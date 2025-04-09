@@ -1,0 +1,62 @@
+<?php
+
+namespace App\Http\Middleware;
+
+use App\Enums\Core\IntegrationsEnum;
+use App\Enums\Core\SystemIntegrationEnum;
+use App\Helpers\SystemHelper;
+use App\Models\APICredential;
+use Closure;
+use Exception;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use PhpImap\Exceptions\ConnectionException;
+use PhpImap\Exceptions\InvalidParameterException;
+use Symfony\Component\HttpFoundation\Response;
+
+class WebsiteAuthMiddleware
+{
+    /**
+     * Handle an incoming request.
+     *
+     * @param \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response) $next
+     */
+    public function handle(Request $request, Closure $next): Response
+    {
+        if (!$request->ajax() && !$request->expectsJson()) {
+            abort(Response::HTTP_NOT_FOUND);
+        }
+        if ($request->header('x-source') !== SystemIntegrationEnum::Website->value) {
+            return $this->_fail('client: no source');
+        }
+        $bearerToken = $request->bearerToken();
+        if (!is_string($bearerToken)) {
+            return $this->_fail('client: no token provided');
+        }
+
+        try {
+            $ApiCred = APICredential::query()->where('Integration', IntegrationsEnum::Website->value)->latest('Id')->first();
+            if (!$ApiCred instanceof APICredential) {
+                return $this->_fail('No API credential Found');
+            }
+            $key = $ApiCred->Configuration?->Key;
+            if (!is_string($key)) {
+                return $this->_fail('Invalid key in system');
+            }
+        } catch (ConnectionException|InvalidParameterException|Exception $e) {
+            return $this->_fail($e->getMessage());
+        }
+        if (md5($bearerToken) === $key) {
+            return $next($request);
+        }
+
+        return $this->_fail('client: invalid key');
+
+    }
+
+    protected function _fail(string $reason): JsonResponse
+    {
+        SystemHelper::notifyAdmin('Website Endpoints Authentication Failure : ' . $reason);
+        return response()->json(['message' => 'unauthorized'], Response::HTTP_UNAUTHORIZED);
+    }
+}

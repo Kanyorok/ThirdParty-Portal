@@ -1,0 +1,277 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Enums\Core\ComparisonOperatorsEnum;
+use App\Enums\Core\DataTypesEnum;
+use App\Helpers\SystemHelper;
+use App\Models\BR\Branch;
+use App\Models\BR\Client;
+use App\Models\BR\SystemCodeDetail;
+use App\Models\Lead;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+
+class SysFilterSeeder extends Seeder
+{
+    //'Related', 'Field'
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        $date = now();
+        $actor = SystemHelper::user();
+        DB::table('t_SysFilters')->insert([
+            [
+                'Name' => 'Branch',
+                'FieldName' => 'OurBranchID',
+                'Relation' => 'accounts',
+                'RelationSource' => Branch::getPrimaryKey(),
+                'DataType' => DataTypesEnum::String,
+                'Operator' => ComparisonOperatorsEnum::In,
+                'Source' => Client::getPrimaryKey(),
+                'CreatedBy' => $actor->Id,
+                'ModifiedBy' => $actor->Id,
+                'ModifiedOn' => $date,
+                'CreatedOn' => $date,
+            ], [
+                'Name' => 'Join Date',
+                'FieldName' => 'CreatedOn',
+                'Relation' => null,
+                'RelationSource' => null,
+                'DataType' => DataTypesEnum::DateTime,
+                'Operator' => ComparisonOperatorsEnum::Between,
+                'Source' => Client::getPrimaryKey(),
+                'CreatedBy' => $actor->Id,
+                'ModifiedBy' => $actor->Id,
+                'ModifiedOn' => $date,
+                'CreatedOn' => $date,
+            ], [
+                'Name' => 'Join Date',
+                'FieldName' => 'CreatedOn',
+                'Relation' => null,
+                'RelationSource' => null,
+                'DataType' => DataTypesEnum::DateTime,
+                'Operator' => ComparisonOperatorsEnum::GreaterThan,
+                'Source' => Client::getPrimaryKey(),
+                'CreatedBy' => $actor->Id,
+                'ModifiedBy' => $actor->Id,
+                'ModifiedOn' => $date,
+                'CreatedOn' => $date,
+            ], [
+                'Name' => 'Join Date',
+                'FieldName' => 'CreatedOn',
+                'Relation' => null,
+                'RelationSource' => null,
+                'DataType' => DataTypesEnum::DateTime,
+                'Operator' => ComparisonOperatorsEnum::LessThan,
+                'Source' => Client::getPrimaryKey(),
+                'CreatedBy' => $actor->Id,
+                'ModifiedBy' => $actor->Id,
+                'ModifiedOn' => $date,
+                'CreatedOn' => $date,
+            ], [
+                'Name' => 'Date of Birth',
+                'FieldName' => 'DateOfBirth',
+                'Relation' => 'individual',
+                'RelationSource' => null,
+                'DataType' => DataTypesEnum::DateTime,
+                'Operator' => ComparisonOperatorsEnum::Between,
+                'Source' => Client::getPrimaryKey(),
+                'CreatedBy' => $actor->Id,
+                'ModifiedBy' => $actor->Id,
+                'ModifiedOn' => $date,
+                'CreatedOn' => $date,
+            ], [
+                'Name' => 'Date of Birth',
+                'FieldName' => 'DateOfBirth',
+                'Relation' => 'individual',
+                'RelationSource' => null,
+                'DataType' => DataTypesEnum::DateTime,
+                'Operator' => ComparisonOperatorsEnum::GreaterThan,
+                'Source' => Client::getPrimaryKey(),
+                'CreatedBy' => $actor->Id,
+                'ModifiedBy' => $actor->Id,
+                'ModifiedOn' => $date,
+                'CreatedOn' => $date,
+            ], [
+                'Name' => 'Date of Birth',
+                'FieldName' => 'DateOfBirth',
+                'Relation' => 'individual',
+                'RelationSource' => null,
+                'DataType' => DataTypesEnum::DateTime,
+                'Operator' => ComparisonOperatorsEnum::LessThan,
+                'Source' => Client::getPrimaryKey(),
+                'CreatedBy' => $actor->Id,
+                'ModifiedBy' => $actor->Id,
+                'ModifiedOn' => $date,
+                'CreatedOn' => $date,
+            ], [
+                'Name' => 'Client Type',
+                'FieldName' => 'ClientTypeID',
+                'Relation' => 'type',
+                'RelationSource' => SystemCodeDetail::getPrimaryKey(),
+                'DataType' => DataTypesEnum::String,
+                'Operator' => ComparisonOperatorsEnum::In,
+                'Source' => Client::getPrimaryKey(),
+                'CreatedBy' => $actor->Id,
+                'ModifiedBy' => $actor->Id,
+                'ModifiedOn' => $date,
+                'CreatedOn' => $date,
+            ], [
+                'Name' => 'Client Status',
+                'FieldName' => 'ClientStatusID',
+                'Relation' => 'status',
+                'RelationSource' => SystemCodeDetail::getPrimaryKey(),
+                'DataType' => DataTypesEnum::String,
+                'Operator' => ComparisonOperatorsEnum::In,
+                'Source' => Client::getPrimaryKey(),
+                'CreatedBy' => $actor->Id,
+                'ModifiedBy' => $actor->Id,
+                'ModifiedOn' => $date,
+                'CreatedOn' => $date,
+            ], [
+                'Name' => 'Gender',
+                'FieldName' => 'GenderID',
+                'Relation' => 'individual',
+                'RelationSource' => SystemCodeDetail::getPrimaryKey(),
+                'DataType' => DataTypesEnum::String,
+                'Operator' => ComparisonOperatorsEnum::In,
+                'Source' => Client::getPrimaryKey(),
+                'CreatedBy' => $actor->Id,
+                'ModifiedBy' => $actor->Id,
+                'ModifiedOn' => $date,
+                'CreatedOn' => $date,
+
+            ], [
+                'Name' => 'Member Class',
+                'FieldName' => 'MemberClassID',
+                'Relation' => 'class',
+                'RelationSource' => SystemCodeDetail::getPrimaryKey(),
+                'DataType' => DataTypesEnum::String,
+                'Operator' => ComparisonOperatorsEnum::In,
+                'Source' => Client::getPrimaryKey(),
+                'CreatedBy' => $actor->Id,
+                'ModifiedBy' => $actor->Id,
+                'ModifiedOn' => $date,
+                'CreatedOn' => $date,
+            ],
+
+
+            /**
+             * Leads
+             */
+
+            [
+                'Name' => 'Date Added',
+                'FieldName' => 'CreatedOn',
+                'Relation' => null,
+                'RelationSource' => null,
+                'DataType' => DataTypesEnum::DateTime,
+                'Operator' => ComparisonOperatorsEnum::Between,
+                'Source' => Lead::getPrimaryKey(),
+                'CreatedBy' => $actor->Id,
+                'ModifiedBy' => $actor->Id,
+                'ModifiedOn' => $date,
+                'CreatedOn' => $date,
+            ], [
+                'Name' => 'Date Added',
+                'FieldName' => 'CreatedOn',
+                'Relation' => null,
+                'RelationSource' => null,
+                'DataType' => DataTypesEnum::DateTime,
+                'Operator' => ComparisonOperatorsEnum::GreaterThan,
+                'Source' => Lead::getPrimaryKey(),
+                'CreatedBy' => $actor->Id,
+                'ModifiedBy' => $actor->Id,
+                'ModifiedOn' => $date,
+                'CreatedOn' => $date,
+            ], [
+                'Name' => 'Date Added',
+                'FieldName' => 'CreatedOn',
+                'Relation' => null,
+                'RelationSource' => null,
+                'DataType' => DataTypesEnum::DateTime,
+                'Operator' => ComparisonOperatorsEnum::LessThan,
+                'Source' => Lead::getPrimaryKey(),
+                'CreatedBy' => $actor->Id,
+                'ModifiedBy' => $actor->Id,
+                'ModifiedOn' => $date,
+                'CreatedOn' => $date,
+            ], [
+                'Name' => 'Last Contacted',
+                'FieldName' => 'LastContacted',
+                'Relation' => null,
+                'RelationSource' => null,
+                'DataType' => DataTypesEnum::DateTime,
+                'Operator' => ComparisonOperatorsEnum::Between,
+                'Source' => Lead::getPrimaryKey(),
+                'CreatedBy' => $actor->Id,
+                'ModifiedBy' => $actor->Id,
+                'ModifiedOn' => $date,
+                'CreatedOn' => $date,
+            ], [
+                'Name' => 'Last Contacted',
+                'FieldName' => 'LastContacted',
+                'Relation' => null,
+                'RelationSource' => null,
+                'DataType' => DataTypesEnum::DateTime,
+                'Operator' => ComparisonOperatorsEnum::GreaterThan,
+                'Source' => Lead::getPrimaryKey(),
+                'CreatedBy' => $actor->Id,
+                'ModifiedBy' => $actor->Id,
+                'ModifiedOn' => $date,
+                'CreatedOn' => $date,
+            ], [
+                'Name' => 'Last Contacted',
+                'FieldName' => 'LastContacted',
+                'Relation' => null,
+                'RelationSource' => null,
+                'DataType' => DataTypesEnum::DateTime,
+                'Operator' => ComparisonOperatorsEnum::LessThan,
+                'Source' => Lead::getPrimaryKey(),
+                'CreatedBy' => $actor->Id,
+                'ModifiedBy' => $actor->Id,
+                'ModifiedOn' => $date,
+                'CreatedOn' => $date,
+            ], [
+                'Name' => 'Gender',
+                'FieldName' => 'Gender',
+                'Relation' => 'enum',
+                'RelationSource' => null,
+                'DataType' => DataTypesEnum::String,
+                'Operator' => ComparisonOperatorsEnum::In,
+                'Source' => Lead::getPrimaryKey(),
+                'CreatedBy' => $actor->Id,
+                'ModifiedBy' => $actor->Id,
+                'ModifiedOn' => $date,
+                'CreatedOn' => $date,
+            ], [
+                'Name' => 'Lead Status',
+                'FieldName' => 'Status',
+                'Relation' => 'enum',
+                'RelationSource' => null,
+                'DataType' => DataTypesEnum::String,
+                'Operator' => ComparisonOperatorsEnum::In,
+                'Source' => Lead::getPrimaryKey(),
+                'CreatedBy' => $actor->Id,
+                'ModifiedBy' => $actor->Id,
+                'ModifiedOn' => $date,
+                'CreatedOn' => $date,
+            ], [
+                'Name' => 'Lead Type',
+                'FieldName' => 'Type',
+                'Relation' => 'enum',
+                'RelationSource' => null,
+                'DataType' => DataTypesEnum::String,
+                'Operator' => ComparisonOperatorsEnum::In,
+                'Source' => Lead::getPrimaryKey(),
+                'CreatedBy' => $actor->Id,
+                'ModifiedBy' => $actor->Id,
+                'ModifiedOn' => $date,
+                'CreatedOn' => $date,
+            ]
+        ]);
+    }
+}

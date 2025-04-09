@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Crm
+    Country="KE" Name="3cX Patrick" Version="1" SupportsEmojis="true">
+    <Number Prefix="AsIs" MaxLength="[MaxLength]"/>
+    <Connection MaxConcurrentRequests="2"/>
+    <Parameters>
+        <LogMessage Message="Sending request to [Url] with phone [phone] and token [BearerToken]"/>
+        <Parameter Name="phone" Type="String" Editor="String" Default=""/>
+        <Parameter Name="CreateContactEnabled" Type="Boolean" Editor="String" Title="Enable Contact Creation"
+                   Default="False"/>
+        <Parameter Name="CreateOnCallDirection" Type="List" Parent="CreateContactEnabled" Editor="String"
+                   Title="Create Contacts on Call Direction:" Default="Inbound" ListValues="Inbound,Inbound/Outbound"/>
+        <Parameter Name="CreateContactFirstName" Type="String" Parent="CreateContactEnabled" Editor="String"
+                   Title="New Contact First Name:" Default="New"/>
+        <Parameter Name="CreateContactLastName" Type="String" Parent="CreateContactEnabled" Editor="String"
+                   Title="New Contact Last Name:" Default="3CX Contact [Number]"/>
+        <Parameter Name="ReportCallEnabled" Type="Boolean" Editor="String" Title="Enable Call Journaling"
+                   Default="False"/>
+        <Parameter Name="Subject" Type="String" Parent="ReportCallEnabled" Editor="String" Title="Call Subject:"
+                   Default="3CX PhoneSystem Call"/>
+        <Parameter Name="InboundCallText" Type="String" Parent="ReportCallEnabled" Editor="String"
+                   Title="Answered Inbound Call:"
+                   Default="[DateTime]: Answered incoming call from [Number] to [Agent] ([Duration])"/>
+        <Parameter Name="MissedCallText" Type="String" Parent="ReportCallEnabled" Editor="String" Title="Missed Call:"
+                   Default="[DateTime]: Missed call from [Number] to [Agent]"/>
+        <Parameter Name="OutboundCallText" Type="String" Parent="ReportCallEnabled" Editor="String"
+                   Title="Answered Outbound Call:"
+                   Default="[DateTime]: Answered outgoing call from [Agent] to [Number] ([Duration])"/>
+        <Parameter Name="NotAnsweredOutboundCallText" Type="String" Parent="ReportCallEnabled" Editor="String"
+                   Title="Unanswered Outbound Call:"
+                   Default="[DateTime]: Unanswered outgoing call from [Agent] to [Number]"/>
+        <Parameter Name="BearerToken" Type="String" Editor="String"
+                   Default="amVrMnBudzZEUHA5VXdiSVc2U0FmbVNqTWhsODhxVG9mWENuaklRV0NNWTliWEhtZ3p0UmdYWEc2NVo1cUU5aw=="/>
+    </Parameters>
+
+    <Authentication Type="No"/>
+    <Scenarios>
+        <!-- get the person infor -->
+        <Scenario Id="" Type="REST">
+            <Request
+                Url="https://channelsuat.imarishasacco.co.ke:9081/v1/pbx/contacts?phone=[phone]&amp;_token=[BearerToken]"
+                MessagePasses="0" RequestEncoding="UrlEncoded" RequestType="Get" ResponseType="Json">
+                <Headers>
+                    <Value Key="x-source" Passes="0" Type="String">pbx-3cx</Value>
+                    <Value Key="Host" Passes="0" Type="String">channelsuat.imarishasacco.co.ke:9081</Value>
+                </Headers>
+            </Request>
+            <Rules>
+                <Rule Type="Any">phone</Rule>
+            </Rules>
+
+            <Variables>
+                <Variable Name="ContactID" Path="contacts.id">
+                    <Filter/>
+                </Variable>
+                <Variable Name="FirstName" Path="data.attributes.name">
+                    <Filter/>
+                </Variable>
+                <Variable Name="LastName" Path="data.attributes.last_name">
+                    <Filter/>
+                </Variable>
+                <Variable Name="PhoneBusiness" Path="data.attributes.phone">
+                    <Filter/>
+                </Variable>
+                <Variable Name="PhoneHome" Path="data.attributes.phone">
+                    <Filter/>
+                </Variable>
+                <Variable Name="PhoneMobile" Path="data.attributes.mobile">
+                    <Filter/>
+                </Variable>
+                <Variable Name="Email" Path="data.attributes.email1">
+                    <Filter/>
+                </Variable>
+                <Variable Name="AccountName" Path="data.attributes.account_name">
+                    <Filter/>
+                </Variable>
+                <Variable Name="AccountID" Path="data.attributes.account_id">
+                    <Filter/>
+                </Variable>
+            </Variables>
+            <Outputs AllowEmpty="false">
+                <Output Type="FirstName" Passes="0" Value="[FirstName]"/>
+                <Output Type="LastName" Passes="0" Value="[LastName]"/>
+                <Output Type="CompanyName" Passes="0" Value="[AccountName]"/>
+                <Output Type="Email" Passes="0" Value="[Email]"/>
+                <Output Type="PhoneBusiness" Passes="0" Value="[PhoneBusiness]"/>
+                <Output Type="PhoneHome" Passes="0" Value="[PhoneHome]"/>
+                <Output Type="PhoneMobile" Passes="0" Value="[PhoneMobile]"/>
+                <Output Type="ContactUrl" Passes="0"
+                        Value="[Domain]/index.php?module=Contacts&amp;action=DetailView&amp;record=[ID]"/>
+                <Output Type="ContactID" Passes="0" Value="[ID]"/>
+                <Output Type="ContactType" Passes="0" Value="Contact"/>
+                <Output Type="AccountID" Passes="0" Value="[AccountID]"/>
+            </Outputs>
+            <ErrorHandling>
+                <OnError>
+                    <LogMessage Message="Contact not found for phone: [phone]. Response: [ResponseBody]"/>
+                    <Output Type="Error" Passes="0" Value="Contact not found"/>
+                </OnError>
+            </ErrorHandling>
+        </Scenario>
+
+
+        <Scenario Id="LookupFromCFD_Contacts_LookupNumber">
+            <!-- notify us when we have a call -->
+            <Request
+                Url="https://channelsuat.imarishasacco.co.ke:9081/v1/pbx/contacts?phone=[phone]&amp;_token=[BearerToken]"
+                RequestType="Get" ResponseType="Json"/>
+            <Headers>
+                <Value Key="x-source" Passes="0" Type="String">pbx-3cx</Value>
+                <Value Key="Host" Passes="0" Type="String">channelsuat.imarishasacco.co.ke:9081</Value>
+            </Headers>
+            <Rules>
+                <Rule Type="Any">phone</Rule>
+            </Rules>
+            <Variables/>
+            <Outputs AllowEmpty="true"/>
+        </Scenario>
+
+        <!-- pass the details of the caller -->
+        <Scenario Id="CreateContactRecord" Type="REST">
+            <Request SkipIf="[CreateContactEnabled]!=True"
+                     Url="https://channelsuat.imarishasacco.co.ke:9081/v1/pbx/contacts/create?_token=[BearerToken]"
+                     MessagePasses="0" RequestContentType="form-data" RequestEncoding="Json" RequestType="Post"
+                     ResponseType="Json">
+                <Headers>
+                    <Value Key="x-source" Passes="0" Type="String">pbx-3cx</Value>
+                    <Value Key="Host" Passes="0" Type="String">channelsuat.imarishasacco.co.ke:9081</Value>
+                    <Value Key="Authorization" Passes="0" Type="String">Bearer [BearerToken]</Value>
+                </Headers>
+                <PostValues>
+                    <Value Key="firstname" Passes="1" Type="String">New</Value>
+                    <Value Key="lastname" Passes="1" Type="String">3CX Contact</Value>
+                    <Value Key="phonemobile" Passes="1" Type="String">[phone]</Value>
+                </PostValues>
+            </Request>
+            <Rules>
+                <Rule Type="Any">id</Rule>
+            </Rules>
+            <Variables>
+                <Variable Name="ContactID" Path="contacts.id" Default="UnknownID">
+                    <Filter/>
+                </Variable>
+                <Variable Name="FirstName" Path="contacts.name" Default="Unknown FirstName">
+                    <Filter/>
+                </Variable>
+                <Variable Name="LastName" Path="contacts.name" Default="Unknown LastName">
+                    <Filter/>
+                </Variable>
+                <Variable Name="PhoneBusiness" Path="contacts.phone" Default="NoBusinessPhone">
+                    <Filter/>
+                </Variable>
+                <Variable Name="PhoneHome" Path="contacts.phone" Default="NoHomePhone">
+                    <Filter/>
+                </Variable>
+                <Variable Name="PhoneMobile" Path="contacts.mobile" Default="NoMobilePhone">
+                    <Filter/>
+                </Variable>
+                <Variable Name="Email" Path="contacts.email" Default="NoEmail@example.com">
+                    <Filter/>
+                </Variable>
+                <Variable Name="AccountName" Path="contacts.description" Default="NoAccountName">
+                    <Filter/>
+                </Variable>
+            </Variables>
+            <Outputs Next="" AllowEmpty="false">
+                <Output Type="FirstName" Passes="0" Value="[FirstName]"/>
+                <Output Type="LastName" Passes="0" Value="[LastName]"/>
+                <Output Type="CompanyName" Passes="0" Value="[AccountName]"/>
+                <Output Type="Email" Passes="0" Value="[Email]"/>
+                <Output Type="PhoneBusiness" Passes="0" Value="[PhoneBusiness]"/>
+                <Output Type="PhoneHome" Passes="0" Value="[PhoneHome]"/>
+                <Output Type="PhoneMobile" Passes="0" Value="[PhoneMobile]"/>
+                <Output Type="ContactUrl" Passes="0"
+                        Value="[Domain]/index.php?module=Contacts&amp;action=DetailView&amp;record=[ContactID]"/>
+                <Output Type="ContactID" Passes="0" Value="[ContactID]"/>
+            </Outputs>
+        </Scenario>
+
+
+        <!-- for recieved call -->
+        <Scenario Id="ReportCall" Type="REST">
+            <Request SkipIf="[ReportCallEnabled]!=True"
+                     Url="https://channelsuat.imarishasacco.co.ke:9081/v1/pbx/calls?_token=[BearerToken]"
+                     MessagePasses="0" RequestContentType="application/json" RequestEncoding="Json" RequestType="Post"
+                     ResponseType="Json">
+                <PostValues Key="">
+                    <Value Key="phonenumber" Passes="1" Type="String">[Number]</Value>
+                    <Value Key="AgentFirstName" Passes="1" Type="String">[AgentFirstName]</Value>
+                    <Value Key="AgentExtension" Passes="1" Type="String">[Agent]</Value>
+                    <Value Key="ContactName" Passes="1" Type="String">[Name]</Value>
+                    <Value Key="StartTime" Passes="1" Type="String">[CallStartTimeLocal]</Value>
+                    <Value Key="EndTime" Passes="1" Type="String">[CallEndTimeLocal]</Value>
+                    <Value Key="CallType" Passes="1" Type="String">[CallType]</Value>
+                </PostValues>
+                <Headers>
+                    <Value Key="x-source" Passes="0" Type="String">pbx-3cx</Value>
+                    <Value Key="Host" Passes="0" Type="String">channelsuat.imarishasacco.co.ke:9081</Value>
+                    <Value Key="Authorization" Passes="0" Type="String">Bearer [BearerToken]</Value>
+                </Headers>
+            </Request>
+            <Variables/>
+            <Outputs Next="ReportCallMissed" AllowEmpty="true"/>
+        </Scenario>
+
+
+        <!-- missed call -->
+        <Scenario Id="ReportCallMissed" Type="REST">
+            <Request
+                SkipIf="[IIf([ReportCallEnabled]!=True||[EntityId]==&quot;&quot;,True,[IIf([CallType]!=Missed,True,False)])]"
+                Url="https://channelsuat.imarishasacco.co.ke:9081/v1/pbx/calls/missed?_token=[BearerToken]"
+                MessagePasses="0" RequestContentType="application/json" RequestEncoding="Json" RequestType="Post"
+                ResponseType="Json">
+                <PostValues Key="">
+                    <Value Key="phonenumber" Passes="1" Type="String">[Number]</Value>
+                    <Value Key="AgentFirstName" Passes="1" Type="String">[AgentFirstName]</Value>
+                    <Value Key="AgentExtension" Passes="1" Type="String">[Agent]</Value>
+                    <Value Key="ContactName" Passes="1" Type="String">[Name]</Value>
+                    <Value Key="StartTime" Passes="1" Type="String">[CallStartTimeLocal]</Value>
+                    <Value Key="EndTime" Passes="1" Type="String">[CallEndTimeLocal]</Value>
+                    <Value Key="CallType" Passes="1" Type="String">[CallType]</Value>
+                </PostValues>
+                <Headers>
+                    <Value Key="x-source" Passes="0" Type="String">pbx-3cx</Value>
+                    <Value Key="Host" Passes="0" Type="String">channelsuat.imarishasacco.co.ke:9081</Value>
+                    <Value Key="Authorization" Passes="0" Type="String">Bearer [BearerToken]</Value>
+                </Headers>
+            </Request>
+            <Variables/>
+            <Outputs Next="ReportCallOutbound" AllowEmpty="true"/>
+        </Scenario>
+
+
+        <!-- the agent called customer -->
+        <Scenario Id="ReportCallOutbound" Type="REST">
+            <Request
+                SkipIf="[IIf([ReportCallEnabled]!=True||[EntityId]==&quot;&quot;,True,[IIf([CallType]!=Outbound,True,False)])]"
+                Url="https://channelsuat.imarishasacco.co.ke:9081/v1/pbx/calls/create?_token=[BearerToken]"
+                MessagePasses="0" RequestContentType="application/json" RequestEncoding="Json" RequestType="Post"
+                ResponseType="Json">
+                <PostValues Key="">
+                    <Value Key="phonenumber" Passes="1" Type="String">[Number]</Value>
+                    <Value Key="AgentFirstName" Passes="1" Type="String">[AgentFirstName]</Value>
+                    <Value Key="AgentExtension" Passes="1" Type="String">[Agent]</Value>
+                    <Value Key="ContactName" Passes="1" Type="String">[Name]</Value>
+                    <Value Key="StartTime" Passes="1" Type="String">[CallStartTimeLocal]</Value>
+                    <Value Key="EndTime" Passes="1" Type="String">[CallEndTimeLocal]</Value>
+                    <Value Key="CallType" Passes="1" Type="String">[CallType]</Value>
+                </PostValues>
+                <Headers>
+                    <Value Key="x-source" Passes="0" Type="String">pbx-3cx</Value>
+                    <Value Key="Host" Passes="0" Type="String">channelsuat.imarishasacco.co.ke:9081</Value>
+                    <Value Key="Authorization" Passes="0" Type="String">Bearer [BearerToken]</Value>
+                </Headers>
+            </Request>
+            <Variables/>
+            <Outputs Next="ReportCallNotanswered" AllowEmpty="true"/>
+        </Scenario>
+
+        <!-- agent called customer but customer did not pick -->
+        <Scenario Id="ReportCallNotanswered" Type="REST">
+            <Request
+                SkipIf="[IIf([ReportCallEnabled]!=True||[EntityId]==&quot;&quot;,True,[IIf([CallType]!=Notanswered,True,False)])]"
+                Url="https://channelsuat.imarishasacco.co.ke:9081/v1/pbx/calls/non-answer?_token=[BearerToken]"
+                MessagePasses="0" RequestContentType="application/json" RequestEncoding="Json" RequestType="Post"
+                ResponseType="Json">
+                <PostValues Key="">
+                    <Value Key="phonenumber" Passes="1" Type="String">[Number]</Value>
+                    <Value Key="AgentFirstName" Passes="1" Type="String">[AgentFirstName]</Value>
+                    <Value Key="AgentExtension" Passes="1" Type="String">[Agent]</Value>
+                    <Value Key="ContactName" Passes="1" Type="String">[Name]</Value>
+                    <Value Key="StartTime" Passes="1" Type="String">[CallStartTimeLocal]</Value>
+                    <Value Key="EndTime" Passes="1" Type="String">[CallEndTimeLocal]</Value>
+                    <Value Key="CallType" Passes="1" Type="String">[CallType]</Value>
+                </PostValues>
+                <Headers>
+                    <Value Key="x-source" Passes="0" Type="String">pbx-3cx</Value>
+                    <Value Key="Host" Passes="0" Type="String">channelsuat.imarishasacco.co.ke:9081</Value>
+                    <Value Key="Authorization" Passes="0" Type="String">Bearer [BearerToken]</Value>
+                </Headers>
+            </Request>
+            <Variables/>
+            <Outputs AllowEmpty="false"/>
+        </Scenario>
+    </Scenarios>
+</Crm>

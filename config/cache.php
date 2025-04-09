@@ -40,10 +40,10 @@ return [
 
         'database' => [
             'driver' => 'database',
+            'table' => env('DB_CACHE_TABLE', 't_SYSCache'),
             'connection' => env('DB_CACHE_CONNECTION'),
-            'table' => env('DB_CACHE_TABLE', 'cache'),
             'lock_connection' => env('DB_CACHE_LOCK_CONNECTION'),
-            'lock_table' => env('DB_CACHE_LOCK_TABLE'),
+            'lock_table' => 't_SYSCacheLocks',
         ],
 
         'file' => [
