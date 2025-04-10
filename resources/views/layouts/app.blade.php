@@ -12,278 +12,2267 @@
      </style>--}}
 </head>
 
-<body>
-
-<div class="wrapper">
-    <nav id="sidebar" class="sidebar js-sidebar">
-        <div class="sidebar-content js-simplebar">
-            <a class="sidebar-brand" href="{{ route('home') }}">
-                <img src="{{{ asset('assets/img/icons/android-icon-36x36.png') }}}" alt=""><span
-                    class="align-middle"> {{ config('app.name') }}</span>
-            </a>
-
-            <ul class="sidebar-nav" id="sideNavBarMain">
-                <li class="sidebar-item {{ request()->is(['/'])?'active':'' }}">
-                    <a class="sidebar-link " href="{{ route('home') }}">
-                        <i class="align-middle" data-feather="home"></i> <span class="align-middle">Dashboard</span>
-                    </a>
-                </li>
-                {{--<li class="sidebar-item {{ request()->is(['user/emails*'])?'active':'' }}">
-                    <a class="sidebar-link " href="{{ route('emails.index') }}">
-                        <i class="align-middle fas fa-envelope"></i> <span class="align-middle"> Mail Box</span>
-                    </a>
-                </li>--}}
-                <li class="sidebar-item {{ request()->is(['email*'])?'active':'' }}">
-                    <a class="sidebar-link " href="{{ route('email-conversations.index') }}">
-                        <i class="align-middle fas fa-envelope"></i> <span class="align-middle"> Mail Box</span>
-                    </a>
-                </li>
-                <li class="sidebar-item {{ request()->is(['user/schedule*'])?'active':'' }}">
-                    <a class="sidebar-link " href="{{ route('schedule.index') }}">
-                        <i class="align-middle fas fa-calendar"></i> <span class="align-middle"> My Schedule</span>
-                    </a>
-                </li>
-                <li class="sidebar-item {{ request()->is(['tickets*'])?'active':'' }}">
-                    <a class="sidebar-link" href="{{ route('tickets.index') }}">
-                        <i class="align-middle" data-feather="check-square"></i> <span
-                            class="align-middle"> Tickets</span> </a>
-                </li>
-
-                @can('thirdParties', App\Models\User::class)
-                    <li class="sidebar-header">Third Parties</li>
-                    @can('viewAny', App\Models\Client::class)
-                        <li class="sidebar-item {{ request()->is(['clients*'])?'active':'' }}">
-                            <a class="sidebar-link " href="{{ route('clients.index') }}">
-                                <i class="align-middle" data-feather="users"></i> <span
-                                    class="align-middle"> Members</span>
-                            </a>
-                        </li>
-                    @endcan @can('viewAny', App\Models\Lead::class)
-                        <li class="sidebar-item {{ request()->is(['leads*'])?'active':'' }}">
-                            <a class="sidebar-link " href="{{ route('leads.index') }}">
-                                <i class="align-middle fas fa-address-book"></i> <span
-                                    class="align-middle"> Leads</span>
-                            </a>
-                        </li>
-                    @endcan @can('viewAny', App\Models\Board::class)
-                        <li class="sidebar-item {{ request()->is(['board*'])?'active':'' }}">
-                            <a class="sidebar-link " href="{{ route('board.index') }}">
-                                <i class="align-middle fas fa-user-secret"></i> <span
-                                    class="align-middle"> Board </span>
-                            </a>
-                        </li>
-                    @endcan
-                @endcan
-
-                @can('marketing', App\Models\User::class)
-                    <li class="sidebar-header">Marketing</li>
-                    @can('viewAny', App\Models\MarketingPlanner::class)
-                        <li class="sidebar-item {{ request()->is(['marketing/marketing-planner*','marketing/master-planner*'])?'active':'' }}">
-                            <a class="sidebar-link" href="{{ route('marketing-planner.index') }}">
-                                <i class="align-middle fa-solid fa-seedling"></i> <span
-                                    class="align-middle"> Planner </span>
-                            </a>
-                        </li>
-                    @endcan @can('viewAny', App\Models\MarketingList::class)
-                        <li class="sidebar-item {{ request()->is(['marketing/marketing-list*'])?'active':'' }}">
-                            <a class="sidebar-link" href="{{ route('marketing-list.index') }}">
-                                <i class="align-middle fas fa-list-dots"></i> <span
-                                    class="align-middle"> Marketing Lists </span>
-                            </a>
-                        </li>
-                    @endcan @can('viewAny', App\Models\Campaign::class)
-                        <li class="sidebar-item {{ request()->is(['marketing/campaigns*'])?'active':'' }}">
-                            <a class="sidebar-link" href="{{ route('campaigns.index') }}">
-                                <i class="align-middle fas fa-copyright"></i> <span
-                                    class="align-middle"> Campaigns</span>
-                            </a>
-                        </li>
-                    @endcan @can('viewAny', App\Models\Competitor::class)
-                        <li class="sidebar-item {{ request()->is(['marketing/competitors*'])?'active':'' }}">
-                            <a class="sidebar-link" href="{{ route('competitors.index') }}">
-                                <i class="align-middle fas fa-face-rolling-eyes"></i> <span
-                                    class="align-middle">Competitors </span>
-                            </a>
-                        </li>
-                    @endcan @can('viewAny', App\Models\Social::class)
-                        <li class="sidebar-item {{ request()->is(['marketing/socials*'])?'active':'' }}">
-                            <a class="sidebar-link" href="{{ route('socials.index') }}">
-                                <i class="align-middle fa-solid fa-icons"></i><span
-                                    class="align-middle"> Social Media</span></a>
-                        </li>
-                    @endcan
-                @endcan
-
-                @can('viewAny', App\Models\ProductDevelopment::class)
-                    <li class="mt-3 sidebar-item {{ request()->is(['product-development*'])?'active':'' }}">
-                        <a class="sidebar-link " href="{{ route('product-development.index') }}">
-                            <i class="align-middle fa-solid fa-cubes"></i> <span class="align-middle"> Product Development</span>
-                        </a>
-                    </li>
-                @endcan
-
-                @can('debt', App\Models\User::class)
-                    <li class="sidebar-header">Debt Collection</li>
-                    @can('viewAny', App\Models\BulkNotification::class)
-                        <li class="sidebar-item {{ request()->is(['debt-notification*'])?'active':'' }}">
-                            <a class="sidebar-link " href="{{ route('debt-notification.index') }}">
-                                <i class="align-middle fas fa-comment-dollar"></i> <span
-                                    class="align-middle"> Notifications</span>
-                            </a>
-                        </li>
-                    @endcan @can('viewAny', App\Models\BR\DebtProduct::class)
-                        <li class="sidebar-item  {{ request()->is(['debt-collection*','loans-list*'])?'active':'' }}">
-                            <a href="#DebtProductSideMenu" data-bs-toggle="collapse" class="sidebar-link collapsed">
-                                <i class="align-middle fas fa-hands-helping"></i> <span
-                                    class="align-middle"> Loans</span>
-                            </a>
-                            <ul id="DebtProductSideMenu"
-                                class="sidebar-dropdown list-unstyled collapse {{ request()->is(['debt-collection*','loans-list*'])?'show':'' }}"
-                                data-bs-parent="#sidebar">
-
-                                <li class="sidebar-item {{ request()->is(['loans-list*'])?'active':'' }}"><a
-                                        class="sidebar-link" href="{{ route('loans-list.index') }}">Lists</a></li>
-                                <li class="sidebar-item {{ request()->is(['debt-collection*'])?'active':'' }}"><a
-                                        class="sidebar-link" href="{{ route('debt-collection.index') }}">Loans</a></li>
-                            </ul>
-                        </li>
-                    @endcan
-                @endcan
-
-                @can('feedback', App\Models\User::class)
-                    <li class="sidebar-header">Feedback</li>
-                    @can('viewAny', App\Models\Survey::class)
-                        <li class="sidebar-item {{ request()->is(['surveys*'])?'active':'' }}">
-                            <a class="sidebar-link" href="{{ route('surveys.index') }}">
-                                <i class="align-middle fa-regular  fa-circle-check"></i> <span
-                                    class="align-middle"> Surveys</span></a>
-                        </li>
-                    @endcan  @can('viewAny', App\Models\Review::class)
-                        <li class="sidebar-item {{ request()->is(['reviews*'])?'active':'' }}">
-                            <a class="sidebar-link" href="{{ route('reviews.index') }}">
-                                <i class="align-middle fa-regular fa-comment"></i> <span
-                                    class="align-middle"> Reviews</span>
-                            </a>
-                        </li>
-                    @endcan
-                @endcan
-                @can('settings', App\Models\User::class)
-                    <li class="sidebar-header">Settings</li>
-                    @can('view', App\Models\CodeDetail::class)
-                        <li class="sidebar-item {{ request()->is(['settings/lists'])?'active':'' }}">
-                            <a class="sidebar-link" href="{{ route('settings.lists') }}">
-                                <i class="align-middle fas fa-cog"></i> <span class="align-middle"> System Codes</span>
-                            </a>
-                        </li>
-                    @endcan @can('settings', App\Models\User::class)
-                        <li class="sidebar-item {{ request()->is(['settings/users-roles*','settings/teams*','settings/users*'])?'active':'' }}">
-                            <a class="sidebar-link" href="{{ route('settings.users') }}">
-                                <i class="align-middle fas fa-users-cog"></i>
-                                <span class="align-middle"> Users & Roles</span>
-                            </a>
-                        </li>
-                    @endcan @can('integrations', App\Models\APICredential::class)
-                        <li class="sidebar-item {{ request()->is(['settings/integrations*'])?'active':'' }}">
-                            <a class="sidebar-link" href="{{ route('settings.integrations') }}">
-                                <i class="align-middle fas fa-cogs"></i>
-                                <span class="align-middle"> Integrations</span>
-                            </a>
-                        </li>
-                    @endcan
-                @endcan
-            </ul>
+<body data-pc-preset="preset-1" data-pc-sidebar-caption="true" data-pc-layout="vertical" data-pc-direction="ltr"
+    data-pc-theme_contrast="" data-pc-theme="light"><!-- [ Pre-loader ] start -->
+    <div class="loader-bg">
+        <div class="loader-track">
+            <div class="loader-fill"></div>
         </div>
-    </nav>
-
-    <div class="main">
-        <nav class="navbar navbar-expand navbar-light navbar-bg">
-            <a class="sidebar-toggle js-sidebar-toggle">
-                <i class="hamburger align-self-center"></i>
-            </a>
-            <div class="text-danger d-none" id="sessionInactivity">
-                <span id="sessionInactivityMinutes">00</span>:
-                <span id="sessionInactivitySeconds">00</span>
+    </div><!-- [ Pre-loader ] End --><!-- [ Sidebar Menu ] start -->
+    <nav class="pc-sidebar">
+        <div class="navbar-wrapper">
+            <div class="m-header"><a href="index.html"
+                    class="b-brand text-primary"><!-- ========   Change your logo from here   ============ --> <img
+                    src="{{{ asset('assets/img/icons/android-icon-36x36.png') }}}" class="img-fluid logo-lg" alt="logo"> <span
+                        class="badge bg-light-success rounded-pill ms-2 theme-version">v9.5.1</span></a></div>
+            <div class="navbar-content">
+                <div class="card pc-user-card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0"><img src="../assets/images/user/avatar-1.jpg" alt="user-image"
+                                    class="user-avtar wid-45 rounded-circle"></div>
+                            <div class="flex-grow-1 ms-3 me-2">
+                                <h6 class="mb-0" data-i18n="Jonh Smith">Jonh Smith</h6><small
+                                    data-i18n="Administrator">Administrator</small>
+                            </div><a class="btn btn-icon btn-link-secondary avtar" data-bs-toggle="collapse"
+                                href="#pc_sidebar_userlink"><svg class="pc-icon">
+                                    <use xlink:href="#custom-sort-outline"></use>
+                                </svg></a>
+                        </div>
+                        <div class="collapse pc-user-links" id="pc_sidebar_userlink">
+                            <div class="pt-3"><a href="#!"><i class="ti ti-user"></i> <span data-i18n="My Account">My
+                                        Account</span> </a><a href="#!"><i class="ti ti-settings"></i> <span
+                                        data-i18n="Settings">Settings</span> </a><a href="#!"><i class="ti ti-lock"></i>
+                                    <span data-i18n="Lock Screen">Lock Screen</span> </a><a href="#!"><i
+                                        class="ti ti-power"></i> <span data-i18n="Logout">Logout</span></a></div>
+                        </div>
+                    </div>
+                </div>
+                <ul class="pc-navbar">
+                    <li class="pc-item pc-caption"><label data-i18n="Navigation">Navigation</label></li>
+                    <li class="pc-item pc-hasmenu"><a href="#!" class="pc-link"><span class="pc-micon"><svg
+                                    class="pc-icon">
+                                    <use xlink:href="#custom-status-up"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="Dashboard">Dashboard</span> <span
+                                class="pc-arrow"><i data-feather="chevron-right"></i></span> <span
+                                class="pc-badge">2</span></a>
+                        <ul class="pc-submenu">
+                            <li class="pc-item"><a class="pc-link" href="index.html" data-i18n="Default">Default</a>
+                            </li>
+                            <li class="pc-item"><a class="pc-link" href="analytics.html"
+                                    data-i18n="Analytics">Analytics</a></li>
+                            <li class="pc-item"><a class="pc-link" href="finance.html" data-i18n="Finance">Finance</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="pc-item pc-hasmenu"><a href="#!" class="pc-link"><span class="pc-micon"><svg
+                                    class="pc-icon">
+                                    <use xlink:href="#custom-document"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="Layouts">Layouts</span> <span
+                                class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                        <ul class="pc-submenu">
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/demo/layout-vertical.html"
+                                    data-i18n="Vertical">Vertical</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/demo/layout-horizontal.html"
+                                    data-i18n="Horizontal">Horizontal</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/demo/layout-color-header.html"
+                                    data-i18n="Layouts 2">Layouts 2</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/demo/layout-compact.html"
+                                    data-i18n="Compact">Compact</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/demo/layout-tab.html"
+                                    data-i18n="Tab">Tab</a></li>
+                        </ul>
+                    </li>
+                    <li class="pc-item pc-caption"><label data-i18n="Widget">Widget</label> <svg class="pc-icon">
+                            <use xlink:href="#custom-presentation-chart"></use>
+                        </svg></li>
+                    <li class="pc-item"><a
+                            href="../../external.html?link=https://ableproadmin.com/widget/w_statistics.html"
+                            class="pc-link"><span class="pc-micon"><svg class="pc-icon">
+                                    <use xlink:href="#custom-story"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="Statistics">Statistics</span></a></li>
+                    <li class="pc-item"><a href="../../external.html?link=https://ableproadmin.com/widget/w_data.html"
+                            class="pc-link"><span class="pc-micon"><svg class="pc-icon">
+                                    <use xlink:href="#custom-fatrows"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="Data">Data</span></a></li>
+                    <li class="pc-item"><a href="../../external.html?link=https://ableproadmin.com/widget/w_chart.html"
+                            class="pc-link"><span class="pc-micon"><svg class="pc-icon">
+                                    <use xlink:href="#custom-presentation-chart"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="Chart">Chart</span></a></li>
+                    <li class="pc-item pc-caption"><label data-i18n="Admin Panel">Admin Panel</label> <svg
+                            class="pc-icon">
+                            <use xlink:href="#custom-layer"></use>
+                        </svg></li>
+                    <li class="pc-item pc-hasmenu"><a href="#!" class="pc-link"><span class="pc-micon"><svg
+                                    class="pc-icon">
+                                    <use xlink:href="#custom-layer"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="Online Courses">Online Courses</span>
+                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                        <ul class="pc-submenu">
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/admins/course-dashboard.html"
+                                    data-i18n="Dashboard">Dashboard</a></li>
+                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span
+                                        data-i18n="Teacher">Teacher</span> <span class="pc-arrow"><i
+                                            data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item"><a class="pc-link"
+                                            href="../../external.html?link=https://ableproadmin.com/admins/course-teacher-list.html"
+                                            data-i18n="List">List</a></li>
+                                    <li class="pc-item"><a class="pc-link"
+                                            href="../../external.html?link=https://ableproadmin.com/admins/course-teacher-apply.html"
+                                            data-i18n="Apply">Apply</a></li>
+                                    <li class="pc-item"><a class="pc-link"
+                                            href="../../external.html?link=https://ableproadmin.com/admins/course-teacher-add.html"
+                                            data-i18n="Add">Add</a></li>
+                                </ul>
+                            </li>
+                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span
+                                        data-i18n="Student">Student</span> <span class="pc-arrow"><i
+                                            data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item"><a class="pc-link"
+                                            href="../../external.html?link=https://ableproadmin.com/admins/course-student-list.html"
+                                            data-i18n="List">list</a></li>
+                                    <li class="pc-item"><a class="pc-link"
+                                            href="../../external.html?link=https://ableproadmin.com/admins/course-student-apply.html"
+                                            data-i18n="Apply">Apply</a></li>
+                                    <li class="pc-item"><a class="pc-link"
+                                            href="../../external.html?link=https://ableproadmin.com/admins/course-student-add.html"
+                                            data-i18n="Add">Add</a></li>
+                                </ul>
+                            </li>
+                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span
+                                        data-i18n="Courses">Courses</span> <span class="pc-arrow"><i
+                                            data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item"><a class="pc-link"
+                                            href="../../external.html?link=https://ableproadmin.com/admins/course-course-view.html"
+                                            data-i18n="View">View</a></li>
+                                    <li class="pc-item"><a class="pc-link"
+                                            href="../../external.html?link=https://ableproadmin.com/admins/course-course-add.html"
+                                            data-i18n="Add">Add</a></li>
+                                </ul>
+                            </li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/admins/course-pricing.html"
+                                    data-i18n="Pricing">Pricing</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/admins/course-site.html"
+                                    data-i18n="Site">Site</a></li>
+                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span
+                                        data-i18n="Setting">Setting</span> <span class="pc-arrow"><i
+                                            data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item"><a class="pc-link"
+                                            href="../../external.html?link=https://ableproadmin.com/admins/course-setting-payment.html"
+                                            data-i18n="Payment">Payment</a></li>
+                                    <li class="pc-item"><a class="pc-link"
+                                            href="../../external.html?link=https://ableproadmin.com/admins/course-setting-pricing.html"
+                                            data-i18n="Pricing">Pricing</a></li>
+                                    <li class="pc-item"><a class="pc-link"
+                                            href="../../external.html?link=https://ableproadmin.com/admins/course-setting-notifications.html"
+                                            data-i18n="Notification">Notifications</a></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="pc-item pc-hasmenu"><a href="#!" class="pc-link"><span class="pc-micon"><svg
+                                    class="pc-icon">
+                                    <use xlink:href="#custom-user"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="Membership">Membership</span> <span
+                                class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                        <ul class="pc-submenu">
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/admins/membership-dashboard.html"
+                                    data-i18n="Dashboard">Dashboard</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/admins/membership-list.html"
+                                    data-i18n="List">List</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/admins/membership-pricing.html"
+                                    data-i18n="Pricing">Pricing</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/admins/membership-setting.html"
+                                    data-i18n="Setting">Setting</a></li>
+                        </ul>
+                    </li>
+                    <li class="pc-item pc-hasmenu"><a href="#!" class="pc-link"><span class="pc-micon"><svg
+                                    class="pc-icon">
+                                    <use xlink:href="#custom-24-support"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="Helpdesk">Helpdesk</span><span
+                                class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                        <ul class="pc-submenu">
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/admins/helpdesk-dashboard.html"
+                                    data-i18n="Dashboard">Dashboard</a></li>
+                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span
+                                        data-i18n="Ticket">Ticket</span> <span class="pc-arrow"><i
+                                            data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item"><a class="pc-link"
+                                            href="../../external.html?link=https://ableproadmin.com/admins/helpdesk-create-ticket.html"
+                                            data-i18n="Create">Create</a></li>
+                                    <li class="pc-item"><a class="pc-link"
+                                            href="../../external.html?link=https://ableproadmin.com/admins/helpdesk-ticket.html"
+                                            data-i18n="List">List</a></li>
+                                    <li class="pc-item"><a class="pc-link"
+                                            href="../../external.html?link=https://ableproadmin.com/admins/helpdesk-ticket-details.html"
+                                            data-i18n="Details">Details</a></li>
+                                </ul>
+                            </li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/admins/helpdesk-customer.html"
+                                    data-i18n="Customer">Customer</a></li>
+                        </ul>
+                    </li>
+                    <li class="pc-item pc-hasmenu"><a href="#!" class="pc-link"><span class="pc-micon"><svg
+                                    class="pc-icon">
+                                    <use xlink:href="#custom-bill"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="Invoice">Invoice</span><span
+                                class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                        <ul class="pc-submenu">
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/admins/invoice-dashboard.html"
+                                    data-i18n="Dashboard">Dashboard</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/admins/invoice-create.html"
+                                    data-i18n="Create">Create</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/admins/invoice-view.html"
+                                    data-i18n="Details">Details</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/admins/invoice-list.html"
+                                    data-i18n="List">List</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/admins/invoice-edit.html"
+                                    data-i18n="Edit">Edit</a></li>
+                        </ul>
+                    </li>
+                    <li class="pc-item pc-caption"><label data-i18n="UI Components">UI Components</label> <svg
+                            class="pc-icon">
+                            <use xlink:href="#custom-box-1"></use>
+                        </svg></li>
+                    <li class="pc-item"><a
+                            href="../../external.html?link=https://ableproadmin.com/elements/bc_alert.html"
+                            class="pc-link" target="_blank"><span class="pc-micon"><svg class="pc-icon">
+                                    <use xlink:href="#custom-box-1"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="Components">Components</span></a></li>
+                    <li class="pc-item"><a
+                            href="../../external.html?link=https://ableproadmin.com/elements/animation.html"
+                            class="pc-link"><span class="pc-micon"><svg class="pc-icon">
+                                    <use xlink:href="#custom-flag"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="Animation">Animation</span></a></li>
+                    <li class="pc-item pc-hasmenu"><a href="#!" class="pc-link"><span class="pc-micon"><svg
+                                    class="pc-icon">
+                                    <use xlink:href="#custom-mouse-circle"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="Icons">Icons</span><span
+                                class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                        <ul class="pc-submenu">
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/elements/icon-feather.html"
+                                    data-i18n="Feather">Feather</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/elements/icon-fontawesome.html"
+                                    data-i18n="Font Awesome 5">Font Awesome 5</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/elements/icon-material.html"
+                                    data-i18n="Material">Material</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/elements/icon-tabler.html"
+                                    data-i18n="Tabler">Tabler</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/elements/icon-phosphor.html"
+                                    data-i18n="Phospher">Phosphor</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/elements/icon-custom.html"
+                                    data-i18n="Custom">Custom</a></li>
+                        </ul>
+                    </li>
+                    <li class="pc-item pc-caption"><label data-feather="Forms">Forms</label> <svg class="pc-icon">
+                            <use xlink:href="#custom-element-plus"></use>
+                        </svg></li>
+                    <li class="pc-item pc-hasmenu"><a href="#!" class="pc-link"><span class="pc-micon"><svg
+                                    class="pc-icon">
+                                    <use xlink:href="#custom-element-plus"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="Form Elements">Forms
+                                Elements</span><span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                        <ul class="pc-submenu">
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/forms/form_elements.html"
+                                    data-i18n="Form Basic">Form Basic</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/forms/form_floating.html"
+                                    data-i18n="Form Floating">Form Floating</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/forms/form2_basic.html"
+                                    data-i18n="Form Options">Form Options</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/forms/form2_input_group.html"
+                                    data-i18n="Input Group">Input Groups</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/forms/form2_checkbox.html"
+                                    data-i18n="CheckBox">Checkbox</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/forms/form2_radio.html"
+                                    data-i18n="Radio">Radio</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/forms/form2_switch.html"
+                                    data-i18n="Switch">Switch</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/forms/form2_megaoption.html"
+                                    data-i18n="Mega Option">Mega option</a></li>
+                        </ul>
+                    </li>
+                    <li class="pc-item pc-hasmenu"><a href="#!" class="pc-link"><span class="pc-micon"><svg
+                                    class="pc-icon">
+                                    <use xlink:href="#custom-cpu-charge"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="Form Plugins">Forms Plugins</span><span
+                                class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                        <ul class="pc-submenu">
+                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#"><span
+                                        data-i18n="Date">Date</span> <span class="pc-arrow"><i
+                                            data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item"><a class="pc-link"
+                                            href="../../external.html?link=https://ableproadmin.com/forms/form2_datepicker.html"
+                                            data-i18n="Date Picker">Datepicker</a></li>
+                                    <li class="pc-item"><a class="pc-link"
+                                            href="../../external.html?link=https://ableproadmin.com/forms/form2_daterangepicker.html"
+                                            data-i18n="Date Range Picker">Date Range Picker</a></li>
+                                    <li class="pc-item"><a class="pc-link"
+                                            href="../../external.html?link=https://ableproadmin.com/forms/form2_timepicker.html"
+                                            data-i18n="Timepicker">Timepicker</a></li>
+                                </ul>
+                            </li>
+                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#"><span
+                                        data-i18n="Select">Select</span> <span class="pc-arrow"><i
+                                            data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item"><a class="pc-link"
+                                            href="../../external.html?link=https://ableproadmin.com/forms/form2_choices.html"
+                                            data-i18n="Choices js">Choices js</a></li>
+                                </ul>
+                            </li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/forms/form2_rating.html"
+                                    data-i18n="Rating">Rating</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/forms/form2_recaptcha.html"
+                                    data-i18n="Google-Re-Captcha">Google reCaptcha</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/forms/form2_inputmask.html"
+                                    data-i18n="Input Mask">Input Masks</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/forms/form2_clipboard.html"
+                                    data-i18n="ClipBoard">Clipboard</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/forms/form2_nouislider.html"
+                                    data-i18n="Nouislider">Nouislider</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/forms/form2_switchjs.html"
+                                    data-i18n="Bootstrap Switch">Bootstrap Switch</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/forms/form2_typeahead.html"
+                                    , data-i18n="TypeaHead">Typeahead</a></li>
+                        </ul>
+                    </li>
+                    <li class="pc-item pc-hasmenu"><a href="#!" class="pc-link"><span class="pc-micon"><svg
+                                    class="pc-icon">
+                                    <use xlink:href="#custom-text-block"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="Text Editor">Text Editors</span><span
+                                class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                        <ul class="pc-submenu">
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/forms/form2_tinymce.html"
+                                    data-i18n="Tinymce">Tinymce</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/forms/form2_quill.html"
+                                    data-i18n="Quill">Quill</a></li>
+                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#"><span data-i18n="CK editor">CK
+                                        editor</span> <span class="pc-arrow"><i
+                                            data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item"><a class="pc-link"
+                                            href="../../external.html?link=https://ableproadmin.com/forms/editor-classic.html"
+                                            data-i18n="classic">classic</a></li>
+                                    <li class="pc-item"><a class="pc-link"
+                                            href="../../external.html?link=https://ableproadmin.com/forms/editor-document.html"
+                                            data-i18n="Document">Document</a></li>
+                                    <li class="pc-item"><a class="pc-link"
+                                            href="../../external.html?link=https://ableproadmin.com/forms/editor-inline.html"
+                                            data-i18n="Inline">Inline</a></li>
+                                    <li class="pc-item"><a class="pc-link"
+                                            href="../../external.html?link=https://ableproadmin.com/forms/editor-balloon.html"
+                                            data-i18n="Balloon">Balloon</a></li>
+                                </ul>
+                            </li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/forms/form2_markdown.html"
+                                    data-i18n="Markdown">Markdown</a></li>
+                        </ul>
+                    </li>
+                    <li class="pc-item pc-hasmenu"><a href="#!" class="pc-link"><span class="pc-micon"><svg
+                                    class="pc-icon">
+                                    <use xlink:href="#custom-row-vertical"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="Form Layouts">Form Layouts</span><span
+                                class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                        <ul class="pc-submenu">
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/forms/form2_lay-default.html"
+                                    data-i18n="Layouts">Layouts</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/forms/form2_lay-multicolumn.html"
+                                    data-i18n="MultiColumn">Multicolumn</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/forms/form2_lay-actionbars.html"
+                                    data-i18n="ActionBars">Actionbars</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/forms/form2_lay-stickyactionbars.html"
+                                    data-i18n="Sticky-ActionBar">Sticky Action bars</a></li>
+                        </ul>
+                    </li>
+                    <li class="pc-item pc-hasmenu"><a href="#!" class="pc-link"><span class="pc-micon"><svg
+                                    class="pc-icon">
+                                    <use xlink:href="#custom-document-upload"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="Form Layouts">File upload</span><span
+                                class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                        <ul class="pc-submenu">
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/forms/file-upload.html"
+                                    data-i18n="Dropzone">Dropzone</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/forms/form2_flu-uppy.html"
+                                    data-i18n="Uppy">Uppy</a></li>
+                        </ul>
+                    </li>
+                    <li class="pc-item"><a
+                            href="../../external.html?link=https://ableproadmin.com/forms/form2_wizard.html"
+                            class="pc-link"><span class="pc-micon"><svg class="pc-icon">
+                                    <use xlink:href="#custom-password-check"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="wizard">Wizard</span></a></li>
+                    <li class="pc-item"><a
+                            href="../../external.html?link=https://ableproadmin.com/forms/form-validation.html"
+                            class="pc-link"><span class="pc-micon"><svg class="pc-icon">
+                                    <use xlink:href="#custom-kanban"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="Form Validation">Form
+                                Validation</span></a></li>
+                    <li class="pc-item"><a
+                            href="../../external.html?link=https://ableproadmin.com/forms/image_crop.html"
+                            class="pc-link"><span class="pc-micon"><svg class="pc-icon">
+                                    <use xlink:href="#custom-crop"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="Images Cropper">Image cropper</span></a>
+                    </li>
+                    <li class="pc-item pc-caption"><label data-i18n="Tables">table</label> <svg class="pc-icon">
+                            <use xlink:href="#custom-text-align-justify-center"></use>
+                        </svg></li>
+                    <li class="pc-item pc-hasmenu"><a href="#!" class="pc-link"><span class="pc-micon"><svg
+                                    class="pc-icon">
+                                    <use xlink:href="#custom-text-align-justify-center"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="Bootstrap Table">Bootstrap
+                                Table</span><span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                        <ul class="pc-submenu">
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/table/tbl_bootstrap.html"
+                                    data-i18n="Basic Table">Basic table</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/table/tbl_sizing.html"
+                                    data-i18n="Sizing table">Sizing table</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/table/tbl_border.html"
+                                    data-i18n="Border table">Border table</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/table/tbl_styling.html"
+                                    data-i18n="Styling table">Styling table</a></li>
+                        </ul>
+                    </li>
+                    <li class="pc-item pc-hasmenu"><a href="#!" class="pc-link"><span class="pc-micon"><svg
+                                    class="pc-icon">
+                                    <use xlink:href="#custom-keyboard"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="Vanilla table">Vanilla Table</span><span
+                                class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                        <ul class="pc-submenu">
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/table/tbl_dt-simple.html"
+                                    data-i18n="Basic initialization">Basic initialization</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/table/tbl_dt-dynamic-import.html"
+                                    data-i18n="Dynamic Import">Dynamic Import</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/table/tbl_dt-render-column-cells.html"
+                                    data-i18n="Render Column Cells">Render Column Cells</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/table/tbl_dt-column-manipulation.html"
+                                    data-i18n="Column Manipulation">Column Manipulation</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/table/tbl_dt-datetime-sorting.html"
+                                    data-i18n="Datetime Sorting">Datetime Sorting</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/table/tbl_dt-methods.html"
+                                    data-i18n="Methods">Methods</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/table/tbl_dt-add-rows.html"
+                                    data-i18n="Add Rows">Add Rows</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/table/tbl_dt-fetch-api.html"
+                                    data-i18n="Fetch API">Fetch API</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/table/tbl_dt-filters.html"
+                                    data-i18n="Filters">Filters</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/table/tbl_dt-export.html"
+                                    data-i18n="Export">Export</a></li>
+                        </ul>
+                    </li>
+                    <li class="pc-item pc-hasmenu"><a href="#!" class="pc-link"><span class="pc-micon"><svg
+                                    class="pc-icon">
+                                    <use xlink:href="#custom-graph"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="Data Table">Data table</span><span
+                                class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                        <ul class="pc-submenu">
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/table/dt_advance.html"
+                                    data-i18n="Advance initialization">Advance initialization</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/table/dt_styling.html"
+                                    data-i18n="Styling">Styling</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/table/dt_api.html"
+                                    data-i18n="API">API</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/table/dt_plugin.html"
+                                    data-i18n="Plug-in">Plug-in</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/table/dt_sources.html"
+                                    data-i18n="Data sources">Data sources</a></li>
+                        </ul>
+                    </li>
+                    <li class="pc-item pc-hasmenu"><a href="#!" class="pc-link"><span class="pc-micon"><svg
+                                    class="pc-icon">
+                                    <use xlink:href="#custom-add-item"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="DT extensions">DT extensions</span><span
+                                class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                        <ul class="pc-submenu">
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/table/dt_ext_autofill.html"
+                                    data-i18n="Autofill">Autofill</a></li>
+                            <li class="pc-item pc-hasmenu"><a href="#!" class="pc-link"><span
+                                        data-i18n="Button">Button</span> <span class="pc-arrow"><i
+                                            data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item"><a class="pc-link"
+                                            href="../../external.html?link=https://ableproadmin.com/table/dt_ext_basic_buttons.html"
+                                            data-i18n="Basic button">Basic button</a></li>
+                                    <li class="pc-item"><a class="pc-link"
+                                            href="../../external.html?link=https://ableproadmin.com/table/dt_ext_export_buttons.html"
+                                            data-i18n="Data export">Data export</a></li>
+                                </ul>
+                            </li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/table/dt_ext_col_reorder.html"
+                                    data-i18n="Col reorder">Col reorder</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/table/dt_ext_fixed_columns.html"
+                                    data-i18n="Fixed columns">Fixed columns</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/table/dt_ext_fixed_header.html"
+                                    data-i18n="Fixed header">Fixed header</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/table/dt_ext_key_table.html"
+                                    data-i18n="Key table">Key table</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/table/dt_ext_responsive.html"
+                                    data-i18n="Responsive">Responsive</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/table/dt_ext_row_reorder.html"
+                                    data-i18n="Row reorder">Row reorder</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/table/dt_ext_scroller.html"
+                                    data-i18n="Scroller">Scroller</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/table/dt_ext_select.html"
+                                    data-i18n="Select">Select table</a></li>
+                        </ul>
+                    </li>
+                    <li class="pc-item pc-caption"><label data-i18n="Chart & Maps">Charts &and; Maps</label> <svg
+                            class="pc-icon">
+                            <use xlink:href="#custom-graph"></use>
+                        </svg></li>
+                    <li class="pc-item pc-hasmenu"><a href="#!" class="pc-link"><span class="pc-micon"><svg
+                                    class="pc-icon">
+                                    <use xlink:href="#custom-graph"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="Charts">Charts</span><span
+                                class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                        <ul class="pc-submenu">
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/chart/chart-apex.html"
+                                    data-i18n="Apex Chart">Apex Chart</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/chart/chart-peity.html"
+                                    data-i18n="Peity Chart">Peity Chart</a></li>
+                        </ul>
+                    </li>
+                    <li class="pc-item pc-hasmenu"><a href="#!" class="pc-link"><span class="pc-micon"><svg
+                                    class="pc-icon">
+                                    <use xlink:href="#custom-shapes"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="Map">Maps</span><span
+                                class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                        <ul class="pc-submenu">
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/chart/map-vector.html"
+                                    data-i18n="Vector Map">Vector Maps</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/chart/map-gmap.html"
+                                    data-i18n="Google Map">Gmaps</a></li>
+                        </ul>
+                    </li>
+                    <li class="pc-item pc-caption"><label data-i18n="Application">Application</label> <svg
+                            class="pc-icon">
+                            <use xlink:href="#custom-shopping-bag"></use>
+                        </svg></li>
+                    <li class="pc-item"><a
+                            href="../../external.html?link=https://ableproadmin.com/application/calendar.html"
+                            class="pc-link"><span class="pc-micon"><svg class="pc-icon">
+                                    <use xlink:href="#custom-calendar-1"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="Calender">Calendar</span></a></li>
+                    <li class="pc-item"><a
+                            href="../../external.html?link=https://ableproadmin.com/application/chat.html"
+                            class="pc-link"><span class="pc-micon"><svg class="pc-icon">
+                                    <use xlink:href="#custom-message-2"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="Chat">Chat</span></a></li>
+                    <li class="pc-item"><a
+                            href="../../external.html?link=https://ableproadmin.com/application/cust_customer_list.html"
+                            class="pc-link"><span class="pc-micon"><svg class="pc-icon">
+                                    <use xlink:href="#custom-notification-status"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="Customer">Customer</span></a></li>
+                    <li class="pc-item pc-hasmenu"><a href="#!" class="pc-link"><span class="pc-micon"><svg
+                                    class="pc-icon">
+                                    <use xlink:href="#custom-shopping-bag"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="Ecommerce">E-commerce</span><span
+                                class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                        <ul class="pc-submenu">
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/application/ecom_product.html"
+                                    data-i18n="Product">Product</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/application/ecom_product-details.html"
+                                    data-i18n="Product-Detail">Product details</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/application/ecom_product-list.html"
+                                    data-i18n="Product-List">Product List</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/application/ecom_product-add.html"
+                                    data-i18n="Product Add">Add New Product</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/application/ecom_checkout.html"
+                                    data-i18n="Checkout">Checkout</a></li>
+                        </ul>
+                    </li>
+                    <li class="pc-item"><a
+                            href="../../external.html?link=https://ableproadmin.com/application/file-manager.html"
+                            class="pc-link"><span class="pc-micon"><svg class="pc-icon">
+                                    <use xlink:href="#custom-document-filter"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="File manager">File manager</span></a>
+                    </li>
+                    <li class="pc-item"><a
+                            href="../../external.html?link=https://ableproadmin.com/application/mail.html"
+                            class="pc-link"><span class="pc-micon"><svg class="pc-icon">
+                                    <use xlink:href="#custom-direct-inbox"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="Mail">Mail</span></a></li>
+                    <li class="pc-item pc-hasmenu"><a href="#!" class="pc-link"><span class="pc-micon"><svg
+                                    class="pc-icon">
+                                    <use xlink:href="#custom-user-square"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="User">Users</span><span
+                                class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                        <ul class="pc-submenu">
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/application/account-profile.html"
+                                    data-i18n="Account Profile">Account Profile</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/application/social-media.html"
+                                    data-i18n="Social Profile">Social media</a></li>
+                        </ul>
+                    </li>
+                    <li class="pc-item pc-caption"><label data-i18n="pages">Pages</label> <svg class="pc-icon">
+                            <use xlink:href="#custom-flag"></use>
+                        </svg></li>
+                    <li class="pc-item pc-hasmenu"><a href="#!" class="pc-link"><span class="pc-micon"><svg
+                                    class="pc-icon">
+                                    <use xlink:href="#custom-shield"></use>
+                                </svg> </span><span class="pc-mtext"
+                                data-i18n="Authentication">Authentication</span><span class="pc-arrow"><i
+                                    data-feather="chevron-right"></i></span></a>
+                        <ul class="pc-submenu">
+                            <li class="pc-item pc-hasmenu"><a href="#!" class="pc-link"><span
+                                        data-i18n="Authentication 1">Authentication 1</span> <span class="pc-arrow"><i
+                                            data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item"><a class="pc-link" target="_blank"
+                                            href="../../external.html?link=https://ableproadmin.com/pages/login-v1.html"
+                                            data-i18n="Login">Login</a></li>
+                                    <li class="pc-item"><a class="pc-link" target="_blank"
+                                            href="../../external.html?link=https://ableproadmin.com/pages/register-v1.html"
+                                            data-i18n="Register">Register</a></li>
+                                    <li class="pc-item"><a class="pc-link" target="_blank"
+                                            href="../../external.html?link=https://ableproadmin.com/pages/forgot-password-v1.html"
+                                            data-i18n="Forget Password">Forgot Password</a></li>
+                                    <li class="pc-item"><a class="pc-link" target="_blank"
+                                            href="../../external.html?link=https://ableproadmin.com/pages/check-mail-v1.html"
+                                            data-i18n="Check Mail">check mail</a></li>
+                                    <li class="pc-item"><a class="pc-link" target="_blank"
+                                            href="../../external.html?link=https://ableproadmin.com/pages/reset-password-v1.html"
+                                            data-i18n="Reset Password">reset password</a></li>
+                                    <li class="pc-item"><a class="pc-link" target="_blank"
+                                            href="../../external.html?link=https://ableproadmin.com/pages/code-verification-v1.html"
+                                            data-i18n="Code Verification">code verification</a></li>
+                                </ul>
+                            </li>
+                            <li class="pc-item pc-hasmenu"><a href="#!" class="pc-link"><span
+                                        data-i18n="Authentication 2">Authentication 2</span> <span class="pc-arrow"><i
+                                            data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item"><a class="pc-link" target="_blank"
+                                            href="../../external.html?link=https://ableproadmin.com/pages/login-v2.html"
+                                            data-i18n="Login">Login</a></li>
+                                    <li class="pc-item"><a class="pc-link" target="_blank"
+                                            href="../../external.html?link=https://ableproadmin.com/pages/register-v2.html"
+                                            data-i18n="Register">Register</a></li>
+                                    <li class="pc-item"><a class="pc-link" target="_blank"
+                                            href="../../external.html?link=https://ableproadmin.com/pages/forgot-password-v2.html"
+                                            data-i18n="Forget Password">Forgot password</a></li>
+                                    <li class="pc-item"><a class="pc-link" target="_blank"
+                                            href="../../external.html?link=https://ableproadmin.com/pages/check-mail-v2.html"
+                                            data-i18n="Check Mail">check mail</a></li>
+                                    <li class="pc-item"><a class="pc-link" target="_blank"
+                                            href="../../external.html?link=https://ableproadmin.com/pages/reset-password-v2.html"
+                                            data-i18n="Reset Password">reset password</a></li>
+                                    <li class="pc-item"><a class="pc-link" target="_blank"
+                                            href="../../external.html?link=https://ableproadmin.com/pages/code-verification-v2.html"
+                                            data-i18n="Code Verification">code verification</a></li>
+                                </ul>
+                            </li>
+                            <li class="pc-item"><a
+                                    href="../../external.html?link=https://ableproadmin.com/pages/login-v3.html"
+                                    target="_blank" class="pc-link" data-i18n="Authentication 3">Authentication 3</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="pc-item pc-hasmenu"><a href="#!" class="pc-link"><span class="pc-micon"><svg
+                                    class="pc-icon">
+                                    <use xlink:href="#custom-flag"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="Maintenance">Maintenance</span><span
+                                class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                        <ul class="pc-submenu">
+                            <li class="pc-item"><a class="pc-link" target="_blank"
+                                    href="../../external.html?link=https://ableproadmin.com/pages/error-404.html"
+                                    data-i18n="Error 404">Error 404</a></li>
+                            <li class="pc-item"><a class="pc-link" target="_blank"
+                                    href="../../external.html?link=https://ableproadmin.com/pages/error-500.html"
+                                    data-i18n="Error 500">Error 500</a></li>
+                            <li class="pc-item pc-hasmenu"><a href="#!" class="pc-link"><span
+                                        data-i18n="Under construction">Under construction</span> <span
+                                        class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item"><a class="pc-link" target="_blank"
+                                            href="../../external.html?link=https://ableproadmin.com/pages/under-construction-v1.html"
+                                            data-i18n="Under construction 1">Under Construction 1</a></li>
+                                    <li class="pc-item"><a class="pc-link" target="_blank"
+                                            href="../../external.html?link=https://ableproadmin.com/pages/under-construction-v2.html"
+                                            data-i18n="Under construction 2">Under Construction 2</a></li>
+                                </ul>
+                            </li>
+                            <li class="pc-item pc-hasmenu"><a href="#!" class="pc-link"><span
+                                        data-i18n="Coming-Soon">Coming soon</span> <span class="pc-arrow"><i
+                                            data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item"><a class="pc-link" target="_blank"
+                                            href="../../external.html?link=https://ableproadmin.com/pages/coming-soon-v1.html"
+                                            data-i18n="Coming-Soon 1">Coming soon 1</a></li>
+                                    <li class="pc-item"><a class="pc-link" target="_blank"
+                                            href="../../external.html?link=https://ableproadmin.com/pages/coming-soon-v2.html"
+                                            data-i18n="Coming-Soon 2">Coming soon 2</a></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="pc-item"><a
+                            href="../../external.html?link=https://ableproadmin.com/pages/contact-us.html"
+                            class="pc-link" target="_blank"><span class="pc-micon"><svg class="pc-icon">
+                                    <use xlink:href="#custom-24-support"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="Contact Us">Contact us</span></a></li>
+                    <li class="pc-item pc-hasmenu"><a href="#!" class="pc-link"><span class="pc-micon"><svg
+                                    class="pc-icon">
+                                    <use xlink:href="#custom-dollar-square"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="Price">Price</span><span
+                                class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                        <ul class="pc-submenu">
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/pages/price-v1.html"
+                                    data-i18n="Price 1" data-i18n="Price 1">Price 1</a></li>
+                            <li class="pc-item"><a class="pc-link"
+                                    href="../../external.html?link=https://ableproadmin.com/pages/price-v2.html"
+                                    data-i18n="Price 2" data-i18n="Price 2">Price 2</a></li>
+                        </ul>
+                    </li>
+                    <li class="pc-item"><a href="../../external.html?link=https://ableproadmin.com/index.html"
+                            class="pc-link" target="_blank"><span class="pc-micon"><svg class="pc-icon">
+                                    <use xlink:href="#custom-airplane"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="Landing">Landing</span></a></li>
+                    <li class="pc-item pc-caption"><label data-i18n="Other">Other</label> <svg class="pc-icon">
+                            <use xlink:href="#custom-notification-status"></use>
+                        </svg></li>
+                    <li class="pc-item pc-hasmenu"><a href="#!" class="pc-link"><span class="pc-micon"><svg
+                                    class="pc-icon">
+                                    <use xlink:href="#custom-level"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="Menu levels">Menu levels</span><span
+                                class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                        <ul class="pc-submenu">
+                            <li class="pc-item"><a class="pc-link" href="#!" data-i18n="Level 2.1">Level 2.1</a></li>
+                            <li class="pc-item pc-hasmenu"><a href="#!" class="pc-link"><span
+                                        data-i18n="Level 2.2">Level 2.2</span> <span class="pc-arrow"><i
+                                            data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item"><a class="pc-link" href="#!" data-i18n="Level 3.1">Level 3.1</a>
+                                    </li>
+                                    <li class="pc-item"><a class="pc-link" href="#!" data-i18n="Level 3.2">Level 3.2</a>
+                                    </li>
+                                    <li class="pc-item pc-hasmenu"><a href="#!" class="pc-link"><span
+                                                data-i18n="Level 3.3">Level 3.3</span> <span class="pc-arrow"><i
+                                                    data-feather="chevron-right"></i></span></a>
+                                        <ul class="pc-submenu">
+                                            <li class="pc-item"><a class="pc-link" href="#!" data-i18n="Level 4.1">Level
+                                                    4.1</a></li>
+                                            <li class="pc-item"><a class="pc-link" href="#!" data-i18n="Level 4.2">Level
+                                                    4.2</a></li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li class="pc-item pc-hasmenu"><a href="#!" class="pc-link"><span
+                                        data-i18n="Level 2.3">Level 2.3</span> <span class="pc-arrow"><i
+                                            data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item"><a class="pc-link" href="#!" data-i18n="Level 3.1">Level 3.1</a>
+                                    </li>
+                                    <li class="pc-item"><a class="pc-link" href="#!" data-i18n="Level 3.2">Level 3.2</a>
+                                    </li>
+                                    <li class="pc-item pc-hasmenu"><a href="#!" class="pc-link"><span
+                                                data-i18n="Level 3.3">Level 3.3</span> <span class="pc-arrow"><i
+                                                    data-feather="chevron-right"></i></span></a>
+                                        <ul class="pc-submenu">
+                                            <li class="pc-item"><a class="pc-link" href="#!" data-i18n="Level 4.1">Level
+                                                    4.1</a></li>
+                                            <li class="pc-item"><a class="pc-link" href="#!" data-i18n="Level 4.2">Level
+                                                    4.2</a></li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="pc-item"><a
+                            href="../../external.html?link=https://ableproadmin.com/other/sample-page.html"
+                            class="pc-link"><span class="pc-micon"><svg class="pc-icon">
+                                    <use xlink:href="#custom-notification-status"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="Sample Page">Sample page</span></a></li>
+                </ul>
             </div>
-            <div class="navbar-collapse collapse">
-                <ul class="navbar-nav navbar-align">
-                    <li class="nav-item dropdown">
-                        <a class="nav-icon dropdown-toggle" href="#" id="alertsDropdown" data-bs-toggle="dropdown">
-                            <div class="position-relative">
-                                <i class="align-middle" data-feather="bell"></i>
+        </div>
+    </nav><!-- [ Sidebar Menu ] end --><!-- [ Header Topbar ] start -->
+    <header class="pc-header">
+        <div class="header-wrapper"><!-- [Mobile Media Block] start -->
+            <div class="me-auto pc-mob-drp">
+                <ul class="list-unstyled"><!-- ======= Menu collapse Icon ===== -->
+                    <li class="pc-h-item pc-sidebar-collapse"><a href="#" class="pc-head-link ms-0" id="sidebar-hide"><i
+                                class="ti ti-menu-2"></i></a></li>
+                    <li class="pc-h-item pc-sidebar-popup"><a href="#" class="pc-head-link ms-0" id="mobile-collapse"><i
+                                class="ti ti-menu-2"></i></a></li>
+                    <li class="pc-h-item d-none d-md-inline-flex">
+                        <form class="form-search"><i class="search-icon"><svg class="pc-icon">
+                                    <use xlink:href="#custom-search-normal-1"></use>
+                                </svg> </i><input type="search" class="form-control" placeholder="Ctrl + K"></form>
+                    </li>
+                </ul>
+            </div><!-- [Mobile Media Block end] -->
+            <div class="ms-auto">
+                <ul class="list-unstyled">
+                    <li class="dropdown pc-h-item"><a class="pc-head-link dropdown-toggle arrow-none me-0"
+                            data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="false"
+                            aria-expanded="false"><svg class="pc-icon">
+                                <use xlink:href="#custom-sun-1"></use>
+                            </svg></a>
+                        <div class="dropdown-menu dropdown-menu-end pc-h-dropdown"><a href="#!" class="dropdown-item"
+                                onclick="layout_change('dark')"><svg class="pc-icon">
+                                    <use xlink:href="#custom-moon"></use>
+                                </svg> <span>Dark</span> </a><a href="#!" class="dropdown-item"
+                                onclick="layout_change('light')"><svg class="pc-icon">
+                                    <use xlink:href="#custom-sun-1"></use>
+                                </svg> <span>Light</span> </a><a href="#!" class="dropdown-item"
+                                onclick="layout_change_default()"><svg class="pc-icon">
+                                    <use xlink:href="#custom-setting-2"></use>
+                                </svg> <span>Default</span></a></div>
+                    </li>
+                    <li class="dropdown pc-h-item"><a class="pc-head-link dropdown-toggle arrow-none me-0"
+                            data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="false"
+                            aria-expanded="false"><svg class="pc-icon">
+                                <use xlink:href="#custom-language"></use>
+                            </svg></a>
+                        <div class="dropdown-menu dropdown-menu-end pc-h-dropdown lng-dropdown"><a href="#!"
+                                class="dropdown-item" data-lng="en"><span>English <small>(UK)</small> </span></a><a
+                                href="#!" class="dropdown-item" data-lng="fr"><span>français <small>(French)</small>
+                                </span></a><a href="#!" class="dropdown-item" data-lng="ro"><span>Română
+                                    <small>(Romanian)</small> </span></a><a href="#!" class="dropdown-item"
+                                data-lng="cn"><span>中国人 <small>(Chinese)</small></span></a></div>
+                    </li>
+                    <li class="dropdown pc-h-item"><a class="pc-head-link dropdown-toggle arrow-none me-0"
+                            data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="false"
+                            aria-expanded="false"><svg class="pc-icon">
+                                <use xlink:href="#custom-setting-2"></use>
+                            </svg></a>
+                        <div class="dropdown-menu dropdown-menu-end pc-h-dropdown"><a href="#!" class="dropdown-item"><i
+                                    class="ti ti-user"></i> <span>My Account</span> </a><a href="#!"
+                                class="dropdown-item"><i class="ti ti-settings"></i> <span>Settings</span> </a><a
+                                href="#!" class="dropdown-item"><i class="ti ti-headset"></i> <span>Support</span>
+                            </a><a href="#!" class="dropdown-item"><i class="ti ti-lock"></i> <span>Lock Screen</span>
+                            </a><a href="#!" class="dropdown-item"><i class="ti ti-power"></i> <span>Logout</span></a>
+                        </div>
+                    </li>
+                    <li class="pc-h-item"><a href="#" class="pc-head-link me-0" data-bs-toggle="offcanvas"
+                            data-bs-target="#announcement" aria-controls="announcement"><svg class="pc-icon">
+                                <use xlink:href="#custom-flash"></use>
+                            </svg></a></li>
+                    <li class="dropdown pc-h-item"><a class="pc-head-link dropdown-toggle arrow-none me-0"
+                            data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="false"
+                            aria-expanded="false"><svg class="pc-icon">
+                                <use xlink:href="#custom-notification"></use>
+                            </svg> <span class="badge bg-success pc-h-badge">3</span></a>
+                        <div class="dropdown-menu dropdown-notification dropdown-menu-end pc-h-dropdown">
+                            <div class="dropdown-header d-flex align-items-center justify-content-between">
+                                <h5 class="m-0">Notifications</h5><a href="#!" class="btn btn-link btn-sm">Mark all
+                                    read</a>
                             </div>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end py-0"
-                             aria-labelledby="alertsDropdown">
-                            <div class="dropdown-menu-header">
-                                0 New Notifications
+                            <div class="dropdown-body text-wrap header-notification-scroll position-relative"
+                                style="max-height: calc(100vh - 215px)">
+                                <p class="text-span">Today</p>
+                                <div class="card mb-2">
+                                    <div class="card-body">
+                                        <div class="d-flex">
+                                            <div class="flex-shrink-0"><svg class="pc-icon text-primary">
+                                                    <use xlink:href="#custom-layer"></use>
+                                                </svg></div>
+                                            <div class="flex-grow-1 ms-3"><span class="float-end text-sm text-muted">2
+                                                    min ago</span>
+                                                <h5 class="text-body mb-2">UI/UX Design</h5>
+                                                <p class="mb-0">Lorem Ipsum has been the industry's standard dummy text
+                                                    ever since the 1500s, when an unknown printer took a galley of type
+                                                    and scrambled it to make a type</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card mb-2">
+                                    <div class="card-body">
+                                        <div class="d-flex">
+                                            <div class="flex-shrink-0"><svg class="pc-icon text-primary">
+                                                    <use xlink:href="#custom-sms"></use>
+                                                </svg></div>
+                                            <div class="flex-grow-1 ms-3"><span class="float-end text-sm text-muted">1
+                                                    hour ago</span>
+                                                <h5 class="text-body mb-2">Message</h5>
+                                                <p class="mb-0">Lorem Ipsum has been the industry's standard dummy text
+                                                    ever since the 1500.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="text-span">Yesterday</p>
+                                <div class="card mb-2">
+                                    <div class="card-body">
+                                        <div class="d-flex">
+                                            <div class="flex-shrink-0"><svg class="pc-icon text-primary">
+                                                    <use xlink:href="#custom-document-text"></use>
+                                                </svg></div>
+                                            <div class="flex-grow-1 ms-3"><span class="float-end text-sm text-muted">2
+                                                    hour ago</span>
+                                                <h5 class="text-body mb-2">Forms</h5>
+                                                <p class="mb-0">Lorem Ipsum has been the industry's standard dummy text
+                                                    ever since the 1500s, when an unknown printer took a galley of type
+                                                    and scrambled it to make a type</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card mb-2">
+                                    <div class="card-body">
+                                        <div class="d-flex">
+                                            <div class="flex-shrink-0"><svg class="pc-icon text-primary">
+                                                    <use xlink:href="#custom-user-bold"></use>
+                                                </svg></div>
+                                            <div class="flex-grow-1 ms-3"><span class="float-end text-sm text-muted">12
+                                                    hour ago</span>
+                                                <h5 class="text-body mb-2">Challenge invitation</h5>
+                                                <p class="mb-2"><span class="text-dark">Jonny aber</span> invites to
+                                                    join the challenge</p><button
+                                                    class="btn btn-sm btn-outline-secondary me-2">Decline</button>
+                                                <button class="btn btn-sm btn-primary">Accept</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card mb-2">
+                                    <div class="card-body">
+                                        <div class="d-flex">
+                                            <div class="flex-shrink-0"><svg class="pc-icon text-primary">
+                                                    <use xlink:href="#custom-security-safe"></use>
+                                                </svg></div>
+                                            <div class="flex-grow-1 ms-3"><span class="float-end text-sm text-muted">5
+                                                    hour ago</span>
+                                                <h5 class="text-body mb-2">Security</h5>
+                                                <p class="mb-0">Lorem Ipsum has been the industry's standard dummy text
+                                                    ever since the 1500s, when an unknown printer took a galley of type
+                                                    and scrambled it to make a type</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="dropdown-menu-footer">
-                                <a href="#" class="text-muted">Show all notifications</a>
+                            <div class="text-center py-2"><a href="#!" class="link-danger">Clear all Notifications</a>
                             </div>
                         </div>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-icon js-fullscreen d-none d-lg-block" href="#">
-                            <div class="position-relative">
-                                <i class="align-middle" data-feather="maximize"></i>
+                    <li class="dropdown pc-h-item header-user-profile"><a
+                            class="pc-head-link dropdown-toggle arrow-none me-0" data-bs-toggle="dropdown" href="#"
+                            role="button" aria-haspopup="false" data-bs-auto-close="outside" aria-expanded="false"><img
+                                src="../assets/images/user/avatar-2.jpg" alt="user-image" class="user-avtar"></a>
+                        <div class="dropdown-menu dropdown-user-profile dropdown-menu-end pc-h-dropdown">
+                            <div class="dropdown-header d-flex align-items-center justify-content-between">
+                                <h5 class="m-0">Profile</h5>
                             </div>
-                        </a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-icon dropdown-toggle d-inline-block d-sm-none" href="#" data-bs-toggle="dropdown">
-                            <i class="align-middle" data-feather="settings"></i>
-                        </a>
-
-                        <a class="nav-link dropdown-toggle d-none d-sm-inline-block" href="#" data-bs-toggle="dropdown">
-                            {!! auth()->user()->getImage('class="avatar-1 avatar img-fluid rounded me-1"') !!}
-                            <span class="text-dark">{{ auth()->user()->UserID }}</span>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-end">
-                            <a class="dropdown-item" href="{{ route('profile') }}"><i class="align-middle me-1"
-                                                                                      data-feather="user"></i>
-                                Profile</a>
-                            <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="#"><i class="align-middle me-1"
-                                                                 data-feather="help-circle"></i> Help Center</a>
-                            <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="{{ route('logout') }}"
-                               onclick="event.preventDefault();
-                                                     document.getElementById('logout-form').submit();">
-                                {{ __('Logout') }}
-                            </a>
-
-                            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                                @csrf
-                            </form>
+                            <div class="dropdown-body">
+                                <div class="profile-notification-scroll position-relative"
+                                    style="max-height: calc(100vh - 225px)">
+                                    <div class="d-flex mb-1">
+                                        <div class="flex-shrink-0"><img src="../assets/images/user/avatar-2.jpg"
+                                                alt="user-image" class="user-avtar wid-35"></div>
+                                        <div class="flex-grow-1 ms-3">
+                                            <h6 class="mb-1">Carson Darrin 🖖</h6><span><a
+                                                    href="../../external.html?link=https://ableproadmin.com/cdn-cgi/l/email-protection"
+                                                    class="__cf_email__"
+                                                    data-cfemail="04676576776b6a2a606576766d6a44676b6974656a7d2a6d6b">[email&#160;protected]</a></span>
+                                        </div>
+                                    </div>
+                                    <hr class="border-secondary border-opacity-50">
+                                    <div class="card">
+                                        <div class="card-body py-3">
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                <h5 class="mb-0 d-inline-flex align-items-center"><svg
+                                                        class="pc-icon text-muted me-2">
+                                                        <use xlink:href="#custom-notification-outline"></use>
+                                                    </svg>Notification</h5>
+                                                <div class="form-check form-switch form-check-reverse m-0"><input
+                                                        class="form-check-input f-18" type="checkbox" role="switch">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p class="text-span">Manage</p><a href="#" class="dropdown-item"><span><svg
+                                                class="pc-icon text-muted me-2">
+                                                <use xlink:href="#custom-setting-outline"></use>
+                                            </svg> <span>Settings</span> </span></a><a href="#"
+                                        class="dropdown-item"><span><svg class="pc-icon text-muted me-2">
+                                                <use xlink:href="#custom-share-bold"></use>
+                                            </svg> <span>Share</span> </span></a><a href="#"
+                                        class="dropdown-item"><span><svg class="pc-icon text-muted me-2">
+                                                <use xlink:href="#custom-lock-outline"></use>
+                                            </svg> <span>Change Password</span></span></a>
+                                    <hr class="border-secondary border-opacity-50">
+                                    <p class="text-span">Team</p><a href="#" class="dropdown-item"><span><svg
+                                                class="pc-icon text-muted me-2">
+                                                <use xlink:href="#custom-profile-2user-outline"></use>
+                                            </svg> <span>UI Design team</span></span>
+                                        <div class="user-group"><img src="../assets/images/user/avatar-1.jpg"
+                                                alt="user-image" class="avtar"> <span
+                                                class="avtar bg-danger text-white">K</span> <span
+                                                class="avtar bg-success text-white"><svg class="pc-icon m-0">
+                                                    <use xlink:href="#custom-user"></use>
+                                                </svg> </span><span
+                                                class="avtar bg-light-primary text-primary">+2</span></div>
+                                    </a><a href="#" class="dropdown-item"><span><svg class="pc-icon text-muted me-2">
+                                                <use xlink:href="#custom-profile-2user-outline"></use>
+                                            </svg> <span>Friends Groups</span></span>
+                                        <div class="user-group"><img src="../assets/images/user/avatar-1.jpg"
+                                                alt="user-image" class="avtar"> <span
+                                                class="avtar bg-danger text-white">K</span> <span
+                                                class="avtar bg-success text-white"><svg class="pc-icon m-0">
+                                                    <use xlink:href="#custom-user"></use>
+                                                </svg></span></div>
+                                    </a><a href="#" class="dropdown-item"><span><svg class="pc-icon text-muted me-2">
+                                                <use xlink:href="#custom-add-outline"></use>
+                                            </svg> <span>Add new</span></span>
+                                        <div class="user-group"><span class="avtar bg-primary text-white"><svg
+                                                    class="pc-icon m-0">
+                                                    <use xlink:href="#custom-add-outline"></use>
+                                                </svg></span></div>
+                                    </a>
+                                    <hr class="border-secondary border-opacity-50">
+                                    <div class="d-grid mb-3"><button class="btn btn-primary"><svg class="pc-icon me-2">
+                                                <use xlink:href="#custom-logout-1-outline"></use>
+                                            </svg>Logout</button></div>
+                                    <div class="card border-0 shadow-none drp-upgrade-card mb-0"
+                                        style="background-image: url(../assets/images/layout/img-profile-card.jpg)">
+                                        <div class="card-body">
+                                            <div class="user-group"><img src="../assets/images/user/avatar-1.jpg"
+                                                    alt="user-image" class="avtar"> <img
+                                                    src="../assets/images/user/avatar-2.jpg" alt="user-image"
+                                                    class="avtar"> <img src="../assets/images/user/avatar-3.jpg"
+                                                    alt="user-image" class="avtar"> <img
+                                                    src="../assets/images/user/avatar-4.jpg" alt="user-image"
+                                                    class="avtar"> <img src="../assets/images/user/avatar-5.jpg"
+                                                    alt="user-image" class="avtar"> <span
+                                                    class="avtar bg-light-primary text-primary">+20</span></div>
+                                            <h3 class="my-3 text-dark">245.3k <small
+                                                    class="text-muted">Followers</small></h3><a href="#"
+                                                class="btn btn btn-warning buynowlinks"><svg class="pc-icon me-2">
+                                                    <use xlink:href="#custom-logout-1-outline"></use>
+                                                </svg> Upgrade to Business</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </li>
                 </ul>
             </div>
-        </nav>
-        <main class="content p-4">
-            <div class="container-fluid p-0">
-                @yield('content')
-            </div>
-        </main>
-
-        <footer class="footer">
-            <div class="container-fluid">
-                <div class="row text-muted">
-                    <div class="col-6 text-start">
-                        @include('layouts._partials._copyright')
+        </div>
+    </header>
+    <div class="offcanvas pc-announcement-offcanvas offcanvas-end" tabindex="-1" id="announcement"
+        aria-labelledby="announcementLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="announcementLabel">What's new announcement?</h5><button type="button"
+                class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <p class="text-span">Today</p>
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="align-items-center d-flex flex-wrap gap-2 mb-3">
+                        <div class="badge bg-light-success f-12">Big News</div>
+                        <p class="mb-0 text-muted">2 min ago</p><span class="badge dot bg-warning"></span>
                     </div>
-                    <div class="col-6 text-end">
-                        <ul class="list-inline">
-                            <li class="list-inline-item">
-                                @include('layouts._partials._version')
-                            </li>
-                        </ul>
+                    <h5 class="mb-3">Able Pro is Redesigned</h5>
+                    <p class="text-muted">Able Pro is completely renowed with high aesthetics User Interface.</p><img
+                        src="../assets/images/layout/img-announcement-1.png" alt="img" class="img-fluid mb-3">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="d-grid"><a class="btn btn-outline-secondary"
+                                    href="../../external.html?link=https://1.envato.market/zNkqj6" target="_blank">Check
+                                    Now</a></div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </footer>
-    </div>
-</div>
-@include('layouts._partials._scripts')
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="align-items-center d-flex flex-wrap gap-2 mb-3">
+                        <div class="badge bg-light-warning f-12">Offer</div>
+                        <p class="mb-0 text-muted">2 hour ago</p><span class="badge dot bg-warning"></span>
+                    </div>
+                    <h5 class="mb-3">Able Pro is in best offer price</h5>
+                    <p class="text-muted">Download Able Pro exclusive on themeforest with best price.</p><a
+                        href="../../external.html?link=https://1.envato.market/zNkqj6" target="_blank"><img
+                            src="../assets/images/layout/img-announcement-2.png" alt="img" class="img-fluid"></a>
+                </div>
+            </div>
+            <p class="text-span mt-4">Yesterday</p>
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="align-items-center d-flex flex-wrap gap-2 mb-3">
+                        <div class="badge bg-light-primary f-12">Blog</div>
+                        <p class="mb-0 text-muted">12 hour ago</p><span class="badge dot bg-warning"></span>
+                    </div>
+                    <h5 class="mb-3">Featured Dashboard Template</h5>
+                    <p class="text-muted">Do you know Able Pro is one of the featured dashboard template selected by
+                        Themeforest team.?</p><img src="../assets/images/layout/img-announcement-3.png" alt="img"
+                        class="img-fluid">
+                </div>
+            </div>
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="align-items-center d-flex flex-wrap gap-2 mb-3">
+                        <div class="badge bg-light-primary f-12">Announcement</div>
+                        <p class="mb-0 text-muted">12 hour ago</p><span class="badge dot bg-warning"></span>
+                    </div>
+                    <h5 class="mb-3">Buy Once - Get Free Updated lifetime</h5>
+                    <p class="text-muted">Get the lifetime free updates once you purchase the Able Pro.</p><img
+                        src="../assets/images/layout/img-announcement-4.png" alt="img" class="img-fluid">
+                </div>
+            </div>
+        </div>
+    </div><!-- [ Header ] end --><!-- [ Main Content ] start -->
+    <div class="pc-container">
+        <div class="pc-content"><!-- [ Main Content ] start -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card welcome-banner bg-blue-800">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="p-4">
+                                        <h2 class="text-white">Explore Redesigned Able Pro</h2>
+                                        <p class="text-white">The Brand new User Interface with power of Bootstrap
+                                            Components. Explore the Endless possibilities with Able Pro.</p><a
+                                            href="../../external.html?link=https://1.envato.market/zNkqj6"
+                                            class="btn btn-outline-light">Exclusive on Themeforest</a>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 text-center">
+                                    <div class="img-welcome-banner"><img
+                                            src="../assets/images/widget/welcome-banner.png" alt="img"
+                                            class="img-fluid"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-xxl-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="avtar avtar-s bg-light-primary"><svg width="24" height="24"
+                                            viewBox="0 0 24 24" fill="none"
+                                            xmlns="../../external.html?link=http://www.w3.org/2000/svg">
+                                            <path opacity="0.4" d="M13 9H7" stroke="#4680FF" stroke-width="1.5"
+                                                stroke-linecap="round" stroke-linejoin="round" />
+                                            <path
+                                                d="M22.0002 10.9702V13.0302C22.0002 13.5802 21.5602 14.0302 21.0002 14.0502H19.0402C17.9602 14.0502 16.9702 13.2602 16.8802 12.1802C16.8202 11.5502 17.0602 10.9602 17.4802 10.5502C17.8502 10.1702 18.3602 9.9502 18.9202 9.9502H21.0002C21.5602 9.9702 22.0002 10.4202 22.0002 10.9702Z"
+                                                stroke="#4680FF" stroke-width="1.5" stroke-linecap="round"
+                                                stroke-linejoin="round" />
+                                            <path
+                                                d="M17.48 10.55C17.06 10.96 16.82 11.55 16.88 12.18C16.97 13.26 17.96 14.05 19.04 14.05H21V15.5C21 18.5 19 20.5 16 20.5H7C4 20.5 2 18.5 2 15.5V8.5C2 5.78 3.64 3.88 6.19 3.56C6.45 3.52 6.72 3.5 7 3.5H16C16.26 3.5 16.51 3.50999 16.75 3.54999C19.33 3.84999 21 5.76 21 8.5V9.95001H18.92C18.36 9.95001 17.85 10.17 17.48 10.55Z"
+                                                stroke="#4680FF" stroke-width="1.5" stroke-linecap="round"
+                                                stroke-linejoin="round" />
+                                        </svg></div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-0">All Earnings</h6>
+                                </div>
+                                <div class="flex-shrink-0 ms-3">
+                                    <div class="dropdown"><a
+                                            class="avtar avtar-s btn-link-secondary dropdown-toggle arrow-none" href="#"
+                                            data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i
+                                                class="ti ti-dots-vertical f-18"></i></a>
+                                        <div class="dropdown-menu dropdown-menu-end"><a class="dropdown-item"
+                                                href="#">Today</a> <a class="dropdown-item" href="#">Weekly</a> <a
+                                                class="dropdown-item" href="#">Monthly</a></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-body p-3 mt-3 rounded">
+                                <div class="mt-3 row align-items-center">
+                                    <div class="col-7">
+                                        <div id="all-earnings-graph"></div>
+                                    </div>
+                                    <div class="col-5">
+                                        <h5 class="mb-1">$3,020</h5>
+                                        <p class="text-primary mb-0"><i class="ti ti-arrow-up-right"></i> 30.6%</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-xxl-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="avtar avtar-s bg-light-warning"><svg width="24" height="24"
+                                            viewBox="0 0 24 24" fill="none"
+                                            xmlns="../../external.html?link=http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M21 7V17C21 20 19.5 22 16 22H8C4.5 22 3 20 3 17V7C3 4 4.5 2 8 2H16C19.5 2 21 4 21 7Z"
+                                                stroke="#E58A00" stroke-width="1.5" stroke-miterlimit="10"
+                                                stroke-linecap="round" stroke-linejoin="round" />
+                                            <path opacity="0.6" d="M14.5 4.5V6.5C14.5 7.6 15.4 8.5 16.5 8.5H18.5"
+                                                stroke="#E58A00" stroke-width="1.5" stroke-miterlimit="10"
+                                                stroke-linecap="round" stroke-linejoin="round" />
+                                            <path opacity="0.6" d="M8 13H12" stroke="#E58A00" stroke-width="1.5"
+                                                stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round" />
+                                            <path opacity="0.6" d="M8 17H16" stroke="#E58A00" stroke-width="1.5"
+                                                stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg></div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-0">Page Views</h6>
+                                </div>
+                                <div class="flex-shrink-0 ms-3">
+                                    <div class="dropdown"><a
+                                            class="avtar avtar-s btn-link-secondary dropdown-toggle arrow-none" href="#"
+                                            data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i
+                                                class="ti ti-dots-vertical f-18"></i></a>
+                                        <div class="dropdown-menu dropdown-menu-end"><a class="dropdown-item"
+                                                href="#">Today</a> <a class="dropdown-item" href="#">Weekly</a> <a
+                                                class="dropdown-item" href="#">Monthly</a></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-body p-3 mt-3 rounded">
+                                <div class="mt-3 row align-items-center">
+                                    <div class="col-7">
+                                        <div id="page-views-graph"></div>
+                                    </div>
+                                    <div class="col-5">
+                                        <h5 class="mb-1">290K+</h5>
+                                        <p class="text-warning mb-0"><i class="ti ti-arrow-up-right"></i> 30.6%</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-xxl-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="avtar avtar-s bg-light-success"><svg width="24" height="24"
+                                            viewBox="0 0 24 24" fill="none"
+                                            xmlns="../../external.html?link=http://www.w3.org/2000/svg">
+                                            <path d="M8 2V5" stroke="#2ca87f" stroke-width="1.5" stroke-miterlimit="10"
+                                                stroke-linecap="round" stroke-linejoin="round" />
+                                            <path d="M16 2V5" stroke="#2ca87f" stroke-width="1.5" stroke-miterlimit="10"
+                                                stroke-linecap="round" stroke-linejoin="round" />
+                                            <path opacity="0.4" d="M3.5 9.08984H20.5" stroke="#2ca87f"
+                                                stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round"
+                                                stroke-linejoin="round" />
+                                            <path
+                                                d="M21 8.5V17C21 20 19.5 22 16 22H8C4.5 22 3 20 3 17V8.5C3 5.5 4.5 3.5 8 3.5H16C19.5 3.5 21 5.5 21 8.5Z"
+                                                stroke="#2ca87f" stroke-width="1.5" stroke-miterlimit="10"
+                                                stroke-linecap="round" stroke-linejoin="round" />
+                                            <path opacity="0.4" d="M15.6947 13.7002H15.7037" stroke="#2ca87f"
+                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                            <path opacity="0.4" d="M15.6947 16.7002H15.7037" stroke="#2ca87f"
+                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                            <path opacity="0.4" d="M11.9955 13.7002H12.0045" stroke="#2ca87f"
+                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                            <path opacity="0.4" d="M11.9955 16.7002H12.0045" stroke="#2ca87f"
+                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                            <path opacity="0.4" d="M8.29431 13.7002H8.30329" stroke="#2ca87f"
+                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                            <path opacity="0.4" d="M8.29395 16.7002H8.30293" stroke="#2ca87f"
+                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg></div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-0">Total Task</h6>
+                                </div>
+                                <div class="flex-shrink-0 ms-3">
+                                    <div class="dropdown"><a
+                                            class="avtar avtar-s btn-link-secondary dropdown-toggle arrow-none" href="#"
+                                            data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i
+                                                class="ti ti-dots-vertical f-18"></i></a>
+                                        <div class="dropdown-menu dropdown-menu-end"><a class="dropdown-item"
+                                                href="#">Today</a> <a class="dropdown-item" href="#">Weekly</a> <a
+                                                class="dropdown-item" href="#">Monthly</a></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-body p-3 mt-3 rounded">
+                                <div class="mt-3 row align-items-center">
+                                    <div class="col-7">
+                                        <div id="total-task-graph"></div>
+                                    </div>
+                                    <div class="col-5">
+                                        <h5 class="mb-1">839</h5>
+                                        <p class="text-success mb-0"><i class="ti ti-arrow-up-right"></i> New</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-xxl-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="avtar avtar-s bg-light-danger"><svg width="24" height="24"
+                                            viewBox="0 0 24 24" fill="none"
+                                            xmlns="../../external.html?link=http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
+                                                stroke="#DC2626" stroke-width="1.5" stroke-miterlimit="10"
+                                                stroke-linecap="round" stroke-linejoin="round" />
+                                            <path opacity="0.4" d="M8.4707 10.7402L12.0007 14.2602L15.5307 10.7402"
+                                                stroke="#DC2626" stroke-width="1.5" stroke-linecap="round"
+                                                stroke-linejoin="round" />
+                                        </svg></div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-0">Download</h6>
+                                </div>
+                                <div class="flex-shrink-0 ms-3">
+                                    <div class="dropdown"><a
+                                            class="avtar avtar-s btn-link-secondary dropdown-toggle arrow-none" href="#"
+                                            data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i
+                                                class="ti ti-dots-vertical f-18"></i></a>
+                                        <div class="dropdown-menu dropdown-menu-end"><a class="dropdown-item"
+                                                href="#">Today</a> <a class="dropdown-item" href="#">Weekly</a> <a
+                                                class="dropdown-item" href="#">Monthly</a></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-body p-3 mt-3 rounded">
+                                <div class="mt-3 row align-items-center">
+                                    <div class="col-7">
+                                        <div id="download-graph"></div>
+                                    </div>
+                                    <div class="col-5">
+                                        <h5 class="mb-1">2,067</h5>
+                                        <p class="text-danger mb-0"><i class="ti ti-arrow-up-right"></i> 30.6%</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-9">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="flex-grow-1">
+                                    <h5 class="mb-0">Repeat customer rate</h5>
+                                </div>
+                                <div class="flex-shrink-0 ms-3">
+                                    <div class="dropdown"><a
+                                            class="avtar avtar-s btn-link-secondary dropdown-toggle arrow-none" href="#"
+                                            data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i
+                                                class="ti ti-dots f-18"></i></a>
+                                        <div class="dropdown-menu dropdown-menu-end"><a class="dropdown-item"
+                                                href="#">Today</a> <a class="dropdown-item" href="#">Weekly</a> <a
+                                                class="dropdown-item" href="#">Monthly</a></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <h5 class="text-end my-2">5.44% <span class="badge bg-success">+2.6%</span></h5>
+                            <div id="customer-rate-graph"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Project - Able Pro</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-4">
+                                <p class="mb-2">Release v1.2.0<span class="float-end">70%</span></p>
+                                <div class="progress progress-primary" style="height: 8px">
+                                    <div class="progress-bar" style="width: 70%"></div>
+                                </div>
+                            </div>
+                            <div class="d-grid gap-2"><a href="#" class="btn btn-link-secondary">
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0"><span
+                                                class="p-1 d-block bg-warning rounded-circle"><span
+                                                    class="visually-hidden">New alerts</span></span></div>
+                                        <div class="flex-grow-1 mx-2">
+                                            <p class="mb-0 d-grid text-start"><span
+                                                    class="text-truncate w-100">Horizontal Layout</span></p>
+                                        </div>
+                                        <div class="badge bg-light-secondary f-12"><i
+                                                class="ti ti-paperclip text-sm"></i> 2</div>
+                                    </div>
+                                </a><a href="#" class="btn btn-link-secondary">
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0"><span
+                                                class="p-1 d-block bg-warning rounded-circle"><span
+                                                    class="visually-hidden">New alerts</span></span></div>
+                                        <div class="flex-grow-1 mx-2">
+                                            <p class="mb-0 d-grid text-start"><span class="text-truncate w-100">Invoice
+                                                    Generator</span></p>
+                                        </div>
+                                    </div>
+                                </a><a href="#" class="btn btn-link-secondary">
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0"><span
+                                                class="p-1 d-block bg-warning rounded-circle"><span
+                                                    class="visually-hidden">New alerts</span></span></div>
+                                        <div class="flex-grow-1 mx-2">
+                                            <p class="mb-0 d-grid text-start"><span class="text-truncate w-100">Package
+                                                    Upgrades</span></p>
+                                        </div>
+                                    </div>
+                                </a><a href="#" class="btn btn-link-secondary">
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0"><span
+                                                class="p-1 d-block bg-success rounded-circle"><span
+                                                    class="visually-hidden">New alerts</span></span></div>
+                                        <div class="flex-grow-1 mx-2">
+                                            <p class="mb-0 d-grid text-start"><span class="text-truncate w-100">Figma
+                                                    Auto Layout</span></p>
+                                        </div>
+                                    </div>
+                                </a></div>
+                            <div class="d-grid mt-3"><button
+                                    class="btn btn-primary d-flex align-items-center justify-content-center gap-2"><i
+                                        class="ti ti-plus"></i> Add task</button></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-9">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <h5 class="mb-0">Project overview</h5>
+                                <div class="dropdown"><a
+                                        class="avtar avtar-s btn-link-secondary dropdown-toggle arrow-none" href="#"
+                                        data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i
+                                            class="ti ti-dots f-18"></i></a>
+                                    <div class="dropdown-menu dropdown-menu-end"><a class="dropdown-item"
+                                            href="#">Today</a> <a class="dropdown-item" href="#">Weekly</a> <a
+                                            class="dropdown-item" href="#">Monthly</a></div>
+                                </div>
+                            </div>
+                            <div class="row align-items-center justify-content-center">
+                                <div class="col-md-6 col-xl-4">
+                                    <div class="mt-3 row align-items-center">
+                                        <div class="col-6">
+                                            <p class="text-muted mb-1">Total Tasks</p>
+                                            <h5 class="mb-0">34,686</h5>
+                                        </div>
+                                        <div class="col-6">
+                                            <div id="total-tasks-graph"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 col-xl-4">
+                                    <div class="mt-3 row align-items-center">
+                                        <div class="col-6">
+                                            <p class="text-muted mb-1">Pending Tasks</p>
+                                            <h5 class="mb-0">3,786</h5>
+                                        </div>
+                                        <div class="col-6">
+                                            <div id="pending-tasks-graph"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 col-xl-4">
+                                    <div class="mt-3 d-grid"><button
+                                            class="btn btn-primary d-flex align-items-center justify-content-center gap-2"><i
+                                                class="ti ti-plus"></i> Add project</button></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="avtar avtar-s bg-light-primary"><i class="ti ti-at f-20"></i></div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-0">Able pro</h6><small class="text-muted">@ableprodevelop</small>
+                                </div>
+                                <div class="dropdown"><a
+                                        class="avtar avtar-s btn-link-secondary dropdown-toggle arrow-none" href="#"
+                                        data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i
+                                            class="ti ti-dots-vertical f-18"></i></a>
+                                    <div class="dropdown-menu dropdown-menu-end"><a class="dropdown-item"
+                                            href="#">Today</a> <a class="dropdown-item" href="#">Weekly</a> <a
+                                            class="dropdown-item" href="#">Monthly</a></div>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center justify-content-between mt-4">
+                                <div class="user-group able-user-group"><img src="../assets/images/user/avatar-1.jpg"
+                                        alt="user-image" class="avtar"> <img src="../assets/images/user/avatar-3.jpg"
+                                        alt="user-image" class="avtar"> <img src="../assets/images/user/avatar-4.jpg"
+                                        alt="user-image" class="avtar"> <img src="../assets/images/user/avatar-5.jpg"
+                                        alt="user-image" class="avtar"> <span
+                                        class="avtar bg-light-primary text-primary text-sm">+2</span></div><a href="#"
+                                    class="avtar avtar-s btn btn-primary rounded-circle"><i
+                                        class="ti ti-plus f-20"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body border-bottom pb-0">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <h5 class="mb-0">Transactions</h5>
+                                <div class="dropdown"><a
+                                        class="avtar avtar-s btn-link-secondary dropdown-toggle arrow-none" href="#"
+                                        data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i
+                                            class="ti ti-dots-vertical f-18"></i></a>
+                                    <div class="dropdown-menu dropdown-menu-end"><a class="dropdown-item"
+                                            href="#">Today</a> <a class="dropdown-item" href="#">Weekly</a> <a
+                                            class="dropdown-item" href="#">Monthly</a></div>
+                                </div>
+                            </div>
+                            <ul class="nav nav-tabs analytics-tab" id="myTab" role="tablist">
+                                <li class="nav-item" role="presentation"><button class="nav-link active"
+                                        id="analytics-tab-1" data-bs-toggle="tab" data-bs-target="#analytics-tab-1-pane"
+                                        type="button" role="tab" aria-controls="analytics-tab-1-pane"
+                                        aria-selected="true">All Transaction</button></li>
+                                <li class="nav-item" role="presentation"><button class="nav-link" id="analytics-tab-2"
+                                        data-bs-toggle="tab" data-bs-target="#analytics-tab-2-pane" type="button"
+                                        role="tab" aria-controls="analytics-tab-2-pane"
+                                        aria-selected="false">Success</button></li>
+                                <li class="nav-item" role="presentation"><button class="nav-link" id="analytics-tab-3"
+                                        data-bs-toggle="tab" data-bs-target="#analytics-tab-3-pane" type="button"
+                                        role="tab" aria-controls="analytics-tab-3-pane"
+                                        aria-selected="false">Pending</button></li>
+                            </ul>
+                        </div>
+                        <div class="tab-content" id="myTabContent">
+                            <div class="tab-pane fade show active" id="analytics-tab-1-pane" role="tabpanel"
+                                aria-labelledby="analytics-tab-1" tabindex="0">
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0">
+                                                <div class="avtar avtar-s border">AI</div>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <div class="row g-1">
+                                                    <div class="col-6">
+                                                        <h6 class="mb-0">Apple Inc.</h6>
+                                                        <p class="text-muted mb-0"><small>#ABLE-PRO-T00232</small></p>
+                                                    </div>
+                                                    <div class="col-6 text-end">
+                                                        <h6 class="mb-1">$210,000</h6>
+                                                        <p class="text-danger mb-0"><i
+                                                                class="ti ti-arrow-down-left"></i> 10.6%</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0">
+                                                <div class="avtar avtar-s border" data-bs-toggle="tooltip"
+                                                    data-bs-title="10,000 Tracks"><span>SM</span></div>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <div class="row g-1">
+                                                    <div class="col-6">
+                                                        <h6 class="mb-0">Spotify Music</h6>
+                                                        <p class="text-muted mb-0"><small>#ABLE-PRO-T10232</small></p>
+                                                    </div>
+                                                    <div class="col-6 text-end">
+                                                        <h6 class="mb-1">- 10,000</h6>
+                                                        <p class="text-success mb-0"><i
+                                                                class="ti ti-arrow-up-right"></i> 30.6%</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0">
+                                                <div class="avtar avtar-s border bg-light-primary"
+                                                    data-bs-toggle="tooltip" data-bs-title="143 Posts"><span>MD</span>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <div class="row g-1">
+                                                    <div class="col-6">
+                                                        <h6 class="mb-0">Medium</h6>
+                                                        <p class="text-muted mb-0"><small>06:30 pm</small></p>
+                                                    </div>
+                                                    <div class="col-6 text-end">
+                                                        <h6 class="mb-1">-26</h6>
+                                                        <p class="text-warning mb-0"><i
+                                                                class="ti ti-arrows-left-right"></i> 5%</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0">
+                                                <div class="avtar avtar-s border" data-bs-toggle="tooltip"
+                                                    data-bs-title="143 Posts"><span>U</span></div>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <div class="row g-1">
+                                                    <div class="col-6">
+                                                        <h6 class="mb-0">Uber</h6>
+                                                        <p class="text-muted mb-0"><small>08:40 pm</small></p>
+                                                    </div>
+                                                    <div class="col-6 text-end">
+                                                        <h6 class="mb-1">+210,000</h6>
+                                                        <p class="text-success mb-0"><i
+                                                                class="ti ti-arrow-up-right"></i> 10.6%</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0">
+                                                <div class="avtar avtar-s border bg-light-warning"
+                                                    data-bs-toggle="tooltip" data-bs-title="143 Posts"><span>OC</span>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <div class="row g-1">
+                                                    <div class="col-6">
+                                                        <h6 class="mb-0">Ola Cabs</h6>
+                                                        <p class="text-muted mb-0"><small>07:40 pm</small></p>
+                                                    </div>
+                                                    <div class="col-6 text-end">
+                                                        <h6 class="mb-1">+210,000</h6>
+                                                        <p class="text-success mb-0"><i
+                                                                class="ti ti-arrow-up-right"></i> 10.6%</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="tab-pane fade" id="analytics-tab-2-pane" role="tabpanel"
+                                aria-labelledby="analytics-tab-2" tabindex="0">
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0">
+                                                <div class="avtar avtar-s border" data-bs-toggle="tooltip"
+                                                    data-bs-title="143 Posts"><span>U</span></div>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <div class="row g-1">
+                                                    <div class="col-6">
+                                                        <h6 class="mb-0">Uber</h6>
+                                                        <p class="text-muted mb-0"><small>08:40 pm</small></p>
+                                                    </div>
+                                                    <div class="col-6 text-end">
+                                                        <h6 class="mb-1">+210,000</h6>
+                                                        <p class="text-success mb-0"><i
+                                                                class="ti ti-arrow-up-right"></i> 10.6%</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0">
+                                                <div class="avtar avtar-s border bg-light-warning"
+                                                    data-bs-toggle="tooltip" data-bs-title="143 Posts"><span>OC</span>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <div class="row g-1">
+                                                    <div class="col-6">
+                                                        <h6 class="mb-0">Ola Cabs</h6>
+                                                        <p class="text-muted mb-0"><small>07:40 pm</small></p>
+                                                    </div>
+                                                    <div class="col-6 text-end">
+                                                        <h6 class="mb-1">+210,000</h6>
+                                                        <p class="text-success mb-0"><i
+                                                                class="ti ti-arrow-up-right"></i> 10.6%</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0">
+                                                <div class="avtar avtar-s border">AI</div>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <div class="row g-1">
+                                                    <div class="col-6">
+                                                        <h6 class="mb-0">Apple Inc.</h6>
+                                                        <p class="text-muted mb-0"><small>#ABLE-PRO-T00232</small></p>
+                                                    </div>
+                                                    <div class="col-6 text-end">
+                                                        <h6 class="mb-1">$210,000</h6>
+                                                        <p class="text-danger mb-0"><i
+                                                                class="ti ti-arrow-down-left"></i> 10.6%</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0">
+                                                <div class="avtar avtar-s border" data-bs-toggle="tooltip"
+                                                    data-bs-title="10,000 Tracks"><span>SM</span></div>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <div class="row g-1">
+                                                    <div class="col-6">
+                                                        <h6 class="mb-0">Spotify Music</h6>
+                                                        <p class="text-muted mb-0"><small>#ABLE-PRO-T10232</small></p>
+                                                    </div>
+                                                    <div class="col-6 text-end">
+                                                        <h6 class="mb-1">- 10,000</h6>
+                                                        <p class="text-success mb-0"><i
+                                                                class="ti ti-arrow-up-right"></i> 30.6%</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0">
+                                                <div class="avtar avtar-s border bg-light-primary"
+                                                    data-bs-toggle="tooltip" data-bs-title="143 Posts"><span>MD</span>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <div class="row g-1">
+                                                    <div class="col-6">
+                                                        <h6 class="mb-0">Medium</h6>
+                                                        <p class="text-muted mb-0"><small>06:30 pm</small></p>
+                                                    </div>
+                                                    <div class="col-6 text-end">
+                                                        <h6 class="mb-1">-26</h6>
+                                                        <p class="text-warning mb-0"><i
+                                                                class="ti ti-arrows-left-right"></i> 5%</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="tab-pane fade" id="analytics-tab-3-pane" role="tabpanel"
+                                aria-labelledby="analytics-tab-3" tabindex="0">
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0">
+                                                <div class="avtar avtar-s border" data-bs-toggle="tooltip"
+                                                    data-bs-title="10,000 Tracks"><span>SM</span></div>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <div class="row g-1">
+                                                    <div class="col-6">
+                                                        <h6 class="mb-0">Spotify Music</h6>
+                                                        <p class="text-muted mb-0"><small>#ABLE-PRO-T10232</small></p>
+                                                    </div>
+                                                    <div class="col-6 text-end">
+                                                        <h6 class="mb-1">- 10,000</h6>
+                                                        <p class="text-success mb-0"><i
+                                                                class="ti ti-arrow-up-right"></i> 30.6%</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0">
+                                                <div class="avtar avtar-s border bg-light-primary"
+                                                    data-bs-toggle="tooltip" data-bs-title="143 Posts"><span>MD</span>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <div class="row g-1">
+                                                    <div class="col-6">
+                                                        <h6 class="mb-0">Medium</h6>
+                                                        <p class="text-muted mb-0"><small>06:30 pm</small></p>
+                                                    </div>
+                                                    <div class="col-6 text-end">
+                                                        <h6 class="mb-1">-26</h6>
+                                                        <p class="text-warning mb-0"><i
+                                                                class="ti ti-arrows-left-right"></i> 5%</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0">
+                                                <div class="avtar avtar-s border" data-bs-toggle="tooltip"
+                                                    data-bs-title="143 Posts"><span>U</span></div>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <div class="row g-1">
+                                                    <div class="col-6">
+                                                        <h6 class="mb-0">Uber</h6>
+                                                        <p class="text-muted mb-0"><small>08:40 pm</small></p>
+                                                    </div>
+                                                    <div class="col-6 text-end">
+                                                        <h6 class="mb-1">+210,000</h6>
+                                                        <p class="text-success mb-0"><i
+                                                                class="ti ti-arrow-up-right"></i> 10.6%</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0">
+                                                <div class="avtar avtar-s border">AI</div>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <div class="row g-1">
+                                                    <div class="col-6">
+                                                        <h6 class="mb-0">Apple Inc.</h6>
+                                                        <p class="text-muted mb-0"><small>#ABLE-PRO-T00232</small></p>
+                                                    </div>
+                                                    <div class="col-6 text-end">
+                                                        <h6 class="mb-1">$210,000</h6>
+                                                        <p class="text-danger mb-0"><i
+                                                                class="ti ti-arrow-down-left"></i> 10.6%</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0">
+                                                <div class="avtar avtar-s border bg-light-warning"
+                                                    data-bs-toggle="tooltip" data-bs-title="143 Posts"><span>OC</span>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <div class="row g-1">
+                                                    <div class="col-6">
+                                                        <h6 class="mb-0">Ola Cabs</h6>
+                                                        <p class="text-muted mb-0"><small>07:40 pm</small></p>
+                                                    </div>
+                                                    <div class="col-6 text-end">
+                                                        <h6 class="mb-1">+210,000</h6>
+                                                        <p class="text-success mb-0"><i
+                                                                class="ti ti-arrow-up-right"></i> 10.6%</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <div class="d-grid"><button class="btn btn-outline-secondary d-grid"><span
+                                                class="text-truncate w-100">View all Transaction History</span></button>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-grid"><button class="btn btn-primary d-grid"><span
+                                                class="text-truncate w-100">Create new Transaction</span></button></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <h5 class="mb-0">Total Income</h5>
+                                <div class="dropdown"><a
+                                        class="avtar avtar-s btn-link-secondary dropdown-toggle arrow-none" href="#"
+                                        data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i
+                                            class="ti ti-dots-vertical f-18"></i></a>
+                                    <div class="dropdown-menu dropdown-menu-end"><a class="dropdown-item"
+                                            href="#">Today</a> <a class="dropdown-item" href="#">Weekly</a> <a
+                                            class="dropdown-item" href="#">Monthly</a></div>
+                                </div>
+                            </div>
+                            <div id="total-income-graph"></div>
+                            <div class="row g-3 mt-3">
+                                <div class="col-sm-6">
+                                    <div class="bg-body p-3 rounded">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <div class="flex-shrink-0"><span
+                                                    class="p-1 d-block bg-primary rounded-circle"><span
+                                                        class="visually-hidden">New alerts</span></span></div>
+                                            <div class="flex-grow-1 ms-2">
+                                                <p class="mb-0">Income</p>
+                                            </div>
+                                        </div>
+                                        <h6 class="mb-0">$23,876 <small class="text-muted"><i
+                                                    class="ti ti-chevrons-up"></i> +$763,43</small></h6>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="bg-body p-3 rounded">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <div class="flex-shrink-0"><span
+                                                    class="p-1 d-block bg-warning rounded-circle"><span
+                                                        class="visually-hidden">New alerts</span></span></div>
+                                            <div class="flex-grow-1 ms-2">
+                                                <p class="mb-0">Rent</p>
+                                            </div>
+                                        </div>
+                                        <h6 class="mb-0">$23,876 <small class="text-muted"><i
+                                                    class="ti ti-chevrons-up"></i> +$763,43</small></h6>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="bg-body p-3 rounded">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <div class="flex-shrink-0"><span
+                                                    class="p-1 d-block bg-success rounded-circle"><span
+                                                        class="visually-hidden">New alerts</span></span></div>
+                                            <div class="flex-grow-1 ms-2">
+                                                <p class="mb-0">Download</p>
+                                            </div>
+                                        </div>
+                                        <h6 class="mb-0">$23,876 <small class="text-muted"><i
+                                                    class="ti ti-chevrons-up"></i> +$763,43</small></h6>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="bg-body p-3 rounded">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <div class="flex-shrink-0"><span
+                                                    class="p-1 d-block bg-light-primary rounded-circle"><span
+                                                        class="visually-hidden">New alerts</span></span></div>
+                                            <div class="flex-grow-1 ms-2">
+                                                <p class="mb-0">Views</p>
+                                            </div>
+                                        </div>
+                                        <h6 class="mb-0">$23,876 <small class="text-muted"><i
+                                                    class="ti ti-chevrons-up"></i> +$763,43</small></h6>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div><!-- [ Main Content ] end -->
+        </div>
+    </div><!-- [ Main Content ] end -->
+    <footer class="pc-footer">
+        <div class="footer-wrapper container-fluid">
+            <div class="row">
+                <div class="col my-1">
+                    <p class="m-0">© Able Pro crafted with ♥ by Team <a
+                            href="../../external.html?link=https://themeforest.net/user/phoenixcoded"
+                            target="_blank">Phoenixcoded</a></p>
+                </div>
+                <div class="col-auto my-1">
+                    <ul class="list-inline footer-link mb-0">
+                        <li class="list-inline-item"><a
+                                href="../../external.html?link=https://ableproadmin.com/index.html">Home</a></li>
+                        <li class="list-inline-item"><a
+                                href="../../external.html?link=https://phoenixcoded.gitbook.io/able-pro/"
+                                target="_blank">Documentation</a></li>
+                        <li class="list-inline-item"><a
+                                href="../../external.html?link=https://phoenixcoded.authordesk.app/"
+                                target="_blank">Support</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <div class="pct-c-btn"><a href="#" data-bs-toggle="offcanvas" data-bs-target="#offcanvas_pc_layout"><i
+                class="ph-duotone ph-gear-six"></i></a></div>
+    <div class="offcanvas border-0 pct-offcanvas offcanvas-end" tabindex="-1" id="offcanvas_pc_layout">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title">Settings</h5><button type="button" class="btn btn-icon btn-link-danger ms-auto"
+                data-bs-dismiss="offcanvas" aria-label="Close"><i class="ti ti-x"></i></button>
+        </div>
+        <div class="pct-body customizer-body">
+            <div class="offcanvas-body py-0">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <div class="pc-dark">
+                            <h6 class="mb-1">Theme Mode</h6>
+                            <p class="text-muted text-sm">Choose light or dark mode or Auto</p>
+                            <div class="row theme-color theme-layout">
+                                <div class="col-4">
+                                    <div class="d-grid"><button class="preset-btn btn active" data-value="true"
+                                            onclick="layout_change('light');" data-bs-toggle="tooltip"
+                                            title="Light"><svg class="pc-icon text-warning">
+                                                <use xlink:href="#custom-sun-1"></use>
+                                            </svg></button></div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="d-grid"><button class="preset-btn btn" data-value="false"
+                                            onclick="layout_change('dark');" data-bs-toggle="tooltip" title="Dark"><svg
+                                                class="pc-icon">
+                                                <use xlink:href="#custom-moon"></use>
+                                            </svg></button></div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="d-grid"><button class="preset-btn btn" data-value="default"
+                                            onclick="layout_change_default();" data-bs-toggle="tooltip"
+                                            title="Automatically sets the theme based on user's operating system's color scheme."><span
+                                                class="pc-lay-icon d-flex align-items-center justify-content-center"><i
+                                                    class="ph-duotone ph-cpu"></i></span></button></div>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="list-group-item">
+                        <h6 class="mb-1">Theme Contrast</h6>
+                        <p class="text-muted text-sm">Choose theme contrast</p>
+                        <div class="row theme-contrast">
+                            <div class="col-6">
+                                <div class="d-grid"><button class="preset-btn btn" data-value="true"
+                                        onclick="layout_theme_contrast_change('true');" data-bs-toggle="tooltip"
+                                        title="True"><svg class="pc-icon">
+                                            <use xlink:href="#custom-mask"></use>
+                                        </svg></button></div>
+                            </div>
+                            <div class="col-6">
+                                <div class="d-grid"><button class="preset-btn btn active" data-value="false"
+                                        onclick="layout_theme_contrast_change('false');" data-bs-toggle="tooltip"
+                                        title="False"><svg class="pc-icon">
+                                            <use xlink:href="#custom-mask-1-outline"></use>
+                                        </svg></button></div>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="list-group-item">
+                        <h6 class="mb-1">Custom Theme</h6>
+                        <p class="text-muted text-sm">Choose your primary theme color</p>
+                        <div class="theme-color preset-color"><a href="#!" data-bs-toggle="tooltip" title="Blue"
+                                class="active" data-value="preset-1"><i class="ti ti-checks"></i></a> <a href="#!"
+                                data-bs-toggle="tooltip" title="Indigo" data-value="preset-2"><i
+                                    class="ti ti-checks"></i></a> <a href="#!" data-bs-toggle="tooltip" title="Purple"
+                                data-value="preset-3"><i class="ti ti-checks"></i></a> <a href="#!"
+                                data-bs-toggle="tooltip" title="Pink" data-value="preset-4"><i
+                                    class="ti ti-checks"></i></a> <a href="#!" data-bs-toggle="tooltip" title="Red"
+                                data-value="preset-5"><i class="ti ti-checks"></i></a> <a href="#!"
+                                data-bs-toggle="tooltip" title="Orange" data-value="preset-6"><i
+                                    class="ti ti-checks"></i></a> <a href="#!" data-bs-toggle="tooltip" title="Yellow"
+                                data-value="preset-7"><i class="ti ti-checks"></i></a> <a href="#!"
+                                data-bs-toggle="tooltip" title="Green" data-value="preset-8"><i
+                                    class="ti ti-checks"></i></a> <a href="#!" data-bs-toggle="tooltip" title="Teal"
+                                data-value="preset-9"><i class="ti ti-checks"></i></a> <a href="#!"
+                                data-bs-toggle="tooltip" title="Cyan" data-value="preset-10"><i
+                                    class="ti ti-checks"></i></a></div>
+                    </li>
+                    <li class="list-group-item">
+                        <h6 class="mb-1">Theme layout</h6>
+                        <p class="text-muted text-sm">Choose your layout</p>
+                        <div class="theme-main-layout d-flex align-center gap-1 w-100"><a href="#!"
+                                data-bs-toggle="tooltip" title="Vertical" class="active" data-value="vertical"><img
+                                    src="../assets/images/customizer/caption-on.svg" alt="img" class="img-fluid"> </a><a
+                                href="#!" data-bs-toggle="tooltip" title="Horizontal" data-value="horizontal"><img
+                                    src="../assets/images/customizer/horizontal.svg" alt="img" class="img-fluid"> </a><a
+                                href="#!" data-bs-toggle="tooltip" title="Color Header" data-value="color-header"><img
+                                    src="../assets/images/customizer/color-header.svg" alt="img" class="img-fluid">
+                            </a><a href="#!" data-bs-toggle="tooltip" title="Compact" data-value="compact"><img
+                                    src="../assets/images/customizer/compact.svg" alt="img" class="img-fluid"> </a><a
+                                href="#!" data-bs-toggle="tooltip" title="Tab" data-value="tab"><img
+                                    src="../assets/images/customizer/tab.svg" alt="img" class="img-fluid"></a></div>
+                    </li>
+                    <li class="list-group-item">
+                        <h6 class="mb-1">Sidebar Caption</h6>
+                        <p class="text-muted text-sm">Sidebar Caption Hide/Show</p>
+                        <div class="row theme-color theme-nav-caption">
+                            <div class="col-6">
+                                <div class="d-grid"><button class="preset-btn btn-img btn active" data-value="true"
+                                        onclick="layout_caption_change('true');" data-bs-toggle="tooltip"
+                                        title="Caption Show"><img src="../assets/images/customizer/caption-on.svg"
+                                            alt="img" class="img-fluid"></button></div>
+                            </div>
+                            <div class="col-6">
+                                <div class="d-grid"><button class="preset-btn btn-img btn" data-value="false"
+                                        onclick="layout_caption_change('false');" data-bs-toggle="tooltip"
+                                        title="Caption Hide"><img src="../assets/images/customizer/caption-off.svg"
+                                            alt="img" class="img-fluid"></button></div>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="list-group-item">
+                        <div class="pc-rtl">
+                            <h6 class="mb-1">Theme Layout</h6>
+                            <p class="text-muted text-sm">LTR/RTL</p>
+                            <div class="row theme-color theme-direction">
+                                <div class="col-6">
+                                    <div class="d-grid"><button class="preset-btn btn-img btn active" data-value="false"
+                                            onclick="layout_rtl_change('false');" data-bs-toggle="tooltip"
+                                            title="LTR"><img src="../assets/images/customizer/ltr.svg" alt="img"
+                                                class="img-fluid"></button></div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="d-grid"><button class="preset-btn btn-img btn" data-value="true"
+                                            onclick="layout_rtl_change('true');" data-bs-toggle="tooltip"
+                                            title="RTL"><img src="../assets/images/customizer/rtl.svg" alt="img"
+                                                class="img-fluid"></button></div>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="list-group-item pc-box-width">
+                        <div class="pc-container-width">
+                            <h6 class="mb-1">Layout Width</h6>
+                            <p class="text-muted text-sm">Choose Full or Container Layout</p>
+                            <div class="row theme-color theme-container">
+                                <div class="col-6">
+                                    <div class="d-grid"><button class="preset-btn btn-img btn active" data-value="false"
+                                            onclick="change_box_container('false')" data-bs-toggle="tooltip"
+                                            title="Full Width"><img src="../assets/images/customizer/full.svg" alt="img"
+                                                class="img-fluid"></button></div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="d-grid"><button class="preset-btn btn-img btn" data-value="true"
+                                            onclick="change_box_container('true')" data-bs-toggle="tooltip"
+                                            title="Fixed Width"><img src="../assets/images/customizer/fixed.svg"
+                                                alt="img" class="img-fluid"></button></div>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="list-group-item">
+                        <div class="d-grid"><button class="btn btn-light-danger" id="layoutreset">Reset Layout</button>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div><!-- [Page Specific JS] start -->
+    <script data-cfasync="false" src="../cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+    <script src="../assets/js/plugins/apexcharts.min.js"></script>
+    <script src="../assets/js/widgets/all-earnings-graph.js"></script>
+    <script src="../assets/js/widgets/page-views-graph.js"></script>
+    <script src="../assets/js/widgets/total-task-graph.js"></script>
+    <script src="../assets/js/widgets/download-graph.js"></script>
+    <script src="../assets/js/widgets/customer-rate-graph.js"></script>
+    <script src="../assets/js/widgets/tasks-graph.js"></script>
+    <script src="../assets/js/widgets/total-income-graph.js"></script>
+    <!-- [Page Specific JS] end --><!-- Required Js -->
+    <script src="../assets/js/plugins/popper.min.js"></script>
+    <script src="../assets/js/plugins/simplebar.min.js"></script>
+    <script src="../assets/js/plugins/bootstrap.min.js"></script>
+    <script src="../assets/js/plugins/i18next.min.js"></script>
+    <script src="../assets/js/plugins/i18nextHttpBackend.min.js"></script>
+    <script src="../assets/js/icon/custom-font.js"></script>
+    <script src="../assets/js/script.js"></script>
+    <script src="../assets/js/theme.js"></script>
+    <script src="../assets/js/multi-lang.js"></script>
+    <script src="../assets/js/plugins/feather.min.js"></script>
+    <div class="floting-button"><a href="../../external.html?link=https://1.envato.market/zNkqj6"
+            class="btn btn btn-danger buynowlinks d-inline-flex align-items-center gap-2" data-bs-toggle="tooltip"
+            title="Buy Now"><i class="ph-duotone ph-shopping-cart"></i> <span>Buy Now</span></a></div>
+    <script>layout_change('light');</script>
+    <script>change_box_container('false');</script>
+    <script>layout_caption_change('true');</script>
+    <script>layout_rtl_change('false');</script>
+    <script>preset_change('preset-1');</script>
+    <script>main_layout_change('vertical');</script>
 </body>
 </html>

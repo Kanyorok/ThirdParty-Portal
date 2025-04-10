@@ -4,19 +4,18 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <meta name="description" content="@yield('description')">
 <meta name="keywords" content="">
-<link rel="preconnect" href="https://fonts.gstatic.com">
-<link rel="apple-touch-icon" sizes="180x180" href="{{ asset('assets/img/icons/apple-touch-icon.png') }}">
-<link rel="icon" type="image/png" sizes="32x32" href="{{ asset('assets/img/icons/favicon-32x32.png') }}">
-<link rel="icon" type="image/png" sizes="192x192" href="{{ asset('assets/img/icons/android-icon-192x192.png') }}">
-<link rel="icon" type="image/png" sizes="16x16" href="{{ asset('assets/img/icons/favicon-16x16.png') }}">
-<link rel="manifest" href="{{ asset('site.webmanifest') }}">
-<link rel="mask-icon" href="{{ asset('assets/img/icons/safari-pinned-tab.svg') }}" color="#3e17a0">
-<link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
 <meta name="msapplication-TileColor" content="#3e17a0">
 <meta name="msapplication-TileImage" content="{{ asset('assets/img/icons/mstile-144x144.png') }}') }}">
 <meta name="msapplication-config" content="{{ asset('browserconfig.xml') }}">
 <meta name="theme-color" content="#2e3192">
-<link href="{{ asset('assets/css/light.css') }}" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{{ asset('assets/plugins/notyf/notyf.min.css') }}">
-@yield('styles')
+<link rel="icon" href="{{ asset('assets/images/favicon.svg') }}" type="image/x-icon"><!-- [Font] Family -->
+<link rel="stylesheet" href="{{ asset('assets/fonts/inter/inter.css') }} id="main-font-link">
+<link rel="stylesheet" href="{{ asset('assets/fonts/phosphor/duotone/style.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/fonts/tabler-icons.min.css') }}"><!-- [Feather Icons] https://feathericons.com -->
+<link rel="stylesheet" href="{{ asset('assets/fonts/feather.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/fonts/fontawesome.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/fonts/material.css') }}"><!-- [Template CSS Files] -->
+<link rel="stylesheet" href="{{ asset('assets/css/style.css') }}" id="main-style-link">
+<script src="{{ asset('assets/js/tech-stack.js') }}"></script>
+<script>window.dataLayer = window.dataLayer || []; function gtag() { dataLayer.push(arguments); } gtag('js', new Date()); gtag('config', 'G-W9Z0W379ZN');</script>
+<link rel="stylesheet" href="{{ asset('assets/css/style-preset.css') }}">
