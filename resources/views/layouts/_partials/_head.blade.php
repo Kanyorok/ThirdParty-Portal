@@ -9,7 +9,7 @@
 <meta name="msapplication-config" content="{{ asset('browserconfig.xml') }}">
 <meta name="theme-color" content="#2e3192">
 <link rel="icon" href="{{ asset('assets/images/favicon.svg') }}" type="image/x-icon"><!-- [Font] Family -->
-<link rel="stylesheet" href="{{ asset('assets/fonts/inter/inter.css') }} id="main-font-link">
+<link rel="stylesheet" href="{{ asset('assets/fonts/inter/inter.css') }}" id="main-font-link">
 <link rel="stylesheet" href="{{ asset('assets/fonts/phosphor/duotone/style.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/fonts/tabler-icons.min.css') }}"><!-- [Feather Icons] https://feathericons.com -->
 <link rel="stylesheet" href="{{ asset('assets/fonts/feather.css') }}">
@@ -17,5 +17,4 @@
 <link rel="stylesheet" href="{{ asset('assets/fonts/material.css') }}"><!-- [Template CSS Files] -->
 <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}" id="main-style-link">
 <script src="{{ asset('assets/js/tech-stack.js') }}"></script>
-<script>window.dataLayer = window.dataLayer || []; function gtag() { dataLayer.push(arguments); } gtag('js', new Date()); gtag('config', 'G-W9Z0W379ZN');</script>
 <link rel="stylesheet" href="{{ asset('assets/css/style-preset.css') }}">
