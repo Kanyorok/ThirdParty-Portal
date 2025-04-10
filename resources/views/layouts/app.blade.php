@@ -14,18 +14,22 @@
 </div>
 <nav class="pc-sidebar">
     <div class="navbar-wrapper">
-        <div class="m-header"><a href="{{ route('home') }}"
-                                 class="b-brand text-primary"><img
-                    src="{{ asset('assets/img/icons/android-icon-36x36.png') }}" class="img-fluid logo-lg" alt="logo">
-                <span class="badge bg-light-success rounded-pill ms-2 theme-version">v9.5.1</span></a></div>
+        <div class="m-header">
+            <a href="{{ route('home') }}" class="b-brand text-primary">
+                <img src="{{ asset('assets/img/icons/android-icon-36x36.png') }}" class="img-fluid " alt="logo">
+                <span class="ms-3 h3 text-decoration-none"> {{ config('app.name') }}</span>
+                <span class="badge bg-light-success rounded-pill ms-2 theme-version">v0.0.1</span></a></div>
         <div class="navbar-content">
             <div class="card pc-user-card">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0"><img src="../assets/images/user/avatar-1.jpg" alt="user-image"
-                                                        class="user-avtar wid-45 rounded-circle"></div>
-                        <div class="flex-grow-1 ms-3 me-2"><h6 class="mb-0" data-i18n="Jonh Smith">Jonh Smith</h6><small
-                                data-i18n="Administrator">Administrator</small></div>
+                        <div class="flex-shrink-0">
+                            {!! auth()->user()->getImage('class="avatar-1 user-avtar wid-45 rounded-circle" alt="user-image"') !!}
+                        </div>
+                        <div class="flex-grow-1 ms-3 me-2"><h6 class="mb-0"
+                                                               data-i18n="Jonh Smith">{{ auth()->user()->UserID }}</h6>
+                            <small
+                                data-i18n="Administrator">{{ auth()->user()->role()?->name }}</small></div>
                         <a class="btn btn-icon btn-link-secondary avtar collapsed" data-bs-toggle="collapse"
                            href="#pc_sidebar_userlink" aria-expanded="false">
                             <svg class="pc-icon">
@@ -33,10 +37,18 @@
                             </svg>
                         </a></div>
                     <div class="pc-user-links collapse" id="pc_sidebar_userlink" style="">
-                        <div class="pt-3"><a href="javascript:void(0)"><i class="ti ti-user"></i> <span
+                        <div class="pt-3">
+                            <a href="{{ route('profile') }}"><i class="ti ti-user"></i> <span
                                     data-i18n="My Account">My Account</span>
-                            </a><a href="javascript:void(0)"><i class="ti ti-power"></i> <span
-                                    data-i18n="Logout">Logout</span></a>
+                            </a>
+                            <a href="{{ route('logout') }}"
+                               onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                <i class="ti ti-power"></i> <span data-i18n="Logout">Logout</span>
+                            </a>
+
+                            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                                @csrf
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -56,13 +68,14 @@
                             class="ti ti-menu-2"></i></a></li>
                 <li class="pc-h-item pc-sidebar-popup"><a href="#" class="pc-head-link ms-0" id="mobile-collapse"><i
                             class="ti ti-menu-2"></i></a></li>
-                {{-- <li class="pc-h-item d-none d-md-inline-flex">
+                <li class="pc-h-item d-none d-md-inline-flex">
                      <form class="form-search"><i class="search-icon">
                              <svg class="pc-icon">
                                  <use xlink:href="#custom-search-normal-1"></use>
                              </svg>
                          </i><input type="search" class="form-control" placeholder="Ctrl + K"></form>
-                 </li>--}}
+                </li>
+
             </ul>
         </div>
         <div class="ms-auto">
@@ -93,15 +106,13 @@
                             </svg>
                             <span>Default</span></a></div>
                 </li>
-
-
-                {{-- <li class="pc-h-item">
+                <li class="pc-h-item">
                      <a href="#" class="pc-head-link me-0" data-bs-toggle="offcanvas"
                                           data-bs-target="#announcement" aria-controls="announcement">
                          <svg class="pc-icon">
                              <use xlink:href="#custom-flash"></use>
                          </svg>
-                     </a></li>--}}
+                     </a></li>
                 <li class="dropdown pc-h-item">
                     <a class="pc-head-link dropdown-toggle arrow-none me-0"
                        data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="false"
@@ -129,22 +140,25 @@
                     <a class="pc-head-link dropdown-toggle arrow-none me-0"
                        data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="false"
                        aria-expanded="false">
-                        <img
-                            src="../assets/images/user/avatar-2.jpg" alt="user-image" class="user-avtar">
-                        {{--  <svg class="pc-icon">
+                        {!! auth()->user()->getImage('class="avatar-1 user-avtar" alt="user-image"') !!}
+                        <svg class="pc-icon">
                               <use xlink:href="#custom-setting-2"></use>
-                          </svg>--}}
+                        </svg>
+
                     </a>
-                    <div class="dropdown-menu dropdown-menu-end pc-h-dropdown"><a href="javascript:void(0)"
-                                                                                  class="dropdown-item"><i
-                                class="ti ti-user"></i> <span>My Account</span> </a><a href="javascript:void(0)"
-                                                                                       class="dropdown-item"><i
-                                class="ti ti-settings"></i> <span>Settings</span> </a><a
-                            href="javascript:void(0)" class="dropdown-item"><i class="ti ti-headset"></i>
+                    <div class="dropdown-menu dropdown-menu-end pc-h-dropdown">
+                        <a href="{{ route('profile') }}" class="dropdown-item">
+                            <i class="ti ti-user"></i> <span>My Account</span>
+                        </a>
+                        <a href="javascript:void(0)" class="dropdown-item"><i class="ti ti-headset"></i>
                             <span>Support</span>
-                        </a><a href="javascript:void(0)" class="dropdown-item"><i class="ti ti-lock"></i> <span>Lock Screen</span>
-                        </a><a href="javascript:void(0)" class="dropdown-item"><i class="ti ti-power"></i>
-                            <span>Logout</span></a>
+                        </a>
+
+                        <a href="{{ route('logout') }}"
+                           onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
+                           class="dropdown-item">
+                            <i class="ti ti-power"></i> <span data-i18n="Logout">Logout</span>
+                        </a>
                     </div>
                 </li>
             </ul>
@@ -156,7 +170,7 @@
     <div class="pc-content">
         @yield('content')
     </div>
-</div><!-- [ Main Content ] end -->
+</div>
 <footer class="pc-footer">
     <div class="footer-wrapper container-fluid">
         <div class="row">
@@ -164,7 +178,7 @@
                 <p class="m-0">@include('layouts._partials._copyright')</p>
             </div>
             <div class="col-auto my-1">
-                {{-- <ul class="list-inline footer-link mb-0">
+                {{--<ul class="list-inline footer-link mb-0">
                      <li class="list-inline-item"><a
                              href="../../external.html?link=https://ableproadmin.com/index.html">Home</a></li>
                      <li class="list-inline-item"><a
@@ -174,6 +188,7 @@
                              href="../../external.html?link=https://phoenixcoded.authordesk.app/"
                              target="_blank">Support</a></li>
                  </ul>--}}
+
             </div>
         </div>
     </div>
