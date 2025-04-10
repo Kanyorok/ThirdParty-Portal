@@ -1,0 +1,74 @@
+<?php
+
+namespace App\Http\Controllers\CRM\Base;
+
+use App\Http\Controllers\Controller;
+use App\Models\CRMImage;
+use App\Services\ImageService;
+use Exception;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\View\View;
+
+class DocumentController extends Controller
+{
+    public function __construct()
+    {
+        $this->middleware('ajax')->except('edit');
+    }
+
+    /**
+     * Appendable Html Content for Content
+     * @throws AuthorizationException
+     */
+    public function show(CRMImage $image): View
+    {
+        //   $this->authorize('view', $image->source); todo fix for emails here
+        return view('crm.base.documents.show', compact('image'))
+            ->with('service', (new ImageService($image)));
+    }
+
+    /**
+     * Download Content
+     * @throws AuthorizationException
+     */
+    public function edit(Request $request, CRMImage $image)
+    {
+        $this->authorize('view', $image->source);
+
+        activity()->causedBy($request->user())->performedOn($image->source)->event('download')->log('downloaded attached document : ' . $image->Name);
+
+        return (Response(base64_decode($image->Image), 200))
+            ->header('ContentType', $image->MIMEType)
+            ->header('Content-Disposition', 'attachment; filename=' . $image->Name);
+
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     * @throws AuthorizationException
+     */
+    public function destroy(Request $request, CRMImage $image): JsonResponse
+    {
+        $this->authorize('delete', $image->source);
+
+        $actor = $request->user();
+        try {
+            DB::transaction(static function () use ($image, $actor) {
+                $image->forceFill([
+                    'DeletedBy' => $actor->Id,
+                    'DeletedOn' => now()
+                ])->save();
+                activity()->causedBy($actor)->performedOn($image->source)->event('delete')->log('trashed attached document : ' . $image->Name);
+            });
+        } catch (Exception $e) {
+            Log::error('Error removing attachment :  ' . $e->getMessage());
+            return $this->errored('unexpected error, try again later');
+        }
+
+        return $this->succeeded('attachment removed successfully');
+    }
+}
