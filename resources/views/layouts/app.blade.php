@@ -1,199 +1,264 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+
 <head>
     @include('layouts._partials._head')
     <title>{{ config('app.name') }} - @yield('title')</title>
 </head>
 
 <body data-pc-preset="preset-1" data-pc-sidebar-caption="true" data-pc-layout="vertical" data-pc-direction="ltr"
-      data-pc-theme_contrast="" data-pc-theme="light">
-<div class="loader-bg">
-    <div class="loader-track">
-        <div class="loader-fill"></div>
+    data-pc-theme_contrast="" data-pc-theme="light">
+    <div class="loader-bg">
+        <div class="loader-track">
+            <div class="loader-fill"></div>
+        </div>
     </div>
-</div>
-<nav class="pc-sidebar">
-    <div class="navbar-wrapper">
-        <div class="m-header">
-            <a href="{{ route('home') }}" class="b-brand text-primary">
-                <img src="{{ asset('assets/img/icons/android-icon-36x36.png') }}" class="img-fluid " alt="logo">
-                <span class="ms-3 h3 text-decoration-none"> {{ config('app.name') }}</span>
-                <span class="badge bg-light-success rounded-pill ms-2 theme-version">v0.0.1</span></a></div>
-        <div class="navbar-content">
-            <div class="card pc-user-card">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            {!! auth()->user()->getImage('class="avatar-1 user-avtar wid-45 rounded-circle" alt="user-image"') !!}
+    <nav class="pc-sidebar">
+        <div class="navbar-wrapper">
+            <div class="m-header">
+                <a href="{{ route('home') }}" class="b-brand text-primary">
+                    <img src="{{ asset('assets/img/icons/android-icon-36x36.png') }}" class="img-fluid " alt="logo">
+                    <span class="ms-3 h3 text-decoration-none"> {{ config('app.name') }}</span>
+                    <span class="badge bg-light-success rounded-pill ms-2 theme-version">v0.0.1</span></a>
+            </div>
+            <div class="navbar-content">
+                <div class="card pc-user-card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                {!! auth()->user()->getImage('class="avatar-1 user-avtar wid-45 rounded-circle"
+                                alt="user-image"') !!}
+                            </div>
+                            <div class="flex-grow-1 ms-3 me-2">
+                                <h6 class="mb-0" data-i18n="Jonh Smith">{{ auth()->user()->UserID }}</h6>
+                                <small data-i18n="Administrator">{{ auth()->user()->role()?->name }}</small>
+                            </div>
+                            <a class="btn btn-icon btn-link-secondary avtar collapsed" data-bs-toggle="collapse"
+                                href="#pc_sidebar_userlink" aria-expanded="false">
+                                <svg class="pc-icon">
+                                    <use xlink:href="#custom-sort-outline"></use>
+                                </svg>
+                            </a>
                         </div>
-                        <div class="flex-grow-1 ms-3 me-2"><h6 class="mb-0"
-                                                               data-i18n="Jonh Smith">{{ auth()->user()->UserID }}</h6>
-                            <small
-                                data-i18n="Administrator">{{ auth()->user()->role()?->name }}</small></div>
-                        <a class="btn btn-icon btn-link-secondary avtar collapsed" data-bs-toggle="collapse"
-                           href="#pc_sidebar_userlink" aria-expanded="false">
-                            <svg class="pc-icon">
-                                <use xlink:href="#custom-sort-outline"></use>
-                            </svg>
-                        </a></div>
-                    <div class="pc-user-links collapse" id="pc_sidebar_userlink" style="">
-                        <div class="pt-3">
-                            <a href="{{ route('profile') }}"><i class="ti ti-user"></i> <span
-                                    data-i18n="My Account">My Account</span>
-                            </a>
-                            <a href="{{ route('logout') }}"
-                               onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                <i class="ti ti-power"></i> <span data-i18n="Logout">Logout</span>
-                            </a>
+                        <div class="pc-user-links collapse" id="pc_sidebar_userlink" style="">
+                            <div class="pt-3">
+                                <a href="{{ route('profile') }}"><i class="ti ti-user"></i> <span
+                                        data-i18n="My Account">My Account</span>
+                                </a>
+                                <a href="{{ route('logout') }}"
+                                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                    <i class="ti ti-power"></i> <span data-i18n="Logout">Logout</span>
+                                </a>
 
-                            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                                @csrf
-                            </form>
+                                <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                                    @csrf
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
+                <ul class="pc-navbar">
+                    <li class="pc-item pc-hasmenu{{ request()->is('/')?'active':'' }}">
+                        <a href="{{ route('home') }}" class="pc-link"><i data-feather="home"></i> Home</a>
+                    </li>
+                    <li class="pc-item pc-hasmenu"><a href="#!" class="pc-link"><span class="pc-micon"><svg
+                                    class="pc-icon">
+                                    <use xlink:href="#custom-layer"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="Online Courses">Procurement </span>
+                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                        <ul class="pc-submenu">
+                            <li class="pc-item"><a class="pc-link" href="../admins/course-dashboard.html"
+                                    data-i18n="Dashboard">Dashboard</a></li>
+                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span
+                                        data-i18n="Teacher">Teacher</span> <span class="pc-arrow"><i
+                                            data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item"><a class="pc-link" href="../admins/course-teacher-list.html"
+                                            data-i18n="List">List</a></li>
+                                    <li class="pc-item"><a class="pc-link" href="../admins/course-teacher-apply.html"
+                                            data-i18n="Apply">Apply</a></li>
+                                    <li class="pc-item"><a class="pc-link" href="../admins/course-teacher-add.html"
+                                            data-i18n="Add">Add</a></li>
+                                </ul>
+                            </li>
+                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span
+                                        data-i18n="Student">Student</span> <span class="pc-arrow"><i
+                                            data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item"><a class="pc-link" href="../admins/course-student-list.html"
+                                            data-i18n="List">list</a></li>
+                                    <li class="pc-item"><a class="pc-link" href="../admins/course-student-apply.html"
+                                            data-i18n="Apply">Apply</a></li>
+                                    <li class="pc-item"><a class="pc-link" href="../admins/course-student-add.html"
+                                            data-i18n="Add">Add</a></li>
+                                </ul>
+                            </li>
+                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span
+                                        data-i18n="Courses">Courses</span> <span class="pc-arrow"><i
+                                            data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item"><a class="pc-link" href="../admins/course-course-view.html"
+                                            data-i18n="View">View</a></li>
+                                    <li class="pc-item"><a class="pc-link" href="../admins/course-course-add.html"
+                                            data-i18n="Add">Add</a></li>
+                                </ul>
+                            </li>
+                            <li class="pc-item"><a class="pc-link" href="../admins/course-pricing.html"
+                                    data-i18n="Pricing">Pricing</a></li>
+                            <li class="pc-item"><a class="pc-link" href="../admins/course-site.html"
+                                    data-i18n="Site">Site</a></li>
+                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span
+                                        data-i18n="Setting">Setting</span> <span class="pc-arrow"><i
+                                            data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item"><a class="pc-link" href="../admins/course-setting-payment.html"
+                                            data-i18n="Payment">Payment</a></li>
+                                    <li class="pc-item"><a class="pc-link" href="../admins/course-setting-pricing.html"
+                                            data-i18n="Pricing">Pricing</a></li>
+                                    <li class="pc-item"><a class="pc-link"
+                                            href="../admins/course-setting-notifications.html"
+                                            data-i18n="Notification">Notifications</a></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
             </div>
-            <ul class="pc-navbar">
-                <li class="pc-item {{ request()->is('/')?'active':'' }}">
-                    <a href="{{ route('home') }}" class="pc-link"><i data-feather="home"></i> Home</a></li>
-            </ul>
         </div>
-    </div>
-</nav>
-<header class="pc-header">
-    <div class="header-wrapper">
-        <div class="me-auto pc-mob-drp">
-            <ul class="list-unstyled">
-                <li class="pc-h-item pc-sidebar-collapse"><a href="#" class="pc-head-link ms-0" id="sidebar-hide"><i
-                            class="ti ti-menu-2"></i></a></li>
-                <li class="pc-h-item pc-sidebar-popup"><a href="#" class="pc-head-link ms-0" id="mobile-collapse"><i
-                            class="ti ti-menu-2"></i></a></li>
-                <li class="pc-h-item d-none d-md-inline-flex">
-                     <form class="form-search"><i class="search-icon">
-                             <svg class="pc-icon">
-                                 <use xlink:href="#custom-search-normal-1"></use>
-                             </svg>
-                         </i><input type="search" class="form-control" placeholder="Ctrl + K"></form>
-                </li>
+    </nav>
+    <header class="pc-header">
+        <div class="header-wrapper">
+            <div class="me-auto pc-mob-drp">
+                <ul class="list-unstyled">
+                    <li class="pc-h-item pc-sidebar-collapse"><a href="#" class="pc-head-link ms-0" id="sidebar-hide"><i
+                                class="ti ti-menu-2"></i></a></li>
+                    <li class="pc-h-item pc-sidebar-popup"><a href="#" class="pc-head-link ms-0" id="mobile-collapse"><i
+                                class="ti ti-menu-2"></i></a></li>
+                    <li class="pc-h-item d-none d-md-inline-flex">
+                        <form class="form-search"><i class="search-icon">
+                                <svg class="pc-icon">
+                                    <use xlink:href="#custom-search-normal-1"></use>
+                                </svg>
+                            </i><input type="search" class="form-control" placeholder="Ctrl + K"></form>
+                    </li>
 
-            </ul>
-        </div>
-        <div class="ms-auto">
-            <ul class="list-unstyled">
-                <li class="dropdown pc-h-item">
-                    <a class="pc-head-link dropdown-toggle arrow-none me-0"
-                       data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="false"
-                       aria-expanded="false">
-                        <svg class="pc-icon">
-                            <use xlink:href="#custom-sun-1"></use>
-                        </svg>
-                    </a>
-                    <div class="dropdown-menu dropdown-menu-end pc-h-dropdown"><a href="javascript:void(0)"
-                                                                                  class="dropdown-item"
-                                                                                  onclick="layout_change('dark')">
-                            <svg class="pc-icon">
-                                <use xlink:href="#custom-moon"></use>
-                            </svg>
-                            <span>Dark</span> </a><a href="javascript:void(0)" class="dropdown-item"
-                                                     onclick="layout_change('light')">
+                </ul>
+            </div>
+            <div class="ms-auto">
+                <ul class="list-unstyled">
+                    <li class="dropdown pc-h-item">
+                        <a class="pc-head-link dropdown-toggle arrow-none me-0" data-bs-toggle="dropdown" href="#"
+                            role="button" aria-haspopup="false" aria-expanded="false">
                             <svg class="pc-icon">
                                 <use xlink:href="#custom-sun-1"></use>
                             </svg>
-                            <span>Light</span> </a><a href="javascript:void(0)" class="dropdown-item"
-                                                      onclick="layout_change_default()">
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end pc-h-dropdown"><a href="javascript:void(0)"
+                                class="dropdown-item" onclick="layout_change('dark')">
+                                <svg class="pc-icon">
+                                    <use xlink:href="#custom-moon"></use>
+                                </svg>
+                                <span>Dark</span> </a><a href="javascript:void(0)" class="dropdown-item"
+                                onclick="layout_change('light')">
+                                <svg class="pc-icon">
+                                    <use xlink:href="#custom-sun-1"></use>
+                                </svg>
+                                <span>Light</span> </a><a href="javascript:void(0)" class="dropdown-item"
+                                onclick="layout_change_default()">
+                                <svg class="pc-icon">
+                                    <use xlink:href="#custom-setting-2"></use>
+                                </svg>
+                                <span>Default</span></a></div>
+                    </li>
+                    <li class="pc-h-item">
+                        <a href="#" class="pc-head-link me-0" data-bs-toggle="offcanvas" data-bs-target="#announcement"
+                            aria-controls="announcement">
+                            <svg class="pc-icon">
+                                <use xlink:href="#custom-flash"></use>
+                            </svg>
+                        </a>
+                    </li>
+                    <li class="dropdown pc-h-item">
+                        <a class="pc-head-link dropdown-toggle arrow-none me-0" data-bs-toggle="dropdown" href="#"
+                            role="button" aria-haspopup="false" aria-expanded="false">
+                            <svg class="pc-icon">
+                                <use xlink:href="#custom-notification"></use>
+                            </svg>
+                            {{-- <span class="badge bg-success pc-h-badge">3</span>--}}
+                        </a>
+                        <div class="dropdown-menu dropdown-notification dropdown-menu-end pc-h-dropdown">
+                            <div class="dropdown-header d-flex align-items-center justify-content-between">
+                                <h5 class="m-0">Notifications</h5><a href="javascript:void(0)"
+                                    class="btn btn-link btn-sm disabled">Mark all
+                                    read</a>
+                            </div>
+                            <div class="dropdown-body text-wrap header-notification-scroll position-relative">
+                                <p class="text-span text-center my-3">No Notifications here</p>
+                            </div>
+                            <div class="text-center py-2"><a href="javascript:void(0)"
+                                    class="link-danger disabled">Clear
+                                    all Notifications</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="dropdown pc-h-item">
+                        <a class="pc-head-link dropdown-toggle arrow-none me-0" data-bs-toggle="dropdown" href="#"
+                            role="button" aria-haspopup="false" aria-expanded="false">
+                            {!! auth()->user()->getImage('class="avatar-1 user-avtar" alt="user-image"') !!}
                             <svg class="pc-icon">
                                 <use xlink:href="#custom-setting-2"></use>
                             </svg>
-                            <span>Default</span></a></div>
-                </li>
-                <li class="pc-h-item">
-                     <a href="#" class="pc-head-link me-0" data-bs-toggle="offcanvas"
-                                          data-bs-target="#announcement" aria-controls="announcement">
-                         <svg class="pc-icon">
-                             <use xlink:href="#custom-flash"></use>
-                         </svg>
-                     </a></li>
-                <li class="dropdown pc-h-item">
-                    <a class="pc-head-link dropdown-toggle arrow-none me-0"
-                       data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="false"
-                       aria-expanded="false">
-                        <svg class="pc-icon">
-                            <use xlink:href="#custom-notification"></use>
-                        </svg>
-                        {{-- <span class="badge bg-success pc-h-badge">3</span>--}}
-                    </a>
-                    <div class="dropdown-menu dropdown-notification dropdown-menu-end pc-h-dropdown">
-                        <div class="dropdown-header d-flex align-items-center justify-content-between">
-                            <h5 class="m-0">Notifications</h5><a href="javascript:void(0)"
-                                                                 class="btn btn-link btn-sm disabled">Mark all
-                                read</a>
-                        </div>
-                        <div class="dropdown-body text-wrap header-notification-scroll position-relative">
-                            <p class="text-span text-center my-3">No Notifications here</p>
-                        </div>
-                        <div class="text-center py-2"><a href="javascript:void(0)" class="link-danger disabled">Clear
-                                all Notifications</a>
-                        </div>
-                    </div>
-                </li>
-                <li class="dropdown pc-h-item">
-                    <a class="pc-head-link dropdown-toggle arrow-none me-0"
-                       data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="false"
-                       aria-expanded="false">
-                        {!! auth()->user()->getImage('class="avatar-1 user-avtar" alt="user-image"') !!}
-                        <svg class="pc-icon">
-                              <use xlink:href="#custom-setting-2"></use>
-                        </svg>
 
-                    </a>
-                    <div class="dropdown-menu dropdown-menu-end pc-h-dropdown">
-                        <a href="{{ route('profile') }}" class="dropdown-item">
-                            <i class="ti ti-user"></i> <span>My Account</span>
                         </a>
-                        <a href="javascript:void(0)" class="dropdown-item"><i class="ti ti-headset"></i>
-                            <span>Support</span>
-                        </a>
+                        <div class="dropdown-menu dropdown-menu-end pc-h-dropdown">
+                            <a href="{{ route('profile') }}" class="dropdown-item">
+                                <i class="ti ti-user"></i> <span>My Account</span>
+                            </a>
+                            <a href="javascript:void(0)" class="dropdown-item"><i class="ti ti-headset"></i>
+                                <span>Support</span>
+                            </a>
 
-                        <a href="{{ route('logout') }}"
-                           onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
-                           class="dropdown-item">
-                            <i class="ti ti-power"></i> <span data-i18n="Logout">Logout</span>
-                        </a>
-                    </div>
-                </li>
-            </ul>
-        </div>
-    </div>
-</header>
-
-<div class="pc-container">
-    <div class="pc-content">
-        @yield('content')
-    </div>
-</div>
-<footer class="pc-footer">
-    <div class="footer-wrapper container-fluid">
-        <div class="row">
-            <div class="col my-1">
-                <p class="m-0">@include('layouts._partials._copyright')</p>
-            </div>
-            <div class="col-auto my-1">
-                {{--<ul class="list-inline footer-link mb-0">
-                     <li class="list-inline-item"><a
-                             href="../../external.html?link=https://ableproadmin.com/index.html">Home</a></li>
-                     <li class="list-inline-item"><a
-                             href="../../external.html?link=https://phoenixcoded.gitbook.io/able-pro/"
-                             target="_blank">Documentation</a></li>
-                     <li class="list-inline-item"><a
-                             href="../../external.html?link=https://phoenixcoded.authordesk.app/"
-                             target="_blank">Support</a></li>
-                 </ul>--}}
-
+                            <a href="{{ route('logout') }}"
+                                onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
+                                class="dropdown-item">
+                                <i class="ti ti-power"></i> <span data-i18n="Logout">Logout</span>
+                            </a>
+                        </div>
+                    </li>
+                </ul>
             </div>
         </div>
+    </header>
+
+    <div class="pc-container">
+        <div class="pc-content">
+            @yield('content')
+        </div>
     </div>
-</footer>
-@include('layouts._partials._scripts')
+    <footer class="pc-footer">
+        <div class="footer-wrapper container-fluid">
+            <div class="row">
+                <div class="col my-1">
+                    <p class="m-0">@include('layouts._partials._copyright')</p>
+                </div>
+                <div class="col-auto my-1">
+                    {{--<ul class="list-inline footer-link mb-0">
+                        <li class="list-inline-item"><a
+                                href="../../external.html?link=https://ableproadmin.com/index.html">Home</a></li>
+                        <li class="list-inline-item"><a
+                                href="../../external.html?link=https://phoenixcoded.gitbook.io/able-pro/"
+                                target="_blank">Documentation</a></li>
+                        <li class="list-inline-item"><a
+                                href="../../external.html?link=https://phoenixcoded.authordesk.app/"
+                                target="_blank">Support</a></li>
+                    </ul>--}}
+
+                </div>
+            </div>
+        </div>
+    </footer>
+    @include('layouts._partials._scripts')
 
 </body>
+
 </html>
