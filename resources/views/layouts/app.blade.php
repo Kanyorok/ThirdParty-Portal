@@ -58,9 +58,10 @@
                     </div>
                 </div>
                 <ul class="pc-navbar">
-                    <li class="pc-item pc-hasmenu{{ request()->is('/')?'active':'' }}">
-                        <a href="{{ route('home') }}" class="pc-link"><i data-feather="home"></i> Home</a>
-                    </li>
+                    <li class="pc-item {{ request()->is('/')?'active':'' }}"><a href="{{ route('home') }}"  class="pc-link"><span class="pc-micon">
+                        <i data-feather="home" class="pc-icon"></i>
+                        <use xlink:href="#custom-fatrows"></use>
+                    </svg> </span><span class="pc-mtext" data-i18n="Data">Home</span></a></li>
                     <li class="pc-item pc-hasmenu"><a href="#!" class="pc-link"><span class="pc-micon"><svg
                                     class="pc-icon">
                                     <use xlink:href="#custom-layer"></use>
