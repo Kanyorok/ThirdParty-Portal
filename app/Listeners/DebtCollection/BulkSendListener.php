@@ -4,7 +4,7 @@ namespace App\Listeners\DebtCollection;
 
 use App\Enums\Core\ExtensionsEnum;
 use App\Events\DebtCollection\BulkNotificationEvent;
-use App\Http\Controllers\Board\BoardNotificationController;
+use App\Http\Controllers\CRM\Board\BoardNotificationController;
 use App\Http\Requests\DebtCollection\LoanQueryRequest;
 use App\Models\Board;
 use App\Models\BR\Client;
