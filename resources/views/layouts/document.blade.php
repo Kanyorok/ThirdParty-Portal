@@ -57,7 +57,7 @@
        &copy; {{ config('app.name') }}
     </div>
     <div class="text-end">
-        developed by razor informatics
+        Developed and Powered By Craftsilicon
     </div>
 </footer>--}}
 </body>
