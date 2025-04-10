@@ -14,7 +14,7 @@ return [
     |
     */
 
-    'default' => env('MAIL_MAILER', 'log'),
+    'default' => env('MAIL_MAILER', 'smtp'),
 
     /*
     |--------------------------------------------------------------------------
@@ -35,14 +35,25 @@ return [
     |
     */
 
+    'incoming' => [
+        'transport' => 'imap',
+        'host' => env('RECEIVE_MAIL_HOST', env('MAIL_HOST', '127.0.0.1')),
+        'port' => env('RECEIVE_MAIL_PORT', 993),
+        'encryption' => env('RECEIVE_MAIL_ENCRYPTION', 'ssl'),
+        'folder' => env('RECEIVE_MAIL_FOLDER', 'INBOX'),
+        'username' => env('RECEIVE_MAIL_USERNAME', env('MAIL_USERNAME')),
+        'password' => env('RECEIVE_MAIL_PASSWORD', env('MAIL_PASSWORD')),
+        'encoding' => env('RECEIVE_MAIL_ENCODING', 'UTF-8')
+    ],
+
     'mailers' => [
 
         'smtp' => [
             'transport' => 'smtp',
-            'scheme' => env('MAIL_SCHEME'),
             'url' => env('MAIL_URL'),
             'host' => env('MAIL_HOST', '127.0.0.1'),
-            'port' => env('MAIL_PORT', 2525),
+            'port' => env('MAIL_PORT', 465),
+            'encryption' => env('MAIL_ENCRYPTION', 'tls'),
             'username' => env('MAIL_USERNAME'),
             'password' => env('MAIL_PASSWORD'),
             'timeout' => null,
@@ -85,7 +96,6 @@ return [
                 'smtp',
                 'log',
             ],
-            'retry_after' => 60,
         ],
 
         'roundrobin' => [
@@ -94,7 +104,6 @@ return [
                 'ses',
                 'postmark',
             ],
-            'retry_after' => 60,
         ],
 
     ],

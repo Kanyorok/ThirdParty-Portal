@@ -1,0 +1,754 @@
+{
+    "data": [
+        {
+            "attachments": {
+                "media_keys": [
+                    "3_1869306612331999232"
+                ]
+            },
+            "created_at": "2024-12-18T09:00:17.000Z",
+            "public_metrics": {
+                "retweet_count": 0,
+                "reply_count": 0,
+                "like_count": 0,
+                "quote_count": 0,
+                "bookmark_count": 0,
+                "impression_count": 0
+            },
+            "media_metadata": [
+                {
+                    "media_key": "3_1869306612331999232"
+                }
+            ],
+            "possibly_sensitive": false,
+            "id": "1869306682465267892",
+            "author_id": "1326367836",
+            "entities": {
+                "urls": [
+                    {
+                        "start": 11,
+                        "end": 34,
+                        "url": "https://t.co/FFzwFVKGO7",
+                        "expanded_url": "https://x.com/_mureithi_maina/status/1869306682465267892/photo/1",
+                        "display_url": "pic.x.com/FFzwFVKGO7",
+                        "media_key": "3_1869306612331999232"
+                    }
+                ]
+            },
+            "edit_controls": {
+                "edits_remaining": 5,
+                "is_edit_eligible": true,
+                "editable_until": "2024-12-18T10:00:17.000Z"
+            },
+            "reply_settings": "everyone",
+            "conversation_id": "1869306682465267892",
+            "edit_history_tweet_ids": [
+                "1869306682465267892"
+            ],
+            "lang": "en",
+            "text": "can relate https://t.co/FFzwFVKGO7",
+            "display_text_range": [
+                0,
+                10
+            ]
+        },
+        {
+            "created_at": "2024-12-16T18:06:43.000Z",
+            "public_metrics": {
+                "retweet_count": 0,
+                "reply_count": 0,
+                "like_count": 0,
+                "quote_count": 0,
+                "bookmark_count": 0,
+                "impression_count": 3
+            },
+            "possibly_sensitive": false,
+            "entities": {
+                "mentions": [
+                    {
+                        "start": 0,
+                        "end": 7,
+                        "username": "Kosgei",
+                        "id": "43146159"
+                    },
+                    {
+                        "start": 8,
+                        "end": 20,
+                        "username": "Stats_Kenya",
+                        "id": "1635645116504260609"
+                    }
+                ]
+            },
+            "id": "1868719420421685287",
+            "author_id": "1326367836",
+            "edit_controls": {
+                "edits_remaining": 5,
+                "is_edit_eligible": false,
+                "editable_until": "2024-12-16T19:06:43.000Z"
+            },
+            "reply_settings": "everyone",
+            "conversation_id": "1738512703537254462",
+            "edit_history_tweet_ids": [
+                "1868719420421685287"
+            ],
+            "lang": "lt",
+            "text": "@Kosgei @Stats_Kenya Bado unangoja",
+            "display_text_range": [
+                21,
+                34
+            ]
+        },
+        {
+            "created_at": "2024-12-16T06:49:57.000Z",
+            "public_metrics": {
+                "retweet_count": 0,
+                "reply_count": 0,
+                "like_count": 0,
+                "quote_count": 0,
+                "bookmark_count": 0,
+                "impression_count": 3
+            },
+            "possibly_sensitive": false,
+            "entities": {
+                "mentions": [
+                    {
+                        "start": 0,
+                        "end": 11,
+                        "username": "lelekoiten",
+                        "id": "914772244508880896"
+                    }
+                ]
+            },
+            "id": "1868549107377180724",
+            "author_id": "1326367836",
+            "edit_controls": {
+                "edits_remaining": 5,
+                "is_edit_eligible": false,
+                "editable_until": "2024-12-16T07:49:57.000Z"
+            },
+            "reply_settings": "everyone",
+            "conversation_id": "1867953640532766810",
+            "edit_history_tweet_ids": [
+                "1868549107377180724"
+            ],
+            "lang": "en",
+            "text": "@lelekoiten He said fuel is controlled by international prices not him",
+            "display_text_range": [
+                12,
+                70
+            ]
+        },
+        {
+            "created_at": "2024-12-16T06:41:50.000Z",
+            "public_metrics": {
+                "retweet_count": 0,
+                "reply_count": 0,
+                "like_count": 1,
+                "quote_count": 0,
+                "bookmark_count": 0,
+                "impression_count": 81
+            },
+            "possibly_sensitive": false,
+            "entities": {
+                "mentions": [
+                    {
+                        "start": 0,
+                        "end": 12,
+                        "username": "AllanObare4",
+                        "id": "1489124133178851331"
+                    }
+                ]
+            },
+            "id": "1868547063367032862",
+            "author_id": "1326367836",
+            "edit_controls": {
+                "edits_remaining": 5,
+                "is_edit_eligible": false,
+                "editable_until": "2024-12-16T07:41:50.000Z"
+            },
+            "reply_settings": "everyone",
+            "conversation_id": "1868301804838302117",
+            "edit_history_tweet_ids": [
+                "1868547063367032862"
+            ],
+            "lang": "en",
+            "text": "@AllanObare4 This guy may be sick and you are laughing, someone kindly check on him",
+            "display_text_range": [
+                13,
+                83
+            ]
+        },
+        {
+            "created_at": "2024-12-05T15:41:38.000Z",
+            "entities": {
+                "hashtags": [
+                    {
+                        "start": 57,
+                        "end": 69,
+                        "tag": "AlpineLinux"
+                    }
+                ],
+                "mentions": [
+                    {
+                        "start": 3,
+                        "end": 15,
+                        "username": "alpinelinux",
+                        "id": "2295990810"
+                    }
+                ],
+                "annotations": [
+                    {
+                        "start": 58,
+                        "end": 68,
+                        "probability": 0.9136,
+                        "type": "Other",
+                        "normalized_text": "AlpineLinux"
+                    },
+                    {
+                        "start": 71,
+                        "end": 73,
+                        "probability": 0.5899,
+                        "type": "Other",
+                        "normalized_text": ".21"
+                    },
+                    {
+                        "start": 114,
+                        "end": 124,
+                        "probability": 0.8771,
+                        "type": "Other",
+                        "normalized_text": "loongarch64"
+                    }
+                ]
+            },
+            "public_metrics": {
+                "retweet_count": 30,
+                "reply_count": 0,
+                "like_count": 0,
+                "quote_count": 0,
+                "bookmark_count": 0,
+                "impression_count": 0
+            },
+            "possibly_sensitive": false,
+            "id": "1864696643959836726",
+            "author_id": "1326367836",
+            "edit_controls": {
+                "edits_remaining": 5,
+                "is_edit_eligible": false,
+                "editable_until": "2024-12-05T16:41:38.000Z"
+            },
+            "reply_settings": "everyone",
+            "conversation_id": "1864696643959836726",
+            "edit_history_tweet_ids": [
+                "1864696643959836726"
+            ],
+            "lang": "en",
+            "text": "RT @alpinelinux: We are happy to announce the release of #AlpineLinux 3.21.",
+            "display_text_range": [
+                0,
+                140
+            ]
+        }
+    ],
+    "includes": {
+        "media": [
+            {
+                "width": 1080,
+                "url": "https://pbs.twimg.com/media/GfEcdbxWcAALN9x.jpg",
+                "type": "photo",
+                "media_key": "3_1869306612331999232",
+                "height": 921
+            },
+            {
+                "preview_image_url": "https://pbs.twimg.com/ext_tw_video_thumb/1867989214660276224/pu/img/LWNSD7g2jiC2gF_P.jpg",
+                "width": 576,
+                "variants": [
+                    {
+                        "bit_rate": 632000,
+                        "content_type": "video/mp4",
+                        "url": "https://video.twimg.com/ext_tw_video/1867989214660276224/pu/vid/avc1/320x568/gqhnPQuu9eMKsxxE.mp4?tag=12"
+                    },
+                    {
+                        "bit_rate": 950000,
+                        "content_type": "video/mp4",
+                        "url": "https://video.twimg.com/ext_tw_video/1867989214660276224/pu/vid/avc1/480x852/fcoWVzcku5n2NikI.mp4?tag=12"
+                    },
+                    {
+                        "bit_rate": 2176000,
+                        "content_type": "video/mp4",
+                        "url": "https://video.twimg.com/ext_tw_video/1867989214660276224/pu/vid/avc1/576x1024/CfXMEFbvStlzwRjn.mp4?tag=12"
+                    },
+                    {
+                        "content_type": "application/x-mpegURL",
+                        "url": "https://video.twimg.com/ext_tw_video/1867989214660276224/pu/pl/c41yUS3LKfPtlddG.m3u8?tag=12&v=3a1"
+                    }
+                ],
+                "duration_ms": 73584,
+                "type": "video",
+                "media_key": "7_1867989214660276224",
+                "height": 1024,
+                "public_metrics": {
+                    "view_count": 45223
+                }
+            },
+            {
+                "width": 1080,
+                "url": "https://pbs.twimg.com/media/Geu4TPmWIAAvgZX.jpg",
+                "type": "photo",
+                "media_key": "3_1867789111219593216",
+                "alt_text": "Anyone who loves Linux is my friend without introduction. There is a photo of Tux and Sonic the Hedgehog in the meme.",
+                "height": 1080
+            }
+        ],
+        "users": [
+            {
+                "id": "1326367836",
+                "most_recent_tweet_id": "1869306682465267892",
+                "protected": false,
+                "url": "https://t.co/MwUysTLH50",
+                "verified": false,
+                "username": "_mureithi_maina",
+                "profile_banner_url": "https://pbs.twimg.com/profile_banners/1326367836/1405057889",
+                "location": "Nairobi Kenya",
+                "profile_image_url": "https://pbs.twimg.com/profile_images/1350674047831601152/bZQjevpg_normal.jpg",
+                "receives_your_dm": false,
+                "subscription_type": "None",
+                "public_metrics": {
+                    "followers_count": 271,
+                    "following_count": 585,
+                    "tweet_count": 1222,
+                    "listed_count": 5,
+                    "like_count": 2732,
+                    "media_count": 156
+                },
+                "name": "Mureithi Maina",
+                "entities": {
+                    "url": {
+                        "urls": [
+                            {
+                                "start": 0,
+                                "end": 23,
+                                "url": "https://t.co/MwUysTLH50",
+                                "expanded_url": "https://www.razorinformatics.co.ke",
+                                "display_url": "razorinformatics.co.ke"
+                            }
+                        ]
+                    },
+                    "description": {
+                        "mentions": [
+                            {
+                                "start": 82,
+                                "end": 96,
+                                "username": "r_informatics"
+                            }
+                        ]
+                    }
+                },
+                "created_at": "2013-04-04T07:37:04.000Z",
+                "description": "",
+                "verified_type": "none"
+            }
+        ],
+        "tweets": [
+            {
+                "attachments": {
+                    "media_keys": [
+                        "3_1869306612331999232"
+                    ]
+                },
+                "created_at": "2024-12-18T09:00:17.000Z",
+                "public_metrics": {
+                    "retweet_count": 0,
+                    "reply_count": 0,
+                    "like_count": 0,
+                    "quote_count": 0,
+                    "bookmark_count": 0,
+                    "impression_count": 0
+                },
+                "media_metadata": [
+                    {
+                        "media_key": "3_1869306612331999232"
+                    }
+                ],
+                "possibly_sensitive": false,
+                "id": "1869306682465267892",
+                "author_id": "1326367836",
+                "entities": {
+                    "urls": [
+                        {
+                            "start": 11,
+                            "end": 34,
+                            "url": "https://t.co/FFzwFVKGO7",
+                            "expanded_url": "https://x.com/_mureithi_maina/status/1869306682465267892/photo/1",
+                            "display_url": "pic.x.com/FFzwFVKGO7",
+                            "media_key": "3_1869306612331999232"
+                        }
+                    ]
+                },
+                "edit_controls": {
+                    "edits_remaining": 5,
+                    "is_edit_eligible": true,
+                    "editable_until": "2024-12-18T10:00:17.000Z"
+                },
+                "reply_settings": "everyone",
+                "conversation_id": "1869306682465267892",
+                "edit_history_tweet_ids": [
+                    "1869306682465267892"
+                ],
+                "lang": "en",
+                "text": "can relate https://t.co/FFzwFVKGO7",
+                "display_text_range": [
+                    0,
+                    10
+                ]
+            },
+            {
+                "created_at": "2024-12-16T18:06:43.000Z",
+                "public_metrics": {
+                    "retweet_count": 0,
+                    "reply_count": 0,
+                    "like_count": 0,
+                    "quote_count": 0,
+                    "bookmark_count": 0,
+                    "impression_count": 3
+                },
+                "possibly_sensitive": false,
+                "entities": {
+                    "mentions": [
+                        {
+                            "start": 0,
+                            "end": 7,
+                            "username": "Kosgei",
+                            "id": "43146159"
+                        },
+                        {
+                            "start": 8,
+                            "end": 20,
+                            "username": "Stats_Kenya",
+                            "id": "1635645116504260609"
+                        }
+                    ]
+                },
+                "id": "1868719420421685287",
+                "author_id": "1326367836",
+                "edit_controls": {
+                    "edits_remaining": 5,
+                    "is_edit_eligible": false,
+                    "editable_until": "2024-12-16T19:06:43.000Z"
+                },
+                "reply_settings": "everyone",
+                "conversation_id": "1738512703537254462",
+                "edit_history_tweet_ids": [
+                    "1868719420421685287"
+                ],
+                "lang": "lt",
+                "text": "@Kosgei @Stats_Kenya Bado unangoja",
+                "display_text_range": [
+                    21,
+                    34
+                ]
+            },
+            {
+                "created_at": "2024-12-16T06:49:57.000Z",
+                "public_metrics": {
+                    "retweet_count": 0,
+                    "reply_count": 0,
+                    "like_count": 0,
+                    "quote_count": 0,
+                    "bookmark_count": 0,
+                    "impression_count": 3
+                },
+                "possibly_sensitive": false,
+                "entities": {
+                    "mentions": [
+                        {
+                            "start": 0,
+                            "end": 11,
+                            "username": "lelekoiten",
+                            "id": "914772244508880896"
+                        }
+                    ]
+                },
+                "id": "1868549107377180724",
+                "author_id": "1326367836",
+                "edit_controls": {
+                    "edits_remaining": 5,
+                    "is_edit_eligible": false,
+                    "editable_until": "2024-12-16T07:49:57.000Z"
+                },
+                "reply_settings": "everyone",
+                "conversation_id": "1867953640532766810",
+                "edit_history_tweet_ids": [
+                    "1868549107377180724"
+                ],
+                "lang": "en",
+                "text": "@lelekoiten He said fuel is controlled by international prices not him",
+                "display_text_range": [
+                    12,
+                    70
+                ]
+            },
+            {
+                "created_at": "2024-12-16T06:41:50.000Z",
+                "public_metrics": {
+                    "retweet_count": 0,
+                    "reply_count": 0,
+                    "like_count": 1,
+                    "quote_count": 0,
+                    "bookmark_count": 0,
+                    "impression_count": 81
+                },
+                "possibly_sensitive": false,
+                "entities": {
+                    "mentions": [
+                        {
+                            "start": 0,
+                            "end": 12,
+                            "username": "AllanObare4",
+                            "id": "1489124133178851331"
+                        }
+                    ]
+                },
+                "id": "1868547063367032862",
+                "author_id": "1326367836",
+                "edit_controls": {
+                    "edits_remaining": 5,
+                    "is_edit_eligible": false,
+                    "editable_until": "2024-12-16T07:41:50.000Z"
+                },
+                "reply_settings": "everyone",
+                "conversation_id": "1868301804838302117",
+                "edit_history_tweet_ids": [
+                    "1868547063367032862"
+                ],
+                "lang": "en",
+                "text": "@AllanObare4 This guy may be sick and you are laughing, someone kindly check on him",
+                "display_text_range": [
+                    13,
+                    83
+                ]
+            },
+            {
+                "created_at": "2024-12-16T06:33:14.000Z",
+                "public_metrics": {
+                    "retweet_count": 0,
+                    "reply_count": 0,
+                    "like_count": 1,
+                    "quote_count": 0,
+                    "bookmark_count": 0,
+                    "impression_count": 161
+                },
+                "possibly_sensitive": false,
+                "entities": {
+                    "mentions": [
+                        {
+                            "start": 0,
+                            "end": 11,
+                            "username": "Goldfield6",
+                            "id": "760941743210717184"
+                        }
+                    ]
+                },
+                "id": "1868544898053591154",
+                "author_id": "1326367836",
+                "edit_controls": {
+                    "edits_remaining": 5,
+                    "is_edit_eligible": false,
+                    "editable_until": "2024-12-16T07:33:14.000Z"
+                },
+                "reply_settings": "everyone",
+                "conversation_id": "1867989347104068092",
+                "edit_history_tweet_ids": [
+                    "1868544898053591154"
+                ],
+                "lang": "und",
+                "text": "@Goldfield6 10/0 man 🤣🤣🤣🤣",
+                "display_text_range": [
+                    12,
+                    25
+                ]
+            },
+            {
+                "attachments": {
+                    "media_keys": [
+                        "7_1867989214660276224"
+                    ],
+                    "media_source_tweet_id": [
+                        "1867989347104068092"
+                    ]
+                },
+                "created_at": "2024-12-16T06:32:52.000Z",
+                "entities": {
+                    "hashtags": [
+                        {
+                            "start": 51,
+                            "end": 70,
+                            "tag": "KalonzosGirlfriend"
+                        }
+                    ],
+                    "mentions": [
+                        {
+                            "start": 3,
+                            "end": 14,
+                            "username": "Goldfield6",
+                            "id": "760941743210717184"
+                        }
+                    ],
+                    "urls": [
+                        {
+                            "start": 71,
+                            "end": 94,
+                            "url": "https://t.co/JahulRX4Db",
+                            "expanded_url": "https://x.com/Goldfield6/status/1867989347104068092/video/1",
+                            "display_url": "pic.x.com/JahulRX4Db",
+                            "media_key": "7_1867989214660276224"
+                        }
+                    ],
+                    "annotations": [
+                        {
+                            "start": 30,
+                            "end": 33,
+                            "probability": 0.8989,
+                            "type": "Person",
+                            "normalized_text": "Ruto"
+                        },
+                        {
+                            "start": 52,
+                            "end": 69,
+                            "probability": 0.7935,
+                            "type": "Other",
+                            "normalized_text": "KalonzosGirlfriend"
+                        }
+                    ]
+                },
+                "public_metrics": {
+                    "retweet_count": 376,
+                    "reply_count": 0,
+                    "like_count": 0,
+                    "quote_count": 0,
+                    "bookmark_count": 0,
+                    "impression_count": 0
+                },
+                "media_metadata": [
+                    {
+                        "media_key": "7_1867989214660276224"
+                    }
+                ],
+                "possibly_sensitive": false,
+                "id": "1868544808480084074",
+                "author_id": "1326367836",
+                "edit_controls": {
+                    "edits_remaining": 5,
+                    "is_edit_eligible": false,
+                    "editable_until": "2024-12-16T07:32:52.000Z"
+                },
+                "reply_settings": "everyone",
+                "conversation_id": "1868544808480084074",
+                "edit_history_tweet_ids": [
+                    "1868544808480084074"
+                ],
+                "lang": "en",
+                "text": "RT @Goldfield6: Fear is gone. Ruto won't  believe #KalonzosGirlfriend https://t.co/JahulRX4Db",
+                "display_text_range": [
+                    0,
+                    94
+                ]
+            },
+            {
+                "created_at": "2024-12-05T15:41:38.000Z",
+                "entities": {
+                    "hashtags": [
+                        {
+                            "start": 57,
+                            "end": 69,
+                            "tag": "AlpineLinux"
+                        }
+                    ],
+                    "mentions": [
+                        {
+                            "start": 3,
+                            "end": 15,
+                            "username": "alpinelinux",
+                            "id": "2295990810"
+                        }
+                    ],
+                    "annotations": [
+                        {
+                            "start": 58,
+                            "end": 68,
+                            "probability": 0.9136,
+                            "type": "Other",
+                            "normalized_text": "AlpineLinux"
+                        },
+                        {
+                            "start": 71,
+                            "end": 73,
+                            "probability": 0.5899,
+                            "type": "Other",
+                            "normalized_text": ".21"
+                        },
+                        {
+                            "start": 114,
+                            "end": 124,
+                            "probability": 0.8771,
+                            "type": "Other",
+                            "normalized_text": "loongarch64"
+                        }
+                    ]
+                },
+                "public_metrics": {
+                    "retweet_count": 30,
+                    "reply_count": 0,
+                    "like_count": 0,
+                    "quote_count": 0,
+                    "bookmark_count": 0,
+                    "impression_count": 0
+                },
+                "possibly_sensitive": false,
+                "id": "1864696643959836726",
+                "author_id": "1326367836",
+                "edit_controls": {
+                    "edits_remaining": 5,
+                    "is_edit_eligible": false,
+                    "editable_until": "2024-12-05T16:41:38.000Z"
+                },
+                "reply_settings": "everyone",
+                "conversation_id": "1864696643959836726",
+                "edit_history_tweet_ids": [
+                    "1864696643959836726"
+                ],
+                "lang": "en",
+                "text": "RT @alpinelinux: We are happy to announce the release of #AlpineLinux 3.21.This is the first stable release for loongarch64.",
+                "display_text_range": [
+                    0,
+                    140
+                ]
+            }
+        ]
+    },
+    "errors": [
+        {
+            "value": "1867989347104068092",
+            "detail": "Could not find tweet with attachments.media_source_tweet: [1867989347104068092].",
+            "title": "Not Found Error",
+            "resource_type": "tweet",
+            "parameter": "attachments.media_source_tweet",
+            "resource_id": "1867989347104068092",
+            "type": "https://api.twitter.com/2/problems/resource-not-found"
+        },
+        {
+            "value": "1867789116047229436",
+            "detail": "Could not find tweet with attachments.media_source_tweet: [1867789116047229436].",
+            "title": "Not Found Error",
+            "resource_type": "tweet",
+            "parameter": "attachments.media_source_tweet",
+            "resource_id": "1867789116047229436",
+            "type": "https://api.twitter.com/2/problems/resource-not-found"
+        }
+    ],
+    "meta": {
+        "next_token": "7140dibdnow9c7btw4b2edrzwo6mzaer5c8ezz4gs7hva",
+        "result_count": 10,
+        "newest_id": "1869306682465267892",
+        "oldest_id": "1864696643959836726"
+    }
+}

@@ -1,0 +1,64 @@
+<?php
+
+namespace App\Models;
+
+use App\Enums\EmailStatusEnum;
+use App\Enums\EmailTypeEnum;
+use App\Traits\Model\UserActorTrait;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class CrmSMS extends Model
+{
+    use UserActorTrait, SoftDeletes;
+
+    const CREATED_AT = 'CreatedOn';
+    const UPDATED_AT = 'ModifiedOn';
+    const DELETED_AT = 'DeletedOn';
+    protected $connection = 'sqlsrv';
+    protected $table = 't_SMS';
+    protected $primaryKey = 'Id';
+
+    protected $fillable = [
+        'SMSId', 'Phone', 'Type', 'Status', 'Content', 'Party', 'PartyID', 'Source', 'SourceID', 'Response', 'BulkNotificationId',
+        'Dated', 'CreatedBy', 'ModifiedBy', 'DeletedBy'
+    ];
+
+
+    protected $casts = [
+        'Dated' => 'datetime',
+        'Status' => EmailStatusEnum::class,
+        'Type' => EmailTypeEnum::class,
+        'Response' => 'object',
+    ];
+
+    public static function getPrimaryKey(): string
+    {
+        return (new self())->getRouteKeyName();
+    }
+
+    /**
+     * Get the route key for the model.
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'SMSId';
+    }
+
+    public function party(): MorphTo
+    {
+        return $this->morphTo(__FUNCTION__, "Party", "PartyID");
+    }
+
+    public function source(): MorphTo
+    {
+        return $this->morphTo(__FUNCTION__, "Source", "SourceID");
+    }
+
+    public function bulk(): BelongsTo
+    {
+        return $this->belongsTo(BulkNotification::class, 'BulkNotificationId', 'BulkNotificationID');
+    }
+}
