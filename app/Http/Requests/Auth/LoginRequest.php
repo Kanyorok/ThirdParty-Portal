@@ -38,8 +38,7 @@ class LoginRequest extends FormRequest
     public function authenticate(): void
     {
         $this->ensureIsNotRateLimited();
-
-        $user = User::where('UserID', Str::upper($this->get('UserID')))->first();
+        $user = User::query()->where('UserID', $this->string('UserID')->upper()->toString())->first();
         if ($user instanceof User && BREncryption::checkAuthUser($user, $this->get('password'))) {
             RateLimiter::clear($this->throttleKey());
             //remove other sessions
@@ -47,6 +46,7 @@ class LoginRequest extends FormRequest
                 DB::connection(config(key: 'session.connection'))->table(table: config(key: 'session.table', default: 'sessions'))
                     ->where(column: 'user_id', operator: '=', value: $user->getAuthIdentifier())->delete();
             }
+
 
             //new session
             Auth::login($user, $user->can(\App\Enums\Core\PermissionEnum::UsersSessions));

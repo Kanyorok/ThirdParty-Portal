@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Log;
 
 class SystemHelper
 {
-    public const ID = 'CRMSYS';
+    public const ID = 'ERPSYS';
 
     public static function user(): User
     {
@@ -29,7 +29,7 @@ class SystemHelper
             'Linked' => false,
             'Notes' => 'SYSTEM ACCOUNT',
             'Password' => 'SYSTEM ACCOUNT',
-            'Email_Signature' => '<p>Regards,<br>Customer Relations<br>' . config('org.name') . '</p>'
+            'Email_Signature' => '<p>Regards,<br>. .<br>' . config('org.name') . '</p>'
         ]);
 
     }

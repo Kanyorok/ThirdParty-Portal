@@ -1,25 +1,87 @@
-# BR CRM - Banking CRM System
+# Br ERP
 
-## Introduction
+**Br ERP** is a powerful and scalable Enterprise Resource Planning (ERP) system developed by **Craft Silicon**. It is designed to optimize and streamline business processes by integrating various organizational resources and operational modules into a single, unified system.
 
-Welcome to **BR CRM**, a powerful Customer Relationship Management (CRM) system specifically designed to integrate
-seamlessly with the **Banking Realm Core** banking system. This application enhances client engagement by offering tools
-to manage various business processes, including tickets, campaigns, surveys, leads, and feedback across multiple banking
-channels such as **mobile** and **internet**.
-BR CRM streamlines customer interactions, providing a unified platform to engage with clients and analyze their needs,
-enabling banks to deliver better services and improve overall customer satisfaction.
+Built on top of the modern **Laravel Framework** (v11.37.0), Br ERP offers a robust backend architecture combined with a user-friendly and intuitive frontend experience. The system is tailored for enterprises of all sizes, addressing diverse needs with configurable modules.
 
-## Key Features
+---
 
-- **Client Management**: Handle all customer information and their related interactions with ease.
-- **Ticket Management**: Track and resolve client issues using a robust ticketing system.
-- **Campaigns**: Plan, execute, and monitor campaigns aimed at enhancing client relationships and engagement.
-- **Surveys**: Collect valuable insights through custom surveys to assess client satisfaction and preferences.
-- **Leads Management**: Streamline operations by efficiently managing leads and turning them into opportunities.
-- **Feedback from Channels**: Gather and manage feedback from various channels, including mobile and internet banking
-  platforms.
-- **Data Integration**: Designed to integrate directly with the **Banking Realm Core** banking system for a cohesive
-  customer database and operational flow.
+## Features
+
+Br ERP provides a comprehensive suite of features covering all critical business functions:
+
+### Core ERP Modules:
+
+1. **Human Resources (HR) Module**:
+    - Employee management (profiles, attendance, leave tracking)
+    - Payroll management
+    - Recruitment and applicant tracking
+    - Performance evaluations
+
+2. **Finance and Accounting**:
+    - General ledger, accounts payable (AP), and accounts receivable (AR)
+    - Invoicing and billing
+    - Budgeting and expense tracking
+    - Comprehensive financial reporting and analytics
+
+3. **Inventory and Warehouse Management**:
+    - Stock control and tracking
+    - Warehouse organization and management
+    - Supplier and purchase order management
+    - Barcode and RFID inventory options
+
+4. **Procurement and Vendor Management**:
+    - Vendor records and relationship management
+    - Purchase order (PO) automation
+    - Product sourcing and supplier catalog integrations
+    - Approval workflows for procurement
+
+5. **Sales and Customer Relationship Management (CRM)**:
+    - Lead tracking and opportunity management
+    - Sales pipeline and quotation management
+    - Order management and invoicing
+    - Customer communication (email, phone, chat logs)
+
+6. **Manufacturing and Production Planning**:
+    - Bill of materials (BOM)
+    - Production order and job scheduling
+    - Demand forecasting and planning
+    - Quality control and compliance management
+
+7. **Project Management**:
+    - Task assignments, progress tracking
+    - Time tracking for employees
+    - Cost estimation and budget adherence
+    - Gantt charts and milestone setting
+
+8. **Supply Chain Management (SCM)**:
+    - Real-time tracking of supply chain activities
+    - Logistics and transportation management
+    - Vendor collaboration portals
+    - Optimization for timely delivery
+
+9. **Reports and Analytics**:
+    - Comprehensive dashboard for KPI monitoring
+    - Customizable reports for operational, financial, and resource analysis
+    - Predictive analytics and actionable insights
+    - Export reports via Excel, CSV, or PDF
+
+10. **Compliance and Audit Management**:
+    - Document and policy management
+    - Audit trail tracking
+    - Industry-specific compliance support
+
+---
+
+### Additional Features:
+- Modular and Scalable Architecture: Easily customizable to suit specific business needs.
+- Role-Based Access Control (RBAC): Enhanced security through granular user permissions.
+- Multi-Currency and Multi-Language Support: For businesses operating globally.
+- Automated Workflow: Task automation through cron-job scheduling.
+- Real-Time Notifications: Alerts for operational events and issues.
+- Seamless API Support: Integrations with external services.
+
+---
 
 ## Important Notes
 
@@ -70,62 +132,84 @@ CREATE SYNONYM [dbo].[syn_t_UserCodeDetail] FOR [BRNET_IMARISHA_LIVE_255].[dbo].
 
 ```
 
-Make sure to adjust the database and schema names to reflect your environment configuration.
+## Technology Stack
 
-1. Install PHP dependencies:
+### Backend:
+- **Framework**: Laravel (v11.37.0)
+- **Database**: SQL Server (sqlsrv)
 
-```bash
-composer install
-```
+### Other Key Dependencies:
+- **Mockery**: For testing
+- **Guzzle**: For handling HTTP requests and API integrations
+- **Faker**: For generating dummy data during development
+- **Monolog**: For advanced logging
+- **Symfony Mailer**: For emails
+- **Laravel Sanctum**: For secure API authentication
+- **Barryvdh/DomPDF**: For PDF generation
+- **Dragonmantank/Cron-Expression**: For managing complex task schedules
 
-2. Install Node.js dependencies:
+---
 
-```bash
-npm install
-```
+## Installation Guide
 
-3. If you need Puppeteer for tasks like browser automation, make sure to install it as well:
+### Requirements:
+- PHP 8.3 or higher
+- Composer (PHP dependency manager)
+- SQL Server instance for the database
 
-```bash
-npm i puppeteer --save
-```
+---
 
-4. Configure the environment file (`.env`) with the necessary database and queue settings.
-5. Run migrations (if required):
+## Contributors
 
-```bash
-php artisan migrate
-```
+- **[Mureithi Maina](https://github.com/mureithimaina/)**:
+- **Robert**
+- **Eric**
+- 
+---
 
-6. Create the required synonyms in your SQL Server using the provided syntax.
-7. Start the development server:
+## License
 
-```bash
-php artisan serve
-```
+**Br ERP** is a proprietary software product developed and owned by **Craft Silicon**. It is subject to the following licensing terms:
 
-## Contributing
+### Key Points:
+1. **Proprietary License**:
+    - The application is licensed, not sold, and remains the exclusive intellectual property of **Craft Silicon**.
+    - Users are granted non-transferable rights to use the software under specific terms defined in the licensing agreement.
 
-We welcome contributions to enhance **BR CRM**. If you'd like to contribute:
+2. **Restrictions**:
+    - Modifying, decompiling, reverse-engineering, redistributing, or reproducing parts of this software in any form without explicit written permission from **Craft Silicon** is prohibited.
+    - The software is not open source.
 
-1. Fork the repository.
-2. Create your feature branch:
+3. **Legal Compliance**:
+    - This software complies with **Kenyan Laws** and adheres to international copyright and intellectual property laws.
+    - Customers are required to abide by both their local regulations as well as provisions outlined under **Kenyan law**.
 
-``` bash
-   git checkout -b feature/YourFeatureName
-```
+4. **Acceptance**:
+    - Use of this software constitutes acceptance of the End-User License Agreement (EULA).
 
-3. Commit your changes:
+For further details about the licensing terms, or to purchase a license, please contact **Craft Silicon** at the provided contact information.
 
-``` bash
-   git commit -m "Add your message here"
-```
+---
 
-4. Push to your branch:
+## Copyright
 
-``` bash
-   git push origin feature/YourFeatureName
-```
+**©2025-Present Craft Silicon. All Rights Reserved.**
 
-5. Open a pull request.
+This software and its documentation are copyrighted materials, protected under:
+1. **Kenya's Copyright Act (Cap 130)**.
+2. Relevant international copyright laws, including but not limited to:
+    - The **Berne Convention for the Protection of Literary and Artistic Works**.
+    - The **Universal Copyright Convention (UCC)**.
+    - The **WIPO Copyright Treaty**.
 
+Any unauthorized use, copying, or distribution is punishable as per applicable Kenyan and international laws.
+
+---
+
+## Contact
+
+For licensing, support, and inquiries, reach out to **Craft Silicon**:
+
+- **Website**: [https://craftsilicon.com](https://craftsilicon.com)
+- **Email**: support@craftsilicon.com
+- **Location**: Nairobi, Kenya
