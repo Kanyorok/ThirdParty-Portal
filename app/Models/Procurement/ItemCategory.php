@@ -1,12 +1,10 @@
-<?php
-
-namespace App\Models;
+namespace App\Models\Procurement;
 
 use Illuminate\Database\Eloquent\Model;
 
 class ItemCategory extends Model
 {
-    protected $table = 't_items_categories';
+    protected $table = 't_item_categories';
     protected $fillable = ['name'];
 
     public function items()

@@ -47,8 +47,8 @@ Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function (
         });
     });
 
-    Route::namespace('procurement')->group(function () {
-        Route::resource('items', 'ItemController');
+    Route::prefix('procurement')->name('procurement.')->group(function () {
+        Route::resource('items', ItemController::class);
     });
 
     Route::get('help', 'HelpController')->name('help');

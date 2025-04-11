@@ -1,64 +1,75 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Procurement;
 
+use App\Http\Controllers\Controller;
+use App\Models\Procurement\Item;
+use App\Models\Procurement\ItemCategory;
 use Illuminate\Http\Request;
 
 class ItemController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        $items = Item::with('category')->get();
+        return view('procurement.items.index', compact('items'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
+        $categories = ItemCategory::all();
+        return view('procurement.items.create', compact('categories'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'type' => 'required|in:good,service',
+            'description' => 'nullable|string',
+            'category_id' => 'nullable|exists:t_item_categories,id',
+            'unit_of_measure' => 'nullable|string|max:100',
+            'unit_price' => 'nullable|numeric|min:0',
+            'service_scope' => 'nullable|string',
+        ]);
+
+        Item::create($validated);
+
+        return redirect()->route('procurement.items.index')->with('success', 'Item created successfully.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show(Item $item)
     {
-        //
+        return view('procurement.items.show', compact('item'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function edit(Item $item)
     {
-        //
+        $categories = ItemCategory::all();
+        return view('procurement.items.edit', compact('item', 'categories'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Item $item)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'type' => 'required|in:good,service',
+            'description' => 'nullable|string',
+            'category_id' => 'nullable|exists:t_item_categories,id',
+            'unit_of_measure' => 'nullable|string|max:100',
+            'unit_price' => 'nullable|numeric|min:0',
+            'service_scope' => 'nullable|string',
+        ]);
+
+        $item->update($validated);
+
+        return redirect()->route('procurement.items.index')->with('success', 'Item updated successfully.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy(Item $item)
     {
-        //
+        $item->delete();
+
+        return redirect()->route('procurement.items.index')->with('success', 'Item deleted successfully.');
     }
 }
