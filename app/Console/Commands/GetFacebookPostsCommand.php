@@ -68,6 +68,5 @@ class GetFacebookPostsCommand extends Command
 
             SocialMediaService::createFromFacebook($post, $actor);
         }
-
     }
 }

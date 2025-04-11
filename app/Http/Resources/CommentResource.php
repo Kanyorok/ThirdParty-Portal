@@ -23,17 +23,17 @@ class CommentResource extends JsonResource
         $service = new CommentService($s);
 
         return [
-            'id' => $this->Id,
-            'msg' => $this->Notes,
-            'dated' => [
-                'datetime' => $this->CreatedOn?->format('M d, Y h:i a'),
-                'sting' => $this->CreatedOn?->diffForHumans(),
-            ],
-            'actor' => $service->commenter(),
-            'extra' => $service->extras(),
-            'permission' => [
-                'cancelable' => $service->trashable(auth()->user())
-            ]
-        ];
+                'id'         => $this->Id,
+                'msg'        => $this->Notes,
+                'dated'      => [
+                                 'datetime' => $this->CreatedOn?->format('M d, Y h:i a'),
+                                 'sting'    => $this->CreatedOn?->diffForHumans(),
+                                ],
+                'actor'      => $service->commenter(),
+                'extra'      => $service->extras(),
+                'permission' => [
+                                 'cancelable' => $service->trashable(auth()->user()),
+                                ],
+               ];
     }
 }

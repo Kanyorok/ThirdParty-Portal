@@ -12,9 +12,13 @@ class DiscussionUser extends Pivot
     protected $table = 't_DiscussionsUsers';
 
     protected $fillable = [
-        'DiscussionId', 'UserID',
-        'CreatedOn', 'CreatedBy', 'ModifiedOn', 'ModifiedBy'
-    ];
+                           'DiscussionId',
+                           'UserID',
+                           'CreatedOn',
+                           'CreatedBy',
+                           'ModifiedOn',
+                           'ModifiedBy',
+                          ];
 
     public function discussion(): BelongsTo
     {

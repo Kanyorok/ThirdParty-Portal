@@ -14,15 +14,22 @@ class ScheduleUser extends Pivot
     protected $table = 't_ScheduleUsers';
 
     protected $fillable = [
-        'ScheduleId', 'UserID', 'ScheduleUserStatus','DecidedOn',
-        'CreatedOn', 'CreatedBy', 'ModifiedOn', 'ModifiedBy', 'ReminderOn'
-    ];
+                           'ScheduleId',
+                           'UserID',
+                           'ScheduleUserStatus',
+                           'DecidedOn',
+                           'CreatedOn',
+                           'CreatedBy',
+                           'ModifiedOn',
+                           'ModifiedBy',
+                           'ReminderOn',
+                          ];
 
-    protected $casts=[
-        'DecidedOn'=>'datetime',
-        'ReminderOn' => 'datetime',
-        'ScheduleUserStatus' => ScheduleUserStatusEnum::class
-    ];
+    protected $casts = [
+                        'DecidedOn'          => 'datetime',
+                        'ReminderOn'         => 'datetime',
+                        'ScheduleUserStatus' => ScheduleUserStatusEnum::class,
+                       ];
 
     public function user(): BelongsTo
     {

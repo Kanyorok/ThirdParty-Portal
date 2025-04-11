@@ -50,13 +50,12 @@ class EmailDraftController extends Controller
                     $CrmEmail->conversation?->increment('Emails');
                     return $CrmEmail;
                 });
-            } catch (Exception|\Throwable $e) {
+            } catch (Exception | \Throwable $e) {
                 Log::error('Error saving draft ' . $e->getMessage());
                 return $this->errored('error creating draft');
             }
 
             return $this->edit($request, $CrmEmail->EmailID);
-
         }
         return $this->errored('similar email is being edited by another user');
     }
@@ -93,5 +92,4 @@ class EmailDraftController extends Controller
         return $this->succeeded('email queued for sending', data: ['summary_url' => route('email-conversations.show', [$replyTo->EmailConversationId])]);*/
         return $this->errored('unexpected error, try again later');
     }
-
 }

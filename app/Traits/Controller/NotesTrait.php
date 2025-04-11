@@ -34,10 +34,10 @@ trait NotesTrait
     {
         return DB::transaction(static function () use ($actor, $query, $notes) {
             $note = $query->create([
-                'Notes' => $notes,
-                'CreatedBy' => $actor->Id,
-                'ModifiedBy' => $actor->Id,
-            ]);
+                                    'Notes'      => $notes,
+                                    'CreatedBy'  => $actor->Id,
+                                    'ModifiedBy' => $actor->Id,
+                                   ]);
 
             return ActivityService::note($note, $actor->UserID . ' added a note.', $actor);
         });

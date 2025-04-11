@@ -41,10 +41,10 @@ trait CallsTrait
             })->editColumn('EndOn', function (Call $call) {
                 return $call->EndOn?->format('F d, Y h:i A');
             })->addColumn('Duration', function (Call $call) {
-                if ($call->EndOn instanceof Carbon){
+                if ($call->EndOn instanceof Carbon) {
                     return $call->EndOn->diffForHumans($call->StartOn, \Carbon\CarbonInterface::DIFF_ABSOLUTE, parts: 2, short: true);
                 }//->diffInMinutes(, true)." mins";
-               return 'Non ended';
+                return 'Non ended';
             })->editColumn('CallStatusID', function (Call $call) {
                 return $call->CallStatusID->description();
             })->rawColumns(['user'])->make();
@@ -56,18 +56,18 @@ trait CallsTrait
      */
     public function startCall(MorphMany $query, Carbon $start, User $actor, Schedule $schedule = null): Call
     {
-       throw new ErrorException('deprecated');
+        throw new ErrorException('deprecated');
     }
 
     /**
      * @throws Throwable
      */
-    public function endCall(Call $call, Carbon $end, User $actor, string $discussion, string $notes = null, bool $activity=true): Call
+    public function endCall(Call $call, Carbon $end, User $actor, string $discussion, string $notes = null, bool $activity = true): Call
     {
         return DB::transaction(static function () use ($activity, $discussion, $notes, $end, $actor, $call) {
-            $service = (new CallService($call))->end($end,CallStatusEnum::SuccessDiscussion,$actor)
+            $service = (new CallService($call))->end($end, CallStatusEnum::SuccessDiscussion, $actor)
                 ->discussion($discussion, $actor, $notes);
-            if($activity){
+            if ($activity) {
                 $service->activity($actor);
             }
             return $service->call;

@@ -67,7 +67,7 @@ class CompetitorRoachListener implements ShouldQueue
         if (Str::length($content) > 0) {
             try {
                 $data = (new AIService())->competitor(Str::limit(StringHelper::removeAccessibility(StringHelper::cleanHtml($content)), 30000));
-            } catch (\Exception|\Throwable) {
+            } catch (\Exception | \Throwable) {
                 $data = null;
             }
             $competitor->update(['Processing' => ['done' => 9, 'total' => 10]]);
@@ -100,19 +100,18 @@ class CompetitorRoachListener implements ShouldQueue
                         }
                         //"", "Limit", "", "OtherCharges", "", "", "Clients",
                         $competitor->products()->create([
-                            'Name' => $product['name'],
-                            'Notes' => array_key_exists('description', $product) ? ($product['description']) : null,
-                            'InterestRate' => array_key_exists('interest', $product) ? ($product['interest']) : null,
-                            'RepaymentPeriod' => array_key_exists('period', $product) ? ($product['period']) : null,
-                            'SecurityRequired' => array_key_exists('security', $product) ? ($product['security']) : null,
-                            'CreatedBy' => SystemHelper::user()->Id,
-                            'ModifiedBy' => SystemHelper::user()->Id
-                        ]);
+                                                         'Name'             => $product['name'],
+                                                         'Notes'            => array_key_exists('description', $product) ? ($product['description']) : null,
+                                                         'InterestRate'     => array_key_exists('interest', $product) ? ($product['interest']) : null,
+                                                         'RepaymentPeriod'  => array_key_exists('period', $product) ? ($product['period']) : null,
+                                                         'SecurityRequired' => array_key_exists('security', $product) ? ($product['security']) : null,
+                                                         'CreatedBy'        => SystemHelper::user()->Id,
+                                                         'ModifiedBy'       => SystemHelper::user()->Id,
+                                                        ]);
                     }
                 }
                 // 'name', 'clients', 'summary', 'email', 'core_business','products', 'name','interest','period','description',''
             }
-
         }
 
         $competitor->update(['Processing' => null]);
@@ -124,7 +123,7 @@ class CompetitorRoachListener implements ShouldQueue
             if (Http::get($logo)->successful()) {
                 $competitor->setAvatarFromURL($logo, SystemHelper::user(), 'Logo');
             }
-        } catch (\Exception|ConnectionException $e) {
+        } catch (\Exception | ConnectionException $e) {
             Log::error('Set Image Error: ' . $logo);
             Log::error($e);
         }

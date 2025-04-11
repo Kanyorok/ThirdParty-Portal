@@ -19,6 +19,6 @@ class ScheduleActionController extends Controller
 
     public function board(BoardMeetingRequest $request): JsonResponse
     {
-       return $this->succeeded('deprecated use the other one');
+        return $this->succeeded('deprecated use the other one');
     }
 }

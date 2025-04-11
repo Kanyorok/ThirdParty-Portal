@@ -27,8 +27,8 @@ class CrmEmailPolicy
             return true;
         }
 
-        if ($crmEmail->conversation instanceof EmailConversation){
-            return  $user->can('view',$crmEmail->conversation);
+        if ($crmEmail->conversation instanceof EmailConversation) {
+            return  $user->can('view', $crmEmail->conversation);
         }
 
         return false;
@@ -51,8 +51,8 @@ class CrmEmailPolicy
             return true;
         }
 
-        if ($crmEmail->conversation instanceof EmailConversation){
-            return  $user->can('update',$crmEmail->conversation);
+        if ($crmEmail->conversation instanceof EmailConversation) {
+            return  $user->can('update', $crmEmail->conversation);
         }
 
         return false;
@@ -67,8 +67,8 @@ class CrmEmailPolicy
             return true;
         }
 
-        if ($crmEmail->conversation instanceof EmailConversation){
-            return  $user->can('delete',$crmEmail->conversation);
+        if ($crmEmail->conversation instanceof EmailConversation) {
+            return  $user->can('delete', $crmEmail->conversation);
         }
 
         return false;

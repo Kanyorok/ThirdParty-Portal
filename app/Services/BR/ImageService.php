@@ -14,7 +14,7 @@ class ImageService
     public function get_image(string $attributes = '', bool $placeholder = true): string
     {
         $str = $this->get_url_string();
-        if (!empty($str)){
+        if (!empty($str)) {
             return '<img src="data:image/png;base64,' . $str . '" ' . $attributes . '>';
         }
 
@@ -54,13 +54,13 @@ class ImageService
         $data = substr($ser, $pos + 3, $len);
 
         $pos += 3 + $len;
-        if ($ser[$pos] != "\x9F")
+        if ($ser[$pos] != "\x9F") {
             throw new Exception('Bytes8TextWithEndElement record not found');
+        }
         $a = unpack('Clen', $ser[$pos + 1]);
         $len = $a['len'];
         $data .= substr($ser, $pos + 2, $len);
 
         return $data;
     }
-
 }

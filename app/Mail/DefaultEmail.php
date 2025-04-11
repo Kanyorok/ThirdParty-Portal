@@ -14,7 +14,8 @@ use Illuminate\Queue\SerializesModels;
 
 class DefaultEmail extends Mailable
 {
-    use Queueable, SerializesModels;
+    use Queueable;
+    use SerializesModels;
 
     //, InteractsWithQueue;
 

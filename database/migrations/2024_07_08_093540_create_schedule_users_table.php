@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('t_ScheduleUsers', static function (Blueprint $table) {
             $table->id();
             $table->foreignId('UserID')->constrained('t_Users', 'Id');
-            $table->foreignId('ScheduleId')->constrained('t_Schedule','ScheduleID');
-            $table->char('ScheduleUserStatus',2);
+            $table->foreignId('ScheduleId')->constrained('t_Schedule', 'ScheduleID');
+            $table->char('ScheduleUserStatus', 2);
             $table->dateTime('DecidedOn')->nullable();
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');

@@ -30,20 +30,17 @@ class ClientResource extends JsonResource
             $phones->add($client->Phone2);
         }
         return [
-            'id' => $this->ClientID,
-            'GovtNo' => $govtNo,
-            'Name' => $this->Name,
-            'Type' =>  $this->resource->type->Description,
-            'Contacts' => [
-                'Emails' => (is_string($this->Email))?[
-                    $this->Email
-                ]:[],
-                'PhoneNumbers' => $phones,
-            ],
-            'Assets' => [
-                'Image' => $this->resource->getImage('class="img-fluid img-thumbnail"')
-            ]
-        ];
+                'id'       => $this->ClientID,
+                'GovtNo'   => $govtNo,
+                'Name'     => $this->Name,
+                'Type'     => $this->resource->type->Description,
+                'Contacts' => [
+                               'Emails'       => (is_string($this->Email)) ? [$this->Email] : [],
+                               'PhoneNumbers' => $phones,
+                              ],
+                'Assets'   => [
+                               'Image' => $this->resource->getImage('class="img-fluid img-thumbnail"'),
+                              ],
+               ];
     }
-
 }

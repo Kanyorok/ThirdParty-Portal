@@ -20,7 +20,6 @@ use Illuminate\Support\Facades\DB;
 
 class MarketingListsActionsController extends Controller
 {
-
     public function __construct()
     {
         $this->middleware('ajax');

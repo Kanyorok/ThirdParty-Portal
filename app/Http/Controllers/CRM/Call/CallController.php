@@ -17,11 +17,14 @@ class CallController extends Controller
     /**
      * A Picked Call with Phone Number
      */
-    public function index(Request $request):View
+    public function index(Request $request): View
     {
         $data = $request->validate([
-            'phone' => ['nullable','string']
-        ]);
+                                    'phone' => [
+                                                'nullable',
+                                                'string',
+                                               ],
+                                   ]);
         $phone = '';
         if (array_key_exists('phone', $data) && !is_null($data['phone'])) {
             $phoneNo = trim($data['phone']);

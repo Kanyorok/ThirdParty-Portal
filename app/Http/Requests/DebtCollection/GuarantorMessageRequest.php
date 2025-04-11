@@ -17,21 +17,32 @@ class GuarantorMessageRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'guarantor_message_content' => ['required_without:message_to', 'string'],
-            'message_to' => ['required_without:guarantor_message_content', 'min:9', 'max:50'],
-            'message_content' => ['required_without:guarantor_message_content', 'string', 'min:5'],
-        ];
+                'guarantor_message_content' => [
+                                                'required_without:message_to',
+                                                'string',
+                                               ],
+                'message_to'                => [
+                                                'required_without:guarantor_message_content',
+                                                'min:9',
+                                                'max:50',
+                                               ],
+                'message_content'           => [
+                                                'required_without:guarantor_message_content',
+                                                'string',
+                                                'min:5',
+                                               ],
+               ];
     }
 
     public function messages(): array
     {
         return [
-            'guarantor_message_content.required_without' => 'message content is required',
-            'guarantor_message_content.min' => 'write a longer message',
-            'message_to.required_without' => 'message to is required',
-            'message_content.required_without' => 'message content is required',
-            'message_content.min' => 'write a longer message',
-        ];
+                'guarantor_message_content.required_without' => 'message content is required',
+                'guarantor_message_content.min'              => 'write a longer message',
+                'message_to.required_without'                => 'message to is required',
+                'message_content.required_without'           => 'message content is required',
+                'message_content.min'                        => 'write a longer message',
+               ];
     }
 
     public function getClientPhone(Client $client): string

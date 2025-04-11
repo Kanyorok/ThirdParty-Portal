@@ -13,15 +13,20 @@ class ScheduleLead extends Model
     protected $table = 't_ScheduleLeads';
 
     protected $fillable = [
-        'ScheduleId', 'LeadId',
-        'CreatedOn', 'CreatedBy', 'ModifiedOn', 'ModifiedBy', 'ReminderOn'
-    ];
+                           'ScheduleId',
+                           'LeadId',
+                           'CreatedOn',
+                           'CreatedBy',
+                           'ModifiedOn',
+                           'ModifiedBy',
+                           'ReminderOn',
+                          ];
 
     protected $casts = [
-        'CreatedOn' => 'datetime',
-        'ModifiedOn' => 'datetime',
-        'ReminderOn' => 'datetime',
-    ];
+                        'CreatedOn'  => 'datetime',
+                        'ModifiedOn' => 'datetime',
+                        'ReminderOn' => 'datetime',
+                       ];
 
     public function lead(): BelongsTo
     {

@@ -7,8 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class ItemCategory extends Model
 {
     protected $table = 't_items_categories';
-    protected $fillable = ['name',
-    ];
+    protected $fillable = ['name'];
 
     public function items()
     {

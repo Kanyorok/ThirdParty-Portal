@@ -10,7 +10,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SysFilter extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -23,12 +24,20 @@ class SysFilter extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'Name', 'FieldName', 'Relation', 'RelationSource', 'DataType', 'Operator', 'Source',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy'
-    ];
+                           'Name',
+                           'FieldName',
+                           'Relation',
+                           'RelationSource',
+                           'DataType',
+                           'Operator',
+                           'Source',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 
     protected $casts = [
-        'DataType' => DataTypesEnum::class,
-        'Operator' => ComparisonOperatorsEnum::class,
-    ];
+                        'DataType' => DataTypesEnum::class,
+                        'Operator' => ComparisonOperatorsEnum::class,
+                       ];
 }

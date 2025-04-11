@@ -39,25 +39,23 @@ class OnfonMediaService
     protected static function _getClient(): Client
     {
         return new Client([
-            'base_uri' => "https://api.onfonmedia.co.ke/v1/sms/",
-            'headers' => [
-                'Accept' => 'application/json',
-            ]
-        ]);
+                           'base_uri' => "https://api.onfonmedia.co.ke/v1/sms/",
+                           'headers'  => ['Accept' => 'application/json'],
+                          ]);
     }
 
     public static function testConfig(string $ClientId, #[SensitiveParameter] string $ApiKey): bool
     {
         try {
             $response = self::_getClient()->get('Balance', [
-                'query' => [
-                    'ApiKey' => $ApiKey,
-                    'ClientId' => $ClientId
-                ]
-            ]);
+                                                            'query' => [
+                                                                        'ApiKey'   => $ApiKey,
+                                                                        'ClientId' => $ClientId,
+                                                                       ],
+                                                           ]);
             $data = json_decode($response->getBody()->getContents(), false, 512, JSON_THROW_ON_ERROR);
             return ($data->ErrorCode === 0);
-        } catch (GuzzleException|JsonException|\Exception) {
+        } catch (GuzzleException | JsonException | \Exception) {
         }
         return false;
     }
@@ -71,20 +69,20 @@ class OnfonMediaService
     {
         try {
             $response = $this->client->get('Balance', [
-                'query' => [
-                    'ApiKey' => $this->key,
-                    'ClientId' => $this->client_id
-                ]
-            ]);
+                                                       'query' => [
+                                                                   'ApiKey'   => $this->key,
+                                                                   'ClientId' => $this->client_id,
+                                                                  ],
+                                                      ]);
             $data = json_decode($response->getBody()->getContents(), false, 512, JSON_THROW_ON_ERROR);
             if ($data->ErrorCode === 0) {
                 return [
-                    'balance' => (float)$data->Data[0]->Credits,
-                    'currency' => $data->Data[0]->PluginType,
-                    'dated' => Carbon::now()->format('Y-m-d H:i:s'),
-                ];
+                        'balance'  => (float) $data->Data[0]->Credits,
+                        'currency' => $data->Data[0]->PluginType,
+                        'dated'    => Carbon::now()->format('Y-m-d H:i:s'),
+                       ];
             }
-        } catch (GuzzleException|JsonException|\Exception) {
+        } catch (GuzzleException | JsonException | \Exception) {
         }
 
         throw new ErroredException("Could Not Fetch Balance");
@@ -95,16 +93,18 @@ class OnfonMediaService
     {
         try {
             $response = $this->client->post('SendBulkSMS', [
-                'json' => [
-                    'ApiKey' => $this->key,
-                    'ClientId' => $this->client_id,
-                    'SenderId' => $this->sender_id,
-                    'MessageParameters' => [[
-                        'Number' => $this->formatKenyaCode($sms->to),
-                        'Text' => $sms->Content
-                    ]],
-                ]
-            ]);
+                                                            'json' => [
+                                                                       'ApiKey'            => $this->key,
+                                                                       'ClientId'          => $this->client_id,
+                                                                       'SenderId'          => $this->sender_id,
+                                                                       'MessageParameters' => [
+                                                                                               [
+                                                                                                'Number' => $this->formatKenyaCode($sms->to),
+                                                                                                'Text'   => $sms->Content,
+                                                                                               ],
+                                                                                              ],
+                                                                      ],
+                                                           ]);
 
             //{"ErrorCode": 0, "ErrorDescription": "null", "Data": [{"MessageErrorCode": 0, "MessageErrorDescription": "Success", "MobileNumber": "254717861596", "MessageId": "5c358ff1-bb38-49dd-bb70-410ba99dc09e", "Custom": ""}]}
             $json_response = json_decode($response->getBody()->getContents(), false, 512, JSON_THROW_ON_ERROR);
@@ -142,7 +142,7 @@ class OnfonMediaService
      */
     protected function formatKenyaCode(string $phone_number): string
     {
-        if (strlen((int)$phone_number) === 9) {
+        if (strlen((int) $phone_number) === 9) {
             if (!$phone_number) {
                 throw new ErroredException("Invalid phone number given ! ");
             }

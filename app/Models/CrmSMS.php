@@ -12,7 +12,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CrmSMS extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -22,17 +23,30 @@ class CrmSMS extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'SMSId', 'Phone', 'Type', 'Status', 'Content', 'Party', 'PartyID', 'Source', 'SourceID', 'Response', 'BulkNotificationId',
-        'Dated', 'CreatedBy', 'ModifiedBy', 'DeletedBy'
-    ];
+                           'SMSId',
+                           'Phone',
+                           'Type',
+                           'Status',
+                           'Content',
+                           'Party',
+                           'PartyID',
+                           'Source',
+                           'SourceID',
+                           'Response',
+                           'BulkNotificationId',
+                           'Dated',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 
 
     protected $casts = [
-        'Dated' => 'datetime',
-        'Status' => EmailStatusEnum::class,
-        'Type' => EmailTypeEnum::class,
-        'Response' => 'object',
-    ];
+                        'Dated'    => 'datetime',
+                        'Status'   => EmailStatusEnum::class,
+                        'Type'     => EmailTypeEnum::class,
+                        'Response' => 'object',
+                       ];
 
     public static function getPrimaryKey(): string
     {

@@ -27,7 +27,8 @@ use Illuminate\View\View;
 
 class LoanNotificationController extends Controller
 {
-    use BulkNotificationTrait, LoansTrait;
+    use BulkNotificationTrait;
+    use LoansTrait;
 
     public function __construct()
     {
@@ -56,13 +57,13 @@ class LoanNotificationController extends Controller
         $this->authorize('create', BulkNotification::class);
         if ($request->ajax()) {
             $dated = $request->getDated();
-                if ($dated instanceof Carbon) {
-                    $query = $request->applyFilters(
-                        (new UserService($request->user()))->hideUsers(DebtProduct::query()->where('processDate', $dated))
-                    )->lock('WITH(NOLOCK)')->select('*');
-                } else {
-                    $query = collect();
-                }
+            if ($dated instanceof Carbon) {
+                $query = $request->applyFilters(
+                    (new UserService($request->user()))->hideUsers(DebtProduct::query()->where('processDate', $dated))
+                )->lock('WITH(NOLOCK)')->select('*');
+            } else {
+                $query = collect();
+            }
             return $this->getLoans($query);
         }
         try {
@@ -86,18 +87,14 @@ class LoanNotificationController extends Controller
         $this->authorize('create', BulkNotification::class);
         $dated = $request->getDated();
         if (!$dated instanceof Carbon) {
-            throw ValidationException::withMessages([
-                'Label' => 'request date may be invalid'
-            ]);
+            throw ValidationException::withMessages(['Label' => 'request date may be invalid']);
         }
 
         $loans = $request->applyFilters(
             (new UserService($request->user()))->hideUsers(DebtProduct::query()->where('processDate', $dated))
         )->lock('WITH(NOLOCK)')->count();
         if ($loans === 0) {
-            throw ValidationException::withMessages([
-                'Label' => 'there are no loans in the list to send.'
-            ]);
+            throw ValidationException::withMessages(['Label' => 'there are no loans in the list to send.']);
         }
 
         $actor = $request->user();
@@ -106,14 +103,14 @@ class LoanNotificationController extends Controller
         try {
             $Bulk = DB::transaction(static function () use ($dated, $loans, $actor, $request, $values) {
                 $Bulk = BulkNotification::create([
-                    'Label' => $request->validated('Label'),
-                    'Module' => LoanService::MODULE,
-                    'Content' => $request->validated('Content'),
-                    'Total' => $loans,
-                    'Extra' => array_merge($values, ['processDate' => $dated->format('Y-m-d')]),
-                    'CreatedBy' => $actor->Id,
-                    'ModifiedBy' => $actor->Id,
-                ]);
+                                                  'Label'      => $request->validated('Label'),
+                                                  'Module'     => LoanService::MODULE,
+                                                  'Content'    => $request->validated('Content'),
+                                                  'Total'      => $loans,
+                                                  'Extra'      => array_merge($values, ['processDate' => $dated->format('Y-m-d')]),
+                                                  'CreatedBy'  => $actor->Id,
+                                                  'ModifiedBy' => $actor->Id,
+                                                 ]);
 
                 //run event to start work.
                 event(new BulkNotificationEvent($Bulk, $actor, $values, $dated));
@@ -157,11 +154,11 @@ class LoanNotificationController extends Controller
         $done = $bulkNotification->sms()->count();
 
         return $this->succeeded('ok', data: [
-            'progress' => (int)($total > 0) ? (($done / $total) * 100) : 100,
-            'done' => $done,
-            'total' => (int)$total,
-            'description' => 'Sending Messages (' . number_format($done) . ' / ' . number_format($total) . ')'
-        ]);
+                                             'progress'    => (int) ($total > 0) ? (($done / $total) * 100) : 100,
+                                             'done'        => $done,
+                                             'total'       => (int) $total,
+                                             'description' => 'Sending Messages (' . number_format($done) . ' / ' . number_format($total) . ')',
+                                            ]);
     }
 
     /**
@@ -178,5 +175,4 @@ class LoanNotificationController extends Controller
 
         return SMSService::dt($bulkNotification->sms(), ['source']);
     }
-
 }

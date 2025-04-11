@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Log;
 class MarketingPlanActionController extends Controller
 {
     use WorkflowTrait;
+
     public function __construct()
     {
         $this->middleware('ajax');
@@ -72,6 +73,5 @@ class MarketingPlanActionController extends Controller
         }
 
         return $this->succeeded('planner submitted successfully.', route('marketing-planner.show', [$planner->PlannerID]));
-
     }
 }

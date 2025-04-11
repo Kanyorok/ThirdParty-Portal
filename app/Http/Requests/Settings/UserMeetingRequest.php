@@ -22,13 +22,36 @@ class UserMeetingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'StaffMeetingTitle' => ['required', 'string', 'max:200'],
-            'StaffMeetingLocation' => ['required', 'string'],
-            'StaffMeetingStart' => ['required', 'date_format:"Y-m-d H:i"', 'before:StaffMeetingEnd'],
-            'StaffMeetingEnd' => ['required', 'date_format:"Y-m-d H:i"', 'after:StaffMeetingStart'],
-            'StaffMeetingUsers' => ['required', 'array', 'min:1', 'max:30'],
-            'StaffMeetingAgenda' => ['required', 'string'],
-        ];
+                'StaffMeetingTitle'    => [
+                                           'required',
+                                           'string',
+                                           'max:200',
+                                          ],
+                'StaffMeetingLocation' => [
+                                           'required',
+                                           'string',
+                                          ],
+                'StaffMeetingStart'    => [
+                                           'required',
+                                           'date_format:"Y-m-d H:i"',
+                                           'before:StaffMeetingEnd',
+                                          ],
+                'StaffMeetingEnd'      => [
+                                           'required',
+                                           'date_format:"Y-m-d H:i"',
+                                           'after:StaffMeetingStart',
+                                          ],
+                'StaffMeetingUsers'    => [
+                                           'required',
+                                           'array',
+                                           'min:1',
+                                           'max:30',
+                                          ],
+                'StaffMeetingAgenda'   => [
+                                           'required',
+                                           'string',
+                                          ],
+               ];
     }
 
     /*
@@ -38,29 +61,21 @@ class UserMeetingRequest extends FormRequest
     {
         $end = Carbon::createFromFormat('Y-m-d H:i', $this->validated('StaffMeetingEnd'));
         if (!$end instanceof Carbon) {
-            throw ValidationException::withMessages([
-                'StaffMeetingEnd' => 'invalid date format',
-            ]);
+            throw ValidationException::withMessages(['StaffMeetingEnd' => 'invalid date format']);
         }
 
         if ($end->lte($start)) {
-            throw ValidationException::withMessages([
-                'StaffMeetingEnd' => 'should be after start.',
-            ]);
+            throw ValidationException::withMessages(['StaffMeetingEnd' => 'should be after start.']);
         }
 
         $diffInMinutes = $start->diffInMinutes($end, true);
 
         if ($diffInMinutes < 0) {
-            throw ValidationException::withMessages([
-                'StaffMeetingEnd' => 'duration should be less least 1 minute.',
-            ]);
+            throw ValidationException::withMessages(['StaffMeetingEnd' => 'duration should be less least 1 minute.']);
         }
 
         if ($diffInMinutes > 480) {//8 hours
-            throw ValidationException::withMessages([
-                'StaffMeetingEnd' => 'duration can only be a maximum of 8 hours.',
-            ]);
+            throw ValidationException::withMessages(['StaffMeetingEnd' => 'duration can only be a maximum of 8 hours.']);
         }
 
         return $end;
@@ -75,9 +90,7 @@ class UserMeetingRequest extends FormRequest
         if ($start instanceof Carbon) {
             return $start;
         }
-        throw ValidationException::withMessages([
-            'meeting_start' => 'invalid date format',
-        ]);
+        throw ValidationException::withMessages(['meeting_start' => 'invalid date format']);
     }
 
     public function getMeetingUsers(): array
@@ -90,9 +103,7 @@ class UserMeetingRequest extends FormRequest
         $staff = User::query()->whereIn('UserID', $this->validated('StaffMeetingUsers'))->select('t_Users.Id')->get('Id')->pluck('Id')->toArray();
 
         if (count($staff) < 2) {
-            throw ValidationException::withMessages([
-                'StaffMeetingUsers' => 'should have at least 2 users.'
-            ]);
+            throw ValidationException::withMessages(['StaffMeetingUsers' => 'should have at least 2 users.']);
         }
 
         return $staff;

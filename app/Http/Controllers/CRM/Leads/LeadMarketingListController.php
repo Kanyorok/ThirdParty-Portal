@@ -34,9 +34,9 @@ class LeadMarketingListController extends Controller
     public function store(PartyListRequest $request, Lead $lead): JsonResponse
     {
         $lead->marketingLists()->where('t_MarketingLists.Type', MarketingListEnum::Static->value)->syncWithPivotValues($request->getLists(), [
-            'CreatedBy' => $request->user()->Id,
-            'ModifiedBy' => $request->user()->Id,
-        ]);
+                                                                                                                                              'CreatedBy'  => $request->user()->Id,
+                                                                                                                                              'ModifiedBy' => $request->user()->Id,
+                                                                                                                                             ]);
 
         return $this->succeeded('marketing list updated.', route('leads.show', [$lead->LeadID]));
     }

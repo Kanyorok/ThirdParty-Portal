@@ -68,11 +68,21 @@ class LoanScheduleController extends Controller
 
         try {
             $schedule = DB::transaction(function () use ($location, $assignees, $notes, $client, $end, $actor, $start, $request, $product) {
-                return $this->appointment(model: $client, title: $request->meeting_title, location: $location,
-                    start: $start, end: $end, dated: now(), actor: $actor, notes: $notes,
-                    UserIds: $assignees->pluck('Id')->toArray(), Source: DebtProduct::getPrimaryKey(), SourceID: $product->AccountID);
+                return $this->appointment(
+                    model: $client,
+                    title: $request->meeting_title,
+                    location: $location,
+                    start: $start,
+                    end: $end,
+                    dated: now(),
+                    actor: $actor,
+                    notes: $notes,
+                    UserIds: $assignees->pluck('Id')->toArray(),
+                    Source: DebtProduct::getPrimaryKey(),
+                    SourceID: $product->AccountID
+                );
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Error scheduling loan appointment failed:  ' . $e->getMessage());
             return $this->errored('unexpected error, try again latter');
         }
@@ -111,7 +121,7 @@ class LoanScheduleController extends Controller
             $schedule = DB::transaction(function () use ($assignee, $notes, $end, $actor, $client, $start, $product) {
                 return $this->phoneCall(model: $client, start: $start, end: $end, dated: now(), actor: $actor, notes: $notes, UserIds: [$assignee->Id], Source: DebtProduct::getPrimaryKey(), SourceID: $product->AccountID);
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Error scheduling loan call failed:  ' . $e->getMessage());
             return $this->errored('unexpected error scheduling call, try again latter');
         }
@@ -151,7 +161,7 @@ class LoanScheduleController extends Controller
             DB::transaction(function () use ($client, $request, $schedule) {
                 $this->cancel($client, $schedule, $request->user());
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Cancel loan schedule failed:  ' . $e->getMessage());
             return $this->errored('unexpected error, try again latter');
         }

@@ -48,10 +48,10 @@ trait CampaignTrait
                 })->editColumn('Notes', function (Campaign $campaign) {
                     return Str::limit($campaign->Notes);
                 })->setRowClass('mouse_pointer user-select-none dbl-click-redirect-data')->setRowData([
-                    'dbl_click_url' => function (Campaign $campaign) use ($list) {
-                        return ($list instanceof MarketingList) ? route('loans-campaigns.show', [$list->MarketingListID, $campaign->CampaignID]) : route('campaigns.show', [$campaign->CampaignID]);
-                    }
-                ])->rawColumns(['action'])->make();
+                                                                                                       'dbl_click_url' => function (Campaign $campaign) use ($list) {
+                                                                                                        return ($list instanceof MarketingList) ? route('loans-campaigns.show', [$list->MarketingListID, $campaign->CampaignID]) : route('campaigns.show', [$campaign->CampaignID]);
+                                                                                                       },
+                                                                                                      ])->rawColumns(['action'])->make();
         } catch (\Exception $e) {
         }
 

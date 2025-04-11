@@ -59,10 +59,16 @@ class LoanService
             : Str::of($content)->replace(['#name', '#amount', '#loanee'], [$guarantor->client?->Name, number_format($guarantor->GuaranteeAmount, 2), $this->loan->AccountName]);
 
         return $str->replace([
-            '#arrears', '#account', '#date', '#product'
-        ], [
-            number_format($this->loan->ArrearsDays), Str::of($this->loan->AccountID)->mask('*', 4, -4), $this->loan->processDate->format('M d, Y'), $this->loan->ProductName
-        ])->toString();
+                              '#arrears',
+                              '#account',
+                              '#date',
+                              '#product',
+                             ], [
+                                 number_format($this->loan->ArrearsDays),
+                                 Str::of($this->loan->AccountID)->mask('*', 4, -4),
+                                 $this->loan->processDate->format('M d, Y'),
+                                 $this->loan->ProductName,
+                                ])->toString();
     }
 
     public function guarantorMail(Collection $guarantors, string $subject, string $content, User $actor, array $cc): array

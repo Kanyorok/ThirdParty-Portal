@@ -51,8 +51,13 @@ class MarketingPlanBranchController extends Controller
         $this->authorize('approve', $planner);
         $actor = $request->user();
         $data = $request->validate([
-            'branch_reject_reason' => ['required', 'string', 'min:15', 'max:2000'],
-        ]);
+                                    'branch_reject_reason' => [
+                                                               'required',
+                                                               'string',
+                                                               'min:15',
+                                                               'max:2000',
+                                                              ],
+                                   ]);
 
         try {
             DB::transaction(static function () use ($planner, $actor, $data) {

@@ -36,15 +36,15 @@ class ProductDevService
         }
 
         $product = ProductDevelopment::create([
-            'ProductID' => self::_ID(),
-            'Name' => $Name,
-            'TargetGroup' => $TargetGroup,
-            'User_ID' => $actor->Id,
-            'Notes' => $Notes,
-            'StageId' => $stage->ID,
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
-        ]);
+                                               'ProductID'   => self::_ID(),
+                                               'Name'        => $Name,
+                                               'TargetGroup' => $TargetGroup,
+                                               'User_ID'     => $actor->Id,
+                                               'Notes'       => $Notes,
+                                               'StageId'     => $stage->ID,
+                                               'CreatedBy'   => $actor->Id,
+                                               'ModifiedBy'  => $actor->Id,
+                                              ]);
 
         activity()->causedBy($actor)->performedOn($product)->event('create')->log('created product (' . Str::upper($product->ProductID) . ') for development.');
 
@@ -72,11 +72,11 @@ class ProductDevService
     public function addFeature(string $title, string $description, User $actor): ProductDevelopmentFeature
     {
         $feature = $this->product->features()->create([
-            'Feature' => $title,
-            'Description' => $description,
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
-        ]);
+                                                       'Feature'     => $title,
+                                                       'Description' => $description,
+                                                       'CreatedBy'   => $actor->Id,
+                                                       'ModifiedBy'  => $actor->Id,
+                                                      ]);
         activity()->causedBy($actor)->performedOn($this->product)->event('feature')->log('added a feature  ' . $title . ' to Product Development ' . Str::upper($this->product->ProductID) . '.');
 
         return $feature;
@@ -85,10 +85,10 @@ class ProductDevService
     public function updateFeature(ProductDevelopmentFeature $feature, string $title, string $description, User $actor): ProductDevelopmentFeature
     {
         $feature->fill([
-            'Feature' => $title,
-            'Description' => $description,
-            'ModifiedBy' => $actor->Id,
-        ])->save();
+                        'Feature'     => $title,
+                        'Description' => $description,
+                        'ModifiedBy'  => $actor->Id,
+                       ])->save();
 
         return $feature;
     }
@@ -101,6 +101,5 @@ class ProductDevService
         }
 
         return CommentService::forProductDev($this->product, $description, $actor)->comment;
-
     }
 }

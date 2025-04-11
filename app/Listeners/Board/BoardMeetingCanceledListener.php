@@ -31,17 +31,21 @@ class BoardMeetingCanceledListener implements ShouldQueue
     public function handle(BoardMeetingCanceledEvent $event): void
     {
         $meeting = $event->meeting;
-        $schedule = Schedule::query()->where('t_Schedule.ScheduledType',Meeting::getPrimaryKey())->where('ScheduledTypeID', $meeting->MeetingID)->first();
+        $schedule = Schedule::query()->where('t_Schedule.ScheduledType', Meeting::getPrimaryKey())->where('ScheduledTypeID', $meeting->MeetingID)->first();
         $actor = SystemHelper::user();
-        if($schedule instanceof Schedule) {
-            foreach ( $schedule->members as $member) {
-                if(!$member instanceof Board){
+        if ($schedule instanceof Schedule) {
+            foreach ($schedule->members as $member) {
+                if (!$member instanceof Board) {
                     continue;
                 }
 
-                (new BoardService($member))->sendMessage('Hello #name, Scheduled meeting `'.$meeting->Title.'`  has been CANCELED. Please check your email for more details.',
-                    $actor,true)
-                    ->sendEmail('Meeting Canceled: ' . $meeting->Title,
+                (new BoardService($member))->sendMessage(
+                    'Hello #name, Scheduled meeting `' . $meeting->Title . '`  has been CANCELED. Please check your email for more details.',
+                    $actor,
+                    true
+                )
+                    ->sendEmail(
+                        'Meeting Canceled: ' . $meeting->Title,
                         body: '<p>We regret to inform you that the scheduled meeting <b>' . $meeting->Title . '</b> has been canceled.</p>
                                <p>Please find the details of the canceled meeting below:</p>
                                <ul>
@@ -56,11 +60,12 @@ class BoardMeetingCanceledListener implements ShouldQueue
                     )?->setSource(Meeting::getPrimaryKey(), $meeting->MeetingID)->send(true);
             }
 
-            foreach ( $schedule->users as $user) {
-                if(!$user instanceof User){
+            foreach ($schedule->users as $user) {
+                if (!$user instanceof User) {
                     continue;
                 }
-                (new UserService($user))->sendEmail('Meeting Canceled: ' . $meeting->Title,
+                (new UserService($user))->sendEmail(
+                    'Meeting Canceled: ' . $meeting->Title,
                     body: '<p>We regret to inform you that the scheduled meeting <b>' . $meeting->Title . '</b> has been canceled.</p>
                            <p>Please find the details of the canceled meeting below:</p>
                            <ul>
@@ -72,7 +77,6 @@ class BoardMeetingCanceledListener implements ShouldQueue
                            <p>We apologize for any inconvenience this may have caused. If you have any questions or concerns, feel free to reach out.</p>',
                 )?->setSource(Meeting::getPrimaryKey(), $meeting->MeetingID)->send(true);
             }
-
         }
     }
 }

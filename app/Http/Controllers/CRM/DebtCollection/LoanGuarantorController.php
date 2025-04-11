@@ -89,9 +89,7 @@ class LoanGuarantorController extends Controller
                 return ClientService::search($query, $request->validated('message_to'));
             })->with('client')->first();
             if (!$guarantor?->client instanceof Client) {
-                throw ValidationException::withMessages([
-                    'message_to' => 'phone number maybe invalid'
-                ]);
+                throw ValidationException::withMessages(['message_to' => 'phone number maybe invalid']);
             }
 
             $guarantors = collect()->add($guarantor);
@@ -134,15 +132,18 @@ class LoanGuarantorController extends Controller
             $query->where('Email', $request->validated('mail_to'));
         })->with('client')->first();
         if (!$guarantor?->client instanceof Client) {
-            throw ValidationException::withMessages([
-                'mail_to' => 'email maybe invalid'
-            ]);
+            throw ValidationException::withMessages(['mail_to' => 'email maybe invalid']);
         }
 
         try {
             $activities = (new LoanService($product))
-                ->guarantorMail(collect()->add($guarantor), $request->validated('mail_subject'), $request->validated('mail_content'),
-                    $request->user(), $request->getCarbonCopyEmails());
+                ->guarantorMail(
+                    collect()->add($guarantor),
+                    $request->validated('mail_subject'),
+                    $request->validated('mail_content'),
+                    $request->user(),
+                    $request->getCarbonCopyEmails()
+                );
         } catch (ErroredException $e) {
             return $e->toJson();
         } catch (Exception $e) {
@@ -150,6 +151,5 @@ class LoanGuarantorController extends Controller
             return $this->errored('unexpected error, try again later');
         }
         return $this->succeeded('sending email(s)', data: ['activities' => $activities]);
-
     }
 }

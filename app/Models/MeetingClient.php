@@ -13,14 +13,18 @@ class MeetingClient extends Pivot
     protected $table = 't_MeetingClients';
 
     protected $fillable = [
-        'MeetingId', 'ClientID',
-        'CreatedOn', 'CreatedBy', 'ModifiedOn', 'ModifiedBy'
-    ];
+                           'MeetingId',
+                           'ClientID',
+                           'CreatedOn',
+                           'CreatedBy',
+                           'ModifiedOn',
+                           'ModifiedBy',
+                          ];
 
     protected $casts = [
-        'CreatedOn' => 'datetime',
-        'ModifiedOn' => 'datetime',
-    ];
+                        'CreatedOn'  => 'datetime',
+                        'ModifiedOn' => 'datetime',
+                       ];
 
     public function client(): BelongsTo
     {

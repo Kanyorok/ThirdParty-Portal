@@ -24,7 +24,6 @@ use RuntimeException;
 
 class ActivityService
 {
-
     public static function lead(Lead $lead, string $description, User $actor, Carbon $dated): array
     {
         return self::rendering(self::_save($lead->LeadID, Lead::getPrimaryKey(), Lead::getPrimaryKey(), $lead->LeadID, $description, $actor, $dated));
@@ -32,10 +31,12 @@ class ActivityService
 
     public static function rendering(Activity $activity): array
     {
-        return ['id' => $activity->ActivityID,
-            'html' => '<div class="d-flex align-items-start"><div class="flex-grow-1">
+        return [
+                'id'   => $activity->ActivityID,
+                'html' => '<div class="d-flex align-items-start"><div class="flex-grow-1">
         <small class="float-end text-navy">' . $activity->CreatedOn->diffForHumans(short: true) . '</small>' . $activity->Notes . '<br />
-        <small class="text-muted">' . $activity->CreatedOn->format('F d, Y h:i a') . '</small><br /></div></div><hr />'];
+        <small class="text-muted">' . $activity->CreatedOn->format('F d, Y h:i a') . '</small><br /></div></div><hr />',
+               ];
     }
 
     private static function _save(string|array $PartyIDs, string $Party, string $type, int $typeId, string $description, User $actor, Carbon $dated): Activity
@@ -49,17 +50,17 @@ class ActivityService
             foreach ($clients->chunk(200) as $chunk) {//2100/9  200 at a time
                 foreach ($chunk as $PartyID) {
                     $data->add([
-                        "Party" => $Party,
-                        "PartyID" => $PartyID,
-                        'UserID' => $actor->Id,
-                        'Notes' => $description,
-                        'ActivityType' => $type,
-                        'ActivityTypeID' => $typeId,
-                        'CreatedBy' => $actor->Id,
-                        'ModifiedBy' => $actor->Id,
-                        'CreatedOn' => $dated,
-                        'ModifiedOn' => $dated
-                    ]);
+                                "Party"          => $Party,
+                                "PartyID"        => $PartyID,
+                                'UserID'         => $actor->Id,
+                                'Notes'          => $description,
+                                'ActivityType'   => $type,
+                                'ActivityTypeID' => $typeId,
+                                'CreatedBy'      => $actor->Id,
+                                'ModifiedBy'     => $actor->Id,
+                                'CreatedOn'      => $dated,
+                                'ModifiedOn'     => $dated,
+                               ]);
                 }
 
                 if ($data->count() > 0) {
@@ -72,20 +73,19 @@ class ActivityService
 
         $activity = new Activity();
         $activity->fill([
-            "Party" => $Party,
-            "PartyID" => $PartyIDs,
-            'UserID' => $actor->Id,
-            'Notes' => $description,
-            'ActivityType' => $type,
-            'ActivityTypeID' => $typeId,
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
-            'CreatedOn' => $dated,
-            'ModifiedOn' => $dated
-        ])->save(['timestamps' => false]);
+                         "Party"          => $Party,
+                         "PartyID"        => $PartyIDs,
+                         'UserID'         => $actor->Id,
+                         'Notes'          => $description,
+                         'ActivityType'   => $type,
+                         'ActivityTypeID' => $typeId,
+                         'CreatedBy'      => $actor->Id,
+                         'ModifiedBy'     => $actor->Id,
+                         'CreatedOn'      => $dated,
+                         'ModifiedOn'     => $dated,
+                        ])->save(['timestamps' => false]);
 
         return $activity;
-
     }
 
     public static function campaignRun(string|array $PartyIDs, string $Party, string $description, Campaign $campaign, User $actor, Carbon $dated): void

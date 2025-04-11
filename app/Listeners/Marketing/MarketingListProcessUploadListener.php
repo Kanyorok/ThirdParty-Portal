@@ -63,7 +63,7 @@ class MarketingListProcessUploadListener implements ShouldQueue
                 SimpleXLSXGen::fromArray($failed, "Failed Import")->saveAs($file);
                 $service?->addAttachmentContent(file_get_contents($file), ExtensionsEnum::Xlsx->getMimeType(), $list->Label . ' Failed ' . now()->format('d M Y H:i') . '.xlsx', $actor);
                 unlink($file);
-            } catch (\Exception|\Throwable) {
+            } catch (\Exception | \Throwable) {
             }
         }
 
@@ -77,9 +77,7 @@ class MarketingListProcessUploadListener implements ShouldQueue
 
         $data = array_map('str_getcsv', file($file));
         $headers = array_shift($data);
-        $requiredHeaders = [
-            'MemberID'
-        ];
+        $requiredHeaders = ['MemberID'];
         if (array_diff($requiredHeaders, $headers)) {
             $this->_completeProcessing($list, $actor, $data, 0, 'The provided CSV file is missing some required fields: ' . " " . implode(', ', array_diff($requiredHeaders, $headers)));
             return;
@@ -108,5 +106,4 @@ class MarketingListProcessUploadListener implements ShouldQueue
         }
         $this->_completeProcessing($list, $actor, $failed->toArray(), ($success / $total) * 100, 'Successfully processed');
     }
-
 }

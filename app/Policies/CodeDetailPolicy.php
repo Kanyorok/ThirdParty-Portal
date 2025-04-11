@@ -64,5 +64,4 @@ class CodeDetailPolicy
     {
         return false;
     }
-
 }

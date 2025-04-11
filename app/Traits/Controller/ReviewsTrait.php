@@ -55,9 +55,10 @@ trait ReviewsTrait
             })->editColumn('Rating', function (Review $review) {
                 return (new ReviewService($review))->getRate(' width="32" height="32" class="img-thumbnail" alt="' . $review->Rating . ' star"');
             })->setRowClass('user-select-none dbl-click-summary-data')->setRowData([
-                'dbl_click_url' => function (Review $review) {
-                    return route('reviews.show', [$review->Id]);
-                }, 'summary_title' => 'review details',
-            ])->rawColumns(['action', 'Rating', 'Party'])->make();
+                                                                                    'dbl_click_url' => function (Review $review) {
+                                                                                        return route('reviews.show', [$review->Id]);
+                                                                                    },
+                                                                                    'summary_title' => 'review details',
+                                                                                   ])->rawColumns(['action', 'Rating', 'Party'])->make();
     }
 }

@@ -42,7 +42,7 @@ class LoanAssignmentCommand extends Command
             $dated = null;
         }
 
-        if (!$dated instanceof Carbon ) {
+        if (!$dated instanceof Carbon) {
             Log::error('Loan Assignment Error: No Debt Products found Date ISSUE');
             return;
         }
@@ -50,7 +50,7 @@ class LoanAssignmentCommand extends Command
         $actor = SystemHelper::user();
         $loans = DebtProduct::query()->where('processDate', $dated)
             ->whereNotIn('AccountID', LoanAssignment::query()->whereNull('EndOn')->select('AccountID'))
-            ->where('Classification','!=','PERFORMING')->get();
+            ->where('Classification', '!=', 'PERFORMING')->get();
 
         foreach ($loans as $loan) {
             $user = LoanService::getAssignUser($loan->AccountID);
@@ -73,26 +73,26 @@ class LoanAssignmentCommand extends Command
     {
         $usersWithLoansToday = User::query()->whereHas('loansAssigned', function (Builder $query) {
                 $query->whereBetween('t_LoanAssignments.StartOn', [Carbon::now()->startOfDay(), Carbon::now()->endOfDay()]);
-            })->withCount(['loansAssigned' => function ( $builder) {
-                $builder->whereBetween('t_LoanAssignments.StartOn', [Carbon::now()->startOfDay(), Carbon::now()->endOfDay()]);
-        }])->get();
+        })->withCount([
+                       'loansAssigned' => function ($builder) {
+                                $builder->whereBetween('t_LoanAssignments.StartOn', [Carbon::now()->startOfDay(), Carbon::now()->endOfDay()]);
+                       },
+                      ])->get();
         foreach ($usersWithLoansToday as $user) {
-
             $loans = $user->loansAssigned()->whereBetween('t_LoanAssignments.StartOn', [Carbon::now()->startOfDay(), Carbon::now()->endOfDay()])
                 ->select('AccountID')->get('AccountID')->pluck('AccountID')->toArray();
 
-            if(count($loans) >0){
+            if (count($loans) > 0) {
                 (new UserService($user))->sendEmail(
-                    subject: 'Loans Assignment '.number_format(count($loans)) .' Loan(s) Assigned',
+                    subject: 'Loans Assignment ' . number_format(count($loans)) . ' Loan(s) Assigned',
                     body: '<p>You have new loans has been assigned to you for collection handling. Please find the details below:</p>
-                   <p>Assignment Date: '.now()->format('M d, Y').' <br>
+                   <p>Assignment Date: ' . now()->format('M d, Y') . ' <br>
                     Loans: ' . implode(', ', $loans) . ' </p>
                    <p>Please review this assignment and take necessary actions according to our collection procedures.</p>
                    <p>This is an automated message. Please do not reply to this email.</p>',
                     immediate: true,
                 );
             }
-
         }
     }
 }

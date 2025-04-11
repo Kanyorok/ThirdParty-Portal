@@ -50,7 +50,7 @@ class LoanListCampaignController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (\Throwable|\Exception $e) {
+        } catch (\Throwable | \Exception $e) {
             Log::error('Error loan list campaign auto: ');
             Log::error($e);
             return $this->errored('unexpected error, try again later');
@@ -67,7 +67,11 @@ class LoanListCampaignController extends Controller
         if ($campaign->list->Source !== DebtProduct::getPrimaryKey() && $listID !== $campaign->list->MarketingListID) {
             return redirect()->back()->with(['fail' => 'campaign not found.']);
         }
-        $data = ['labels' => [], 'data' => [], 'rate' => 0];
+        $data = [
+                 'labels' => [],
+                 'data'   => [],
+                 'rate'   => 0,
+                ];
 
         if (!$campaign->Processing) {
             $failed = $campaign->contacts()->where('t_CampaignParties.Status', EmailStatusEnum::Failed->value)->count();
@@ -93,11 +97,11 @@ class LoanListCampaignController extends Controller
             $total = 0;
             $done = 0;
             $description = 'Processing Complete';
-        } else if ($campaign->Status->value === CampaignStatusEnum::Processing->value) {// 2 for processing messages.
+        } elseif ($campaign->Status->value === CampaignStatusEnum::Processing->value) {// 2 for processing messages.
             $total = $campaign->contacts()->count();
             $done = $campaign->contacts()->where('t_CampaignParties.Status', '!=', CampaignStatusEnum::Draft->value)->count();
             $description = 'Preparing Messages 2/3';
-        } else if ($campaign->Status->value === CampaignStatusEnum::Sending->value) {// 3 Sending messages
+        } elseif ($campaign->Status->value === CampaignStatusEnum::Sending->value) {// 3 Sending messages
             $total = $campaign->contacts()->count();
             $done = $campaign->contacts()->whereIn('t_CampaignParties.Status', [CampaignStatusEnum::Sent->value, CampaignStatusEnum::Failed->value])->count();
             $description = 'Sending Messages 3/3';
@@ -111,11 +115,10 @@ class LoanListCampaignController extends Controller
         }
 
         return $this->succeeded('ok', data: [
-            'progress' => (int)($total > 0) ? (($done / $total) * 100) : 100,
-            'done' => (int)$done,
-            'total' => (int)$total,
-            'description' => $description . ' (' . number_format($done) . ' of ' . number_format($total) . ')'
-        ]);
-
+                                             'progress'    => (int) ($total > 0) ? (($done / $total) * 100) : 100,
+                                             'done'        => (int) $done,
+                                             'total'       => (int) $total,
+                                             'description' => $description . ' (' . number_format($done) . ' of ' . number_format($total) . ')',
+                                            ]);
     }
 }

@@ -12,7 +12,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Survey extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -25,16 +26,23 @@ class Survey extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'SurveyID', 'Label', 'Notes', 'StartOn', 'EndOn', 'Status',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy'
-    ];
+                           'SurveyID',
+                           'Label',
+                           'Notes',
+                           'StartOn',
+                           'EndOn',
+                           'Status',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 
     protected $casts = [
-        'StartOn' => 'datetime',
-        'EndOn' => 'datetime',
-        'CreatedBy' => 'integer',
-        'Status' => SurveyStatusEnum::class,
-    ];
+                        'StartOn'   => 'datetime',
+                        'EndOn'     => 'datetime',
+                        'CreatedBy' => 'integer',
+                        'Status'    => SurveyStatusEnum::class,
+                       ];
 
     public function getRouteKeyName(): string
     {
@@ -43,7 +51,7 @@ class Survey extends Model
 
     public static function getPrimaryKey(): string
     {
-        return (new self)->getRouteKeyName();
+        return (new self())->getRouteKeyName();
     }
 
     public function workflows(): MorphMany

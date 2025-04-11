@@ -44,7 +44,6 @@ class DocumentController extends Controller
         return (Response(base64_decode($image->Image), 200))
             ->header('ContentType', $image->MIMEType)
             ->header('Content-Disposition', 'attachment; filename=' . $image->Name);
-
     }
 
     /**
@@ -59,9 +58,9 @@ class DocumentController extends Controller
         try {
             DB::transaction(static function () use ($image, $actor) {
                 $image->forceFill([
-                    'DeletedBy' => $actor->Id,
-                    'DeletedOn' => now()
-                ])->save();
+                                   'DeletedBy' => $actor->Id,
+                                   'DeletedOn' => now(),
+                                  ])->save();
                 activity()->causedBy($actor)->performedOn($image->source)->event('delete')->log('trashed attached document : ' . $image->Name);
             });
         } catch (Exception $e) {

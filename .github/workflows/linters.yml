@@ -74,21 +74,23 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      # Setup PHP
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
 
+      # Perform PHP syntax check for all files
       - name: Syntax check all PHP files
         run: |
           find . -type f -name "*.php" -exec php -l {} \;
 
-      # Uncomment the section below to enable PHP_CodeSniffer
-      # - name: Install Composer
-      #   run: sudo apt-get update && sudo apt-get install -y composer
+      # Uncomment the following lines to enable PHP_CodeSniffer
+      - name: Install Composer
+        run: sudo apt-get update && sudo apt-get install -y composer
 
-      # - name: Install PHP_CodeSniffer
-      #   run: composer global require "squizlabs/php_codesniffer=*"
+      - name: Install PHP_CodeSniffer
+        run: composer global require "squizlabs/php_codesniffer=*"
 
-      # - name: Run PHP_CodeSniffer
-      #   run: ~/.composer/vendor/bin/phpcs --standard=PSR12 .
+      - name: Run PHP_CodeSniffer
+        run: ~/.composer/vendor/bin/phpcs --standard=phpcs.xml .

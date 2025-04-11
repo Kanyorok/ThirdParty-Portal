@@ -46,7 +46,7 @@ class LeadTaskController extends Controller
 
         try {
             $activity = $this->save($lead, $notes, $dated, $assignee, $actor);
-        } catch (\Throwable|Exception $e) {
+        } catch (\Throwable | Exception $e) {
             Log::error('Error adding  Lead Task. e: ' . $e->getMessage());
             return $this->errored('unexpected error, try again latter');
         }
@@ -76,6 +76,5 @@ class LeadTaskController extends Controller
         }
 
         return $this->succeeded('task updated successfully.');
-
     }
 }

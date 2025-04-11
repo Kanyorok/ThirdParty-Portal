@@ -43,7 +43,7 @@ trait ImageTrait
             throw new RuntimeException('Invalid field');
         }
 
-        return $this->_setImage(ImageService::createContent($content, $this->primaryKey, $this->{$this->primaryKey},$mimeType, $fileName, $actor), $field);
+        return $this->_setImage(ImageService::createContent($content, $this->primaryKey, $this->{$this->primaryKey}, $mimeType, $fileName, $actor), $field);
     }
 
 
@@ -51,8 +51,8 @@ trait ImageTrait
     {
         if (is_string($field)) {
             $this->update([
-                $field => $service->image->ImageID,
-            ]);
+                           $field => $service->image->ImageID,
+                          ]);
         }
         return $this;
     }

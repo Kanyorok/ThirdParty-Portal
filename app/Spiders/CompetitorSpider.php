@@ -13,28 +13,33 @@ use RoachPHP\Http\Response;
 use RoachPHP\Spider\BasicSpider;
 use RoachPHP\Spider\ParseResult;
 
-
 class CompetitorSpider extends BasicSpider
 {
     //public array $startUrls = [''];
 
     public array $downloaderMiddleware = [
-        RequestDeduplicationMiddleware::class,
-        [UserAgentMiddleware::class, ['userAgent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36']],
-        [ExecuteJavascriptMiddleware::class, []],
-    ];
+                                          RequestDeduplicationMiddleware::class,
+                                          [
+                                           UserAgentMiddleware::class,
+                                           ['userAgent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36'],
+                                          ],
+                                          [
+                                           ExecuteJavascriptMiddleware::class,
+                                           [],
+                                          ],
+                                         ];
 
     public array $spiderMiddleware = [
         //
-    ];
+                                     ];
 
     public array $itemProcessors = [
         //
-    ];
+                                   ];
 
     public array $extensions = [
-        StatsCollectorExtension::class,
-    ];
+                                StatsCollectorExtension::class,
+                               ];
 
     public int $concurrency = 2;
 
@@ -65,7 +70,6 @@ class CompetitorSpider extends BasicSpider
             }
 
             yield $this->item(['landing' => StringHelper::removeScripts($response->getBody())]);
-
         }
     }
 

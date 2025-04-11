@@ -16,13 +16,13 @@ class TeamSeeder extends Seeder
         $date = now();
         $user = SystemHelper::user();
         DB::table('t_Teams')->insert([
-            'Name' => 'Marketing Team',
-            'IsMarketing' => true,
-            'Email' => config('org.email'),
-            'CreatedOn' => $date,
-            'CreatedBy' => $user->Id,
-            'ModifiedOn' => $date,
-            'ModifiedBy' => $user->Id,
-        ]);
+                                      'Name'        => 'Marketing Team',
+                                      'IsMarketing' => true,
+                                      'Email'       => config('org.email'),
+                                      'CreatedOn'   => $date,
+                                      'CreatedBy'   => $user->Id,
+                                      'ModifiedOn'  => $date,
+                                      'ModifiedBy'  => $user->Id,
+                                     ]);
     }
 }

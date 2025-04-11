@@ -20,9 +20,11 @@ class TeamUser extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'TeamId', 'UserId',
-        'CreatedBy', 'ModifiedBy',
-    ];
+                           'TeamId',
+                           'UserId',
+                           'CreatedBy',
+                           'ModifiedBy',
+                          ];
 
     public function team(): BelongsTo
     {

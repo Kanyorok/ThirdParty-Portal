@@ -43,7 +43,7 @@ class UserMessageController extends Controller
 
                 activity()->causedBy($actor)->performedOn($user)->event('sent message')->log('sent direct message to user ' . $user->UserID . '.');
             });
-        } catch (\Throwable|\Exception $e) {
+        } catch (\Throwable | \Exception $e) {
             Log::error('Error sending sms to users/staff ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }

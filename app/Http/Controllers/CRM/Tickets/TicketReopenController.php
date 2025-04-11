@@ -52,8 +52,13 @@ class TicketReopenController extends Controller
         $this->authorize('approve', $ticket);
         $actor = $request->user();
         $data = $request->validate([
-            'ticket_reject_reason' => ['required', 'string', 'min:15', 'max:2000'],
-        ]);
+                                    'ticket_reject_reason' => [
+                                                               'required',
+                                                               'string',
+                                                               'min:15',
+                                                               'max:2000',
+                                                              ],
+                                   ]);
 
         try {
             DB::transaction(static function () use ($ticket, $actor, $data) {

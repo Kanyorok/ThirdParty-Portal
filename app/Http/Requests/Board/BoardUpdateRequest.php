@@ -17,18 +17,41 @@ class BoardUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'BoardMemberPhone' => ['nullable', 'string', 'max:200'],
-            'BoardMemberEmail' => ['required', 'email:dns', 'max:200'],
-            'BoardCommittees' => ['required', 'array', 'min:1', 'max:20'],
-            'BoardCommittees.*' => ['required', Rule::exists('t_Committees', 'CommitteeID')],
-            'BoardMemberRole' => ['nullable', 'string', 'max:200'],
-            'BoardMemberNotes' => ['nullable', 'string', 'max:2000'],
-        ];
+                'BoardMemberPhone'  => [
+                                        'nullable',
+                                        'string',
+                                        'max:200',
+                                       ],
+                'BoardMemberEmail'  => [
+                                        'required',
+                                        'email:dns',
+                                        'max:200',
+                                       ],
+                'BoardCommittees'   => [
+                                        'required',
+                                        'array',
+                                        'min:1',
+                                        'max:20',
+                                       ],
+                'BoardCommittees.*' => [
+                                        'required',
+                                        Rule::exists('t_Committees', 'CommitteeID'),
+                                       ],
+                'BoardMemberRole'   => [
+                                        'nullable',
+                                        'string',
+                                        'max:200',
+                                       ],
+                'BoardMemberNotes'  => [
+                                        'nullable',
+                                        'string',
+                                        'max:2000',
+                                       ],
+               ];
     }
 
-    public function getCommittees():array
+    public function getCommittees(): array
     {
         return Committee::query()->whereIn('CommitteeID', $this->validated('BoardCommittees'))->select('Id')->pluck('Id')->toArray();
     }
-
 }

@@ -23,9 +23,15 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'UserID' => ['required', 'string'],
-            'password' => ['required', 'string'],
-        ];
+                'UserID'   => [
+                               'required',
+                               'string',
+                              ],
+                'password' => [
+                               'required',
+                               'string',
+                              ],
+               ];
     }
 
     /**
@@ -57,8 +63,8 @@ class LoginRequest extends FormRequest
 
         RateLimiter::hit($this->throttleKey());
         throw ValidationException::withMessages([
-            'UserID' => trans('auth.failed'),
-        ]);
+                                                 'UserID' => trans('auth.failed'),
+                                                ]);
     }
 
     /**
@@ -79,11 +85,11 @@ class LoginRequest extends FormRequest
         $seconds = RateLimiter::availableIn($this->throttleKey());
 
         throw ValidationException::withMessages([
-            'UserID' => trans('auth.throttle', [
-                'seconds' => $seconds,
-                'minutes' => ceil($seconds / 60),
-            ]),
-        ]);
+                                                 'UserID' => trans('auth.throttle', [
+                                                                                     'seconds' => $seconds,
+                                                                                     'minutes' => ceil($seconds / 60),
+                                                                                    ]),
+                                                ]);
     }
 
     /**

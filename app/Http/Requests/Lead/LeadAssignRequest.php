@@ -20,17 +20,15 @@ class LeadAssignRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'Assignee' => ['required'],
-        ];
+                'Assignee' => ['required'],
+               ];
     }
 
     public function getAssignee(): User
     {
         $user = User::query()->where('t_Users.UserID', Str::upper($this->validated('Assignee')))->where('t_Users.UserID', '!=', SystemHelper::ID)->first();
         if (!$user instanceof User) {
-            throw ValidationException::withMessages([
-                'Assignee' => 'invalid user selected',
-            ]);
+            throw ValidationException::withMessages(['Assignee' => 'invalid user selected']);
         }
 
         if ($user->Id === $this->user()->Id) {
@@ -39,8 +37,8 @@ class LeadAssignRequest extends FormRequest
 
         if (!$user->can('viewAny', Lead::class)) {
             throw ValidationException::withMessages([
-                'Assignee' => $user->Name . ' does not have permission to view any lead.',
-            ]);
+                                                     'Assignee' => $user->Name . ' does not have permission to view any lead.',
+                                                    ]);
         }
 
         return $user;

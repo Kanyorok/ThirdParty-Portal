@@ -15,7 +15,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Ticket extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -28,22 +29,38 @@ class Ticket extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'TicketID', 'Title', 'CategoryID', 'Notes', 'Party', 'PartyID', 'Source', 'SourceID', 'Status', 'Priority', 'Owner', 'OwnerID',
-        'ClosedOn', 'SourceTicketID', 'StartDate', 'EndDate',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy'
-    ];
+                           'TicketID',
+                           'Title',
+                           'CategoryID',
+                           'Notes',
+                           'Party',
+                           'PartyID',
+                           'Source',
+                           'SourceID',
+                           'Status',
+                           'Priority',
+                           'Owner',
+                           'OwnerID',
+                           'ClosedOn',
+                           'SourceTicketID',
+                           'StartDate',
+                           'EndDate',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 
     protected $casts = [
-        'Status' => TicketStatusEnum::class,
-        'Priority' => TicketPriorityEnum::class,
-        'ClosedOn' => 'datetime',
-        'StartDate' => 'datetime',
-        'EndDate' => 'datetime',
-    ];
+                        'Status'    => TicketStatusEnum::class,
+                        'Priority'  => TicketPriorityEnum::class,
+                        'ClosedOn'  => 'datetime',
+                        'StartDate' => 'datetime',
+                        'EndDate'   => 'datetime',
+                       ];
 
     public static function getPrimaryKey(): string
     {
-        return (new self)->getRouteKeyName();
+        return (new self())->getRouteKeyName();
     }
 
     /**

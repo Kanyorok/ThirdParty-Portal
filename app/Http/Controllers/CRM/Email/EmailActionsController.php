@@ -41,14 +41,14 @@ class EmailActionsController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (\Exception|\Throwable $e) {
+        } catch (\Exception | \Throwable $e) {
             Log::error('Error upload email attachment : ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }
 
         return $this->succeeded('attachment added', data: [
-            'html' => (new ImageService($document))->summaryList()
-        ]);
+                                                           'html' => (new ImageService($document))->summaryList(),
+                                                          ]);
     }
 
 
@@ -64,14 +64,14 @@ class EmailActionsController extends Controller
         try {
             DB::transaction(static function () use ($cc, $crmEmail, $request) {
                 $crmEmail->update([
-                    'Body' => $request->validated('mail_content'),
-                    'CC' => $cc
-                ]);
+                                   'Body' => $request->validated('mail_content'),
+                                   'CC'   => $cc,
+                                  ]);
                 (new CRMEmailService($crmEmail))->send();
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (\Exception|\Throwable $e) {
+        } catch (\Exception | \Throwable $e) {
             Log::error($e);
             Log::error('Error send draft email : ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
