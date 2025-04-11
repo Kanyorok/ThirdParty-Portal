@@ -40,7 +40,7 @@
                                 </svg>
                             </a>
                         </div>
-                        <div class="pc-user-links collapse" id="pc_sidebar_userlink" style="">
+                        <div class="pc-user-links collapse" id="pc_sidebar_userlink">
                             <div class="pt-3">
                                 <a href="{{ route('profile') }}"><i class="ti ti-user"></i> <span
                                         data-i18n="My Account">My Account</span>
