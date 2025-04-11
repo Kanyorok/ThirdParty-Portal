@@ -68,57 +68,16 @@
                                 </svg> </span><span class="pc-mtext" data-i18n="Online Courses">Procurement </span>
                             <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
                         <ul class="pc-submenu">
-                            <li class="pc-item"><a class="pc-link" href="../admins/course-dashboard.html"
-                                    data-i18n="Dashboard">Dashboard</a></li>
                             <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span
-                                        data-i18n="Teacher">Teacher</span> <span class="pc-arrow"><i
+                                        data-i18n="Teacher">Items Catalogue</span> <span class="pc-arrow"><i
                                             data-feather="chevron-right"></i></span></a>
                                 <ul class="pc-submenu">
                                     <li class="pc-item"><a class="pc-link" href="../admins/course-teacher-list.html"
-                                            data-i18n="List">List</a></li>
+                                            data-i18n="List">Add New Item</a></li>
                                     <li class="pc-item"><a class="pc-link" href="../admins/course-teacher-apply.html"
-                                            data-i18n="Apply">Apply</a></li>
+                                            data-i18n="Apply">Manage Items</a></li>
                                     <li class="pc-item"><a class="pc-link" href="../admins/course-teacher-add.html"
-                                            data-i18n="Add">Add</a></li>
-                                </ul>
-                            </li>
-                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span
-                                        data-i18n="Student">Student</span> <span class="pc-arrow"><i
-                                            data-feather="chevron-right"></i></span></a>
-                                <ul class="pc-submenu">
-                                    <li class="pc-item"><a class="pc-link" href="../admins/course-student-list.html"
-                                            data-i18n="List">list</a></li>
-                                    <li class="pc-item"><a class="pc-link" href="../admins/course-student-apply.html"
-                                            data-i18n="Apply">Apply</a></li>
-                                    <li class="pc-item"><a class="pc-link" href="../admins/course-student-add.html"
-                                            data-i18n="Add">Add</a></li>
-                                </ul>
-                            </li>
-                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span
-                                        data-i18n="Courses">Courses</span> <span class="pc-arrow"><i
-                                            data-feather="chevron-right"></i></span></a>
-                                <ul class="pc-submenu">
-                                    <li class="pc-item"><a class="pc-link" href="../admins/course-course-view.html"
-                                            data-i18n="View">View</a></li>
-                                    <li class="pc-item"><a class="pc-link" href="../admins/course-course-add.html"
-                                            data-i18n="Add">Add</a></li>
-                                </ul>
-                            </li>
-                            <li class="pc-item"><a class="pc-link" href="../admins/course-pricing.html"
-                                    data-i18n="Pricing">Pricing</a></li>
-                            <li class="pc-item"><a class="pc-link" href="../admins/course-site.html"
-                                    data-i18n="Site">Site</a></li>
-                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span
-                                        data-i18n="Setting">Setting</span> <span class="pc-arrow"><i
-                                            data-feather="chevron-right"></i></span></a>
-                                <ul class="pc-submenu">
-                                    <li class="pc-item"><a class="pc-link" href="../admins/course-setting-payment.html"
-                                            data-i18n="Payment">Payment</a></li>
-                                    <li class="pc-item"><a class="pc-link" href="../admins/course-setting-pricing.html"
-                                            data-i18n="Pricing">Pricing</a></li>
-                                    <li class="pc-item"><a class="pc-link"
-                                            href="../admins/course-setting-notifications.html"
-                                            data-i18n="Notification">Notifications</a></li>
+                                            data-i18n="Add">Item Categories</a></li>
                                 </ul>
                             </li>
                         </ul>
