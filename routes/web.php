@@ -50,4 +50,5 @@ Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function (
     Route::get('help','HelpController')->name('help');
 
     require __DIR__ . '/crm.php';
+    require __DIR__ . '/procurement.php';
 });

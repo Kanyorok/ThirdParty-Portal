@@ -70,14 +70,22 @@
                         <ul class="pc-submenu">
                             <li class="pc-item"><a class="pc-link" href="../admins/course-dashboard.html"
                                     data-i18n="Dashboard">Dashboard</a></li>
-                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span
-                                        data-i18n="Teacher">Teacher</span> <span class="pc-arrow"><i
-                                            data-feather="chevron-right"></i></span></a>
+                            <li class="pc-item pc-hasmenu">
+                                <a class="pc-link" href="#!">
+                                    <span
+                                        data-i18n="Requisitions">Purchase Requisition
+                                    </span>
+                                    <span class="pc-arrow">
+                                        <i
+                                            data-feather="chevron-right">
+                                        </i>
+                                    </span>
+                                </a>
                                 <ul class="pc-submenu">
-                                    <li class="pc-item"><a class="pc-link" href="../admins/course-teacher-list.html"
-                                            data-i18n="List">List</a></li>
-                                    <li class="pc-item"><a class="pc-link" href="../admins/course-teacher-apply.html"
-                                            data-i18n="Apply">Apply</a></li>
+                                    <li class="pc-item"><a class="pc-link" href="{{route('requisition.index')}}"
+                                            data-i18n="List">Requisition List</a></li>
+                                    <li class="pc-item"><a class="pc-link" href="{{route('requisition.create')}}"
+                                            data-i18n="Apply">Requisition Form</a></li>
                                     <li class="pc-item"><a class="pc-link" href="../admins/course-teacher-add.html"
                                             data-i18n="Add">Add</a></li>
                                 </ul>

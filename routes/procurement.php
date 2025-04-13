@@ -2,6 +2,11 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::namespace('procurement')->group(function () {
+Route::namespace('Procurement')->group(function () {
+
+    //Requisitions
+    Route::resource('requisition', 'Requisitions');
+    Route::resource('requisitionItem', 'RequisitionItems');
+
 
 });
