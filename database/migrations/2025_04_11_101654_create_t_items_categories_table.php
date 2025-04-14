@@ -11,10 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('t_items_categories', function (Blueprint $table) {
+        Schema::create('t_Item_categories', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique()->comment('Category name');
+            $table->string('description')->nullable()->comment('Category description');
             $table->timestamps();
+            $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
+            $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
+            $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
         });
     }
 

@@ -1,4 +1,5 @@
 @extends('layouts.app')
+@section('title','Items Catalogue')
 @section('content')
 <div class="container">
     <h1>Items Catalogue</h1>
@@ -13,6 +14,8 @@
                 <th>Type</th>
                 <th>Category</th>
                 <th>Actions</th>
+                <th>Unit Price</th>
+                
             </tr>
         </thead>
         <tbody>

@@ -11,14 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('t_items', function (Blueprint $table) {
+        Schema::table('t_Items', function (Blueprint $table) {
             // First, change the column type to match the foreign key
             $table->unsignedBigInteger('category_id')->nullable()->change();
 
             // Then, apply the foreign key constraint
             $table->foreign('category_id')
                 ->references('id')
-                ->on('t_items_categories')
+                ->on('t_Item_categories')
                 ->onDelete('set null');
         });
     }

@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('t_items', function (Blueprint $table) {
+        Schema::create('t_Items', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique()->comment('Item name');
             $table->string('description')->nullable()->comment('Item description');
@@ -24,7 +24,9 @@ return new class extends Migration
 
             //Fields for services
             $table->text('service_scope')->nullable()->comment('Service scope');
-
+            $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
+            $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
+            $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
             //Common fields
             $table->timestamps();
         });

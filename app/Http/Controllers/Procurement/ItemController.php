@@ -9,6 +9,11 @@ use Illuminate\Http\Request;
 
 class ItemController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
     public function index()
     {
         $items = Item::with('category')->get();
@@ -33,10 +38,14 @@ class ItemController extends Controller
             'service_scope' => 'nullable|string',
         ]);
 
+        $validated['CreatedBy'] = auth()->user()->Id;
+        $validated['ModifiedBy'] = auth()->user()->Id; 
+
         Item::create($validated);
 
         return redirect()->route('procurement.items.index')->with('success', 'Item created successfully.');
     }
+
 
     public function show(Item $item)
     {
@@ -55,7 +64,7 @@ class ItemController extends Controller
             'name' => 'required|string|max:255',
             'type' => 'required|in:good,service',
             'description' => 'nullable|string',
-            'category_id' => 'nullable|exists:t_item_categories,id',
+            'category_id' => 'nullable|exists:t_Item_categories,id',
             'unit_of_measure' => 'nullable|string|max:100',
             'unit_price' => 'nullable|numeric|min:0',
             'service_scope' => 'nullable|string',

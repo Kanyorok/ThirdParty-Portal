@@ -72,12 +72,15 @@
                                         data-i18n="Teacher">Items Catalogue</span> <span class="pc-arrow"><i
                                             data-feather="chevron-right"></i></span></a>
                                 <ul class="pc-submenu">
-                                    <li class="pc-item"><a class="pc-link" href="../admins/course-teacher-list.html"
-                                            data-i18n="List">Add New Item</a></li>
-                                    <li class="pc-item"><a class="pc-link" href="../admins/course-teacher-apply.html"
-                                            data-i18n="Apply">Manage Items</a></li>
-                                    <li class="pc-item"><a class="pc-link" href="../admins/course-teacher-add.html"
-                                            data-i18n="Add">Item Categories</a></li>
+                                    <li class="pc-item">
+                                        <a class="pc-link" href="{{ route('procurement.items.create') }}" data-i18n="List">Add New Item</a>
+                                    </li>
+                                    <li class="pc-item">
+                                        <a class="pc-link" href="{{ route('procurement.items.index') }}" data-i18n="Apply">Manage Items</a>
+                                    </li>
+                                    <li class="pc-item">
+                                        <a class="pc-link" href="{{ route('procurement.categories.index') }}" data-i18n="Add">Item Categories</a>
+                                    </li>
                                 </ul>
                             </li>
                         </ul>

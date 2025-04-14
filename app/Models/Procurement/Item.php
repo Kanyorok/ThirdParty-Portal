@@ -1,3 +1,4 @@
+<?php
 namespace App\Models\Procurement;
 
 use Illuminate\Database\Eloquent\Model;
@@ -8,7 +9,7 @@ class Item extends Model
     protected $fillable = [
         'name', 'type', 'description',
         'category_id', 'unit_of_measure',
-        'unit_price', 'service_scope'
+        'unit_price', 'service_scope', 'CreatedBy', 'ModifiedBy'
     ];
 
     public function category()
