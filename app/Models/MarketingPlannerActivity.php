@@ -10,9 +10,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class   MarketingPlannerActivity extends Model
+class MarketingPlannerActivity extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -25,20 +26,34 @@ class   MarketingPlannerActivity extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'PlannerActivityID', 'PlannerId', 'Name', 'Location', 'Notes', 'BranchId', 'StartOn', 'EndOn', 'Budget', 'Materials', 'Actual', 'MasterPlannerId',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy', 'DeletedOn'
-    ];
+                           'PlannerActivityID',
+                           'PlannerId',
+                           'Name',
+                           'Location',
+                           'Notes',
+                           'BranchId',
+                           'StartOn',
+                           'EndOn',
+                           'Budget',
+                           'Materials',
+                           'Actual',
+                           'MasterPlannerId',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                           'DeletedOn',
+                          ];
 
     protected $casts = [
-        'StartOn' => 'datetime',
-        'EndOn' => 'datetime',
-        'Budget' => 'decimal:2',
-        'Actual' => 'decimal:2',
-    ];
+                        'StartOn' => 'datetime',
+                        'EndOn'   => 'datetime',
+                        'Budget'  => 'decimal:2',
+                        'Actual'  => 'decimal:2',
+                       ];
 
     public static function getPrimaryKey(): string
     {
-        return (new self)->getRouteKeyName();
+        return (new self())->getRouteKeyName();
     }
 
     /**

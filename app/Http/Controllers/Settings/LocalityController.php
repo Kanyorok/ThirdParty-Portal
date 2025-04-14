@@ -58,12 +58,12 @@ class LocalityController extends Controller
         try {
             DB::transaction(static function () use ($name, $type, $located, $actor) {
                 $locality = Locality::create([
-                    'Name' => $name,
-                    'LocationType' => $type,
-                    'LocalityID' => $located,
-                    'CreatedBy' => $actor->Id,
-                    'ModifiedBy' => $actor->Id,
-                ]);
+                                              'Name'         => $name,
+                                              'LocationType' => $type,
+                                              'LocalityID'   => $located,
+                                              'CreatedBy'    => $actor->Id,
+                                              'ModifiedBy'   => $actor->Id,
+                                             ]);
                 activity()->causedBy($actor)->performedOn($locality->refresh())->event('create')->log('created locality ' . $locality->Name);
             });
         } catch (ErroredException $e) {
@@ -89,10 +89,10 @@ class LocalityController extends Controller
         try {
             DB::transaction(static function () use ($located, $locality, $actor, $name) {
                 $locality->fill([
-                    'Name' => $name,
-                    'LocalityID' => $located,
-                    'ModifiedBy' => $actor->Id,
-                ])->save();
+                                 'Name'       => $name,
+                                 'LocalityID' => $located,
+                                 'ModifiedBy' => $actor->Id,
+                                ])->save();
 
                 activity()->causedBy($actor)->performedOn($locality)->event('update')->log('Updated location ' . $locality->Name);
             });
@@ -116,9 +116,9 @@ class LocalityController extends Controller
         try {
             DB::transaction(static function () use ($locality, $actor) {
                 $locality->forceFill([
-                    'DeletedOn' => now(),
-                    'DeletedBy' => $actor->Id
-                ])->save();
+                                      'DeletedOn' => now(),
+                                      'DeletedBy' => $actor->Id,
+                                     ])->save();
 
                 activity()->causedBy($actor)->performedOn($locality)->event('delete')->log('delete location  ' . $locality->Name);
             });

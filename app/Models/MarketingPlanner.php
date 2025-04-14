@@ -15,7 +15,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class MarketingPlanner extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -28,22 +29,34 @@ class MarketingPlanner extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'PlannerID', 'Name', 'Type', 'BranchId', 'OwnerId', 'MasterPlannerId', 'Notes', 'Status', 'Modes', 'StartOn', 'EndOn',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy'
-    ];
+                           'PlannerID',
+                           'Name',
+                           'Type',
+                           'BranchId',
+                           'OwnerId',
+                           'MasterPlannerId',
+                           'Notes',
+                           'Status',
+                           'Modes',
+                           'StartOn',
+                           'EndOn',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 
     public static function getPrimaryKey(): string
     {
-        return (new self)->getRouteKeyName();
+        return (new self())->getRouteKeyName();
     }
 
     protected $casts = [
-        'StartOn' => 'datetime',
-        'EndOn' => 'datetime',
-        'OwnerId' => 'integer',
-        'Type' => PlannerTypeEnum::class,
-        'Status' => PlannerStatus::class,
-    ];
+                        'StartOn' => 'datetime',
+                        'EndOn'   => 'datetime',
+                        'OwnerId' => 'integer',
+                        'Type'    => PlannerTypeEnum::class,
+                        'Status'  => PlannerStatus::class,
+                       ];
     /**
      * Get the route key for the model.
      */

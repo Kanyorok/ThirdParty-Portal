@@ -11,5 +11,4 @@ enum LeadTypeEnum: string
     case Individual = 'i';
 
     case Company = 'c';
-
 }

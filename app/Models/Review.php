@@ -12,7 +12,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Review extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -25,14 +26,23 @@ class Review extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'BranchID', 'Party', 'PartyID', 'Source', 'SourceID', 'Tonality', 'Rating', 'Content',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy'
-    ];
+                           'BranchID',
+                           'Party',
+                           'PartyID',
+                           'Source',
+                           'SourceID',
+                           'Tonality',
+                           'Rating',
+                           'Content',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 
     protected $casts = [
-        'Rating' => 'integer',
-        'Tonality' => TonalityEnum::class,
-    ];
+                        'Rating'   => 'integer',
+                        'Tonality' => TonalityEnum::class,
+                       ];
 
     public static function getPrimaryKey(): string
     {
@@ -53,5 +63,4 @@ class Review extends Model
     {
         return $this->morphTo(__FUNCTION__, 'Source', 'SourceID');
     }
-
 }

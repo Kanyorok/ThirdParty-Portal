@@ -23,6 +23,6 @@ class GuarantorEmailRequest extends FormRequest
     {
         return [
             //
-        ];
+               ];
     }
 }

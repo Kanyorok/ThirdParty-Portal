@@ -47,7 +47,7 @@ class CampaignApprovalController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (\Throwable|Exception $e) {
+        } catch (\Throwable | Exception $e) {
             Log::error('Error approve campaign failed: ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }
@@ -64,8 +64,13 @@ class CampaignApprovalController extends Controller
         $this->authorize('approve', $campaign);
         $actor = $request->user();
         $data = $request->validate([
-            'campaign_reject_reason' => ['required', 'string', 'min:15', 'max:2000'],
-        ]);
+                                    'campaign_reject_reason' => [
+                                                                 'required',
+                                                                 'string',
+                                                                 'min:15',
+                                                                 'max:2000',
+                                                                ],
+                                   ]);
 
         try {
             DB::transaction(static function () use ($campaign, $actor, $data) {

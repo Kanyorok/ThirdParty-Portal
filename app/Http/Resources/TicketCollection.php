@@ -15,9 +15,9 @@ class TicketCollection extends ResourceCollection
     public function toArray(Request $request): array
     {
         return [
-            'data' => $this->collection->transform(function ($ticket) {
-                return new TicketResource($ticket);
-            }),
-        ];
+                'data' => $this->collection->transform(function ($ticket) {
+                    return new TicketResource($ticket);
+                }),
+               ];
     }
 }

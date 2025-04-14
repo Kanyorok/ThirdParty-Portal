@@ -23,13 +23,31 @@ class MeetingScheduleRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'meeting_title' => ['required', 'string', 'max:250'],
-            'meeting_location' => ['required', 'string', 'max:250'],
-            'meeting_start' => 'required|date_format:"Y-m-d H:i"|before:meeting_end',
-            'meeting_end' => 'required|date_format:"Y-m-d H:i"|after:meeting_start',
-            'meeting_users' => ['required', 'array', 'min:1', 'max:30'],
-            'meeting_notes' => ['required', 'min:1', 'max:250', 'string'],
-        ];
+                'meeting_title'    => [
+                                       'required',
+                                       'string',
+                                       'max:250',
+                                      ],
+                'meeting_location' => [
+                                       'required',
+                                       'string',
+                                       'max:250',
+                                      ],
+                'meeting_start'    => 'required|date_format:"Y-m-d H:i"|before:meeting_end',
+                'meeting_end'      => 'required|date_format:"Y-m-d H:i"|after:meeting_start',
+                'meeting_users'    => [
+                                       'required',
+                                       'array',
+                                       'min:1',
+                                       'max:30',
+                                      ],
+                'meeting_notes'    => [
+                                       'required',
+                                       'min:1',
+                                       'max:250',
+                                       'string',
+                                      ],
+               ];
     }
 
     public function getNotes(): string
@@ -56,29 +74,21 @@ class MeetingScheduleRequest extends FormRequest
     {
         $end = Carbon::createFromFormat('Y-m-d H:i', $this->validated('meeting_end'));
         if (!$end instanceof Carbon) {
-            throw ValidationException::withMessages([
-                'meeting_start' => 'invalid date format',
-            ]);
+            throw ValidationException::withMessages(['meeting_start' => 'invalid date format']);
         }
 
         if ($end->lte($start)) {
-            throw ValidationException::withMessages([
-                'meeting_end' => 'should be after start.',
-            ]);
+            throw ValidationException::withMessages(['meeting_end' => 'should be after start.']);
         }
 
         $diffInMinutes = $start->diffInMinutes($end, true);
 
         if ($diffInMinutes < 0) {
-            throw ValidationException::withMessages([
-                'meeting_end' => 'duration should be less least 1 minute.',
-            ]);
+            throw ValidationException::withMessages(['meeting_end' => 'duration should be less least 1 minute.']);
         }
 
         if ($diffInMinutes > 480) {//8 hours
-            throw ValidationException::withMessages([
-                'meeting_end' => 'duration can only be a maximum of 8 hours.',
-            ]);
+            throw ValidationException::withMessages(['meeting_end' => 'duration can only be a maximum of 8 hours.']);
         }
 
         return $end;
@@ -91,9 +101,7 @@ class MeetingScheduleRequest extends FormRequest
     {
         $users = User::query()->whereIn('t_Users.UserID', $this->validated('meeting_users'))->where('t_Users.UserID', '!=', SystemHelper::ID)->get(['Id', 'UserID']);
         if (!$users->count() === 0) {
-            throw ValidationException::withMessages([
-                'meeting_users' => 'no users selected',
-            ]);
+            throw ValidationException::withMessages(['meeting_users' => 'no users selected']);
         }
 
         if ($users->count() === 1 && $users->first()->Id === $this->user()->Id) {
@@ -102,9 +110,7 @@ class MeetingScheduleRequest extends FormRequest
 
 
         if (!$this->user()->can(PermissionEnum::ScheduleWrite->value)) {
-            throw ValidationException::withMessages([
-                'meeting_users' => 'You dont have permission to add people to meetings.',
-            ]);
+            throw ValidationException::withMessages(['meeting_users' => 'You dont have permission to add people to meetings.']);
         }
         return $users;
     }
@@ -118,8 +124,6 @@ class MeetingScheduleRequest extends FormRequest
         if ($start instanceof Carbon) {
             return $start;
         }
-        throw ValidationException::withMessages([
-            'meeting_start' => 'invalid date format',
-        ]);
+        throw ValidationException::withMessages(['meeting_start' => 'invalid date format']);
     }
 }

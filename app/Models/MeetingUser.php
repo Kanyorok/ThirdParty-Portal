@@ -12,14 +12,18 @@ class MeetingUser extends Model
     protected $table = 't_MeetingUsers';
 
     protected $fillable = [
-        'MeetingId', 'UserID',
-        'CreatedOn', 'CreatedBy', 'ModifiedOn', 'ModifiedBy'
-    ];
+                           'MeetingId',
+                           'UserID',
+                           'CreatedOn',
+                           'CreatedBy',
+                           'ModifiedOn',
+                           'ModifiedBy',
+                          ];
 
-    protected $casts=[
-        'CreatedOn'=>'datetime',
-        'ModifiedOn'=>'datetime',
-    ];
+    protected $casts = [
+                        'CreatedOn'  => 'datetime',
+                        'ModifiedOn' => 'datetime',
+                       ];
 
     public function user(): BelongsTo
     {
@@ -28,6 +32,6 @@ class MeetingUser extends Model
 
     public function meeting(): BelongsTo
     {
-        return $this->belongsTo(Meeting::class,'MeetingId','MeetingID');
+        return $this->belongsTo(Meeting::class, 'MeetingId', 'MeetingID');
     }
 }

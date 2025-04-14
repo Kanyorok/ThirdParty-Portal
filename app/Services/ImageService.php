@@ -48,14 +48,14 @@ class ImageService
     {
         $img = new CRMImage();
         $img->fill([
-            "Name" => $Name,
-            "ImageType" => $Type,
-            "ImageTypeID" => $TypeID,
-            "Image" => base64_encode($Content),
-            "MIMEType" => $MimeType,
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
-        ])->save();
+                    "Name"        => $Name,
+                    "ImageType"   => $Type,
+                    "ImageTypeID" => $TypeID,
+                    "Image"       => base64_encode($Content),
+                    "MIMEType"    => $MimeType,
+                    'CreatedBy'   => $actor->Id,
+                    'ModifiedBy'  => $actor->Id,
+                   ])->save();
 
         return new self($img->refresh());
     }
@@ -93,5 +93,4 @@ class ImageService
                         data-url="' . route('documents.show', [$this->image->ImageID]) . '" id="document-' . $this->image->ImageID . '">
                     ' . $this->image->ext()?->getIcon() . "&nbsp;" . Str::limit(explode(".", $this->image->Name)[0], 10) . '.' . $this->image->ext()?->value . '</span>';
     }
-
 }

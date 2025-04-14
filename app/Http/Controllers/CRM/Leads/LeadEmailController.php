@@ -43,7 +43,7 @@ class LeadEmailController extends Controller
                 $service->send();
                 return $activity;
             });
-        } catch (Exception|\Throwable $e) {
+        } catch (Exception | \Throwable $e) {
             Log::error('Error sending email to lead ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }

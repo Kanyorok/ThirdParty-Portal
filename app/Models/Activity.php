@@ -10,7 +10,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Activity extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -20,9 +21,17 @@ class Activity extends Model
     protected $primaryKey = 'ActivityID';
 
     protected $fillable = [
-        "Party", "PartyID", 'UserID', 'Notes', 'ActivityType', 'ActivityTypeID',
-        'CreatedOn', 'CreatedBy', 'ModifiedOn', 'ModifiedBy'
-    ];
+                           "Party",
+                           "PartyID",
+                           'UserID',
+                           'Notes',
+                           'ActivityType',
+                           'ActivityTypeID',
+                           'CreatedOn',
+                           'CreatedBy',
+                           'ModifiedOn',
+                           'ModifiedBy',
+                          ];
 
     // (Call, Schedule, )
     public function activityType(): MorphTo

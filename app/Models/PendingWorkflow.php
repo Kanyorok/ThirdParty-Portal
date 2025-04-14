@@ -9,7 +9,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PendingWorkflow extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -22,13 +23,17 @@ class PendingWorkflow extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'Source', 'SourceID', 'Stage', 'UserId',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy', 'DeletedOn'
-    ];
+                           'Source',
+                           'SourceID',
+                           'Stage',
+                           'UserId',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                           'DeletedOn',
+                          ];
 
-    protected $casts = [
-        'UserId' => 'integer',
-    ];
+    protected $casts = ['UserId' => 'integer'];
 
     public static function getPrimaryKey(): string
     {

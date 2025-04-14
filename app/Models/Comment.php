@@ -10,7 +10,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Comment extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -23,15 +24,22 @@ class Comment extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'Notes', 'CommentType', 'CommentTypeID', 'Response', 'RemoteId', 'Source',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy'
-    ];
+                           'Notes',
+                           'CommentType',
+                           'CommentTypeID',
+                           'Response',
+                           'RemoteId',
+                           'Source',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 
     protected $casts = [
-        'Response' => 'object',
-        'CreatedBy' => 'integer',
-        'ModifiedBy' => 'integer'
-    ];
+                        'Response'   => 'object',
+                        'CreatedBy'  => 'integer',
+                        'ModifiedBy' => 'integer',
+                       ];
 
     public static function getPrimaryKey(): string
     {
@@ -47,5 +55,4 @@ class Comment extends Model
     {
         return $this->morphMany(__CLASS__, 'type', 'CommentType', 'CommentTypeID', 'Id');
     }
-
 }

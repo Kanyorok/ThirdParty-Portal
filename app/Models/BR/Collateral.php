@@ -18,9 +18,9 @@ class Collateral extends Model
     protected $primaryKey = 'CollateralID';
 
     protected $casts = [
-        'LodgedDate' => 'datetime',
-        'CollateralValue' => 'decimal:2',
-    ];
+                        'LodgedDate'      => 'datetime',
+                        'CollateralValue' => 'decimal:2',
+                       ];
 
     public static function primaryKey(): string
     {
@@ -31,5 +31,4 @@ class Collateral extends Model
     {
         return $this->belongsTo(CollateralType::class, 'CollateralTypeID', 'CollateralTypeID');
     }
-
 }

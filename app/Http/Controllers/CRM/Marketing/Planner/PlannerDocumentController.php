@@ -17,8 +17,8 @@ class PlannerDocumentController extends Controller
     public function __invoke(Request $request, MarketingPlanner $planner): Response
     {
         return PDF::loadview('crm.marketing.planner.document', [
-            'title' => Str::upper($planner->PlannerID),
-            'planner' => $planner,
-        ])->setPaper('a4', 'landscape')->download($planner->PlannerID . '.pdf');
+                                                                'title'   => Str::upper($planner->PlannerID),
+                                                                'planner' => $planner,
+                                                               ])->setPaper('a4', 'landscape')->download($planner->PlannerID . '.pdf');
     }
 }

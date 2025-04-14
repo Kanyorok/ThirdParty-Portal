@@ -51,7 +51,7 @@ class SurveyActionController extends Controller
         //check if the survey has questions without options
         $id = 1;
         foreach ($survey->questions()->withCount('answers')->get() as $question) {
-            if ((int)$question?->answers_count < 1 && $question->Type->value === SurveyQuestionTypeEnum::Closed->value) {
+            if ((int) $question?->answers_count < 1 && $question->Type->value === SurveyQuestionTypeEnum::Closed->value) {
                 return $this->errored('Question ' . $id . ' does not have options');
             }
             $id++;
@@ -69,6 +69,5 @@ class SurveyActionController extends Controller
         }
 
         return $this->succeeded('survey submitted successfully.', route('surveys.show', [$survey->SurveyID]));
-
     }
 }

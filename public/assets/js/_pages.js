@@ -9,7 +9,8 @@ window.addEventListener('beforeunload', function (event) {
     }
 });
 
-async function saveForm(form, saveBtn, redirect = false, reset = false, popMessage = true, isEdit = false) {
+async function saveForm(form, saveBtn, redirect = false, reset = false, popMessage = true, isEdit = false)
+{
     const btnContent = saveBtn.html();
     saveBtn.prop('disable', true).addClass('disabled').prop('type', 'button').html('<i class="fas fa-spinner fa-spin"></i> please wait');
     $(".form-control").removeClass('is-invalid');
@@ -50,7 +51,8 @@ async function saveForm(form, saveBtn, redirect = false, reset = false, popMessa
     }
 }
 
-function printContent(elem, title) {
+function printContent(elem, title)
+{
     var mywindow = window.open('', 'PRINT');
 
     mywindow.document.write('<html lang="en"><head><title>' + title + '</title>');
@@ -71,7 +73,8 @@ function printContent(elem, title) {
     return true;
 }
 
-function codeNotify(r) {
+function codeNotify(r)
+{
     switch (r) {
         case 0:
             nError("Check your internet connection, Connection Lost");
@@ -112,7 +115,8 @@ function codeNotify(r) {
     }
 }
 
-function formRequest(request, popMessage = true, edit = false) {
+function formRequest(request, popMessage = true, edit = false)
+{
     if (popMessage) {
         codeNotify(request.status);
     }
@@ -129,17 +133,20 @@ function formRequest(request, popMessage = true, edit = false) {
     }
 }
 
-function setInvalid(element_id, message) {
+function setInvalid(element_id, message)
+{
     $('#' + element_id).addClass('is-invalid');
     $('#' + element_id + '_error').removeClass('d-none').html(message);
 }
 
-function clearInvalid(element_id) {
+function clearInvalid(element_id)
+{
     $('#' + element_id).removeClass('is-invalid');
     $('#' + element_id + '_error').addClass('d-none').html('..');
 }
 
-function nSuccess(msg) {
+function nSuccess(msg)
+{
     return window.notyf.open({
         type: "success",
         message: msg,
@@ -153,7 +160,8 @@ function nSuccess(msg) {
     });
 }
 
-function nError(msg) {
+function nError(msg)
+{
     return window.notyf.open({
         type: "error",
         message: msg,
@@ -167,7 +175,8 @@ function nError(msg) {
     });
 }
 
-function nWarning(msg) {
+function nWarning(msg)
+{
     return window.notyf.open({
         background: "orange",
         message: msg,
@@ -187,7 +196,8 @@ window.getDocumentUrl = function () {
     return current.replace('#', '');
 }
 
-function updateFields(fields) {
+function updateFields(fields)
+{
     Object.entries(fields).forEach(([key, value]) => {
         $('.set-' + key).html(value);
     });

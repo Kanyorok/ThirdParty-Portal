@@ -32,8 +32,8 @@ class ProductDevelopmentFeatureController extends Controller
         $productFeature = (new ProductDevService($product))->addFeature($request->validated('feature_title'), $request->validated('feature_content'), $request->user());
 
         return $this->succeeded('product feature added', data: [
-            'feature' => $productFeature->toArray()
-        ]);
+                                                                'feature' => $productFeature->toArray(),
+                                                               ]);
     }
 
     /**
@@ -55,8 +55,8 @@ class ProductDevelopmentFeatureController extends Controller
         $productFeature = (new ProductDevService($product))->updateFeature($feature, $request->validated('feature_title'), $request->validated('feature_content'), $request->user());
 
         return $this->succeeded('product feature updated', data: [
-            'feature' => $productFeature->toArray()
-        ]);
+                                                                  'feature' => $productFeature->toArray(),
+                                                                 ]);
     }
 
     /**
@@ -77,14 +77,14 @@ class ProductDevelopmentFeatureController extends Controller
 
         $user = $request->user();
         $feature->forceFill([
-            'DeletedOn' => now(),
-            'DeletedBy' => $user->Id,
-        ])->save();
+                             'DeletedOn' => now(),
+                             'DeletedBy' => $user->Id,
+                            ])->save();
 
         activity()->causedBy($user)->performedOn($product)->event('feature')->log('added a feature  ' . $feature->Feature . ' to Product Development ' . Str::upper($product->ProductID) . '.');
 
         return $this->succeeded('product feature deleted', data: [
-            'feature' => $feature->toArray()
-        ]);
+                                                                  'feature' => $feature->toArray(),
+                                                                 ]);
     }
 }

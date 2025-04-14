@@ -9,7 +9,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class MarketingListFilter extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
     //todo v2 add Groups to be able to Group Queries.
 
@@ -24,14 +25,21 @@ class MarketingListFilter extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'MarketingListId', 'FilterId', 'FilterValue', 'FilterValues', 'After', 'DisplayOrder',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy'
-    ];
+                           'MarketingListId',
+                           'FilterId',
+                           'FilterValue',
+                           'FilterValues',
+                           'After',
+                           'DisplayOrder',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 
     protected $casts = [
-        'FilterValues' => 'array',
-        'DisplayOrder' => 'integer',
-    ];
+                        'FilterValues' => 'array',
+                        'DisplayOrder' => 'integer',
+                       ];
 
     public function filter(): BelongsTo
     {
@@ -42,5 +50,4 @@ class MarketingListFilter extends Model
     {
         return $this->belongsTo(MarketingList::class, 'MarketingListId', 'MarketingListID');
     }
-
 }

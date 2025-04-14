@@ -22,12 +22,31 @@ class MailToRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'mail_to' => ['required', 'email:rfc,dns', 'max:200'],
-            'mail_cc' => ['nullable', 'array', 'max:20'],
-            'mail_subject' => ['required', 'string', 'max:200'],
-            'mail_content' => ['required', 'string', 'min:5'],
-            'mail_reply_to' => ['nullable', 'string'],
-        ];
+                'mail_to'       => [
+                                    'required',
+                                    'email:rfc,dns',
+                                    'max:200',
+                                   ],
+                'mail_cc'       => [
+                                    'nullable',
+                                    'array',
+                                    'max:20',
+                                   ],
+                'mail_subject'  => [
+                                    'required',
+                                    'string',
+                                    'max:200',
+                                   ],
+                'mail_content'  => [
+                                    'required',
+                                    'string',
+                                    'min:5',
+                                   ],
+                'mail_reply_to' => [
+                                    'nullable',
+                                    'string',
+                                   ],
+               ];
     }
 
     /**
@@ -64,9 +83,7 @@ class MailToRequest extends FormRequest
 
     public function messages(): array
     {
-        return [
-            'mail_content.min' => 'Write something about it.',
-        ];
+        return ['mail_content.min' => 'Write something about it.'];
     }
 
     public function getReplyTo(): CrmEmail
@@ -76,9 +93,7 @@ class MailToRequest extends FormRequest
             return $mail;
         }
 
-        throw ValidationException::withMessages([
-            'mail_reply_to' => 'reply to email invalid, maybe deleted',
-        ]);
+        throw ValidationException::withMessages(['mail_reply_to' => 'reply to email invalid, maybe deleted']);
     }
 
 
@@ -98,9 +113,7 @@ class MailToRequest extends FormRequest
             return $mail;
         }
 
-        throw ValidationException::withMessages([
-            'mail_to' => 'The mail address does not related to lead.',
-        ]);
+        throw ValidationException::withMessages(['mail_to' => 'The mail address does not related to lead.']);
     }
 
     public function getContactEmail(Contact $contact): string
@@ -111,9 +124,7 @@ class MailToRequest extends FormRequest
             return $mail;
         }
 
-        throw ValidationException::withMessages([
-            'mail_to' => 'The mail address does not related to contact.',
-        ]);
+        throw ValidationException::withMessages(['mail_to' => 'The mail address does not related to contact.']);
     }
 
     /**
@@ -132,9 +143,7 @@ class MailToRequest extends FormRequest
             return $mail;
         }
 
-        throw ValidationException::withMessages([
-            'mail_to' => 'The mail address does not related to lead.',
-        ]);
+        throw ValidationException::withMessages(['mail_to' => 'The mail address does not related to lead.']);
     }
 
     /**
@@ -192,5 +201,4 @@ class MailToRequest extends FormRequest
      *
      * return $ccEmails->toArray();
     * }  */
-
 }

@@ -60,7 +60,8 @@ class LeadController extends Controller
                 $query->where(function (Builder $query) use ($actor) {
                     //check users.
                     $query->where('t_Leads.RelationshipManagerID', $actor->Id)
-                        ->orWhereHas('watchers', function (Builder $query) use ($actor) {// 'Party', 'PartyID'
+                        ->orWhereHas('watchers', function (Builder $query) use ($actor) {
+// 'Party', 'PartyID'
                             $query->where(function (Builder $query) use ($actor) {
                                 $query->where('t_LeadUsers.PartyID', $actor->Id)->where('t_LeadUsers.Party', User::getPrimaryKey());
                             })->orWhere(function (Builder $query) use ($actor) {
@@ -91,19 +92,18 @@ class LeadController extends Controller
         $this->authorize('create', Lead::class);
         $type = $request->type;
         if (in_array($type, [LeadTypeEnum::Individual->name, LeadTypeEnum::Company->name], true)) {
-            $email ='';
+            $email = '';
             $emailConversation = null;
-            if($request->has('conversation')){
-                $emailConversation = EmailConversation::query()->where('Id',$request->conversation)->first();
+            if ($request->has('conversation')) {
+                $emailConversation = EmailConversation::query()->where('Id', $request->conversation)->first();
                 if ($emailConversation instanceof EmailConversation) {
                     $email = (new \App\Services\CRMEmailService($emailConversation->email))->getParty();
                 }
-
             }
 
             $contact = null;
-            if($request->has('contact')){
-                $contact = Contact::query()->where('ContactID',$request->contact)->where('PartyID', '0')->first();
+            if ($request->has('contact')) {
+                $contact = Contact::query()->where('ContactID', $request->contact)->where('PartyID', '0')->first();
                 if ($contact instanceof Contact) {
                     $email = $contact->Email;
                 }
@@ -111,9 +111,9 @@ class LeadController extends Controller
 
             $StaticLists = StaticListsService::getList([StaticListsService::Industries, StaticListsService::MarketingModes, StaticListsService::CustomerType]);
 
-            $view= ($request->type === LeadTypeEnum::Individual->name )?'leads.create-individual':'leads.create-corporate';
+            $view = ($request->type === LeadTypeEnum::Individual->name ) ? 'leads.create-individual' : 'leads.create-corporate';
 
-            return view($view,compact('contact','email'))
+            return view($view, compact('contact', 'email'))
                 ->with('conversation', $emailConversation instanceof EmailConversation ? $emailConversation->Id : 0)
                 ->with('Industries', $StaticLists->where('CodeID', StaticListsService::Industries))
                 ->with('CustomerTypes', $StaticLists->where('CodeID', StaticListsService::CustomerType))
@@ -140,25 +140,47 @@ class LeadController extends Controller
         $contacted = $request->getLastContacted() ?? now();
         $gender = $request->getGender();
         $emailConversation = null;
-        if($request->has('conversation')){
-            $emailConversation = EmailConversation::query()->where('Id',$request->conversation)->first();
+        if ($request->has('conversation')) {
+            $emailConversation = EmailConversation::query()->where('Id', $request->conversation)->first();
         }
         $contact = null;
-        if($request->has('contact')){
-            $contact = Contact::query()->where('ContactID',$request->contact)->where('PartyID', '0')->first();
+        if ($request->has('contact')) {
+            $contact = Contact::query()->where('ContactID', $request->contact)->where('PartyID', '0')->first();
         }
 
         try {
-           $lead = DB::transaction(static function () use ($request, $gender, $contact, $contacted, $CustomerType, $Source, $Industry, $location, $assignee, $emailConversation) {
+            $lead = DB::transaction(static function () use ($request, $gender, $contact, $contacted, $CustomerType, $Source, $Industry, $location, $assignee, $emailConversation) {
                 if ($request->validated('Type') === LeadTypeEnum::Company->value) {
                     $service = LeadService::company(
-                        $request->validated('Name'), $request->validated('Email') ?? '', $request->validated('Phone')??'', $request->validated('Website')??'', $contacted,
-                        $assignee, $request->user(), $location, $Industry, $Source, $CustomerType, $request->validated('Notes') ?? ''
+                        $request->validated('Name'),
+                        $request->validated('Email') ?? '',
+                        $request->validated('Phone') ?? '',
+                        $request->validated('Website') ?? '',
+                        $contacted,
+                        $assignee,
+                        $request->user(),
+                        $location,
+                        $Industry,
+                        $Source,
+                        $CustomerType,
+                        $request->validated('Notes') ?? ''
                     );
-                } else if ($request->validated('Type') === LeadTypeEnum::Individual->value) {
+                } elseif ($request->validated('Type') === LeadTypeEnum::Individual->value) {
                     $service = LeadService::individual(
-                        $request->validated('Name'), $request->validated('Surname'), $request->validated('Email')??'', $request->validated('Phone')??'', $request->validated('JobTitle')??'', $contacted, $gender,
-                        $assignee, $request->user(), $location, $Industry, $Source, $CustomerType, $request->validated('Notes') ?? ''
+                        $request->validated('Name'),
+                        $request->validated('Surname'),
+                        $request->validated('Email') ?? '',
+                        $request->validated('Phone') ?? '',
+                        $request->validated('JobTitle') ?? '',
+                        $contacted,
+                        $gender,
+                        $assignee,
+                        $request->user(),
+                        $location,
+                        $Industry,
+                        $Source,
+                        $CustomerType,
+                        $request->validated('Notes') ?? ''
                     );
                 } else {
                     throw new ErroredException();
@@ -169,37 +191,37 @@ class LeadController extends Controller
                     $service->lead->setImage($image, $request->user(), 'ImageId');
                 }
 
-                if ($emailConversation instanceof  EmailConversation ){
+                if ($emailConversation instanceof  EmailConversation) {
                     $emailConversation->update([
-                        'Party' => Lead::getPrimaryKey(),
-                        'PartyID' => $service->lead->LeadID,
-                    ]);
+                                                'Party'   => Lead::getPrimaryKey(),
+                                                'PartyID' => $service->lead->LeadID,
+                                               ]);
                     $emailConversation->emails()->update([
-                        'Party' => Lead::getPrimaryKey(),
-                        'PartyID' => $service->lead->LeadID,
-                    ]);
+                                                          'Party'   => Lead::getPrimaryKey(),
+                                                          'PartyID' => $service->lead->LeadID,
+                                                         ]);
                 }
 
-                if ($contact instanceof Contact){
+                if ($contact instanceof Contact) {
                     $contact->crmmails()->update([
-                        'Party' => Lead::getPrimaryKey(),
-                        'PartyID' => $service->lead->LeadID,
-                    ]);
+                                                  'Party'   => Lead::getPrimaryKey(),
+                                                  'PartyID' => $service->lead->LeadID,
+                                                 ]);
 
                     $contact->crmsms()->update([
-                        'Party' => Lead::getPrimaryKey(),
-                        'PartyID' => $service->lead->LeadID,
-                    ]);
+                                                'Party'   => Lead::getPrimaryKey(),
+                                                'PartyID' => $service->lead->LeadID,
+                                               ]);
 
                     $contact->calls()->update([
-                        'Party' => Lead::getPrimaryKey(),
-                        'PartyID' => $service->lead->LeadID,
-                    ]);
+                                               'Party'   => Lead::getPrimaryKey(),
+                                               'PartyID' => $service->lead->LeadID,
+                                              ]);
 
                     $contact->update([
-                        'Party' => Lead::getPrimaryKey(),
-                        'PartyID' => $service->lead->LeadID,
-                    ]);
+                                      'Party'   => Lead::getPrimaryKey(),
+                                      'PartyID' => $service->lead->LeadID,
+                                     ]);
                     $contact->delete();
                 }
 
@@ -207,7 +229,7 @@ class LeadController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (\Throwable|Exception $e) {
+        } catch (\Throwable | Exception $e) {
             Log::error('Error adding lead ' . $e->getMessage());
             return $this->errored('unexpected error adding lead, try again latter');
         }
@@ -247,7 +269,7 @@ class LeadController extends Controller
                 } else {
                     $call = null;
                 }
-            } else if (is_numeric($request->meet)) {
+            } elseif (is_numeric($request->meet)) {
                 $user = $request->user();
                 $meeting = Meeting::query()->where('StatusID', MeetingStatusEnum::Ongoing)->where('MeetingID', $request->get('meet'))
                     ->whereHas('meetingUsers', function (Builder $query) use ($user) {
@@ -260,7 +282,7 @@ class LeadController extends Controller
                 } else {
                     $meeting = null;
                 }
-            } else if (is_numeric($request->schedule)) {
+            } elseif (is_numeric($request->schedule)) {
                 $user = $request->user();
                 $schedule = Schedule::query()->where('t_Schedule.ScheduleID', $request->schedule)->whereBetween('t_Schedule.StartOn', [Carbon::now()->startOfDay(), Carbon::now()->endOfDay()])
                     ->whereHas('scheduleLeads', function (Builder $query) use ($lead) {
@@ -291,10 +313,10 @@ class LeadController extends Controller
 
     public function edit(Request $request, Lead $lead): View
     {
-        return view('crm.leads.edit', compact('lead'))/*
+        return view('crm.leads.edit', compact('lead'));/*
             ->with('branches', Branch::query()->select(['OurBranchID as value', 'BranchName as name'])->get())
             ->with('memberClasses', SystemCodeDetail::query()->where('ID', 'MemberClassID')->select(['SubCodeID as value', 'Description as name'])->get())
-            ->with('countries', DB::connection('brcbs')->table('t_Country')->select(['CountryID', 'CountryName'])->get())*/ ;
+            ->with('countries', DB::connection('brcbs')->table('t_Country')->select(['CountryID', 'CountryName'])->get())*/
     }
 
     public function update(NewLeadRequest $request, Lead $lead): JsonResponse
@@ -317,8 +339,9 @@ class LeadController extends Controller
              return $this->errored('lead already won');
          }*/
         $activities = $lead->activities()->latest('ActivityID')->limit(5)->get();
-        return view('crm.leads.summary',
-            compact('lead', 'activities'));
+        return view(
+            'crm.leads.summary',
+            compact('lead', 'activities')
+        );
     }
-
 }

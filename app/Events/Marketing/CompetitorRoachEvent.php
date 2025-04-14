@@ -9,7 +9,9 @@ use Illuminate\Queue\SerializesModels;
 
 class CompetitorRoachEvent
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable;
+    use InteractsWithSockets;
+    use SerializesModels;
 
     /**
      * Create a new event instance.
@@ -17,5 +19,4 @@ class CompetitorRoachEvent
     public function __construct(public Competitor $competitor, public bool $clear)
     {
     }
-
 }

@@ -11,7 +11,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Discussion extends Pivot
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -24,14 +25,20 @@ class Discussion extends Pivot
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        "Party", "PartyID", 'SourceType', 'SourceTypeID', 'Discussion',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy'
-    ];
+                           "Party",
+                           "PartyID",
+                           'SourceType',
+                           'SourceTypeID',
+                           'Discussion',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 
     // (Call, Meeting)
     public function source(): MorphTo
     {
-        return $this->morphTo(__FUNCTION__,'SourceType','SourceTypeID');
+        return $this->morphTo(__FUNCTION__, 'SourceType', 'SourceTypeID');
     }
 
     //Client/Lead

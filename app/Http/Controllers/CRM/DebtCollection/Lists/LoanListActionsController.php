@@ -28,16 +28,17 @@ class LoanListActionsController extends Controller
             if ($dated instanceof Carbon) {
                 $query = $request->applyFilters((new UserService($request->user()))->hideUsers(DebtProduct::query()->where('processDate', $dated)));
                 if ($request->q === 'current') {
-                    $query->whereIn('AccountID',
+                    $query->whereIn(
+                        'AccountID',
                         $list->parties()->where('t_MarketingListParties.Party', DebtProduct::getPrimaryKey())->lock('WITH(NOLOCK)')->select('t_MarketingListParties.PartyID')
                     );
                 } else {
-                    $query->whereNotIn('AccountID',
+                    $query->whereNotIn(
+                        'AccountID',
                         $list->parties()->where('t_MarketingListParties.Party', DebtProduct::getPrimaryKey())->lock('WITH(NOLOCK)')->select('t_MarketingListParties.PartyID')
                     );
                 }
                 $query->lock('WITH(NOLOCK)')->select('*');
-
             } else {
                 $query = collect();
             }

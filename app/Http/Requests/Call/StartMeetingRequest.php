@@ -22,11 +22,22 @@ class StartMeetingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'meeting_initiated' => ['required', 'date_format:"H:i"'],
-            'meeting_initiated_title' => ['required', 'min:5', 'max:200'],
-            'meeting_initiated_location' => ['required', 'min:5', 'max:200'],
-            'meeting_schedule' => ['required']
-        ];
+                'meeting_initiated'          => [
+                                                 'required',
+                                                 'date_format:"H:i"',
+                                                ],
+                'meeting_initiated_title'    => [
+                                                 'required',
+                                                 'min:5',
+                                                 'max:200',
+                                                ],
+                'meeting_initiated_location' => [
+                                                 'required',
+                                                 'min:5',
+                                                 'max:200',
+                                                ],
+                'meeting_schedule'           => ['required'],
+               ];
     }
 
     /**
@@ -45,9 +56,7 @@ class StartMeetingRequest extends FormRequest
             return $schedule;
         }
 
-        throw ValidationException::withMessages([
-            'meeting_initiated' => 'invalid schedule provide',
-        ]);
+        throw ValidationException::withMessages(['meeting_initiated' => 'invalid schedule provide']);
     }
 
     /**
@@ -57,9 +66,7 @@ class StartMeetingRequest extends FormRequest
     {
         $current_start = Carbon::createFromFormat('H:i', $this->validated('meeting_initiated'));
         if (!$current_start instanceof Carbon) {
-            throw ValidationException::withMessages([
-                'meeting_initiated' => 'invalid date format',
-            ]);
+            throw ValidationException::withMessages(['meeting_initiated' => 'invalid date format']);
         }
         if ($current_start->greaterThan(now())) {
             $current_start = now()->subMinute();

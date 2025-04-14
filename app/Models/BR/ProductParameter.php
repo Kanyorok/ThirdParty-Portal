@@ -14,5 +14,4 @@ class ProductParameter extends Model
     protected $keyType = 'string';
     protected $table = 'syn_t_ProductParameter';
     protected $primaryKey = null;
-
 }

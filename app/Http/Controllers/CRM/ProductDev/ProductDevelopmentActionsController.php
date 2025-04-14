@@ -21,7 +21,8 @@ use Illuminate\Support\Str;
 
 class ProductDevelopmentActionsController extends Controller
 {
-    use WorkflowTrait, ActivitiesTrait;
+    use WorkflowTrait;
+    use ActivitiesTrait;
 
     public function __construct()
     {
@@ -81,8 +82,8 @@ class ProductDevelopmentActionsController extends Controller
         }
 
         return $this->succeeded('document uploaded successfully', data: [
-            'html' => (new ImageService($document))->summaryList()
-        ]);
+                                                                         'html' => (new ImageService($document))->summaryList(),
+                                                                        ]);
     }
 
     public function enableComment(Request $request, string $product_id): JsonResponse
@@ -100,8 +101,8 @@ class ProductDevelopmentActionsController extends Controller
         try {
             $product = DB::transaction(static function () use ($request, $product) {
                 $product->fill([
-                    'CommentStart' => now(),
-                ])->save();
+                                'CommentStart' => now(),
+                               ])->save();
 
                 activity()->causedBy($request->user())->performedOn($product)->event('enabled')->log('Enabled commenting product development ' . Str::upper($product->ProductID) . '.');
 
@@ -138,8 +139,8 @@ class ProductDevelopmentActionsController extends Controller
         try {
             $product = DB::transaction(static function () use ($request, $product) {
                 $product->fill([
-                    'CommentEnd' => now(),
-                ])->save();
+                                'CommentEnd' => now(),
+                               ])->save();
 
                 activity()->causedBy($request->user())->performedOn($product)->event('disabled')->log('Ended commenting on product development ' . Str::upper($product->ProductID) . '.');
 
@@ -224,7 +225,5 @@ class ProductDevelopmentActionsController extends Controller
           }*/
         return $this->errored('unexpected error, try again later');
         //return $this->succeeded('survey submitted successfully.', route('surveys.show', [$survey->SurveyID]));
-
     }
-
 }

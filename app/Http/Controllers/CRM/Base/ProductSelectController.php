@@ -30,6 +30,5 @@ class ProductSelectController extends Controller
         }
 
         return response()->json($data);
-
     }
 }

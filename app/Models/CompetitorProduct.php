@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CompetitorProduct extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -17,7 +18,17 @@ class CompetitorProduct extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        "CompetitorId", "Name", "Limit", "InterestRate", "OtherCharges", "RepaymentPeriod", "SecurityRequired", "Clients",
-        'Notes', 'CreatedBy', 'ModifiedBy', 'DeletedBy'
-    ];
+                           "CompetitorId",
+                           "Name",
+                           "Limit",
+                           "InterestRate",
+                           "OtherCharges",
+                           "RepaymentPeriod",
+                           "SecurityRequired",
+                           "Clients",
+                           'Notes',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 }

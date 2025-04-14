@@ -25,7 +25,6 @@ use Illuminate\Validation\ValidationException;
 
 class NewLeadRequest extends FormRequest
 {
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -34,30 +33,82 @@ class NewLeadRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'Name' => ['required', 'string', 'max:250'],
-            'Type' => ['required', Rule::in(LeadTypeEnum::values())],
-            'Location' => ['required', Rule::exists('t_Localities', 'ID')->where(function (Builder $query) {
-                return $query->where('LocationType', LocalityTypeEnum::City->value);
-            })],
-            'Gender' => ['required_if:Type,' . LeadTypeEnum::Individual->value, Rule::in(GenderEnum::values())],
-            'Surname' => ['required_if:Type,' . LeadTypeEnum::Individual->value, 'string', 'max:150'],
-            'Industry' => ['required', Rule::exists('t_CRMCodeDetails', 'ID')->where(function (Builder $query) {
-                return $query->where('CodeID', StaticListsService::Industries);
-            })],
-            'CustomerType' => ['required', Rule::exists('t_CRMCodeDetails', 'ID')->where(function (Builder $query) {
-                return $query->where('CodeID', StaticListsService::CustomerType);
-            })],
-            'Source' => ['required', Rule::exists('t_CRMCodeDetails', 'ID')->where(function (Builder $query) {
-                return $query->where('CodeID', StaticListsService::MarketingModes);
-            })],
-            'Phone' => ['required', 'string', 'max:15'],
-            'Email' => ['nullable', 'email', 'max:250'],
-            'JobTitle' => ['nullable', 'string', 'max:200'],
-            'LastContact' => ['nullable', 'date_format:"Y-m-d H:i"', 'before:now'],
-            'image' => ['nullable', Rule::imageFile()->max('10mb')],
-            'Notes' => ['nullable', 'string', 'max:5000'],
-            'RelationshipManager' => ['nullable', 'string'],
-        ];
+                'Name'                => [
+                                          'required',
+                                          'string',
+                                          'max:250',
+                                         ],
+                'Type'                => [
+                                          'required',
+                                          Rule::in(LeadTypeEnum::values()),
+                                         ],
+                'Location'            => [
+                                          'required',
+                                          Rule::exists('t_Localities', 'ID')->where(function (Builder $query) {
+                                                            return $query->where('LocationType', LocalityTypeEnum::City->value);
+                                          }),
+                                         ],
+                'Gender'              => [
+                                          'required_if:Type,' . LeadTypeEnum::Individual->value,
+                                          Rule::in(GenderEnum::values()),
+                                         ],
+                'Surname'             => [
+                                          'required_if:Type,' . LeadTypeEnum::Individual->value,
+                                          'string',
+                                          'max:150',
+                                         ],
+                'Industry'            => [
+                                          'required',
+                                          Rule::exists('t_CRMCodeDetails', 'ID')->where(function (Builder $query) {
+                                            return $query->where('CodeID', StaticListsService::Industries);
+                                          }),
+                                         ],
+                'CustomerType'        => [
+                                          'required',
+                                          Rule::exists('t_CRMCodeDetails', 'ID')->where(function (Builder $query) {
+                                            return $query->where('CodeID', StaticListsService::CustomerType);
+                                          }),
+                                         ],
+                'Source'              => [
+                                          'required',
+                                          Rule::exists('t_CRMCodeDetails', 'ID')->where(function (Builder $query) {
+                                            return $query->where('CodeID', StaticListsService::MarketingModes);
+                                          }),
+                                         ],
+                'Phone'               => [
+                                          'required',
+                                          'string',
+                                          'max:15',
+                                         ],
+                'Email'               => [
+                                          'nullable',
+                                          'email',
+                                          'max:250',
+                                         ],
+                'JobTitle'            => [
+                                          'nullable',
+                                          'string',
+                                          'max:200',
+                                         ],
+                'LastContact'         => [
+                                          'nullable',
+                                          'date_format:"Y-m-d H:i"',
+                                          'before:now',
+                                         ],
+                'image'               => [
+                                          'nullable',
+                                          Rule::imageFile()->max('10mb'),
+                                         ],
+                'Notes'               => [
+                                          'nullable',
+                                          'string',
+                                          'max:5000',
+                                         ],
+                'RelationshipManager' => [
+                                          'nullable',
+                                          'string',
+                                         ],
+               ];
     }
 
     public function getCustomerType(): CodeDetail
@@ -67,9 +118,7 @@ class NewLeadRequest extends FormRequest
         if ($code instanceof CodeDetail) {
             return $code;
         }
-        throw ValidationException::withMessages([
-            'CustomerType' => 'invalid customer type given'
-        ]);
+        throw ValidationException::withMessages(['CustomerType' => 'invalid customer type given']);
     }
 
     public function getSource(): CodeDetail
@@ -79,9 +128,7 @@ class NewLeadRequest extends FormRequest
         if ($code instanceof CodeDetail) {
             return $code;
         }
-        throw ValidationException::withMessages([
-            'Source' => 'invalid source given'
-        ]);
+        throw ValidationException::withMessages(['Source' => 'invalid source given']);
     }
 
     public function getIndustry(): CodeDetail
@@ -91,9 +138,7 @@ class NewLeadRequest extends FormRequest
         if ($code instanceof CodeDetail) {
             return $code;
         }
-        throw ValidationException::withMessages([
-            'Industry' => 'invalid industry given'
-        ]);
+        throw ValidationException::withMessages(['Industry' => 'invalid industry given']);
     }
 
     public function getLocation(): Locality
@@ -102,9 +147,7 @@ class NewLeadRequest extends FormRequest
         if ($location instanceof Locality) {
             return $location;
         }
-        throw ValidationException::withMessages([
-            'Location' => 'Location is not a valid location.',
-        ]);
+        throw ValidationException::withMessages(['Location' => 'Location is not a valid location.']);
     }
 
     public function getImage(): ?UploadedFile
@@ -118,26 +161,26 @@ class NewLeadRequest extends FormRequest
     protected function _data(User $actor, bool $update): array
     {
         return array_merge([
-            "Name" => $this->validated('Name'),
-            "Email" => $this->validated('Email'),
-            "Phone" => $this->validated('Phone'),
-            "Website" => $this->validated('Website'),
-            "Gender" => $this->getGender(),
-            "LocationID" => $this->validated('Location'),
-            "Industry" => $this->validated('Industry'),
-            "Source" => $this->validated('Source'),
-            "CustomerType" => $this->validated('CustomerType'),
-            "JobTitle" => $this->validated('JobTitle'),
-            "Notes" => $this->validated('Notes'),
-            "OtherNames" => $this->validated('Surname'),
-            'ModifiedBy' => $actor->Id,
+                            "Name"         => $this->validated('Name'),
+                            "Email"        => $this->validated('Email'),
+                            "Phone"        => $this->validated('Phone'),
+                            "Website"      => $this->validated('Website'),
+                            "Gender"       => $this->getGender(),
+                            "LocationID"   => $this->validated('Location'),
+                            "Industry"     => $this->validated('Industry'),
+                            "Source"       => $this->validated('Source'),
+                            "CustomerType" => $this->validated('CustomerType'),
+                            "JobTitle"     => $this->validated('JobTitle'),
+                            "Notes"        => $this->validated('Notes'),
+                            "OtherNames"   => $this->validated('Surname'),
+                            'ModifiedBy'   => $actor->Id,
 
-        ], $update ? [] : [
-            "Type" => $this->validated('Type'),
-            'CreatedBy' => $actor->Id,
-            "LastContacted" => $this->getLastContacted(),
-            "RelationshipManagerID" => $this->getAssignee(),
-        ]);
+                           ], $update ? [] : [
+                                              "Type"                  => $this->validated('Type'),
+                                              'CreatedBy'             => $actor->Id,
+                                              "LastContacted"         => $this->getLastContacted(),
+                                              "RelationshipManagerID" => $this->getAssignee(),
+                                             ]);
     }
 
 
@@ -163,7 +206,6 @@ class NewLeadRequest extends FormRequest
             }
 
             return $lead;
-
         });
     }
 
@@ -176,9 +218,7 @@ class NewLeadRequest extends FormRequest
             try {
                 return Carbon::createFromFormat('Y-m-d H:i', $this->LastContact);
             } catch (Exception) {
-                throw ValidationException::withMessages([
-                    'LastContact' => 'invalid date format provided.'
-                ]);
+                throw ValidationException::withMessages(['LastContact' => 'invalid date format provided.']);
             }
         }
         return null;
@@ -195,9 +235,7 @@ class NewLeadRequest extends FormRequest
         }
         $user = User::query()->where('t_Users.UserID', Str::upper($userID))->where('t_Users.UserID', '!=', SystemHelper::ID)->first(['Id', 'UserID']);
         if (!$user instanceof User) {
-            throw ValidationException::withMessages([
-                'RelationshipManager' => 'invalid user selected.',
-            ]);
+            throw ValidationException::withMessages(['RelationshipManager' => 'invalid user selected.']);
         }
 
         if ($user->Id === $this->user()->Id) {
@@ -205,15 +243,13 @@ class NewLeadRequest extends FormRequest
         }
 
         if (!$this->user()->can(PermissionEnum::LeadDelegate->value)) {
-            throw ValidationException::withMessages([
-                'RelationshipManager' => 'You cannot assign to another person',
-            ]);
+            throw ValidationException::withMessages(['RelationshipManager' => 'You cannot assign to another person']);
         }
 
         if (!$user->can('viewAny', Lead::class)) {
             throw ValidationException::withMessages([
-                'Assignee' => $user->Name . ' does not have permission to manage a lead.',
-            ]);
+                                                     'Assignee' => $user->Name . ' does not have permission to manage a lead.',
+                                                    ]);
         }
 
         return $user;
@@ -232,9 +268,6 @@ class NewLeadRequest extends FormRequest
             return GenderEnum::from($this->validated('Gender'));
         } catch (Exception) {
         }
-        throw ValidationException::withMessages([
-            'Gender' => 'invalid gender provided.'
-        ]);
+        throw ValidationException::withMessages(['Gender' => 'invalid gender provided.']);
     }
-
 }

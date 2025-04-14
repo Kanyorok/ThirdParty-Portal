@@ -48,7 +48,7 @@ class BoardMessageController extends Controller
                 (new BoardService($boardMember))->sendMessage($request->validated('message_content'), $actor);
                 activity()->causedBy($actor)->performedOn($boardMember)->event('sent message')->log('sent direct message to board member ' . $boardMember->BoardMemberID . '.');
             });
-        } catch (\Throwable|Exception $e) {
+        } catch (\Throwable | Exception $e) {
             Log::error('Error sending sms to board member ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }

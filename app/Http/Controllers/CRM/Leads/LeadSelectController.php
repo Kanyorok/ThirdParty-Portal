@@ -31,9 +31,9 @@ class LeadSelectController extends Controller
                 })->lock('WITH(NOLOCK)')->select(['LeadID', "Name", "OtherNames"])->limit(10)->get(['LeadID', "Name", "OtherNames"]);
             $data = $leads->map(function ($lead) {
                 return [
-                    'LeadID' => $lead->LeadID,
-                    'Name' => $lead->Name . ' ' . $lead->OtherNames,
-                ];
+                        'LeadID' => $lead->LeadID,
+                        'Name'   => $lead->Name . ' ' . $lead->OtherNames,
+                       ];
             });
         }
 

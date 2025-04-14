@@ -48,8 +48,11 @@ class TicketCommentController extends Controller
             return $this->errored('ticket is not open.');
         }
         $request->validate([
-            'social_comment' => ['required', 'max:5000']
-        ]);
+                            'social_comment' => [
+                                                 'required',
+                                                 'max:5000',
+                                                ],
+                           ]);
 
         try {
             $comment = DB::transaction(function () use ($request, $ticket) {
@@ -77,10 +80,12 @@ class TicketCommentController extends Controller
             return $this->errored('comment not found');
         }
 
-        if ($comment->forceFill([
-            'DeletedOn' => now(),
-            'DeletedBy' => $request->user()->Id
-        ])->save()) {
+        if (
+            $comment->forceFill([
+                                 'DeletedOn' => now(),
+                                 'DeletedBy' => $request->user()->Id,
+                                ])->save()
+        ) {
             return $this->succeeded('comment trashed successfully', data: ['id' => $comment_id]);
         }
 

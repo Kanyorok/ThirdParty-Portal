@@ -43,11 +43,11 @@ class CrmBranchController extends Controller
                 }
                 return '<b class="text-danger">None<b>';
             })->setRowClass('mouse_pointer user-select-none dbl-click-summary-data')->setRowData([
-                'dbl_click_url' => function (Branch $branch) {
-                    return route('branches.create', ['branch' => $branch->OurBranchID]);
-                }, 'summary_title' => 'Branch Details'
-            ])->rawColumns(['action', 'Manager', 'Operation'])->make();
-
+                                                                                                  'dbl_click_url' => function (Branch $branch) {
+                                                                                                    return route('branches.create', ['branch' => $branch->OurBranchID]);
+                                                                                                  },
+                                                                                                  'summary_title' => 'Branch Details',
+                                                                                                 ])->rawColumns(['action', 'Manager', 'Operation'])->make();
     }
 
     /**
@@ -57,10 +57,10 @@ class CrmBranchController extends Controller
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'BranchID' => 'required',
-            'Manager' => 'nullable',
-            'Operation' => 'nullable',
-        ]);
+                                    'BranchID'  => 'required',
+                                    'Manager'   => 'nullable',
+                                    'Operation' => 'nullable',
+                                   ]);
 
         $branch = Branch::query()->where('OurBranchID', $data['BranchID'])->first();
         if (!$branch instanceof Branch) {
@@ -71,9 +71,7 @@ class CrmBranchController extends Controller
         if ($request->has('Manager') && is_string($data['Manager'])) {
             $user = User::query()->where('UserID', $data['Manager'])->first('Id');
             if (!$user instanceof User) {
-                throw ValidationException::withMessages([
-                    'Manager' => 'Branch manager selected is invalid'
-                ]);
+                throw ValidationException::withMessages(['Manager' => 'Branch manager selected is invalid']);
             }
             $userID = $user->Id;
         }
@@ -82,9 +80,7 @@ class CrmBranchController extends Controller
         if ($request->has('Operation') && is_string($data['Operation'])) {
             $user = User::query()->where('UserID', $data['Operation'])->first('Id');
             if (!$user instanceof User) {
-                throw ValidationException::withMessages([
-                    'Operation' => 'Operational manager selected is invalid'
-                ]);
+                throw ValidationException::withMessages(['Operation' => 'Operational manager selected is invalid']);
             }
             $Operation = $user->Id;
         }
@@ -93,25 +89,23 @@ class CrmBranchController extends Controller
         try {
             DB::transaction(static function () use ($Operation, $actor, $branch, $userID) {
                 CrmBranch::query()->where('BranchID', $branch->OurBranchID)->update([
-                    'DeletedBy' => $actor->Id
-                ]);
+                                                                                     'DeletedBy' => $actor->Id,
+                                                                                    ]);
                 CrmBranch::query()->where('BranchID', $branch->OurBranchID)->delete();
 
                 if (!is_null($Operation) || !is_null($userID)) {
                     $crmBranch = CrmBranch::create([
-                        'BranchID' => $branch->OurBranchID,
-                        'UserId' => $userID,
-                        'ManagerId' => $Operation,
-                        'Name' => $branch->BranchName,
-                        'CreatedBy' => $actor->Id,
-                        'ModifiedBy' => $actor->Id,
-                        'CreatedOn' => now(),
-                        'UpdatedOn' => now(),
-                    ]);
+                                                    'BranchID'   => $branch->OurBranchID,
+                                                    'UserId'     => $userID,
+                                                    'ManagerId'  => $Operation,
+                                                    'Name'       => $branch->BranchName,
+                                                    'CreatedBy'  => $actor->Id,
+                                                    'ModifiedBy' => $actor->Id,
+                                                    'CreatedOn'  => now(),
+                                                    'UpdatedOn'  => now(),
+                                                   ]);
                     activity()->causedBy($actor)->performedOn($crmBranch->refresh())->event('update')->log('updated branch managers ' . $branch->BranchName);
                 }
-
-
             });
         } catch (Exception $e) {
             Log::error('Error updating branch failed: ' . $e->getMessage());
@@ -138,5 +132,4 @@ class CrmBranchController extends Controller
         return view('settings.branches.create', compact('branch'))
             ->with('local', $branch->local);
     }
-
 }

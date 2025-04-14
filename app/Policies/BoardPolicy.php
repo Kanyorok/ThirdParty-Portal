@@ -8,7 +8,6 @@ use App\Models\User;
 
 class BoardPolicy
 {
-
     public function meeting(User $user): bool
     {
         return $user->can(PermissionEnum::BoardMeeting->value);

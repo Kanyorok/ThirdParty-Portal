@@ -31,7 +31,8 @@ class EmailConversationController extends Controller
         if ($request->ajax()) {
             $query = EmailConversation::query()->with(['party', 'email'])->withCount(['emails', 'emails as unread_emails_count' => function (Builder $builder) {
                 $builder->where('t_CRMEmails.Type', EmailTypeEnum::Incoming)->where('t_CRMEmails.Status', EmailStatusEnum::Unread);
-            }]);
+            }
+                                                                                     ]);
             if ($request->searchByType === 'UNREAD') {
                 $query->whereHas('emails', function (Builder $builder) {
                     $builder->where('t_CRMEmails.Type', EmailTypeEnum::Incoming)->where('t_CRMEmails.Status', EmailStatusEnum::Unread);
@@ -48,12 +49,15 @@ class EmailConversationController extends Controller
                 ->addColumn('action', function (EmailConversation $conversation) {
                     return '<a href="' . route('email-conversations.show', $conversation->Id) . '" class="btn btn-secondary btn-pill btn-sm"><i class="fas fa-eye"></i></a>';
                 })->editColumn('party', function (EmailConversation $conversation) {
-                    return (new PartyService($conversation->party))->simplified(true, true,
-                        unknown: (new CRMEmailService($conversation->email))->getParty());
+                    return (new PartyService($conversation->party))->simplified(
+                        true,
+                        true,
+                        unknown: (new CRMEmailService($conversation->email))->getParty()
+                    );
                 })->editColumn('ModifiedOn', function (EmailConversation $conversation) {
                     return $conversation->ModifiedOn?->format('M d, Y H:i');
                 })->editColumn('emails_count', function ($conversation) {
-                    return (int)$conversation->emails_count;
+                    return (int) $conversation->emails_count;
                 })->editColumn('email.Subject', function (EmailConversation $conversation) {
                     return $conversation->email?->Subject;
                 })->setRowClass(function ($conversation) {
@@ -62,10 +66,11 @@ class EmailConversationController extends Controller
                     }
                     return 'mouse_pointer user-select-none click-email-details';
                 })->setRowData([
-                    'click_url' => function (EmailConversation $conversation) {
-                        return route('email-conversations.summary', [$conversation->Id]);
-                    }, 'summary_title' => 'email summary'
-                ])->rawColumns(['party', 'action'])->make();
+                                'click_url'     => function (EmailConversation $conversation) {
+                                    return route('email-conversations.summary', [$conversation->Id]);
+                                },
+                                'summary_title' => 'email summary',
+                               ])->rawColumns(['party', 'action'])->make();
         }
 
         return view('crm.emails.conversations.index');

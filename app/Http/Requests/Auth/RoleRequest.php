@@ -11,8 +11,6 @@ use Spatie\Permission\Models\Role;
 
 class RoleRequest extends FormRequest
 {
-
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -21,8 +19,12 @@ class RoleRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'RoleName' => ['required', 'string', 'max:200'],
-        ];
+                'RoleName' => [
+                               'required',
+                               'string',
+                               'max:200',
+                              ],
+               ];
     }
 
     /**
@@ -36,9 +38,7 @@ class RoleRequest extends FormRequest
             $check_role->where('id', '!=', $role->id);
         }
         if ($check_role->where('name', $name)->exists()) {
-            throw ValidationException::withMessages([
-                'RoleName' => "Role name already exists.",
-            ]);
+            throw ValidationException::withMessages(['RoleName' => "Role name already exists."]);
         }
 
         return $name;
@@ -57,15 +57,11 @@ class RoleRequest extends FormRequest
             }
         }
         if ($roles->isEmpty()) {
-            throw ValidationException::withMessages([
-                'permissions' => 'select at least one permission',
-            ]);
+            throw ValidationException::withMessages(['permissions' => 'select at least one permission']);
         }
         $permissions = Permission::query()->whereIn('name', $roles->toArray())->select('id')->pluck('id')->toArray();
         if (empty($permissions)) {
-            throw ValidationException::withMessages([
-                'permissions' => 'select at least one permission',
-            ]);
+            throw ValidationException::withMessages(['permissions' => 'select at least one permission']);
         }
 
         return $permissions;

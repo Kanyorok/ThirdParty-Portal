@@ -6,11 +6,10 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\ControllerMiddlewareOptions;
 
-
 abstract class Controller //implements HasMiddleware
 {
-
     use AuthorizesRequests;
+
     /**
      * Get the middleware that should be assigned to the controller.
      */
@@ -35,11 +34,11 @@ abstract class Controller //implements HasMiddleware
      */
     public function middleware(array|\Closure|string $middleware, array $options = []): ControllerMiddlewareOptions
     {
-        foreach ((array)$middleware as $m) {
+        foreach ((array) $middleware as $m) {
             $this->middleware[] = [
-                'middleware' => $m,
-                'options' => &$options,
-            ];
+                                   'middleware' => $m,
+                                   'options'    => &$options,
+                                  ];
         }
 
         return new ControllerMiddlewareOptions($options);
@@ -72,8 +71,9 @@ abstract class Controller //implements HasMiddleware
     {
         return response()->json(array_merge(
             ['message' => $message],
-            ($route === '') ? []:[ 'route' => $route],
-            $data), $status);
+            ($route === '') ? [] : [ 'route' => $route],
+            $data
+        ), $status);
     }
 
     public function errored(string $message, array $data = [], int $status = 400): JsonResponse
@@ -84,12 +84,12 @@ abstract class Controller //implements HasMiddleware
     public function br_response(string $status, string $message, array $extra = []): JsonResponse
     {
         return response()->json([
-            'ourBranchID' => null,
-            'resp' => [
-                'status' => $status,
-                'outputJSON' => (!empty($extra)) ? json_encode($extra) : '',
-                'message' => $message,
-            ]
-        ]);
+                                 'ourBranchID' => null,
+                                 'resp'        => [
+                                                   'status'     => $status,
+                                                   'outputJSON' => (!empty($extra)) ? json_encode($extra) : '',
+                                                   'message'    => $message,
+                                                  ],
+                                ]);
     }
 }

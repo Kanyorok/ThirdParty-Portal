@@ -91,7 +91,6 @@ class ClientController extends Controller
                 }
             }
             return ClientService::dt((new UserService($request->user()))->hideUsers($query), ['type', 'status']);
-
         }
 
         return view('crm.clients.index');
@@ -128,7 +127,6 @@ class ClientController extends Controller
                         return $account->LastDebitTrxDate;
                     }
                     return $account->LastCreditTrxDate;
-
                 })/*->setRowClass('mouse_pointer user-select-none client-row-data')->setRowData([
                     'data-click-url' => function(Account $account) {
                         return route('accounts.show', $client->ClientID);
@@ -153,7 +151,7 @@ class ClientController extends Controller
             } else {
                 $call = null;
             }
-        } else if (is_numeric($request->meet)) {
+        } elseif (is_numeric($request->meet)) {
             $user = $request->user();
             $meeting = Meeting::query()->where('StatusID', MeetingStatusEnum::Ongoing)->where('MeetingID', $request->get('meet'))
                 ->whereHas('meetingUsers', function (Builder $query) use ($user) {
@@ -166,7 +164,7 @@ class ClientController extends Controller
             } else {
                 $meeting = null;
             }
-        } else if (is_numeric($request->schedule)) {
+        } elseif (is_numeric($request->schedule)) {
             $user = $request->user();
             $schedule = Schedule::query()->where('t_Schedule.ScheduleID', $request->schedule)->whereBetween('t_Schedule.StartOn', [Carbon::now()->startOfDay(), Carbon::now()->endOfDay()])
                 ->whereHas('scheduleClients', function (Builder $query) use ($client) {
@@ -189,14 +187,18 @@ class ClientController extends Controller
         };
         $introducer = $client->introducer->first();
 
-        if (!Activity::query()->where('event', 'view')->where('subject_type', Client::getPrimaryKey())
+        if (
+            !Activity::query()->where('event', 'view')->where('subject_type', Client::getPrimaryKey())
             ->where('subject_id', $client->ClientID)->whereBetween('created_at', [Carbon::now()->subMinutes(10), Carbon::now()->endOfDay()])
-            ->where('causer_type', User::getPrimaryKey())->where('causer_id', $request->user()->Id)->exists()) {
+            ->where('causer_type', User::getPrimaryKey())->where('causer_id', $request->user()->Id)->exists()
+        ) {
             activity()->causedBy($request->user())->performedOn($client)->event('view')->log('viewed client details.');
         }
 
-        return view('crm.clients.show',
-            compact('client', 'schedule', 'call', 'type', 'introducer', 'meeting'))
+        return view(
+            'crm.clients.show',
+            compact('client', 'schedule', 'call', 'type', 'introducer', 'meeting')
+        )
             ->with('TicketCategories', StaticListsService::getList(StaticListsService::TicketCategories))
             ->with('MarketingListMember', $client->marketingLists()->where('Type', MarketingListEnum::Static->value)->select(['slug', 'Label'])->whereNull('t_MarketingListParties.DeletedOn')->get());
     }
@@ -207,7 +209,9 @@ class ClientController extends Controller
         $this->authorize('summary', $client);
         $activities = $client->activities()->latest('ActivityID')->limit(5)->get();
         activity()->causedBy($request->user())->performedOn($client)->event('summary')->log('viewed client details.');
-        return view('crm.clients.summary',
-            compact('client', 'activities'));
+        return view(
+            'crm.clients.summary',
+            compact('client', 'activities')
+        );
     }
 }

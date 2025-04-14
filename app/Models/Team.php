@@ -11,7 +11,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Team extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -23,9 +24,14 @@ class Team extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'Name', 'Email', 'Notes', 'UserId',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy'
-    ];
+                           'Name',
+                           'Email',
+                           'Notes',
+                           'UserId',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 
 
     public function lead(): BelongsTo

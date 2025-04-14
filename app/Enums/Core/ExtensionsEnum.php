@@ -8,6 +8,7 @@ use App\Traits\UsefulEnumTrait;
 enum ExtensionsEnum: string
 {
     use UsefulEnumTrait;
+
     case Jpeg = 'jpeg';
     case Png = 'png';
     case Gif = 'gif';
@@ -143,7 +144,6 @@ enum ExtensionsEnum: string
         return $videos->map(function ($item) {
             return $item->getMimeType();
         })->toArray();
-
     }
 
     public function isImage(): bool
@@ -155,6 +155,4 @@ enum ExtensionsEnum: string
     {
         return in_array($this->value, self::getVideos('value'), true);
     }
-
-
 }

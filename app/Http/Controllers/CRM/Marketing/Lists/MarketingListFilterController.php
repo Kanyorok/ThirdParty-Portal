@@ -122,6 +122,5 @@ class MarketingListFilterController extends Controller
         }
 
         return $this->succeeded('filter removed successfully.');
-
     }
 }

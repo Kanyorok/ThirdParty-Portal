@@ -62,7 +62,7 @@ class LeadUserController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (\Throwable|Exception $e) {
+        } catch (\Throwable | Exception $e) {
             Log::error('Error add lead watcher failed: ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }
@@ -85,7 +85,7 @@ class LeadUserController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (\Throwable|Exception $e) {
+        } catch (\Throwable | Exception $e) {
             Log::error('Error  re assigned lead failed: ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }
@@ -102,11 +102,11 @@ class LeadUserController extends Controller
         $leadUser = $lead->watchers()->where('t_LeadUsers.Id', $leadUser_Id)->first();
 
         if ($leadUser instanceof LeadUser) {
-            if (($leadUser->Party === User::getPrimaryKey()) && ((int)$leadUser->PartyID === (int)$lead->RelationshipManagerID)) {
+            if (($leadUser->Party === User::getPrimaryKey()) && ((int) $leadUser->PartyID === (int) $lead->RelationshipManagerID)) {
                 return $this->errored('cannot remove relationship officer.');
             }
 
-            if (($leadUser->Party === User::getPrimaryKey()) && ((int)$leadUser->PartyID === (int)$lead->CreatedBy)) {
+            if (($leadUser->Party === User::getPrimaryKey()) && ((int) $leadUser->PartyID === (int) $lead->CreatedBy)) {
                 return $this->errored('cannot remove introducer.');
             }
 
@@ -116,7 +116,7 @@ class LeadUserController extends Controller
                 });
             } catch (ErroredException $e) {
                 return $e->toJson();
-            } catch (\Throwable|Exception $e) {
+            } catch (\Throwable | Exception $e) {
                 Log::error('Error remove lead watcher failed: ' . $e->getMessage());
                 return $this->errored('unexpected error, try again later');
             }

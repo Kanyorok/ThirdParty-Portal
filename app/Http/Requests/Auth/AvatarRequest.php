@@ -15,7 +15,10 @@ class AvatarRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'image' => ['required', Rule::imageFile()->max(9000)]
-        ];
+                'image' => [
+                            'required',
+                            Rule::imageFile()->max(9000),
+                           ],
+               ];
     }
 }

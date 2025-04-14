@@ -51,8 +51,13 @@ class MarketingPlanManagerController extends Controller
         $this->authorize('approve', $planner);
         $actor = $request->user();
         $data = $request->validate([
-            'manager_reject_reason' => ['required', 'string', 'min:15', 'max:2000'],
-        ]);
+                                    'manager_reject_reason' => [
+                                                                'required',
+                                                                'string',
+                                                                'min:15',
+                                                                'max:2000',
+                                                               ],
+                                   ]);
 
         try {
             DB::transaction(static function () use ($planner, $actor, $data) {

@@ -81,7 +81,7 @@ class MarketingPlannerController extends Controller
             return Datatables::of($query->with(['branch', 'mode'])->lock('WITH(NOLOCK)')->select('*'))->addIndexColumn()
                 ->addColumn('action', function (MarketingPlanner $planner) use ($actor) {
                     $btn = '';
-                    if (((int)$planner->OwnerId === (int)$actor->Id && $planner->Status->value === PlannerStatus::Draft->value)) {
+                    if (((int) $planner->OwnerId === (int) $actor->Id && $planner->Status->value === PlannerStatus::Draft->value)) {
                         $btn = ($planner->Type->value === PlannerTypeEnum::MasterPlanner->value)
                             ? '<a class="btn btn-primary btn-sm m-2" href="' . route('master-planner.edit', [$planner->PlannerID]) . '"><i class="fas fa-edit"></i> edit</a>'
                             : '<a class="btn btn-primary btn-sm m-2" href="' . route('marketing-planner.edit', [$planner->PlannerID]) . '"><i class="fas fa-edit"></i> edit</a>';
@@ -98,16 +98,15 @@ class MarketingPlannerController extends Controller
                 })->editColumn('Status', function (MarketingPlanner $planner) {
                     return $planner->Status->description();
                 })->setRowData([
-                    'dbl_click_url' => function (MarketingPlanner $planner) {
-                        return route('marketing-planner.show', $planner->PlannerID);
-                    }
-                ])->rawColumns(['action'])->make();
-
+                                'dbl_click_url' => function (MarketingPlanner $planner) {
+                                    return route('marketing-planner.show', $planner->PlannerID);
+                                },
+                               ])->rawColumns(['action'])->make();
         }
         return ((new UserService($request->user()))->isMarketingManager()) ?
             view('crm.marketing.planner.index')
                 ->with('isMarketingManager', true)
-                ->with('plans', MarketingPlanner::query()->where('t_MarketingPlanner.Status', PlannerStatus::MarketingManager->value)->whereNull('t_MarketingPlanner.MasterPlannerId')->select(['t_MarketingPlanner.PlannerID', 't_MarketingPlanner.Name', 'BranchId',])->get())
+                ->with('plans', MarketingPlanner::query()->where('t_MarketingPlanner.Status', PlannerStatus::MarketingManager->value)->whereNull('t_MarketingPlanner.MasterPlannerId')->select(['t_MarketingPlanner.PlannerID', 't_MarketingPlanner.Name', 'BranchId'])->get())
             : view('crm.marketing.planner.index')->with('isMarketingManager', false)
                 ->with('Branches', CrmBranch::query()->get(['t_CRMBranches.Name', 't_CRMBranches.BranchID']))
                 ->with('MarketingModes', StaticListsService::getList(StaticListsService::MarketingModes));

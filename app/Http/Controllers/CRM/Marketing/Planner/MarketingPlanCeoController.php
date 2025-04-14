@@ -42,7 +42,6 @@ class MarketingPlanCeoController extends Controller
         }
 
         return $this->succeeded('plan approved successfully.', route('marketing-planner.show', [$planner->PlannerID]));
-
     }
 
     /**
@@ -54,8 +53,13 @@ class MarketingPlanCeoController extends Controller
         $this->authorize('ceo', User::class);
         $actor = $request->user();
         $data = $request->validate([
-            'ceo_reject_reason' => ['required', 'string', 'min:15', 'max:2000'],
-        ]);
+                                    'ceo_reject_reason' => [
+                                                            'required',
+                                                            'string',
+                                                            'min:15',
+                                                            'max:2000',
+                                                           ],
+                                   ]);
 
         try {
             DB::transaction(static function () use ($planner, $actor, $data) {

@@ -12,7 +12,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Social extends Model
 {
-    use SoftDeletes, UserActorTrait, ImageTrait;
+    use SoftDeletes;
+    use UserActorTrait;
+    use ImageTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -22,23 +24,34 @@ class Social extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'SocialID', 'RemoteId', 'Type', 'Content', 'LikesCount', 'CommentsCount', 'ViewsCount', 'Published_at', 'Scheduled_at',
-        'Response', 'CreatedBy', 'ModifiedBy', 'DeletedBy'
-    ];
+                           'SocialID',
+                           'RemoteId',
+                           'Type',
+                           'Content',
+                           'LikesCount',
+                           'CommentsCount',
+                           'ViewsCount',
+                           'Published_at',
+                           'Scheduled_at',
+                           'Response',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 
     protected $casts = [
-        'LikesCount' => 'integer',
-        'CommentsCount' => 'integer',
-        'ViewsCount' => 'integer',
-        'Published_at' => 'datetime',
-        'Scheduled_at' => 'datetime',
-        'Response' => 'array',
-        'Type' => IntegrationsEnum::class
-    ];
+                        'LikesCount'    => 'integer',
+                        'CommentsCount' => 'integer',
+                        'ViewsCount'    => 'integer',
+                        'Published_at'  => 'datetime',
+                        'Scheduled_at'  => 'datetime',
+                        'Response'      => 'array',
+                        'Type'          => IntegrationsEnum::class,
+                       ];
 
     public static function getPrimaryKey(): string
     {
-        return (new self)->getRouteKeyName();
+        return (new self())->getRouteKeyName();
     }
 
     public function getRouteKeyName(): string
@@ -62,6 +75,5 @@ class Social extends Model
     public function getPhotoAttribute()
     {
         return $this->images()->whereLike('t_CrmImages.ImageType', 'image/%')->first();
-
     }
 }

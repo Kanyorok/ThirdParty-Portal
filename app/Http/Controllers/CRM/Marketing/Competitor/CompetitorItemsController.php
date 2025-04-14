@@ -47,21 +47,22 @@ class CompetitorItemsController extends Controller
         }
 
         $request->validate([
-            'ItemDescription' => ['required', 'string'],
-        ], [
-            'ItemDescription.required' => 'Description is required.',
-        ]);
+                            'ItemDescription' => [
+                                                  'required',
+                                                  'string',
+                                                 ],
+                           ], ['ItemDescription.required' => 'Description is required.']);
 
         try {
             DescriptionItem::create([
-                "Item" => Competitor::getPrimaryKey(),
-                "ItemID" => $competitor->CompetitorID,
-                "Description" => $request->ItemDescription,
-                "ItemType" => ItemTypeEnum::valueFromName($request->_type)->value,
-                "Tonality" => TonalityEnum::Neutral->value,
-                'CreatedBy' => $request->user()->Id,
-                'ModifiedBy' => $request->user()->Id,
-            ]);
+                                     "Item"        => Competitor::getPrimaryKey(),
+                                     "ItemID"      => $competitor->CompetitorID,
+                                     "Description" => $request->ItemDescription,
+                                     "ItemType"    => ItemTypeEnum::valueFromName($request->_type)->value,
+                                     "Tonality"    => TonalityEnum::Neutral->value,
+                                     'CreatedBy'   => $request->user()->Id,
+                                     'ModifiedBy'  => $request->user()->Id,
+                                    ]);
         } catch (\ErrorException) {
             return $this->errored('could not save try again latter');
         }
@@ -78,9 +79,9 @@ class CompetitorItemsController extends Controller
         $this->authorize('view', $competitor);
         $item = $competitor->items()->where('Id', $itemID)->lock('WITH(NOLOCK)')->firstOrFail();
         $item->forceFill([
-            'DeletedBy' => $request->user()->Id,
-            'DeletedOn' => now()
-        ])->save();
+                          'DeletedBy' => $request->user()->Id,
+                          'DeletedOn' => now(),
+                         ])->save();
 
         return $this->succeeded('item trashed successfully', data: ['list' => $item->ItemType->name]);
     }

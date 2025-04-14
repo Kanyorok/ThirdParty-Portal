@@ -16,14 +16,12 @@ class AccountTrx extends Model
 
     protected function casts(): array
     {
-        return [
-            'ValueDate' => 'datetime',
-        ];
+        return ['ValueDate' => 'datetime'];
     }
 
     public function type(): BelongsTo
     {
-        return $this->belongsTo(SystemCodeDetail::class, 'TrxTypeID','SubCodeID')->where('ID', 'TrxTypeID');
+        return $this->belongsTo(SystemCodeDetail::class, 'TrxTypeID', 'SubCodeID')->where('ID', 'TrxTypeID');
     }
 
     /*public function product(): BelongsTo

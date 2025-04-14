@@ -66,21 +66,22 @@ $(function () {
             $this = $(this);
 
             if (!$this.data('googleMap')) {
-                if ($this.data('googleDebug'))
+                if ($this.data('googleDebug')) {
                     console.error("jQuery googleMap : Unable to add a marker where there is no map !");
+                }
 
                 return false;
             }
 
             if (!params.coords && !params.address) {
-                if ($this.data('googleDebug'))
+                if ($this.data('googleDebug')) {
                     console.error("jQuery googleMap : Unable to add a marker if you don't tell us where !");
+                }
 
                 return false;
             }
 
             if (params.address && typeof params.address == "string") {
-
                 var geocodeAsync = function ($that) {
 
                     var geocoder = new google.maps.Geocoder();
@@ -164,10 +165,10 @@ $(function () {
                             }
 
                             params.success(coords, $this);
-
                         } else {
-                            if ($this.data('googleDebug'))
+                            if ($this.data('googleDebug')) {
                                 console.error("jQuery googleMap : Unable to find the place asked for the marker (" + status + ")");
+                            }
                         }
                     });
                 }($this);
@@ -248,8 +249,9 @@ $(function () {
             var $this = $(this);
 
             if (!$this.data('googleMap')) {
-                if ($this.data('googleDebug'))
+                if ($this.data('googleDebug')) {
                     console.log("jQuery googleMap : Unable to delete a marker where there is no map !");
+                }
 
                 return false;
             }
@@ -259,13 +261,15 @@ $(function () {
             if (typeof $markers[id] != 'undefined') {
                 $markers[id].setMap(null);
 
-                if ($this.data('googleDebug'))
+                if ($this.data('googleDebug')) {
                     console.log('jQuery googleMap : marker deleted');
+                }
 
                 return true;
             } else {
-                if ($this.data('googleDebug'))
+                if ($this.data('googleDebug')) {
                     console.error("jQuery googleMap : Unable to delete a marker if it not exists !");
+                }
 
                 return false;
             }
@@ -332,14 +336,15 @@ $(function () {
                             if (status == google.maps.DirectionsStatus.OK) {
                                 way.setDirections(response);
                             } else {
-                                if ($that.data('googleDebug'))
+                                if ($that.data('googleDebug')) {
                                     console.error("jQuery googleMap : Unable to find the place asked for the route (" + response + ")");
+                                }
                             }
                         });
-
                     } else {
-                        if ($that.data('googleDebug'))
+                        if ($that.data('googleDebug')) {
                             console.error("jQuery googleMap : Address not found");
+                        }
                     }
                 });
             }($(this));
@@ -356,8 +361,9 @@ $(function () {
                 if (status == google.maps.DirectionsStatus.OK) {
                     way.setDirections(response);
                 } else {
-                    if ($(this).data('googleDebug'))
+                    if ($(this).data('googleDebug')) {
                         console.error("jQuery googleMap : Address not found");
+                    }
                 }
             });
         }

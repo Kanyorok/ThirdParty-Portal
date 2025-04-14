@@ -39,16 +39,23 @@ class NewPasswordController extends Controller
     public function store(Request $request): JsonResponse
     {
         $request->validate([
-            'token' => ['required'],
-            'email' => ['required', 'email'],
-            'password' => ['required', 'confirmed', Rules\Password::min(8)->mixedCase()->numbers()->symbols()->uncompromised()],
-        ]);
+                            'token'    => ['required'],
+                            'email'    => [
+                                           'required',
+                                           'email',
+                                          ],
+                            'password' => [
+                                           'required',
+                                           'confirmed',
+                                           Rules\Password::min(8)->mixedCase()->numbers()->symbols()->uncompromised(),
+                                          ],
+                           ]);
 
         $user = User::query()->where('Email', '=', $request->get('email'))->first();
         if (!$user instanceof User) {
             throw ValidationException::withMessages([
-                'email' => ['Confirm the the email and token are valid.'],
-            ]);
+                                                     'email' => ['Confirm the the email and token are valid.'],
+                                                    ]);
         }
 
         if (Password::tokenExists($user, $request->get('token'))) {
@@ -62,9 +69,9 @@ class NewPasswordController extends Controller
 
 
             $user->forceFill([
-                'Password' => BREncryption::hashUser($user, $request->password),
-                'remember_token' => Str::random(60),
-            ])->save();
+                              'Password'       => BREncryption::hashUser($user, $request->password),
+                              'remember_token' => Str::random(60),
+                             ])->save();
 
             Password::deleteToken($user);
 
@@ -78,7 +85,7 @@ class NewPasswordController extends Controller
 
 
         throw ValidationException::withMessages([
-            'email' => ['Confirm the the email and token are valid.'],
-        ]);
+                                                 'email' => ['Confirm the the email and token are valid.'],
+                                                ]);
     }
 }

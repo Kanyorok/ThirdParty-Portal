@@ -18,11 +18,11 @@ class CollateralAccount extends Model
     protected $primaryKey = null;
 
     protected $casts = [
-        'AssignedDate' => 'datetime',
-        'CreatedOn' => 'datetime',
-        'ApportionedRatio' => 'decimal:2',
-        'NetCollateralValue' => 'decimal:2',
-    ];
+                        'AssignedDate'       => 'datetime',
+                        'CreatedOn'          => 'datetime',
+                        'ApportionedRatio'   => 'decimal:2',
+                        'NetCollateralValue' => 'decimal:2',
+                       ];
 
     public static function primaryKey(): string
     {
@@ -38,5 +38,4 @@ class CollateralAccount extends Model
     {
         return $this->belongsTo(Collateral::class, 'CollateralID', 'CollateralID');
     }
-
 }

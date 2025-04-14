@@ -33,7 +33,7 @@ class TicketPolicy
      */
     public function approve(User $user, Ticket $ticket): bool
     {
-        if ((int)$ticket->ModifiedBy === (int)$user->Id) {
+        if ((int) $ticket->ModifiedBy === (int) $user->Id) {
             return false;
         }
 
