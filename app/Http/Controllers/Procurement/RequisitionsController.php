@@ -3,25 +3,17 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
-use App\Services\ERP\RequisitionItemService;
 use Illuminate\Http\Request;
-use App\Http\Requests\ERP\Requisition\RequisitionItemRequest;
 
-class RequisitionItems extends Controller
+class RequisitionsController extends Controller
 {
-
-    public function __construct(protected RequisitionItemService $service) {
-
-        $this->middleware('ajax')->except(['index', 'show']);
-        $this->authorizeResource(RequisitionLines::class);
-    }
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
         //
-        return view ('procurement.requisitionItems.index');
+        return view ('procurement.requisitions.index');
     }
 
     /**
@@ -30,22 +22,15 @@ class RequisitionItems extends Controller
     public function create()
     {
         //
-        return view ('procurement.requisitionItems.create');
+        return view ('procurement.requisitions.create');
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(RequisitionItemRequest $request)
+    public function store(Request $request)
     {
         //
-        $requisitionItem = DB::transaction(static function () use ($request) {
-            return $this->service->create($request->validated());
-        });
-        return response()->json([
-            'message' => 'Requisition line saved successfully.',
-            'data' => $requisitionItem,
-        ], 201);
     }
 
     /**

@@ -11,7 +11,7 @@ class RequisitionItemRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**

@@ -12,6 +12,7 @@ use App\Models\Campaign;
 use App\Models\CodeDetail;
 use App\Models\Competitor;
 use App\Models\EmailConversation;
+use App\Models\ERP\RequisitionLines;
 use App\Models\Lead;
 use App\Models\MarketingList;
 use App\Models\MarketingPlanner;

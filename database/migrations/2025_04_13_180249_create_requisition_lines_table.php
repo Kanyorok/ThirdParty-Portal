@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::create('t_RequisitionLines', function (Blueprint $table) {
             $table->id('Id');
-            $table->integer('RequistionID');
+            $table->integer('RequisitionID')->nullable();
             $table->string('Module');
             $table->string('Item');
             $table->longText('Description');
             $table->string('UOM');
-            $table->float('Quanity')->default(0);
+            $table->float('Quantity')->default(0);
             $table->decimal('ExpectedPrice')->default(0);
             $table->smallInteger('Urgency');
             $table->char('Status', 1)->default('p');

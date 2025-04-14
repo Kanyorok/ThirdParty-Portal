@@ -4,6 +4,7 @@ namespace App\Services\ERP;
 
 
 use App\Models\ERP\RequisitionLines;
+use App\Models\User;
 
 class RequisitionItemService
 {
@@ -15,16 +16,18 @@ class RequisitionItemService
         //
     }
 
-    public static function create(array $data): RequisitionLines
+    public static function create(array $data,User $actor): RequisitionLines
     {
         return  RequisitionLines::create([
-        'Module' => $data['module'],
-        'Item' => $data['item'],
-        'Description' => $data['description'],
-        'Quantity' => $data['quantity'],
-        'UOM' => $data['uom'],
-        'ExpectedPrice' => $data['expected_price'],
-        'Urgency' => $data['urgency'],
+        'Module' => $data['Module'],
+        'Item' => $data['Item'],
+        'Description' => $data['Description'],
+        'Quantity' => $data['Quantity'],
+        'UOM' => $data['UOM'],
+        'ExpectedPrice' => $data['ExpectedPrice'],
+        'Urgency' => $data['Urgency'],
+        'CreatedBy' => $actor->Id,
+        'ModifiedBy' => $actor->Id
         // optionally CreatedBy etc.
     ]);
 

@@ -82,7 +82,7 @@
                                     </span>
                                 </a>
                                 <ul class="pc-submenu">
-                                    <li class="pc-item"><a class="pc-link" href="{{route('requisition.index')}}"
+                                    <li class="pc-item"><a class="pc-link" href="{{route('requisitionItem.index')}}"
                                             data-i18n="List">Requisition List</a></li>
                                     <li class="pc-item"><a class="pc-link" href="{{route('requisition.create')}}"
                                             data-i18n="Apply">Requisition Form</a></li>

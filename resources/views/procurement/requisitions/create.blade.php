@@ -24,11 +24,13 @@
                         <thead>
                         <tr>
                             <th>#</th>
-                            <th>Label</th>
-                            <th>Status</th>
-                            <th>Contacts</th>
-                            <th>Dated</th>
-                            <th>Actions</th>
+                            <th>Item</th>
+                            <th>Description</th>
+                            <th>Quantity</th>
+                            <th>UOM</th>
+                            <th>Expected Price</th>
+                            <th>Actual Price</th>
+                            <th>Urgency</th>
                         </tr>
                         </thead>
                         <tbody></tbody>
@@ -47,7 +49,7 @@
                 </div>
                 <div class="modal-body">
                     <div class="onboarding-content with-gradient d-none modal-item" id="createRequistionItem">
-                        <form  method="post" id="createRequistionItemForm">
+                        <form action="{{ route('requisitionItem.store') }}" method="post" id="createRequistionItemForm">
                             @csrf
                             <div class="mb-3">
                                 <label class="form-label" for="Module">Module <span class="text-danger">*</span></label>
@@ -91,14 +93,14 @@
                                    role="alert"></p>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label" for="UOM">ExepectedPrice </label>
-                                <textarea name="ExepectedPrice" id="ExepectedPrice" rows="3" class="form-control"
+                                <label class="form-label" for="UOM">Expected Price </label>
+                                <textarea name="ExpectedPrice" id="ExpectedPrice" rows="3" class="form-control"
                                           maxlength="1000"></textarea>
-                                <p id="ExepectedPrice_error" class="invalid-feedback d-none error col-12"
+                                <p id="ExpectedPrice_error" class="invalid-feedback d-none error col-12"
                                    role="alert"></p>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label" for="UOM">ActualPrice </label>
+                                <label class="form-label" for="UOM">Actual Price </label>
                                 <textarea name="ActualPrice" id="ActualPrice" rows="3" class="form-control"
                                           maxlength="1000"></textarea>
                                 <p id="ActualPrice_error" class="invalid-feedback d-none error col-12"
@@ -143,38 +145,38 @@
                 $Modal.modal('show');
             });
 
-            // $('form#createRequistionItemForm').submit(async function (e) {
-            //     alert('hello');
-            //     e.preventDefault();
-            //     // if (await saveForm($(this), $('#createRequistionItemBtn'), true, true, true)) {
-            //     //     $Modal.modal('hide');
-            //     // }
-
-            // });
-
-            $("#createRequistionItemBtn").click(function (e) {
+            $('form#createRequistionItemForm').submit(async function (e) {
+                // alert('hello');
                 e.preventDefault();
+                if (await saveForm($(this), $('#createRequistionItemBtn'), true, true, true)) {
+                    $Modal.modal('hide');
+                }
 
-                let form = $('#createRequistionItemForm')[0];
-                let data = new FormData(form);
-
-                $.ajax({
-                    url: "{{ route('requisitionItem.store') }}",
-                    type: "POST",
-                    data: data,
-                    dataType: "json",
-                    processData: false,
-                    contentType: false,
-                    success: function (response) {
-                        console.log(response);
-                        // Show success message or close modal here
-                    },
-                    error: function (xhr) {
-                        console.error(xhr.responseText);
-                        // Optional: Handle validation or other error display
-                    }
-                });
             });
+
+            // $("#createRequistionItemBtn").click(function (e) {
+            //     e.preventDefault();
+
+            //     let form = $('#createRequistionItemForm')[0];
+            //     let data = new FormData(form);
+
+            //     $.ajax({
+            //         url: "{{ route('requisitionItem.store') }}",
+            //         type: "POST",
+            //         data: data,
+            //         dataType: "json",
+            //         processData: false,
+            //         contentType: false,
+            //         success: function (response) {
+            //             console.log(response);
+            //             // Show success message or close modal here
+            //         },
+            //         error: function (xhr) {
+            //             console.error(xhr.responseText);
+            //             // Optional: Handle validation or other error display
+            //         }
+            //     });
+            // });
 
             $("#MarketingList").select2({
                 dropdownParent: $Modal,
