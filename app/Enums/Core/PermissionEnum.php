@@ -12,6 +12,7 @@ use App\Models\Campaign;
 use App\Models\CodeDetail;
 use App\Models\Competitor;
 use App\Models\EmailConversation;
+use App\Models\ERP\RequisitionLines;
 use App\Models\Lead;
 use App\Models\MarketingList;
 use App\Models\MarketingPlanner;
@@ -147,6 +148,14 @@ enum PermissionEnum: string
     case MarketingManager = 'marketingManager';
     case Managers = 'manager';
 
+    //Procurement
+    //Requisitions
+    case RequisitionRead = 'requisition-read';
+    case RequisitionWrite = 'requisition-create';
+    case RequisitionUpdate = 'requisition-update';
+    case RequisitionDelete = 'requisition-delete';
+    case RequisitionApproval = 'requisition-approval';
+
 
     public function module(): string
     {
@@ -175,6 +184,8 @@ enum PermissionEnum: string
             self::MeetingRooms => MeetingRoom::getPrimaryKey(),
             self::Roles, self::Ceo, self::Managers, self::MarketingManager => Role::class,
             self::ListsView, self::ListsUpdate => CodeDetail::getPrimaryKey(),
+            //Requisition
+            self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval => RequisitionLines::getPrimaryKey(),
         };
     }
 
