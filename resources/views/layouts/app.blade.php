@@ -58,10 +58,12 @@
                     </div>
                 </div>
                 <ul class="pc-navbar">
-                    <li class="pc-item {{ request()->is('/')?'active':'' }}"><a href="{{ route('home') }}"  class="pc-link"><span class="pc-micon">
-                        <i data-feather="home" class="pc-icon"></i>
-                        <use xlink:href="#custom-fatrows"></use>
-                    </svg> </span><span class="pc-mtext" data-i18n="Data">Home</span></a></li>
+                    <li class="pc-item {{ request()->is('/')?'active':'' }}"><a href="{{ route('home') }}"
+                            class="pc-link"><span class="pc-micon">
+                                <i data-feather="home" class="pc-icon"></i>
+                                <use xlink:href="#custom-fatrows"></use>
+                                </svg>
+                            </span><span class="pc-mtext" data-i18n="Data">Home</span></a></li>
                     <li class="pc-item pc-hasmenu"><a href="#!" class="pc-link"><span class="pc-micon"><svg
                                     class="pc-icon">
                                     <use xlink:href="#custom-layer"></use>
@@ -70,12 +72,10 @@
                         <ul class="pc-submenu">
                             <li class="pc-item pc-hasmenu">
                                 <a class="pc-link" href="#!">
-                                    <span
-                                        data-i18n="Requisitions">Purchase Requisition
+                                    <span data-i18n="Requisitions">Purchase Requisition
                                     </span>
                                     <span class="pc-arrow">
-                                        <i
-                                            data-feather="chevron-right">
+                                        <i data-feather="chevron-right">
                                         </i>
                                     </span>
                                 </a>
@@ -88,25 +88,25 @@
                                             data-i18n="Add">Add</a></li>
                                 </ul>
                             </li>
-                        </ul>
-                        <ul class="pc-submenu">
-                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span
-                                        data-i18n="Teacher">Items Catalogue</span> <span class="pc-arrow"><i
+                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Teacher">Items
+                                        Catalogue</span> <span class="pc-arrow"><i
                                             data-feather="chevron-right"></i></span></a>
                                 <ul class="pc-submenu">
                                     <li class="pc-item">
-                                        <a class="pc-link" href="{{ route('procurement.items.create') }}" data-i18n="List">Add New Item</a>
+                                        <a class="pc-link" href="{{ route('items.create') }}" data-i18n="List">Add New
+                                            Item</a>
                                     </li>
                                     <li class="pc-item">
-                                        <a class="pc-link" href="{{ route('procurement.items.index') }}" data-i18n="Apply">Manage Items</a>
+                                        <a class="pc-link" href="{{ route('items.index') }}" data-i18n="Apply">Manage
+                                            Items</a>
                                     </li>
                                     <li class="pc-item">
-                                        <a class="pc-link" href="{{ route('procurement.categories.index') }}" data-i18n="Add">Item Categories</a>
+                                        <a class="pc-link" href="{{ route('categories.index') }}" data-i18n="Add">Item
+                                            Categories</a>
                                     </li>
                                 </ul>
                             </li>
                         </ul>
-                    </li>
                     </li>
                 </ul>
             </div>

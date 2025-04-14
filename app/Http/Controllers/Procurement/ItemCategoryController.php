@@ -39,6 +39,6 @@ class ItemCategoryController extends Controller
             'ModifiedBy' => auth()->user()->Id, 
         ]);
 
-        return redirect()->route('procurement.categories.index')->with('success', 'Category created successfully.');
+        return redirect()->route('categories.index')->with('success', 'Category created successfully.');
     }
 }

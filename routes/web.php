@@ -48,10 +48,10 @@ Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function (
         });
     });
 
-    Route::prefix('procurement')->name('procurement.')->group(function () {
-        Route::resource('items', ItemController::class);
-        Route::resource('categories', ItemCategoryController::class);
-    });
+    // Route::prefix('procurement')->name('procurement.')->group(function () {
+    //     Route::resource('items', ItemController::class);
+    //     Route::resource('categories', ItemCategoryController::class);
+    // });
 
     Route::get('help', 'HelpController')->name('help');
 

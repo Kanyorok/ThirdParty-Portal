@@ -2,7 +2,7 @@
 @section('title','Category List')
 @section('content')
     <h1>Item Categories</h1>
-    <a href="{{ route('procurement.categories.create') }}" class="btn btn-primary mb-3">Add Category</a>
+    <a href="{{ route('categories.create') }}" class="btn btn-primary mb-3">Add Category</a>
     
     <table class="table table-bordered">
         <thead>
@@ -18,8 +18,8 @@
                     <td>{{ $category->name }}</td>
                     <td>{{ $category->description }}</td>
                     <td>
-                        <a href="{{ route('procurement.categories.edit', $category) }}" class="btn btn-sm btn-warning">Edit</a>
-                        <form action="{{ route('procurement.categories.destroy', $category) }}" method="POST" style="display:inline-block">
+                        <a href="{{ route('categories.edit', $category) }}" class="btn btn-sm btn-warning">Edit</a>
+                        <form action="{{ route('categories.destroy', $category) }}" method="POST" style="display:inline-block">
                             @csrf
                             @method('DELETE')
                             <button class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</button>

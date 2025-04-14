@@ -2,7 +2,7 @@
 @section('title','Create Category')
 @section('content')
     <h1>Create Item Category</h1>
-    <form method="POST" action="{{ route('procurement.categories.store') }}">
+    <form method="POST" action="{{ route('categories.store') }}">
         @csrf
         <div class="mb-3">
             <label for="name" class="form-label">Category Name</label>

@@ -4,7 +4,7 @@
 <div class="container">
     <h2>Edit Item</h2>
     @include('procurement.items.form', [
-        'route' => route('procurement.items.update', $item),
+        'route' => route('items.update', $item),
         'method' => 'PUT',
         'item' => $item
     ])

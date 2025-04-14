@@ -9,7 +9,7 @@ Route::namespace('Procurement')->group(function () {
     //Requisitions
     Route::resource('requisition', 'RequisitionsController');
     Route::resource('requisitionItem', 'RequisitionItemsController');
-    Route::resource('items', ItemController::class);
-    Route::resource('categories', ItemCategoryController::class);
+    Route::resource('items', 'ItemController');
+    Route::resource('categories', 'ItemCategoryController');
 
 });

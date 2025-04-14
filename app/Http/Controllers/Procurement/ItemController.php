@@ -43,7 +43,7 @@ class ItemController extends Controller
 
         Item::create($validated);
 
-        return redirect()->route('procurement.items.index')->with('success', 'Item created successfully.');
+        return redirect()->route('items.index')->with('success', 'Item created successfully.');
     }
 
 
@@ -72,13 +72,13 @@ class ItemController extends Controller
 
         $item->update($validated);
 
-        return redirect()->route('procurement.items.index')->with('success', 'Item updated successfully.');
+        return redirect()->route('items.index')->with('success', 'Item updated successfully.');
     }
 
     public function destroy(Item $item)
     {
         $item->delete();
 
-        return redirect()->route('procurement.items.index')->with('success', 'Item deleted successfully.');
+        return redirect()->route('items.index')->with('success', 'Item deleted successfully.');
     }
 }
