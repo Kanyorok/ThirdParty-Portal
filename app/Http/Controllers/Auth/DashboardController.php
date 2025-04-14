@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Auth;
 
-
 use App\Enums\EmailStatusEnum;
 use App\Enums\LeadStatusEnum;
 use App\Enums\TicketStatusEnum;
@@ -35,15 +34,25 @@ class DashboardController extends Controller
     {
         $actor = $request->user();
         $data = [
-            'leads' => [
-                'line' => ['labels' => [], 'converted' => []],
-                'donut' => ['labels' => []],
-                'total' => 0,
-            ],
-            'campaigns' => ['active' => 0, 'sent' => 0],
-            'schedule' => ['calls' => 0, 'appointments' => 0, 'total' => 0],
-            'tickets' => ['active' => 0]
-        ];
+                 'leads'     => [
+                                 'line'  => [
+                                             'labels'    => [],
+                                             'converted' => [],
+                                            ],
+                                 'donut' => ['labels' => []],
+                                 'total' => 0,
+                                ],
+                 'campaigns' => [
+                                 'active' => 0,
+                                 'sent'   => 0,
+                                ],
+                 'schedule'  => [
+                                 'calls'        => 0,
+                                 'appointments' => 0,
+                                 'total'        => 0,
+                                ],
+                 'tickets'   => ['active' => 0],
+                ];
 
         return view('auth.dashboard', compact('data'));
     }
@@ -67,7 +76,6 @@ class DashboardController extends Controller
             $dateTime->addMonth();
             $converted = 0;
             try {
-
                 $converted = Lead::withTrashed()->whereBetween('DeletedOn', [$dateTime->copy()->startOfMonth(), $dateTime->copy()->endOfMonth()])
                     ->where('Status', LeadStatusEnum::Won->value)->where('RelationshipManagerID', $actor->Id)->count();
             } catch (\Exception) {

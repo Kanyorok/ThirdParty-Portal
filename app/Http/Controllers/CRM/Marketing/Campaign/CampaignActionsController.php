@@ -74,7 +74,7 @@ class CampaignActionsController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception|\Throwable $e) {
+        } catch (Exception | \Throwable $e) {
             Log::error('Error submitting campaign ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }
@@ -98,7 +98,6 @@ class CampaignActionsController extends Controller
             })->editColumn('CreatedOn', function (CampaignParty $campaignParty) {
                 return $campaignParty->CreatedOn?->format('F d, Y h:i A');
             })->rawColumns(['action', 'party'])->make();
-
     }
 
 
@@ -127,10 +126,10 @@ class CampaignActionsController extends Controller
         }
 
         return $this->succeeded('ok', data: [
-            'progress' => (int)($total > 0) ? (($done / $total) * 100) : 100,
-            'done' => (int)$done,
-            'total' => (int)$total,
-            'description' => $description . ' (' . number_format($done) . ' / ' . number_format($total) . ')'
-        ]);
+                                             'progress'    => (int) ($total > 0) ? (($done / $total) * 100) : 100,
+                                             'done'        => (int) $done,
+                                             'total'       => (int) $total,
+                                             'description' => $description . ' (' . number_format($done) . ' / ' . number_format($total) . ')',
+                                            ]);
     }
 }

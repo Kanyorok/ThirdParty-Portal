@@ -49,8 +49,11 @@ class SocialCommentController extends Controller
     {
         $this->authorize('create', Social::class);
         $request->validate([
-            'social_comment' => ['required', 'max:5000']
-        ]);
+                            'social_comment' => [
+                                                 'required',
+                                                 'max:5000',
+                                                ],
+                           ]);
         $parent = null;
         if ($request->has('CommentId')) {
             $cmt = $social->comments()->where('t_Comments.Id', $request->get('CommentId'))->first();

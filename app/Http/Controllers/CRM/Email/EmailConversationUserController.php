@@ -63,7 +63,7 @@ class EmailConversationUserController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Error add conversation watcher failed: ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }
@@ -86,7 +86,7 @@ class EmailConversationUserController extends Controller
                 });
             } catch (ErroredException $e) {
                 return $e->toJson();
-            } catch (Throwable|Exception $e) {
+            } catch (Throwable | Exception $e) {
                 Log::error('Error remove conversation watcher failed: ' . $e->getMessage());
                 return $this->errored('unexpected error, try again later');
             }

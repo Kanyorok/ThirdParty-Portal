@@ -10,7 +10,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Task extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -23,17 +24,26 @@ class Task extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        "Party", "PartyID", "UserID", "Dated", "CompletedOn", "Notes", 'Source', 'SourceID',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy'
-    ];
+                           "Party",
+                           "PartyID",
+                           "UserID",
+                           "Dated",
+                           "CompletedOn",
+                           "Notes",
+                           'Source',
+                           'SourceID',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 
     protected $casts = [
-        'Dated' => 'datetime',
-        'CompletedOn' => 'datetime',
-        'UserID' => 'integer',
-        'CreatedBy' => 'integer',
-        'ModifiedBy' => 'integer',
-    ];
+                        'Dated'       => 'datetime',
+                        'CompletedOn' => 'datetime',
+                        'UserID'      => 'integer',
+                        'CreatedBy'   => 'integer',
+                        'ModifiedBy'  => 'integer',
+                       ];
 
     public function party(): MorphTo
     {

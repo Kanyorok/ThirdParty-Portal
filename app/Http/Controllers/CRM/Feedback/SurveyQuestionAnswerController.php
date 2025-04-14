@@ -36,7 +36,6 @@ class SurveyQuestionAnswerController extends Controller
                 return (empty($answer->Notes))
                     ? $answer->Answer
                     : '<details><summary>' . $answer->Answer . '</summary><p>' . $answer->Notes . '</p></details>';
-
             })->rawColumns(['action', 'Answer'])->make();
     }
 
@@ -57,11 +56,11 @@ class SurveyQuestionAnswerController extends Controller
         $actor = $request->user();
         try {
             DB::transaction(static function () use ($question, $request, $actor) {
-                $question->answers()->create(['Answer' => '1. One', 'Notes' => "", 'CreatedBy' => $actor->Id, 'ModifiedBy' => $actor->Id,]);
-                $question->answers()->create(['Answer' => '2. Two', 'Notes' => "", 'CreatedBy' => $actor->Id, 'ModifiedBy' => $actor->Id,]);
-                $question->answers()->create(['Answer' => '3. Three', 'Notes' => "", 'CreatedBy' => $actor->Id, 'ModifiedBy' => $actor->Id,]);
-                $question->answers()->create(['Answer' => '4. Four', 'Notes' => "", 'CreatedBy' => $actor->Id, 'ModifiedBy' => $actor->Id,]);
-                $question->answers()->create(['Answer' => '5. Five', 'Notes' => "", 'CreatedBy' => $actor->Id, 'ModifiedBy' => $actor->Id,]);
+                $question->answers()->create(['Answer' => '1. One', 'Notes' => "", 'CreatedBy' => $actor->Id, 'ModifiedBy' => $actor->Id]);
+                $question->answers()->create(['Answer' => '2. Two', 'Notes' => "", 'CreatedBy' => $actor->Id, 'ModifiedBy' => $actor->Id]);
+                $question->answers()->create(['Answer' => '3. Three', 'Notes' => "", 'CreatedBy' => $actor->Id, 'ModifiedBy' => $actor->Id]);
+                $question->answers()->create(['Answer' => '4. Four', 'Notes' => "", 'CreatedBy' => $actor->Id, 'ModifiedBy' => $actor->Id]);
+                $question->answers()->create(['Answer' => '5. Five', 'Notes' => "", 'CreatedBy' => $actor->Id, 'ModifiedBy' => $actor->Id]);
             });
         } catch (ErroredException $e) {
             return $e->toJson();
@@ -71,8 +70,8 @@ class SurveyQuestionAnswerController extends Controller
         }
 
         return $this->succeeded('options added.', data: [
-            'question' => $question->SurveyQuestionId
-        ]);
+                                                         'question' => $question->SurveyQuestionId,
+                                                        ]);
     }
 
     /**
@@ -93,17 +92,17 @@ class SurveyQuestionAnswerController extends Controller
         try {
             DB::transaction(static function () use ($question, $actor) {
                 $question->answers()->create([
-                    'Answer' => "Yes",
-                    'Notes' => 'Agree',
-                    'CreatedBy' => $actor->Id,
-                    'ModifiedBy' => $actor->Id,
-                ]);
+                                              'Answer'     => "Yes",
+                                              'Notes'      => 'Agree',
+                                              'CreatedBy'  => $actor->Id,
+                                              'ModifiedBy' => $actor->Id,
+                                             ]);
                 $question->answers()->create([
-                    'Answer' => "No",
-                    'Notes' => 'Disagree',
-                    'CreatedBy' => $actor->Id,
-                    'ModifiedBy' => $actor->Id,
-                ]);
+                                              'Answer'     => "No",
+                                              'Notes'      => 'Disagree',
+                                              'CreatedBy'  => $actor->Id,
+                                              'ModifiedBy' => $actor->Id,
+                                             ]);
             });
         } catch (ErroredException $e) {
             return $e->toJson();
@@ -113,8 +112,8 @@ class SurveyQuestionAnswerController extends Controller
         }
 
         return $this->succeeded('options added.', data: [
-            'question' => $question->SurveyQuestionId
-        ]);
+                                                         'question' => $question->SurveyQuestionId,
+                                                        ]);
     }
 
     /**
@@ -125,9 +124,15 @@ class SurveyQuestionAnswerController extends Controller
     {
         $this->authorize('update', $question?->survey);
         $request->validate([
-            'QuestionOption' => ['required', 'max:500'],
-            'QuestionOptionHelp' => ['nullable', 'max:500'],
-        ]);
+                            'QuestionOption'     => [
+                                                     'required',
+                                                     'max:500',
+                                                    ],
+                            'QuestionOptionHelp' => [
+                                                     'nullable',
+                                                     'max:500',
+                                                    ],
+                           ]);
 
         if ($question->Type->value !== SurveyQuestionTypeEnum::Closed->value) {
             return $this->errored('Question has to be closed ended.');
@@ -137,11 +142,11 @@ class SurveyQuestionAnswerController extends Controller
         try {
             DB::transaction(static function () use ($question, $request, $actor) {
                 $question->answers()->create([
-                    'Answer' => $request->get('QuestionOption'),
-                    'Notes' => $request->get('QuestionOptionHelp'),
-                    'CreatedBy' => $actor->Id,
-                    'ModifiedBy' => $actor->Id,
-                ]);
+                                              'Answer'     => $request->get('QuestionOption'),
+                                              'Notes'      => $request->get('QuestionOptionHelp'),
+                                              'CreatedBy'  => $actor->Id,
+                                              'ModifiedBy' => $actor->Id,
+                                             ]);
             });
         } catch (ErroredException $e) {
             return $e->toJson();
@@ -151,8 +156,8 @@ class SurveyQuestionAnswerController extends Controller
         }
 
         return $this->succeeded('option added.', data: [
-            'question' => $question->SurveyQuestionId
-        ]);
+                                                        'question' => $question->SurveyQuestionId,
+                                                       ]);
     }
 
     /**
@@ -171,9 +176,9 @@ class SurveyQuestionAnswerController extends Controller
         try {
             DB::transaction(static function () use ($option, $actor) {
                 $option->forceFill([
-                    'DeletedBy' => $actor->Id,
-                    'DeletedOn' => now()
-                ])->save();
+                                    'DeletedBy' => $actor->Id,
+                                    'DeletedOn' => now(),
+                                   ])->save();
                 //activity()->causedBy($actor)->performedOn($survey)->event('update')->log('removed a question in survey : ' . $survey->SurveyID);
             });
         } catch (Exception $e) {
@@ -182,7 +187,7 @@ class SurveyQuestionAnswerController extends Controller
         }
 
         return $this->succeeded('option removed.', data: [
-            'question' => $question->SurveyQuestionId
-        ]);
+                                                          'question' => $question->SurveyQuestionId,
+                                                         ]);
     }
 }

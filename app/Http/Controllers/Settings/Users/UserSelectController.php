@@ -58,18 +58,18 @@ class UserSelectController extends Controller
     {
         if ($request->has('add_none')) {
             $data->add([
-                'UserID' => SystemHelper::ID,
-                'Name' => 'None - Unassigned',
-                'type' => 'user'
-            ]);
+                        'UserID' => SystemHelper::ID,
+                        'Name'   => 'None - Unassigned',
+                        'type'   => 'user',
+                       ]);
         }
 
         if ($request->has('add_all')) {
             $data->add([
-                'UserID' => UserService::MODULE,
-                'Name' => 'All Users',
-                'type' => 'user'
-            ]);
+                        'UserID' => UserService::MODULE,
+                        'Name'   => 'All Users',
+                        'type'   => 'user',
+                       ]);
         }
         return response()->json($data->toarray());
     }
@@ -83,10 +83,10 @@ class UserSelectController extends Controller
         })->select('t_Teams.TeamID', 't_Teams.Name')->lock('WITH(NOLOCK)')->limit(self::LIMIT)->get(['TeamID', 'Name']);
         return $teams->map(function ($team) {
             return [
-                'UserID' => 't#' . $team->TeamID,
-                'Name' => $team->Name . ' (team)',
-                'type' => 'team'
-            ];
+                    'UserID' => 't#' . $team->TeamID,
+                    'Name'   => $team->Name . ' (team)',
+                    'type'   => 'team',
+                   ];
         });
     }
 
@@ -96,9 +96,9 @@ class UserSelectController extends Controller
 
         if ($request->has('filter_team')) {
             $query->whereNotIn('Id', TeamUser::query()->where('t_TeamUser.TeamId', $request->get('filter_team'))->select('t_TeamUser.UserId'));
-        } else if ($request->has('filter_team_only')) {
+        } elseif ($request->has('filter_team_only')) {
             $query->whereIn('Id', TeamUser::query()->where('t_TeamUser.TeamId', $request->get('filter_team_only'))->select('t_TeamUser.UserId'));
-        } else if ($request->has('filter_current')) {
+        } elseif ($request->has('filter_current')) {
             $query->where('Id', '!=', $request->user()->Id);
         }
 
@@ -111,10 +111,10 @@ class UserSelectController extends Controller
         $append = ($request->has('with_teams')) ? ' (user)' : '';
         return $users->map(function ($user) use ($append) {
             return [
-                'UserID' => $user->UserID,
-                'Name' => $user->Name . ' - ' . $user->UserID . $append,
-                'type' => 'user'
-            ];
+                    'UserID' => $user->UserID,
+                    'Name'   => $user->Name . ' - ' . $user->UserID . $append,
+                    'type'   => 'user',
+                   ];
         });
     }
 }

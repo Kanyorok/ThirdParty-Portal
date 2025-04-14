@@ -12,7 +12,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Board extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -25,13 +26,20 @@ class Board extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'BoardMemberID', 'Name', 'ClientID', 'Role', 'Phone', 'Email', 'Extra',
-        'Notes', 'CreatedBy', 'ModifiedBy', 'DeletedBy'
-    ];
+                           'BoardMemberID',
+                           'Name',
+                           'ClientID',
+                           'Role',
+                           'Phone',
+                           'Email',
+                           'Extra',
+                           'Notes',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 
-    protected $casts = [
-        'Extra' => 'object',
-    ];
+    protected $casts = ['Extra' => 'object'];
 
     public function client(): BelongsTo
     {
@@ -65,8 +73,6 @@ class Board extends Model
 
     public static function getPrimaryKey(): string
     {
-        return (new self)->getRouteKeyName();
+        return (new self())->getRouteKeyName();
     }
-
-
 }

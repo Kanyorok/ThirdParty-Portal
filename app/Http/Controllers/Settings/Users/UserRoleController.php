@@ -28,13 +28,14 @@ class UserRoleController extends Controller
     public function store(Request $request, User $user): JsonResponse
     {
         $request->validate([
-            'Role' => ['required', 'string'],
-        ]);
+                            'Role' => [
+                                       'required',
+                                       'string',
+                                      ],
+                           ]);
         $role = Role::query()->where('t_Roles.id', $request->Role)->first();
         if (!$role instanceof Role) {
-            throw ValidationException::withMessages([
-                'Role' => 'invalid role defined',
-            ]);
+            throw ValidationException::withMessages(['Role' => 'invalid role defined']);
         }
 
         (new UserService($user))->setRole($role);

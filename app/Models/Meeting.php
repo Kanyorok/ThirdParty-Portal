@@ -24,20 +24,33 @@ class Meeting extends Model
     protected $primaryKey = 'MeetingID';
 
     protected $fillable = [
-        'Title', 'StartOn', 'EndOn', 'Location', 'Notes', 'Type', 'StatusID', 'MeetingLocationType', 'LocationId', 'Source','SourceID',
-        'CreatedOn', 'CreatedBy', 'ModifiedOn', 'ModifiedBy'
-    ];
+                           'Title',
+                           'StartOn',
+                           'EndOn',
+                           'Location',
+                           'Notes',
+                           'Type',
+                           'StatusID',
+                           'MeetingLocationType',
+                           'LocationId',
+                           'Source',
+                           'SourceID',
+                           'CreatedOn',
+                           'CreatedBy',
+                           'ModifiedOn',
+                           'ModifiedBy',
+                          ];
 
     protected $casts = [
-        'StartOn' => 'datetime',
-        'EndOn' => 'datetime',
-        'StatusID' => MeetingStatusEnum::class,
-        'MeetingLocationType' => MeetingLocationEnum::class,
-    ];
+                        'StartOn'             => 'datetime',
+                        'EndOn'               => 'datetime',
+                        'StatusID'            => MeetingStatusEnum::class,
+                        'MeetingLocationType' => MeetingLocationEnum::class,
+                       ];
 
     public function clients(): BelongsToMany
     {
-        return $this->belongsToMany(Client::class, 't_MeetingClients', 'ClientID','MeetingId')
+        return $this->belongsToMany(Client::class, 't_MeetingClients', 'ClientID', 'MeetingId')
             ->withPivot(['CreatedOn', 'CreatedBy', 'ModifiedOn', 'ModifiedBy'])
             ->using(MeetingClient::class);
     }

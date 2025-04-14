@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 class Notes extends Model
 {
     use UserActorTrait;
+
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     protected $connection = 'sqlsrv';
@@ -20,9 +21,15 @@ class Notes extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'DiscussionID', "Party", "PartyID", 'Notes',
-        'CreatedOn', 'CreatedBy', 'ModifiedOn', 'ModifiedBy'
-    ];
+                           'DiscussionID',
+                           "Party",
+                           "PartyID",
+                           'Notes',
+                           'CreatedOn',
+                           'CreatedBy',
+                           'ModifiedOn',
+                           'ModifiedBy',
+                          ];
 
     public function discussion(): BelongsTo
     {

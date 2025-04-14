@@ -17,8 +17,12 @@ class AttachContactClientRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'client' => ['required', 'string', 'max:200'],
-        ];
+                'client' => [
+                             'required',
+                             'string',
+                             'max:200',
+                            ],
+               ];
     }
 
     public function getClient(): Client
@@ -27,8 +31,6 @@ class AttachContactClientRequest extends FormRequest
         if ($client instanceof Client) {
             return $client;
         }
-        throw ValidationException::withMessages([
-            'client' => 'client not found, or invalid.'
-        ]);
+        throw ValidationException::withMessages(['client' => 'client not found, or invalid.']);
     }
 }

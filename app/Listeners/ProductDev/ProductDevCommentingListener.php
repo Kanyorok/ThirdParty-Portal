@@ -31,7 +31,8 @@ class ProductDevCommentingListener implements ShouldQueue
         }
         $users = User::query()->lock('WITH(NOLOCK)')->hasPermission(PermissionEnum::ProductDevelopmentRead->value)->get(["Id", "UserID", "Name", "Email"]);
         foreach ($users as $user) {
-            (new UserService($user))->sendEmail('We Value Your Feedback on Our Product Development!',
+            (new UserService($user))->sendEmail(
+                'We Value Your Feedback on Our Product Development!',
                 '<p>Hello ' . $user->Name . '</p>
                        <p>We are excited to share details about one of our products in development. Your feedback could make a real difference!</p>
                        <p>Please take a moment to read the details and leave a comment or suggestion about what you think</p>

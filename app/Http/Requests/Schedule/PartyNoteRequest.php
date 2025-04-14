@@ -14,8 +14,12 @@ class PartyNoteRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'party_note' => ['required', 'string', 'max:5000'],
-        ];
+                'party_note' => [
+                                 'required',
+                                 'string',
+                                 'max:5000',
+                                ],
+               ];
     }
 
     public function getPartyNote(): string

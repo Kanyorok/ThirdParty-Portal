@@ -12,7 +12,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class MeetingRoom extends Model
 {
     //,''
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -25,14 +26,21 @@ class MeetingRoom extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'RoomID', 'Name', 'Capacity', 'Extra', 'BranchId',
-        'Notes', 'CreatedBy', 'ModifiedBy', 'DeletedBy'
-    ];
+                           'RoomID',
+                           'Name',
+                           'Capacity',
+                           'Extra',
+                           'BranchId',
+                           'Notes',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 
     protected $casts = [
-        'Extra' => 'object',
-        'Capacity' => 'integer',
-    ];
+                        'Extra'    => 'object',
+                        'Capacity' => 'integer',
+                       ];
 
     public function meetings(): HasMany
     {

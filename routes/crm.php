@@ -47,7 +47,6 @@ Route::namespace('CRM')->group(function () {
         Route::get('tickets-user', 'UserTicketController')->name('tickets.user');
         Route::resource('approve-ticket', 'TicketReopenController')->parameters(['approve-ticket' => 'ticket'])->only(['update', 'destroy']);
         Route::resource('tickets', 'TicketController')->except(['create']);//edit used for summary
-
     });
 
     Route::namespace('Client')->group(function () {
@@ -287,7 +286,7 @@ Route::namespace('CRM')->group(function () {
         Route::post('board/notification', 'BoardNotificationController')->name('bulk-notification.board');
 
         Route::post('board-meetings/{meeting}/documents', 'BoardMeetingActionController@upload')->name('board-meetings.upload');
-        Route::resource('board-meetings', 'BoardMeetingsController')->except(['edit','create']);
+        Route::resource('board-meetings', 'BoardMeetingsController')->except(['edit', 'create']);
 
         Route::resource('board/{board}/board-sms', 'BoardMessageController')->only(['index', 'store']);
 

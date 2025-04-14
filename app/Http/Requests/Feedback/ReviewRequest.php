@@ -17,19 +17,34 @@ class ReviewRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'ratting' => ['required_without:review', 'integer', 'between:1,5'],
-            'review' => ['required_without:ratting', 'string', 'max:5000'],
-            'name' => ['nullable', 'string', 'max:200'],
-            'clientID' => ['nullable', 'string'],
-        ];
+                'ratting'  => [
+                               'required_without:review',
+                               'integer',
+                               'between:1,5',
+                              ],
+                'review'   => [
+                               'required_without:ratting',
+                               'string',
+                               'max:5000',
+                              ],
+                'name'     => [
+                               'nullable',
+                               'string',
+                               'max:200',
+                              ],
+                'clientID' => [
+                               'nullable',
+                               'string',
+                              ],
+               ];
     }
 
     public function messages(): array
     {
         return [
-            'ratting.required_without' => 'rate or / and review is required.',
-            'review.required_without' => 'rate or / and review is required.',
-        ];
+                'ratting.required_without' => 'rate or / and review is required.',
+                'review.required_without'  => 'rate or / and review is required.',
+               ];
     }
 
     /**
@@ -42,9 +57,7 @@ class ReviewRequest extends FormRequest
             return $name;
         }
 
-        throw ValidationException::withMessages([
-            'name' => 'name is required'
-        ]);
+        throw ValidationException::withMessages(['name' => 'name is required']);
     }
 
     public function getRate(): int
@@ -67,15 +80,11 @@ class ReviewRequest extends FormRequest
     {
         $clientID = $this->validated('clientID');
         if (!is_string($clientID)) {
-            throw ValidationException::withMessages([
-                'clientID' => 'clientID is required'
-            ]);
+            throw ValidationException::withMessages(['clientID' => 'clientID is required']);
         }
 
         if (!Client::query()->where('ClientID', $clientID)->exists()) {
-            throw ValidationException::withMessages([
-                'clientID' => 'clientID may be invalid'
-            ]);
+            throw ValidationException::withMessages(['clientID' => 'clientID may be invalid']);
         }
         return $clientID;
     }

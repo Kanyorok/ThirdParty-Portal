@@ -46,7 +46,7 @@ class IntegrationController extends Controller
         }
 
         if ($Integration->value === IntegrationsEnum::InfoBip->value) {
-            return $this->_infoBipConfiguration($request->validated('InfoBip_Host'),$request->validated('InfoBip_Email'),$request->validated('InfoBip_API_Key'), $request->user());
+            return $this->_infoBipConfiguration($request->validated('InfoBip_Host'), $request->validated('InfoBip_Email'), $request->validated('InfoBip_API_Key'), $request->user());
         }
 
         if ($Integration->value === IntegrationsEnum::LLM->value) {
@@ -66,9 +66,15 @@ class IntegrationController extends Controller
         }
 
         if ($Integration->value === IntegrationsEnum::Twitter->value) {
-            return $this->_saveXConfiguration($request->validated('X_Access_Token'), $request->validated('X_Access_Token_Secret'), $request->validated('X_Consumer_Key'),
-                $request->validated('X_Consumer_Secret'), $request->validated('X_Bearer_Token'), $request->validated('X_Is_Free') === 'yes',
-                $request->user());
+            return $this->_saveXConfiguration(
+                $request->validated('X_Access_Token'),
+                $request->validated('X_Access_Token_Secret'),
+                $request->validated('X_Consumer_Key'),
+                $request->validated('X_Consumer_Secret'),
+                $request->validated('X_Bearer_Token'),
+                $request->validated('X_Is_Free') === 'yes',
+                $request->user()
+            );
         }
 
         if ($Integration->value === IntegrationsEnum::CoreBanking->value) {
@@ -89,22 +95,22 @@ class IntegrationController extends Controller
         }
 
         $data = [
-            'Incoming' => [
-                'host' => $request->validated('Incoming_Server'),
-                'port' => $request->validated('Incoming_Port'),
-                'folder' => 'INBOX',
-                'username' => $request->validated('Incoming_Username'),
-                'password' => $request->validated('Incoming_Password'),
-                'encryption' => $Incoming_Encryption->value,
-            ],
-            'Outgoing' => [
-                'host' => $request->validated('Outgoing_Server'),
-                'port' => $request->validated('Outgoing_Port'),
-                'username' => $request->validated('Outgoing_Username'),
-                'password' => $request->validated('Outgoing_Password'),
-                'encryption' => $Outgoing_Encryption->value,
-            ]
-        ];
+                 'Incoming' => [
+                                'host'       => $request->validated('Incoming_Server'),
+                                'port'       => $request->validated('Incoming_Port'),
+                                'folder'     => 'INBOX',
+                                'username'   => $request->validated('Incoming_Username'),
+                                'password'   => $request->validated('Incoming_Password'),
+                                'encryption' => $Incoming_Encryption->value,
+                               ],
+                 'Outgoing' => [
+                                'host'       => $request->validated('Outgoing_Server'),
+                                'port'       => $request->validated('Outgoing_Port'),
+                                'username'   => $request->validated('Outgoing_Username'),
+                                'password'   => $request->validated('Outgoing_Password'),
+                                'encryption' => $Outgoing_Encryption->value,
+                               ],
+                ];
 
         return $this->_saveData(IntegrationsEnum::Email, $data, $request->user());
     }
@@ -114,22 +120,22 @@ class IntegrationController extends Controller
         try {
             DB::transaction(static function () use ($Integration, $data, $actor) {
                 APICredential::query()->where('Integration', $Integration->value)->update([
-                    'DeletedBy' => $actor->Id
-                ]);
+                                                                                           'DeletedBy' => $actor->Id,
+                                                                                          ]);
                 APICredential::query()->where('Integration', $Integration->value)->delete();
 
                 $crmIntegration = APICredential::create([
-                    'Integration' => $Integration->value,
-                    'Configuration' => $data,
-                    'CreatedBy' => $actor->Id,
-                    'ModifiedBy' => $actor->Id,
-                    'CreatedOn' => now(),
-                    'UpdatedOn' => now(),
-                ]);
+                                                         'Integration'   => $Integration->value,
+                                                         'Configuration' => $data,
+                                                         'CreatedBy'     => $actor->Id,
+                                                         'ModifiedBy'    => $actor->Id,
+                                                         'CreatedOn'     => now(),
+                                                         'UpdatedOn'     => now(),
+                                                        ]);
 
                 activity()->causedBy($actor)->performedOn($crmIntegration->refresh())->event('updated')->log('Set Updated Integration Config for: ' . $Integration->description());
             });
-        } catch (Exception|\Throwable $e) {
+        } catch (Exception | \Throwable $e) {
             Log::error('Error updating ' . $Integration->name . ' config failed: ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }
@@ -144,39 +150,42 @@ class IntegrationController extends Controller
         }
 
         return $this->_saveData(IntegrationsEnum::SMS, [
-            'priority' => $priority,
-            'messageType' => $messageType,
-            'sender_Id' => $sender_id,
-            'password' => $password
-        ], $actor);
+                                                        'priority'    => $priority,
+                                                        'messageType' => $messageType,
+                                                        'sender_Id'   => $sender_id,
+                                                        'password'    => $password,
+                                                       ], $actor);
     }
 
     private function _generateChannelKey(IntegrationRequest $request, string $callbackUrl): JsonResponse
     {
         $key = base64_encode(Str::random(64));
-        $data = ['Key' => md5($key), 'Callback' => $callbackUrl];
+        $data = [
+                 'Key'      => md5($key),
+                 'Callback' => $callbackUrl,
+                ];
         $actor = $request->user();
 
         try {
             DB::transaction(static function () use ($data, $actor) {
                 $Integration = IntegrationsEnum::Channels;
                 APICredential::query()->where('Integration', $Integration->value)->update([
-                    'DeletedBy' => $actor->Id
-                ]);
+                                                                                           'DeletedBy' => $actor->Id,
+                                                                                          ]);
                 APICredential::query()->where('Integration', $Integration->value)->delete();
 
                 $crmIntegration = APICredential::create([
-                    'Integration' => $Integration->value,
-                    'Configuration' => $data,
-                    'CreatedBy' => $actor->Id,
-                    'ModifiedBy' => $actor->Id,
-                    'CreatedOn' => now(),
-                    'UpdatedOn' => now(),
-                ]);
+                                                         'Integration'   => $Integration->value,
+                                                         'Configuration' => $data,
+                                                         'CreatedBy'     => $actor->Id,
+                                                         'ModifiedBy'    => $actor->Id,
+                                                         'CreatedOn'     => now(),
+                                                         'UpdatedOn'     => now(),
+                                                        ]);
 
                 activity()->causedBy($actor)->performedOn($crmIntegration->refresh())->event('updated')->log('Generated a new channels api key.');
             });
-        } catch (Exception|\Throwable $e) {
+        } catch (Exception | \Throwable $e) {
             Log::error('Error updating Channel config failed: ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }
@@ -203,13 +212,13 @@ class IntegrationController extends Controller
         }
 
         return $this->_saveData(IntegrationsEnum::Facebook, [
-            'page_id' => $pageId,
-            'app_id' => $appId,
-            'app_secret' => $appSecret,
-            'page_token' => $tokenResponse->access_token,
-            'page_token_expires_at' => bcadd($tokenResponse->expires_in, now()->format('U')),
-            'page_name' => $pageName
-        ], $actor);
+                                                             'page_id'               => $pageId,
+                                                             'app_id'                => $appId,
+                                                             'app_secret'            => $appSecret,
+                                                             'page_token'            => $tokenResponse->access_token,
+                                                             'page_token_expires_at' => bcadd($tokenResponse->expires_in, now()->format('U')),
+                                                             'page_name'             => $pageName,
+                                                            ], $actor);
     }
 
     private function _saveXConfiguration(#[SensitiveParameter] string $accessToken, #[SensitiveParameter] string $accessTokenSecret, #[SensitiveParameter] string $consumerKey, #[SensitiveParameter] string $consumerSecret, #[SensitiveParameter] string $bearerToken, bool $isFree, User $actor): JsonResponse
@@ -223,25 +232,25 @@ class IntegrationController extends Controller
         }
 
         return $this->_saveData(IntegrationsEnum::Twitter, [
-            'account_id' => $userResponse->data->id,
-            'username' => $userResponse->data->username,
-            'name' => $userResponse->data->name,
-            'access_token' => $accessToken,
-            'access_token_secret' => $accessTokenSecret,
-            'consumer_key' => $consumerKey,
-            'consumer_secret' => $consumerSecret,
-            'bearer_token' => $bearerToken,
-            'is_free' => $isFree
-        ], $actor);
+                                                            'account_id'          => $userResponse->data->id,
+                                                            'username'            => $userResponse->data->username,
+                                                            'name'                => $userResponse->data->name,
+                                                            'access_token'        => $accessToken,
+                                                            'access_token_secret' => $accessTokenSecret,
+                                                            'consumer_key'        => $consumerKey,
+                                                            'consumer_secret'     => $consumerSecret,
+                                                            'bearer_token'        => $bearerToken,
+                                                            'is_free'             => $isFree,
+                                                           ], $actor);
     }
 
     private function _coreBankingConfiguration(string $Host, #[SensitiveParameter] string $ConsumerKey, #[SensitiveParameter] string $ConsumerSecret, User $actor): JsonResponse
     {
         return $this->_saveData(IntegrationsEnum::CoreBanking, [
-            'host' => $Host,
-            'ConsumerKey' => $ConsumerKey,
-            'ConsumerSecret' => $ConsumerSecret
-        ], $actor);
+                                                                'host'           => $Host,
+                                                                'ConsumerKey'    => $ConsumerKey,
+                                                                'ConsumerSecret' => $ConsumerSecret,
+                                                               ], $actor);
     }
 
     private function _llmConfiguration(Provider $provider, string $model, #[SensitiveParameter] string $APIKey, User $actor): JsonResponse
@@ -249,10 +258,10 @@ class IntegrationController extends Controller
         try {
             if (AIService::testConfig($provider, $model, $APIKey)) {
                 return $this->_saveData(IntegrationsEnum::LLM, [
-                    'Model' => $model,
-                    'Provider' => $provider->value,
-                    'Config' => ['api_key' => $APIKey],
-                ], $actor);
+                                                                'Model'    => $model,
+                                                                'Provider' => $provider->value,
+                                                                'Config'   => ['api_key' => $APIKey],
+                                                               ], $actor);
             }
         } catch (Exception $e) {
             return $this->errored($e->getMessage());
@@ -264,10 +273,10 @@ class IntegrationController extends Controller
         try {
             if (InfobipService::testConfig($host, $email, $APIKey, $actor)) {
                 return $this->_saveData(IntegrationsEnum::InfoBip, [
-                    'Host' => $host,
-                    'Email' => $email,
-                    'Key' => $APIKey,
-                ], $actor);
+                                                                    'Host'  => $host,
+                                                                    'Email' => $email,
+                                                                    'Key'   => $APIKey,
+                                                                   ], $actor);
             }
         } catch (Exception $e) {
             return $this->errored($e->getMessage());
@@ -282,22 +291,22 @@ class IntegrationController extends Controller
         try {
             DB::transaction(static function () use ($Integration, $key, $actor) {
                 APICredential::query()->where('Integration', $Integration->value)->update([
-                    'DeletedBy' => $actor->Id
-                ]);
+                                                                                           'DeletedBy' => $actor->Id,
+                                                                                          ]);
                 APICredential::query()->where('Integration', $Integration->value)->delete();
 
                 $crmIntegration = APICredential::create([
-                    'Integration' => $Integration->value,
-                    'Configuration' => ['Key' => md5($key)],
-                    'CreatedBy' => $actor->Id,
-                    'ModifiedBy' => $actor->Id,
-                    'CreatedOn' => now(),
-                    'UpdatedOn' => now(),
-                ]);
+                                                         'Integration'   => $Integration->value,
+                                                         'Configuration' => ['Key' => md5($key)],
+                                                         'CreatedBy'     => $actor->Id,
+                                                         'ModifiedBy'    => $actor->Id,
+                                                         'CreatedOn'     => now(),
+                                                         'UpdatedOn'     => now(),
+                                                        ]);
 
                 activity()->causedBy($actor)->performedOn($crmIntegration->refresh())->event('updated')->log('Generated ' . $Integration->description() . ' api key.');
             });
-        } catch (\Throwable|Exception $e) {
+        } catch (\Throwable | Exception $e) {
             Log::error('Error updating ' . $Integration->description() . ' failed: ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }

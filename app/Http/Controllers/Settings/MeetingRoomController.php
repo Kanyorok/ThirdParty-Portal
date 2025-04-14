@@ -39,10 +39,11 @@ class MeetingRoomController extends Controller
                 }
                 return '. . .';
             })->setRowClass('mouse_pointer user-select-none dbl-click-summary-data')->setRowData([
-                'dbl_click_url' => function (MeetingRoom $MeetingRoom) {
-                    return route('meeting-room.show', [$MeetingRoom->RoomID]);
-                }, 'summary_title' => "Meeting Room Details",
-            ])->rawColumns(['action'])->make();
+                                                                                                  'dbl_click_url' => function (MeetingRoom $MeetingRoom) {
+                                                                                                    return route('meeting-room.show', [$MeetingRoom->RoomID]);
+                                                                                                  },
+                                                                                                  'summary_title' => "Meeting Room Details",
+                                                                                                 ])->rawColumns(['action'])->make();
     }
 
     /**
@@ -55,14 +56,14 @@ class MeetingRoomController extends Controller
         try {
             DB::transaction(static function () use ($branch, $actor, $request) {
                 $MeetingRoom = MeetingRoom::create([
-                    'Name' => $request->validated('RooMName'),
-                    'Capacity' => $request->validated('RooMCapacity'),
-                    'BranchId' => $branch,
-                    'Notes' => $request->validated('RooMNotes'),
-                    'RoomID' => $request->generateID(),
-                    'CreatedBy' => $actor->Id,
-                    'ModifiedBy' => $actor->Id,
-                ]);
+                                                    'Name'       => $request->validated('RooMName'),
+                                                    'Capacity'   => $request->validated('RooMCapacity'),
+                                                    'BranchId'   => $branch,
+                                                    'Notes'      => $request->validated('RooMNotes'),
+                                                    'RoomID'     => $request->generateID(),
+                                                    'CreatedBy'  => $actor->Id,
+                                                    'ModifiedBy' => $actor->Id,
+                                                   ]);
                 activity()->causedBy($actor)->performedOn($MeetingRoom)->event('create')->log('Created Meeting Room  ' . $MeetingRoom->RoomID . '.');
             });
         } catch (Exception $e) {
@@ -100,12 +101,12 @@ class MeetingRoomController extends Controller
         try {
             DB::transaction(static function () use ($branch, $MeetingRoom, $actor, $request) {
                 $MeetingRoom->update([
-                    'Name' => $request->validated('RooMName'),
-                    'Capacity' => $request->validated('RooMCapacity'),
-                    'BranchId' => $branch,
-                    'Notes' => $request->validated('RooMNotes'),
-                    'ModifiedBy' => $actor->Id,
-                ]);
+                                      'Name'       => $request->validated('RooMName'),
+                                      'Capacity'   => $request->validated('RooMCapacity'),
+                                      'BranchId'   => $branch,
+                                      'Notes'      => $request->validated('RooMNotes'),
+                                      'ModifiedBy' => $actor->Id,
+                                     ]);
                 activity()->causedBy($actor)->performedOn($MeetingRoom)->event('update')->log('Updated Meeting Room ' . $MeetingRoom->RoomID . '.');
             });
         } catch (Exception $e) {
@@ -125,9 +126,9 @@ class MeetingRoomController extends Controller
         try {
             DB::transaction(static function () use ($MeetingRoom, $actor, $request) {
                 $MeetingRoom->forceFill([
-                    'DeletedOn' => now(),
-                    'DeletedBy' => $request->user()->Id,
-                ])->save();
+                                         'DeletedOn' => now(),
+                                         'DeletedBy' => $request->user()->Id,
+                                        ])->save();
                 activity()->causedBy($actor)->performedOn($MeetingRoom)->event('delete')->log('removed Meeting Room ' . $MeetingRoom->RoomID . '.');
             });
         } catch (Exception $e) {

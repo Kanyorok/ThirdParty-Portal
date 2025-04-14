@@ -18,26 +18,33 @@ class BulkNotificationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'NotificationLabel' => ['required', 'string', 'max:255'],
-            'NotificationCommittee' => ['required', Rule::exists('t_Committees', 'CommitteeID')],
-            'NotificationContent' => ['required', 'string', 'max:2000'],
-        ];
+                'NotificationLabel'     => [
+                                            'required',
+                                            'string',
+                                            'max:255',
+                                           ],
+                'NotificationCommittee' => [
+                                            'required',
+                                            Rule::exists('t_Committees', 'CommitteeID'),
+                                           ],
+                'NotificationContent'   => [
+                                            'required',
+                                            'string',
+                                            'max:2000',
+                                           ],
+               ];
     }
 
     public function getCommittee(): Committee
     {
-        $committee = Committee::query()->where('CommitteeID',$this->validated('NotificationCommittee'))->first();
-        if($committee instanceof Committee){
-            if ($committee->members()->count() ===0){
-                throw ValidationException::withMessages([
-                    'NotificationCommittee' => 'committee has no members',
-                ]);
+        $committee = Committee::query()->where('CommitteeID', $this->validated('NotificationCommittee'))->first();
+        if ($committee instanceof Committee) {
+            if ($committee->members()->count() === 0) {
+                throw ValidationException::withMessages(['NotificationCommittee' => 'committee has no members']);
             }
             return $committee;
         }
 
-        throw ValidationException::withMessages([
-            'NotificationCommittee' => 'invalid committee',
-        ]);
+        throw ValidationException::withMessages(['NotificationCommittee' => 'invalid committee']);
     }
 }

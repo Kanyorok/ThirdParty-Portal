@@ -10,7 +10,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class MarketingListParty extends Pivot
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -23,9 +24,14 @@ class MarketingListParty extends Pivot
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'MarketingListId', 'Party', 'PartyID',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy', 'DeletedOn'
-    ];
+                           'MarketingListId',
+                           'Party',
+                           'PartyID',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                           'DeletedOn',
+                          ];
 
 
     //Client, Leads
@@ -38,6 +44,4 @@ class MarketingListParty extends Pivot
     {
         return $this->belongsTo(MarketingList::class, 'MarketingListId', 'MarketingListID');
     }
-
-
 }

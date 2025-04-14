@@ -14,7 +14,7 @@ return new class extends Migration
     {
         Schema::create('t_Calls', static function (Blueprint $table) {
             $table->id('CallID');
-            $table->foreignId('ScheduleID')->nullable()->constrained('t_Schedule','ScheduleID');
+            $table->foreignId('ScheduleID')->nullable()->constrained('t_Schedule', 'ScheduleID');
             $table->string("Party");
             $table->string("PartyID", 100);
             $table->foreignId('UserID')->constrained('t_Users', 'Id');

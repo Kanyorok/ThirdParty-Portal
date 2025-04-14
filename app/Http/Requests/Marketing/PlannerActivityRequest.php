@@ -12,8 +12,6 @@ use Illuminate\Validation\ValidationException;
 
 class PlannerActivityRequest extends FormRequest
 {
-
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -22,15 +20,48 @@ class PlannerActivityRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'activity_name' => ['required', 'string', 'max:200'],
-            'activity_location' => ['required', 'string', 'max:200'],
-            'activity_budget' => ['required', 'numeric', 'min:0'],
-            'activity_start' => ['required', 'date_format:"Y-m-d"', 'before_or_equal:activity_end'],
-            'activity_end' => ['required', 'date_format:"Y-m-d"', 'after_or_equal:activity_start'],
-            'activity_materials' => ['nullable', 'string', 'max:5000'],
-            'activity_notes' => ['nullable', 'string', 'max:5000'],
-            'activity_users' => ['required', 'array', 'min:1', 'max:200'],
-        ];
+                'activity_name'      => [
+                                         'required',
+                                         'string',
+                                         'max:200',
+                                        ],
+                'activity_location'  => [
+                                         'required',
+                                         'string',
+                                         'max:200',
+                                        ],
+                'activity_budget'    => [
+                                         'required',
+                                         'numeric',
+                                         'min:0',
+                                        ],
+                'activity_start'     => [
+                                         'required',
+                                         'date_format:"Y-m-d"',
+                                         'before_or_equal:activity_end',
+                                        ],
+                'activity_end'       => [
+                                         'required',
+                                         'date_format:"Y-m-d"',
+                                         'after_or_equal:activity_start',
+                                        ],
+                'activity_materials' => [
+                                         'nullable',
+                                         'string',
+                                         'max:5000',
+                                        ],
+                'activity_notes'     => [
+                                         'nullable',
+                                         'string',
+                                         'max:5000',
+                                        ],
+                'activity_users'     => [
+                                         'required',
+                                         'array',
+                                         'min:1',
+                                         'max:200',
+                                        ],
+               ];
     }
 
     /**
@@ -40,9 +71,7 @@ class PlannerActivityRequest extends FormRequest
     {
         $users = User::query()->whereIn('t_Users.UserID', $this->validated('activity_users'))->where('t_Users.UserID', '!=', SystemHelper::ID)->get(['Id', 'UserID']);
         if ($users->isEmpty()) {
-            throw ValidationException::withMessages([
-                'activity_users' => 'kindly select user(s) involved in the activity'
-            ]);
+            throw ValidationException::withMessages(['activity_users' => 'kindly select user(s) involved in the activity']);
         }
         return $users;
     }
@@ -54,17 +83,13 @@ class PlannerActivityRequest extends FormRequest
     {
         $end = Carbon::createFromFormat('Y-m-d', $this->validated('activity_end'));
         if (!$end instanceof Carbon) {
-            throw ValidationException::withMessages([
-                'activity_end' => 'invalid date format',
-            ]);
+            throw ValidationException::withMessages(['activity_end' => 'invalid date format']);
         }
 
         $end->endOfDay()->subSeconds(5);
 
         if ($end->lte($start)) {
-            throw ValidationException::withMessages([
-                'activity_end' => 'should be after start.',
-            ]);
+            throw ValidationException::withMessages(['activity_end' => 'should be after start.']);
         }
 
         return $end;
@@ -79,8 +104,6 @@ class PlannerActivityRequest extends FormRequest
         if ($start instanceof Carbon) {
             return $start->startOfDay();
         }
-        throw ValidationException::withMessages([
-            'activity_start' => 'invalid date format',
-        ]);
+        throw ValidationException::withMessages(['activity_start' => 'invalid date format']);
     }
 }

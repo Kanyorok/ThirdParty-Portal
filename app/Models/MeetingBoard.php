@@ -12,14 +12,18 @@ class MeetingBoard extends Model
     protected $table = 't_MeetingBoard';
 
     protected $fillable = [
-        'MeetingId', 'BoardMemberId',
-        'CreatedOn', 'CreatedBy', 'ModifiedOn', 'ModifiedBy'
-    ];
+                           'MeetingId',
+                           'BoardMemberId',
+                           'CreatedOn',
+                           'CreatedBy',
+                           'ModifiedOn',
+                           'ModifiedBy',
+                          ];
 
     protected $casts = [
-        'CreatedOn' => 'datetime',
-        'ModifiedOn' => 'datetime',
-    ];
+                        'CreatedOn'  => 'datetime',
+                        'ModifiedOn' => 'datetime',
+                       ];
 
     public function board(): BelongsTo
     {

@@ -44,24 +44,26 @@ class LeadProductController extends Controller
     public function store(Request $request, Lead $lead): JsonResponse
     {
         $request->validate([
-            'lead_product' => ['required'],
-            'product_notes' => ['nullable', 'string', 'max:1000']
-        ]);
+                            'lead_product'  => ['required'],
+                            'product_notes' => [
+                                                'nullable',
+                                                'string',
+                                                'max:1000',
+                                               ],
+                           ]);
 
         $product = Product::query()->where('ProductID', $request->lead_product)->select(['ProductID', 'Description'])->first(['ProductID', 'Description']);
         if (!$product instanceof Product) {
-            throw ValidationException::withMessages([
-                'lead_product' => 'Product not found',
-            ]);
+            throw ValidationException::withMessages(['lead_product' => 'Product not found']);
         }
 
         $lead->products()->create([
-            'ProductID' => $product->ProductID,
-            'ProductName' => $product->Description,
-            'Notes' => $request->product_notes,
-            'CreatedBy' => $request->user()->Id,
-            'ModifiedBy' => $request->user()->Id,
-        ]);
+                                   'ProductID'   => $product->ProductID,
+                                   'ProductName' => $product->Description,
+                                   'Notes'       => $request->product_notes,
+                                   'CreatedBy'   => $request->user()->Id,
+                                   'ModifiedBy'  => $request->user()->Id,
+                                  ]);
 
         return $this->succeeded('Product added successfully');
     }
@@ -72,10 +74,10 @@ class LeadProductController extends Controller
         if (!$leadProduct instanceof LeadProduct) {
             return $this->errored('product not found');
         }
-        return view('crm.leads.product',
-            compact('lead', 'leadProduct'));
-
-
+        return view(
+            'crm.leads.product',
+            compact('lead', 'leadProduct')
+        );
     }
 
     /**
@@ -89,9 +91,9 @@ class LeadProductController extends Controller
         }
 
         $leadProduct->forceFill([
-            'DeletedBy' => $request->user()->Id,
-            'DeletedOn' => now()
-        ])->save();
+                                 'DeletedBy' => $request->user()->Id,
+                                 'DeletedOn' => now(),
+                                ])->save();
 
         return $this->succeeded('product trashed successfully');
     }

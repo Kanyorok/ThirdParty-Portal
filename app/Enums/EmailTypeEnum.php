@@ -11,5 +11,4 @@ enum EmailTypeEnum: string
     case Incoming = "i";
 
     case Outgoing = "o";
-
 }

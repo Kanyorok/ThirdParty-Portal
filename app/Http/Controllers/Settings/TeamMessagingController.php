@@ -27,27 +27,27 @@ class TeamMessagingController extends Controller
     public function __invoke(UserBulkNotificationRequest $request, Team $team)
     {
         $this->authorize('messaging', User::class);
-        if($team->users()->count() === 0) {
+        if ($team->users()->count() === 0) {
             return $this->errored('no users found in the team');
         }
         $actor = $request->user();
         try {
             $Bulk =  DB::transaction(static function () use ($team, $request, $actor) {
                 $Bulk = BulkNotification::create([
-                    'Label' => $request->validated('NotificationLabel'),
-                    'Module' => TeamService::MODULE,
-                    'Content' => $request->validated('NotificationContent'),
-                    'Total' => $team->users()->count(),
-                    'Extra' => ['TeamID' => $team->TeamID],
-                    'CreatedBy' => $actor->Id,
-                    'ModifiedBy' => $actor->Id,
-                ]);
+                                                  'Label'      => $request->validated('NotificationLabel'),
+                                                  'Module'     => TeamService::MODULE,
+                                                  'Content'    => $request->validated('NotificationContent'),
+                                                  'Total'      => $team->users()->count(),
+                                                  'Extra'      => ['TeamID' => $team->TeamID],
+                                                  'CreatedBy'  => $actor->Id,
+                                                  'ModifiedBy' => $actor->Id,
+                                                 ]);
 
                 //run event to start work.
-                event(new BulkNotificationEvent($Bulk, $actor, ['team'=>$team], now()));
+                event(new BulkNotificationEvent($Bulk, $actor, ['team' => $team], now()));
                 return $Bulk;
             });
-        } catch (\Throwable|\Exception $e) {
+        } catch (\Throwable | \Exception $e) {
             Log::error('Error sending board bulk notification : ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }

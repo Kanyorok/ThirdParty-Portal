@@ -18,14 +18,14 @@ class UserCollection extends ResourceCollection
     {
 
         return [
-            'data' => $this->collection->transform(function ($user) {
-                $operatorService = new OperatorService($user->OperatorID);
-                return [
-                    'id' => $user->OperatorID,
-                    'name' => ($operatorService->getClient() instanceof Client)?$operatorService->getClient()->Name:'',
-                    'image' => $operatorService->getImage()
-                ];
-            }),
-        ];
+                'data' => $this->collection->transform(function ($user) {
+                    $operatorService = new OperatorService($user->OperatorID);
+                    return [
+                            'id'    => $user->OperatorID,
+                            'name'  => ($operatorService->getClient() instanceof Client) ? $operatorService->getClient()->Name : '',
+                            'image' => $operatorService->getImage(),
+                           ];
+                }),
+               ];
     }
 }

@@ -9,7 +9,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Workflow extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -22,17 +23,22 @@ class Workflow extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'Source', 'SourceID', 'Stage', 'Status', 'Notes',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy'
-    ];
+                           'Source',
+                           'SourceID',
+                           'Stage',
+                           'Status',
+                           'Notes',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 
     protected $casts = [
-        'Status' => WorkflowStatus::class,
-    ];
+                        'Status' => WorkflowStatus::class,
+                       ];
 
     public static function getPrimaryKey(): string
     {
         return 'WorkflowID';
     }
-
 }

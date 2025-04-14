@@ -15,15 +15,22 @@ class ScheduleBoard extends Pivot
     protected $table = 't_ScheduleBoard';
 
     protected $fillable = [
-        'ScheduleId', 'BoardMemberId', 'ScheduleStatus', 'DecidedOn',
-        'CreatedOn', 'CreatedBy', 'ModifiedOn', 'ModifiedBy', 'ReminderOn'
-    ];
+                           'ScheduleId',
+                           'BoardMemberId',
+                           'ScheduleStatus',
+                           'DecidedOn',
+                           'CreatedOn',
+                           'CreatedBy',
+                           'ModifiedOn',
+                           'ModifiedBy',
+                           'ReminderOn',
+                          ];
 
     protected $casts = [
-        'DecidedOn' => 'datetime',
-        'ReminderOn' => 'datetime',
-        'ScheduleStatus' => ScheduleUserStatusEnum::class
-    ];
+                        'DecidedOn'      => 'datetime',
+                        'ReminderOn'     => 'datetime',
+                        'ScheduleStatus' => ScheduleUserStatusEnum::class,
+                       ];
 
     public function board(): BelongsTo
     {

@@ -14,7 +14,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Competitor extends Model
 {
-    use ImageTrait, UserActorTrait, SoftDeletes;
+    use ImageTrait;
+    use UserActorTrait;
+    use SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -23,13 +25,23 @@ class Competitor extends Model
     protected $primaryKey = 'CompetitorID';
 
     protected $fillable = [
-        "CompetitorName", "LocationID", "Logo", "Email", "Website", "Phone", "CoreBusiness", "Clients", "MarketShare", "Processing",
-        'Notes', 'CreatedBy', 'ModifiedBy', 'DeletedBy'
-    ];
+                           "CompetitorName",
+                           "LocationID",
+                           "Logo",
+                           "Email",
+                           "Website",
+                           "Phone",
+                           "CoreBusiness",
+                           "Clients",
+                           "MarketShare",
+                           "Processing",
+                           'Notes',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 
-    protected $casts = [
-        'Processing' => 'array'
-    ];
+    protected $casts = ['Processing' => 'array'];
 
     public function strategies(): BelongsToMany
     {
@@ -54,8 +66,7 @@ class Competitor extends Model
 
 
     public function items(): MorphMany
-     {
+    {
          return $this->morphMany(DescriptionItem::class, 'item', 'Item', 'ItemID', 'CompetitorID');
-     }
-
+    }
 }

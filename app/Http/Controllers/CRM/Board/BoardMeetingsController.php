@@ -26,7 +26,8 @@ use Illuminate\Support\Facades\Log;
 
 class BoardMeetingsController extends Controller
 {
-    use MeetingTrait, ScheduleTrait;
+    use MeetingTrait;
+    use ScheduleTrait;
 
     public function __construct()
     {
@@ -41,7 +42,7 @@ class BoardMeetingsController extends Controller
     public function index(): JsonResponse
     {
         $this->authorize('viewAny', Board::class);
-        return $this->meetings(Meeting::query()->where('t_Meetings.Type',Board::getPrimaryKey())->where('t_Meetings.EndOn', '>=',Carbon::now()));
+        return $this->meetings(Meeting::query()->where('t_Meetings.Type', Board::getPrimaryKey())->where('t_Meetings.EndOn', '>=', Carbon::now()));
     }
 
     /**
@@ -58,13 +59,21 @@ class BoardMeetingsController extends Controller
         $committee = $request->getCommittee();
 
         try {
-            DB::transaction(static function () use ($committee, $start, $end, $actor, $location,$UserIds, $request) {
-                return ScheduleService::boardMeeting(committee:$committee,title: $request->validated('BoardMeetingTitle'), location: $location, agenda: $request->validated('BoardMeetingAgenda'),
-                    start: $start, end: $end, actor: $actor, UserIds: $UserIds)->schedule;
+            DB::transaction(static function () use ($committee, $start, $end, $actor, $location, $UserIds, $request) {
+                return ScheduleService::boardMeeting(
+                    committee:$committee,
+                    title: $request->validated('BoardMeetingTitle'),
+                    location: $location,
+                    agenda: $request->validated('BoardMeetingAgenda'),
+                    start: $start,
+                    end: $end,
+                    actor: $actor,
+                    UserIds: $UserIds
+                )->schedule;
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (\Exception|\Throwable $e) {
+        } catch (\Exception | \Throwable $e) {
             Log::error('Error scheduling board meeting failed:  ' . $e->getMessage());
             return $this->errored('unexpected error, try again latter');
         }
@@ -78,12 +87,12 @@ class BoardMeetingsController extends Controller
     public function show(string $meetingId)
     {
         $this->authorize('viewAny', Board::class);
-        $meeting = Meeting::query()->where('t_Meetings.Type',Board::getPrimaryKey())->where('t_Meetings.MeetingID', $meetingId)->lock('WITH(NOLOCK)')->first();
+        $meeting = Meeting::query()->where('t_Meetings.Type', Board::getPrimaryKey())->where('t_Meetings.MeetingID', $meetingId)->lock('WITH(NOLOCK)')->first();
         if (!$meeting instanceof Meeting) {
-            return redirect()->back()->with(['fail'=>'meeting not found']);
+            return redirect()->back()->with(['fail' => 'meeting not found']);
         }
         if ($meeting->StatusID !== MeetingStatusEnum::Scheduled) {
-            return redirect()->back()->with(['fail'=>'meeting is '.$meeting->StatusID->name]);
+            return redirect()->back()->with(['fail' => 'meeting is ' . $meeting->StatusID->name]);
         }
         return view('crm.board.meetings.show')
             ->with('meeting', $meeting)
@@ -94,10 +103,10 @@ class BoardMeetingsController extends Controller
     /**
      * Update Scheduled Meetings
      */
-    public function update(UpdateBoardMeetingRequest $request, string $meetingId):JsonResponse
+    public function update(UpdateBoardMeetingRequest $request, string $meetingId): JsonResponse
     {
         $this->authorize('meeting', Board::class);
-        $meeting = Meeting::query()->where('t_Meetings.Type',Board::getPrimaryKey())->where('t_Meetings.MeetingID', $meetingId)->lock('WITH(NOLOCK)')->first();
+        $meeting = Meeting::query()->where('t_Meetings.Type', Board::getPrimaryKey())->where('t_Meetings.MeetingID', $meetingId)->lock('WITH(NOLOCK)')->first();
         if (!$meeting instanceof Meeting) {
             return $this->errored('meeting not found');
         }
@@ -109,37 +118,37 @@ class BoardMeetingsController extends Controller
         try {
             DB::transaction(static function () use ($end, $start, $location, $meeting, $request) {
                 (new MeetingService($meeting))
-                    ->update(MeetingStatusEnum::Scheduled, $request->validated('BoardMeetingTitle'), $location, $start, $request->user(),$end, $request->validated('BoardMeetingAgenda'));
+                    ->update(MeetingStatusEnum::Scheduled, $request->validated('BoardMeetingTitle'), $location, $start, $request->user(), $end, $request->validated('BoardMeetingAgenda'));
 
-                $schedule = Schedule::query()->where('t_Schedule.ScheduledType',Meeting::getPrimaryKey())->where('ScheduledTypeID', $meeting->MeetingID)->first();
+                $schedule = Schedule::query()->where('t_Schedule.ScheduledType', Meeting::getPrimaryKey())->where('ScheduledTypeID', $meeting->MeetingID)->first();
 
-                if($schedule instanceof Schedule) {
+                if ($schedule instanceof Schedule) {
                     $schedule->update([
-                        'StartOn' => $start,
-                        'EndOn' => $end,
-                    ]);
+                                       'StartOn' => $start,
+                                       'EndOn'   => $end,
+                                      ]);
                 }
-                if ($request->sendNotification()){
+                if ($request->sendNotification()) {
                     event(new BoardMeetingUpdatedEvent($meeting));
                 }
 
-                activity()->causedBy($request->user())->performedOn($meeting)->event('updated')->log('Updated board meeting  ' .$meeting->Title .'.');
+                activity()->causedBy($request->user())->performedOn($meeting)->event('updated')->log('Updated board meeting  ' . $meeting->Title . '.');
             });
-        } catch (\Throwable|\Exception $e) {
+        } catch (\Throwable | \Exception $e) {
             Log::error('Error updating meeting Schedule : ' . $e->getMessage());
             return $this->br_response(400, 'unexpected error, try again later');
         }
 
-        return $this->succeeded('meeting updated successfully',route: route('board-meetings.show', $meeting->MeetingID));
+        return $this->succeeded('meeting updated successfully', route: route('board-meetings.show', $meeting->MeetingID));
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Request $request, string $meetingId):JsonResponse
+    public function destroy(Request $request, string $meetingId): JsonResponse
     {
         $this->authorize('meeting', Board::class);
-        $meeting = Meeting::query()->where('t_Meetings.Type',Board::getPrimaryKey())->where('t_Meetings.MeetingID', $meetingId)->lock('WITH(NOLOCK)')->first();
+        $meeting = Meeting::query()->where('t_Meetings.Type', Board::getPrimaryKey())->where('t_Meetings.MeetingID', $meetingId)->lock('WITH(NOLOCK)')->first();
         if (!$meeting instanceof Meeting) {
             return $this->errored('meeting not found');
         }
@@ -148,21 +157,21 @@ class BoardMeetingsController extends Controller
             DB::transaction(static function () use ($meeting, $request) {
 
                 $meeting->update([
-                    'StatusID' => MeetingStatusEnum::Canceled,
-                ]);
-                $schedule = Schedule::query()->where('t_Schedule.ScheduledType',Meeting::getPrimaryKey())->where('ScheduledTypeID', $meeting->MeetingID)->first();
+                                  'StatusID' => MeetingStatusEnum::Canceled,
+                                 ]);
+                $schedule = Schedule::query()->where('t_Schedule.ScheduledType', Meeting::getPrimaryKey())->where('ScheduledTypeID', $meeting->MeetingID)->first();
 
-                if($schedule instanceof Schedule) {
+                if ($schedule instanceof Schedule) {
                     $schedule->update([
-                        'ScheduleStatusID' => ScheduleStatusEnum::Canceled,
-                    ]);
+                                       'ScheduleStatusID' => ScheduleStatusEnum::Canceled,
+                                      ]);
                 }
 
                 event(new BoardMeetingCanceledEvent($meeting));
 
-                activity()->causedBy($request->user())->performedOn($meeting)->event('cancel')->log('Canceled board meeting  ' .$meeting->Title .'.');
+                activity()->causedBy($request->user())->performedOn($meeting)->event('cancel')->log('Canceled board meeting  ' . $meeting->Title . '.');
             });
-        } catch (\Throwable|\Exception $e) {
+        } catch (\Throwable | \Exception $e) {
             Log::error('Error updating meeting Schedule : ' . $e->getMessage());
             return $this->br_response(400, 'unexpected error, try again later');
         }

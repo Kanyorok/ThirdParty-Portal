@@ -13,7 +13,6 @@ use Illuminate\Validation\ValidationException;
 
 class ListFilterRequest extends FormRequest
 {
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -22,13 +21,30 @@ class ListFilterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'filter' => 'required',
-            'Start' => ['nullable', 'string'],
-            'End' => ['nullable', 'string'],
-            'Value' => ['nullable', 'string'],
-            'Values' => ['nullable', 'array', 'min:1', 'max:10'],
-            'operation' => ['required', Rule::in(['and', 'or'])]
-        ];
+                'filter'    => 'required',
+                'Start'     => [
+                                'nullable',
+                                'string',
+                               ],
+                'End'       => [
+                                'nullable',
+                                'string',
+                               ],
+                'Value'     => [
+                                'nullable',
+                                'string',
+                               ],
+                'Values'    => [
+                                'nullable',
+                                'array',
+                                'min:1',
+                                'max:10',
+                               ],
+                'operation' => [
+                                'required',
+                                Rule::in(['and', 'or']),
+                               ],
+               ];
     }
 
     /**
@@ -40,9 +56,7 @@ class ListFilterRequest extends FormRequest
         if ($filter->Operator->value === ComparisonOperatorsEnum::In->value) {
             $values = $this->validated('Values');
             if (!is_array($values)) {
-                throw ValidationException::withMessages([
-                    'Values' => 'select one at least one value'
-                ]);
+                throw ValidationException::withMessages(['Values' => 'select one at least one value']);
             }
 
             $valid = collect();
@@ -53,9 +67,7 @@ class ListFilterRequest extends FormRequest
             }
 
             if ($valid->isEmpty()) {
-                throw ValidationException::withMessages([
-                    'Values' => 'select one at least one value'
-                ]);
+                throw ValidationException::withMessages(['Values' => 'select one at least one value']);
             }
 
             return $valid->toArray();
@@ -67,15 +79,18 @@ class ListFilterRequest extends FormRequest
 
             if (!$filter->DataType->isValid($start)) {
                 throw ValidationException::withMessages([
-                    'Start' => 'invalid format of ' . $filter->DataType->name
-                ]);
+                                                         'Start' => 'invalid format of ' . $filter->DataType->name,
+                                                        ]);
             }
             if (!$filter->DataType->isValid($end)) {
                 throw ValidationException::withMessages([
-                    'End' => 'invalid format of ' . $filter->DataType->name
-                ]);
+                                                         'End' => 'invalid format of ' . $filter->DataType->name,
+                                                        ]);
             }
-            return [$start, $end];
+            return [
+                    $start,
+                    $end,
+                   ];
         }
 
         if ($filter->Operator->isBasic()) {
@@ -83,13 +98,11 @@ class ListFilterRequest extends FormRequest
                 return $this->validated('Value');
             }
             throw ValidationException::withMessages([
-                'Value' => 'invalid format of ' . $filter->DataType->name
-            ]);
+                                                     'Value' => 'invalid format of ' . $filter->DataType->name,
+                                                    ]);
         }
 
-        throw ValidationException::withMessages([
-            'filter' => 'issue with type in filter'
-        ]);
+        throw ValidationException::withMessages(['filter' => 'issue with type in filter']);
     }
 
 
@@ -103,8 +116,6 @@ class ListFilterRequest extends FormRequest
             return $filter;
         }
 
-        throw ValidationException::withMessages([
-            'filter' => 'unknown filter given'
-        ]);
+        throw ValidationException::withMessages(['filter' => 'unknown filter given']);
     }
 }

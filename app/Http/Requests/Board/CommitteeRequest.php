@@ -9,7 +9,6 @@ use Illuminate\Validation\Rule;
 
 class CommitteeRequest extends FormRequest
 {
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -18,9 +17,18 @@ class CommitteeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'CommitteeName' => ['required', 'string', 'max:200',Rule::unique('t_Committees', 'Name')->ignore($this->route('committee'))],
-            'CommitteeNotes' => ['nullable', 'string', 'max:2000'],
-        ];
+                'CommitteeName'  => [
+                                     'required',
+                                     'string',
+                                     'max:200',
+                                     Rule::unique('t_Committees', 'Name')->ignore($this->route('committee')),
+                                    ],
+                'CommitteeNotes' => [
+                                     'nullable',
+                                     'string',
+                                     'max:2000',
+                                    ],
+               ];
     }
 
     public function generateID(): string

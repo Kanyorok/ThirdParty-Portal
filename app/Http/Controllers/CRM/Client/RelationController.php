@@ -41,9 +41,9 @@ class RelationController extends Controller
         })->editColumn('ClientID', function (Client $client) {
             return '<a href="' . route('clients.show', $client->ClientID) . '">' . $client->ClientID . '</a>';
         })->setRowClass('mouse_pointer user-select-none client-row-data')->setRowData([
-            'data-url' => function (Client $client) {
-                return route('clients.show', $client->ClientID);
-            }
-        ])->rawColumns(['action', 'ClientID'])->make();
+                                                                                       'data-url' => function (Client $client) {
+                                                                                        return route('clients.show', $client->ClientID);
+                                                                                       },
+                                                                                      ])->rawColumns(['action', 'ClientID'])->make();
     }
 }

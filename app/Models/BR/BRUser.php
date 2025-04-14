@@ -21,9 +21,9 @@ class BRUser extends Model
      * @var array<int, string>
      */
     protected $hidden = [
-        'Password',
-        'TrxPassword',
-    ];
+                         'Password',
+                         'TrxPassword',
+                        ];
 
     public function client(): BelongsTo
     {
@@ -33,8 +33,8 @@ class BRUser extends Model
     protected function casts(): array
     {
         return [
-            'Password' => 'hashed',
-            'TrxPassword' => 'hashed',
-        ];
+                'Password'    => 'hashed',
+                'TrxPassword' => 'hashed',
+               ];
     }
 }

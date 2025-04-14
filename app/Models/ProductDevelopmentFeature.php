@@ -9,7 +9,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ProductDevelopmentFeature extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -20,9 +21,14 @@ class ProductDevelopmentFeature extends Model
 
 
     protected $fillable = [
-        'ProductDevelopmentId', 'Feature', 'Description', 'Notes',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy'
-    ];
+                           'ProductDevelopmentId',
+                           'Feature',
+                           'Description',
+                           'Notes',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 
     public function product(): BelongsTo
     {

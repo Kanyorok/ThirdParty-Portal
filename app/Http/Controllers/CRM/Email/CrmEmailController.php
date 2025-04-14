@@ -36,7 +36,7 @@ class CrmEmailController extends Controller
                 $query = CrmEmail::query()->where('Type', EmailTypeEnum::Outgoing->value)->where('Status', EmailStatusEnum::Draft->value)
                     ->where('CreatedBy', $actor->Id);
             } elseif ($request->_filter === 'SENT') {
-                $query = CrmEmail::query()->where('Type', EmailTypeEnum::Outgoing->value)->whereIn('Status', [EmailStatusEnum::Queued->value, EmailStatusEnum::Sending->value, EmailStatusEnum::Sent->value, EmailStatusEnum::Failed->value,])
+                $query = CrmEmail::query()->where('Type', EmailTypeEnum::Outgoing->value)->whereIn('Status', [EmailStatusEnum::Queued->value, EmailStatusEnum::Sending->value, EmailStatusEnum::Sent->value, EmailStatusEnum::Failed->value])
                 ->where('CreatedBy', $actor->Id);
             } else {
                 throw new RuntimeException("Unexpected error");
@@ -57,7 +57,7 @@ class CrmEmailController extends Controller
                 (new CRMEmailService($replyTo))->createReply($email, $request->validated('mail_subject'), $request->validated('mail_content'), $request->user(), $request->getCarbonCopyEmails())
                     ->send();
             });
-        } catch (Exception|\Throwable $e) {
+        } catch (Exception | \Throwable $e) {
             Log::error('Error reply email ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }
@@ -104,19 +104,17 @@ class CrmEmailController extends Controller
             try {
                 DB::transaction(static function () use ($crmEmail, $request) {
                     $crmEmail->update([
-                        'Status' => EmailStatusEnum::Read->value,
-                        'ReadBy' => $request->user()->Id,
-                        'ReadOn' => now()
-                    ]);
+                                       'Status' => EmailStatusEnum::Read->value,
+                                       'ReadBy' => $request->user()->Id,
+                                       'ReadOn' => now(),
+                                      ]);
 
                     activity()->by($request->user())->on($crmEmail)->event('mark read')->log('marked email (' . $crmEmail?->MailID . ') as read');
-
                 });
-            } catch (Exception|\Throwable $e) {
+            } catch (Exception | \Throwable $e) {
                 Log::error('Error Marking email as read :  ');
                 Log::error($e);
             }
-
         }
         return $this->succeeded('Email marked as read', data: ['email_id' => $email_id, 'status' => 'read']);
     }
@@ -132,17 +130,17 @@ class CrmEmailController extends Controller
             $conversation = DB::transaction(static function () use ($crmEmail, $request) {
                 $conversation = false;
                 $crmEmail->forceFill([
-                    'DeletedBy' => $request->user()->Id,
-                    'DeletedOn' => now()
-                ])->save();
+                                      'DeletedBy' => $request->user()->Id,
+                                      'DeletedOn' => now(),
+                                     ])->save();
                 $crmEmail->attachments()->delete();
 
                 if ($crmEmail->conversation instanceof EmailConversation) {
                     if ($crmEmail->conversation->Emails === 1) {
                         $crmEmail->conversation->forceFill([
-                            'DeletedBy' => $request->user()->Id,
-                            'DeletedOn' => now()
-                        ])->save();
+                                                            'DeletedBy' => $request->user()->Id,
+                                                            'DeletedOn' => now(),
+                                                           ])->save();
                         $conversation = true;
                     } else {
                         $crmEmail->conversation->decrement('Emails');
@@ -153,7 +151,7 @@ class CrmEmailController extends Controller
                 activity()->by($request->user())->on($crmEmail)->event('delete')->log($description . ($crmEmail->Type === EmailTypeEnum::Incoming->value) ? " received from $crmEmail->From" : " sent by " . $crmEmail->creator->UserID);
                 return $conversation;
             });
-        } catch (Exception|\Throwable $e) {
+        } catch (Exception | \Throwable $e) {
             Log::error('Error Marking email as read :  ');
             Log::error($e);
             $conversation = false;

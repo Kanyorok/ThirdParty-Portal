@@ -11,7 +11,6 @@ use Illuminate\Validation\ValidationException;
 
 class PlannerRequest extends FormRequest
 {
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -20,11 +19,24 @@ class PlannerRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'Name' => ['required', 'string', 'max:200'],
-            'Branch' => ['required', 'string'],
-            'Mode' => ['required', 'string'],
-            'Notes' => ['nullable', 'string'],
-        ];
+                'Name'   => [
+                             'required',
+                             'string',
+                             'max:200',
+                            ],
+                'Branch' => [
+                             'required',
+                             'string',
+                            ],
+                'Mode'   => [
+                             'required',
+                             'string',
+                            ],
+                'Notes'  => [
+                             'nullable',
+                             'string',
+                            ],
+               ];
     }
 
 
@@ -37,9 +49,7 @@ class PlannerRequest extends FormRequest
         if ($Mode instanceof CodeDetail) {
             return $Mode;
         }
-        throw ValidationException::withMessages([
-            'Mode' => 'Invalid Marketing Modes.',
-        ]);
+        throw ValidationException::withMessages(['Mode' => 'Invalid Marketing Modes.']);
     }
 
     /**
@@ -54,8 +64,6 @@ class PlannerRequest extends FormRequest
             return $branch;
         }
 
-        throw ValidationException::withMessages([
-            'Branch' => 'Branch is not found.',
-        ]);
+        throw ValidationException::withMessages(['Branch' => 'Branch is not found.']);
     }
 }

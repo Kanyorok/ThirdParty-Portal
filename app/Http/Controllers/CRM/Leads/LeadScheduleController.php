@@ -52,10 +52,19 @@ class LeadScheduleController extends Controller
 
         try {
             $schedule = DB::transaction(function () use ($location, $assignees, $notes, $lead, $end, $actor, $start, $request) {
-                return $this->appointment(model: $lead, title: $request->meeting_title, location: $location,
-                    start: $start, end: $end, dated: now(), actor: $actor, notes: $notes, UserIds: $assignees->pluck('Id')->toArray());
+                return $this->appointment(
+                    model: $lead,
+                    title: $request->meeting_title,
+                    location: $location,
+                    start: $start,
+                    end: $end,
+                    dated: now(),
+                    actor: $actor,
+                    notes: $notes,
+                    UserIds: $assignees->pluck('Id')->toArray()
+                );
             });
-        } catch (Exception|\Throwable $e) {
+        } catch (Exception | \Throwable $e) {
             Log::error('Error scheduling lead appointment failed:  ' . $e->getMessage());
             return $this->errored('unexpected error, try again latter');
         }
@@ -123,6 +132,5 @@ class LeadScheduleController extends Controller
         }
 
         return $this->succeeded('schedule canceled successfully', data: ['schedule_id' => $schedule->id]);
-
     }
 }

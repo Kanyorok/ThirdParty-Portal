@@ -25,7 +25,9 @@ use Illuminate\Validation\ValidationException;
 
 class TicketActionsController extends Controller
 {
-    use TicketsTrait, WorkflowTrait, ActivitiesTrait;
+    use TicketsTrait;
+    use WorkflowTrait;
+    use ActivitiesTrait;
 
     public function __construct()
     {
@@ -59,7 +61,7 @@ class TicketActionsController extends Controller
     public function assignee(Request $request, Ticket $ticket): JsonResponse
     {
         $this->authorize('update', $ticket);
-        $assignee = (new NewTicketRequest)->getAssignee($request->validate(['ticket_user' => ['required', 'string']])['ticket_user']);
+        $assignee = (new NewTicketRequest())->getAssignee($request->validate(['ticket_user' => ['required', 'string']])['ticket_user']);
 
         try {
             DB::transaction(function () use ($assignee, $ticket) {
@@ -86,10 +88,10 @@ class TicketActionsController extends Controller
 
         try {
             $priority = TicketPriorityEnum::fromValue($request->get('ticket_priority'));
-        } catch (ErrorException|ErroredException $e) {
+        } catch (ErrorException | ErroredException $e) {
             throw  ValidationException::withMessages([
-                'ticket_priority' => $e->getMessage()
-            ]);
+                                                      'ticket_priority' => $e->getMessage(),
+                                                     ]);
         }
 
         if ($ticket->Status->value !== TicketStatusEnum::Active->value) {
@@ -157,14 +159,13 @@ class TicketActionsController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception|\Throwable $e) {
+        } catch (Exception | \Throwable $e) {
             Log::error('Error upload ticket document : ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }
 
         return $this->succeeded('document uploaded successfully', data: [
-            'html' => (new ImageService($document))->summaryList()
-        ]);
+                                                                         'html' => (new ImageService($document))->summaryList(),
+                                                                        ]);
     }
-
 }

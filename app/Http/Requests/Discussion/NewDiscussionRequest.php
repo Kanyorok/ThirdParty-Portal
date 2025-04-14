@@ -23,6 +23,6 @@ class NewDiscussionRequest extends FormRequest
     {
         return [
             //
-        ];
+               ];
     }
 }

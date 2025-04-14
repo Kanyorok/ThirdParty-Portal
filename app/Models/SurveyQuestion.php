@@ -11,7 +11,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SurveyQuestion extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -24,13 +25,19 @@ class SurveyQuestion extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'SurveyQuestionId', 'Type', 'Question', 'Notes', 'SurveyId',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy'
-    ];
+                           'SurveyQuestionId',
+                           'Type',
+                           'Question',
+                           'Notes',
+                           'SurveyId',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 
     protected $casts = [
-        'Type' => SurveyQuestionTypeEnum::class,
-    ];
+                        'Type' => SurveyQuestionTypeEnum::class,
+                       ];
 
     public function getRouteKeyName(): string
     {

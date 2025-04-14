@@ -48,21 +48,22 @@ class RoleController extends Controller
                 }
                 return $user->UserID . '-' . $user->Name;
             })->setRowClass('mouse_pointer user-select-none dbl-click-summary-data')->setRowData([
-                'dbl_click_url' => function (Role $role) {
-                    return route('roles.edit', [$role->id]);
-                }, 'summary_title' => function (Role $role) {
-                    return "Role " . $role->name;
-                },
-            ])->rawColumns(['action'])->make();
+                                                                                                  'dbl_click_url' => function (Role $role) {
+                                                                                                    return route('roles.edit', [$role->id]);
+                                                                                                  },
+                                                                                                  'summary_title' => function (Role $role) {
+                                                                                                                return "Role " . $role->name;
+                                                                                                  },
+                                                                                                 ])->rawColumns(['action'])->make();
     }
 
     /*
       * Show the form for creating a new resource.
       */
     public function create(): View
-     {
+    {
          return view('settings.roles.create');
-     }
+    }
 
     /**
      * Store a newly created resource in storage.
@@ -76,10 +77,10 @@ class RoleController extends Controller
         try {
             DB::transaction(static function () use ($actor, $name, $permissions) {
                 $Role = Role::create([
-                    'name' => $name,
-                    'CreatedBy' => $actor->Id,
-                    'ModifiedBy' => $actor->Id
-                ]);
+                                      'name'       => $name,
+                                      'CreatedBy'  => $actor->Id,
+                                      'ModifiedBy' => $actor->Id,
+                                     ]);
                 $Role->permissions()->syncWithPivotValues($permissions, ['CreatedBy' => $actor->Id, 'ModifiedBy' => $actor->Id], false);
                 activity()->causedBy($actor)->performedOn($Role)->event('create')->log('create role ' . $Role->name);
             });
@@ -121,9 +122,9 @@ class RoleController extends Controller
         try {
             DB::transaction(static function () use ($role, $actor, $name, $permissions) {
                 $role->update([
-                    'name' => $name,
-                    'ModifiedBy' => $actor->Id
-                ]);
+                               'name'       => $name,
+                               'ModifiedBy' => $actor->Id,
+                              ]);
 
                 $role->permissions()->syncWithPivotValues($permissions, ['CreatedBy' => $actor->Id, 'ModifiedBy' => $actor->Id]);
                 activity()->causedBy($actor)->performedOn($role)->event('update')->log('update role ' . $role->name);

@@ -21,6 +21,5 @@ enum GenderEnum: string
             self::Female => 'F',
             default => 'U',
         };
-
     }
 }

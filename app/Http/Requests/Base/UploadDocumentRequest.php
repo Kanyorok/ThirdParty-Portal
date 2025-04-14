@@ -18,8 +18,11 @@ class UploadDocumentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'file' => ['required', Rule::file()->types(ExtensionsEnum::getAllMimeTypes())->max(9000)],
-        ];
+                'file' => [
+                           'required',
+                           Rule::file()->types(ExtensionsEnum::getAllMimeTypes())->max(9000),
+                          ],
+               ];
     }
 
 

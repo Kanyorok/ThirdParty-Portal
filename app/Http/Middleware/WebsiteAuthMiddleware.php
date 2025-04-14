@@ -43,7 +43,7 @@ class WebsiteAuthMiddleware
             if (!is_string($key)) {
                 return $this->_fail('Invalid key in system');
             }
-        } catch (ConnectionException|InvalidParameterException|Exception $e) {
+        } catch (ConnectionException | InvalidParameterException | Exception $e) {
             return $this->_fail($e->getMessage());
         }
         if (md5($bearerToken) === $key) {
@@ -51,7 +51,6 @@ class WebsiteAuthMiddleware
         }
 
         return $this->_fail('client: invalid key');
-
     }
 
     protected function _fail(string $reason): JsonResponse

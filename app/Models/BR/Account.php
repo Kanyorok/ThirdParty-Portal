@@ -18,15 +18,15 @@ class Account extends Model
     protected function casts(): array
     {
         return [
-            'ClearBalance' => 'decimal:4',
-            'LastCreditTrxDate' => 'datetime',
-            'LastDebitTrxDate' => 'datetime',
-        ];
+                'ClearBalance'      => 'decimal:4',
+                'LastCreditTrxDate' => 'datetime',
+                'LastDebitTrxDate'  => 'datetime',
+               ];
     }
 
     public static function getPrimaryKey(): string
     {
-        return (new self)->primaryKey;
+        return (new self())->primaryKey;
     }
 
     public function branch(): BelongsTo
@@ -36,17 +36,17 @@ class Account extends Model
 
     public function product(): BelongsTo
     {
-        return $this->belongsTo(Product::class, 'ProductID','ProductID');
+        return $this->belongsTo(Product::class, 'ProductID', 'ProductID');
     }
 
     public function status(): BelongsTo
     {
-        return $this->belongsTo(SystemCodeDetail::class, 'AccountStatusID','SubCodeID')->where('ID', 'AccountStatusID');
+        return $this->belongsTo(SystemCodeDetail::class, 'AccountStatusID', 'SubCodeID')->where('ID', 'AccountStatusID');
     }
 
     public function client(): BelongsTo
     {
-        return $this->belongsTo(Client::class, 'ClientID','ClientID');
+        return $this->belongsTo(Client::class, 'ClientID', 'ClientID');
     }
 
     public function transactions(): BelongsTo

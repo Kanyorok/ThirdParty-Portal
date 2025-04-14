@@ -20,15 +20,21 @@
     PERFORMANCE OF THIS SOFTWARE.
     ***************************************************************************** */
 
-    function __spreadArrays() {
-        for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
-        for (var r = Array(s), k = 0, i = 0; i < il; i++)
-            for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
+    function __spreadArrays()
+    {
+        for (var s = 0, i = 0, il = arguments.length; i < il; i++) {
+            s += arguments[i].length;
+        }
+        for (var r = Array(s), k = 0, i = 0; i < il; i++) {
+            for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++) {
                 r[k] = a[j];
+            }
+        }
         return r;
     }
 
-    function rangePlugin(config) {
+    function rangePlugin(config)
+    {
         if (config === void 0) {
             config = {};
         }
@@ -54,8 +60,9 @@
                 }
                 if (secondInput.value) {
                     var parsedDate = fp.parseDate(secondInput.value);
-                    if (parsedDate)
+                    if (parsedDate) {
                         fp.selectedDates.push(parsedDate);
+                    }
                 }
                 secondInput.setAttribute("data-fp-omit", "");
                 if (fp.config.clickOpens) {
@@ -75,16 +82,18 @@
                         fp.open();
                     });
                 }
-                if (fp.config.allowInput)
+                if (fp.config.allowInput) {
                     fp._bind(secondInput, "keydown", function (e) {
                         if (e.key === "Enter") {
                             fp.setDate([fp.selectedDates[0], secondInput.value], true, dateFormat);
                             secondInput.click();
                         }
                     });
-                if (!config.input)
+                }
+                if (!config.input) {
                     fp._input.parentNode &&
                     fp._input.parentNode.insertBefore(secondInput, fp._input.nextSibling);
+                }
             };
             var plugin = {
                 onParseConfig: function () {
@@ -108,11 +117,13 @@
                         _secondInputFocused = false;
                         fp.jumpToDate(fp.selectedDates[0]);
                     });
-                    if (fp.config.allowInput)
+                    if (fp.config.allowInput) {
                         fp._bind(fp._input, "keydown", function (e) {
-                            if (e.key === "Enter")
+                            if (e.key === "Enter") {
                                 fp.setDate([fp._input.value, fp.selectedDates[1]], true, dateFormat);
+                            }
                         });
+                    }
                     fp.setDate(fp.selectedDates, false);
                     plugin.onValueUpdate(fp.selectedDates);
                     fp.loadedPlugins.push("range");
@@ -128,8 +139,9 @@
                 onChange: function () {
                     if (!fp.selectedDates.length) {
                         setTimeout(function () {
-                            if (fp.selectedDates.length)
+                            if (fp.selectedDates.length) {
                                 return;
+                            }
                             secondInput.value = "";
                             _prevDates = [];
                         }, 10);
@@ -141,14 +153,16 @@
                     }
                 },
                 onDestroy: function () {
-                    if (!config.input)
+                    if (!config.input) {
                         secondInput.parentNode &&
                         secondInput.parentNode.removeChild(secondInput);
+                    }
                 },
                 onValueUpdate: function (selDates) {
                     var _a, _b, _c;
-                    if (!secondInput)
+                    if (!secondInput) {
                         return;
+                    }
                     _prevDates =
                         !_prevDates || selDates.length >= _prevDates.length
                             ? __spreadArrays(selDates) : _prevDates;

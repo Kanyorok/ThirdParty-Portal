@@ -22,9 +22,12 @@ class SharePartyRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'share_party' => ['required'],
-            'share_role' => ['required', Rule::in(RoleEnum::values())],
-        ];
+                'share_party' => ['required'],
+                'share_role'  => [
+                                  'required',
+                                  Rule::in(RoleEnum::values()),
+                                 ],
+               ];
     }
 
     /**
@@ -40,18 +43,14 @@ class SharePartyRequest extends FormRequest
             if (($team instanceof Team) && $team->users()->count() > 0) {
                 return $team;
             }
-            throw ValidationException::withMessages([
-                'share_party' => 'invalid team or has no users',
-            ]);
+            throw ValidationException::withMessages(['share_party' => 'invalid team or has no users']);
         }
 
         $user = User::query()->where('UserID', Str::upper($party))->first();
         if ($user instanceof User) {
             return $user;
         }
-        throw ValidationException::withMessages([
-            'share_party' => 'invalid user selected.',
-        ]);
+        throw ValidationException::withMessages(['share_party' => 'invalid user selected.']);
     }
 
     /**
@@ -62,11 +61,8 @@ class SharePartyRequest extends FormRequest
         try {
             $role = RoleEnum::fromValue($this->validated('share_role'));
         } catch (ErroredException $e) {
-            throw ValidationException::withMessages([
-                'share_role' => 'invalid role provided',
-            ]);
+            throw ValidationException::withMessages(['share_role' => 'invalid role provided']);
         }
         return $role;
-
     }
 }

@@ -53,24 +53,24 @@ class TicketService
     {
         $ticket = new Ticket();
         $ticket->fill([
-            'SourceTicketID' => $SourceTicketID,
-            'TicketID' => Str::upper(self::_ID()),
-            'Title' => $title,
-            'CategoryID' => $category->ID,
-            'Notes' => str_replace("\r\n", '', $description),
-            'Party' => $Party,
-            'PartyID' => $PartyID,
-            'Source' => $Source,
-            'SourceID' => $SourceID,
-            'Status' => TicketStatusEnum::Active->value,
-            'Priority' => $priority->value,
-            'StartDate' => $start,
-            'EndDate' => $end,
-            'Owner' => User::getPrimaryKey(),
-            'OwnerID' => SystemHelper::user()->Id,
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
-        ])->save();
+                       'SourceTicketID' => $SourceTicketID,
+                       'TicketID'       => Str::upper(self::_ID()),
+                       'Title'          => $title,
+                       'CategoryID'     => $category->ID,
+                       'Notes'          => str_replace("\r\n", '', $description),
+                       'Party'          => $Party,
+                       'PartyID'        => $PartyID,
+                       'Source'         => $Source,
+                       'SourceID'       => $SourceID,
+                       'Status'         => TicketStatusEnum::Active->value,
+                       'Priority'       => $priority->value,
+                       'StartDate'      => $start,
+                       'EndDate'        => $end,
+                       'Owner'          => User::getPrimaryKey(),
+                       'OwnerID'        => SystemHelper::user()->Id,
+                       'CreatedBy'      => $actor->Id,
+                       'ModifiedBy'     => $actor->Id,
+                      ])->save();
 
         activity()->causedBy($actor)->performedOn($ticket->refresh())->event('create')->log('Created ticket ' . $ticket->TicketID);
         return (new self($ticket))->addWatcher($actor, RoleEnum::Write, SystemHelper::user(), false);
@@ -79,13 +79,13 @@ class TicketService
     public function update(CodeDetail $category, string $title, string $description, User $actor, Carbon $start = null, Carbon $end = null): TicketService
     {
         $this->ticket->update([
-            'Title' => $title,
-            'CategoryID' => $category->ID,
-            'Notes' => str_replace("\r\n", '', $description),
-            'StartDate' => $start,
-            'EndDate' => $end,
-            'ModifiedBy' => $actor->Id,
-        ]);
+                               'Title'      => $title,
+                               'CategoryID' => $category->ID,
+                               'Notes'      => str_replace("\r\n", '', $description),
+                               'StartDate'  => $start,
+                               'EndDate'    => $end,
+                               'ModifiedBy' => $actor->Id,
+                              ]);
         activity()->causedBy($actor)->performedOn($this->ticket)->event('update')->log('Updated ticket ' . $this->ticket->TicketID);
         return $this;
     }
@@ -98,28 +98,30 @@ class TicketService
         //check a previous owner as read.
         $this->ticket->watchers()->lock('WITH(NOLOCK)')->where('t_TicketUsers.Party', $this->ticket->Owner)
             ->where('t_TicketUsers.PartyID', $this->ticket->OwnerID)->update([
-                'Role' => RoleEnum::Read->value
-            ]);
+                                                                              'Role' => RoleEnum::Read->value,
+                                                                             ]);
 
         $this->addWatcher($owner, RoleEnum::Admin, SystemHelper::user(), false);
 
         if ($owner instanceof Team) {
-
             $this->ticket->lock('WITH(NOLOCK)')->update([
-                'Owner' => Team::getPrimaryKey(),
-                'OwnerID' => $owner->TeamID
-            ]);
+                                                         'Owner'   => Team::getPrimaryKey(),
+                                                         'OwnerID' => $owner->TeamID,
+                                                        ]);
 
             $users = $owner->users()->lock('WITH(NOLOCK)')->select(['Email', 'Name'])->lock('WITH(NOLOCK)')->inRandomOrder()->limit(15)->get(['Email', 'Name']);
             $cc = $users->map(function ($user) {
                 return [$user->Name => $user->Email];
             });
 
-            CRMEmailService::createTeam($owner, 'Ticket Assignment Notification ' . $this->ticket->TicketID,
+            CRMEmailService::createTeam(
+                $owner,
+                'Ticket Assignment Notification ' . $this->ticket->TicketID,
                 '<p>This is to inform that a new ticket (<a  href="' . route('tickets.show', $this->ticket->TicketID) . '">[Ticket ID: #' . $this->ticket->TicketID . ']</a>) has been assigned to team ' . $owner->Name . '. </p>
                        <p>You can access the ticket using the following link: <a  href="' . route('tickets.show', $this->ticket->TicketID) . '"> ticket details</a></p>
                         <p>Thank you for your prompt attention to this matter.</p>',
-                SystemHelper::user(), $cc->toArray()
+                SystemHelper::user(),
+                $cc->toArray()
             );
 
             return $this;
@@ -130,18 +132,20 @@ class TicketService
         }
 
         $this->ticket->lock('WITH(NOLOCK)')->update([
-            'Owner' => User::getPrimaryKey(),
-            'OwnerID' => $owner->Id
-        ]);
+                                                     'Owner'   => User::getPrimaryKey(),
+                                                     'OwnerID' => $owner->Id,
+                                                    ]);
 
         $service = new UserService($owner);
         if ($this->ticket->Priority->value === TicketPriorityEnum::Urgent->value) {
             $service->sendMessage('You have been assigned ticket (Ticket ID: #' . $this->ticket->TicketID . ') that has high priority kindly check on it.', SystemHelper::user());
         }
-        $service->sendEmail('Ticket Assignment Notification ' . $this->ticket->TicketID,
+        $service->sendEmail(
+            'Ticket Assignment Notification ' . $this->ticket->TicketID,
             '<p>This is to inform you that a new ticket ([Ticket ID: #' . $this->ticket->TicketID . ']) has been assigned to you. </p>
                     <p>Kindly review the ticket at your earliest convenience. You can access the ticket using the following link: <a  href="' . route('tickets.show', $this->ticket->TicketID) . '"> ticket details</a></p>
-                    <p>Thank you for your prompt attention to this matter.</p>');
+                    <p>Thank you for your prompt attention to this matter.</p>'
+        );
 
         return $this;
     }
@@ -167,11 +171,12 @@ class TicketService
         activity()->causedBy($actor)->performedOn($this->ticket)->event('delete')->log('Removed ' . $service->getName() . ' as a ticket (' . $this->ticket->TicketID . ') watcher.');
 
         $ticketUser->forceFill([
-            'DeletedOn' => now(),
-            'DeletedBy' => $actor->Id
-        ])->save();
+                                'DeletedOn' => now(),
+                                'DeletedBy' => $actor->Id,
+                               ])->save();
 
-        $service->sendEmail('Notification: Removed as Watchers from Ticket ' . $this->ticket->TicketID,
+        $service->sendEmail(
+            'Notification: Removed as Watchers from Ticket ' . $this->ticket->TicketID,
             '<p>You have been removed as watchers from Ticket ' . $this->ticket->TicketID . '. As a result, you will no longer receive updates or notifications related to this ticket.</p>
                 <p>Thank you for your continued support and collaboration.</p>'
         );
@@ -186,18 +191,18 @@ class TicketService
             if (!$ticketUser instanceof TicketUsers) {
                 $ticketUser = new TicketUsers();
                 $ticketUser->fill([
-                    'Party' => Team::getPrimaryKey(),
-                    'CreatedBy' => $actor->Id,
-                    'TicketID' => $this->ticket->Id,
-                    'PartyID' => $watcher->TeamID,
-                    'CreatedOn' => now(),
-                ]);
+                                   'Party'     => Team::getPrimaryKey(),
+                                   'CreatedBy' => $actor->Id,
+                                   'TicketID'  => $this->ticket->Id,
+                                   'PartyID'   => $watcher->TeamID,
+                                   'CreatedOn' => now(),
+                                  ]);
             }
             $ticketUser->fill([
-                'Role' => $role->value,
-                'ModifiedBy' => $actor->Id,
-                'ModifiedOn' => now()
-            ])->save();
+                               'Role'       => $role->value,
+                               'ModifiedBy' => $actor->Id,
+                               'ModifiedOn' => now(),
+                              ])->save();
 
             if ($notify) {
                 $users = $watcher->users()->lock('WITH(NOLOCK)')->select(['Email', 'Name'])->lock('WITH(NOLOCK)')->inRandomOrder()->limit(15)->get(['Email', 'Name']);
@@ -205,11 +210,14 @@ class TicketService
                     return [$user->Name => $user->Email];
                 });
 
-                CRMEmailService::createTeam($watcher, 'Notification: Added as Watchers to Ticket ' . $this->ticket->TicketID,
+                CRMEmailService::createTeam(
+                    $watcher,
+                    'Notification: Added as Watchers to Ticket ' . $this->ticket->TicketID,
                     '<p>You have been added as watchers to <a  href="' . route('tickets.show', $this->ticket->TicketID) . '">Ticket ID: #' . $this->ticket->TicketID . '</a>.</p>
                        <p>As watchers, you will receive updates and notifications about any changes, comments, or progress related to this ticket. </p>
                         <p>Please feel free to review the details and provide any necessary input to ensure a smooth resolution.</p>',
-                    SystemHelper::user(), $cc->toArray()
+                    SystemHelper::user(),
+                    $cc->toArray()
                 );
             }
 
@@ -223,22 +231,24 @@ class TicketService
         if (!$ticketUser instanceof TicketUsers) {
             $ticketUser = new TicketUsers();
             $ticketUser->fill([
-                'TicketID' => $this->ticket->Id,
-                'Party' => User::getPrimaryKey(),
-                'PartyID' => $watcher->Id,
-                'CreatedBy' => $actor->Id,
-                'CreatedOn' => now(),
-            ]);
+                               'TicketID'  => $this->ticket->Id,
+                               'Party'     => User::getPrimaryKey(),
+                               'PartyID'   => $watcher->Id,
+                               'CreatedBy' => $actor->Id,
+                               'CreatedOn' => now(),
+                              ]);
         }
         $ticketUser->fill([
-            'Role' => $role->value,
-            'ModifiedBy' => $actor->Id,
-            'ModifiedOn' => now()
-        ])->save();
+                           'Role'       => $role->value,
+                           'ModifiedBy' => $actor->Id,
+                           'ModifiedOn' => now(),
+                          ])->save();
 
 
         if ($notify) {
-            CRMEmailService::createUser(user: $watcher, subject: 'Notification: Added as a Watcher to Ticket ' . $this->ticket->TicketID,
+            CRMEmailService::createUser(
+                user: $watcher,
+                subject: 'Notification: Added as a Watcher to Ticket ' . $this->ticket->TicketID,
                 body: '<p>You have been added as watcher to <a  href="' . route('tickets.show', $this->ticket->TicketID) . '">Ticket ID: #' . $this->ticket->TicketID . '</a>.</p>
                        <p>As watchers, you will receive updates and notifications about any changes, comments, or progress related to this ticket. </p>
                         <p>Please feel free to review the details and provide any necessary input to ensure a smooth resolution.</p>',
@@ -251,23 +261,22 @@ class TicketService
     public function setSource(string $Source, string $SourceID): static
     {
         $this->ticket->update([
-            'Source' => $Source,
-            'SourceID' => $SourceID
-        ]);
+                               'Source'   => $Source,
+                               'SourceID' => $SourceID,
+                              ]);
 
         return $this;
     }
 
     public function source(): string
     {
-        if($this->ticket->SourceID === '0') {
+        if ($this->ticket->SourceID === '0') {
             return $this->ticket->Source;
         }
 
         $source = $this->ticket->source;
         if ($source instanceof CrmEmail) {
-            return 'Email : <a href="javascript:void(0)" data-click_url="'. route('emails.summary',[$source->EmailID]).'" data-summary_title="email details" class="click-summary-data">' . $source->EmailID . '</a>';
-
+            return 'Email : <a href="javascript:void(0)" data-click_url="' . route('emails.summary', [$source->EmailID]) . '" data-summary_title="email details" class="click-summary-data">' . $source->EmailID . '</a>';
         }
 
 
@@ -277,10 +286,10 @@ class TicketService
     public function cancel(User $actor): static
     {
         $this->ticket->update([
-            'Status' => TicketStatusEnum::Cancelled->value,
-            'ClosedOn' => now(),
-            'ModifiedBy' => $actor->Id,
-        ]);
+                               'Status'     => TicketStatusEnum::Cancelled->value,
+                               'ClosedOn'   => now(),
+                               'ModifiedBy' => $actor->Id,
+                              ]);
 
         activity()->causedBy($actor)->performedOn($this->ticket)->event('cancel')->log('Canceled ticket ' . $this->ticket->TicketID);
 
@@ -290,18 +299,18 @@ class TicketService
     public function priority(TicketPriorityEnum $priority): static
     {
         $this->ticket->update([
-            'Priority' => $priority->value,
-        ]);
+                               'Priority' => $priority->value,
+                              ]);
         return $this;
     }
 
     public function resolve(User $actor): static
     {
         $this->ticket->update([
-            'Status' => TicketStatusEnum::Resolved->value,
-            'ClosedOn' => now(),
-            'ModifiedBy' => $actor->Id,
-        ]);
+                               'Status'     => TicketStatusEnum::Resolved->value,
+                               'ClosedOn'   => now(),
+                               'ModifiedBy' => $actor->Id,
+                              ]);
 
         $this->sendMessage('Hello #name, Ticket ID: #' . $this->ticket->TicketID . ' has been resolved.', $actor);
         activity()->causedBy($actor)->performedOn($this->ticket)->event('closed')->log('Marked ticket ' . $this->ticket->TicketID . ' as resolved');
@@ -313,21 +322,21 @@ class TicketService
         $status = $this->ticket->Status->name;
 
         $this->ticket->update([
-            'Status' => TicketStatusEnum::Approval->value,
-            'ClosedOn' => null,
-            'ModifiedBy' => $actor->Id,
-        ]);
+                               'Status'     => TicketStatusEnum::Approval->value,
+                               'ClosedOn'   => null,
+                               'ModifiedBy' => $actor->Id,
+                              ]);
 
         //add workflow
         Workflow::create([
-            'Source' => Ticket::getPrimaryKey(),
-            'SourceID' => $this->ticket->Id,
-            'Stage' => $status,
-            'Status' => WorkflowStatus::Submitted->value,
-            'Notes' => $reason,
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
-        ]);
+                          'Source'     => Ticket::getPrimaryKey(),
+                          'SourceID'   => $this->ticket->Id,
+                          'Stage'      => $status,
+                          'Status'     => WorkflowStatus::Submitted->value,
+                          'Notes'      => $reason,
+                          'CreatedBy'  => $actor->Id,
+                          'ModifiedBy' => $actor->Id,
+                         ]);
 
         activity()->causedBy($actor)->performedOn($this->ticket)->event('reopen')->log('Reopen ticket ' . $this->ticket->TicketID . ' submitted for approval.');
 
@@ -364,7 +373,6 @@ class TicketService
         if ($model instanceof Lead) {
             (new LeadService($model))->sendMessage($message, $actor);
         }
-
     }
 
     protected static function _ID(): string
@@ -432,10 +440,10 @@ class TicketService
                 }
                 return $classes;
             })->setRowData([
-                'dbl_click_url' => function (Ticket $ticket) {
-                    return route('tickets.show', $ticket->TicketID);
-                }
-            ])->rawColumns(['TicketID', 'party'])->make();
+                            'dbl_click_url' => function (Ticket $ticket) {
+                                return route('tickets.show', $ticket->TicketID);
+                            },
+                           ])->rawColumns(['TicketID', 'party'])->make();
     }
 
 
@@ -448,29 +456,31 @@ class TicketService
     public function workflowApprove(User $actor): static
     {
         $this->ticket->forceFill([
-            'Status' => TicketStatusEnum::Active,
-            'ClosedOn' => null
-        ])->save(['timestamps' => false]);
+                                  'Status'   => TicketStatusEnum::Active,
+                                  'ClosedOn' => null,
+                                 ])->save(['timestamps' => false]);
 
         $this->ticket->pendingWorkflows()->where('Stage', TicketStatusEnum::Approval)->update([
-            'DeletedOn' => now(),
-            'DeletedBy' => $actor->Id
-        ]);
+                                                                                               'DeletedOn' => now(),
+                                                                                               'DeletedBy' => $actor->Id,
+                                                                                              ]);
 
         $this->ticket->workflows()->create([
-            'Stage' => TicketStatusEnum::Approval->name,
-            'Status' => WorkflowStatus::Accepted->value,
-            'Notes' => 'Ticket Re-Open Approved',
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
-        ]);
+                                            'Stage'      => TicketStatusEnum::Approval->name,
+                                            'Status'     => WorkflowStatus::Accepted->value,
+                                            'Notes'      => 'Ticket Re-Open Approved',
+                                            'CreatedBy'  => $actor->Id,
+                                            'ModifiedBy' => $actor->Id,
+                                           ]);
 
         $owner = $this->ticket->modified;
         if ($owner instanceof User) {
-            (new UserService($owner))->sendEmail('Ticket Update - Approval for Reopening',
+            (new UserService($owner))->sendEmail(
+                'Ticket Update - Approval for Reopening',
                 '<p>Hello</p><p>This to inform you that your request to reopen ticket #<a href="' . route('tickets.show', [$this->ticket->TicketID]) . '">' . $this->ticket->TicketID . '</a> has been <b>approved</b>. Click the link below to review</p>
                 <p><a href="' . route('tickets.show', [$this->ticket->TicketID]) . '"> ticket details</a></p>
-                <p>Thank you for your patience.</p>');
+                <p>Thank you for your patience.</p>'
+            );
         }
 
         $this->sendMessage('Hello #name, Ticket ID: #' . $this->ticket->TicketID . ' has been reopened.', $actor);
@@ -483,30 +493,32 @@ class TicketService
     public function workflowReject(User $actor, string $reason): static
     {
         $this->ticket->forceFill([
-            'Status' => TicketStatusEnum::Cancelled->value,
-        ])->save(['timestamps' => false]);
+                                  'Status' => TicketStatusEnum::Cancelled->value,
+                                 ])->save(['timestamps' => false]);
 
 
         $this->ticket->pendingWorkflows()->where('Stage', TicketStatusEnum::Approval)->update([
-            'DeletedOn' => now(),
-            'DeletedBy' => $actor->Id
-        ]);
+                                                                                               'DeletedOn' => now(),
+                                                                                               'DeletedBy' => $actor->Id,
+                                                                                              ]);
 
         $this->ticket->workflows()->create([
-            'Stage' => TicketStatusEnum::Approval->name,
-            'Status' => WorkflowStatus::RejectedCancel->value,
-            'Notes' => $reason,
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
-        ]);
+                                            'Stage'      => TicketStatusEnum::Approval->name,
+                                            'Status'     => WorkflowStatus::RejectedCancel->value,
+                                            'Notes'      => $reason,
+                                            'CreatedBy'  => $actor->Id,
+                                            'ModifiedBy' => $actor->Id,
+                                           ]);
 
 
         $owner = $this->ticket->modified;
         if ($owner instanceof User) {
-            (new UserService($owner))->sendEmail('Ticket Update - Request for Reopening Denied',
+            (new UserService($owner))->sendEmail(
+                'Ticket Update - Request for Reopening Denied',
                 '<p>Hello</p><p>This is to inform you that your request to reopen ticket #<a href="' . route('tickets.show', [$this->ticket->TicketID]) . '">' . $this->ticket->TicketID . '</a> has been <b style="color: #fa2f43">denied</b>.</p>
                 <p><a href="' . route('tickets.show', [$this->ticket->TicketID]) . '"> ticket details</a></p>
-                <p><b>Reason Given: </b>&nbsp;' . $reason . '</p>');
+                <p><b>Reason Given: </b>&nbsp;' . $reason . '</p>'
+            );
         }
 
         activity()->causedBy($actor)->performedOn($this->ticket)->event('reject')->log('Approved ticket re-open ' . $this->ticket->TicketID);
@@ -530,9 +542,9 @@ class TicketService
         return $document;
     }
 
-    public function documentContent( string $content, string $MimeType, string $Name, User $actor): CRMImage
+    public function documentContent(string $content, string $MimeType, string $Name, User $actor): CRMImage
     {
-        $document = ImageService::create(Ticket::getPrimaryKey(), $this->ticket->Id,$content,$MimeType,$Name,  $actor)->image;
+        $document = ImageService::create(Ticket::getPrimaryKey(), $this->ticket->Id, $content, $MimeType, $Name, $actor)->image;
         activity()->causedBy($actor)->performedOn($this->ticket)->event('document')->log('added a document  ' . $document->Name . ' to ticket ' . Str::upper($this->ticket->TicketID));
         return $document;
     }

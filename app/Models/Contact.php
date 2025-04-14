@@ -10,7 +10,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Contact extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -23,13 +24,19 @@ class Contact extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'Label', 'Phone', 'Email', 'Party', 'PartyID', 'Extra',
-        'Notes', 'CreatedBy', 'ModifiedBy', 'DeletedBy'
-    ];
+                           'Label',
+                           'Phone',
+                           'Email',
+                           'Party',
+                           'PartyID',
+                           'Extra',
+                           'Notes',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 
-    protected $casts = [
-        'Extra' => 'object',
-    ];
+    protected $casts = ['Extra' => 'object'];
 
     public function party(): MorphTo
     {

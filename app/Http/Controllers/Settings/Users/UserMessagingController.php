@@ -25,7 +25,7 @@ class UserMessagingController extends Controller
     /**
      * Handle the incoming request.
      */
-    public function __invoke(UserBulkNotificationRequest $request):JsonResponse
+    public function __invoke(UserBulkNotificationRequest $request): JsonResponse
     {
         $this->authorize('messaging', User::class);
 
@@ -33,19 +33,19 @@ class UserMessagingController extends Controller
         try {
             $Bulk =  DB::transaction(static function () use ($request, $actor) {
                 $Bulk = BulkNotification::create([
-                    'Label' => $request->validated('NotificationLabel'),
-                    'Module' => UserService::MODULE,
-                    'Content' => $request->validated('NotificationContent'),
-                    'Total' => User::query()->count(),
-                    'CreatedBy' => $actor->Id,
-                    'ModifiedBy' => $actor->Id,
-                ]);
+                                                  'Label'      => $request->validated('NotificationLabel'),
+                                                  'Module'     => UserService::MODULE,
+                                                  'Content'    => $request->validated('NotificationContent'),
+                                                  'Total'      => User::query()->count(),
+                                                  'CreatedBy'  => $actor->Id,
+                                                  'ModifiedBy' => $actor->Id,
+                                                 ]);
 
                 //run event to start work.
                 event(new BulkNotificationEvent($Bulk, $actor, [], now()));
                 return $Bulk;
             });
-        } catch (\Throwable|\Exception $e) {
+        } catch (\Throwable | \Exception $e) {
             Log::error('Error sending board bulk notification : ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }

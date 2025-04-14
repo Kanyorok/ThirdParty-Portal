@@ -65,7 +65,6 @@ class PendingWorkflowController extends Controller
                     default:
                         return 'Unknown Module ?';
                 }
-
             })->editColumn('CreatedOn', function (PendingWorkflow $workflow) {
                 return $workflow->CreatedOn->format('M d, Y H:i');
             })->rawColumns(['description'])->make();

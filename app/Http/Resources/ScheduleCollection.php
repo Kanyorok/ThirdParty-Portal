@@ -15,8 +15,8 @@ class ScheduleCollection extends ResourceCollection
     public function toArray(Request $request): array
     {
         return [
-            'data' => $this->collection->transform(function ($schedule) {
-                return new ScheduleResource($schedule);
+                'data' => $this->collection->transform(function ($schedule) {
+                    return new ScheduleResource($schedule);
                 /*$scheduleService = new ScheduleService($schedule->resource);
                 return  [
                     'id' => $schedule->ScheduleID,
@@ -33,7 +33,7 @@ class ScheduleCollection extends ResourceCollection
                         'actionable' => $scheduleService->actionable()
                     ],
                 ];*/
-            }),
-        ];
+                }),
+               ];
     }
 }

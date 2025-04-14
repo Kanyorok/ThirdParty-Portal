@@ -19,11 +19,26 @@ class MeetingRoomRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'RooMName' => ['required', 'string', 'max:255'],
-            'RooMCapacity' => ['required', 'integer', 'min:2'],
-            'RooMNotes' => ['nullable', 'string', 'max:2000'],
-            'RooMBranch' => ['nullable', 'string'],
-        ];
+                'RooMName'     => [
+                                   'required',
+                                   'string',
+                                   'max:255',
+                                  ],
+                'RooMCapacity' => [
+                                   'required',
+                                   'integer',
+                                   'min:2',
+                                  ],
+                'RooMNotes'    => [
+                                   'nullable',
+                                   'string',
+                                   'max:2000',
+                                  ],
+                'RooMBranch'   => [
+                                   'nullable',
+                                   'string',
+                                  ],
+               ];
     }
 
     public function generateID(): string
@@ -50,8 +65,6 @@ class MeetingRoomRequest extends FormRequest
             return $this->validated('RooMBranch');
         }
 
-        throw ValidationException::withMessages([
-            'RooMBranch' => 'Branch may be invalid',
-        ]);
+        throw ValidationException::withMessages(['RooMBranch' => 'Branch may be invalid']);
     }
 }

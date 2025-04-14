@@ -14,7 +14,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Schedule extends Model
 {
-    use HasFactory, SoftDeletes, UserActorTrait;
+    use HasFactory;
+    use SoftDeletes;
+    use UserActorTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -24,15 +26,26 @@ class Schedule extends Model
     protected $primaryKey = 'ScheduleID';
 
     protected $fillable = [
-        'Title', 'Notes', 'ScheduledType', 'ScheduledTypeID', 'ScheduleStatusID', 'StartOn', 'EndOn', 'Type', 'Source', 'SourceID',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy'
-    ];
+                           'Title',
+                           'Notes',
+                           'ScheduledType',
+                           'ScheduledTypeID',
+                           'ScheduleStatusID',
+                           'StartOn',
+                           'EndOn',
+                           'Type',
+                           'Source',
+                           'SourceID',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 
     protected $casts = [
-        'StartOn' => 'datetime',
-        'EndOn' => 'datetime',
-        'ScheduleStatusID' => ScheduleStatusEnum::class
-    ];
+                        'StartOn'          => 'datetime',
+                        'EndOn'            => 'datetime',
+                        'ScheduleStatusID' => ScheduleStatusEnum::class,
+                       ];
 
 
     // (Call, Meeting, Task)

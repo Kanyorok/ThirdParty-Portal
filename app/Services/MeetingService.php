@@ -37,7 +37,6 @@ class MeetingService
             if ($room instanceof MeetingRoom) {
                 return $room->RoomID . ': ' . $room->Name;
             }
-
         }
 
         $location = $this->meeting->Location;
@@ -48,7 +47,7 @@ class MeetingService
         return $location;
     }
 
-    public function update(MeetingStatusEnum $status, string $title, string|MeetingRoom $location, Carbon $start, User $actor, Carbon $end = null, string $agenda=null): static
+    public function update(MeetingStatusEnum $status, string $title, string|MeetingRoom $location, Carbon $start, User $actor, Carbon $end = null, string $agenda = null): static
     {
         if ($location instanceof MeetingRoom) {
             $Location = '';
@@ -58,20 +57,19 @@ class MeetingService
             $Location = $location;
             $LocationType = ((filter_var($location, FILTER_VALIDATE_URL))) ? MeetingLocationEnum::Online : MeetingLocationEnum::Physical;
             $LocationId = null;
-
         }
 
         $this->meeting->update([
-            'Title' => $title,
-            'StatusID' => $status->value,
-            'StartOn' => $start,
-            'EndOn' => $end??$this->meeting->EndOn,
-            'Location' => $Location,
-            'MeetingLocationType' => $LocationType->value,
-            'LocationId' => $LocationId,
-            'Notes' => $agenda??$this->meeting->Notes,
-            'ModifiedBy' => $actor->Id,
-        ]);
+                                'Title'               => $title,
+                                'StatusID'            => $status->value,
+                                'StartOn'             => $start,
+                                'EndOn'               => $end ?? $this->meeting->EndOn,
+                                'Location'            => $Location,
+                                'MeetingLocationType' => $LocationType->value,
+                                'LocationId'          => $LocationId,
+                                'Notes'               => $agenda ?? $this->meeting->Notes,
+                                'ModifiedBy'          => $actor->Id,
+                               ]);
 
         return $this;
     }
@@ -93,25 +91,24 @@ class MeetingService
             $Location = $location;
             $LocationType = ((filter_var($location, FILTER_VALIDATE_URL))) ? MeetingLocationEnum::Online : MeetingLocationEnum::Physical;
             $LocationId = null;
-
         }
 
         $meeting = new Meeting();
         $meeting->fill([
-            'Title' => $title,
-            'StatusID' => $status->value,
-            'StartOn' => $start,
-            'EndOn' => $end,
-            'Type' => $type,
-            'Location' => $Location,
-            'MeetingLocationType' => $LocationType->value,
-            'LocationId' => $LocationId,
-            'Notes' => $notes,
-            'Source' => $source,
-            'SourceID' => $sourceID,
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
-        ])->save();
+                        'Title'               => $title,
+                        'StatusID'            => $status->value,
+                        'StartOn'             => $start,
+                        'EndOn'               => $end,
+                        'Type'                => $type,
+                        'Location'            => $Location,
+                        'MeetingLocationType' => $LocationType->value,
+                        'LocationId'          => $LocationId,
+                        'Notes'               => $notes,
+                        'Source'              => $source,
+                        'SourceID'            => $sourceID,
+                        'CreatedBy'           => $actor->Id,
+                        'ModifiedBy'          => $actor->Id,
+                       ])->save();
 
         return new self($meeting->refresh());
     }
@@ -157,13 +154,13 @@ class MeetingService
                 foreach ($chunk as $ClientID) {
                     $dataClients->add($ClientID);
                     $data->add([
-                        'MeetingId' => $this->meeting->MeetingID,
-                        'ClientID' => $ClientID,
-                        'CreatedOn' => $dated,
-                        'CreatedBy' => $actor->Id,
-                        'ModifiedOn' => $dated,
-                        'ModifiedBy' => $actor->Id,
-                    ]);
+                                'MeetingId'  => $this->meeting->MeetingID,
+                                'ClientID'   => $ClientID,
+                                'CreatedOn'  => $dated,
+                                'CreatedBy'  => $actor->Id,
+                                'ModifiedOn' => $dated,
+                                'ModifiedBy' => $actor->Id,
+                               ]);
                 }
                 if ($data->count() > 0) {
                     DB::table('t_MeetingClients')->insert($data->toArray());
@@ -176,13 +173,13 @@ class MeetingService
         }
 
         DB::table('t_MeetingClients')->insert([
-            'MeetingId' => $this->meeting->MeetingID,
-            'ClientID' => $ClientIDs,
-            'CreatedOn' => $dated,
-            'CreatedBy' => $actor->Id,
-            'ModifiedOn' => $dated,
-            'ModifiedBy' => $actor->Id,
-        ]);
+                                               'MeetingId'  => $this->meeting->MeetingID,
+                                               'ClientID'   => $ClientIDs,
+                                               'CreatedOn'  => $dated,
+                                               'CreatedBy'  => $actor->Id,
+                                               'ModifiedOn' => $dated,
+                                               'ModifiedBy' => $actor->Id,
+                                              ]);
 
         // ActivityService::schedule($ClientIDs, Client::getPrimaryKey(), $this->schedule, $description, $actor);
 
@@ -201,13 +198,13 @@ class MeetingService
                 foreach ($chunk as $LeadId) {
                     $dataLeads->add($LeadId);
                     $data->add([
-                        'MeetingId' => $this->meeting->MeetingID,
-                        'LeadId' => $LeadId,
-                        'CreatedOn' => $dated,
-                        'CreatedBy' => $actor->Id,
-                        'ModifiedOn' => $dated,
-                        'ModifiedBy' => $actor->Id,
-                    ]);
+                                'MeetingId'  => $this->meeting->MeetingID,
+                                'LeadId'     => $LeadId,
+                                'CreatedOn'  => $dated,
+                                'CreatedBy'  => $actor->Id,
+                                'ModifiedOn' => $dated,
+                                'ModifiedBy' => $actor->Id,
+                               ]);
                 }
                 if ($data->count() > 0) {
                     DB::table('t_MeetingLeads')->insert($data->toArray());
@@ -220,13 +217,13 @@ class MeetingService
         }
 
         DB::table('t_MeetingLeads')->insert([
-            'MeetingId' => $this->meeting->MeetingID,
-            'LeadId' => $LeadIds,
-            'CreatedOn' => $dated,
-            'CreatedBy' => $actor->Id,
-            'ModifiedOn' => $dated,
-            'ModifiedBy' => $actor->Id,
-        ]);
+                                             'MeetingId'  => $this->meeting->MeetingID,
+                                             'LeadId'     => $LeadIds,
+                                             'CreatedOn'  => $dated,
+                                             'CreatedBy'  => $actor->Id,
+                                             'ModifiedOn' => $dated,
+                                             'ModifiedBy' => $actor->Id,
+                                            ]);
 
         //ActivityService::schedule($LeadIds, Lead::getPrimaryKey(), $this->schedule, $description, $actor);
 
@@ -241,13 +238,13 @@ class MeetingService
             foreach ($users->chunk(1000) as $chunk) {
                 foreach ($chunk as $OperatorID) {
                     $data->add([
-                        'MeetingId' => $this->meeting->MeetingID,
-                        'UserID' => $OperatorID,
-                        'CreatedOn' => $dated,
-                        'CreatedBy' => $actor->Id,
-                        'ModifiedOn' => $dated,
-                        'ModifiedBy' => $actor->Id,
-                    ]);
+                                'MeetingId'  => $this->meeting->MeetingID,
+                                'UserID'     => $OperatorID,
+                                'CreatedOn'  => $dated,
+                                'CreatedBy'  => $actor->Id,
+                                'ModifiedOn' => $dated,
+                                'ModifiedBy' => $actor->Id,
+                               ]);
                 }
 
                 if ($data->count() > 0) {
@@ -259,13 +256,13 @@ class MeetingService
         }
 
         DB::table('t_MeetingUsers')->insert([
-            'MeetingId' => $this->meeting->MeetingID,
-            'UserID' => $OperatorIDs,
-            'CreatedOn' => $dated,
-            'CreatedBy' => $actor->Id,
-            'ModifiedOn' => $dated,
-            'ModifiedBy' => $actor->Id,
-        ]);
+                                             'MeetingId'  => $this->meeting->MeetingID,
+                                             'UserID'     => $OperatorIDs,
+                                             'CreatedOn'  => $dated,
+                                             'CreatedBy'  => $actor->Id,
+                                             'ModifiedOn' => $dated,
+                                             'ModifiedBy' => $actor->Id,
+                                            ]);
 
         return $this;
     }
@@ -278,13 +275,13 @@ class MeetingService
             foreach ($users->chunk(1000) as $chunk) {
                 foreach ($chunk as $MemberID) {
                     $data->add([
-                        'MeetingId' => $this->meeting->MeetingID,
-                        'BoardMemberId' => $MemberID,
-                        'CreatedOn' => $dated,
-                        'CreatedBy' => $actor->Id,
-                        'ModifiedOn' => $dated,
-                        'ModifiedBy' => $actor->Id,
-                    ]);
+                                'MeetingId'     => $this->meeting->MeetingID,
+                                'BoardMemberId' => $MemberID,
+                                'CreatedOn'     => $dated,
+                                'CreatedBy'     => $actor->Id,
+                                'ModifiedOn'    => $dated,
+                                'ModifiedBy'    => $actor->Id,
+                               ]);
                 }
 
                 if ($data->count() > 0) {
@@ -296,13 +293,13 @@ class MeetingService
         }
 
         DB::table('t_MeetingBoard')->insert([
-            'MeetingId' => $this->meeting->MeetingID,
-            'BoardMemberId' => $MemberIDs,
-            'CreatedOn' => $dated,
-            'CreatedBy' => $actor->Id,
-            'ModifiedOn' => $dated,
-            'ModifiedBy' => $actor->Id,
-        ]);
+                                             'MeetingId'     => $this->meeting->MeetingID,
+                                             'BoardMemberId' => $MemberIDs,
+                                             'CreatedOn'     => $dated,
+                                             'CreatedBy'     => $actor->Id,
+                                             'ModifiedOn'    => $dated,
+                                             'ModifiedBy'    => $actor->Id,
+                                            ]);
 
         return $this;
     }

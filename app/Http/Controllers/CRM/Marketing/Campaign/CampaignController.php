@@ -27,6 +27,7 @@ use Illuminate\View\View;
 class CampaignController extends Controller
 {
     use CampaignTrait;
+
     public function __construct()
     {
         $this->middleware('ajax')->except(['index', 'show']);
@@ -73,7 +74,7 @@ class CampaignController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (\Throwable|Exception $e) {
+        } catch (\Throwable | Exception $e) {
             Log::error('Error create campaign ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }
@@ -105,15 +106,23 @@ class CampaignController extends Controller
         }
 
         $request->validate([
-            'Subject' => [Rule::requiredIf($campaign->Type->value === CampaignTypeEnum::Email->value), 'max:200'],
-            'Content' => ['required', 'string', 'min:5', 'max:50000']
-        ]);
+                            'Subject' => [
+                                          Rule::requiredIf($campaign->Type->value === CampaignTypeEnum::Email->value),
+                                          'max:200',
+                                         ],
+                            'Content' => [
+                                          'required',
+                                          'string',
+                                          'min:5',
+                                          'max:50000',
+                                         ],
+                           ]);
 
         $campaign->update([
-            'Label' => ($campaign->Type->value === CampaignTypeEnum::Email->value) ? $request->Subject : $campaign->Label,
-            'Details' => Str::of($request->Content)->remove(["\r", "\n", "\t", "\0", "\x0B"])->replace("\u{A0}", " ")->toString(),
-            'ModifiedBy' => $request->user()->Id,
-        ]);
+                           'Label'      => ($campaign->Type->value === CampaignTypeEnum::Email->value) ? $request->Subject : $campaign->Label,
+                           'Details'    => Str::of($request->Content)->remove(["\r", "\n", "\t", "\0", "\x0B"])->replace("\u{A0}", " ")->toString(),
+                           'ModifiedBy' => $request->user()->Id,
+                          ]);
 
         return $this->succeeded('saved successfully');
     }
@@ -128,9 +137,9 @@ class CampaignController extends Controller
         }
 
         $campaign->forceFill([
-            'DeletedOn' => now(),
-            'DeletedBy' => $request->user()->Id,
-        ])->save();
+                              'DeletedOn' => now(),
+                              'DeletedBy' => $request->user()->Id,
+                             ])->save();
 
         return $this->succeeded('Campaign canceled successfully', route('campaigns.index'));
     }
