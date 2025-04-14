@@ -40,7 +40,7 @@
                                 </svg>
                             </a>
                         </div>
-                        <div class="pc-user-links collapse" id="pc_sidebar_userlink">
+                        <div class="pc-user-links collapse" id="pc_sidebar_userlink" style="">
                             <div class="pt-3">
                                 <a href="{{ route('profile') }}"><i class="ti ti-user"></i> <span
                                         data-i18n="My Account">My Account</span>
@@ -68,6 +68,28 @@
                                 </svg> </span><span class="pc-mtext" data-i18n="Online Courses">Procurement </span>
                             <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
                         <ul class="pc-submenu">
+                            <li class="pc-item pc-hasmenu">
+                                <a class="pc-link" href="#!">
+                                    <span
+                                        data-i18n="Requisitions">Purchase Requisition
+                                    </span>
+                                    <span class="pc-arrow">
+                                        <i
+                                            data-feather="chevron-right">
+                                        </i>
+                                    </span>
+                                </a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item"><a class="pc-link" href="{{route('requisitionItem.index')}}"
+                                            data-i18n="List">Requisition List</a></li>
+                                    <li class="pc-item"><a class="pc-link" href="{{route('requisition.create')}}"
+                                            data-i18n="Apply">Requisition Form</a></li>
+                                    <li class="pc-item"><a class="pc-link" href="../admins/course-teacher-add.html"
+                                            data-i18n="Add">Add</a></li>
+                                </ul>
+                            </li>
+                        </ul>
+                        <ul class="pc-submenu">
                             <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span
                                         data-i18n="Teacher">Items Catalogue</span> <span class="pc-arrow"><i
                                             data-feather="chevron-right"></i></span></a>
@@ -84,6 +106,7 @@
                                 </ul>
                             </li>
                         </ul>
+                    </li>
                     </li>
                 </ul>
             </div>
