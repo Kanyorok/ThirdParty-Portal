@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('t_Item_categories', function (Blueprint $table) {
+        Schema::create('t_ItemCategories', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique()->comment('Category name');
             $table->string('description')->nullable()->comment('Category description');
