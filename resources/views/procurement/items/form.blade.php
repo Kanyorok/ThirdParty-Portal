@@ -12,8 +12,8 @@
     <div class="mb-3">
         <label class="form-label">Type</label>
         <select name="Type" class="form-control" required>
-            <option value="goods" {{ old('Type', $item->Type ?? '') === 'goods' ? 'selected' : '' }}>Goods</option>
-            <option value="services" {{ old('Type', $item->Type ?? '') === 'services' ? 'selected' : '' }}>Services</option>
+            <option value="good" {{ old('Type', $item->Type ?? '') === 'good' ? 'selected' : '' }}>Good</option>
+            <option value="service" {{ old('Type', $item->Type ?? '') === 'service' ? 'selected' : '' }}>Service</option>
         </select>
     </div>
 
