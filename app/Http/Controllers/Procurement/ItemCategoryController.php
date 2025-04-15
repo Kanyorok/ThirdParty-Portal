@@ -27,8 +27,8 @@ class ItemCategoryController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-                            'Name'        => 'required|string|max:255',
-                            'Description' => 'nullable|string|max:1000',
+                            'name'        => 'required|string|max:255',
+                            'nescription' => 'nullable|string|max:1000',
                            ]);
 
 

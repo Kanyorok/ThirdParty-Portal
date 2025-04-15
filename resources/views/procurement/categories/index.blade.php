@@ -15,8 +15,8 @@
         <tbody>
             @forelse($categories as $category)
                 <tr>
-                    <td>{{ $category->name }}</td>
-                    <td>{{ $category->description }}</td>
+                    <td>{{ $category->Name }}</td>
+                    <td>{{ $category->Description }}</td>
                     <td>
                         <a href="{{ route('categories.edit', $category) }}" class="btn btn-sm btn-warning">Edit</a>
                         <form action="{{ route('categories.destroy', $category) }}" method="POST" style="display:inline-block">
