@@ -11,5 +11,4 @@ Route::namespace('Procurement')->group(function () {
     Route::resource('requisitionItem', 'RequisitionItemsController');
     Route::resource('items', 'ItemController');
     Route::resource('categories', 'ItemCategoryController');
-
 });
