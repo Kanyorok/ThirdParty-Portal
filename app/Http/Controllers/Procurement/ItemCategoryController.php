@@ -27,14 +27,14 @@ class ItemCategoryController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-                            'name'        => 'required|string|max:255',
-                            'description' => 'nullable|string|max:1000',
+                            'Name'        => 'required|string|max:255',
+                            'Description' => 'nullable|string|max:1000',
                            ]);
 
 
         ItemCategory::create([
-                              'name'        => $request->name,
-                              'description' => $request->description,
+                              'Name'        => $request->name,
+                              'Description' => $request->description,
                               'CreatedBy'   => auth()->user()->Id,
                               'ModifiedBy'  => auth()->user()->Id,
                              ]);

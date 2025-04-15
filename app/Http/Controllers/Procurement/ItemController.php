@@ -29,13 +29,13 @@ class ItemController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-                                         'name'            => 'required|string|max:255',
-                                         'type'            => 'required|in:good,service',
-                                         'description'     => 'nullable|string',
-                                         'category_id'     => 'nullable|exists:t_item_categories,id',
-                                         'unit_of_measure' => 'nullable|string|max:100',
-                                         'unit_price'      => 'nullable|numeric|min:0',
-                                         'service_scope'   => 'nullable|string',
+                                         'Name'            => 'required|string|max:255',
+                                         'Type'            => 'required|in:good,service',
+                                         'Description'     => 'nullable|string',
+                                         'CategoryId'     => 'nullable|exists:t_item_categories,id',
+                                         'UOM' => 'nullable|string|max:100',
+                                         'UnitPrice'      => 'nullable|numeric|min:0',
+                                         'ServiceScope'   => 'nullable|string',
                                         ]);
 
         $validated['CreatedBy'] = auth()->user()->Id;
@@ -61,13 +61,13 @@ class ItemController extends Controller
     public function update(Request $request, Item $item)
     {
         $validated = $request->validate([
-                                         'name'            => 'required|string|max:255',
-                                         'type'            => 'required|in:good,service',
-                                         'description'     => 'nullable|string',
-                                         'category_id'     => 'nullable|exists:t_Item_categories,id',
-                                         'unit_of_measure' => 'nullable|string|max:100',
-                                         'unit_price'      => 'nullable|numeric|min:0',
-                                         'service_scope'   => 'nullable|string',
+                                         'Name'            => 'required|string|max:255',
+                                         'Type'            => 'required|in:good,service',
+                                         'Description'     => 'nullable|string',
+                                         'Category_id'     => 'nullable|exists:t_Item_categories,id',
+                                         'UOM' => 'nullable|string|max:100',
+                                         'UnitPrice'      => 'nullable|numeric|min:0',
+                                         'ServiceScope'   => 'nullable|string',
                                         ]);
 
         $item->update($validated);
