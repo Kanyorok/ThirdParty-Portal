@@ -13,17 +13,17 @@
                 <th>Name</th>
                 <th>Type</th>
                 <th>Category</th>
-                <th>Actions</th>
                 <th>Unit Price</th>
-                
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
             @forelse($items as $item)
                 <tr>
-                    <td>{{ $item->name }}</td>
-                    <td>{{ ucfirst($item->type) }}</td>
-                    <td>{{ optional($item->category)->name }}</td>
+                    <td>{{ $item->Name }}</td>
+                    <td>{{ ucfirst($item->Type) }}</td>
+                    <td>{{ optional($item->category)->Name }}</td>
+                    <td>Ksh. {{ $item->UnitPrice }}</td>
                     <td>
                         <a href="{{ route('items.edit', $item) }}" class="btn btn-sm btn-warning">Edit</a>
                         <form action="{{ route('items.destroy', $item) }}" method="POST" style="display:inline-block">
