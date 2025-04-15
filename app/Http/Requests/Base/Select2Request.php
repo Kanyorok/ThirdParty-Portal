@@ -14,15 +14,19 @@ class Select2Request extends FormRequest
     public function rules(): array
     {
         return [
-            'q' => ['nullable', 'string', 'max:255']
-        ];
+                'q' => [
+                        'nullable',
+                        'string',
+                        'max:255',
+                       ],
+               ];
     }
 
-    public function getSearchString():?string
+    public function getSearchString(): ?string
     {
         $q = $this->validated('q');
         if (!is_string($q)) {
-           return null;
+            return null;
         }
 
         return str_replace(['*', '%'], ['', ''], $q);

@@ -9,7 +9,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BulkNotification extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -19,16 +20,24 @@ class BulkNotification extends Model
     protected $primaryKey = 'BulkNotificationID';
 
     protected $fillable = [
-        'Label', 'Module', 'Title', 'Content', 'CompleteOn', 'Extra', 'Total',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy'
-    ];
+                           'Label',
+                           'Module',
+                           'Title',
+                           'Content',
+                           'CompleteOn',
+                           'Extra',
+                           'Total',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 
 
     protected $casts = [
-        'CompleteOn' => 'datetime',
-        'Total' => 'integer',
-        'Extra' => 'array'
-    ];
+                        'CompleteOn' => 'datetime',
+                        'Total'      => 'integer',
+                        'Extra'      => 'array',
+                       ];
 
     public function sms(): HasMany
     {

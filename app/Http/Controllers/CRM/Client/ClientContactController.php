@@ -34,7 +34,7 @@ class ClientContactController extends Controller
     public function create(Client $client): View
     {
         return view('crm.contacts.create')
-            ->with('email','')
+            ->with('email', '')
             ->with('route', route('client-contacts.store', $client->ClientID));
     }
 
@@ -44,26 +44,25 @@ class ClientContactController extends Controller
     public function store(ContactRequest $request, Client $client): JsonResponse
     {
         $emailConversation = null;
-        if($request->has('conversation')){
-            $emailConversation = EmailConversation::query()->where('Id',$request->conversation)->first();
+        if ($request->has('conversation')) {
+            $emailConversation = EmailConversation::query()->where('Id', $request->conversation)->first();
         }
 
         try {
             $this->save($client->contacts(), $request->savable());
 
-            if ($emailConversation instanceof  EmailConversation ){
+            if ($emailConversation instanceof  EmailConversation) {
                 $emailConversation->update([
-                    'Party' => Client::getPrimaryKey(),
-                    'PartyID' => $client->ClientID,
-                ]);
+                                            'Party'   => Client::getPrimaryKey(),
+                                            'PartyID' => $client->ClientID,
+                                           ]);
 
                 $emailConversation->emails()->update([
-                    'Party' => Client::getPrimaryKey(),
-                    'PartyID' => $client->ClientID,
-                ]);
+                                                      'Party'   => Client::getPrimaryKey(),
+                                                      'PartyID' => $client->ClientID,
+                                                     ]);
             }
-
-        } catch (\Throwable|Exception $e) {
+        } catch (\Throwable | Exception $e) {
             Log::error('Error adding  client Contact. e: ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }

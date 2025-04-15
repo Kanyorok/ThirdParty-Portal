@@ -57,7 +57,7 @@ class CheckEmailCommand extends Command
                 null,
                 "US-ASCII"//'UTF-8',
             );//SE_UID, "US-ASCII")
-        } catch (ConnectionException|InvalidParameterException|Exception $e) {
+        } catch (ConnectionException | InvalidParameterException | Exception $e) {
             SystemHelper::notifyAdmin('Issue with fetch mail: ' . $e->getMessage());
             return;
         }
@@ -98,21 +98,21 @@ class CheckEmailCommand extends Command
 
                     $crmEmail = new CrmEmail();
                     $crmEmail->fill([
-                        'MailID' => trim($email->messageId ?? '', '<>'),
-                        'Type' => EmailTypeEnum::Incoming->value,
-                        'Status' => EmailStatusEnum::Unread->value,
-                        'Priority' => $this->priority($email->priority, $email->importance)->value,
-                        'From' => $email->fromAddress,
-                        'To' => $this->_flipAddresses($email->to),
-                        'CC' => $this->_flipAddresses($email->cc),
-                        'ReferenceId' => $ref,
-                        'Subject' => $email->subject,
-                        'Body' => (empty($email->textHtml)) ? $email->textPlain : $this->_parserHtml($email->textHtml),
-                        'Text' => Str::of($email->textPlain)->trim()->value(),
-                        'CreatedBy' => $actor->Id,
-                        'ModifiedBy' => $actor->Id,
-                        'Dated' => $dated,
-                    ])->save();
+                                     'MailID'      => trim($email->messageId ?? '', '<>'),
+                                     'Type'        => EmailTypeEnum::Incoming->value,
+                                     'Status'      => EmailStatusEnum::Unread->value,
+                                     'Priority'    => $this->priority($email->priority, $email->importance)->value,
+                                     'From'        => $email->fromAddress,
+                                     'To'          => $this->_flipAddresses($email->to),
+                                     'CC'          => $this->_flipAddresses($email->cc),
+                                     'ReferenceId' => $ref,
+                                     'Subject'     => $email->subject,
+                                     'Body'        => (empty($email->textHtml)) ? $email->textPlain : $this->_parserHtml($email->textHtml),
+                                     'Text'        => Str::of($email->textPlain)->trim()->value(),
+                                     'CreatedBy'   => $actor->Id,
+                                     'ModifiedBy'  => $actor->Id,
+                                     'Dated'       => $dated,
+                                    ])->save();
 
                     $service = (new CRMEmailService($crmEmail->refresh()))->autoAttachIncoming($dated);
                     if ($email->hasAttachments()) {
@@ -134,10 +134,8 @@ class CheckEmailCommand extends Command
                               }*/
                         }
                     }
-
-
                 });
-            } catch (Exception|\Throwable $e) {
+            } catch (Exception | \Throwable $e) {
                 SystemHelper::notifyAdmin('handle incoming email failed: ' . $e->getMessage());
                 continue;
             }

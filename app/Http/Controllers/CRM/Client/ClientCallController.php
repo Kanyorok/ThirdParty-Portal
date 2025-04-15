@@ -48,10 +48,10 @@ class ClientCallController extends Controller
 
         try {
             $call = DB::transaction(static function () use ($client, $current_start, $actor, $schedule) {
-                return CallService::createClient($client, CallStatusEnum::SuccessOngoing,CallTypeEnum::Incoming, $current_start, $actor, $schedule)->call;
+                return CallService::createClient($client, CallStatusEnum::SuccessOngoing, CallTypeEnum::Incoming, $current_start, $actor, $schedule)->call;
             });
             //$call = $this->startCall($client->calls(), $current_start, $actor, $schedule);
-        } catch (\Throwable|Exception $e) {
+        } catch (\Throwable | Exception $e) {
             Log::error('Error starting call ' . $e->getMessage());
             return $this->errored('unexpected error start call, try again latter');
         }
@@ -74,22 +74,27 @@ class ClientCallController extends Controller
     public function update(Request $request, Client $client, int $callID): JsonResponse
     {
         $request->validate([
-            'call_discussion' => ['required', 'min:5', 'max:5000'],
-            'private_notes' => ['nullable', 'max:5000'],
-        ]);
+                            'call_discussion' => [
+                                                  'required',
+                                                  'min:5',
+                                                  'max:5000',
+                                                 ],
+                            'private_notes'   => [
+                                                  'nullable',
+                                                  'max:5000',
+                                                 ],
+                           ]);
 
         $call = $client->calls()->where('t_Calls.CallID', $callID)->first();
         if (!$call instanceof Call) {
-            throw ValidationException::withMessages([
-                'call_discussion' => 'call selected could have been deleted.'
-            ]);
+            throw ValidationException::withMessages(['call_discussion' => 'call selected could have been deleted.']);
         }
 
         $actor = $request->user();
 
         try {
             $this->endCall($call, Carbon::now()->subSeconds(3), $actor, $request->call_discussion, $request->private_notes);
-        } catch (\Throwable|Exception $e) {
+        } catch (\Throwable | Exception $e) {
             Log::error('Error call ' . $e->getMessage());
             return $this->errored('unexpected error saving, try again latter');
         }

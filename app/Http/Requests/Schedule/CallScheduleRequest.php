@@ -13,7 +13,6 @@ use Illuminate\Validation\ValidationException;
 
 class CallScheduleRequest extends FormRequest
 {
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -22,11 +21,19 @@ class CallScheduleRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'call_start' => 'required|date_format:"Y-m-d H:i"|before:call_end',
-            'call_end' => 'required|date_format:"Y-m-d H:i"|after:call_start',
-            'call_notes' => ['required', 'min:1', 'max:250', 'string'],
-            'call_user' => ['required', 'string'],
-        ];
+                'call_start' => 'required|date_format:"Y-m-d H:i"|before:call_end',
+                'call_end'   => 'required|date_format:"Y-m-d H:i"|after:call_start',
+                'call_notes' => [
+                                 'required',
+                                 'min:1',
+                                 'max:250',
+                                 'string',
+                                ],
+                'call_user'  => [
+                                 'required',
+                                 'string',
+                                ],
+               ];
     }
 
     /**
@@ -36,9 +43,7 @@ class CallScheduleRequest extends FormRequest
     {
         $user = User::query()->where('t_Users.UserID', Str::upper($this->validated('call_user')))->where('t_Users.UserID', '!=', SystemHelper::ID)->first(['Id', 'UserID']);
         if (!$user instanceof User) {
-            throw ValidationException::withMessages([
-                'call_user' => 'invalid user',
-            ]);
+            throw ValidationException::withMessages(['call_user' => 'invalid user']);
         }
 
         if ($user->Id === $this->user()->Id) {
@@ -46,9 +51,7 @@ class CallScheduleRequest extends FormRequest
         }
 
         if (!$this->user()->can(PermissionEnum::ScheduleWrite->value)) {
-            throw ValidationException::withMessages([
-                'call_user' => 'You cannot assign to another person',
-            ]);
+            throw ValidationException::withMessages(['call_user' => 'You cannot assign to another person']);
         }
         return $user;
     }
@@ -64,29 +67,21 @@ class CallScheduleRequest extends FormRequest
     {
         $end = Carbon::createFromFormat('Y-m-d H:i', $this->input('call_end'));
         if (!$end instanceof Carbon) {
-            throw ValidationException::withMessages([
-                'call_start' => 'invalid date format',
-            ]);
+            throw ValidationException::withMessages(['call_start' => 'invalid date format']);
         }
 
         if ($end->lte($start)) {
-            throw ValidationException::withMessages([
-                'call_end' => 'should be after start.',
-            ]);
+            throw ValidationException::withMessages(['call_end' => 'should be after start.']);
         }
 
         $diffInMinutes = $start->diffInMinutes($end, true);
 
         if ($diffInMinutes < 0) {
-            throw ValidationException::withMessages([
-                'call_end' => 'duration should be less least 1 minute.',
-            ]);
+            throw ValidationException::withMessages(['call_end' => 'duration should be less least 1 minute.']);
         }
 
         if ($diffInMinutes > 180) {//8 hours
-            throw ValidationException::withMessages([
-                'call_end' => 'duration can only be a maximum of 3 hours.',
-            ]);
+            throw ValidationException::withMessages(['call_end' => 'duration can only be a maximum of 3 hours.']);
         }
 
         return $end;
@@ -101,8 +96,6 @@ class CallScheduleRequest extends FormRequest
         if ($start instanceof Carbon) {
             return $start;
         }
-        throw ValidationException::withMessages([
-            'call_start' => 'invalid date format',
-        ]);
+        throw ValidationException::withMessages(['call_start' => 'invalid date format']);
     }
 }

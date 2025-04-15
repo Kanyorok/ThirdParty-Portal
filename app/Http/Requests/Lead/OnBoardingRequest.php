@@ -11,7 +11,6 @@ use Illuminate\Validation\ValidationException;
 
 class OnBoardingRequest extends FormRequest
 {
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -20,15 +19,41 @@ class OnBoardingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'MemberClass' => ['required', 'string'],
-            'Branch' => ['required', 'string'],
-            'GovernmentID' => ['required', 'string'],
-            'TaxNo' => ['required', 'string'],
-            'DoB' => ['required', 'string', 'date', 'date_format:Y-m-d'],
-            'County' => ['required', 'string'],
-            'Address1' => ['required', 'string'],
-            'Address2' => ['required', 'string'],
-        ];
+                'MemberClass'  => [
+                                   'required',
+                                   'string',
+                                  ],
+                'Branch'       => [
+                                   'required',
+                                   'string',
+                                  ],
+                'GovernmentID' => [
+                                   'required',
+                                   'string',
+                                  ],
+                'TaxNo'        => [
+                                   'required',
+                                   'string',
+                                  ],
+                'DoB'          => [
+                                   'required',
+                                   'string',
+                                   'date',
+                                   'date_format:Y-m-d',
+                                  ],
+                'County'       => [
+                                   'required',
+                                   'string',
+                                  ],
+                'Address1'     => [
+                                   'required',
+                                   'string',
+                                  ],
+                'Address2'     => [
+                                   'required',
+                                   'string',
+                                  ],
+               ];
     }
 
     /**
@@ -39,9 +64,7 @@ class OnBoardingRequest extends FormRequest
         /*if (DB::connection('brcbs')->table('t_Country')->where('CountryID', $this->validated('County'))->exists()) {
             return $this->validated('County');
         }*/
-        throw ValidationException::withMessages([
-            'County' => 'county code has to be ISO 3166-1 alpha-2'
-        ]);
+        throw ValidationException::withMessages(['County' => 'county code has to be ISO 3166-1 alpha-2']);
     }
 
     /**
@@ -52,9 +75,7 @@ class OnBoardingRequest extends FormRequest
         if (SystemCodeDetail::query()->where('ID', 'MemberClassID')->where('SubCodeID', $this->validated('MemberClass'))->exists()) {
             return $this->validated('MemberClass');
         }
-        throw ValidationException::withMessages([
-            'MemberClassID' => 'Member Class may be invalid.',
-        ]);
+        throw ValidationException::withMessages(['MemberClassID' => 'Member Class may be invalid.']);
     }
 
     /**
@@ -67,9 +88,7 @@ class OnBoardingRequest extends FormRequest
             return $branch;
         }
 
-        throw ValidationException::withMessages([
-            'Branch' => 'Branch may be invalid',
-        ]);
+        throw ValidationException::withMessages(['Branch' => 'Branch may be invalid']);
     }
 
     /**
@@ -81,8 +100,6 @@ class OnBoardingRequest extends FormRequest
             return Carbon::createFromFormat('Y-m-d', $this->validated('DoB'));
         } catch (\Exception) {
         }
-        throw ValidationException::withMessages([
-            'DOB' => 'Invalid Date format eg 2000-01-31',
-        ]);
+        throw ValidationException::withMessages(['DOB' => 'Invalid Date format eg 2000-01-31']);
     }
 }

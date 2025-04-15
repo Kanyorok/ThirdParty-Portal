@@ -20,8 +20,8 @@ class LoanAssignmentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'Assignee' => ['required'],
-        ];
+                'Assignee' => ['required'],
+               ];
     }
 
     public function getAssignee(): User
@@ -29,9 +29,7 @@ class LoanAssignmentRequest extends FormRequest
         $user = User::query()->where('t_Users.UserID', Str::upper($this->validated('Assignee')))
             ->where('t_Users.UserID', '!=', SystemHelper::ID)->first();
         if (!$user instanceof User) {
-            throw ValidationException::withMessages([
-                'Assignee' => 'invalid user selected',
-            ]);
+            throw ValidationException::withMessages(['Assignee' => 'invalid user selected']);
         }
 
         if ($user->Id === $this->user()->Id) {
@@ -40,8 +38,8 @@ class LoanAssignmentRequest extends FormRequest
 
         if (!$user->can(PermissionEnum::DebtCollectionAssignment)) {
             throw ValidationException::withMessages([
-                'Assignee' => $user->Name . ' does not have permission to be assigned to a loan.',
-            ]);
+                                                     'Assignee' => $user->Name . ' does not have permission to be assigned to a loan.',
+                                                    ]);
         }
 
         return $user;

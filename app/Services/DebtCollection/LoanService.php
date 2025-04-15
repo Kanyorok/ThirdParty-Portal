@@ -30,9 +30,11 @@ class LoanService
         }
 
         $user = User::query()->lock('WITH(NOLOCK)')->hasPermission(PermissionEnum::DebtCollectionAssignment->value)
-            ->withCount(['loansAssigned' => function (Builder $builder) {
-                $builder->whereNull('t_LoanAssignments.EndOn');
-            }])->orderBy("loans_assigned_count", 'asc')->first();
+            ->withCount([
+                         'loansAssigned' => function (Builder $builder) {
+                                    $builder->whereNull('t_LoanAssignments.EndOn');
+                         },
+                        ])->orderBy("loans_assigned_count", 'asc')->first();
 
         return ($user instanceof User) ? $user : null;
     }
@@ -47,26 +49,28 @@ class LoanService
         }
 
         $this->loan->assignment()->whereNull('EndOn')->update([
-            'EndOn' => Carbon::now(),
-            'ModifiedBy' => $actor->Id,
-            'Notes' => 'REASSIGNED'
-        ]);
+                                                               'EndOn'      => Carbon::now(),
+                                                               'ModifiedBy' => $actor->Id,
+                                                               'Notes'      => 'REASSIGNED',
+                                                              ]);
 
         $this->loan->assignment()->create([
-            'StartOn' => Carbon::now(),
-            'UserId' => $assignee->Id,
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
-        ]);
+                                           'StartOn'    => Carbon::now(),
+                                           'UserId'     => $assignee->Id,
+                                           'CreatedBy'  => $actor->Id,
+                                           'ModifiedBy' => $actor->Id,
+                                          ]);
 
         if ($notify) {
-            (new UserService($assignee))->sendEmail('Loan Assignment Notification',
+            (new UserService($assignee))->sendEmail(
+                'Loan Assignment Notification',
                 body: '<p>Dear ' . $assignee->Name . ',</p>
                 <p>You have been assigned a new loan account with the following details:</p>
                 <p><strong>Loan :</strong> ' . $this->loan->AccountID . '</p>
                 <p>You can view the <a href="' . route('debt-collection.show', [$this->loan->AccountID]) . '">loan details here</a>.</p>
                 <p>Please log in to your account and take the necessary actions.</p>
-                <p>This is an automated message. Please do not reply to this email.</p>');
+                <p>This is an automated message. Please do not reply to this email.</p>'
+            );
         }
 
         return $this;

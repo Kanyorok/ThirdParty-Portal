@@ -19,14 +19,41 @@ class CallLogRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'phonenumber' => ['required', 'string', 'max:255'],
-            'AgentFirstName' => ['required', 'string', 'max:255'],
-            'AgentExtension' => ['required', 'integer'],
-            'ContactName' => ['nullable', 'string', 'max:255'],
-            'StartTime' => ['required', 'string', 'max:255'],
-            'EndTime' => ['required', 'string', 'max:255'],
-            'CallType' => ['required', 'string', 'max:20'],
-        ];
+                'phonenumber'    => [
+                                     'required',
+                                     'string',
+                                     'max:255',
+                                    ],
+                'AgentFirstName' => [
+                                     'required',
+                                     'string',
+                                     'max:255',
+                                    ],
+                'AgentExtension' => [
+                                     'required',
+                                     'integer',
+                                    ],
+                'ContactName'    => [
+                                     'nullable',
+                                     'string',
+                                     'max:255',
+                                    ],
+                'StartTime'      => [
+                                     'required',
+                                     'string',
+                                     'max:255',
+                                    ],
+                'EndTime'        => [
+                                     'required',
+                                     'string',
+                                     'max:255',
+                                    ],
+                'CallType'       => [
+                                     'required',
+                                     'string',
+                                     'max:20',
+                                    ],
+               ];
     }
 
     public function getStart(): Carbon

@@ -81,9 +81,16 @@ class GlobalPlannerController extends Controller
     {
         $this->authorize('marketingManager', User::class);
         $data = $request->validate([
-            'Name' => ['required', 'string', 'max:200'],
-            'Notes' => ['nullable', 'string'],
-        ]);
+                                    'Name'  => [
+                                                'required',
+                                                'string',
+                                                'max:200',
+                                               ],
+                                    'Notes' => [
+                                                'nullable',
+                                                'string',
+                                               ],
+                                   ]);
 
         $planner = MarketingPlanner::query()->where('PlannerID', $planner_id)->where('OwnerId', $request->user()->Id)
             ->where('Type', PlannerTypeEnum::MasterPlanner->value)->where('Status', PlannerStatus::Draft->value)->first();

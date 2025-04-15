@@ -10,7 +10,9 @@ use Illuminate\Queue\SerializesModels;
 
 class ReopenTicketEvent
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable;
+    use InteractsWithSockets;
+    use SerializesModels;
 
     /**
      * Create a new event instance.
@@ -19,5 +21,4 @@ class ReopenTicketEvent
     {
         //
     }
-
 }

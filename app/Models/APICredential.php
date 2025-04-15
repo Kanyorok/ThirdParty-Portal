@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class APICredential extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -18,20 +19,21 @@ class APICredential extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'Integration', 'Configuration',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy'
-    ];
+                           'Integration',
+                           'Configuration',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 
     public static function getPrimaryKey(): string
     {
         return 'APICredential';
     }
 
-    protected $hidden = [
-        'Configuration'
-    ];
+    protected $hidden = ['Configuration'];
 
     protected $casts = [
-        'Configuration' => 'object'//'array'
-    ];
+                        'Configuration' => 'object',//'array'
+                       ];
 }

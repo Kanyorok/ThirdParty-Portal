@@ -19,7 +19,6 @@ use Illuminate\Support\Collection;
 
 class LoanQueryRequest extends FormRequest
 {
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -29,9 +28,17 @@ class LoanQueryRequest extends FormRequest
     {
         if ($this->method() === 'POST') {
             return [
-                'Label' => ['required', 'string', 'max:255'],
-                'Content' => ['required', 'string', 'max:2000'],
-            ];
+                    'Label'   => [
+                                  'required',
+                                  'string',
+                                  'max:255',
+                                 ],
+                    'Content' => [
+                                  'required',
+                                  'string',
+                                  'max:2000',
+                                 ],
+                   ];
         }
 
         return [];
@@ -39,7 +46,7 @@ class LoanQueryRequest extends FormRequest
 
     public function getDated(): ?Carbon
     {
-        if (!$this->has('dated') || !StringHelper::isInteger($this->dated) || !((int)$this->dated > 0)) {
+        if (!$this->has('dated') || !StringHelper::isInteger($this->dated) || !((int) $this->dated > 0)) {
             return null;
         }
         try {
@@ -66,9 +73,9 @@ class LoanQueryRequest extends FormRequest
                 $query->where('ArrearsDays', $filters['ArrearsDaysMin']);
             } else {
                 $query->whereBetween('ArrearsDays', [
-                    ($filters['ArrearsDaysMin'] < $filters['ArrearsDaysMax']) ? $filters['ArrearsDaysMin'] : $filters['ArrearsDaysMax'],
-                    ($filters['ArrearsDaysMin'] > $filters['ArrearsDaysMax']) ? $filters['ArrearsDaysMin'] : $filters['ArrearsDaysMax']
-                ]);
+                                                     ($filters['ArrearsDaysMin'] < $filters['ArrearsDaysMax']) ? $filters['ArrearsDaysMin'] : $filters['ArrearsDaysMax'],
+                                                     ($filters['ArrearsDaysMin'] > $filters['ArrearsDaysMax']) ? $filters['ArrearsDaysMin'] : $filters['ArrearsDaysMax'],
+                                                    ]);
             }
         } elseif (array_key_exists('ArrearsDaysMin', $filters) && is_numeric($filters['ArrearsDaysMin'])) {
             $query->where('ArrearsDays', '>=', $filters['ArrearsDaysMin']);
@@ -116,9 +123,9 @@ class LoanQueryRequest extends FormRequest
                 $query->where('ArrearsAmount', $filters['ArrearsAmountMin']);
             } else {
                 $query->whereBetween('ArrearsAmount', [
-                    ($filters['ArrearsAmountMin'] < $filters['ArrearsAmountMax']) ? $filters['ArrearsAmountMin'] : $filters['ArrearsAmountMax'],
-                    ($filters['ArrearsAmountMin'] > $filters['ArrearsAmountMax']) ? $filters['ArrearsAmountMin'] : $filters['ArrearsAmountMax']
-                ]);
+                                                       ($filters['ArrearsAmountMin'] < $filters['ArrearsAmountMax']) ? $filters['ArrearsAmountMin'] : $filters['ArrearsAmountMax'],
+                                                       ($filters['ArrearsAmountMin'] > $filters['ArrearsAmountMax']) ? $filters['ArrearsAmountMin'] : $filters['ArrearsAmountMax'],
+                                                      ]);
             }
         } elseif (array_key_exists('ArrearsAmountMin', $filters) && is_numeric($filters['ArrearsAmountMin'])) {
             $query->where('ArrearsAmount', '>=', $filters['ArrearsAmountMin']);
@@ -133,42 +140,41 @@ class LoanQueryRequest extends FormRequest
             $query->whereIn('OurBranchID', $filters['Branch']);
         }
 
-         if (array_key_exists('Categorization', $filters)) {
-             if (array_key_exists('Product', $filters) && is_array($filters['Product']) && ((count($filters['Product']) > 0))) {
+        if (array_key_exists('Categorization', $filters)) {
+            if (array_key_exists('Product', $filters) && is_array($filters['Product']) && ((count($filters['Product']) > 0))) {
                 $products  =  $filters['Product'];
-                 switch ($filters['Categorization']) {
-                     case LoanCategorizationEnum::BOSA->name:
-                         $query->whereIn('ProductID', ProductParameter::query()->whereIn('ProductID',$products)->where('SysParamID',LoanCategorizationEnum::BOSA->value)
-                             ->select('ProductID')->pluck('ProductID')->toArray());
-                         break;
-                     case LoanCategorizationEnum::FOSA->name:
-                         $query->whereIn('ProductID', ProductParameter::query()->whereIn('ProductID',$products)->where('SysParamID',LoanCategorizationEnum::FOSA->value)
-                             ->select('ProductID')->pluck('ProductID')->toArray());
-                         break;
-                     case LoanCategorizationEnum::MicroLoans->name:
-                         $query->whereNotIn('ProductID', ProductParameter::query()->whereIn('ProductID',$products)
-                             ->whereIn('SysParamID',[LoanCategorizationEnum::BOSA->value,LoanCategorizationEnum::FOSA->value])->select('ProductID')->pluck('ProductID')->toArray());
-                         break;
-                 }
-             }else{
-                 switch ($filters['Categorization']) {
-                     case LoanCategorizationEnum::BOSA->name:
-                         $query->whereIn('ProductID', ProductParameter::query()->where('SysParamID',LoanCategorizationEnum::BOSA->value)->select('ProductID')->pluck('ProductID')->toArray());
-                         break;
-                     case LoanCategorizationEnum::FOSA->name:
-                         $query->whereIn('ProductID', ProductParameter::query()->where('SysParamID',LoanCategorizationEnum::FOSA->value)->select('ProductID')->pluck('ProductID')->toArray());
-                         break;
-                     case LoanCategorizationEnum::MicroLoans->name:
-                         $query->whereNotIn('ProductID', ProductParameter::query()->whereIn('SysParamID',[LoanCategorizationEnum::BOSA->value,LoanCategorizationEnum::FOSA->value])->select('ProductID')->pluck('ProductID')->toArray());
-                         break;
-                 }
-             }
-        }else  if (array_key_exists('Product', $filters) && is_array($filters['Product']) && ((count($filters['Product']) > 0))) {
-             $query->whereIn('ProductID', $filters['Product']);
-         }
+                switch ($filters['Categorization']) {
+                    case LoanCategorizationEnum::BOSA->name:
+                        $query->whereIn('ProductID', ProductParameter::query()->whereIn('ProductID', $products)->where('SysParamID', LoanCategorizationEnum::BOSA->value)
+                            ->select('ProductID')->pluck('ProductID')->toArray());
+                        break;
+                    case LoanCategorizationEnum::FOSA->name:
+                        $query->whereIn('ProductID', ProductParameter::query()->whereIn('ProductID', $products)->where('SysParamID', LoanCategorizationEnum::FOSA->value)
+                            ->select('ProductID')->pluck('ProductID')->toArray());
+                        break;
+                    case LoanCategorizationEnum::MicroLoans->name:
+                        $query->whereNotIn('ProductID', ProductParameter::query()->whereIn('ProductID', $products)
+                            ->whereIn('SysParamID', [LoanCategorizationEnum::BOSA->value, LoanCategorizationEnum::FOSA->value])->select('ProductID')->pluck('ProductID')->toArray());
+                        break;
+                }
+            } else {
+                switch ($filters['Categorization']) {
+                    case LoanCategorizationEnum::BOSA->name:
+                        $query->whereIn('ProductID', ProductParameter::query()->where('SysParamID', LoanCategorizationEnum::BOSA->value)->select('ProductID')->pluck('ProductID')->toArray());
+                        break;
+                    case LoanCategorizationEnum::FOSA->name:
+                        $query->whereIn('ProductID', ProductParameter::query()->where('SysParamID', LoanCategorizationEnum::FOSA->value)->select('ProductID')->pluck('ProductID')->toArray());
+                        break;
+                    case LoanCategorizationEnum::MicroLoans->name:
+                        $query->whereNotIn('ProductID', ProductParameter::query()->whereIn('SysParamID', [LoanCategorizationEnum::BOSA->value, LoanCategorizationEnum::FOSA->value])->select('ProductID')->pluck('ProductID')->toArray());
+                        break;
+                }
+            }
+        } elseif (array_key_exists('Product', $filters) && is_array($filters['Product']) && ((count($filters['Product']) > 0))) {
+            $query->whereIn('ProductID', $filters['Product']);
+        }
 
         return $query;
-
     }
 
     public static function setFilters(array $values): array
@@ -180,25 +186,19 @@ class LoanQueryRequest extends FormRequest
         if (array_key_exists('Status', $values)) {
             $states = UserCodeDetail::query()->where('ID', 'LoanSubClassID')->whereIn('SubCodeID', explode(',', $values['Status']))->select('Description')->pluck('Description')->toArray();
             if (count($states) > 0) {
-                $filters = $filters->merge([
-                    'Status' => $states
-                ]);
+                $filters = $filters->merge(['Status' => $states]);
             }
         }
         if (array_key_exists('Branch', $values)) {
             $branches = Branch::query()->whereIn('OurBranchID', explode(',', $values['Branch']))->select('OurBranchID')->pluck('OurBranchID')->toArray();
             if (count($branches) > 0) {
-                $filters = $filters->merge([
-                    'Branch' => $branches
-                ]);
+                $filters = $filters->merge(['Branch' => $branches]);
             }
         }
         if (array_key_exists('Product', $values)) {
             $products = Product::where('ProductTypeID', 'LN')->whereIn('ProductID', explode(',', $values['Product']))->select('ProductID')->pluck('ProductID')->toArray();
             if (count($products) > 0) {
-                $filters = $filters->merge([
-                    'Product' => $products
-                ]);
+                $filters = $filters->merge(['Product' => $products]);
             }
         }
 
@@ -207,11 +207,11 @@ class LoanQueryRequest extends FormRequest
                 $loanCategorization = LoanCategorizationEnum::valueFromName($values['Categorization']);
                 if ($loanCategorization instanceof LoanCategorizationEnum) {
                     $filters = $filters->merge([
-                        'Categorization' => $loanCategorization->name,
-                    ]);
+                                                'Categorization' => $loanCategorization->name,
+                                               ]);
                 }
-
-            } catch (ErroredException $e) {}
+            } catch (ErroredException $e) {
+            }
         }
 
         return $filters->toArray();
@@ -221,8 +221,8 @@ class LoanQueryRequest extends FormRequest
     {
         if (array_key_exists($name, $values)) {
             return $filters->merge([
-                $name => $values[$name]
-            ]);
+                                    $name => $values[$name],
+                                   ]);
         }
         return $filters;
     }
@@ -230,7 +230,7 @@ class LoanQueryRequest extends FormRequest
     public function getValues(): array
     {
         $values = collect();
-        foreach (['ArrearsDaysMin', 'ArrearsDaysMax', 'Contacted', 'MaturityMin', 'MaturityMax', 'ArrearsAmountMin', 'ArrearsAmountMax', 'Status', 'Branch', 'Product','Categorization'] as $filter) {
+        foreach (['ArrearsDaysMin', 'ArrearsDaysMax', 'Contacted', 'MaturityMin', 'MaturityMax', 'ArrearsAmountMin', 'ArrearsAmountMax', 'Status', 'Branch', 'Product', 'Categorization'] as $filter) {
             if (!is_null($this->$filter)) {
                 $values->put($filter, $this->$filter);
             }

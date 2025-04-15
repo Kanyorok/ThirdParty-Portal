@@ -34,7 +34,5 @@ Route::prefix('v1')->group(function () {
         Route::post('calls/missed', [\App\Http\Controllers\API\PBX\CallController::class, 'missed']);
         Route::post('calls/create', [\App\Http\Controllers\API\PBX\CallController::class, 'outgoing']);
         Route::post('calls/non-answer', [\App\Http\Controllers\API\PBX\CallController::class, 'noAnswer']);
-
     });
 });
-

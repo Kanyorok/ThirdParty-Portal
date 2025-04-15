@@ -39,8 +39,6 @@ class LoanListController extends Controller
         }
 
         return view('crm.debt-collection.lists.index');
-
-
     }
 
     /**
@@ -80,7 +78,6 @@ class LoanListController extends Controller
         return view('crm.debt-collection.lists.show', compact('list', 'dated'))
             ->with('isProcessing', $service->isProcessing())
             ->with('contacts_count', $service->contacts());
-
     }
 
     /**

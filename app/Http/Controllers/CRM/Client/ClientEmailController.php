@@ -14,7 +14,6 @@ use Illuminate\Validation\ValidationException;
 
 class ClientEmailController extends Controller
 {
-
     /**
      * Sent and Received Emails
      * @throws Exception
@@ -39,7 +38,7 @@ class ClientEmailController extends Controller
                 $service->send();
                 return $activity;
             });
-        } catch (Exception|\Throwable $e) {
+        } catch (Exception | \Throwable $e) {
             Log::error('Error sending email to client ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }

@@ -55,7 +55,7 @@ class LoanTaskController extends Controller
 
         try {
             $activity = $this->save($product->client, $notes, $dated, $assignee, $actor, DebtProduct::getPrimaryKey(), $product_id);
-        } catch (\Throwable|Exception $e) {
+        } catch (\Throwable | Exception $e) {
             Log::error('Error adding  Loan Task. e: ' . $e->getMessage());
             return $this->errored('unexpected error, try again latter');
         }

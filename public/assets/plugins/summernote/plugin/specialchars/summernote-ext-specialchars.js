@@ -156,7 +156,8 @@
                     var ARROW_KEYS = [KEY.UP, KEY.DOWN, KEY.LEFT, KEY.RIGHT];
                     var ENTER_KEY = KEY.ENTER;
 
-                    function addActiveClass($target) {
+                    function addActiveClass($target)
+                    {
                         if (!$target) {
                             return;
                         }
@@ -164,13 +165,15 @@
                         $selectedNode = $target;
                     }
 
-                    function removeActiveClass($target) {
+                    function removeActiveClass($target)
+                    {
                         $target.find('button').removeClass('active');
                         $selectedNode = null;
                     }
 
                     // find next node
-                    function findNextNode(row, column) {
+                    function findNextNode(row, column)
+                    {
                         var findNode = null;
                         $.each($specialCharNode, function (idx, $node) {
                             var findRow = Math.ceil((idx + 1) / COLUMN_LENGTH);
@@ -183,7 +186,8 @@
                         return $(findNode);
                     }
 
-                    function arrowKeyHandler(keyCode) {
+                    function arrowKeyHandler(keyCode)
+                    {
                         // left, right, up, down key
                         var $nextNode;
                         var lastRowColumnLength = $specialCharNode.length % totalColumn;
@@ -234,7 +238,8 @@
                         }
                     }
 
-                    function enterKeyHandler() {
+                    function enterKeyHandler()
+                    {
                         if (!$selectedNode) {
                             return;
                         }
@@ -243,7 +248,8 @@
                         $specialCharDialog.modal('hide');
                     }
 
-                    function keyDownEventHandler(event) {
+                    function keyDownEventHandler(event)
+                    {
                         event.preventDefault();
                         var keyCode = event.keyCode;
                         if (keyCode === undefined || keyCode === null) {

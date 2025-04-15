@@ -33,8 +33,11 @@ class TicketController extends Controller
             return $this->errored('client may be invalid');
         }
 
-        return $this->br_response('000',
-            'success', ['data' => new TicketCollection($client->tickets()->paginate(20))]);
+        return $this->br_response(
+            '000',
+            'success',
+            ['data' => new TicketCollection($client->tickets()->paginate(20))]
+        );
     }
 
     /**
@@ -49,11 +52,22 @@ class TicketController extends Controller
 
         try {
             $data = $request->validate([
-                'ticket_id' => ['required', 'string', 'max:100'],
-                'ticket_title' => ['required', 'string', 'max:255'],
-                'ticket_description' => ['required', 'string'],
-                'ticket_category' => ['required'],
-            ]);
+                                        'ticket_id'          => [
+                                                                 'required',
+                                                                 'string',
+                                                                 'max:100',
+                                                                ],
+                                        'ticket_title'       => [
+                                                                 'required',
+                                                                 'string',
+                                                                 'max:255',
+                                                                ],
+                                        'ticket_description' => [
+                                                                 'required',
+                                                                 'string',
+                                                                ],
+                                        'ticket_category'    => ['required'],
+                                       ]);
         } catch (ValidationException $e) {
             return $this->br_response(422, $e->getMessage(), $e->errors());
         }
@@ -73,7 +87,10 @@ class TicketController extends Controller
             return $this->br_response(400, 'unexpected error, try again later');
         }
 
-        return $this->br_response('000',
-            'ticket created', ['data' => new TicketResource($service->ticket)]);
+        return $this->br_response(
+            '000',
+            'ticket created',
+            ['data' => new TicketResource($service->ticket)]
+        );
     }
 }

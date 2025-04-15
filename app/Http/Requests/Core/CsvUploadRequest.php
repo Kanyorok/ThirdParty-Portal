@@ -19,8 +19,11 @@ class CsvUploadRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'file' => ['required', Rule::file()->extensions(ExtensionsEnum::Csv->value)->max('15mb')]
-        ];
+                'file' => [
+                           'required',
+                           Rule::file()->extensions(ExtensionsEnum::Csv->value)->max('15mb'),
+                          ],
+               ];
     }
 
     public function getFile(): UploadedFile
@@ -29,8 +32,6 @@ class CsvUploadRequest extends FormRequest
         if ($file instanceof UploadedFile && $file->isValid() && $file->getMimeType() === ExtensionsEnum::Csv->getMimeType()) {
             return $file;
         }
-        throw ValidationException::withMessages([
-            'file' => 'file is not a valid file',
-        ]);
+        throw ValidationException::withMessages(['file' => 'file is not a valid file']);
     }
 }

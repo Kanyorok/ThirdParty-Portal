@@ -13,7 +13,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Campaign extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -23,21 +24,30 @@ class Campaign extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'CampaignID', 'Label', 'Status', 'Type', 'Details', 'MarketingListId', 'Processing',
-        'Notes', 'CreatedBy', 'ModifiedBy', 'DeletedBy'
-    ];
+                           'CampaignID',
+                           'Label',
+                           'Status',
+                           'Type',
+                           'Details',
+                           'MarketingListId',
+                           'Processing',
+                           'Notes',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 
     protected $casts = [
-        'Status' => CampaignStatusEnum::class,
-        'Type' => CampaignTypeEnum::class,
-        'CreatedBy' => 'integer',
-        'ModifiedBy' => 'integer',
-        'Processing' => 'boolean'
-    ];
+                        'Status'     => CampaignStatusEnum::class,
+                        'Type'       => CampaignTypeEnum::class,
+                        'CreatedBy'  => 'integer',
+                        'ModifiedBy' => 'integer',
+                        'Processing' => 'boolean',
+                       ];
 
     public static function getPrimaryKey(): string
     {
-        return (new self)->getRouteKeyName();
+        return (new self())->getRouteKeyName();
     }
 
     /**

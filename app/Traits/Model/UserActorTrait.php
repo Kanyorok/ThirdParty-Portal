@@ -17,7 +17,7 @@ trait UserActorTrait
 
     public static function getPrimaryKey(): string
     {
-        return (new self)->primaryKey;
+        return (new self())->primaryKey;
     }
 
     public function creator(): BelongsTo
@@ -43,5 +43,4 @@ trait UserActorTrait
     {
         return $this->morphMany(ActivitylogServiceProvider::determineActivityModel(), 'subject');
     }
-
 }

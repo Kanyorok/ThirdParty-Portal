@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CodeDetail extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -17,11 +18,16 @@ class CodeDetail extends Model
     protected $primaryKey = 'ID';
 
     protected $fillable = [
-        'CodeID', 'Description', 'DisplayOrder', 'IsActive',
-        'CreatedOn', 'CreatedBy', 'ModifiedOn', 'ModifiedBy', 'DeletedBy'
-    ];
+                           'CodeID',
+                           'Description',
+                           'DisplayOrder',
+                           'IsActive',
+                           'CreatedOn',
+                           'CreatedBy',
+                           'ModifiedOn',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 
-    protected $casts = [
-        'DisplayOrder' => 'integer',
-    ];
+    protected $casts = ['DisplayOrder' => 'integer'];
 }

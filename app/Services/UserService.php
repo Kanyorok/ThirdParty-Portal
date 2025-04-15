@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-
 use App\Enums\Core\ExtensionsEnum;
 use App\Enums\Core\PermissionEnum;
 use App\Enums\EmailPriorityEnum;
@@ -76,19 +75,19 @@ class UserService
     {
         $user = new User();
         $user->fill([
-            'UserID' => $UserID,
-            'Name' => $Name,
-            'Email' => $Email,
-            'Phone' => $Phone,
-            'Gender' => $Gender->value,
-            'Linked' => false,
-            'Notes' => $Notes,
-            'Password' => Str::random(),
-            'Email_Signature' => $Signature,
-            'BranchId' => $branch->OurBranchID,
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
-        ])->save();
+                     'UserID'          => $UserID,
+                     'Name'            => $Name,
+                     'Email'           => $Email,
+                     'Phone'           => $Phone,
+                     'Gender'          => $Gender->value,
+                     'Linked'          => false,
+                     'Notes'           => $Notes,
+                     'Password'        => Str::random(),
+                     'Email_Signature' => $Signature,
+                     'BranchId'        => $branch->OurBranchID,
+                     'CreatedBy'       => $actor->Id,
+                     'ModifiedBy'      => $actor->Id,
+                    ])->save();
         return new UserService($user);
     }
 
@@ -137,10 +136,10 @@ class UserService
                     $user->getImage('class="img-thumbnail" style="height: 70px; max-width: inherit;"')
                     : '';
             })->setRowClass('mouse_pointer user-select-none dbl-click-redirect-data')->setRowData([
-                'dbl_click_url' => function (User $user) {
-                    return route('users.show', [$user->UserID]);
-                }
-            ])->rawColumns(['action', 'photo'])->make();
+                                                                                                   'dbl_click_url' => function (User $user) {
+                                                                                                    return route('users.show', [$user->UserID]);
+                                                                                                   },
+                                                                                                  ])->rawColumns(['action', 'photo'])->make();
     }
 
     public function setRole(Role $role): static
@@ -149,7 +148,7 @@ class UserService
         return $this;
     }
 
-    public function syncBR(bool $pullImages=false): static
+    public function syncBR(bool $pullImages = false): static
     {
         $br_user = $this->brUser();
         if (is_null($br_user)) {
@@ -157,15 +156,15 @@ class UserService
         }
 
         $this->user->update([
-            'Linked' => true,
-            'Password' => $br_user->Password,
-            'ClientID' => $br_user->ClientID,
-        ]);
+                             'Linked'   => true,
+                             'Password' => $br_user->Password,
+                             'ClientID' => $br_user->ClientID,
+                            ]);
 
-        if($pullImages){
+        if ($pullImages) {
             $str = (new CBSService())->getClientImage($this->user->ClientID);
             if (!empty($str)) {
-                $this->user->setFromContent(base64_decode($str), SystemHelper::user(), ExtensionsEnum::Jpeg->getMimeType(),$this->user->ClientID.'.'.ExtensionsEnum::Jpeg->value,'ImageId');
+                $this->user->setFromContent(base64_decode($str), SystemHelper::user(), ExtensionsEnum::Jpeg->getMimeType(), $this->user->ClientID . '.' . ExtensionsEnum::Jpeg->value, 'ImageId');
             }
         }
 
@@ -176,31 +175,32 @@ class UserService
     {
         $user = BRUser::where('OperatorID', $this->user->UserID)->first();
         return ($user instanceof BRUser) ? $user : null;
-
     }
 
     public function update(string $UserID, string $Name, string $Email, string $Phone, GenderEnum $Gender, User $actor, string $Signature = '', string $Notes = '', Branch $branch = null, string $ClientID = null): static
     {
         $email_change = ($this->user->Email === $Email) ? null : $this->user->Email;
         $this->user->update([
-            'UserID' => $UserID,
-            'Name' => $Name,
-            'Email' => $Email,
-            'Phone' => $Phone,
-            'ClientID' => $ClientID,
-            'Gender' => $Gender->value,
-            'BranchId' => ($branch instanceof Branch) ? $branch->OurBranchID : $this->user->BranchId,
-            'Notes' => $Notes,
-            'Email_Signature' => $Signature,
-            'ModifiedBy' => $actor->Id,
-            'ModifiedOn' => now()
-        ]);
+                             'UserID'          => $UserID,
+                             'Name'            => $Name,
+                             'Email'           => $Email,
+                             'Phone'           => $Phone,
+                             'ClientID'        => $ClientID,
+                             'Gender'          => $Gender->value,
+                             'BranchId'        => ($branch instanceof Branch) ? $branch->OurBranchID : $this->user->BranchId,
+                             'Notes'           => $Notes,
+                             'Email_Signature' => $Signature,
+                             'ModifiedBy'      => $actor->Id,
+                             'ModifiedOn'      => now(),
+                            ]);
         activity()->causedBy($this->user)->performedOn($this->user)->event('update')->log('Update user account');
 
         if (!is_null($email_change)) {
-            $this->sendEmail('Email Changed in Crm',
+            $this->sendEmail(
+                'Email Changed in Crm',
                 '<div><p>Hello ' . $this->user->Name . ' </p><p>Your email has been changed from <b>' . $email_change . '</b> to <b>' . $this->user->Email . '</b> </p><p>if this was a mistake, contact support</p></div>',
-                [[$Name => $email_change]]);
+                [[$Name => $email_change]]
+            );
         }
         return $this;
     }
@@ -246,16 +246,18 @@ class UserService
     private function createResetURL(): string
     {
         return url(route('password.reset', [
-            'token' => Password::createToken($this->user),
-            'email' => $this->user->Email,
-        ], false));
+                                            'token' => Password::createToken($this->user),
+                                            'email' => $this->user->Email,
+                                           ], false));
     }
 
     public function sendPasswordResetNotification(): static
     {
-        $this->sendEmail('Reset Password Notification',
+        $this->sendEmail(
+            'Reset Password Notification',
             '<p>You are receiving this email because we received a password reset request for your account.</p><a  href="' . $this->createResetURL() . '">Reset Password</a>
-                    <p>This password reset link will expire in 60 minutes. <br> If you did not request a password reset, no further action is required.</p>');
+                    <p>This password reset link will expire in 60 minutes. <br> If you did not request a password reset, no further action is required.</p>'
+        );
         return $this;
     }
 
@@ -263,11 +265,10 @@ class UserService
     {
 
         $this->user->forceFill([
-            'DeletedOn' => now(),
-            'DeletedBy' => $actor->Id
-        ])->save(['timestamps' => false]);
+                                'DeletedOn' => now(),
+                                'DeletedBy' => $actor->Id,
+                               ])->save(['timestamps' => false]);
 
         $this->sendEmail('account deleted', '<p>Hello ' . $this->user->Name . '<br>Your account has just been deleted <br> If you have any questions or concerns, feel free to reach out to our support team </p>');
-
     }
 }

@@ -22,12 +22,31 @@ class ListRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'Label' => ['required', 'string', 'min:2', 'max:100'],
-            'Type' => ['nullable', Rule::enum(MarketingListEnum::class)],
-            'Party' => ['nullable', 'string', 'required_if:Type,' . MarketingListEnum::Dynamic->value],
-            'Visibility' => ['required', Rule::enum(VisibilityEnum::class)],
-            'Notes' => ['nullable', 'string', 'max:5000'],
-        ];
+                'Label'      => [
+                                 'required',
+                                 'string',
+                                 'min:2',
+                                 'max:100',
+                                ],
+                'Type'       => [
+                                 'nullable',
+                                 Rule::enum(MarketingListEnum::class),
+                                ],
+                'Party'      => [
+                                 'nullable',
+                                 'string',
+                                 'required_if:Type,' . MarketingListEnum::Dynamic->value,
+                                ],
+                'Visibility' => [
+                                 'required',
+                                 Rule::enum(VisibilityEnum::class),
+                                ],
+                'Notes'      => [
+                                 'nullable',
+                                 'string',
+                                 'max:5000',
+                                ],
+               ];
     }
 
     /**
@@ -37,15 +56,11 @@ class ListRequest extends FormRequest
     {
         $Source = $this->string('Party', 'null')->toString();
         if (!in_array($Source, ['null', Client::getPrimaryKey(), Lead::getPrimaryKey()], true)) {
-            throw ValidationException::withMessages([
-                'Party' => 'select a valid source'
-            ]);
+            throw ValidationException::withMessages(['Party' => 'select a valid source']);
         }
 
         if ($type->value === MarketingListEnum::Dynamic->value && ($Source === 'null')) {
-            throw ValidationException::withMessages([
-                'Party' => 'select a valid source'
-            ]);
+            throw ValidationException::withMessages(['Party' => 'select a valid source']);
         }
 
         return ($Source === 'null') ? null : $Source;
@@ -60,8 +75,8 @@ class ListRequest extends FormRequest
             return MarketingListEnum::fromValue($this->validated('Type'));
         } catch (ErroredException $e) {
             throw ValidationException::withMessages([
-                'Type' => $e->getMessage(),
-            ]);
+                                                     'Type' => $e->getMessage(),
+                                                    ]);
         }
     }
 
@@ -74,8 +89,6 @@ class ListRequest extends FormRequest
         if ($Visibility instanceof VisibilityEnum) {
             return $Visibility;
         }
-        throw ValidationException::withMessages([
-            'Visibility' => 'invalid visibility type',
-        ]);
+        throw ValidationException::withMessages(['Visibility' => 'invalid visibility type']);
     }
 }

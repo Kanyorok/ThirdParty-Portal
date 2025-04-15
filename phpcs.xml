@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<ruleset name="My PHP Best Practices">
+  <description>PHP CodeSniffer configuration for enforcing best practices.</description>
+
+  <!-- Include PSR-12 as base standard -->
+  <rule ref="PSR12" />
+  
+  <!-- Additional rules for best practices -->
+  <rule ref="Squiz.Arrays.ArrayDeclaration" />
+  <rule ref="Squiz.WhiteSpace.SemicolonSpacing" />
+  <rule ref="Squiz.WhiteSpace.SuperfluousWhitespace" />
+  <rule ref="Generic.Formatting.SpaceAfterCast" />
+  <rule ref="Generic.Formatting.DisallowMultipleStatements" />
+  <rule ref="Generic.PHP.DisallowShortOpenTag" />
+  <rule ref="Generic.Functions.FunctionCallArgumentSpacing" />
+  <rule ref="Generic.ControlStructures.InlineControlStructure" />
+
+  <!-- Exclude specific directories -->
+  <exclude-pattern>vendor/*</exclude-pattern>
+  <exclude-pattern>node_modules/*</exclude-pattern>
+  <exclude-pattern>tests/*</exclude-pattern>
+
+  <!-- Show progress -->
+  <arg name="colors"/>
+</ruleset>

@@ -67,7 +67,8 @@
                         aps = [].slice,
                         jsSuffixRegExp = /\.js$/;
 
-                    function hasProp(obj, prop) {
+                    function hasProp(obj, prop)
+                    {
                         return hasOwn.call(obj, prop);
                     }
 
@@ -79,7 +80,8 @@
                      * to.
                      * @returns {String} normalized name
                      */
-                    function normalize(name, baseName) {
+                    function normalize(name, baseName)
+                    {
                         var nameParts, nameSegment, mapValue, foundMap, lastIndex,
                             foundI, foundStarMap, starI, i, j, part, normalizedBaseParts,
                             baseParts = baseName && baseName.split("/"),
@@ -189,7 +191,8 @@
                         return name;
                     }
 
-                    function makeRequire(relName, forceSync) {
+                    function makeRequire(relName, forceSync)
+                    {
                         return function () {
                             //A version of a require function that passes a moduleName
                             //value for items that may need to
@@ -206,19 +209,22 @@
                         };
                     }
 
-                    function makeNormalize(relName) {
+                    function makeNormalize(relName)
+                    {
                         return function (name) {
                             return normalize(name, relName);
                         };
                     }
 
-                    function makeLoad(depName) {
+                    function makeLoad(depName)
+                    {
                         return function (value) {
                             defined[depName] = value;
                         };
                     }
 
-                    function callDep(name) {
+                    function callDep(name)
+                    {
                         if (hasProp(waiting, name)) {
                             var args = waiting[name];
                             delete waiting[name];
@@ -235,7 +241,8 @@
                     //Turns a plugin!resource to [plugin, resource]
                     //with the plugin being undefined if the name
                     //did not have a plugin prefix.
-                    function splitPrefix(name) {
+                    function splitPrefix(name)
+                    {
                         var prefix,
                             index = name ? name.indexOf('!') : -1;
                         if (index > -1) {
@@ -247,7 +254,8 @@
 
                     //Creates a parts array for a relName where first part is plugin ID,
                     //second part is resource ID. Assumes relName has already been normalized.
-                    function makeRelParts(relName) {
+                    function makeRelParts(relName)
+                    {
                         return relName ? splitPrefix(relName) : [];
                     }
 
@@ -295,7 +303,8 @@
                         };
                     };
 
-                    function makeConfig(name) {
+                    function makeConfig(name)
+                    {
                         return function () {
                             return (config && config.config && config.config[name]) || {};
                         };
@@ -515,7 +524,8 @@
             Utils.Extend = function (ChildClass, SuperClass) {
                 var __hasProp = {}.hasOwnProperty;
 
-                function BaseConstructor() {
+                function BaseConstructor()
+                {
                     this.constructor = ChildClass;
                 }
 
@@ -532,7 +542,8 @@
                 return ChildClass;
             };
 
-            function getMethods(theClass) {
+            function getMethods(theClass)
+            {
                 var proto = theClass.prototype;
 
                 var methods = [];
@@ -558,7 +569,8 @@
                 var decoratedMethods = getMethods(DecoratorClass);
                 var superMethods = getMethods(SuperClass);
 
-                function DecoratedClass() {
+                function DecoratedClass()
+                {
                     var unshift = Array.prototype.unshift;
 
                     var argCount = DecoratorClass.prototype.constructor.length;
@@ -576,7 +588,8 @@
 
                 DecoratorClass.displayName = SuperClass.displayName;
 
-                function ctr() {
+                function ctr()
+                {
                     this.constructor = DecoratedClass;
                 }
 
@@ -789,7 +802,8 @@
             'jquery',
             './utils'
         ], function ($, Utils) {
-            function Results($element, options, dataAdapter) {
+            function Results($element, options, dataAdapter)
+            {
                 this.$element = $element;
                 this.data = dataAdapter;
                 this.options = options;
@@ -1216,7 +1230,9 @@
                     });
                 }
 
-                this.$results.on('mouseup', '.select2-results__option[aria-selected]',
+                this.$results.on(
+                    'mouseup',
+                    '.select2-results__option[aria-selected]',
                     function (evt) {
                         var $this = $(this);
 
@@ -1239,9 +1255,12 @@
                             originalEvent: evt,
                             data: data
                         });
-                    });
+                    }
+                );
 
-                this.$results.on('mouseenter', '.select2-results__option[aria-selected]',
+                this.$results.on(
+                    'mouseenter',
+                    '.select2-results__option[aria-selected]',
                     function (evt) {
                         var data = $(this).data('data');
 
@@ -1252,7 +1271,8 @@
                             data: data,
                             element: $(this)
                         });
-                    });
+                    }
+                );
             };
 
             Results.prototype.getHighlightedResults = function () {
@@ -1338,7 +1358,8 @@
             '../utils',
             '../keys'
         ], function ($, Utils, KEYS) {
-            function BaseSelection($element, options) {
+            function BaseSelection($element, options)
+            {
                 this.$element = $element;
                 this.options = options;
 
@@ -1498,7 +1519,8 @@
             '../utils',
             '../keys'
         ], function ($, BaseSelection, Utils, KEYS) {
-            function SingleSelection() {
+            function SingleSelection()
+            {
                 SingleSelection.__super__.constructor.apply(this, arguments);
             }
 
@@ -1597,7 +1619,8 @@
             './base',
             '../utils'
         ], function ($, BaseSelection, Utils) {
-            function MultipleSelection($element, options) {
+            function MultipleSelection($element, options)
+            {
                 MultipleSelection.__super__.constructor.apply(this, arguments);
             }
 
@@ -1705,7 +1728,8 @@
         S2.define('select2/selection/placeholder', [
             '../utils'
         ], function (Utils) {
-            function Placeholder(decorated, $element, options) {
+            function Placeholder(decorated, $element, options)
+            {
                 this.placeholder = this.normalizePlaceholder(options.get('placeholder'));
 
                 decorated.call(this, $element, options);
@@ -1756,7 +1780,8 @@
             'jquery',
             '../keys'
         ], function ($, KEYS) {
-            function AllowClear() {
+            function AllowClear()
+            {
             }
 
             AllowClear.prototype.bind = function (decorated, container, $container) {
@@ -1773,10 +1798,13 @@
                     }
                 }
 
-                this.$selection.on('mousedown', '.select2-selection__clear',
+                this.$selection.on(
+                    'mousedown',
+                    '.select2-selection__clear',
                     function (evt) {
                         self._handleClear(evt);
-                    });
+                    }
+                );
 
                 container.on('keypress', function (evt) {
                     self._handleKeyboardClear(evt, container);
@@ -1856,7 +1884,8 @@
             '../utils',
             '../keys'
         ], function ($, Utils, KEYS) {
-            function Search(decorated, $element, options) {
+            function Search(decorated, $element, options)
+            {
                 decorated.call(this, $element, options);
             }
 
@@ -2077,7 +2106,8 @@
         S2.define('select2/selection/eventRelay', [
             'jquery'
         ], function ($) {
-            function EventRelay() {
+            function EventRelay()
+            {
             }
 
             EventRelay.prototype.bind = function (decorated, container, $container) {
@@ -2125,7 +2155,8 @@
             'jquery',
             'require'
         ], function ($, require) {
-            function Translation(dict) {
+            function Translation(dict)
+            {
                 this.dict = dict || {};
             }
 
@@ -3007,7 +3038,8 @@
         S2.define('select2/data/base', [
             '../utils'
         ], function (Utils) {
-            function BaseAdapter($element, options) {
+            function BaseAdapter($element, options)
+            {
                 BaseAdapter.__super__.constructor.call(this);
             }
 
@@ -3050,7 +3082,8 @@
             '../utils',
             'jquery'
         ], function (BaseAdapter, Utils, $) {
-            function SelectAdapter($element, options) {
+            function SelectAdapter($element, options)
+            {
                 this.$element = $element;
                 this.options = options;
 
@@ -3336,7 +3369,8 @@
             '../utils',
             'jquery'
         ], function (SelectAdapter, Utils, $) {
-            function ArrayAdapter($element, options) {
+            function ArrayAdapter($element, options)
+            {
                 var data = options.get('data') || [];
 
                 ArrayAdapter.__super__.constructor.call(this, $element, options);
@@ -3371,7 +3405,8 @@
                 var $options = [];
 
                 // Filter out all items except for the one passed in the argument
-                function onlyItem(item) {
+                function onlyItem(item)
+                {
                     return function () {
                         return $(this).val() == item.id;
                     };
@@ -3416,7 +3451,8 @@
             '../utils',
             'jquery'
         ], function (ArrayAdapter, Utils, $) {
-            function AjaxAdapter($element, options) {
+            function AjaxAdapter($element, options)
+            {
                 this.ajaxOptions = this._applyDefaults(options.get('ajax'));
 
                 if (this.ajaxOptions.processResults != null) {
@@ -3477,7 +3513,8 @@
                     options.data = options.data.call(this.$element, params);
                 }
 
-                function request() {
+                function request()
+                {
                     var $request = options.transport(options, function (data) {
                         var results = self.processResults(data, params);
 
@@ -3524,7 +3561,8 @@
         S2.define('select2/data/tags', [
             'jquery'
         ], function ($) {
-            function Tags(decorated, $element, options) {
+            function Tags(decorated, $element, options)
+            {
                 var tags = options.get('tags');
 
                 var createTag = options.get('createTag');
@@ -3563,7 +3601,8 @@
                     return;
                 }
 
-                function wrapper(obj, child) {
+                function wrapper(obj, child)
+                {
                     var data = obj.results;
 
                     for (var i = 0; i < data.length; i++) {
@@ -3653,7 +3692,8 @@
         S2.define('select2/data/tokenizer', [
             'jquery'
         ], function ($) {
-            function Tokenizer(decorated, $element, options) {
+            function Tokenizer(decorated, $element, options)
+            {
                 var tokenizer = options.get('tokenizer');
 
                 if (tokenizer !== undefined) {
@@ -3673,7 +3713,8 @@
             Tokenizer.prototype.query = function (decorated, params, callback) {
                 var self = this;
 
-                function createAndSelect(data) {
+                function createAndSelect(data)
+                {
                     // Normalize the data object so we can use it for checks
                     var item = self._normalizeItem(data);
 
@@ -3696,7 +3737,8 @@
                     select(item);
                 }
 
-                function select(data) {
+                function select(data)
+                {
                     self.trigger('select', {
                         data: data
                     });
@@ -3768,7 +3810,8 @@
         });
 
         S2.define('select2/data/minimumInputLength', [], function () {
-            function MinimumInputLength(decorated, $e, options) {
+            function MinimumInputLength(decorated, $e, options)
+            {
                 this.minimumInputLength = options.get('minimumInputLength');
 
                 decorated.call(this, $e, options);
@@ -3797,7 +3840,8 @@
         });
 
         S2.define('select2/data/maximumInputLength', [], function () {
-            function MaximumInputLength(decorated, $e, options) {
+            function MaximumInputLength(decorated, $e, options)
+            {
                 this.maximumInputLength = options.get('maximumInputLength');
 
                 decorated.call(this, $e, options);
@@ -3827,7 +3871,8 @@
         });
 
         S2.define('select2/data/maximumSelectionLength', [], function () {
-            function MaximumSelectionLength(decorated, $e, options) {
+            function MaximumSelectionLength(decorated, $e, options)
+            {
                 this.maximumSelectionLength = options.get('maximumSelectionLength');
 
                 decorated.call(this, $e, options);
@@ -3860,7 +3905,8 @@
             'jquery',
             './utils'
         ], function ($, Utils) {
-            function Dropdown($element, options) {
+            function Dropdown($element, options)
+            {
                 this.$element = $element;
                 this.options = options;
 
@@ -3903,7 +3949,8 @@
             'jquery',
             '../utils'
         ], function ($, Utils) {
-            function Search() {
+            function Search()
+            {
             }
 
             Search.prototype.render = function (decorated) {
@@ -4003,7 +4050,8 @@
         });
 
         S2.define('select2/dropdown/hidePlaceholder', [], function () {
-            function HidePlaceholder(decorated, $element, options, dataAdapter) {
+            function HidePlaceholder(decorated, $element, options, dataAdapter)
+            {
                 this.placeholder = this.normalizePlaceholder(options.get('placeholder'));
 
                 decorated.call(this, $element, options, dataAdapter);
@@ -4046,7 +4094,8 @@
         S2.define('select2/dropdown/infiniteScroll', [
             'jquery'
         ], function ($) {
-            function InfiniteScroll(decorated, $element, options, dataAdapter) {
+            function InfiniteScroll(decorated, $element, options, dataAdapter)
+            {
                 this.lastParams = {};
 
                 decorated.call(this, $element, options, dataAdapter);
@@ -4137,7 +4186,8 @@
             'jquery',
             '../utils'
         ], function ($, Utils) {
-            function AttachBody(decorated, $element, options) {
+            function AttachBody(decorated, $element, options)
+            {
                 this.$dropdownParent = options.get('dropdownParent') || $(document.body);
 
                 decorated.call(this, $element, options);
@@ -4236,11 +4286,13 @@
                         $(this).scrollTop(position.y);
                     });
 
-                    $(window).on(scrollEvent + ' ' + resizeEvent + ' ' + orientationEvent,
+                    $(window).on(
+                        scrollEvent + ' ' + resizeEvent + ' ' + orientationEvent,
                         function (e) {
                             self._positionDropdown();
                             self._resizeDropdown();
-                        });
+                        }
+                    );
                 };
 
             AttachBody.prototype._detachPositioningHandler =
@@ -4357,7 +4409,8 @@
         });
 
         S2.define('select2/dropdown/minimumResultsForSearch', [], function () {
-            function countResults(data) {
+            function countResults(data)
+            {
                 var count = 0;
 
                 for (var d = 0; d < data.length; d++) {
@@ -4373,7 +4426,8 @@
                 return count;
             }
 
-            function MinimumResultsForSearch(decorated, $element, options, dataAdapter) {
+            function MinimumResultsForSearch(decorated, $element, options, dataAdapter)
+            {
                 this.minimumResultsForSearch = options.get('minimumResultsForSearch');
 
                 if (this.minimumResultsForSearch < 0) {
@@ -4395,7 +4449,8 @@
         });
 
         S2.define('select2/dropdown/selectOnClose', [], function () {
-            function SelectOnClose() {
+            function SelectOnClose()
+            {
             }
 
             SelectOnClose.prototype.bind = function (decorated, container, $container) {
@@ -4445,7 +4500,8 @@
         });
 
         S2.define('select2/dropdown/closeOnSelect', [], function () {
-            function CloseOnSelect() {
+            function CloseOnSelect()
+            {
             }
 
             CloseOnSelect.prototype.bind = function (decorated, container, $container) {
@@ -4560,17 +4616,39 @@
             './dropdown/closeOnSelect',
 
             './i18n/en'
-        ], function ($, require,
-                     ResultsList,
-                     SingleSelection, MultipleSelection, Placeholder, AllowClear,
-                     SelectionSearch, EventRelay,
-                     Utils, Translation, DIACRITICS,
-                     SelectData, ArrayData, AjaxData, Tags, Tokenizer,
-                     MinimumInputLength, MaximumInputLength, MaximumSelectionLength,
-                     Dropdown, DropdownSearch, HidePlaceholder, InfiniteScroll,
-                     AttachBody, MinimumResultsForSearch, SelectOnClose, CloseOnSelect,
-                     EnglishTranslation) {
-            function Defaults() {
+        ], function (
+            $,
+            require,
+            ResultsList,
+            SingleSelection,
+            MultipleSelection,
+            Placeholder,
+            AllowClear,
+            SelectionSearch,
+            EventRelay,
+            Utils,
+            Translation,
+            DIACRITICS,
+            SelectData,
+            ArrayData,
+            AjaxData,
+            Tags,
+            Tokenizer,
+            MinimumInputLength,
+            MaximumInputLength,
+            MaximumSelectionLength,
+            Dropdown,
+            DropdownSearch,
+            HidePlaceholder,
+            InfiniteScroll,
+            AttachBody,
+            MinimumResultsForSearch,
+            SelectOnClose,
+            CloseOnSelect,
+            EnglishTranslation
+) {
+            function Defaults()
+            {
                 this.reset();
             }
 
@@ -4817,16 +4895,19 @@
             };
 
             Defaults.prototype.reset = function () {
-                function stripDiacritics(text) {
+                function stripDiacritics(text)
+                {
                     // Used 'uni range + named function' from http://jsperf.com/diacritics/18
-                    function match(a) {
+                    function match(a)
+                    {
                         return DIACRITICS[a] || a;
                     }
 
                     return text.replace(/[^\u0000-\u007E]/g, match);
                 }
 
-                function matcher(params, data) {
+                function matcher(params, data)
+                {
                     // Always return the object if there is nothing to compare
                     if ($.trim(params.term) === '') {
                         return data;
@@ -4921,7 +5002,8 @@
             './defaults',
             './utils'
         ], function (require, $, Defaults, Utils) {
-            function Options(options, $element) {
+            function Options(options, $element)
+            {
                 this.options = options;
 
                 if ($element != null) {
@@ -5234,8 +5316,7 @@
 
                 var observer = window.MutationObserver ||
                     window.WebKitMutationObserver ||
-                    window.MozMutationObserver
-                ;
+                    window.MozMutationObserver;
 
                 if (observer != null) {
                     this._observer = new observer(function (mutations) {
@@ -5654,7 +5735,8 @@
         S2.define('select2/compat/utils', [
             'jquery'
         ], function ($) {
-            function syncCssClasses($dest, $src, adapter) {
+            function syncCssClasses($dest, $src, adapter)
+            {
                 var classes, replacements = [], adapted;
 
                 classes = $.trim($dest.attr('class'));
@@ -5700,11 +5782,13 @@
             './utils'
         ], function ($, CompatUtils) {
             // No-op CSS adapter that discards all classes by default
-            function _containerAdapter(clazz) {
+            function _containerAdapter(clazz)
+            {
                 return null;
             }
 
-            function ContainerCSS() {
+            function ContainerCSS()
+            {
             }
 
             ContainerCSS.prototype.render = function (decorated) {
@@ -5758,11 +5842,13 @@
             './utils'
         ], function ($, CompatUtils) {
             // No-op CSS adapter that discards all classes by default
-            function _dropdownAdapter(clazz) {
+            function _dropdownAdapter(clazz)
+            {
                 return null;
             }
 
-            function DropdownCSS() {
+            function DropdownCSS()
+            {
             }
 
             DropdownCSS.prototype.render = function (decorated) {
@@ -5814,7 +5900,8 @@
         S2.define('select2/compat/initSelection', [
             'jquery'
         ], function ($) {
-            function InitSelection(decorated, $element, options) {
+            function InitSelection(decorated, $element, options)
+            {
                 if (options.get('debug') && window.console && console.warn) {
                     console.warn(
                         'Select2: The `initSelection` option has been deprecated in favor' +
@@ -5857,7 +5944,8 @@
         S2.define('select2/compat/inputData', [
             'jquery'
         ], function ($) {
-            function InputData(decorated, $element, options) {
+            function InputData(decorated, $element, options)
+            {
                 this._currentData = [];
                 this._valueSeparator = options.get('valueSeparator') || ',';
 
@@ -5875,7 +5963,8 @@
             }
 
             InputData.prototype.current = function (_, callback) {
-                function getSelected(data, selectedIds) {
+                function getSelected(data, selectedIds)
+                {
                     var selected = [];
 
                     if (data.selected || $.inArray(data.id, selectedIds) !== -1) {
@@ -5985,8 +6074,10 @@
         S2.define('select2/compat/matcher', [
             'jquery'
         ], function ($) {
-            function oldMatcher(matcher) {
-                function wrappedMatcher(params, data) {
+            function oldMatcher(matcher)
+            {
+                function wrappedMatcher(params, data)
+                {
                     var match = $.extend(true, {}, data);
 
                     if (params.term == null || $.trim(params.term) === '') {
@@ -6026,7 +6117,8 @@
         });
 
         S2.define('select2/compat/query', [], function () {
-            function Query(decorated, $element, options) {
+            function Query(decorated, $element, options)
+            {
                 if (options.get('debug') && window.console && console.warn) {
                     console.warn(
                         'Select2: The `query` option has been deprecated in favor of a ' +
@@ -6051,7 +6143,8 @@
         });
 
         S2.define('select2/dropdown/attachContainer', [], function () {
-            function AttachContainer(decorated, $element, options) {
+            function AttachContainer(decorated, $element, options)
+            {
                 decorated.call(this, $element, options);
             }
 
@@ -6068,7 +6161,8 @@
         });
 
         S2.define('select2/dropdown/stopPropagation', [], function () {
-            function StopPropagation() {
+            function StopPropagation()
+            {
             }
 
             StopPropagation.prototype.bind = function (decorated, container, $container) {
@@ -6106,7 +6200,8 @@
         });
 
         S2.define('select2/selection/stopPropagation', [], function () {
-            function StopPropagation() {
+            function StopPropagation()
+            {
             }
 
             StopPropagation.prototype.bind = function (decorated, container, $container) {
@@ -6235,7 +6330,8 @@
             });
 
 
-            function handler(event) {
+            function handler(event)
+            {
                 var orgEvent = event || window.event,
                     args = slice.call(arguments, 1),
                     delta = 0,
@@ -6362,11 +6458,13 @@
                 return ($.event.dispatch || $.event.handle).apply(this, args);
             }
 
-            function nullLowestDelta() {
+            function nullLowestDelta()
+            {
                 lowestDelta = null;
             }
 
-            function shouldAdjustOldDeltas(orgEvent, absDelta) {
+            function shouldAdjustOldDeltas(orgEvent, absDelta)
+            {
                 // If this is an older event and the delta is divisable by 120,
                 // then we are assuming that the browser is treating this as an
                 // older mouse wheel event and that we should divide the deltas

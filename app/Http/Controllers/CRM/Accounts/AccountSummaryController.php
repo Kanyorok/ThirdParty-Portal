@@ -21,9 +21,9 @@ class AccountSummaryController extends Controller
     {
         activity()->causedBy($request->user())->performedOn($account)->event('view')->log('Account ' . $account->AccountID . ' summary');
         return view('crm.accounts.summary', [
-            'account' => $account,
-            'client' => $account->client,
-            'transactions' => $account->transactions()->lock('WITH(NOLOCK)')->with(['type'])->latest('ValueDate')->limit(5)->get()
-        ]);
+                                             'account'      => $account,
+                                             'client'       => $account->client,
+                                             'transactions' => $account->transactions()->lock('WITH(NOLOCK)')->with(['type'])->latest('ValueDate')->limit(5)->get(),
+                                            ]);
     }
 }

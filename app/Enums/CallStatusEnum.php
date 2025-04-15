@@ -30,7 +30,7 @@ enum CallStatusEnum: string
         };
     }
 
-    public static function unreachable():Collection
+    public static function unreachable(): Collection
     {
         return  collect([self::PhoneOff, self::NotReceived]);
     }

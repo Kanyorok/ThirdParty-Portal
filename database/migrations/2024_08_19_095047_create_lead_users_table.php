@@ -25,7 +25,6 @@ return new class extends Migration {
             $table->softDeletes('DeletedOn');
 
             $table->index(["Party", "PartyID"]); //user/team
-
         });
     }
 

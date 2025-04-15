@@ -36,11 +36,11 @@ class MarketingListsUploadController extends Controller
         }
 
         return $this->succeeded('ok', data: [
-            'progress' => (int)($total > 0) ? (($done / $total) * 100) : 100,
-            'done' => $done,
-            'total' => (int)$total,
-            'description' => 'Processing Data (' . number_format($done) . ' / ' . number_format($total) . ')'
-        ]);
+                                             'progress'    => (int) ($total > 0) ? (($done / $total) * 100) : 100,
+                                             'done'        => $done,
+                                             'total'       => (int) $total,
+                                             'description' => 'Processing Data (' . number_format($done) . ' / ' . number_format($total) . ')',
+                                            ]);
     }
 
     /**
@@ -54,17 +54,20 @@ class MarketingListsUploadController extends Controller
         }
 
         $type = $request->validate([
-            'Type' => ['required', Rule::in([Client::getPrimaryKey(), Lead::getPrimaryKey()])],
-        ], [
-            'Type.required' => 'type is required',
-            'Type.in' => 'type is invalid'
-        ])['Type'];
+                                    'Type' => [
+                                               'required',
+                                               Rule::in([Client::getPrimaryKey(), Lead::getPrimaryKey()]),
+                                              ],
+                                   ], [
+                                       'Type.required' => 'type is required',
+                                       'Type.in'       => 'type is invalid',
+                                      ])['Type'];
 
         $service = (new ListService($list));
         if (!$service->canSource($type)) {
             throw ValidationException::withMessages([
-                'Type' => 'Type and List do not match only ' . $service->source()
-            ]);
+                                                     'Type' => 'Type and List do not match only ' . $service->source(),
+                                                    ]);
         }
 
         $file = $request->getFile();
@@ -73,21 +76,20 @@ class MarketingListsUploadController extends Controller
         $headers = array_shift($data);
 
         if ($type === Client::getPrimaryKey()) {
-            $requiredHeaders = [
-                'MemberID'
-            ];
+            $requiredHeaders = ['MemberID'];
         } elseif ($type === Lead::getPrimaryKey()) {
             $requiredHeaders = [
-                'Phone', 'Email'
-            ];
+                                'Phone',
+                                'Email',
+                               ];
         } else {
             return $this->errored('type is invalid');
         }
 
         if (array_diff($requiredHeaders, $headers)) {
             throw ValidationException::withMessages([
-                'file' => 'The provided CSV file is missing some required fields: ' . " " . implode(', ', array_diff($requiredHeaders, $headers))
-            ]);
+                                                     'file' => 'The provided CSV file is missing some required fields: ' . " " . implode(', ', array_diff($requiredHeaders, $headers)),
+                                                    ]);
         }
 
         //move file

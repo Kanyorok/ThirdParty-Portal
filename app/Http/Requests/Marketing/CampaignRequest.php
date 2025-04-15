@@ -23,11 +23,25 @@ class CampaignRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'Label' => ['required', 'string', 'max:200'],
-            'MarketingList' => ['required', 'string'],
-            'Type' => ['required', Rule::enum(CampaignTypeEnum::class)],
-            'Notes' => ['nullable', 'string', 'max:5000'],
-        ];
+                'Label'         => [
+                                    'required',
+                                    'string',
+                                    'max:200',
+                                   ],
+                'MarketingList' => [
+                                    'required',
+                                    'string',
+                                   ],
+                'Type'          => [
+                                    'required',
+                                    Rule::enum(CampaignTypeEnum::class),
+                                   ],
+                'Notes'         => [
+                                    'nullable',
+                                    'string',
+                                    'max:5000',
+                                   ],
+               ];
     }
 
     /**
@@ -36,16 +50,16 @@ class CampaignRequest extends FormRequest
     public function savable(bool $update = false): array
     {
         return array_merge([
-            'Label' => $this->validated('Label'),
-            'Type' => $this->getType()->value,
-            'MarketingListId' => $this->getList()->MarketingListID,
-            'Notes' => $this->validated('Notes'),
-            'ModifiedBy' => $this->user()->Id
-        ], $update ? [] : [
-            'CreatedBy' => $this->user()->Id,
-            'Status' => EmailStatusEnum::Draft,
-            'CampaignID' => $this->createID()
-        ]);
+                            'Label'           => $this->validated('Label'),
+                            'Type'            => $this->getType()->value,
+                            'MarketingListId' => $this->getList()->MarketingListID,
+                            'Notes'           => $this->validated('Notes'),
+                            'ModifiedBy'      => $this->user()->Id,
+                           ], $update ? [] : [
+                                              'CreatedBy'  => $this->user()->Id,
+                                              'Status'     => EmailStatusEnum::Draft,
+                                              'CampaignID' => $this->createID(),
+                                             ]);
     }
 
 
@@ -58,9 +72,7 @@ class CampaignRequest extends FormRequest
             return CampaignTypeEnum::fromValue($this->validated('Type'));
         } catch (ErroredException) {
         }
-        throw ValidationException::withMessages([
-            'Type' => 'invalid type',
-        ]);
+        throw ValidationException::withMessages(['Type' => 'invalid type']);
     }
 
     /**
@@ -71,22 +83,16 @@ class CampaignRequest extends FormRequest
         $ml = MarketingList::query()->where('slug', $this->validated('MarketingList'))->first();
         if ($ml instanceof MarketingList) {
             if ($ml->Source === DebtProduct::getPrimaryKey()/* && !auth()->user()->can('debt', MarketingList::class)*/) {
-                throw ValidationException::withMessages([
-                    'MarketingList' => 'You do not have permission to create a campaign for loan list.',
-                ]);
+                throw ValidationException::withMessages(['MarketingList' => 'You do not have permission to create a campaign for loan list.']);
             }
             //check count
             $contacts = (new ListService($ml))->contacts();
             if ($contacts < 3) {
-                throw ValidationException::withMessages([
-                    'MarketingList' => 'List must have at least 3 contacts to create a campaign.'
-                ]);
+                throw ValidationException::withMessages(['MarketingList' => 'List must have at least 3 contacts to create a campaign.']);
             }
             return $ml;
         }
 
-        throw ValidationException::withMessages([
-            'MarketingList' => 'invalid Marketing List',
-        ]);
+        throw ValidationException::withMessages(['MarketingList' => 'invalid Marketing List']);
     }
 }

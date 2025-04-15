@@ -25,7 +25,7 @@ class UserPolicy
 
     public function thirdParties(User $user): bool
     {
-        return $user->canAny([PermissionEnum::LeadRead->value, PermissionEnum::Members->value,  PermissionEnum::BoardManage->value]);
+        return $user->canAny([PermissionEnum::LeadRead->value, PermissionEnum::Members->value, PermissionEnum::BoardManage->value]);
     }
 
     public function settings(User $user): bool

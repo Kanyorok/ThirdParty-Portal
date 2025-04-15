@@ -18,7 +18,7 @@ class Branch extends Model
 
     public static function getPrimaryKey(): string
     {
-        return (new self)->primaryKey;
+        return (new self())->primaryKey;
     }
 
     public function local(): HasOne

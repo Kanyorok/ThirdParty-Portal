@@ -41,21 +41,21 @@ class CampaignSubmittedWorkflowListener implements ShouldQueue
                 }
 
                 $event->campaign->pendingWorkflows()->lock('WITH(NOLOCK)')->where('Stage', CampaignStatusEnum::Approval)->create([
-                    'Stage' => CampaignStatusEnum::Approval,
-                    'UserId' => $user->Id,
-                    'CreatedBy' => $event->actor->Id,
-                    'ModifiedBy' => $event->actor->Id,
-                ]);
+                                                                                                                                  'Stage'      => CampaignStatusEnum::Approval,
+                                                                                                                                  'UserId'     => $user->Id,
+                                                                                                                                  'CreatedBy'  => $event->actor->Id,
+                                                                                                                                  'ModifiedBy' => $event->actor->Id,
+                                                                                                                                 ]);
 
                 $this->_sendMail($user, $event->campaign);
             }
         });
-
     }
 
     protected function _sendMail(User $user, Campaign $campaign): void
     {
-        (new UserService($user))->sendEmail(subject: 'Campaign submitted review and approval',
+        (new UserService($user))->sendEmail(
+            subject: 'Campaign submitted review and approval',
             body: '<p>Hello</p><p>The campaign <b>' . $campaign->Label . '</b> has been submitted for your review. Click the link below to review</p>
                 <p><a href="' . route('campaigns.show', [$campaign->CampaignID]) . '"> campaign ' . $campaign->CampaignID . ' details</a></p>
                 <p>Kindly review and approve the campaign at your earliest convenience.</p>',

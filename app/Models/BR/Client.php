@@ -195,7 +195,7 @@ class Client extends Model
 
     public static function getPrimaryKey(): string
     {
-        return (new self)->primaryKey;
+        return (new self())->primaryKey;
     }
 
     /**
@@ -204,17 +204,15 @@ class Client extends Model
     protected function casts(): array
     {
         return [
-            'OpenedDate' => 'datetime',
-            'CreatedOn' => 'datetime',
-            'ModifiedOn' => 'datetime',
-            'SupervisedOn' => 'datetime',
-        ];
+                'OpenedDate'   => 'datetime',
+                'CreatedOn'    => 'datetime',
+                'ModifiedOn'   => 'datetime',
+                'SupervisedOn' => 'datetime',
+               ];
     }
 
     /* public function scopeWithWhereHas($query, $relation, $constraint){
          return $query->whereHas($relation, $constraint)
              ->with([$relation => $constraint]);
      }*/
-
-
 }

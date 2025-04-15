@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('t_MeetingClients', static function (Blueprint $table) {
             $table->id();
             $table->string('ClientID', 70)->index();
-            $table->foreignId('MeetingId')->constrained('t_Meetings','MeetingID');
+            $table->foreignId('MeetingId')->constrained('t_Meetings', 'MeetingID');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');

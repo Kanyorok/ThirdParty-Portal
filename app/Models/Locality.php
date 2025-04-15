@@ -10,7 +10,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Locality extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
+    use SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -19,13 +20,18 @@ class Locality extends Model
     protected $primaryKey = 'ID';
 
     protected $fillable = [
-        'Name', 'LocationType', 'LocalityID', 'IsActive',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy'
-    ];
+                           'Name',
+                           'LocationType',
+                           'LocalityID',
+                           'IsActive',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 
     protected $casts = [
-        'LocationType' => LocalityTypeEnum::class,
-    ];
+                        'LocationType' => LocalityTypeEnum::class,
+                       ];
 
     public function in(): BelongsTo
     {

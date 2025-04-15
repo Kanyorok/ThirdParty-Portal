@@ -10,7 +10,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class LeadProduct extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -19,9 +20,14 @@ class LeadProduct extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'LeadId', 'ProductID', 'ProductName',
-        'Notes', 'CreatedBy', 'ModifiedBy', 'DeletedBy'
-    ];
+                           'LeadId',
+                           'ProductID',
+                           'ProductName',
+                           'Notes',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 
 
     public function lead(): BelongsTo

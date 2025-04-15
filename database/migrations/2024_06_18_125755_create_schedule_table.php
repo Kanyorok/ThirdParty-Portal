@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::create('t_Schedule', static function (Blueprint $table) {
             $table->id('ScheduleID');
-            $table->string('Title','200');
+            $table->string('Title', '200');
             $table->longText('Notes');
             $table->string("ScheduledType")->nullable();
             $table->unsignedBigInteger("ScheduledTypeID")->nullable();
             $table->index(["ScheduledType", "ScheduledTypeID"]);
-            $table->char('ScheduleStatusID','2')->default(\App\Enums\ScheduleStatusEnum::Scheduled->value);
+            $table->char('ScheduleStatusID', '2')->default(\App\Enums\ScheduleStatusEnum::Scheduled->value);
             $table->dateTime('StartOn');
             $table->dateTime('EndOn');
             $table->string('Type');

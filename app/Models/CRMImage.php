@@ -12,7 +12,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CRMImage extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -22,9 +23,16 @@ class CRMImage extends Model
     protected $primaryKey = 'ImageID';
 
     protected $fillable = [
-        "Name", "ImageType", "ImageTypeID", "Image", "MIMEType",
-        'Notes', 'CreatedBy', 'ModifiedBy', 'DeletedBy'
-    ];
+                           "Name",
+                           "ImageType",
+                           "ImageTypeID",
+                           "Image",
+                           "MIMEType",
+                           'Notes',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 
     public function source(): MorphTo
     {

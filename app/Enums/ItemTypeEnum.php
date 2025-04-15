@@ -12,5 +12,4 @@ enum ItemTypeEnum: string
     case CustomerServicePerception = 'csp';
     case Strength = 'cst';
     case Weaknesses = 'cwe';
-
 }

@@ -9,7 +9,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class MarketingPlannerActivityUser extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -17,9 +18,12 @@ class MarketingPlannerActivityUser extends Model
     protected $table = 't_MarketingPlannerActivityUsers';
 
     protected $fillable = [
-        'ActivityId', 'UserID',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy'
-    ];
+                           'ActivityId',
+                           'UserID',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 
     public function user(): BelongsTo
     {

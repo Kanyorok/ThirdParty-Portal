@@ -22,7 +22,12 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use ImageTrait, HasFactory, Notifiable, UserActorTrait, SoftDeletes, HasRoles;
+    use ImageTrait;
+    use HasFactory;
+    use Notifiable;
+    use UserActorTrait;
+    use SoftDeletes;
+    use HasRoles;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -35,24 +40,41 @@ class User extends Authenticatable
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'UserID', 'Name', 'Email', 'Phone', 'ImageId', 'Gender', 'Linked', 'Notes', 'Password', 'Email_Signature', 'BranchId',
-        'ClientID', 'ExtensionNo', 'CreatedBy', 'ModifiedBy', 'DeletedBy'
-    ];
+                           'UserID',
+                           'Name',
+                           'Email',
+                           'Phone',
+                           'ImageId',
+                           'Gender',
+                           'Linked',
+                           'Notes',
+                           'Password',
+                           'Email_Signature',
+                           'BranchId',
+                           'ClientID',
+                           'ExtensionNo',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 
     protected $hidden = [
-        'Password', 'remember_token', 'Linked', 'Email_Signature'
-    ];
+                         'Password',
+                         'remember_token',
+                         'Linked',
+                         'Email_Signature',
+                        ];
 
     protected $casts = [
         //  'Password' => 'hashed',
-        'Gender' => GenderEnum::class,
-        'Linked' => 'bool',
-        'CreatedBy' => 'integer',
-    ];
+                        'Gender'    => GenderEnum::class,
+                        'Linked'    => 'bool',
+                        'CreatedBy' => 'integer',
+                       ];
 
     public static function getPrimaryKey(): string
     {
-        return (new self)->getRouteKeyName();
+        return (new self())->getRouteKeyName();
     }
 
 
@@ -131,5 +153,4 @@ class User extends Authenticatable
     {
         return $this->morphMany(Ticket::class, 'party', "Party", "PartyID", 'Id');
     }
-
 }

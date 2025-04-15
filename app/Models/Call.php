@@ -13,7 +13,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Call extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -26,17 +27,30 @@ class Call extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'ScheduleID', "Party", "PartyID", 'UserID', 'StartOn', 'EndOn', 'CallStatusID', 'CallTypeID', 'Source', 'SourceID',
-        'Notes', 'Response', 'CreatedBy', 'ModifiedBy', 'DeletedBy'
-    ];
+                           'ScheduleID',
+                           "Party",
+                           "PartyID",
+                           'UserID',
+                           'StartOn',
+                           'EndOn',
+                           'CallStatusID',
+                           'CallTypeID',
+                           'Source',
+                           'SourceID',
+                           'Notes',
+                           'Response',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 
-    protected $casts=[
-        'StartOn' => 'datetime',
-        'EndOn' => 'datetime',
-        'CallStatusID' => CallStatusEnum::class,
-        'CallTypeID' => CallTypeEnum::class,
-        'Response' => 'object'
-    ];
+    protected $casts = [
+                        'StartOn'      => 'datetime',
+                        'EndOn'        => 'datetime',
+                        'CallStatusID' => CallStatusEnum::class,
+                        'CallTypeID'   => CallTypeEnum::class,
+                        'Response'     => 'object',
+                       ];
 
     public function schedule(): BelongsTo
     {

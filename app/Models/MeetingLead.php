@@ -12,14 +12,18 @@ class MeetingLead extends Model
     protected $table = 't_MeetingLeads';
 
     protected $fillable = [
-        'MeetingId', 'LeadId',
-        'CreatedOn', 'CreatedBy', 'ModifiedOn', 'ModifiedBy'
-    ];
+                           'MeetingId',
+                           'LeadId',
+                           'CreatedOn',
+                           'CreatedBy',
+                           'ModifiedOn',
+                           'ModifiedBy',
+                          ];
 
     protected $casts = [
-        'CreatedOn' => 'datetime',
-        'ModifiedOn' => 'datetime',
-    ];
+                        'CreatedOn'  => 'datetime',
+                        'ModifiedOn' => 'datetime',
+                       ];
 
     public function lead(): BelongsTo
     {

@@ -28,24 +28,24 @@ class BoardNotificationController extends Controller
         $committee = $request->getCommittee();
         $actor = $request->user();
         try {
-          $Bulk =  DB::transaction(static function () use ($request, $committee, $actor) {
+            $Bulk =  DB::transaction(static function () use ($request, $committee, $actor) {
                 $Bulk = BulkNotification::create([
-                    'Label' => $request->validated('NotificationLabel'),
-                    'Module' => self::MODULE,
-                    'Content' => $request->validated('NotificationContent'),
-                    'Total' => $committee->members()->count(),
-                    'Extra' => ['CommitteeID' =>$committee->CommitteeID],
-                    'CreatedBy' => $actor->Id,
-                    'ModifiedBy' => $actor->Id,
-                ]);
+                                                  'Label'      => $request->validated('NotificationLabel'),
+                                                  'Module'     => self::MODULE,
+                                                  'Content'    => $request->validated('NotificationContent'),
+                                                  'Total'      => $committee->members()->count(),
+                                                  'Extra'      => ['CommitteeID' => $committee->CommitteeID],
+                                                  'CreatedBy'  => $actor->Id,
+                                                  'ModifiedBy' => $actor->Id,
+                                                 ]);
 
                 //run event to start work.
-                event(new BulkNotificationEvent($Bulk, $actor, ['committee'=>$committee], now()));
+                event(new BulkNotificationEvent($Bulk, $actor, ['committee' => $committee], now()));
 
-              activity()->causedBy($actor)->performedOn($committee)->event('sent message')->log('sent message to board committee:  ' . $Bulk->Label . '.');
+                activity()->causedBy($actor)->performedOn($committee)->event('sent message')->log('sent message to board committee:  ' . $Bulk->Label . '.');
                 return $Bulk;
             });
-        } catch (\Throwable|\Exception $e) {
+        } catch (\Throwable | \Exception $e) {
             Log::error('Error sending board bulk notification : ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }

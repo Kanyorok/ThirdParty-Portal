@@ -9,7 +9,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SurveyQuestionResponse extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -22,9 +23,17 @@ class SurveyQuestionResponse extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'Party', 'PartyID', 'Source', 'SourceID', 'Response', 'SurveyQuestionAnswerID', 'SurveyQuestionID',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy'
-    ];
+                           'Party',
+                           'PartyID',
+                           'Source',
+                           'SourceID',
+                           'Response',
+                           'SurveyQuestionAnswerID',
+                           'SurveyQuestionID',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 
     public function answer(): BelongsTo
     {

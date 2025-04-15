@@ -25,22 +25,22 @@ class LocalitySeeder extends Seeder
         foreach ($response as $res) {
             $counties->add([
                 //'ID' => $res['code'],
-                'Name' => $res['name'],
-                'LocationType' => LocalityTypeEnum::County->value,
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ]);
+                            'Name'         => $res['name'],
+                            'LocationType' => LocalityTypeEnum::County->value,
+                            'CreatedOn'    => $date,
+                            'CreatedBy'    => $user->Id,
+                            'ModifiedOn'   => $date,
+                            'ModifiedBy'   => $user->Id,
+                           ]);
             $cities->add([
-                'Name' => (array_key_exists('capital', $res)) ? $res['capital'] : $res['name'],
-                'LocationType' => LocalityTypeEnum::City->value,
-                'LocalityID' => $res['code'],
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ]);
+                          'Name'         => (array_key_exists('capital', $res)) ? $res['capital'] : $res['name'],
+                          'LocationType' => LocalityTypeEnum::City->value,
+                          'LocalityID'   => $res['code'],
+                          'CreatedOn'    => $date,
+                          'CreatedBy'    => $user->Id,
+                          'ModifiedOn'   => $date,
+                          'ModifiedBy'   => $user->Id,
+                         ]);
         }
 
 

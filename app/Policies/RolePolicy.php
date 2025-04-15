@@ -2,7 +2,6 @@
 
 namespace App\Policies;
 
-
 use App\Enums\Core\PermissionEnum;
 use App\Models\User;
 use Spatie\Permission\Models\Role;

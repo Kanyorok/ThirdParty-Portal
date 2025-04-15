@@ -47,9 +47,7 @@ class LeadMeetingController extends Controller
         if ($schedule instanceof Schedule) {
             $meeting = $schedule->scheduled;
             if (!$meeting instanceof Meeting) {
-                throw ValidationException::withMessages([
-                    'meeting_initiated' => 'invalid schedule provide',
-                ]);
+                throw ValidationException::withMessages(['meeting_initiated' => 'invalid schedule provide']);
             }
         }
         try {
@@ -69,12 +67,32 @@ class LeadMeetingController extends Controller
     public function update(Request $request, Lead $lead, $meeting_id): JsonResponse
     {
         $request->validate([
-            'ongoing_meeting_title' => ['required', 'min:5', 'max:200'],
-            'ongoing_meeting_location' => ['required', 'min:5', 'max:200'],
-            'ongoing_meeting_discussion' => ['required', 'min:5', 'max:5000'],
-            'meeting_notes' => ['nullable', 'max:5000'],
-            'ongoing_meeting_users' => ['required', 'array', 'min:1', 'max:200'],
-        ]);
+                            'ongoing_meeting_title'      => [
+                                                             'required',
+                                                             'min:5',
+                                                             'max:200',
+                                                            ],
+                            'ongoing_meeting_location'   => [
+                                                             'required',
+                                                             'min:5',
+                                                             'max:200',
+                                                            ],
+                            'ongoing_meeting_discussion' => [
+                                                             'required',
+                                                             'min:5',
+                                                             'max:5000',
+                                                            ],
+                            'meeting_notes'              => [
+                                                             'nullable',
+                                                             'max:5000',
+                                                            ],
+                            'ongoing_meeting_users'      => [
+                                                             'required',
+                                                             'array',
+                                                             'min:1',
+                                                             'max:200',
+                                                            ],
+                           ]);
 
         $meeting = $lead->meetings()->where('t_Meetings.MeetingID', $meeting_id)->first();
         if (!$meeting instanceof Meeting) {
@@ -82,9 +100,7 @@ class LeadMeetingController extends Controller
         }
         $userIds = User::query()->whereIn('t_Users.UserID', $request->get('ongoing_meeting_users'))->pluck('Id')->toArray();
         if (count($userIds) === 0) {
-            throw ValidationException::withMessages([
-                'users' => "select some attendees"
-            ]);
+            throw ValidationException::withMessages(['users' => "select some attendees"]);
         }
 
         $actor = $request->user();

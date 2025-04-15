@@ -66,10 +66,10 @@ class SocialController extends Controller
                 })->editColumn('ViewCount', function (Social $social) {
                     return number_format($social->ViewsCount);
                 })->setRowClass('mouse_pointer user-select-none dbl-click-redirect-data')->setRowData([
-                    'dbl_click_url' => function (Social $social) {
-                        return route('socials.show', $social->SocialID);
-                    }
-                ])->rawColumns(['image', 'Type'])->make();
+                                                                                                       'dbl_click_url' => function (Social $social) {
+                                                                                                        return route('socials.show', $social->SocialID);
+                                                                                                       },
+                                                                                                      ])->rawColumns(['image', 'Type'])->make();
         }
 
         return view('crm.marketing.socials.index');
@@ -120,7 +120,7 @@ class SocialController extends Controller
     /**
      * Display the specified resource. covermart brilliant white 2l.
      */
-    public function show(Social $social):View
+    public function show(Social $social): View
     {
         return view('crm.marketing.socials.show')
             ->with('images', $social->images()->where('t_CRMImages.MIMEType', 'like', 'image/%')->get())

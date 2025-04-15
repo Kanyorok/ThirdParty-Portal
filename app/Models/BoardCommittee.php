@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
 
 class BoardCommittee extends Pivot
 {
-    use  UserActorTrait;
+    use UserActorTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -17,9 +17,13 @@ class BoardCommittee extends Pivot
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'BoardId','CommitteeId',
-        'CreatedOn', 'CreatedBy', 'ModifiedOn', 'ModifiedBy'
-    ];
+                           'BoardId',
+                           'CommitteeId',
+                           'CreatedOn',
+                           'CreatedBy',
+                           'ModifiedOn',
+                           'ModifiedBy',
+                          ];
 
     public function committee(): BelongsTo
     {

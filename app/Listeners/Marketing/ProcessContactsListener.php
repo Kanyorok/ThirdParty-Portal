@@ -31,11 +31,8 @@ class ProcessContactsListener implements ShouldQueue
         if ($event->autoSend) {
             (new CampaignService($campaign))->run($event->actor);
         } else {
-            $campaign->update([
-                'Processing' => false
-            ]);
+            $campaign->update(['Processing' => false]);
         }
         /*  }, 2);*/
-
     }
 }

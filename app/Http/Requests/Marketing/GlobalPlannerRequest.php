@@ -18,11 +18,23 @@ class GlobalPlannerRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'Name' => ['required', 'string', 'max:200'],
-            'plans' => ['required', 'array', 'min:1', 'max:500'],
-            'plans.*' => ['required'],
-            'Notes' => ['nullable', 'string'],
-        ];
+                'Name'    => [
+                              'required',
+                              'string',
+                              'max:200',
+                             ],
+                'plans'   => [
+                              'required',
+                              'array',
+                              'min:1',
+                              'max:500',
+                             ],
+                'plans.*' => ['required'],
+                'Notes'   => [
+                              'nullable',
+                              'string',
+                             ],
+               ];
     }
 
     /**
@@ -41,8 +53,8 @@ class GlobalPlannerRequest extends FormRequest
             }
 
             throw ValidationException::withMessages([
-                'plans' => 'plan ' . $id . ' is not valid',
-            ]);
+                                                     'plans' => 'plan ' . $id . ' is not valid',
+                                                    ]);
         }
 
         return $plans;

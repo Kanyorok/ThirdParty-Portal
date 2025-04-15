@@ -28,7 +28,6 @@ use Illuminate\Support\Str;
 
 class CampaignRunListener implements ShouldQueue
 {
-
     /**
      * Create the event listener.
      */
@@ -43,39 +42,34 @@ class CampaignRunListener implements ShouldQueue
     public function handle(CampaignRunEvent $event): void
     {
         /* DB::transaction(function () use ($event) {*/
-            if ($event->campaign->Type->value === CampaignTypeEnum::Email->value) {
-                $this->_email($event->campaign, $event->actor);
-                return;
-            }
+        if ($event->campaign->Type->value === CampaignTypeEnum::Email->value) {
+            $this->_email($event->campaign, $event->actor);
+            return;
+        }
 
-            if ($event->campaign->Type->value === CampaignTypeEnum::SMS->value) {
-                $this->_sms($event->campaign, $event->actor);
-                return;
-            }
+        if ($event->campaign->Type->value === CampaignTypeEnum::SMS->value) {
+            $this->_sms($event->campaign, $event->actor);
+            return;
+        }
 
-        $event->campaign->update([
-            'Processing' => false
-        ]);
+        $event->campaign->update(['Processing' => false]);
 
             $event->campaign->contacts()->update([
-                'Status' => CampaignStatusEnum::Failed->value,
-            ]);
+                                                  'Status' => CampaignStatusEnum::Failed->value,
+                                                 ]);
         /*}, 2);*/
-
     }
 
     protected function _email(Campaign $campaign, User $actor): void
     {
         try {
             $service = new InfobipService();
-        }catch (\Exception|\ErrorException){
+        } catch (\Exception | \ErrorException) {
             $campaign->contacts()->update([
-                'Status' => CampaignStatusEnum::Failed->value,
-            ]);
+                                           'Status' => CampaignStatusEnum::Failed->value,
+                                          ]);
 
-            $campaign->update([
-                'Processing' => false
-            ]);
+            $campaign->update(['Processing' => false]);
 
             (new UserService($actor))->sendEmail(
                 subject: 'Campaign Failed: Invalid Infobip Configuration',
@@ -135,32 +129,32 @@ class CampaignRunListener implements ShouldQueue
                         $campaign_failed->add($contact->Id);
                         continue;
                     }
-                    $messageID = $service->sendEmail([$contact->party->Email],$campaign->Label,$body,$campaign->CampaignID);
+                    $messageID = $service->sendEmail([$contact->party->Email], $campaign->Label, $body, $campaign->CampaignID);
 
                     $data->add([
-                        'To' => [[$contact->party->Name => $contact->party->Email]],
-                        'Subject' => $campaign->Label,
-                        'Body' => $body,
-                        'Text' => StringHelper::cleanHtml($body),
-                        'Source' => CampaignParty::getPrimaryKey(),
-                        'SourceID' => $contact->Id,
-                        'Party' => Lead::getPrimaryKey(),
-                        'PartyID' => $contact->party->LeadID,
-                        'CreatedBy' => $actor->Id,
-                        'ModifiedBy' => $actor->Id,
-                        'CreatedOn' => $date,
-                        'ModifiedOn' => $date,
-                        'Status'=> (is_null($messageID))?EmailStatusEnum::Failed:EmailStatusEnum::Sent->value,
-                        'MailID' => $messageID,
-                    ]);
+                                'To'         => [[$contact->party->Name => $contact->party->Email]],
+                                'Subject'    => $campaign->Label,
+                                'Body'       => $body,
+                                'Text'       => StringHelper::cleanHtml($body),
+                                'Source'     => CampaignParty::getPrimaryKey(),
+                                'SourceID'   => $contact->Id,
+                                'Party'      => Lead::getPrimaryKey(),
+                                'PartyID'    => $contact->party->LeadID,
+                                'CreatedBy'  => $actor->Id,
+                                'ModifiedBy' => $actor->Id,
+                                'CreatedOn'  => $date,
+                                'ModifiedOn' => $date,
+                                'Status'     => (is_null($messageID)) ? EmailStatusEnum::Failed : EmailStatusEnum::Sent->value,
+                                'MailID'     => $messageID,
+                               ]);
                     //
 
-                if((is_null($messageID))){
-                    $campaign_failed->add($contact->Id);
-                }else{
-                    $leadId_Sent->add($contact->party->LeadID);
-                    $campaign_sending->add($contact->Id);
-                }
+                    if ((is_null($messageID))) {
+                        $campaign_failed->add($contact->Id);
+                    } else {
+                        $leadId_Sent->add($contact->party->LeadID);
+                        $campaign_sending->add($contact->Id);
+                    }
 
 
                     // $service->sendPartyEmail($contact, $contact->party, $actor, true);
@@ -171,29 +165,29 @@ class CampaignRunListener implements ShouldQueue
                         $campaign_failed->add($contact->Id);
                         continue;
                     }
-                    $messageID = $service->sendEmail([$contact->party->Email],$campaign->Label,$body,$campaign->CampaignID);
+                    $messageID = $service->sendEmail([$contact->party->Email], $campaign->Label, $body, $campaign->CampaignID);
 
                     $data->add([
-                        'Source' => CampaignParty::getPrimaryKey(),
-                        'SourceID' => $contact->Id,
-                        'To' => [[$contact->party->Name => $contact->party->Email]],
-                        'Subject' => $campaign->Label,
-                        'Body' => $body,
-                        'Text' => StringHelper::cleanHtml($body),
-                        'Party' => Client::getPrimaryKey(),
-                        'PartyID' => $contact->party->ClientID,
-                        'CreatedBy' => $actor->Id,
-                        'ModifiedBy' => $actor->Id,
-                        'CreatedOn' => $date,
-                        'ModifiedOn' => $date,
-                        'Status'=> (is_null($messageID))?EmailStatusEnum::Failed:EmailStatusEnum::Sent->value,
-                        'MailID' => $messageID,
-                    ]);
+                                'Source'     => CampaignParty::getPrimaryKey(),
+                                'SourceID'   => $contact->Id,
+                                'To'         => [[$contact->party->Name => $contact->party->Email]],
+                                'Subject'    => $campaign->Label,
+                                'Body'       => $body,
+                                'Text'       => StringHelper::cleanHtml($body),
+                                'Party'      => Client::getPrimaryKey(),
+                                'PartyID'    => $contact->party->ClientID,
+                                'CreatedBy'  => $actor->Id,
+                                'ModifiedBy' => $actor->Id,
+                                'CreatedOn'  => $date,
+                                'ModifiedOn' => $date,
+                                'Status'     => (is_null($messageID)) ? EmailStatusEnum::Failed : EmailStatusEnum::Sent->value,
+                                'MailID'     => $messageID,
+                               ]);
                     //
 
-                    if((is_null($messageID))){
+                    if ((is_null($messageID))) {
                         $campaign_failed->add($contact->Id);
-                    }else{
+                    } else {
                         $clientID_sent->add($contact->party->ClientID);
                         $campaign_sending->add($contact->Id);
                     }
@@ -216,41 +210,41 @@ class CampaignRunListener implements ShouldQueue
                         continue;
                     }
                     $body = (new LoanService($contact->party))->placeholders($contact->party->client, $body);
-                    $messageID = $service->sendEmail([$email],$campaign->Label,$body,$campaign->CampaignID);
+                    $messageID = $service->sendEmail([$email], $campaign->Label, $body, $campaign->CampaignID);
                     $data->add([
-                        'Source' => CampaignParty::getPrimaryKey(),
-                        'SourceID' => $contact->Id,
-                        'To' => [[$contact->party->Name => $email]],
-                        'Subject' => (new LoanService($contact->party))->placeholders($contact->party->client, $campaign->Label),
-                        'Body' => $body,
-                        'Text' => StringHelper::cleanHtml($body),
-                        'Party' => Client::getPrimaryKey(),
-                        'PartyID' => $contact->party->ClientID,
-                        'CreatedBy' => $actor->Id,
-                        'ModifiedBy' => $actor->Id,
-                        'CreatedOn' => $date,
-                        'ModifiedOn' => $date,
-                        'Status'=> (is_null($messageID))?EmailStatusEnum::Failed:EmailStatusEnum::Sent->value,
-                        'MailID' => $messageID,
-                    ]);
+                                'Source'     => CampaignParty::getPrimaryKey(),
+                                'SourceID'   => $contact->Id,
+                                'To'         => [[$contact->party->Name => $email]],
+                                'Subject'    => (new LoanService($contact->party))->placeholders($contact->party->client, $campaign->Label),
+                                'Body'       => $body,
+                                'Text'       => StringHelper::cleanHtml($body),
+                                'Party'      => Client::getPrimaryKey(),
+                                'PartyID'    => $contact->party->ClientID,
+                                'CreatedBy'  => $actor->Id,
+                                'ModifiedBy' => $actor->Id,
+                                'CreatedOn'  => $date,
+                                'ModifiedOn' => $date,
+                                'Status'     => (is_null($messageID)) ? EmailStatusEnum::Failed : EmailStatusEnum::Sent->value,
+                                'MailID'     => $messageID,
+                               ]);
                     //
 
                     $LoansActivity->add([
-                        'Party' => Client::getPrimaryKey(),
-                        'PartyID' => $contact->party->ClientID,
-                        'UserID' => $actor->Id,
-                        'Notes' => $description,
-                        'ActivityType' => DebtProduct::getPrimaryKey(),
-                        'ActivityTypeID' => $contact->party->AccountID,
-                        'CreatedBy' => $actor->Id,
-                        'ModifiedBy' => $actor->Id,
-                        'CreatedOn' => $date,
-                        'ModifiedOn' => $date
-                    ]);
+                                         'Party'          => Client::getPrimaryKey(),
+                                         'PartyID'        => $contact->party->ClientID,
+                                         'UserID'         => $actor->Id,
+                                         'Notes'          => $description,
+                                         'ActivityType'   => DebtProduct::getPrimaryKey(),
+                                         'ActivityTypeID' => $contact->party->AccountID,
+                                         'CreatedBy'      => $actor->Id,
+                                         'ModifiedBy'     => $actor->Id,
+                                         'CreatedOn'      => $date,
+                                         'ModifiedOn'     => $date,
+                                        ]);
 
-                    if((is_null($messageID))){
+                    if ((is_null($messageID))) {
                         $campaign_failed->add($contact->Id);
-                    }else{
+                    } else {
                         $clientID_sent->add($contact->party->ClientID);
                         $campaign_sending->add($contact->Id);
                     }
@@ -265,8 +259,8 @@ class CampaignRunListener implements ShouldQueue
             if ($data->count() > 0) {
                 DB::table('t_CRMEmails')->lock('WITH(NOLOCK)')->insert($data->toArray());
                 CampaignParty::query()->whereIn('t_CampaignParties.Id', $campaign_sending->flatten()->toArray())->update([
-                    'Status' => CampaignStatusEnum::Sent->value,
-                ]);
+                                                                                                                          'Status' => CampaignStatusEnum::Sent->value,
+                                                                                                                         ]);
             }
             $this->activitiesAndFailed($campaign_failed, $leadId_Sent, $description, $campaign, $actor, $clientID_sent, $LoansActivity);
         });
@@ -307,18 +301,18 @@ class CampaignRunListener implements ShouldQueue
                     }
 
                     $data->add([
-                        'SMSId' => $campaign->CampaignID . '-' . $contact->Id . '-' . Str::random(7),
-                        'Phone' => $phoneNo,
-                        'Content' => str_replace(['#name', '#date', '#org'], [$contact->party->Name, Carbon::now()->format('M d, Y'), config('org.name')], $campaign->Details),
-                        'Source' => CampaignParty::getPrimaryKey(),
-                        'SourceID' => $contact->Id,
-                        'Party' => Lead::getPrimaryKey(),
-                        'PartyID' => $contact->party->LeadID,
-                        'CreatedBy' => $actor->Id,
-                        'ModifiedBy' => $actor->Id,
-                        'CreatedOn' => $date,
-                        'ModifiedOn' => $date,
-                    ]);
+                                'SMSId'      => $campaign->CampaignID . '-' . $contact->Id . '-' . Str::random(7),
+                                'Phone'      => $phoneNo,
+                                'Content'    => str_replace(['#name', '#date', '#org'], [$contact->party->Name, Carbon::now()->format('M d, Y'), config('org.name')], $campaign->Details),
+                                'Source'     => CampaignParty::getPrimaryKey(),
+                                'SourceID'   => $contact->Id,
+                                'Party'      => Lead::getPrimaryKey(),
+                                'PartyID'    => $contact->party->LeadID,
+                                'CreatedBy'  => $actor->Id,
+                                'ModifiedBy' => $actor->Id,
+                                'CreatedOn'  => $date,
+                                'ModifiedOn' => $date,
+                               ]);
                     $leadId_Sent->add($contact->party->LeadID);
                     $campaign_sending->add($contact->Id);
                     //$service->sendPartySMS($contact, $contact->party, $actor, true);
@@ -332,20 +326,32 @@ class CampaignRunListener implements ShouldQueue
                     }
 
                     $data->add([
-                        'SMSId' => $campaign->CampaignID . '-' . $contact->Id . '-' . Str::random(7),
-                        'Phone' => $phoneNo,
-                        'Content' => Str::of($campaign->Details)->remove(["\r", "\n", "\t", "\0", "\x0B"])
-                            ->replace(["\u{A0}", '#name', '#date', '#org'],
-                                [" ", $contact->party->Name, Carbon::now()->format('M d, Y'), config('org.name')])->toString(),
-                        'Source' => CampaignParty::getPrimaryKey(),
-                        'SourceID' => $contact->Id,
-                        'Party' => Client::getPrimaryKey(),
-                        'PartyID' => $contact->party->ClientID,
-                        'CreatedBy' => $actor->Id,
-                        'ModifiedBy' => $actor->Id,
-                        'CreatedOn' => $date,
-                        'ModifiedOn' => $date,
-                    ]);
+                                'SMSId'      => $campaign->CampaignID . '-' . $contact->Id . '-' . Str::random(7),
+                                'Phone'      => $phoneNo,
+                                'Content'    => Str::of($campaign->Details)->remove(["\r", "\n", "\t", "\0", "\x0B"])
+                            ->replace(
+                                [
+                                 "\u{A0}",
+                                 '#name',
+                                 '#date',
+                                 '#org',
+                                ],
+                                [
+                                 " ",
+                                 $contact->party->Name,
+                                 Carbon::now()->format('M d, Y'),
+                                 config('org.name'),
+                                ]
+                            )->toString(),
+                                'Source'     => CampaignParty::getPrimaryKey(),
+                                'SourceID'   => $contact->Id,
+                                'Party'      => Client::getPrimaryKey(),
+                                'PartyID'    => $contact->party->ClientID,
+                                'CreatedBy'  => $actor->Id,
+                                'ModifiedBy' => $actor->Id,
+                                'CreatedOn'  => $date,
+                                'ModifiedOn' => $date,
+                               ]);
                     $campaign_sending->add($contact->Id);
                     $clientID_sent->add($contact->party->ClientID);
 
@@ -370,35 +376,35 @@ class CampaignRunListener implements ShouldQueue
                     }
 
                     $data->add([
-                        'SMSId' => $campaign->CampaignID . '-' . $contact->Id . '-' . Str::random(7),
-                        'Phone' => $phoneNo,
-                        'Content' => (new LoanService($contact->party))->placeholders($contact->party->client, $campaign->Details),
+                                'SMSId'      => $campaign->CampaignID . '-' . $contact->Id . '-' . Str::random(7),
+                                'Phone'      => $phoneNo,
+                                'Content'    => (new LoanService($contact->party))->placeholders($contact->party->client, $campaign->Details),
                         /* 'Source' => DebtProduct::getPrimaryKey(),
                          'SourceID' => $contact->party->AccountID,*/
-                        'Source' => CampaignParty::getPrimaryKey(),
-                        'SourceID' => $contact->Id,
+                                'Source'     => CampaignParty::getPrimaryKey(),
+                                'SourceID'   => $contact->Id,
                         /*'Party' => Client::getPrimaryKey(),
                         'PartyID' => $contact->party->ClientID,*/
-                        'Party' => DebtProduct::getPrimaryKey(),
-                        'PartyID' => $contact->party->AccountID,
-                        'CreatedBy' => $actor->Id,
-                        'ModifiedBy' => $actor->Id,
-                        'CreatedOn' => $date,
-                        'ModifiedOn' => $date,
-                    ]);
+                                'Party'      => DebtProduct::getPrimaryKey(),
+                                'PartyID'    => $contact->party->AccountID,
+                                'CreatedBy'  => $actor->Id,
+                                'ModifiedBy' => $actor->Id,
+                                'CreatedOn'  => $date,
+                                'ModifiedOn' => $date,
+                               ]);
 
                     $LoansActivity->add([
-                        'Party' => Client::getPrimaryKey(),
-                        'PartyID' => $contact->party->ClientID,
-                        'UserID' => $actor->Id,
-                        'Notes' => $description,
-                        'ActivityType' => DebtProduct::getPrimaryKey(),
-                        'ActivityTypeID' => $contact->party->AccountID,
-                        'CreatedBy' => $actor->Id,
-                        'ModifiedBy' => $actor->Id,
-                        'CreatedOn' => $date,
-                        'ModifiedOn' => $date
-                    ]);
+                                         'Party'          => Client::getPrimaryKey(),
+                                         'PartyID'        => $contact->party->ClientID,
+                                         'UserID'         => $actor->Id,
+                                         'Notes'          => $description,
+                                         'ActivityType'   => DebtProduct::getPrimaryKey(),
+                                         'ActivityTypeID' => $contact->party->AccountID,
+                                         'CreatedBy'      => $actor->Id,
+                                         'ModifiedBy'     => $actor->Id,
+                                         'CreatedOn'      => $date,
+                                         'ModifiedOn'     => $date,
+                                        ]);
 
                     $campaign_sending->add($contact->Id);
                     $clientID_sent->add($contact->party->ClientID);
@@ -411,17 +417,17 @@ class CampaignRunListener implements ShouldQueue
             if ($data->count() > 0) {
                 DB::table('t_SMS')->lock('WITH(NOLOCK)')->insert($data->toArray());
                 CampaignParty::query()->lock('WITH(NOLOCK)')->whereIn('t_CampaignParties.Id', $campaign_sending->flatten()->toArray())->update([
-                    'Status' => CampaignStatusEnum::Sending->value,
-                    'Channel' => CrmSMS::getPrimaryKey()
-                ]);
+                                                                                                                                                'Status'  => CampaignStatusEnum::Sending->value,
+                                                                                                                                                'Channel' => CrmSMS::getPrimaryKey(),
+                                                                                                                                               ]);
             }
             $this->activitiesAndFailed($campaign_failed, $leadId_Sent, $description, $campaign, $actor, $clientID_sent, $LoansActivity);
         });
 
         $campaign->update([
-            'Status' => CampaignStatusEnum::Sending->value,
-            'Processing' => false
-        ]);
+                           'Status'     => CampaignStatusEnum::Sending->value,
+                           'Processing' => false,
+                          ]);
     }
 
 
@@ -429,8 +435,8 @@ class CampaignRunListener implements ShouldQueue
     {
         if ($campaign_failed->count() > 0) {
             CampaignParty::query()->lock('WITH(NOLOCK)')->whereIn('t_CampaignParties.Id', $campaign_failed->flatten()->toArray())->update([
-                'Status' => CampaignStatusEnum::Failed->value,
-            ]);
+                                                                                                                                           'Status' => CampaignStatusEnum::Failed->value,
+                                                                                                                                          ]);
         }
 
         if ($LoansActivity->count() > 0) {

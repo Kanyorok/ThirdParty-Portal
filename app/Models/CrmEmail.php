@@ -15,7 +15,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CrmEmail extends Model
 {
-    use ImageTrait, UserActorTrait, SoftDeletes;
+    use ImageTrait;
+    use UserActorTrait;
+    use SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -25,24 +27,46 @@ class CrmEmail extends Model
     protected $primaryKey = 'EmailID';
 
     protected $fillable = [
-        'MailID', 'Type', 'Status', 'Priority', 'From', 'To', 'CC', 'BCC', 'Subject', 'Body', 'Text', 'Party', 'PartyID', 'Extra',
-        'Source', 'SourceID', 'EmailConversationId', 'ReferenceId', 'ReadBy', 'ReadOn', 'Dated', 'CreatedBy', 'ModifiedBy', 'DeletedBy'
-    ];
+                           'MailID',
+                           'Type',
+                           'Status',
+                           'Priority',
+                           'From',
+                           'To',
+                           'CC',
+                           'BCC',
+                           'Subject',
+                           'Body',
+                           'Text',
+                           'Party',
+                           'PartyID',
+                           'Extra',
+                           'Source',
+                           'SourceID',
+                           'EmailConversationId',
+                           'ReferenceId',
+                           'ReadBy',
+                           'ReadOn',
+                           'Dated',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 
 
     protected $casts = [
-        'Extra' => 'object',
-        'To' => 'array',
-        'CC' => 'array',
-        'BCC' => 'array',
-        'Dated' => 'datetime',
-        'ReadOn' => 'datetime',
-        'ReadBy' => 'integer',
-        'EmailConversationId' => 'integer',
-        'Priority' => EmailPriorityEnum::class,
-        'Status' => EmailStatusEnum::class,
-        'Type' => EmailTypeEnum::class,
-    ];
+                        'Extra'               => 'object',
+                        'To'                  => 'array',
+                        'CC'                  => 'array',
+                        'BCC'                 => 'array',
+                        'Dated'               => 'datetime',
+                        'ReadOn'              => 'datetime',
+                        'ReadBy'              => 'integer',
+                        'EmailConversationId' => 'integer',
+                        'Priority'            => EmailPriorityEnum::class,
+                        'Status'              => EmailStatusEnum::class,
+                        'Type'                => EmailTypeEnum::class,
+                       ];
 
 
     /**

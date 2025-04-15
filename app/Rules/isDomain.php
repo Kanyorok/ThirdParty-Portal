@@ -24,7 +24,7 @@ class isDomain implements ValidationRule
         //FILTER_VALIDATE_URL checks length but..why not? so we dont move forward with more expensive operations
         $domain_len = strlen($domain_name);
         if ($domain_len < 3 || $domain_len > 253) {
-            return FALSE;
+            return false;
         }
 
         //getting rid of HTTP/S just in case was passed.
@@ -35,15 +35,16 @@ class isDomain implements ValidationRule
         }
 
         //we dont need the www either
-        if (stripos($domain_name, 'www.') === 0)
+        if (stripos($domain_name, 'www.') === 0) {
             $domain_name = substr($domain_name, 4);
+        }
 
         //Checking for a '.' at least, not in the beginning nor end, since http://.abcd. is reported valid
-        if (!str_contains($domain_name, '.') || $domain_name[strlen($domain_name) - 1] === '.' || $domain_name[0] == '.')
-            return FALSE;
+        if (!str_contains($domain_name, '.') || $domain_name[strlen($domain_name) - 1] === '.' || $domain_name[0] == '.') {
+            return false;
+        }
 
         //now we use the FILTER_VALIDATE_URL, concatenating http so we can use it, and return BOOL
-        return !((filter_var('http://' . $domain_name, FILTER_VALIDATE_URL) === FALSE));
-
+        return !((filter_var('http://' . $domain_name, FILTER_VALIDATE_URL) === false));
     }
 }

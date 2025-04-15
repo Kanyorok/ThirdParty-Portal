@@ -25,7 +25,7 @@ class NotesController extends Controller
      */
     public function index(Request $request): View | JsonResponse
     {
-        if ($request->ajax()){
+        if ($request->ajax()) {
             return Datatables::of(Notes::query()->lock('WITH(NOLOCK)')->with(['party'])->select('*'))->addIndexColumn()
                 ->addColumn('action', function (Notes $notes) {
                     return '<button type="button" data-click_url="' . route('notes.show', [$notes->NoteID]) . '" data-summary_title="notes summary" class="btn btn-info btn-sm click-summary-data"><i class="fas fa-eye"></i> details</button>';

@@ -24,9 +24,9 @@ trait BulkNotificationTrait
             })->editColumn('Total', function ($notification) {
                 return number_format($notification->Total);
             })->setRowClass('mouse_pointer user-select-none dbl-click-redirect-data')->setRowData([
-                'dbl_click_url' => function (BulkNotification $notification) {
-                    return route('debt-notification.show', $notification->BulkNotificationID);
-                }
-            ])->rawColumns(['creator'])->make();
+                                                                                                   'dbl_click_url' => function (BulkNotification $notification) {
+                                                                                                    return route('debt-notification.show', $notification->BulkNotificationID);
+                                                                                                   },
+                                                                                                  ])->rawColumns(['creator'])->make();
     }
 }

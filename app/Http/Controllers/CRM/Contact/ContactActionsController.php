@@ -15,51 +15,51 @@ use Illuminate\Support\Facades\Log;
 
 class ContactActionsController extends Controller
 {
-    public function attachLead(AttachContactLeadRequest $request, Contact $contact):JsonResponse
+    public function attachLead(AttachContactLeadRequest $request, Contact $contact): JsonResponse
     {
-        if ($contact->PartyID !== '0'){
+        if ($contact->PartyID !== '0') {
             return $this->errored('contact not found or invalid');
         }
         $lead = $request->getLead();
-        if ($lead->Status === LeadStatusEnum::Won->value){
+        if ($lead->Status === LeadStatusEnum::Won->value) {
             return $this->errored('lead already won');
         }
 
         try {
             DB::transaction(static function () use ($lead, $contact, $request) {
                 $contact->crmmails()->update([
-                    'Party' => Lead::getPrimaryKey(),
-                    'PartyID' => $lead->LeadID,
-                ]);
+                                              'Party'   => Lead::getPrimaryKey(),
+                                              'PartyID' => $lead->LeadID,
+                                             ]);
 
                 $contact->crmsms()->update([
-                    'Party' => Lead::getPrimaryKey(),
-                    'PartyID' => $lead->LeadID,
-                ]);
+                                            'Party'   => Lead::getPrimaryKey(),
+                                            'PartyID' => $lead->LeadID,
+                                           ]);
 
                 $contact->calls()->update([
-                    'Party' => Lead::getPrimaryKey(),
-                    'PartyID' => $lead->LeadID,
-                ]);
+                                           'Party'   => Lead::getPrimaryKey(),
+                                           'PartyID' => $lead->LeadID,
+                                          ]);
 
                 $contact->update([
-                    'Party' => Lead::getPrimaryKey(),
-                    'PartyID' => $lead->LeadID,
-                ]);
+                                  'Party'   => Lead::getPrimaryKey(),
+                                  'PartyID' => $lead->LeadID,
+                                 ]);
 
                 activity()->causedBy($request->user())->performedOn($contact)->event('create')->log('attached contact to lead : ' . $lead->LeadID);
             });
-        } catch (\Throwable|\Exception $e) {
+        } catch (\Throwable | \Exception $e) {
             Log::error('Error attaching   Contact to Lead. e: ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }
 
-        return $this->succeeded('contact attached successfully.', route('leads.show',[$lead->LeadID]));
+        return $this->succeeded('contact attached successfully.', route('leads.show', [$lead->LeadID]));
     }
 
-    public function attachClient(AttachContactClientRequest $request, Contact $contact):JsonResponse
+    public function attachClient(AttachContactClientRequest $request, Contact $contact): JsonResponse
     {
-        if ($contact->PartyID !== '0'){
+        if ($contact->PartyID !== '0') {
             return $this->errored('contact not found or invalid');
         }
         $client = $request->getClient();
@@ -67,33 +67,32 @@ class ContactActionsController extends Controller
         try {
             DB::transaction(static function () use ($client, $contact, $request) {
                 $contact->crmmails()->update([
-                    'Party' => Client::getPrimaryKey(),
-                    'PartyID' => $client->ClientID,
-                ]);
+                                              'Party'   => Client::getPrimaryKey(),
+                                              'PartyID' => $client->ClientID,
+                                             ]);
 
                 $contact->crmsms()->update([
-                    'Party' => Client::getPrimaryKey(),
-                    'PartyID' => $client->ClientID,
-                ]);
+                                            'Party'   => Client::getPrimaryKey(),
+                                            'PartyID' => $client->ClientID,
+                                           ]);
 
                 $contact->calls()->update([
-                    'Party' => Client::getPrimaryKey(),
-                    'PartyID' => $client->ClientID,
-                ]);
+                                           'Party'   => Client::getPrimaryKey(),
+                                           'PartyID' => $client->ClientID,
+                                          ]);
 
                 $contact->update([
-                    'Party' => Client::getPrimaryKey(),
-                    'PartyID' => $client->ClientID,
-                ]);
+                                  'Party'   => Client::getPrimaryKey(),
+                                  'PartyID' => $client->ClientID,
+                                 ]);
 
                 activity()->causedBy($request->user())->performedOn($contact)->event('create')->log('attached contact to client : ' . $client->ClientID);
             });
-        } catch (\Throwable|\Exception $e) {
+        } catch (\Throwable | \Exception $e) {
             Log::error('Error attaching Contact to Client. e: ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }
 
-        return $this->succeeded('contact attached successfully.', route('clients.show',[$client->ClientID]));
-
+        return $this->succeeded('contact attached successfully.', route('clients.show', [$client->ClientID]));
     }
 }

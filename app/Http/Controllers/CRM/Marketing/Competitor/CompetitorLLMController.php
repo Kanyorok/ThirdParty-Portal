@@ -35,11 +35,11 @@ class CompetitorLLMController extends Controller
         }
 
         return $this->succeeded('ok', data: [
-            'progress' => (int)($total > 0) ? (($done / $total) * 100) : 100,
-            'done' => $done,
-            'total' => (int)$total,
-            'description' => 'Fetching & Processing Data (' . number_format($done) . ' / ' . number_format($total) . ')'
-        ]);
+                                             'progress'    => (int) ($total > 0) ? (($done / $total) * 100) : 100,
+                                             'done'        => $done,
+                                             'total'       => (int) $total,
+                                             'description' => 'Fetching & Processing Data (' . number_format($done) . ' / ' . number_format($total) . ')',
+                                            ]);
     }
 
     /**
@@ -61,7 +61,7 @@ class CompetitorLLMController extends Controller
             if (!filter_var($competitor->Website, FILTER_VALIDATE_URL) || !Http::get($competitor->Website)->successful()) {
                 return $this->errored('Invalid Website URL');
             }
-        } catch (\Exception|\Throwable) {
+        } catch (\Exception | \Throwable) {
             return $this->errored('Invalid Website URL');
         }
 
@@ -71,7 +71,7 @@ class CompetitorLLMController extends Controller
                 event(new CompetitorRoachEvent($competitor, ($request->clear === 'yes')));
                 activity()->causedBy($request->user())->performedOn($competitor)->event('crawl')->log('Start LLM competitor (' . $competitor->CompetitorID . ') data fetching and processing.');
             });
-        } catch (Exception|\Throwable $e) {
+        } catch (Exception | \Throwable $e) {
             Log::error('Start LLM Competitor data fetching and processing failed: .');
             Log::error($e);
             return $this->errored('an unexpected error occurred');

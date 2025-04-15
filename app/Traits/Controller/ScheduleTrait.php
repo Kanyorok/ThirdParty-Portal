@@ -47,7 +47,6 @@ trait ScheduleTrait
             })->editColumn('EndOn', function (Schedule $schedule) {
                 return $schedule->EndOn?->format('F d, Y h:i A');
             })->rawColumns(['action'])->make();
-
     }
 
 
@@ -89,16 +88,16 @@ trait ScheduleTrait
     public function cancel(Model $model, Schedule $schedule, User $actor): void
     {
         $schedule->forceFill([
-            'ScheduleStatusID' => ScheduleStatusEnum::Canceled->value,
-            'DeletedOn' => Carbon::now(),
-            'DeletedBy' => $actor->Id
-        ])->save(['timestamps' => false]);
+                              'ScheduleStatusID' => ScheduleStatusEnum::Canceled->value,
+                              'DeletedOn'        => Carbon::now(),
+                              'DeletedBy'        => $actor->Id,
+                             ])->save(['timestamps' => false]);
 
         $scheduled = $schedule->scheduled;
         if ($scheduled instanceof Meeting) {
             $scheduled->fill([
-                'StatusID' => MeetingStatusEnum::Canceled->value,
-            ])->save();
+                              'StatusID' => MeetingStatusEnum::Canceled->value,
+                             ])->save();
         }
 
         if ($model instanceof Client) {

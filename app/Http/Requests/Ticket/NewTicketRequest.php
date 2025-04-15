@@ -26,16 +26,41 @@ class NewTicketRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'ticket_title' => ['required', 'string', 'max:255'],
-            'ticket_description' => ['required', 'string'],
-            'ticket_category' => ['required'],
-            'ticket_user' => ['required'],
-            'ticket_watchers' => ['nullable', 'array', 'max:10'],
-            'ticket_source' => ['required', Rule::enum(TicketSourceEnum::class)],
-            'ticket_priority' => ['required', Rule::enum(TicketPriorityEnum::class)],
-            'ticket_start' => ['nullable', 'required_with:ticket_end', 'date_format:"Y-m-d"'],
-            'ticket_end' => ['nullable', 'required_with:ticket_start', 'date_format:"Y-m-d"'],
-        ];
+                'ticket_title'       => [
+                                         'required',
+                                         'string',
+                                         'max:255',
+                                        ],
+                'ticket_description' => [
+                                         'required',
+                                         'string',
+                                        ],
+                'ticket_category'    => ['required'],
+                'ticket_user'        => ['required'],
+                'ticket_watchers'    => [
+                                         'nullable',
+                                         'array',
+                                         'max:10',
+                                        ],
+                'ticket_source'      => [
+                                         'required',
+                                         Rule::enum(TicketSourceEnum::class),
+                                        ],
+                'ticket_priority'    => [
+                                         'required',
+                                         Rule::enum(TicketPriorityEnum::class),
+                                        ],
+                'ticket_start'       => [
+                                         'nullable',
+                                         'required_with:ticket_end',
+                                         'date_format:"Y-m-d"',
+                                        ],
+                'ticket_end'         => [
+                                         'nullable',
+                                         'required_with:ticket_start',
+                                         'date_format:"Y-m-d"',
+                                        ],
+               ];
     }
 
     /**
@@ -45,15 +70,11 @@ class NewTicketRequest extends FormRequest
     {
         $end = Carbon::createFromFormat('Y-m-d', $this->validated('ticket_end'));
         if (!$end instanceof Carbon) {
-            throw ValidationException::withMessages([
-                'ticket_start' => 'invalid date format',
-            ]);
+            throw ValidationException::withMessages(['ticket_start' => 'invalid date format']);
         }
 
         if ($end->endOfDay()->lte($start)) {
-            throw ValidationException::withMessages([
-                'ticket_end' => 'should be after start.',
-            ]);
+            throw ValidationException::withMessages(['ticket_end' => 'should be after start.']);
         }
 
         /*  $diffInMinutes = $start->diffInMinutes($end, true);
@@ -82,9 +103,7 @@ class NewTicketRequest extends FormRequest
             return $start->startOfDay();
         }
 
-        throw ValidationException::withMessages([
-            'ticket_start' => 'invalid date format',
-        ]);
+        throw ValidationException::withMessages(['ticket_start' => 'invalid date format']);
     }
 
     /**
@@ -96,9 +115,7 @@ class NewTicketRequest extends FormRequest
             return TicketSourceEnum::fromValue($this->validated('ticket_source'));
         } catch (\Exception) {
         }
-        throw ValidationException::withMessages([
-            'ticket_source' => 'invalid source',
-        ]);
+        throw ValidationException::withMessages(['ticket_source' => 'invalid source']);
     }
 
     /**
@@ -110,9 +127,7 @@ class NewTicketRequest extends FormRequest
             return TicketPriorityEnum::fromValue($this->validated('ticket_priority'));
         } catch (\Exception) {
         }
-        throw ValidationException::withMessages([
-            'ticket_priority' => 'invalid ticket priority',
-        ]);
+        throw ValidationException::withMessages(['ticket_priority' => 'invalid ticket priority']);
     }
 
     /**
@@ -128,18 +143,14 @@ class NewTicketRequest extends FormRequest
             if (($team instanceof Team) && $team->users()->count() > 0) {
                 return $team;
             }
-            throw ValidationException::withMessages([
-                'ticket_user' => 'invalid team or has no users',
-            ]);
+            throw ValidationException::withMessages(['ticket_user' => 'invalid team or has no users']);
         }
 
         $user = User::query()->where('UserID', Str::upper($assignee))->first();
         if ($user instanceof User) {
             return $user;
         }
-        throw ValidationException::withMessages([
-            'ticket_user' => 'invalid user selected.',
-        ]);
+        throw ValidationException::withMessages(['ticket_user' => 'invalid user selected.']);
     }
 
     /**
@@ -151,9 +162,7 @@ class NewTicketRequest extends FormRequest
         if ($category instanceof CodeDetail) {
             return $category;
         }
-        throw ValidationException::withMessages([
-            'ticket_category' => 'Category Not Found',
-        ]);
+        throw ValidationException::withMessages(['ticket_category' => 'Category Not Found']);
     }
 
     public function getWatchers(): Collection
@@ -174,5 +183,4 @@ class NewTicketRequest extends FormRequest
         }
         return $Actors;
     }
-
 }

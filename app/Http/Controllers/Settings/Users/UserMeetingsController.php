@@ -22,7 +22,8 @@ use Illuminate\Support\Facades\Log;
 
 class UserMeetingsController extends Controller
 {
-    use MeetingTrait, ScheduleTrait;
+    use MeetingTrait;
+    use ScheduleTrait;
 
     public function __construct()
     {
@@ -53,12 +54,19 @@ class UserMeetingsController extends Controller
         $actor = $request->user();
         try {
             $schedule = DB::transaction(static function () use ($start, $end, $actor, $location, $UserIds, $request) {
-                return ScheduleService::userMeeting(UserIds: $UserIds, title: $request->string('StaffMeetingTitle'), location: $location,
-                    agenda: $request->string('StaffMeetingAgenda'), start: $start, end: $end, actor: $actor)->schedule;
+                return ScheduleService::userMeeting(
+                    UserIds: $UserIds,
+                    title: $request->string('StaffMeetingTitle'),
+                    location: $location,
+                    agenda: $request->string('StaffMeetingAgenda'),
+                    start: $start,
+                    end: $end,
+                    actor: $actor
+                )->schedule;
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (\Exception|\Throwable $e) {
+        } catch (\Exception | \Throwable $e) {
             Log::error('Error scheduling staff meeting failed: ');
             Log::error($e);
             return $this->errored('unexpected error, try again latter');
@@ -82,21 +90,21 @@ class UserMeetingsController extends Controller
             DB::transaction(static function () use ($meeting, $request) {
 
                 $meeting->update([
-                    'StatusID' => MeetingStatusEnum::Canceled,
-                ]);
+                                  'StatusID' => MeetingStatusEnum::Canceled,
+                                 ]);
                 $schedule = Schedule::query()->where('t_Schedule.ScheduledType', Meeting::getPrimaryKey())->where('ScheduledTypeID', $meeting->MeetingID)->first();
 
                 if ($schedule instanceof Schedule) {
                     $schedule->update([
-                        'ScheduleStatusID' => ScheduleStatusEnum::Canceled,
-                    ]);
+                                       'ScheduleStatusID' => ScheduleStatusEnum::Canceled,
+                                      ]);
                 }
 
                 //event(new BoardMeetingCanceledEvent($meeting));
 
                 activity()->causedBy($request->user())->performedOn($meeting)->event('cancel')->log('Canceled staff meeting  ' . $meeting->Title . '.');
             });
-        } catch (\Throwable|\Exception $e) {
+        } catch (\Throwable | \Exception $e) {
             Log::error('Error updating meeting Schedule : ' . $e->getMessage());
             return $this->br_response(400, 'unexpected error, try again later');
         }

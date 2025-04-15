@@ -14,15 +14,20 @@ class ScheduleClient extends Pivot
     protected $table = 't_ScheduleClients';
 
     protected $fillable = [
-        'ScheduleId', 'ClientID',
-        'CreatedOn', 'CreatedBy', 'ModifiedOn', 'ModifiedBy', 'ReminderOn'
-    ];
+                           'ScheduleId',
+                           'ClientID',
+                           'CreatedOn',
+                           'CreatedBy',
+                           'ModifiedOn',
+                           'ModifiedBy',
+                           'ReminderOn',
+                          ];
 
     protected $casts = [
-        'CreatedOn' => 'datetime',
-        'ModifiedOn' => 'datetime',
-        'ReminderOn' => 'datetime',
-    ];
+                        'CreatedOn'  => 'datetime',
+                        'ModifiedOn' => 'datetime',
+                        'ReminderOn' => 'datetime',
+                       ];
 
     public function client(): BelongsTo
     {

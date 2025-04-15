@@ -50,9 +50,7 @@ class LoanMessageController extends Controller
 
         $client = $product->client;
         if (!$client instanceof Client) {
-            throw ValidationException::withMessages([
-                'message_to' => 'phone number maybe invalid'
-            ]);
+            throw ValidationException::withMessages(['message_to' => 'phone number maybe invalid']);
         }
         $request->getClientPhone($client);
 

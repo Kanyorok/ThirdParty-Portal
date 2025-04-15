@@ -9,7 +9,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CrmBranch extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -21,9 +22,14 @@ class CrmBranch extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'UserId', 'ManagerId', 'Name', 'BranchID',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy'
-    ];
+                           'UserId',
+                           'ManagerId',
+                           'Name',
+                           'BranchID',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 
     public static function getPrimaryKey(): string
     {
