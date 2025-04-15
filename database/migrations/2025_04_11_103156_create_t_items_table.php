@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('t_Items', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique()->comment('Item name');
-            $table->string('description')->nullable()->comment('Item description');
-            $table->enum('type', ['good', 'service'])->default('good')->comment('Item type');
+            $table->string('Name')->unique()->comment('Item name');
+            $table->string('Description')->nullable()->comment('Item description');
+            $table->enum('Type', ['good', 'service'])->default('good')->comment('Item type');
 
             //Fields for goods
             $table->unsignedInteger('CategoryId')->nullable()->comment('Category ID');

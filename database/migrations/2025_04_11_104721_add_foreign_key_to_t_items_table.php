@@ -29,10 +29,10 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('t_items', function (Blueprint $table) {
-            $table->dropForeign(['category_id']);
+            $table->dropForeign(['CategoryId']);
 
             // Optional: revert the column type back if needed
-            $table->unsignedInteger('category_id')->nullable()->change();
+            $table->unsignedInteger('CategoryId')->nullable()->change();
         });
     }
 };

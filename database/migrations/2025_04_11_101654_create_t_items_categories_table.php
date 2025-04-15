@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('t_ItemCategories', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique()->comment('Category name');
-            $table->string('description')->nullable()->comment('Category description');
+            $table->string('Name')->unique()->comment('Category name');
+            $table->string('Description')->nullable()->comment('Category description');
             $table->timestamps();
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');

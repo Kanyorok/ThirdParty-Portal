@@ -8,20 +8,20 @@ class Item extends Model
 {
     protected $table = 't_items';
     protected $fillable = [
-                           'name',
-                           'type',
-                           'description',
-                           'category_id',
-                           'unit_of_measure',
-                           'unit_price',
-                           'service_scope',
+                           'Name',
+                           'Type',
+                           'Description',
+                           'CategoryId',
+                           'UOM',
+                           'UnitPrice',
+                           'ServiceScope',
                            'CreatedBy',
                            'ModifiedBy',
                           ];
 
     public function category()
     {
-        return $this->belongsTo(ItemCategory::class, 'category_id');
+        return $this->belongsTo(ItemCategory::class, 'CategoryId');
     }
 
     public function scopeGoods($query)
