@@ -34,6 +34,6 @@ class RequisitionItemRequest extends FormRequest
             'ActualPrice' =>    ['nullable']
 
             //
-        ];
+               ];
     }
 }

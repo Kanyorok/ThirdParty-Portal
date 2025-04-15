@@ -2,7 +2,6 @@
 
 namespace App\Services\ERP;
 
-
 use App\Models\ERP\RequisitionLines;
 use App\Models\User;
 
@@ -16,7 +15,7 @@ class RequisitionItemService
         //
     }
 
-    public static function create(array $data,User $actor): RequisitionLines
+    public static function create(array $data, User $actor): RequisitionLines
     {
         return  RequisitionLines::create([
         'Module' => $data['Module'],
@@ -30,7 +29,6 @@ class RequisitionItemService
         'CreatedBy' => $actor->Id,
         'ModifiedBy' => $actor->Id
         // optionally CreatedBy etc.
-    ]);
-
+                                         ]);
     }
 }
