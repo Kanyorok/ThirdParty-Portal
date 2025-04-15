@@ -9,7 +9,7 @@ Route::namespace('Procurement')->group(function () {
     //Requisitions
     Route::resource('requisition', 'RequisitionsController');
     Route::resource('requisitionItem', 'RequisitionItemsController');
+    Route::get('items/download', [ItemController::class, 'download'])->name('items.download');
     Route::resource('items', 'ItemController');
     Route::resource('categories', 'ItemCategoryController');
-    Route::get('items/download', [ItemController::class, 'download'])->name('items.download');
 });

@@ -22,8 +22,8 @@
         <div class="col-md-4">
             <select name="type" class="form-control">
                 <option value="">-- Filter by Type --</option>
-                <option value="goods" {{ request('type') == 'goods' ? 'selected' : '' }}>Goods</option>
-                <option value="services" {{ request('type') == 'services' ? 'selected' : '' }}>Services</option>
+                <option value="good" {{ request('type') == 'good' ? 'selected' : '' }}>Goods</option>
+                <option value="service" {{ request('type') == 'service' ? 'selected' : '' }}>Services</option>
             </select>
         </div>
 
