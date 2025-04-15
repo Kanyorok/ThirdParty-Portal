@@ -8,7 +8,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class RequisitionLines extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
+
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
@@ -17,11 +19,20 @@ class RequisitionLines extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'RequisitionID', 'Module', 'Item', 'Description', 'UOM', 'Quantity', 'ExpectedPrice',
-        'Urgency', 'CreatedBy', 'ModifiedBy', 'DeletedBy'
-    ];
+                           'RequisitionID',
+                           'Module',
+                           'Item',
+                           'Description',
+                           'UOM',
+                           'Quantity',
+                           'ExpectedPrice',
+                           'Urgency',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 
-    public static function getPrimaryKey():string
+    public static function getPrimaryKey(): string
     {
         return 'RequisitionLineID';
     }
@@ -29,11 +40,8 @@ class RequisitionLines extends Model
     protected $casts = [
         // 'Status' => CampaignStatusEnum::class,
         // 'Type' => CampaignTypeEnum::class,
-        'CreatedBy' => 'integer',
-        'ModifiedBy' => 'integer' //,
+                        'CreatedBy'  => 'integer',
+                        'ModifiedBy' => 'integer',//,
         // 'Processing' => 'boolean'
-    ];
-
-
-
+                       ];
 }

@@ -14,10 +14,10 @@ class ItemCategorySeeder extends Seeder
     {
         // Seed some example categories
         ItemCategory::insert([
-            ['name' => 'Electronics'],
-            ['name' => 'Furniture'],
-            ['name' => 'Stationery'],
-            ['name' => 'Services'],
-        ]);
+                              ['name' => 'Electronics'],
+                              ['name' => 'Furniture'],
+                              ['name' => 'Stationery'],
+                              ['name' => 'Services'],
+                             ]);
     }
 }

@@ -13,7 +13,7 @@ class RequisitionsController extends Controller
     public function index()
     {
         //
-        return view ('procurement.requisitions.index');
+        return view('procurement.requisitions.index');
     }
 
     /**
@@ -22,7 +22,7 @@ class RequisitionsController extends Controller
     public function create()
     {
         //
-        return view ('procurement.requisitions.create');
+        return view('procurement.requisitions.create');
     }
 
     /**
