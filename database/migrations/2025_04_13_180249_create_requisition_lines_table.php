@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id('Id');
             $table->integer('RequisitionID')->nullable();
             $table->string('Module');
+            $table->string('Type');
             $table->string('Item');
             $table->longText('Description');
             $table->string('UOM');

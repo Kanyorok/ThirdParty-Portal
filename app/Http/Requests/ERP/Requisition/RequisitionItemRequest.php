@@ -24,6 +24,7 @@ class RequisitionItemRequest extends FormRequest
         return [
 
             'Module' => ['required'],
+            'Type' => ['required'],
             'Item' =>   ['required'],
             'Description' =>    ['required'],
             'Quantity' =>   ['required'],

@@ -20,6 +20,7 @@ class RequisitionItemService
     {
         return  RequisitionLines::create([
         'Module' => $data['Module'],
+        'Type' => $data['Type'],
         'Item' => $data['Item'],
         'Description' => $data['Description'],
         'Quantity' => $data['Quantity'],
