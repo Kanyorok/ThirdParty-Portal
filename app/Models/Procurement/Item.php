@@ -17,6 +17,8 @@ class Item extends Model
                            'ServiceScope',
                            'CreatedBy',
                            'ModifiedBy',
+                           'UniqueCode',
+                           'Currency',
                           ];
 
     public function category()

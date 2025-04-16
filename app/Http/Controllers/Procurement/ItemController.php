@@ -50,7 +50,22 @@ class ItemController extends Controller
                                          'UOM' => 'nullable|string|max:100',
                                          'UnitPrice'      => 'nullable|numeric|min:0',
                                          'ServiceScope'   => 'nullable|string',
+                                         'Currency'       => 'nullable|string|max:3',
                                         ]);
+
+         // Generate UniqueCode
+        $type = $validated['Type'];
+        $prefix = $type === 'good' ? 'IT' : 'SE';
+
+        // Get the last item of the same type
+        $lastItem = Item::where('Type', $type)->orderBy('id', 'desc')->first();
+
+        // Determine the next sequential number
+        $lastCode = $lastItem ? intval(substr($lastItem->UniqueCode, 2)) : 0;
+        $nextCode = str_pad($lastCode + 1, 3, '0', STR_PAD_LEFT);
+
+        // Assign the generated UniqueCode
+        $validated['UniqueCode'] = $prefix . $nextCode;
 
         $validated['CreatedBy'] = auth()->user()->Id;
         $validated['ModifiedBy'] = auth()->user()->Id;
@@ -82,7 +97,27 @@ class ItemController extends Controller
                                          'UOM' => 'nullable|string|max:100',
                                          'UnitPrice'      => 'nullable|numeric|min:0',
                                          'ServiceScope'   => 'nullable|string',
+                                         'Currency'       => 'nullable|string|max:3',
                                         ]);
+
+        // Check if the Type has changed
+        if ($validated['Type'] !== $item->Type) {
+            $type = $validated['Type'];
+            $prefix = $type === 'good' ? 'IT' : 'SE';
+
+            // Get the last item of the new type
+            $lastItem = Item::where('Type', $type)->orderBy('id', 'desc')->first();
+
+            // Determine the next sequential number
+            $lastCode = $lastItem ? intval(substr($lastItem->UniqueCode, 2)) : 0;
+            $nextCode = str_pad($lastCode + 1, 3, '0', STR_PAD_LEFT);
+
+            // Assign the new UniqueCode
+            $validated['UniqueCode'] = $prefix . $nextCode;
+        }
+
+
+        $validated['ModifiedBy'] = auth()->user()->Id;
 
         $item->update($validated);
 
