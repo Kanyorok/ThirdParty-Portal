@@ -31,4 +31,23 @@ class RequisitionItemService
         // optionally CreatedBy etc.
                                          ]);
     }
+
+    public static function getRequisitionItems(){
+
+        return DB::table('t_RequisitionLines')
+            ->select('t_RequisitionLines.*')
+            ->get();
+    }
+
+    // public static function getItemDetails($item){
+    //     // logger('Fetching items details: ' . $item);
+
+    //     return DB::table('t_Items')
+    //         ->join('t_ItemCategories','t_Items.CategoryId','=','t_ItemCategories.id')
+    //         ->where('t_Items.id',$item)
+    //         ->select('t_Items.Description','t_Items.UOM','t_Items.UnitPrice')
+    //         ->get();
+    // }
+
+
 }

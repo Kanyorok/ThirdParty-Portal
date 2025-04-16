@@ -47,14 +47,14 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="onboarding-content with-gradient d-none modal-item" id="createRequistionItem">
-                        <form action="{{ route('requisitionItem.store') }}" method="post" id="createRequistionItemForm">
+                    <div class="onboarding-content with-gradient d-none modal-item" id="createRequisitionItem">
+                        <form action="{{ route('requisitionItem.store') }}" method="post" id="createRequisitionItemForm">
                             @csrf
 
                             <div class="mb-3">
                                 <label class="form-label" for="Module">Module <span class="text-danger">*</span></label>
                                 <select class="form-control" name="Module" id="Module" required>
-                                    <option selected disabled>Select a List</option>
+                                    <option selected disabled>Select list</option>
                                     <option>Purchase Requisition</option>
                                     <option>Tender</option>
 
@@ -70,8 +70,9 @@
                                 <label class="form-label" for="Type">Item Type <span
                                         class="text-danger">*</span></label>
                                 <select class="form-control" name="Type" id="Type" required>
-                                    <option selected disabled>Select a List</option>
-                                    <option>Select a List</option>
+                                    <option selected disabled>Select type</option>
+                                    <option value="good">Good</option>
+                                    <option value="service">Service</option>
                                     {{-- @foreach ($MarketingLists as $MarketingList)
                                         <option value="{{ $MarketingList->slug }}">{{ $MarketingList->Label }}</option>
                                     @endforeach --}}
@@ -82,8 +83,8 @@
                             <div class="mb-3">
                                 <label for="Item" class="form-label">Item </label>
                                 <select class="form-control" name="Item" id="Item" required>
-                                    <option selected disabled>Select a List</option>
-                                    <option>Select a List</option>
+                                    <option selected disabled>Select item</option>
+
                                     {{-- @foreach ($MarketingLists as $MarketingList)
                                         <option value="{{ $MarketingList->slug }}">{{ $MarketingList->Label }}</option>
                                     @endforeach --}}
@@ -92,7 +93,7 @@
                             </div>
                             <div class="mb-3">
                                 <label class="form-label" for="Description">Description </label>
-                                <textarea name="Description" id="Description" rows="3" class="form-control" maxlength="1000"></textarea>
+                                <textarea name="Description" id="Description" rows="3" class="form-control" maxlength="1000" readonly></textarea>
                                 <p id="Description_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
                             {{-- <div class="mb-3">
@@ -115,9 +116,10 @@
                             </div>
                             <div class="mb-3">
                                 <label class="form-label" for="UOM">UOM </label>
+
                                 <select class="form-control" name="UOM" id="UOM" required>
-                                    <option selected disabled>Select a List</option>
-                                    <option>Select a List</option>
+{{--                                    <option selected disabled>Select UOM</option>--}}
+
                                     {{-- @foreach ($MarketingLists as $MarketingList)
                                         <option value="{{ $MarketingList->slug }}">{{ $MarketingList->Label }}</option>
                                     @endforeach --}}
@@ -137,8 +139,7 @@
                             <div class="mb-3">
                                 <label class="form-label" for="ActualPrice">Actual Price </label>
 
-                                <input type="number" class="form-control" id="ActualPrice" name="ActualPrice" required
-                                    placeholder="Actual Price">
+                                <input type="number" class="form-control" id="ActualPrice" name="ActualPrice" readonly required
 
                                 <p id="ActualPrice_error" class="invalid-feedback d-none error col-12" role="alert">
                                 </p>
@@ -146,8 +147,15 @@
                             <div class="mb-3">
                                 <label class="form-label" for="Urgency">Urgency </label>
 
-                                <input type="number" class="form-control" id="Urgency" min="1" max="4"
-                                    name="Urgency" required placeholder="Urgency">
+                                <select class="form-control" name="Urgency" id="Urgency" required>
+                                    <option selected disabled>Select urgency</option>
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+
+                                </select>
+
 
                                 <p id="Urgency" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
@@ -156,7 +164,7 @@
                                 <button type="button" class="btn btn-secondary float-start" data-bs-dismiss="modal">
                                     cancel
                                 </button>
-                                <button class="btn btn-primary float-end" id="createRequistionItemBtn" type="submit"><i
+                                <button class="btn btn-primary float-end" id="createRequisitionItemBtn" type="submit"><i
                                         class="fas fa-save"></i> add item
                                 </button>
                             </div>
@@ -179,35 +187,41 @@
             $(document).on('click', '.modal-create-item', function() {
                 $(".modal-title").html('Add Item');
                 $(".modal-item").addClass('d-none');
-                $('#createRequistionItem').removeClass('d-none');
+                $('#createRequisitionItem').removeClass('d-none');
                 $Modal.modal('show');
             });
 
-            $('form#createRequistionItemForm').submit(async function(e) {
+            $('form#createRequisitionItemForm').submit(async function(e) {
                 // alert('hello');
                 e.preventDefault();
-                if (await saveForm($(this), $('#createRequistionItemBtn'), true, true, true)) {
+                if (await saveForm($(this), $('#createRequisitionItemBtn'), true, true, true)) {
                     $Modal.modal('hide');
                 }
 
             });
 
-            $(#Type).on('change',function(){
-
+            $('#Type').on('change',function(){
+                    // alert('hello');
                 let type = $(this).val();
+
                 if (type !== '') {
+                    // alert(type + 'eric');
                     $.ajax({
-                        url: '',
+                        url: `/requisitionItem/getItem/${type}`,
                         type: 'GET',
                         success: function (response) {
+                            // console.log('AJAX Response:', response);
+
                             $('#Item').empty().append('<option value="">Select Item</option>');
-                            $.each(response, function (key, item) {
-                                $('#item').append(`<option value="${item.id}">${item.name}</option>`);
+                            $.each(response.data, function (key, item) {
+                                $('#Item').append(`<option value="${item.id}">${item.name}</option>`);
 
                             });
                         },
-                        error: function () {
-                            alert('Failed to load items')
+                        error: function (response) {
+                            // alert('Failed to load items');
+                            alert(response)
+                            console.log(response)
                         }
                     });
                 }else{
@@ -217,29 +231,39 @@
             })
 
 
-            // $("#createRequistionItemBtn").click(function (e) {
-            //     e.preventDefault();
+            $('#Item').on('change',function(){
+                // alert('hello');
+                let item = $(this).val();
 
-            //     let form = $('#createRequistionItemForm')[0];
-            //     let data = new FormData(form);
+                if (item !== '') {
+                    // alert(type + 'eric');
+                    $.ajax({
+                        url: `/requisitionItem/getItemDetails/${item}`,
+                        type: 'GET',
+                        success: function (response) {
+                            // console.log('AJAX Response:', response);
 
-            //     $.ajax({
-            //         url: "{{ route('requisitionItem.store') }}",
-            //         type: "POST",
-            //         data: data,
-            //         dataType: "json",
-            //         processData: false,
-            //         contentType: false,
-            //         success: function (response) {
-            //             console.log(response);
-            //             // Show success message or close modal here
-            //         },
-            //         error: function (xhr) {
-            //             console.error(xhr.responseText);
-            //             // Optional: Handle validation or other error display
-            //         }
-            //     });
-            // });
+                            // $('#UOM').empty().append('<option value="">Select UOM</option>');
+
+                            if (response.data && response.data.length > 0) {
+                            $.each(response.data, function (key, item) {
+                                $('#UOM').empty().append(`<option value="${item.UOM}">${item.UOM}</option>`);
+
+                                $('#Description').val(item.Description || '');
+                                $('#ActualPrice').val(item.UnitPrice || '');
+                            });}
+                        },
+                        error: function (response) {
+                            // alert('Failed to load items');
+                            alert(response)
+                            console.log(response)
+                        }
+                    });
+                }else{
+
+                    $('#Item').empty().append('<option value="">Select Item</option>')
+                }
+            })
 
             $("#MarketingList").select2({
                 dropdownParent: $Modal,

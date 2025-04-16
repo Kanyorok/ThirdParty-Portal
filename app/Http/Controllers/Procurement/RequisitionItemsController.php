@@ -37,11 +37,46 @@ class RequisitionItemsController extends Controller
         }
     }
 
+    public function getItemDetails($item): JsonResponse
+    {
+        try{
+            $details = $this->itemService->getItemDetails($item);
+            return response()->json([
+                'success' => true,
+                'data' => $details,
+            ]);}
+        catch(\Exception $e){
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch items.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getRequisitionItems(): JsonResponse
+    {
+        try{
+            $details = $this->itemService->getRequisitionItems();
+            return response()->json([
+                'success' => true,
+                'data' => $details,
+            ]);}
+        catch(\Exception $e){
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch items.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
+
         //
         return view ('procurement.requisitionItems.index');
     }

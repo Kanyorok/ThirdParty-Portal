@@ -33,7 +33,12 @@
                                 <th>Urgency</th>
                             </tr>
                         </thead>
-                        <tbody></tbody>
+                        <tbody>
+                            @forelse($)
+                            <tr>
+
+                            </tr>
+                        </tbody>
                     </table>
                 </div>
             </div>

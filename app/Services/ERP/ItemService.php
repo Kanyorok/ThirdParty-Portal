@@ -1,6 +1,7 @@
 <?php
 namespace App\Services\ERP;
 
+use Illuminate\Support\Facades\DB;
 use function Laravel\Prompts\select;
 
 class ItemService
@@ -14,14 +15,24 @@ class ItemService
     }
 
     public static function getItemByType($type){
+        // logger('Fetching items for type: ' . $type);
 
         return DB::table('t_Items')
-//            ->join('t_ItemCategories')
-            ->join('t_Item_categories','t_Items.category_id','=','t_Item_categories.id')
+            ->join('t_ItemCategories','t_Items.CategoryId','=','t_ItemCategories.id')
             ->where('t_Items.type',$type)
-            ->select('t_Items.*','t_Item_categories.name')
+            ->select('t_Items.id','t_Items.name')
             ->get();
-
     }
+    public static function getItemDetails($item){
+        // logger('Fetching items details: ' . $item);
+
+        return DB::table('t_Items')
+            ->join('t_ItemCategories','t_Items.CategoryId','=','t_ItemCategories.id')
+            ->where('t_Items.id',$item)
+            ->select('t_Items.Description','t_Items.UOM','t_Items.UnitPrice')
+            ->get();
+    }
+
+
 
 }
