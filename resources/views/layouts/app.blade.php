@@ -40,7 +40,7 @@
                                 </svg>
                             </a>
                         </div>
-                        <div class="pc-user-links collapse" id="pc_sidebar_userlink" style="">
+                        <div class="pc-user-links collapse" id="pc_sidebar_userlink">
                             <div class="pt-3">
                                 <a href="{{ route('profile') }}"><i class="ti ti-user"></i> <span
                                         data-i18n="My Account">My Account</span>
@@ -103,6 +103,22 @@
                                     <li class="pc-item">
                                         <a class="pc-link" href="{{ route('categories.index') }}" data-i18n="Add">Item
                                             Categories</a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Teacher">
+                                Procurement Modes
+                            </span> <span class="pc-arrow"><i
+                                            data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item">
+                                        <a class="pc-link" href="{{ route('items.create') }}" data-i18n="List">List Modes</a>
+                                    </li>
+                                    <li class="pc-item">
+                                        <a class="pc-link" href="{{ route('items.index') }}" data-i18n="Apply">Add Mode</a>
+                                    </li>
+                                    <li class="pc-item">
+                                        <a class="pc-link" href="{{ route('categories.index') }}" data-i18n="Add">Mode Timelines</a>
                                     </li>
                                 </ul>
                             </li>
