@@ -37,7 +37,27 @@
 
     <div class="mb-3">
         <label class="form-label">Unit of Measure <span class="text-danger">*</span></label>
-        <input type="text" name="UOM" class="form-control" value="{{ old('UOM', $item->UOM ?? '') }}">
+        <select name="UOM" class="form-control" required>
+            <option value="">-- Select Unit of Measure --</option>
+            @php
+                $units = [
+                    'pcs' => 'Pieces',
+                    'kg' => 'Kilograms',
+                    'ltr' => 'Liters',
+                    'm' => 'Meters',
+                    'box' => 'Box',
+                    'set' => 'Set',
+                    'hour' => 'Hour',
+                    'day' => 'Day',
+                    'service' => 'Service',
+                ];
+            @endphp
+            @foreach($units as $key => $label)
+                <option value="{{ $key }}" {{ old('UOM', $item->UOM ?? '') === $key ? 'selected' : '' }}>
+                    {{ $label }}
+                </option>
+            @endforeach
+        </select>
     </div>
 
     <div class="mb-3">

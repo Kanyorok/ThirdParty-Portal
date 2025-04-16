@@ -52,6 +52,7 @@
                 <th>Category</th>
                 <th>Description</th>
                 <th>Unit Price</th>
+                <th>UOM</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -65,6 +66,7 @@
                     <td>{{ optional($item->category)->Name }}</td>
                     <td>{{ $item->Description }}</td>
                     <td>{{ $item->Currency }} {{ $item->UnitPrice }}</td>
+                    <td>{{ $item->UOM }}</td>
                     <td>
                         <a href="{{ route('items.edit', $item) }}" class="btn btn-sm btn-warning">Edit</a>
                         <form action="{{ route('items.destroy', $item) }}" method="POST" style="display:inline-block">
