@@ -30,7 +30,7 @@
                 <tr>
                     <td>{{ $index + 1 }}</td>
                     <td>{{ $mode->UniqueCode }}</td>
-                    <td>{{ $mode->Name }}</td>
+                    <td><a href="{{ route('procurement-modes.show', $mode->id) }}" class="btn btn-primary">{{ $mode->Name }}</a></td>
                     <td>{{ $mode->Description }}</td>
                     <td>{{ $mode->created_at->format('Y-m-d') }}</td>
                     <td>

@@ -18,4 +18,9 @@ class ProcurementMode extends Model
         'ModifiedBy',
         'UniqueCode',
     ];
+
+    public function timelines()
+    {
+        return $this->hasMany(ModeTimeline::class, 'ProcurementModeId');
+    }
 }

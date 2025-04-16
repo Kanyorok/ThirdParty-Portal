@@ -50,7 +50,9 @@ class ProcurementModeController extends Controller
 
     public function show(ProcurementMode $procurement_mode)
     {
-        return view('procurement.procurement_modes.show', compact('procurement_mode'));
+        return view('procurement.procurement_modes.show', [
+            'procurement_mode' => $procurement_mode->load('timelines'),
+        ]);
     }
 
     public function edit(ProcurementMode $procurement_mode)

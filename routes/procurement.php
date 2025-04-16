@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Procurement\ItemController;
 use App\Http\Controllers\Procurement\ItemCategoryController;
+use App\Http\Controllers\Procurement\ModeTimelineController;
 
 Route::namespace('Procurement')->group(function () {
 
@@ -22,4 +23,10 @@ Route::namespace('Procurement')->group(function () {
 
     // Procurement Modes
     Route::resource('procurement-modes', ProcurementModeController::class);
+
+    //Mode Timelines
+    Route::post('/timelines', [ModeTimelineController::class, 'store'])->name('timelines.store');
+    Route::delete('timelines/{id}', [ModeTimelineController::class, 'destroy'])->name('timelines.destroy');
+    Route::get('timelines/{id}/edit', [ModeTimelineController::class, 'edit'])->name('timelines.edit');
+    Route::put('timelines/{id}', [ModeTimelineController::class, 'update'])->name('timelines.update');
 });
