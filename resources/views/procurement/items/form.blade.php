@@ -41,6 +41,22 @@
     </div>
 
     <div class="mb-3">
+        <label class="form-label">Currency <span class="text-danger">*</span></label>
+        <select name="Currency" class="form-control" required>
+            <option value="">-- Select Currency --</option>
+            @php
+                $currencies = ['KES', 'USD', 'EUR', 'GBP', 'UGX', 'TZS', 'ZAR']; // extend as needed
+            @endphp
+            @foreach($currencies as $currency)
+                <option value="{{ $currency }}"
+                    {{ old('Currency', $item->Currency ?? '') === $currency ? 'selected' : '' }}>
+                    {{ $currency }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+
+    <div class="mb-3">
         <label class="form-label">Unit Price <span class="text-danger">*</span></label>
         <input type="number" step="0.01" name="UnitPrice" class="form-control" value="{{ old('UnitPrice', $item->UnitPrice ?? '') }}">
     </div>
