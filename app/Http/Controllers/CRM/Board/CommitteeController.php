@@ -31,18 +31,19 @@ class CommitteeController extends Controller
         $this->authorize('viewAny', Board::class);
         return Datatables::of(Committee::query()->withCount('members')->select('*'))->addIndexColumn()
             ->editColumn('members_count', function (Committee $committee) {
-               return number_format($committee->members_count ?? 0);
+                return number_format($committee->members_count ?? 0);
             })->setRowClass('mouse_pointer user-select-none dbl-click-summary-data')->setRowData([
-                'dbl_click_url' => function (Committee $committee) {
-                    return route('committee.show', [$committee->CommitteeID]);
-                }, 'summary_title' => "Committee",
-            ])->rawColumns(['committees'])->make();
+                                                                                                  'dbl_click_url' => function (Committee $committee) {
+                                                                                                    return route('committee.show', [$committee->CommitteeID]);
+                                                                                                  },
+                                                                                                  'summary_title' => "Committee",
+                                                                                                 ])->rawColumns(['committees'])->make();
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create():View
+    public function create(): View
     {
         $this->authorize('viewAny', Board::class);
         return view('crm.board.committee.create');
@@ -58,16 +59,16 @@ class CommitteeController extends Controller
         try {
             DB::transaction(static function () use ($actor, $request) {
                 $committee = Committee::create([
-                    "CommitteeID" => $request->generateID(),
-                    "Name" => $request->validated('CommitteeName'),
-                    'Notes' => $request->validated('CommitteeNotes'),
-                    'CreatedBy' => $actor->Id,
-                    'ModifiedBy' => $actor->Id,
-                ]);
+                                                "CommitteeID" => $request->generateID(),
+                                                "Name"        => $request->validated('CommitteeName'),
+                                                'Notes'       => $request->validated('CommitteeNotes'),
+                                                'CreatedBy'   => $actor->Id,
+                                                'ModifiedBy'  => $actor->Id,
+                                               ]);
 
                 activity()->causedBy($actor)->performedOn($committee)->event('create')->log('created board committee ' . $committee->CommitteeID . '.');
             });
-        } catch (Exception|\Throwable $e) {
+        } catch (Exception | \Throwable $e) {
             Log::error('creating committee.');
             Log::error($e);
             return $this->errored('an unexpected error occurred');
@@ -78,7 +79,7 @@ class CommitteeController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Committee $committee):View
+    public function show(Committee $committee): View
     {
         $this->authorize('viewAny', Board::class);
         return view('crm.board.committee.show', compact('committee'));
@@ -87,21 +88,21 @@ class CommitteeController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(CommitteeRequest $request, Committee $committee):JsonResponse
+    public function update(CommitteeRequest $request, Committee $committee): JsonResponse
     {
         $this->authorize('viewAny', Board::class);
         $actor = $request->user();
         try {
             DB::transaction(static function () use ($committee, $actor, $request) {
                 $committee->update([
-                    "Name" => $request->validated('CommitteeName'),
-                    'Notes' => $request->validated('CommitteeNotes'),
-                    'ModifiedBy' => $actor->Id,
-                ]);
+                                    "Name"       => $request->validated('CommitteeName'),
+                                    'Notes'      => $request->validated('CommitteeNotes'),
+                                    'ModifiedBy' => $actor->Id,
+                                   ]);
 
                 activity()->causedBy($actor)->performedOn($committee)->event('update')->log('Updated committee ' . $committee->CommitteeID . '.');
             });
-        } catch (\Throwable|Exception $e) {
+        } catch (\Throwable | Exception $e) {
             Log::error('update committee.');
             Log::error($e);
             return $this->errored('an unexpected error occurred');
@@ -119,12 +120,12 @@ class CommitteeController extends Controller
         try {
             DB::transaction(static function () use ($committee, $actor, $request) {
                 $committee->forceFill([
-                    'DeletedOn' => now(),
-                    'DeletedBy' => $request->user()->Id,
-                ])->save();
+                                       'DeletedOn' => now(),
+                                       'DeletedBy' => $request->user()->Id,
+                                      ])->save();
                 activity()->causedBy($actor)->performedOn($committee)->event('delete')->log('removed committee ' . $committee->CommitteeID . '.');
             });
-        } catch (\Throwable|Exception $e) {
+        } catch (\Throwable | Exception $e) {
             Log::error('trash committee.');
             Log::error($e);
             return $this->errored('an unexpected error occurred');

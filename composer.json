@@ -15,7 +15,7 @@
         "ext-mbstring": "*",
         "ext-pdo": "*",
         "ext-zlib": "*",
-        "barryvdh/laravel-dompdf": "^3.0",
+        "barryvdh/laravel-dompdf": "*",
         "davmixcool/php-sentiment-analyzer": "^1.2",
         "echolabsdev/prism": "^0.34.0",
         "facebook/php-business-sdk": "^21.0",
@@ -24,7 +24,7 @@
         "laravel/framework": "^11.32",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
-        "noweh/twitter-api-v2-php": "^3.6",
+        "maatwebsite/excel": "*",
         "php-imap/php-imap": "^5.0",
         "roach-php/core": "^3.2",
         "roach-php/laravel": "^3.1",
@@ -37,7 +37,6 @@
         "yajra/laravel-datatables-html": "11.0"
     },
     "require-dev": {
-        "roave/security-advisories": "dev-latest",
         "fakerphp/faker": "^1.23",
         "laravel/pint": "^1.13",
         "laravel/sail": "^1.26",

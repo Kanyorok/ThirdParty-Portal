@@ -18,7 +18,6 @@ use Illuminate\Validation\ValidationException;
 
 class SurveyQuestionController extends Controller
 {
-
     public function __construct()
     {
         $this->middleware('ajax');
@@ -69,10 +68,10 @@ class SurveyQuestionController extends Controller
         try {
             DB::transaction(static function () use ($request, $question, $actor) {
                 $question->update([
-                    'Question' => $request->validated('SurveyQuestion'),
-                    'Notes' => $request->validated('SurveyHelp') ?? '',
-                    'ModifiedBy' => $actor->Id,
-                ]);
+                                   'Question'   => $request->validated('SurveyQuestion'),
+                                   'Notes'      => $request->validated('SurveyHelp') ?? '',
+                                   'ModifiedBy' => $actor->Id,
+                                  ]);
                 // activity()->causedBy($actor)->performedOn($survey)->event('delete')->log('added question to survey : ' . $survey->SurveyID);
             });
         } catch (ErroredException $e) {
@@ -101,9 +100,9 @@ class SurveyQuestionController extends Controller
         try {
             DB::transaction(static function () use ($survey, $question, $actor) {
                 $question->forceFill([
-                    'DeletedBy' => $actor->Id,
-                    'DeletedOn' => now()
-                ])->save();
+                                      'DeletedBy' => $actor->Id,
+                                      'DeletedOn' => now(),
+                                     ])->save();
                 activity()->causedBy($actor)->performedOn($survey)->event('update')->log('removed a question in survey : ' . $survey->SurveyID);
             });
         } catch (Exception $e) {

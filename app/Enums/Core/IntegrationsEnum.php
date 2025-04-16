@@ -44,14 +44,17 @@ enum IntegrationsEnum: string
 
     public static function socials(): array
     {
-        return [self::Twitter, self::Facebook];
+        return [
+                self::Twitter,
+                self::Facebook,
+               ];
     }
 
-    public function getIcon(string $class=''): string
+    public function getIcon(string $class = ''): string
     {
         return match ($this) {
-            self::Facebook => '<i class="fa-brands fa-facebook text-primary '.$class.'"></i>',
-            self::Twitter => '<i class="fa-brands fa-twitter text-primary '.$class.'"></i>',
+            self::Facebook => '<i class="fa-brands fa-facebook text-primary ' . $class . '"></i>',
+            self::Twitter => '<i class="fa-brands fa-twitter text-primary ' . $class . '"></i>',
             default => '',
         };
     }

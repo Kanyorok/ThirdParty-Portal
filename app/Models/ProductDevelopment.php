@@ -13,7 +13,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ProductDevelopment extends Model
 {
-    use SoftDeletes, UserActorTrait, ImageTrait;
+    use SoftDeletes;
+    use UserActorTrait;
+    use ImageTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -23,24 +25,42 @@ class ProductDevelopment extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'ProductID', 'Name', 'TargetGroup', 'User_ID', 'Income', 'Revenue', 'Regulatory', 'Notes', 'Justification', 'Risks', 'RiskStrategies', 'Summary', 'StageId',
-        'CommentStart', 'CommentEnd', 'ArchivedOn', 'ArchivedBy', 'CreatedBy', 'ModifiedBy', 'DeletedBy'
-    ];
+                           'ProductID',
+                           'Name',
+                           'TargetGroup',
+                           'User_ID',
+                           'Income',
+                           'Revenue',
+                           'Regulatory',
+                           'Notes',
+                           'Justification',
+                           'Risks',
+                           'RiskStrategies',
+                           'Summary',
+                           'StageId',
+                           'CommentStart',
+                           'CommentEnd',
+                           'ArchivedOn',
+                           'ArchivedBy',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 
     protected $casts = [
-        'Income' => 'decimal:2',
-        'Revenue' => 'decimal:2',
-        'ArchivedOn' => 'datetime',
-        'CommentStart' => 'datetime',
-        'CommentEnd' => 'datetime',
-        'StageId' => 'integer',
-        'User_ID' => 'integer',
+                        'Income'       => 'decimal:2',
+                        'Revenue'      => 'decimal:2',
+                        'ArchivedOn'   => 'datetime',
+                        'CommentStart' => 'datetime',
+                        'CommentEnd'   => 'datetime',
+                        'StageId'      => 'integer',
+                        'User_ID'      => 'integer',
 
-    ];
+                       ];
 
     public static function getPrimaryKey(): string
     {
-        return (new self)->getRouteKeyName();
+        return (new self())->getRouteKeyName();
     }
 
     public function getRouteKeyName(): string

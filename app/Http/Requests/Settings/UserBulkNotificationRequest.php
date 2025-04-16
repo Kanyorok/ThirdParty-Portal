@@ -15,8 +15,16 @@ class UserBulkNotificationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'NotificationLabel' => ['required', 'string', 'max:255'],
-            'NotificationContent' => ['required', 'string', 'max:2000'],
-        ];
+                'NotificationLabel'   => [
+                                          'required',
+                                          'string',
+                                          'max:255',
+                                         ],
+                'NotificationContent' => [
+                                          'required',
+                                          'string',
+                                          'max:2000',
+                                         ],
+               ];
     }
 }

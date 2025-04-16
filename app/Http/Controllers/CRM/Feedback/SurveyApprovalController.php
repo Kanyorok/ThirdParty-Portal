@@ -52,8 +52,13 @@ class SurveyApprovalController extends Controller
         $this->authorize('approve', $survey);
         $actor = $request->user();
         $data = $request->validate([
-            'survey_reject_reason' => ['required', 'string', 'min:15', 'max:2000'],
-        ]);
+                                    'survey_reject_reason' => [
+                                                               'required',
+                                                               'string',
+                                                               'min:15',
+                                                               'max:2000',
+                                                              ],
+                                   ]);
 
         try {
             DB::transaction(static function () use ($survey, $actor, $data) {

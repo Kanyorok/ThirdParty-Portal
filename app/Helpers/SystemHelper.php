@@ -14,24 +14,22 @@ class SystemHelper
         return User::where('UserID', self::ID)->withTrashed()->firstOr(function () {
             return self::_create();
         });
-
     }
 
     protected static function _create(): User
     {
         self::notifyAdmin('new system account created ?');
         return User::create([
-            'UserID' => self::ID,
-            'Name' => 'SYSTEM',
-            'Email' => 'SYSTEM ACCOUNT',
-            'Phone' => 0,
-            'BranchId' => '00',
-            'Linked' => false,
-            'Notes' => 'SYSTEM ACCOUNT',
-            'Password' => 'SYSTEM ACCOUNT',
-            'Email_Signature' => '<p>Regards,<br>. .<br>' . config('org.name') . '</p>'
-        ]);
-
+                             'UserID'          => self::ID,
+                             'Name'            => 'SYSTEM',
+                             'Email'           => 'SYSTEM ACCOUNT',
+                             'Phone'           => 0,
+                             'BranchId'        => '00',
+                             'Linked'          => false,
+                             'Notes'           => 'SYSTEM ACCOUNT',
+                             'Password'        => 'SYSTEM ACCOUNT',
+                             'Email_Signature' => '<p>Regards,<br>. .<br>' . config('org.name') . '</p>',
+                            ]);
     }
 
     /**
@@ -47,5 +45,4 @@ class SystemHelper
     {
         Log::critical($message);
     }
-
 }

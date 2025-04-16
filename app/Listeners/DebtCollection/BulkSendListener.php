@@ -40,28 +40,28 @@ class BulkSendListener implements ShouldQueue
             case LoanService::MODULE:
                 $this->_loans($event);
                 $view = 'debt-collection.notifications.document';
-            break;
+                break;
             case BoardNotificationController::MODULE:
                 $this->_board($event);
                 $view = 'board.notifications.document';
-            break;
+                break;
             case UserService::MODULE:
                 $this->_users($event);
                 $view = 'settings.users.notifications.document';
-            break;
+                break;
             case TeamService::MODULE:
                 $this->_team($event);
                 $view = 'settings.users.notifications.document';
-            break;
-
+                break;
         }
 
         $event->bulkNotification->update([
-            'CompleteOn' => now()
-        ]);
+                                          'CompleteOn' => now(),
+                                         ]);
 
-        if(is_string($view)){
-            (new UserService($event->bulkNotification->creator))->sendEmail('Bulk Notification: ' . Str::upper($event->bulkNotification->Label),
+        if (is_string($view)) {
+            (new UserService($event->bulkNotification->creator))->sendEmail(
+                'Bulk Notification: ' . Str::upper($event->bulkNotification->Label),
                 body: '<div><p>Dear ' . $event->bulkNotification->creator->Name . ',</p>
                         <p>Please find attached the detailed report for the Bulk SMS Notification titled <strong>' . e(Str::upper($event->bulkNotification->Label)) . '</strong>.</p></div>',
                 immediate: null
@@ -72,17 +72,16 @@ class BulkSendListener implements ShouldQueue
                 actor: $event->bulkNotification->creator
             )->send(true);
         }
-
     }
 
     protected function _team(BulkNotificationEvent $event): void
     {
         $team = $event->attributes['team'];
         if ($team instanceof Team) {
-            $content = Str::replace('#team',$team->Name,$event->bulkNotification->Content);
-            foreach ($team->users()->select(['t_Users.Name','t_Users.Phone','t_Users.UserID','t_Users.Id'])->get() as $user) {
-                if($user instanceof User){
-                    (new UserService($user))->sendMessage($content,$event->actor, true, $event->bulkNotification);
+            $content = Str::replace('#team', $team->Name, $event->bulkNotification->Content);
+            foreach ($team->users()->select(['t_Users.Name', 't_Users.Phone', 't_Users.UserID', 't_Users.Id'])->get() as $user) {
+                if ($user instanceof User) {
+                    (new UserService($user))->sendMessage($content, $event->actor, true, $event->bulkNotification);
                 }
             }
         }
@@ -91,9 +90,9 @@ class BulkSendListener implements ShouldQueue
     protected function _users(BulkNotificationEvent $event): void
     {
         $content = $event->bulkNotification->Content;
-        foreach (User::query()->select(['t_Users.Name','t_Users.Phone','t_Users.UserID','t_Users.Id'])->get() as $user) {
-            if($user instanceof User){
-                (new UserService($user))->sendMessage($content,$event->actor, true, $event->bulkNotification);
+        foreach (User::query()->select(['t_Users.Name', 't_Users.Phone', 't_Users.UserID', 't_Users.Id'])->get() as $user) {
+            if ($user instanceof User) {
+                (new UserService($user))->sendMessage($content, $event->actor, true, $event->bulkNotification);
             }
         }
     }
@@ -102,9 +101,9 @@ class BulkSendListener implements ShouldQueue
     {
         $committee = $event->attributes['committee'];
         if ($committee instanceof Committee) {
-            $content = Str::replace('#committee',$committee->Name,$event->bulkNotification->Content);
+            $content = Str::replace('#committee', $committee->Name, $event->bulkNotification->Content);
             foreach ($committee->members as $member) {
-                if($member instanceof Board){
+                if ($member instanceof Board) {
                     (new BoardService($member))->sendMessage($content, $event->actor, true, $event->bulkNotification);
                 }
             }

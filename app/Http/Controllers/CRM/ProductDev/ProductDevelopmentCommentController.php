@@ -55,8 +55,11 @@ class ProductDevelopmentCommentController extends Controller
         $this->authorize('view', $product);
 
         $request->validate([
-            'social_comment' => ['required', 'max:5000']
-        ]);
+                            'social_comment' => [
+                                                 'required',
+                                                 'max:5000',
+                                                ],
+                           ]);
         $parent = null;
         if ($request->has('CommentId')) {
             $cmt = $product->comments()->where('t_Comments.Id', $request->get('CommentId'))->first();
@@ -97,10 +100,12 @@ class ProductDevelopmentCommentController extends Controller
         }
 
         //todo check if comment part of product.
-        if ($comment->forceFill([
-            'DeletedOn' => now(),
-            'DeletedBy' => $request->user()->Id
-        ])->save()) {
+        if (
+            $comment->forceFill([
+                                 'DeletedOn' => now(),
+                                 'DeletedBy' => $request->user()->Id,
+                                ])->save()
+        ) {
             return $this->succeeded('comment trashed successfully', data: ['id' => $comment->Id]);
         }
 

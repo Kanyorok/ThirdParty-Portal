@@ -22,16 +22,16 @@ class DebtProduct extends Model
     protected $primaryKey = 'AccountID';//null;
 
     protected $casts = [
-        'MaturityDate' => 'datetime',
-        'processDate' => 'datetime',
-        'OutstandingBalance' => 'decimal:2',
-        'ArrearsAmount' => 'decimal:2',
-        'ArrearsDays' => 'integer'
-    ];
+                        'MaturityDate'       => 'datetime',
+                        'processDate'        => 'datetime',
+                        'OutstandingBalance' => 'decimal:2',
+                        'ArrearsAmount'      => 'decimal:2',
+                        'ArrearsDays'        => 'integer',
+                       ];
 
     public static function getPrimaryKey(): string
     {
-        return (new self)->getRouteKeyName();
+        return (new self())->getRouteKeyName();
     }
 
     public function getRouteKeyName(): string

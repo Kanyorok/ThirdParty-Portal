@@ -54,10 +54,10 @@ class TicketController extends Controller
                         $query->where('t_Tickets.Owner', Team::getPrimaryKey())
                             ->whereIn('t_Tickets.OwnerID', $actor->teamUser()->select('t_TeamUser.TeamId'));
                         // dd($actor->teams()->select('t_TeamUser.TeamId')->get('TeamId'));
-                    })->orWhere('t_Tickets.CreatedBy', $actor->Id
-                    )->orWhere(function (Builder $query) use ($actor) {
+                    })->orWhere('t_Tickets.CreatedBy', $actor->Id)->orWhere(function (Builder $query) use ($actor) {
                         $query->where('t_Tickets.Party', User::getPrimaryKey())->where('t_Tickets.PartyID', $actor->Id);
-                    })->orWhereHas('watchers', function (Builder $query) use ($actor) {// 'Party', 'PartyID'
+                    })->orWhereHas('watchers', function (Builder $query) use ($actor) {
+// 'Party', 'PartyID'
                         $query->where(function (Builder $query) use ($actor) {
                             $query->where('t_TicketUsers.PartyID', $actor->Id)->where('t_TicketUsers.Party', User::getPrimaryKey());
                         })->orWhere(function (Builder $query) use ($actor) {
@@ -65,7 +65,7 @@ class TicketController extends Controller
                         });
                     });
                 });
-            } else if ($request->get('_user') === 'none') {
+            } elseif ($request->get('_user') === 'none') {
                 $query->where(function (Builder $query) {
                     $query->where('t_Tickets.Owner', User::getPrimaryKey())->where('t_Tickets.OwnerID', SystemHelper::user()->Id);
                 });
@@ -118,9 +118,7 @@ class TicketController extends Controller
         $assignee = $request->getAssignee();
         $watchers = $request->getWatchers();
         if ($assignee->Id === $owner->Id) {
-            throw ValidationException::withMessages([
-                'ticket_user' => 'you cannot assign yourself, your ticket.',
-            ]);
+            throw ValidationException::withMessages(['ticket_user' => 'you cannot assign yourself, your ticket.']);
         }
         $exists = $owner->tickets()->where('t_Tickets.CategoryID', $category->ID)->where('t_Tickets.Status', TicketStatusEnum::Active->value)->first();
         if ($exists instanceof Ticket) {
@@ -235,8 +233,13 @@ class TicketController extends Controller
     {
         $this->authorize('restore', $ticket);
         $request->validate([
-            'open_reason' => ['required', 'string', 'min:15', 'max:250']
-        ]);
+                            'open_reason' => [
+                                              'required',
+                                              'string',
+                                              'min:15',
+                                              'max:250',
+                                             ],
+                           ]);
         if (!in_array($ticket->Status->value, [TicketStatusEnum::Resolved->value, TicketStatusEnum::Cancelled->value], true)) {
             return $this->errored('ticket is not closed');
         }

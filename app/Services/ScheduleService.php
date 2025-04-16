@@ -34,7 +34,7 @@ class ScheduleService
     {
     }
 
-    public function editable():bool
+    public function editable(): bool
     {
         return $this->schedule->ScheduleStatusID->cancelable() && Carbon::today()->startOfDay()->lte($this->schedule->EndOn);
     }
@@ -78,7 +78,7 @@ class ScheduleService
     }
 
 
-    public function colour():string
+    public function colour(): string
     {
         return $this->schedule->ScheduleStatusID->colour((Carbon::today()->gte($this->schedule->EndOn) && ($this->schedule->ScheduledType !== Meeting::getPrimaryKey())));
     }
@@ -111,10 +111,17 @@ class ScheduleService
 
 
     private static function _createNew(
-        string      $type, string $title, string $scheduledType, Carbon $start, Carbon $end, User $actor,
-        string|null $scheduledTypeID = null, string|null $notes = '', string $Source = null, string $SourceID = null
-    ): ScheduleService
-    {
+        string $type,
+        string $title,
+        string $scheduledType,
+        Carbon $start,
+        Carbon $end,
+        User $actor,
+        string|null $scheduledTypeID = null,
+        string|null $notes = '',
+        string $Source = null,
+        string $SourceID = null
+    ): ScheduleService {
         if (!in_array($scheduledType, [Call::getPrimaryKey(), Meeting::getPrimaryKey()], true)) {
             throw new \RuntimeException('invalid scheduler');
         }
@@ -124,21 +131,21 @@ class ScheduleService
 
         $dated = now();
         $scheduleID = Schedule::insertGetId([
-            'Title' =>$title,
-            'Type' => $type,
-            'Notes' => $notes,
-            'ScheduledType' => $scheduledType,
-            'ScheduledTypeID' => $scheduledTypeID,
-            'ScheduleStatusID' => ScheduleStatusEnum::Scheduled->value,
-            'StartOn' => $start,
-            'EndOn' => $end,
-            'Source' => $Source,
-            'SourceID' => $SourceID,
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
-            'CreatedOn' => $dated,
-            'ModifiedOn' => $dated,
-        ]);
+                                             'Title'            => $title,
+                                             'Type'             => $type,
+                                             'Notes'            => $notes,
+                                             'ScheduledType'    => $scheduledType,
+                                             'ScheduledTypeID'  => $scheduledTypeID,
+                                             'ScheduleStatusID' => ScheduleStatusEnum::Scheduled->value,
+                                             'StartOn'          => $start,
+                                             'EndOn'            => $end,
+                                             'Source'           => $Source,
+                                             'SourceID'         => $SourceID,
+                                             'CreatedBy'        => $actor->Id,
+                                             'ModifiedBy'       => $actor->Id,
+                                             'CreatedOn'        => $dated,
+                                             'ModifiedOn'       => $dated,
+                                            ]);
 
 
         $schedule = Schedule::query()->findOrFail($scheduleID);
@@ -149,10 +156,17 @@ class ScheduleService
     }
 
     public static function clientCall(
-        Client $client, Carbon $start, Carbon $end, Carbon $dated, User $actor, string $notes = '', bool $rescheduled = false,
-        array  $UserIds = [], string $source = null, string $sourceID = null
-    ): ScheduleService
-    {
+        Client $client,
+        Carbon $start,
+        Carbon $end,
+        Carbon $dated,
+        User $actor,
+        string $notes = '',
+        bool $rescheduled = false,
+        array $UserIds = [],
+        string $source = null,
+        string $sourceID = null
+    ): ScheduleService {
         $title = ($rescheduled) ? 'Rescheduled call with ' . Str::title($client->Name) . ' (' . $client->ClientID . ')' : 'Scheduled call with ' . Str::title($client->Name) . ' (' . $client->ClientID . ')';
         $service = self::_createNew(type: Client::getPrimaryKey(), title: $title, scheduledType: Call::getPrimaryKey(), start: $start, end: $end, actor: $actor, notes: $notes, Source: $source, SourceID: $sourceID)
             ->attachClient($client->ClientID, $dated, $actor);
@@ -182,10 +196,18 @@ class ScheduleService
     }
 
     public static function clientMeeting(
-        Client $client, string $title, string|MeetingRoom $location, Carbon $start, Carbon $end, Carbon $dated, User $actor,
-        string $notes = '', array $UserIds = [], string $source = null, string $sourceID = null
-    ): ScheduleService
-    {
+        Client $client,
+        string $title,
+        string|MeetingRoom $location,
+        Carbon $start,
+        Carbon $end,
+        Carbon $dated,
+        User $actor,
+        string $notes = '',
+        array $UserIds = [],
+        string $source = null,
+        string $sourceID = null
+    ): ScheduleService {
         $service = self::_meeting(type: Client::getPrimaryKey(), title: $title, location: $location, start: $start, end: $end, actor: $actor, notes: $notes, source: $source, sourceID: $sourceID)
             ->attachClient($client->ClientID, $dated, $actor);
 
@@ -241,10 +263,17 @@ class ScheduleService
 
 
     protected static function _meeting(
-        string $type, string $title, string|MeetingRoom $location, Carbon $start, Carbon $end, User $actor, string $notes, string $source = null, string $sourceID = null
-    ): ScheduleService
-    {
-        $meeting = MeetingService::create(MeetingStatusEnum::Scheduled, $type, $title, $location, $start, $end, $actor, $notes,$source,$sourceID)->meeting;
+        string $type,
+        string $title,
+        string|MeetingRoom $location,
+        Carbon $start,
+        Carbon $end,
+        User $actor,
+        string $notes,
+        string $source = null,
+        string $sourceID = null
+    ): ScheduleService {
+        $meeting = MeetingService::create(MeetingStatusEnum::Scheduled, $type, $title, $location, $start, $end, $actor, $notes, $source, $sourceID)->meeting;
 
         $description = $title . " - " . (new MeetingService($meeting))->getVenue();
 
@@ -273,15 +302,15 @@ class ScheduleService
 
         if (is_string($MemberIds)) {
             DB::table('t_ScheduleBoard')->insert([
-                'ScheduleId' => $this->schedule->ScheduleID,
-                'BoardMemberId' => $MemberIds,
-                'ScheduleStatus' => ScheduleUserStatusEnum::Accepted->value,
-                'DecidedOn' => $dated,
-                'CreatedOn' => $dated,
-                'CreatedBy' => $actor->Id,
-                'ModifiedOn' => $dated,
-                'ModifiedBy' => $actor->Id,
-            ]);
+                                                  'ScheduleId'     => $this->schedule->ScheduleID,
+                                                  'BoardMemberId'  => $MemberIds,
+                                                  'ScheduleStatus' => ScheduleUserStatusEnum::Accepted->value,
+                                                  'DecidedOn'      => $dated,
+                                                  'CreatedOn'      => $dated,
+                                                  'CreatedBy'      => $actor->Id,
+                                                  'ModifiedOn'     => $dated,
+                                                  'ModifiedBy'     => $actor->Id,
+                                                 ]);
             return $this;
         }
 
@@ -291,15 +320,15 @@ class ScheduleService
             foreach ($Members->chunk(700) as $chunk) {
                 foreach ($chunk as $memberID) {
                     $data->add([
-                        'ScheduleId' => $this->schedule->ScheduleID,
-                        'BoardMemberId' => $memberID,
-                        'ScheduleStatus' => ScheduleUserStatusEnum::Accepted->value,
-                        'DecidedOn' => $dated,
-                        'CreatedOn' => $dated,
-                        'CreatedBy' => $actor->Id,
-                        'ModifiedOn' => $dated,
-                        'ModifiedBy' => $actor->Id,
-                    ]);
+                                'ScheduleId'     => $this->schedule->ScheduleID,
+                                'BoardMemberId'  => $memberID,
+                                'ScheduleStatus' => ScheduleUserStatusEnum::Accepted->value,
+                                'DecidedOn'      => $dated,
+                                'CreatedOn'      => $dated,
+                                'CreatedBy'      => $actor->Id,
+                                'ModifiedOn'     => $dated,
+                                'ModifiedBy'     => $actor->Id,
+                               ]);
                 }
 
                 if ($data->count() > 0) {
@@ -324,13 +353,13 @@ class ScheduleService
                 foreach ($chunk as $ClientID) {
                     $dataClients->add($ClientID);
                     $data->add([
-                        'ScheduleId' => $this->schedule->ScheduleID,
-                        'ClientID' => $ClientID,
-                        'CreatedOn' => $dated,
-                        'CreatedBy' => $actor->Id,
-                        'ModifiedOn' => $dated,
-                        'ModifiedBy' => $actor->Id,
-                    ]);
+                                'ScheduleId' => $this->schedule->ScheduleID,
+                                'ClientID'   => $ClientID,
+                                'CreatedOn'  => $dated,
+                                'CreatedBy'  => $actor->Id,
+                                'ModifiedOn' => $dated,
+                                'ModifiedBy' => $actor->Id,
+                               ]);
                 }
                 if ($data->count() > 0) {
                     DB::table('t_ScheduleClients')->insert($data->toArray());
@@ -343,13 +372,13 @@ class ScheduleService
         }
 
         DB::table('t_ScheduleClients')->insert([
-            'ScheduleId' => $this->schedule->ScheduleID,
-            'ClientID' => $ClientIDs,
-            'CreatedOn' => $dated,
-            'CreatedBy' => $actor->Id,
-            'ModifiedOn' => $dated,
-            'ModifiedBy' => $actor->Id,
-        ]);
+                                                'ScheduleId' => $this->schedule->ScheduleID,
+                                                'ClientID'   => $ClientIDs,
+                                                'CreatedOn'  => $dated,
+                                                'CreatedBy'  => $actor->Id,
+                                                'ModifiedOn' => $dated,
+                                                'ModifiedBy' => $actor->Id,
+                                               ]);
 
         ActivityService::schedule($ClientIDs, Client::getPrimaryKey(), $this->schedule, $description, $actor);
 
@@ -368,13 +397,13 @@ class ScheduleService
                 foreach ($chunk as $LeadId) {
                     $dataLeads->add($LeadId);
                     $data->add([
-                        'ScheduleId' => $this->schedule->ScheduleID,
-                        'LeadId' => $LeadId,
-                        'CreatedOn' => $dated,
-                        'CreatedBy' => $actor->Id,
-                        'ModifiedOn' => $dated,
-                        'ModifiedBy' => $actor->Id,
-                    ]);
+                                'ScheduleId' => $this->schedule->ScheduleID,
+                                'LeadId'     => $LeadId,
+                                'CreatedOn'  => $dated,
+                                'CreatedBy'  => $actor->Id,
+                                'ModifiedOn' => $dated,
+                                'ModifiedBy' => $actor->Id,
+                               ]);
                 }
                 if ($data->count() > 0) {
                     DB::table('t_ScheduleLeads')->insert($data->toArray());
@@ -387,13 +416,13 @@ class ScheduleService
         }
 
         DB::table('t_ScheduleLeads')->insert([
-            'ScheduleId' => $this->schedule->ScheduleID,
-            'LeadId' => $LeadIds,
-            'CreatedOn' => $dated,
-            'CreatedBy' => $actor->Id,
-            'ModifiedOn' => $dated,
-            'ModifiedBy' => $actor->Id,
-        ]);
+                                              'ScheduleId' => $this->schedule->ScheduleID,
+                                              'LeadId'     => $LeadIds,
+                                              'CreatedOn'  => $dated,
+                                              'CreatedBy'  => $actor->Id,
+                                              'ModifiedOn' => $dated,
+                                              'ModifiedBy' => $actor->Id,
+                                             ]);
 
         ActivityService::schedule($LeadIds, Lead::getPrimaryKey(), $this->schedule, $description, $actor);
 
@@ -404,15 +433,15 @@ class ScheduleService
     {
         if (is_string($UserIds)) {
             DB::table('t_ScheduleUsers')->insert([
-                'ScheduleId' => $this->schedule->ScheduleID,
-                'UserID' => $UserIds,
-                'ScheduleUserStatus' => ScheduleUserStatusEnum::Accepted->value,
-                'DecidedOn' => $dated,
-                'CreatedOn' => $dated,
-                'CreatedBy' => $actor->Id,
-                'ModifiedOn' => $dated,
-                'ModifiedBy' => $actor->Id,
-            ]);
+                                                  'ScheduleId'         => $this->schedule->ScheduleID,
+                                                  'UserID'             => $UserIds,
+                                                  'ScheduleUserStatus' => ScheduleUserStatusEnum::Accepted->value,
+                                                  'DecidedOn'          => $dated,
+                                                  'CreatedOn'          => $dated,
+                                                  'CreatedBy'          => $actor->Id,
+                                                  'ModifiedOn'         => $dated,
+                                                  'ModifiedBy'         => $actor->Id,
+                                                 ]);
             return $this;
         }
 
@@ -422,15 +451,15 @@ class ScheduleService
             foreach ($users->chunk(1000) as $chunk) {
                 foreach ($chunk as $userId) {
                     $data->add([
-                        'ScheduleId' => $this->schedule->ScheduleID,
-                        'UserID' => $userId,
-                        'ScheduleUserStatus' => ScheduleUserStatusEnum::Accepted->value,
-                        'DecidedOn' => $dated,
-                        'CreatedOn' => $dated,
-                        'CreatedBy' => $actor->Id,
-                        'ModifiedOn' => $dated,
-                        'ModifiedBy' => $actor->Id,
-                    ]);
+                                'ScheduleId'         => $this->schedule->ScheduleID,
+                                'UserID'             => $userId,
+                                'ScheduleUserStatus' => ScheduleUserStatusEnum::Accepted->value,
+                                'DecidedOn'          => $dated,
+                                'CreatedOn'          => $dated,
+                                'CreatedBy'          => $actor->Id,
+                                'ModifiedOn'         => $dated,
+                                'ModifiedBy'         => $actor->Id,
+                               ]);
                 }
 
                 if ($data->count() > 0) {
@@ -541,7 +570,6 @@ class ScheduleService
             $name = "Scheduled Call on " . $this->schedule->StartOn?->format('l, jS F Y');
 
             $event->address('Online')->alertMinutesBefore(20, 'You have a scheduled Call in 20 minutes.');
-
         } elseif ($this->schedule->ScheduledType === Meeting::getPrimaryKey()) {
             $meeting = $this->schedule->scheduled;
             if ($meeting instanceof Meeting) {
@@ -575,7 +603,7 @@ class ScheduleService
         }
 
         if ($this->schedule->Type === Board::getPrimaryKey()) {
-            foreach ( $this->schedule->members()->whereNotNull('t_BoardMembers.Email')->get(['t_BoardMembers.Name', 't_BoardMembers.Email']) as $board) {
+            foreach ($this->schedule->members()->whereNotNull('t_BoardMembers.Email')->get(['t_BoardMembers.Name', 't_BoardMembers.Email']) as $board) {
                 $event->attendee($board->Email, $board->Name, ParticipationStatus::accepted());
             }
         }
@@ -636,5 +664,4 @@ class ScheduleService
 
         return 'None';
     }
-
 }

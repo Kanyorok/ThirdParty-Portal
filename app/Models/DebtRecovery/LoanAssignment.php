@@ -20,16 +20,21 @@ class LoanAssignment extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'AccountID', 'StartOn', 'EndOn', 'Notes', 'UserId',
-        'CreatedBy', 'ModifiedBy'
-    ];
+                           'AccountID',
+                           'StartOn',
+                           'EndOn',
+                           'Notes',
+                           'UserId',
+                           'CreatedBy',
+                           'ModifiedBy',
+                          ];
 
     protected $casts = [
-        'StartOn' => 'datetime',
-        'EndOn' => 'datetime',
-        'CreatedBy' => 'integer',
-        'UserId' => 'integer'
-    ];
+                        'StartOn'   => 'datetime',
+                        'EndOn'     => 'datetime',
+                        'CreatedBy' => 'integer',
+                        'UserId'    => 'integer',
+                       ];
 
     public function user(): BelongsTo
     {

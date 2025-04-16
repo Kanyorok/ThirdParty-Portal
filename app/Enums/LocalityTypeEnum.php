@@ -17,5 +17,4 @@ enum LocalityTypeEnum: string
     {
         return ($this->value === self::City->value);
     }
-
 }

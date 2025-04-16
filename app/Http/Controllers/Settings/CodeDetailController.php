@@ -41,10 +41,10 @@ class CodeDetailController extends Controller
                 return '<button type="button" class="btn btn-primary btn-sm  list-action-update" data-info="' . $codeDetail->ID . '~' . $codeDetail->Description . '"><i class="fas fa-edit"></i> edit</button>
                          <button type="button" class="btn btn-danger btn-sm  list-action-trash" data-info="' . $codeDetail->ID . '~' . $codeDetail->Description . '"><i class="fas fa-trash"></i> trash</button>';
             })->setRowAttr([
-                'data-info' => function (CodeDetail $codeDetail) {
-                    return $codeDetail->ID;
-                },
-            ])->rawColumns(['action'])->make();
+                            'data-info' => function (CodeDetail $codeDetail) {
+                                return $codeDetail->ID;
+                            },
+                           ])->rawColumns(['action'])->make();
     }
 
 
@@ -59,7 +59,7 @@ class CodeDetailController extends Controller
         }
         $this->authorize('update', $codeDetail);
         $actor = $request->user();
-        $position = (int)$request->get('position');
+        $position = (int) $request->get('position');
         if ($position === 0) {
             return $this->errored('could not change order');
         }
@@ -122,9 +122,9 @@ class CodeDetailController extends Controller
         try {
             DB::transaction(static function () use ($codeDetail, $description, $actor) {
                 $codeDetail->update([
-                    'Description' => $description,
-                    'ModifiedBy' => $actor->Id,
-                ]);
+                                     'Description' => $description,
+                                     'ModifiedBy'  => $actor->Id,
+                                    ]);
 
                 activity()->causedBy($actor)->performedOn($codeDetail)->event('update')->log('updated ' . $codeDetail->CodeID);
             });
@@ -154,9 +154,9 @@ class CodeDetailController extends Controller
         try {
             DB::transaction(static function () use ($codeDetail, $actor) {
                 $codeDetail->forceFill([
-                    'DeletedOn' => now(),
-                    'DeletedBy' => $actor->Id
-                ])->save();
+                                        'DeletedOn' => now(),
+                                        'DeletedBy' => $actor->Id,
+                                       ])->save();
 
                 activity()->causedBy($actor)->performedOn($codeDetail)->event('delete')->log('deleted system code ' . $codeDetail->CodeID);
             });

@@ -35,23 +35,31 @@ trait TicketsTrait
      * @throws Throwable
      */
     public function save(
-        Model $model, CodeDetail $category, string $title, string $description, User $actor, TicketSourceEnum|string $Source,
-        TicketPriorityEnum $priority, Carbon $start = null, Carbon $end = null, string $SourceTicketID = null, string $SourceID = '0'
-    ): TicketService
-    {
+        Model $model,
+        CodeDetail $category,
+        string $title,
+        string $description,
+        User $actor,
+        TicketSourceEnum|string $Source,
+        TicketPriorityEnum $priority,
+        Carbon $start = null,
+        Carbon $end = null,
+        string $SourceTicketID = null,
+        string $SourceID = '0'
+    ): TicketService {
         if (!$model instanceof Lead && !$model instanceof Client && !$model instanceof User) {
             throw new ErroredException('unknown party given');
         }
         return DB::transaction(static function () use ($SourceTicketID, $priority, $model, $category, $title, $description, $actor, $Source, $SourceID, $start, $end) {
             if ($model instanceof Lead) {
-                return TicketService::lead($model, $category, $title, $description, $actor, ($Source instanceof TicketSourceEnum)?$Source->value:$Source, $priority, SourceID: $SourceID, start: $start, end: $end);
+                return TicketService::lead($model, $category, $title, $description, $actor, ($Source instanceof TicketSourceEnum) ? $Source->value : $Source, $priority, SourceID: $SourceID, start: $start, end: $end);
             }
 
             if ($model instanceof Client) {
-                return TicketService::client($model, $category, $title, $description, $actor, ($Source instanceof TicketSourceEnum)?$Source->value:$Source, $priority,SourceID: $SourceID, start: $start, end: $end, SourceTicketID: $SourceTicketID);
+                return TicketService::client($model, $category, $title, $description, $actor, ($Source instanceof TicketSourceEnum) ? $Source->value : $Source, $priority, SourceID: $SourceID, start: $start, end: $end, SourceTicketID: $SourceTicketID);
             }
 
-            return TicketService::user($category, $title, $description, $actor,($Source instanceof TicketSourceEnum)?$Source->value:$Source, $priority, SourceID: $SourceID, start: $start, end: $end);
+            return TicketService::user($category, $title, $description, $actor, ($Source instanceof TicketSourceEnum) ? $Source->value : $Source, $priority, SourceID: $SourceID, start: $start, end: $end);
         });
     }
 
@@ -59,5 +67,4 @@ trait TicketsTrait
     {
         return new TicketService($ticket);
     }
-
 }

@@ -14,10 +14,10 @@ class HelpController extends Controller
     {
         $help = $request->get('help');
         $help = $help ?? '';
-        if(!View::exists('help.'.$help)){
+        if (!View::exists('help.' . $help)) {
             return $this->errored('help page not found');
         }
 
-        return view('help.'.$help);
+        return view('help.' . $help);
     }
 }

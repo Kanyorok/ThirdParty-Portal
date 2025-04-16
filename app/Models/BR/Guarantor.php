@@ -22,9 +22,9 @@ class Guarantor extends Model
     protected $primaryKey = null;
 
     protected $casts = [
-        'GuaranteeAmount' => 'decimal:2',
-        'CreatedOn' => 'datetime',
-    ];
+                        'GuaranteeAmount' => 'decimal:2',
+                        'CreatedOn'       => 'datetime',
+                       ];
 
     public static function primaryKey(): string
     {
@@ -40,5 +40,4 @@ class Guarantor extends Model
     {
         return $this->belongsTo(Client::class, 'GuarantorID', 'ClientID');
     }
-
 }

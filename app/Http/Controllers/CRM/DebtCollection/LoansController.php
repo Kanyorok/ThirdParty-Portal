@@ -21,6 +21,7 @@ use Illuminate\View\View;
 class LoansController extends Controller
 {
     use LoansTrait;
+
     /**
      * Display a listing of the resource.
      * @throws Exception
@@ -29,7 +30,7 @@ class LoansController extends Controller
     {
         $this->authorize('viewAny', DebtProduct::class);
         if ($request->ajax()) {
-            if ($request->has('dated') && StringHelper::isInteger($request->dated) && (int)$request->dated > 0) {
+            if ($request->has('dated') && StringHelper::isInteger($request->dated) && (int) $request->dated > 0) {
                 try {
                     $dated = Carbon::createFromFormat('U', $request->dated);
                     $dated?->setTimezone(new DateTimeZone(config('app.timezone')));
@@ -47,7 +48,7 @@ class LoansController extends Controller
                     //assignments.
                     if (($request->get('assignee') === $actor->UserID) || (!$request->user()->can('assign', DebtProduct::class))) {
                         $query->whereIn('AccountID', $actor->loansAssigned()->whereNull('t_LoanAssignments.EndOn')->select('t_LoanAssignments.AccountID'));
-                    } else if ($request->get('assignee') === 'none') {
+                    } elseif ($request->get('assignee') === 'none') {
                         $query->whereNotIn('AccountID', LoanAssignment::query()->whereNull('t_LoanAssignments.EndOn')->select('t_LoanAssignments.AccountID'));
                     } elseif ($request->get('assignee') !== 'all') {
                         return $this->errored('Invalid Ownership filter given');

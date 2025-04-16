@@ -20,14 +20,14 @@ class PlannerActivityResource extends JsonResource
             $s = $s->resource;
         }
         return [
-            'id' => $this->PlannerActivityID,
-            'title' => $this->Name,
-            'start' => $this->StartOn->toIso8601String(),
-            'end' => $this->EndOn->toIso8601String(),
-            'description' => $this->Notes,
-            'actions' => [
-                'show' => route('planner-activities.show', [$s->planner->PlannerID, $this->PlannerActivityID])
-            ]
-        ];
+                'id'          => $this->PlannerActivityID,
+                'title'       => $this->Name,
+                'start'       => $this->StartOn->toIso8601String(),
+                'end'         => $this->EndOn->toIso8601String(),
+                'description' => $this->Notes,
+                'actions'     => [
+                                  'show' => route('planner-activities.show', [$s->planner->PlannerID, $this->PlannerActivityID]),
+                                 ],
+               ];
     }
 }

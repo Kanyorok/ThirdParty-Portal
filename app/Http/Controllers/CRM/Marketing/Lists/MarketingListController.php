@@ -61,7 +61,6 @@ class MarketingListController extends Controller
         }
 
         return $this->succeeded('list added successfully', route: route('marketing-list.edit', $list->slug));
-
     }
 
     /**

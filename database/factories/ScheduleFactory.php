@@ -38,18 +38,18 @@ class ScheduleFactory extends Factory
         $operator = 'CSADM';
         $start = $this->getDate();
         return [
-            'ClientID' => $client->ClientID,
-            'Title' => 'Call with ' . $client->Name . ' (' . $client->ClientID . ')',
-            'Notes' => fake()->realTextBetween(70, 500),
-            'OperatorID' => $operator,
-            'AcceptedOn' => $this->today,
-            'StartOn' => $start,
-            'EndOn' => $start->copy()->addMinutes($this->_randomMinutes()),
-            'CreatedBy' => $operator,
-            'CreatedOn' => $this->today,
-            'ModifiedOn' => $this->today,
-            'ModifiedBy' => $operator,
-        ];
+                'ClientID'   => $client->ClientID,
+                'Title'      => 'Call with ' . $client->Name . ' (' . $client->ClientID . ')',
+                'Notes'      => fake()->realTextBetween(70, 500),
+                'OperatorID' => $operator,
+                'AcceptedOn' => $this->today,
+                'StartOn'    => $start,
+                'EndOn'      => $start->copy()->addMinutes($this->_randomMinutes()),
+                'CreatedBy'  => $operator,
+                'CreatedOn'  => $this->today,
+                'ModifiedOn' => $this->today,
+                'ModifiedBy' => $operator,
+               ];
     }
 
     private function getDate(bool $loop = false): Carbon
@@ -74,12 +74,12 @@ class ScheduleFactory extends Factory
         $this->dated->setTime(8, 0)->addDay();
 
         if ($this->dated->dayOfWeek === 0) {
-            $this->dated->addDay()->setTime(8,10);
+            $this->dated->addDay()->setTime(8, 10);
             return $this->dated;
         }
 
-        if ($loop){
-            return $this->dated->setTime(8,0);
+        if ($loop) {
+            return $this->dated->setTime(8, 0);
         }
         return $this->getDate(true);
     }

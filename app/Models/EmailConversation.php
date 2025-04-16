@@ -11,7 +11,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class EmailConversation extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -21,14 +22,19 @@ class EmailConversation extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'Emails', 'EmailId', 'Party', 'PartyID',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy'
-    ];
+                           'Emails',
+                           'EmailId',
+                           'Party',
+                           'PartyID',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 
     protected $casts = [
-        'EmailId' => 'integer',
-        'Emails' => 'integer'
-    ];
+                        'EmailId' => 'integer',
+                        'Emails'  => 'integer',
+                       ];
 
     public function party(): MorphTo
     {

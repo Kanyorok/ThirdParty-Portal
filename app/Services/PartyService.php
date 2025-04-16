@@ -78,7 +78,6 @@ class PartyService
     public function getName(bool $simpleRole = false): string
     {
         if ($this->party instanceof Client) {
-
             return $this->party->Name . ' ' . $this->getRole($simpleRole);
         }
         if ($this->party instanceof Lead) {
@@ -102,7 +101,6 @@ class PartyService
     public function getRole(bool $simpleRole = false): string
     {
         if ($this->party instanceof Client) {
-
             return ($simpleRole) ? '(M)' : ' (Member)';
         }
         if ($this->party instanceof Lead) {

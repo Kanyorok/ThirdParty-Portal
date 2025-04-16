@@ -8,5 +8,4 @@ enum SystemIntegrationEnum: string
 
     case Channels = 'channels';
     case PBX = 'pbx-3cx';
-
 }

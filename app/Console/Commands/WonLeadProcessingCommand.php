@@ -52,41 +52,41 @@ class WonLeadProcessingCommand extends Command
             try {
                 DB::transaction(static function () use ($actor, $lead, $client) {
                     $lead->update([
-                        'ArchivedOn' => now(),
-                        'ArchivedBy' => $actor->Id,
-                        'ApplicationID' => $client->ClientID
-                    ]);
+                                   'ArchivedOn'    => now(),
+                                   'ArchivedBy'    => $actor->Id,
+                                   'ApplicationID' => $client->ClientID,
+                                  ]);
                     //change all configurations
                     $lead->calls()->update([
-                        "Party" => Client::getPrimaryKey(),
-                        "PartyID" => $client->ClientID,
-                    ]);
+                                            "Party"   => Client::getPrimaryKey(),
+                                            "PartyID" => $client->ClientID,
+                                           ]);
                     $lead->crmmails()->update([
-                        "Party" => Client::getPrimaryKey(),
-                        "PartyID" => $client->ClientID,
-                    ]);
+                                               "Party"   => Client::getPrimaryKey(),
+                                               "PartyID" => $client->ClientID,
+                                              ]);
                     $lead->crmsms()->update([
-                        "Party" => Client::getPrimaryKey(),
-                        "PartyID" => $client->ClientID,
-                    ]);
+                                             "Party"   => Client::getPrimaryKey(),
+                                             "PartyID" => $client->ClientID,
+                                            ]);
                     $lead->activities()->update([
-                        "Party" => Client::getPrimaryKey(),
-                        "PartyID" => $client->ClientID,
-                    ]);
+                                                 "Party"   => Client::getPrimaryKey(),
+                                                 "PartyID" => $client->ClientID,
+                                                ]);
                     $lead->tickets()->update([
-                        "Party" => Client::getPrimaryKey(),
-                        "PartyID" => $client->ClientID,
-                    ]);
+                                              "Party"   => Client::getPrimaryKey(),
+                                              "PartyID" => $client->ClientID,
+                                             ]);
                     $lead->tasks()->update([
-                        "Party" => Client::getPrimaryKey(),
-                        "PartyID" => $client->ClientID,
-                    ]);
+                                            "Party"   => Client::getPrimaryKey(),
+                                            "PartyID" => $client->ClientID,
+                                           ]);
                     $lead->discussions()->update([
-                        "Party" => Client::getPrimaryKey(),
-                        "PartyID" => $client->ClientID,
-                    ]);
+                                                  "Party"   => Client::getPrimaryKey(),
+                                                  "PartyID" => $client->ClientID,
+                                                 ]);
                 });
-            } catch (Exception|\Throwable $e) {
+            } catch (Exception | \Throwable $e) {
                 Log::error('Could not migrate contacts details lead (' . $lead->LeadID . ') to client (' . $client->ClientID . ')');
                 Log::error($e);
             }

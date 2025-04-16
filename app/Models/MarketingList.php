@@ -11,7 +11,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class MarketingList extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -24,18 +25,28 @@ class MarketingList extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'slug', 'Label', 'Extra', 'Type', 'LastContacted', 'Source', 'Visibility', 'Processing',
-        'Notes', 'CreatedBy', 'ModifiedBy', 'DeletedBy'
-    ];
+                           'slug',
+                           'Label',
+                           'Extra',
+                           'Type',
+                           'LastContacted',
+                           'Source',
+                           'Visibility',
+                           'Processing',
+                           'Notes',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 
     protected $casts = [
-        'CreatedBy' => 'integer',
-        'Type' => MarketingListEnum::class,
-        'Visibility' => VisibilityEnum::class,
-        'Extra' => 'object',
-        'LastContacted' => 'datetime',
-        'Processing' => 'array'
-    ];
+                        'CreatedBy'     => 'integer',
+                        'Type'          => MarketingListEnum::class,
+                        'Visibility'    => VisibilityEnum::class,
+                        'Extra'         => 'object',
+                        'LastContacted' => 'datetime',
+                        'Processing'    => 'array',
+                       ];
 
     /**
      * Get the route key for the model.
@@ -59,5 +70,4 @@ class MarketingList extends Model
     {
         return $this->hasMany(MarketingListFilter::class, 'MarketingListId', 'MarketingListID');
     }
-
 }

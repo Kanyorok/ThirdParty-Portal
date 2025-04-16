@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 class ContactController extends Controller
 {
     use ContactsTrait;
+
     public function __construct()
     {
         $this->middleware('ajax')->except(['index', 'show']);
@@ -39,8 +40,8 @@ class ContactController extends Controller
      */
     public function show(Request $request, Contact $contact)
     {
-        if ($contact->PartyID !== '0'){
-            return redirect()->back()->with(['fail'=>'contact not found or invalid']);
+        if ($contact->PartyID !== '0') {
+            return redirect()->back()->with(['fail' => 'contact not found or invalid']);
         }
         $call = null;
         $schedule = null;

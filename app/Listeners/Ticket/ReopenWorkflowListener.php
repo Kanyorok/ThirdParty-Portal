@@ -41,16 +41,15 @@ class ReopenWorkflowListener implements ShouldQueue
                 }
 
                 $event->ticket->pendingWorkflows()->lock('WITH(NOLOCK)')->where('Stage', TicketStatusEnum::Approval)->create([
-                    'Stage' => TicketStatusEnum::Approval,
-                    'UserId' => $user->Id,
-                    'CreatedBy' => $event->actor->Id,
-                    'ModifiedBy' => $event->actor->Id,
-                ]);
+                                                                                                                              'Stage'      => TicketStatusEnum::Approval,
+                                                                                                                              'UserId'     => $user->Id,
+                                                                                                                              'CreatedBy'  => $event->actor->Id,
+                                                                                                                              'ModifiedBy' => $event->actor->Id,
+                                                                                                                             ]);
 
                 $this->_sendMail($user, $event->ticket, $event->reason);
             }
         });
-
     }
 
     protected function _sendMail(User $user, Ticket $ticket, string $reason): void
@@ -58,7 +57,8 @@ class ReopenWorkflowListener implements ShouldQueue
         if ($user->email !== 'mureithi.maina@craftsilicon.com') {
             return;
         }
-        (new UserService($user))->sendEmail(subject: 'Request for Ticket Reopening',
+        (new UserService($user))->sendEmail(
+            subject: 'Request for Ticket Reopening',
             body: '<p>Hello ' . $user->UserID . '</p><p>A request for the reopening of ticket <b>#' . $ticket->TicketID . '</b> has been submitted for your review. Click the link below to review</p>
                 <p><a href="' . route('tickets.show', [$ticket->TicketID]) . '"> ticket details</a></p>
                 <p>Reason given: ' . $reason . '</p>',

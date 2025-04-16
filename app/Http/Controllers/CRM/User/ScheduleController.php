@@ -47,7 +47,8 @@ class ScheduleController extends Controller
             return new ScheduleCollection(
                 Schedule::query()->whereIn('t_Schedule.ScheduleID', ScheduleUser::query()->where('UserID', $request->user()->Id)->select('t_ScheduleUsers.ScheduleId'))
                     ->whereBetween('t_Schedule.StartOn', [$start, $end])
-                ->lock('WITH(NOLOCK)')->withTrashed()->get());
+                ->lock('WITH(NOLOCK)')->withTrashed()->get()
+            );
         }
 
 
@@ -66,51 +67,49 @@ class ScheduleController extends Controller
         $start = $request->getStart();
         $end = $request->getEnd($start);
         $actor = $request->user();
-        if ($request->_type === 'call'){
+        if ($request->_type === 'call') {
             $client = $clients->first();
             if (!$client instanceof Client) {//'ClientID', 'Name' can check set and not null
-                throw ValidationException::withMessages([
-                    'client' => 'Client Not Found',
-                ]);
+                throw ValidationException::withMessages(['client' => 'Client Not Found']);
             }
             try {
-                $schedule = DB::transaction(static function () use ($end, $actor, $client, $start,  $request) {
-                   return ScheduleService::callSchedule($client,$start,$end,now(),$actor,$request->notes)->schedule;
+                $schedule = DB::transaction(static function () use ($end, $actor, $client, $start, $request) {
+                    return ScheduleService::callSchedule($client, $start, $end, now(), $actor, $request->notes)->schedule;
                 });
             } catch (Exception $e) {
-                Log::error('Error scheduling call failed:  '.$e->getMessage());
+                Log::error('Error scheduling call failed:  ' . $e->getMessage());
                 return $this->errored('unexpected error scheduling call, try again latter');
             }
 
             return $this->succeeded('schedule created', data: ['event' => new ScheduleResource($schedule)]);
         }
 
-        if ($request->_type === 'meeting'){
+        if ($request->_type === 'meeting') {
             try {
-                $schedule = DB::transaction(static function () use ($end, $actor, $clients, $start,  $request) {
+                $schedule = DB::transaction(static function () use ($end, $actor, $clients, $start, $request) {
                     $meeting = Meeting::create([
-                        'Title' => $request->schedule_title,
-                        'StartOn' => $start,
-                        'EndOn' => $end,
-                        'Location'=> $request->schedule_location,
-                        'Notes' => $request->notes,
-                        'CreatedBy' => $actor->Id,
-                        'ModifiedBy' => $actor->Id,
-                    ]);
+                                                'Title'      => $request->schedule_title,
+                                                'StartOn'    => $start,
+                                                'EndOn'      => $end,
+                                                'Location'   => $request->schedule_location,
+                                                'Notes'      => $request->notes,
+                                                'CreatedBy'  => $actor->Id,
+                                                'ModifiedBy' => $actor->Id,
+                                               ]);
 
                     $description = 'Meeting: ' . $meeting->Title . " - ";
                     $description .= (filter_var($meeting->Location, FILTER_VALIDATE_URL)) ? "Online" : $meeting->Location;
                     return ScheduleService::meetingSchedule($meeting, $clients->toArray(), $start, $end, now(), $actor, $description)->schedule;
                 });
             } catch (Exception $e) {
-                Log::error('Error scheduling meeting failed:  '.$e->getMessage());
+                Log::error('Error scheduling meeting failed:  ' . $e->getMessage());
                 return $this->errored('unexpected error scheduling meeting, try again latter');
             }
 
             return $this->succeeded('schedule created', data: ['event' => new ScheduleResource($schedule)]);
         }
 
-        return $this->errored('could not schedule '.$request->_type);
+        return $this->errored('could not schedule ' . $request->_type);
     }
 
     /**
@@ -130,8 +129,7 @@ class ScheduleController extends Controller
                 if (!$party instanceof Client) {
                     return $this->errored('call party not found');
                 }
-
-            } else if ($schedule->Type === Lead::getPrimaryKey()) {
+            } elseif ($schedule->Type === Lead::getPrimaryKey()) {
                 $party = $scheduleService->leads()->first();
                 if (!$party instanceof Lead) {
                     return $this->errored('call party not found');
@@ -144,7 +142,7 @@ class ScheduleController extends Controller
             return view('crm.schedule.call')
                 ->with('schedule', $schedule)
                 ->with('call', $schedule->scheduled)
-                ->with('service',$scheduleService)
+                ->with('service', $scheduleService)
                 ->with('party', $party);
         }
 
@@ -160,7 +158,7 @@ class ScheduleController extends Controller
                 } else {
                     $parties = $scheduleService->clients(['photo'], 10)->paginate(7, ['ClientID', 'Name', 'PhotoID']);
                 }
-            } else if ($schedule->Type === User::getPrimaryKey()) {
+            } elseif ($schedule->Type === User::getPrimaryKey()) {
                 $parties_count = $schedule->users()->count();
                 if ($parties_count === 1) {
                     $parties = $scheduleService->users()->first();
@@ -170,7 +168,7 @@ class ScheduleController extends Controller
                 } else {
                     $parties = $scheduleService->users()->limit(10)->paginate(7);
                 }
-            } else if ($schedule->Type === Lead::getPrimaryKey()) {
+            } elseif ($schedule->Type === Lead::getPrimaryKey()) {
                 $parties = $scheduleService->leads()->first();
                 if (!$parties instanceof Lead) {
                     return $this->errored('appointment party not found');
@@ -212,14 +210,13 @@ class ScheduleController extends Controller
         $user = $request->user();
 
         $schedule->update([
-            'ModifiedBy' => $user->Id,
-            'ModifiedOn' => now(),
-            'StartOn' => $start,
-            'EndOn' => $end,
-        ]);
+                           'ModifiedBy' => $user->Id,
+                           'ModifiedOn' => now(),
+                           'StartOn'    => $start,
+                           'EndOn'      => $end,
+                          ]);
 
         return $this->succeeded('updated successfully');
-
     }
 
     /**

@@ -35,20 +35,21 @@ class BoardController extends Controller
         if (!$request->ajax()) {
             return view('crm.board.index')
                 ->with('rooms', MeetingRoom::query()->get(['RoomID', 'Name', 'Capacity']))
-                ->with('committees',  Committee::query()->get(['t_Committees.CommitteeID','t_Committees.Name']));
+                ->with('committees', Committee::query()->get(['t_Committees.CommitteeID', 't_Committees.Name']));
         }
         return Datatables::of(Board::query()->with('committees')->select('*'))->addIndexColumn()
             ->addColumn('committees', function (Board $board) {
-                return implode('&nbsp;',$board->committees->map(function ($committee) {
-                    return '<span class="badge rounded-pill bg-info">'.$committee->Name.'</span>';
+                return implode('&nbsp;', $board->committees->map(function ($committee) {
+                    return '<span class="badge rounded-pill bg-info">' . $committee->Name . '</span>';
                 })->toArray());
             })->editColumn('BoardMemberID', function (Board $board) {
                 return Str::upper($board->BoardMemberID);
             })->setRowClass('mouse_pointer user-select-none dbl-click-summary-data')->setRowData([
-                'dbl_click_url' => function (Board $board) {
-                    return route('board.show', [$board->BoardMemberID]);
-                }, 'summary_title' => "Board Member",
-            ])->rawColumns(['committees'])->make();
+                                                                                                  'dbl_click_url' => function (Board $board) {
+                                                                                                    return route('board.show', [$board->BoardMemberID]);
+                                                                                                  },
+                                                                                                  'summary_title' => "Board Member",
+                                                                                                 ])->rawColumns(['committees'])->make();
     }
 
     /**
@@ -71,25 +72,25 @@ class BoardController extends Controller
         try {
             DB::transaction(static function () use ($client, $actor, $request) {
                 $board = Board::create([
-                    'Name' => $client->Name,
-                    'ClientID' => $client->ClientID,
-                    'Role' => $request->validated('BoardMemberRole'),
-                    'Phone' => (new ClientService($client))->phoneNo() ?? '-',
-                    'Email' => (new ClientService($client))->getEmail() ?? '-',
-                    'Notes' => $request->validated('BoardMemberNotes'),
-                    'BoardMemberID' => $request->generateID(),
-                    'CreatedBy' => $actor->Id,
-                    'ModifiedBy' => $actor->Id,
-                ]);
+                                        'Name'          => $client->Name,
+                                        'ClientID'      => $client->ClientID,
+                                        'Role'          => $request->validated('BoardMemberRole'),
+                                        'Phone'         => (new ClientService($client))->phoneNo() ?? '-',
+                                        'Email'         => (new ClientService($client))->getEmail() ?? '-',
+                                        'Notes'         => $request->validated('BoardMemberNotes'),
+                                        'BoardMemberID' => $request->generateID(),
+                                        'CreatedBy'     => $actor->Id,
+                                        'ModifiedBy'    => $actor->Id,
+                                       ]);
 
-                $board->committees()->syncWithPivotValues($request->getCommittees(),[
-                    'CreatedBy' => $actor->Id,
-                    'ModifiedBy' => $actor->Id,
-                ], false);
+                $board->committees()->syncWithPivotValues($request->getCommittees(), [
+                                                                                      'CreatedBy'  => $actor->Id,
+                                                                                      'ModifiedBy' => $actor->Id,
+                                                                                     ], false);
 
                 activity()->causedBy($actor)->performedOn($board)->event('create')->log('Created board member ' . $board->BoardMemberID . '.');
             });
-        } catch (Exception|\Throwable $e) {
+        } catch (Exception | \Throwable $e) {
             Log::error('creating board member.');
             Log::error($e);
             return $this->errored('an unexpected error occurred');
@@ -103,7 +104,7 @@ class BoardController extends Controller
     public function show(Board $board)
     {
         return view('crm.board.show', compact('board'))
-            ->with('committees',  Committee::all());
+            ->with('committees', Committee::all());
     }
 
     /**
@@ -115,21 +116,21 @@ class BoardController extends Controller
         try {
             DB::transaction(static function () use ($board, $actor, $request) {
                 $board->update([
-                    'Role' => $request->validated('BoardMemberRole'),
-                    'Phone' => $request->validated('BoardMemberPhone'),
-                    'Email' => $request->validated('BoardMemberEmail'),
-                    'Notes' => $request->validated('BoardMemberNotes'),
-                    'ModifiedBy' => $actor->Id,
-                ]);
+                                'Role'       => $request->validated('BoardMemberRole'),
+                                'Phone'      => $request->validated('BoardMemberPhone'),
+                                'Email'      => $request->validated('BoardMemberEmail'),
+                                'Notes'      => $request->validated('BoardMemberNotes'),
+                                'ModifiedBy' => $actor->Id,
+                               ]);
 
-                $board->committees()->syncWithPivotValues($request->getCommittees(),[
-                    'CreatedBy' => $actor->Id,
-                    'ModifiedBy' => $actor->Id,
-                ], false);
+                $board->committees()->syncWithPivotValues($request->getCommittees(), [
+                                                                                      'CreatedBy'  => $actor->Id,
+                                                                                      'ModifiedBy' => $actor->Id,
+                                                                                     ], false);
 
                 activity()->causedBy($actor)->performedOn($board)->event('update')->log('Updated board member ' . $board->BoardMemberID . '.');
             });
-        } catch (\Throwable|Exception $e) {
+        } catch (\Throwable | Exception $e) {
             Log::error('update board member.');
             Log::error($e);
             return $this->errored('an unexpected error occurred');
@@ -146,12 +147,12 @@ class BoardController extends Controller
         try {
             DB::transaction(static function () use ($board, $actor, $request) {
                 $board->forceFill([
-                    'DeletedOn' => now(),
-                    'DeletedBy' => $request->user()->Id,
-                ])->save();
+                                   'DeletedOn' => now(),
+                                   'DeletedBy' => $request->user()->Id,
+                                  ])->save();
                 activity()->causedBy($actor)->performedOn($board)->event('delete')->log('removed board member ' . $board->BoardMemberID . '.');
             });
-        } catch (\Throwable|Exception $e) {
+        } catch (\Throwable | Exception $e) {
             Log::error('trash board member.');
             Log::error($e);
             return $this->errored('an unexpected error occurred');

@@ -37,10 +37,11 @@ class CompetitorProductController extends Controller
             })->editColumn('Clients', function (CompetitorProduct $product) {
                 return number_format($product->Clients);
             })->setRowClass('mouse_pointer user-select-none dbl-click-summary-data')->setRowData([
-                'dbl_click_url' => function (CompetitorProduct $product) use ($competitor) {
-                    return route('competitor-products.show', [$competitor->CompetitorID, $product->Id]);
-                }, 'summary_title' => 'Product Details'
-            ])->make();
+                                                                                                  'dbl_click_url' => function (CompetitorProduct $product) use ($competitor) {
+                                                                                                    return route('competitor-products.show', [$competitor->CompetitorID, $product->Id]);
+                                                                                                  },
+                                                                                                  'summary_title' => 'Product Details',
+                                                                                                 ])->make();
     }
 
     /**
@@ -50,9 +51,9 @@ class CompetitorProductController extends Controller
     {
         $this->authorize('update', $competitor);
         $competitor->products()->create(array_merge($request->validated(), [
-            'CreatedBy' => $request->user()->Id,
-            'ModifiedBy' => $request->user()->Id,
-        ]));
+                                                                            'CreatedBy'  => $request->user()->Id,
+                                                                            'ModifiedBy' => $request->user()->Id,
+                                                                           ]));
 
         return $this->succeeded('product added successfully');
     }
@@ -75,8 +76,8 @@ class CompetitorProductController extends Controller
         $this->authorize('update', $competitor);
         $product = $competitor->products()->where('Id', $product_id)->firstOrFail();
         $product->update(array_merge($request->validated(), [
-            'ModifiedBy' => $request->user()->Id,
-        ]));
+                                                             'ModifiedBy' => $request->user()->Id,
+                                                            ]));
 
         return $this->succeeded('product updated successfully');
     }
@@ -91,9 +92,9 @@ class CompetitorProductController extends Controller
         $product = $competitor->products()->where('Id', $product_id)->firstOrFail();
 
         $product->forceFill([
-            'DeletedBy' => $request->user()->Id,
-            'DeletedOn' => now()
-        ])->save();
+                             'DeletedBy' => $request->user()->Id,
+                             'DeletedOn' => now(),
+                            ])->save();
 
         return $this->succeeded('product trashed successfully');
     }

@@ -7,6 +7,7 @@ use App\Traits\UsefulEnumTrait;
 enum SurveyQuestionTypeEnum: string
 {
     use UsefulEnumTrait;
+
     case Open = 'op';
 
     case Closed = 'cl';

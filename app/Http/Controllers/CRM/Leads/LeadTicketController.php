@@ -60,8 +60,8 @@ class LeadTicketController extends Controller
         $owner = $request->user();
         $watchers = $request->getWatchers();
         $emailConversation = null;
-        if($request->has('conversation')){
-            $emailConversation = EmailConversation::query()->where('Id',$request->conversation)->first();
+        if ($request->has('conversation')) {
+            $emailConversation = EmailConversation::query()->where('Id', $request->conversation)->first();
         }
 
         try {
@@ -83,19 +83,18 @@ class LeadTicketController extends Controller
                     $service->addWatcher($watcher, RoleEnum::Read, $owner);
                 }
 
-                if( ($emailConversation instanceof EmailConversation)){//attach documents in email to ticket
-                    foreach ($emailConversation->email->attachments as  $attachment){
-                        if ($attachment instanceof CRMImage){
-                            $service->documentContent($attachment->Image,$attachment->MIMEType,$attachment->Name,SystemHelper::user());
+                if (($emailConversation instanceof EmailConversation)) {//attach documents in email to ticket
+                    foreach ($emailConversation->email->attachments as $attachment) {
+                        if ($attachment instanceof CRMImage) {
+                            $service->documentContent($attachment->Image, $attachment->MIMEType, $attachment->Name, SystemHelper::user());
                         }
                     }
-
                 }
                 return $service;
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (\Throwable|Exception $e) {
+        } catch (\Throwable | Exception $e) {
             Log::error('Error creating ticket ' . $e->getMessage());
             Log::error($e);
             return $this->errored('unexpected error creating ticket, try again later');

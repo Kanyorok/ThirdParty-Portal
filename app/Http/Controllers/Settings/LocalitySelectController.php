@@ -34,9 +34,9 @@ class LocalitySelectController extends Controller
                     })->lock('WITH(NOLOCK)')->select(['ID', "Name", 'LocalityID'])->limit(20)->get()
                     ->map(function ($locality) {
                         return [
-                            'ID' => $locality->ID,
-                            'Name' => $locality->Name . ' - ' . $locality->in?->Name,
-                        ];
+                                'ID'   => $locality->ID,
+                                'Name' => $locality->Name . ' - ' . $locality->in?->Name,
+                               ];
                     })->toArray();
             } else {
                 $data = Locality::query()->where('LocationType', $request->type)

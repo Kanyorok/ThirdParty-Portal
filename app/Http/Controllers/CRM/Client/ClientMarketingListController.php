@@ -13,7 +13,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-
 class ClientMarketingListController extends Controller
 {
     public function __construct()
@@ -52,9 +51,9 @@ class ClientMarketingListController extends Controller
     public function store(PartyListRequest $request, Client $client): JsonResponse
     {
         $client->marketingLists()->where('t_MarketingLists.Type', MarketingListEnum::Static->value)->where('Source', '!=', DebtProduct::getPrimaryKey())->syncWithPivotValues($request->getLists(), [
-            'CreatedBy' => $request->user()->Id,
-            'ModifiedBy' => $request->user()->Id,
-        ]);
+                                                                                                                                                                                                     'CreatedBy'  => $request->user()->Id,
+                                                                                                                                                                                                     'ModifiedBy' => $request->user()->Id,
+                                                                                                                                                                                                    ]);
 
         return $this->succeeded('marketing list updated.', route('clients.show', [$client->ClientID]));
     }

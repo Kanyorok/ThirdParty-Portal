@@ -42,7 +42,6 @@ class SurveyPolicy
     public function update(User $user, Survey $survey): bool
     {
         return ($survey->Status->value === SurveyStatusEnum::Draft->value && $user->Id === $survey->CreatedBy);
-
     }
 
     /**

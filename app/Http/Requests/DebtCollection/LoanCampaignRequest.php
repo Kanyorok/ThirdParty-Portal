@@ -15,15 +15,27 @@ class LoanCampaignRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'Label' => ['required', 'string', 'max:200'],
-            'Content' => ['required', 'string', 'min:5', 'max:50000'],
-            'Notes' => ['nullable', 'string', 'max:5000'],
-        ];
+                'Label'   => [
+                              'required',
+                              'string',
+                              'max:200',
+                             ],
+                'Content' => [
+                              'required',
+                              'string',
+                              'min:5',
+                              'max:50000',
+                             ],
+                'Notes'   => [
+                              'nullable',
+                              'string',
+                              'max:5000',
+                             ],
+               ];
     }
 
     public function getMessageContent(): string
     {
         return $this->string('Content')->remove(["\r", "\n", "\t", "\0", "\x0B"])->replace("\u{A0}", " ")->toString();
-
     }
 }

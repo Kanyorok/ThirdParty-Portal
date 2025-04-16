@@ -109,8 +109,18 @@ class UserController extends Controller
         try {
             DB::transaction(static function () use ($branch, $user, $userID, $email, $gender, $request, $phone, $clientID) {
                 (new UserService($user))
-                    ->update($userID, $request->validated('Name'), $email, $phone, $gender, $request->user(),
-                        ($user->Email_Signature) ?? '', ($request->validated('Notes')) ?? '', $branch, $clientID)
+                    ->update(
+                        $userID,
+                        $request->validated('Name'),
+                        $email,
+                        $phone,
+                        $gender,
+                        $request->user(),
+                        ($user->Email_Signature) ?? '',
+                        ($request->validated('Notes')) ?? '',
+                        $branch,
+                        $clientID
+                    )
                     ->syncBR();
             });
         } catch (ErroredException $e) {

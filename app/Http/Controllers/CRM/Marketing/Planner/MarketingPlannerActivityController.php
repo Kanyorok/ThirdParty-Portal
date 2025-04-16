@@ -22,7 +22,6 @@ use Yajra\DataTables\DataTables;
 
 class MarketingPlannerActivityController extends Controller
 {
-
     public function __construct()
     {
         $this->middleware('ajax');
@@ -41,7 +40,7 @@ class MarketingPlannerActivityController extends Controller
 
         return Datatables::of($planner->activities()->lock('WITH(NOLOCK)')->select('*'))->addIndexColumn()
             ->addColumn('action', function (MarketingPlannerActivity $activity) use ($actor, $planner) {
-                return (((int)$planner->OwnerId === (int)$actor->Id)) ?
+                return (((int) $planner->OwnerId === (int) $actor->Id)) ?
                     '<button class="btn btn-primary btn-sm m-2 click-summary-data" type="button" data-click_url="' . route('planner-activities.edit', [$planner->PlannerID, $activity->PlannerActivityID]) . '"
                         data-summary_title="update ' . Str::upper($planner->PlannerID) . ' activity"><i class="fas fa-edit"></i></button>
                         <button class="btn btn-danger btn-sm m-2 trash-planner-activity" type="button"
@@ -59,10 +58,11 @@ class MarketingPlannerActivityController extends Controller
             })->editColumn('Budget', function (MarketingPlannerActivity $activity) {
                 return number_format($activity->Budget, 2);
             })->setRowClass('mouse_pointer user-select-none dbl-click-summary-data')->setRowData([
-                'dbl_click_url' => function (MarketingPlannerActivity $activity) {
-                    return route('planner-activities.show', [$activity->planner->PlannerID, $activity->PlannerActivityID]);
-                }, 'summary_title' => 'Plan Activity Details'
-            ])->rawColumns(['action'])->make();
+                                                                                                  'dbl_click_url' => function (MarketingPlannerActivity $activity) {
+                                                                                                    return route('planner-activities.show', [$activity->planner->PlannerID, $activity->PlannerActivityID]);
+                                                                                                  },
+                                                                                                  'summary_title' => 'Plan Activity Details',
+                                                                                                 ])->rawColumns(['action'])->make();
     }
 
     /**
@@ -79,9 +79,7 @@ class MarketingPlannerActivityController extends Controller
                 $branch = Branch::query()->where('OurBranchID', $request->get('Branch'))->first();
             }
             if (!$branch instanceof Branch) {
-                throw ValidationException::withMessages([
-                    'Branch' => 'branch is required'
-                ]);
+                throw ValidationException::withMessages(['Branch' => 'branch is required']);
             }
         }
         $actor = $request->user();
@@ -92,8 +90,18 @@ class MarketingPlannerActivityController extends Controller
         try {
             $planner = DB::transaction(static function () use ($users, $end, $start, $request, $planner, $actor, $branch) {
                 (new PlannerService($planner))
-                    ->addActivity($request->validated('activity_name'), $request->validated('activity_location'), $start, $end, $request->validated('activity_budget'),
-                        ($request->validated('activity_notes')) ?? '', $actor, $users, $branch, ($request->validated('activity_materials')) ?? '');
+                    ->addActivity(
+                        $request->validated('activity_name'),
+                        $request->validated('activity_location'),
+                        $start,
+                        $end,
+                        $request->validated('activity_budget'),
+                        ($request->validated('activity_notes')) ?? '',
+                        $actor,
+                        $users,
+                        $branch,
+                        ($request->validated('activity_materials')) ?? ''
+                    );
                 activity()->causedBy($request->user())->performedOn($planner)->event('update')->log('added activity to plan ' . $planner->PlannerID);
                 return $planner;
             });
@@ -155,9 +163,7 @@ class MarketingPlannerActivityController extends Controller
             if ($request->has('Branch') && Branch::query()->where('OurBranchID', $request->get('Branch'))->exists()) {
                 $branchId = $request->get('Branch');
             } else {
-                throw ValidationException::withMessages([
-                    'Branch' => 'branch is required'
-                ]);
+                throw ValidationException::withMessages(['Branch' => 'branch is required']);
             }
         }
         $actor = $request->user();
@@ -167,8 +173,18 @@ class MarketingPlannerActivityController extends Controller
 
         try {
             DB::transaction(static function () use ($Activity, $users, $end, $start, $request, $planner, $actor, $branchId) {
-                (new PlannerService($planner))->updateActivity($Activity, $request->validated('activity_name'), $request->validated('activity_location'),
-                    $start, $end, $request->validated('activity_budget'), ($request->validated('activity_notes')) ?? '', $actor, $users, $branchId);
+                (new PlannerService($planner))->updateActivity(
+                    $Activity,
+                    $request->validated('activity_name'),
+                    $request->validated('activity_location'),
+                    $start,
+                    $end,
+                    $request->validated('activity_budget'),
+                    ($request->validated('activity_notes')) ?? '',
+                    $actor,
+                    $users,
+                    $branchId
+                );
                 activity()->causedBy($request->user())->performedOn($planner)->event('update')->log('updated activity (' . $Activity->PlannerActivityID . ') in plan ' . $planner->PlannerID);
             });
         } catch (Exception $e) {
@@ -193,9 +209,9 @@ class MarketingPlannerActivityController extends Controller
         try {
             DB::transaction(static function () use ($ActivityId, $request, $planner, $actor) {
                 $planner->activities()->where('t_MarketingPlannerActivities.PlannerActivityID', $ActivityId)->update([
-                    'DeletedBy' => $actor->id,
-                    'DeletedOn' => now()
-                ]);
+                                                                                                                      'DeletedBy' => $actor->id,
+                                                                                                                      'DeletedOn' => now(),
+                                                                                                                     ]);
                 activity()->causedBy($request->user())->performedOn($planner)->event('delete')->log('removed activity ' . $ActivityId . ' from  plan ' . $planner->PlannerID);
                 return $planner;
             });

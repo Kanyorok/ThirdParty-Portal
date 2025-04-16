@@ -11,7 +11,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class TicketUsers extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -21,14 +22,19 @@ class TicketUsers extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'Party', 'PartyID', 'TicketID', 'Role',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy'
-    ];
+                           'Party',
+                           'PartyID',
+                           'TicketID',
+                           'Role',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 
     protected $casts = [
-        'Role' => RoleEnum::class,
-        'TicketID' => 'integer'
-    ];
+                        'Role'     => RoleEnum::class,
+                        'TicketID' => 'integer',
+                       ];
 
     public function tickets(): BelongsTo
     {

@@ -147,19 +147,20 @@ class CRMEmailService
                 }
                 return $email->CreatedOn?->format('F d, Y h:i A');
             })->setRowClass('mouse_pointer user-select-none click-email-details')->setRowData([
-                'click_url' => function (CrmEmail $email) {
-                    if (is_null($email->EmailConversationId)) {
-                        return route('emails.show', [$email->EmailID]);
-                    }
-                    return route('email-conversations.summary', [$email->EmailConversationId]);
-                }, 'summary_title' => 'email summary'
+                                                                                               'click_url'     => function (CrmEmail $email) {
+                                                                                                if (is_null($email->EmailConversationId)) {
+                                                                                                    return route('emails.show', [$email->EmailID]);
+                                                                                                }
+                                                                                                return route('email-conversations.summary', [$email->EmailConversationId]);
+                                                                                               },
+                                                                                               'summary_title' => 'email summary',
                 /*  'click_url' => function (CrmEmail $email) {
                       return route('emails.show', $email->EmailID);
                   },
                   'dbl_click_url' => function (CrmEmail $email) {
                       return route('emails.summary', [$email->EmailID]);
                   }, 'summary_title' => 'email summary'*/
-            ])->rawColumns(['action', 'party', 'Status'])->make();
+                                                                                              ])->rawColumns(['action', 'party', 'Status'])->make();
     }
 
     public static function testConfig(string $host, int $port, EmailEncryptionEnum $encryption, string $username, #[SensitiveParameter] string $password): bool
@@ -169,16 +170,16 @@ class CRMEmailService
             $mailer->alwaysFrom($username, config('org.name'));
             $mailer->alwaysTo($username, config('org.name'));
             $mailer->setSymfonyTransport(Mail::createSymfonyTransport([
-                'transport' => 'smtp',
-                'timeout' => 5,
-                'host' => $host,
-                'port' => $port,
-                'encryption' => $encryption,
-                'username' => $username,
-                'password' => $password,
-            ]));
+                                                                       'transport'  => 'smtp',
+                                                                       'timeout'    => 5,
+                                                                       'host'       => $host,
+                                                                       'port'       => $port,
+                                                                       'encryption' => $encryption,
+                                                                       'username'   => $username,
+                                                                       'password'   => $password,
+                                                                      ]));
             return ($mailer->sendNow(new TestMail()) instanceof SentMessage);
-        } catch (Exception|RuntimeException) {
+        } catch (Exception | RuntimeException) {
         }
 
         return false;
@@ -207,23 +208,23 @@ class CRMEmailService
         }
         $crmEmail = new CrmEmail();
         $crmEmail->fill([
-            'Type' => EmailTypeEnum::Outgoing->value,
-            'Status' => EmailStatusEnum::Draft->value,
-            'Priority' => $priority->value,
-            'From' => 'temp@craftsilicon.com',
-            'To' => $to,
-            'CC' => $cc,
-            'BCC' => $bcc,
-            'Subject' => $subject,
-            'Body' => $body,
-            'Text' => StringHelper::cleanHtml($body),
-            'Party' => $Party,
-            'PartyID' => $PartyID,
-            'EmailConversationId' => $replyTo?->EmailConversationId,
-            'ReferenceId' => $replyTo?->MailID,
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
-        ])->save();
+                         'Type'                => EmailTypeEnum::Outgoing->value,
+                         'Status'              => EmailStatusEnum::Draft->value,
+                         'Priority'            => $priority->value,
+                         'From'                => 'temp@craftsilicon.com',
+                         'To'                  => $to,
+                         'CC'                  => $cc,
+                         'BCC'                 => $bcc,
+                         'Subject'             => $subject,
+                         'Body'                => $body,
+                         'Text'                => StringHelper::cleanHtml($body),
+                         'Party'               => $Party,
+                         'PartyID'             => $PartyID,
+                         'EmailConversationId' => $replyTo?->EmailConversationId,
+                         'ReferenceId'         => $replyTo?->MailID,
+                         'CreatedBy'           => $actor->Id,
+                         'ModifiedBy'          => $actor->Id,
+                        ])->save();
 
         return new self($crmEmail);
     }
@@ -231,9 +232,9 @@ class CRMEmailService
     public function setSource(string $Source, string $SourceID): static
     {
         $this->crmEmail->update([
-            'Source' => $Source,
-            'SourceID' => $SourceID
-        ]);
+                                 'Source'   => $Source,
+                                 'SourceID' => $SourceID,
+                                ]);
 
         return $this;
     }
@@ -307,9 +308,9 @@ class CRMEmailService
     public function attachClient(Client $client): static
     {
         $this->crmEmail->update([
-            'Party' => Client::getPrimaryKey(),
-            'PartyID' => $client->ClientID,
-        ]);
+                                 'Party'   => Client::getPrimaryKey(),
+                                 'PartyID' => $client->ClientID,
+                                ]);
 
         return $this;
     }
@@ -317,9 +318,9 @@ class CRMEmailService
     public function attachLead(Lead $lead): static
     {
         $this->crmEmail->update([
-            'Party' => Lead::getPrimaryKey(),
-            'PartyID' => $lead->LeadID,
-        ]);
+                                 'Party'   => Lead::getPrimaryKey(),
+                                 'PartyID' => $lead->LeadID,
+                                ]);
 
         return $this;
     }
@@ -340,8 +341,8 @@ class CRMEmailService
         if ($this->crmEmail->Status->value === EmailStatusEnum::Draft->value) {
             if (!$immediate && config('queue.default') !== 'sync') {
                 $this->crmEmail->update([
-                    'Status' => EmailStatusEnum::Sending->value
-                ]);
+                                         'Status' => EmailStatusEnum::Sending->value,
+                                        ]);
 
                 event(new EmailSendEvent($this->crmEmail));
                 return $this;
@@ -374,10 +375,10 @@ class CRMEmailService
 
         if ($mailable instanceof SentMessage) {
             $this->crmEmail->update([
-                'MailID' => $mailable->getMessageId(),
-                'Dated' => now(),
-                'Status' => EmailStatusEnum::Sent->value
-            ]);
+                                     'MailID' => $mailable->getMessageId(),
+                                     'Dated'  => now(),
+                                     'Status' => EmailStatusEnum::Sent->value,
+                                    ]);
 
             if (!is_int($this->crmEmail->EmailConversationId)) {
                 $this->_createConversation();//create and set non related (new);
@@ -385,10 +386,10 @@ class CRMEmailService
             $source = $this->crmEmail->source;
             if ($source instanceof CampaignParty) {//update status
                 $source->update([
-                    'Status' => EmailStatusEnum::Sent->value,
-                    'Channel' => CrmEmail::getPrimaryKey(),
-                    'ChannelID' => $this->crmEmail->EmailID,
-                ]);
+                                 'Status'    => EmailStatusEnum::Sent->value,
+                                 'Channel'   => CrmEmail::getPrimaryKey(),
+                                 'ChannelID' => $this->crmEmail->EmailID,
+                                ]);
                 if ($source->campaign instanceof Campaign) {
                     (new CampaignService($source->campaign))->complete();
                 }
@@ -396,8 +397,8 @@ class CRMEmailService
 
             if ($this->crmEmail->party instanceof Lead) {
                 $this->crmEmail->party->update([
-                    'LastContacted' => now()
-                ]);
+                                                'LastContacted' => now(),
+                                               ]);
             }
             return $this;
         }
@@ -417,21 +418,21 @@ class CRMEmailService
         $emailConfig = $credentials->Configuration;
 
         $this->crmEmail->update([
-            'From' => $emailConfig?->Outgoing?->username
-        ]);
+                                 'From' => $emailConfig?->Outgoing?->username,
+                                ]);
         // $mailer = (new MailManager(clone app('mailer')));
 
         $mailer = clone app('mailer');
         $mailer->alwaysFrom($emailConfig?->Outgoing?->username, config('org.name'));
         // Override email config
         $mailer->setSymfonyTransport(Mail::createSymfonyTransport([
-            'transport' => 'smtp',
-            'host' => $emailConfig?->Outgoing?->host,
-            'port' => $emailConfig?->Outgoing?->port,
-            'encryption' => $emailConfig?->Outgoing?->encryption,
-            'username' => $emailConfig?->Outgoing?->username,
-            'password' => $emailConfig?->Outgoing?->password,
-        ]));
+                                                                   'transport'  => 'smtp',
+                                                                   'host'       => $emailConfig?->Outgoing?->host,
+                                                                   'port'       => $emailConfig?->Outgoing?->port,
+                                                                   'encryption' => $emailConfig?->Outgoing?->encryption,
+                                                                   'username'   => $emailConfig?->Outgoing?->username,
+                                                                   'password'   => $emailConfig?->Outgoing?->password,
+                                                                  ]));
 
         // Send email
         return $mailer->sendNow(new DefaultEmail($this->crmEmail));
@@ -442,19 +443,19 @@ class CRMEmailService
         $source = $this->crmEmail->source;
         if ($source instanceof CampaignParty) {//update status
             $source->update([
-                'Status' => EmailStatusEnum::Failed->value,
-                'Channel' => CrmEmail::getPrimaryKey(),
-                'ChannelID' => $this->crmEmail->EmailID,
-            ]);
+                             'Status'    => EmailStatusEnum::Failed->value,
+                             'Channel'   => CrmEmail::getPrimaryKey(),
+                             'ChannelID' => $this->crmEmail->EmailID,
+                            ]);
             if ($source->campaign instanceof Campaign) {
                 (new CampaignService($source->campaign))->complete();
             }
         }
 
         $this->crmEmail->update([
-            'Dated' => now(),
-            'Status' => EmailStatusEnum::Failed->value
-        ]);
+                                 'Dated'  => now(),
+                                 'Status' => EmailStatusEnum::Failed->value,
+                                ]);
 
         return $this;
     }
@@ -463,13 +464,13 @@ class CRMEmailService
     {
         $conversation = new EmailConversation();
         $conversation->fill([
-            'EmailId' => $this->crmEmail->EmailID,
-            'Emails' => 0,
-            'Party' => $this->crmEmail->Party,
-            'PartyID' => $this->crmEmail->PartyID,
-            'CreatedBy' => $this->crmEmail->CreatedBy,
-            'ModifiedBy' => $this->crmEmail->CreatedBy,
-        ])->save();
+                             'EmailId'    => $this->crmEmail->EmailID,
+                             'Emails'     => 0,
+                             'Party'      => $this->crmEmail->Party,
+                             'PartyID'    => $this->crmEmail->PartyID,
+                             'CreatedBy'  => $this->crmEmail->CreatedBy,
+                             'ModifiedBy' => $this->crmEmail->CreatedBy,
+                            ])->save();
 
         return $this->attachToConversation($conversation);
     }
@@ -477,19 +478,19 @@ class CRMEmailService
     protected function attachToConversation(EmailConversation $conversation, bool $changeEmailParty = false): EmailConversation
     {
         $this->crmEmail->update([
-            'EmailConversationId' => $conversation->Id
-        ]);
+                                 'EmailConversationId' => $conversation->Id,
+                                ]);
         $conversation->increment('Emails');
 
         $conversation->update([
-            'EmailId' => $this->crmEmail->EmailID,
-        ]);
+                               'EmailId' => $this->crmEmail->EmailID,
+                              ]);
 
         if ($changeEmailParty) {
             $this->crmEmail->update([
-                'PartyID' => $conversation->PartyID,
-                'Party' => $conversation->Party
-            ]);
+                                     'PartyID' => $conversation->PartyID,
+                                     'Party'   => $conversation->Party,
+                                    ]);
         }
         return $conversation;
     }

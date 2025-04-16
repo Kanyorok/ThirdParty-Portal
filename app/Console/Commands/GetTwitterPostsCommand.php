@@ -54,11 +54,11 @@ class GetTwitterPostsCommand extends Command
             $social = Social::query()->where('Type', IntegrationsEnum::Twitter->value)->where('RemoteId', $tweet->id)->first();
             if ($social instanceof Social) {
                 $social->fill([
-                    'LikesCount' => $tweet->public_metrics->like_count,
-                    'CommentsCount' => $tweet->public_metrics->reply_count,
-                    'ViewsCount' => $tweet->public_metrics->impression_count,
-                    'Response' => json_encode($tweet),
-                ])->save();
+                               'LikesCount'    => $tweet->public_metrics->like_count,
+                               'CommentsCount' => $tweet->public_metrics->reply_count,
+                               'ViewsCount'    => $tweet->public_metrics->impression_count,
+                               'Response'      => json_encode($tweet),
+                              ])->save();
 
                 continue;
             }
@@ -90,7 +90,6 @@ class GetTwitterPostsCommand extends Command
         }
         return null;
     }
-
 }
 /*
 {
@@ -261,4 +260,3 @@ class GetTwitterPostsCommand extends Command
       }
     ]
   }*/
-

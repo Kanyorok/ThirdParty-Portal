@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('t_Meetings', static function (Blueprint $table) {
             $table->id('MeetingID');
-            $table->string('Title','200');
+            $table->string('Title', '200');
             $table->dateTime('StartOn');
             $table->dateTime('EndOn');
             $table->string('Type');
-            $table->string('Location',200);
+            $table->string('Location', 200);
             $table->longText('Notes')->nullable();
             $table->char('StatusID', 2);
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');

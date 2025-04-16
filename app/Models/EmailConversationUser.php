@@ -19,14 +19,20 @@ class EmailConversationUser extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'EmailConversationId', 'Party', 'PartyID', 'Role',
-        'Notes', 'CreatedBy', 'ModifiedBy', 'DeletedBy'
-    ];
+                           'EmailConversationId',
+                           'Party',
+                           'PartyID',
+                           'Role',
+                           'Notes',
+                           'CreatedBy',
+                           'ModifiedBy',
+                           'DeletedBy',
+                          ];
 
     protected $casts = [
-        'Role' => RoleEnum::class,
-        'EmailConversationId' => 'integer',
-    ];
+                        'Role'                => RoleEnum::class,
+                        'EmailConversationId' => 'integer',
+                       ];
 
     /**
      * User or Team

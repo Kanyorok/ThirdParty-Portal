@@ -26,7 +26,6 @@ trait UsefulEnumTrait
     public static function getAll(): Collection
     {
         return collect(self::cases());
-
     }
 
     /**
@@ -50,7 +49,7 @@ trait UsefulEnumTrait
     {
         try {
             return self::from($value);
-        } catch (Throwable|\ErrorException|\Exception) {
+        } catch (Throwable | \ErrorException | \Exception) {
         }
 
         throw new ErroredException('Unknown type');

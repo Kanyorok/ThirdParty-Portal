@@ -18,7 +18,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 class IntegrationRequest extends FormRequest
 {
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -27,58 +26,229 @@ class IntegrationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'Integration' => ['required', Rule::enum(IntegrationsEnum::class)],
+                'Integration'           => [
+                                            'required',
+                                            Rule::enum(IntegrationsEnum::class),
+                                           ],
 
             #email
-            'Incoming_Server' => ['exclude_unless:Integration,' . IntegrationsEnum::Email->value, 'required', 'string', new isDomain],
-            'Incoming_Port' => ['exclude_unless:Integration,' . IntegrationsEnum::Email->value, 'required', 'integer', 'min:1', 'max:65535'],
-            'Incoming_Encryption' => ['exclude_unless:Integration,' . IntegrationsEnum::Email->value, 'required', Rule::enum(EmailEncryptionEnum::class)],
-            'Incoming_Username' => ['exclude_unless:Integration,' . IntegrationsEnum::Email->value, 'required', 'string', 'max:200'],
-            'Incoming_Password' => ['exclude_unless:Integration,' . IntegrationsEnum::Email->value, 'required', 'string', 'max:200'],
-            'Outgoing_Server' => ['exclude_unless:Integration,' . IntegrationsEnum::Email->value, 'required', 'string', new isDomain],
-            'Outgoing_Port' => ['exclude_unless:Integration,' . IntegrationsEnum::Email->value, 'required', 'integer', 'min:1', 'max:65535'],
-            'Outgoing_Encryption' => ['exclude_unless:Integration,' . IntegrationsEnum::Email->value, 'required', Rule::enum(EmailEncryptionEnum::class)],
-            'Outgoing_Username' => ['exclude_unless:Integration,' . IntegrationsEnum::Email->value, 'required', 'string', 'max:200'],
-            'Outgoing_Password' => ['exclude_unless:Integration,' . IntegrationsEnum::Email->value, 'required', 'string', 'max:200'],
+                'Incoming_Server'       => [
+                                            'exclude_unless:Integration,' . IntegrationsEnum::Email->value,
+                                            'required',
+                                            'string',
+                                            new isDomain(),
+                                           ],
+                'Incoming_Port'         => [
+                                            'exclude_unless:Integration,' . IntegrationsEnum::Email->value,
+                                            'required',
+                                            'integer',
+                                            'min:1',
+                                            'max:65535',
+                                           ],
+                'Incoming_Encryption'   => [
+                                            'exclude_unless:Integration,' . IntegrationsEnum::Email->value,
+                                            'required',
+                                            Rule::enum(EmailEncryptionEnum::class),
+                                           ],
+                'Incoming_Username'     => [
+                                            'exclude_unless:Integration,' . IntegrationsEnum::Email->value,
+                                            'required',
+                                            'string',
+                                            'max:200',
+                                           ],
+                'Incoming_Password'     => [
+                                            'exclude_unless:Integration,' . IntegrationsEnum::Email->value,
+                                            'required',
+                                            'string',
+                                            'max:200',
+                                           ],
+                'Outgoing_Server'       => [
+                                            'exclude_unless:Integration,' . IntegrationsEnum::Email->value,
+                                            'required',
+                                            'string',
+                                            new isDomain(),
+                                           ],
+                'Outgoing_Port'         => [
+                                            'exclude_unless:Integration,' . IntegrationsEnum::Email->value,
+                                            'required',
+                                            'integer',
+                                            'min:1',
+                                            'max:65535',
+                                           ],
+                'Outgoing_Encryption'   => [
+                                            'exclude_unless:Integration,' . IntegrationsEnum::Email->value,
+                                            'required',
+                                            Rule::enum(EmailEncryptionEnum::class),
+                                           ],
+                'Outgoing_Username'     => [
+                                            'exclude_unless:Integration,' . IntegrationsEnum::Email->value,
+                                            'required',
+                                            'string',
+                                            'max:200',
+                                           ],
+                'Outgoing_Password'     => [
+                                            'exclude_unless:Integration,' . IntegrationsEnum::Email->value,
+                                            'required',
+                                            'string',
+                                            'max:200',
+                                           ],
 
             #sms
-            'SMS_Priority' => ['exclude_unless:Integration,' . IntegrationsEnum::SMS->value, 'required', 'string', 'max:100'],
-            'SMS_Message_Type' => ['exclude_unless:Integration,' . IntegrationsEnum::SMS->value, 'required', 'string', 'max:100'],
-            'SMS_Sender_Id' => ['exclude_unless:Integration,' . IntegrationsEnum::SMS->value, 'required', 'string', 'max:200'],
-            'SMS_Password' => ['exclude_unless:Integration,' . IntegrationsEnum::SMS->value, 'required', 'string', 'max:200'],
+                'SMS_Priority'          => [
+                                            'exclude_unless:Integration,' . IntegrationsEnum::SMS->value,
+                                            'required',
+                                            'string',
+                                            'max:100',
+                                           ],
+                'SMS_Message_Type'      => [
+                                            'exclude_unless:Integration,' . IntegrationsEnum::SMS->value,
+                                            'required',
+                                            'string',
+                                            'max:100',
+                                           ],
+                'SMS_Sender_Id'         => [
+                                            'exclude_unless:Integration,' . IntegrationsEnum::SMS->value,
+                                            'required',
+                                            'string',
+                                            'max:200',
+                                           ],
+                'SMS_Password'          => [
+                                            'exclude_unless:Integration,' . IntegrationsEnum::SMS->value,
+                                            'required',
+                                            'string',
+                                            'max:200',
+                                           ],
 
             #Facebook
-            'FB_Page_Id' => ['exclude_unless:Integration,' . IntegrationsEnum::Facebook->value, 'required', 'numeric'],
-            'FB_App_Id' => ['exclude_unless:Integration,' . IntegrationsEnum::Facebook->value, 'required', 'numeric'],
-            'FB_App_Secret' => ['exclude_unless:Integration,' . IntegrationsEnum::Facebook->value, 'required', 'string', 'max:200'],
-            'FB_Page_Token' => ['exclude_unless:Integration,' . IntegrationsEnum::Facebook->value, 'required', 'string', 'max:5000'],
+                'FB_Page_Id'            => [
+                                            'exclude_unless:Integration,' . IntegrationsEnum::Facebook->value,
+                                            'required',
+                                            'numeric',
+                                           ],
+                'FB_App_Id'             => [
+                                            'exclude_unless:Integration,' . IntegrationsEnum::Facebook->value,
+                                            'required',
+                                            'numeric',
+                                           ],
+                'FB_App_Secret'         => [
+                                            'exclude_unless:Integration,' . IntegrationsEnum::Facebook->value,
+                                            'required',
+                                            'string',
+                                            'max:200',
+                                           ],
+                'FB_Page_Token'         => [
+                                            'exclude_unless:Integration,' . IntegrationsEnum::Facebook->value,
+                                            'required',
+                                            'string',
+                                            'max:5000',
+                                           ],
 
             #Twitter X
-            'X_Access_Token' => ['exclude_unless:Integration,' . IntegrationsEnum::Twitter->value, 'required', 'string', 'max:200'],
-            'X_Access_Token_Secret' => ['exclude_unless:Integration,' . IntegrationsEnum::Twitter->value, 'required', 'string', 'max:200'],
-            'X_Consumer_Key' => ['exclude_unless:Integration,' . IntegrationsEnum::Twitter->value, 'required', 'string', 'max:200'],
-            'X_Consumer_Secret' => ['exclude_unless:Integration,' . IntegrationsEnum::Twitter->value, 'required', 'string', 'max:200'],
-            'X_Bearer_Token' => ['exclude_unless:Integration,' . IntegrationsEnum::Twitter->value, 'required', 'string', 'max:500'],
-            'X_Is_Free' => ['exclude_unless:Integration,' . IntegrationsEnum::Twitter->value, 'required', Rule::in(['yes', 'no'])],
+                'X_Access_Token'        => [
+                                            'exclude_unless:Integration,' . IntegrationsEnum::Twitter->value,
+                                            'required',
+                                            'string',
+                                            'max:200',
+                                           ],
+                'X_Access_Token_Secret' => [
+                                            'exclude_unless:Integration,' . IntegrationsEnum::Twitter->value,
+                                            'required',
+                                            'string',
+                                            'max:200',
+                                           ],
+                'X_Consumer_Key'        => [
+                                            'exclude_unless:Integration,' . IntegrationsEnum::Twitter->value,
+                                            'required',
+                                            'string',
+                                            'max:200',
+                                           ],
+                'X_Consumer_Secret'     => [
+                                            'exclude_unless:Integration,' . IntegrationsEnum::Twitter->value,
+                                            'required',
+                                            'string',
+                                            'max:200',
+                                           ],
+                'X_Bearer_Token'        => [
+                                            'exclude_unless:Integration,' . IntegrationsEnum::Twitter->value,
+                                            'required',
+                                            'string',
+                                            'max:500',
+                                           ],
+                'X_Is_Free'             => [
+                                            'exclude_unless:Integration,' . IntegrationsEnum::Twitter->value,
+                                            'required',
+                                            Rule::in(['yes', 'no']),
+                                           ],
 
             #Channels
-            'Channel_Callback' => ['exclude_unless:Integration,' . IntegrationsEnum::Channels->value, 'required', 'string', 'url:http,https', 'active_url', 'max:200'],
+                'Channel_Callback'      => [
+                                            'exclude_unless:Integration,' . IntegrationsEnum::Channels->value,
+                                            'required',
+                                            'string',
+                                            'url:http,https',
+                                            'active_url',
+                                            'max:200',
+                                           ],
 
             #Artificial Intelligence
-            'LLM_API_Key' => ['exclude_unless:Integration,' . IntegrationsEnum::LLM->value, 'required', 'string',],
-            'LLM_Provider' => ['exclude_unless:Integration,' . IntegrationsEnum::LLM->value, 'required', 'string', Rule::enum(Provider::class)],
-            'LLM_Model' => ['exclude_unless:Integration,' . IntegrationsEnum::LLM->value, 'required', 'string'],
+                'LLM_API_Key'           => [
+                                            'exclude_unless:Integration,' . IntegrationsEnum::LLM->value,
+                                            'required',
+                                            'string',
+                                           ],
+                'LLM_Provider'          => [
+                                            'exclude_unless:Integration,' . IntegrationsEnum::LLM->value,
+                                            'required',
+                                            'string',
+                                            Rule::enum(Provider::class),
+                                           ],
+                'LLM_Model'             => [
+                                            'exclude_unless:Integration,' . IntegrationsEnum::LLM->value,
+                                            'required',
+                                            'string',
+                                           ],
 
             #Core Banking
-            'CBS_Host' => ['exclude_unless:Integration,' . IntegrationsEnum::CoreBanking->value, 'required', 'string', 'url:http,https', 'max:200'],
-            'CBS_ConsumerKey' => ['exclude_unless:Integration,' . IntegrationsEnum::CoreBanking->value, 'required', 'string', 'max:200'],
-            'CBS_ConsumerSecret' => ['exclude_unless:Integration,' . IntegrationsEnum::CoreBanking->value, 'required', 'string', 'max:200'],
+                'CBS_Host'              => [
+                                            'exclude_unless:Integration,' . IntegrationsEnum::CoreBanking->value,
+                                            'required',
+                                            'string',
+                                            'url:http,https',
+                                            'max:200',
+                                           ],
+                'CBS_ConsumerKey'       => [
+                                            'exclude_unless:Integration,' . IntegrationsEnum::CoreBanking->value,
+                                            'required',
+                                            'string',
+                                            'max:200',
+                                           ],
+                'CBS_ConsumerSecret'    => [
+                                            'exclude_unless:Integration,' . IntegrationsEnum::CoreBanking->value,
+                                            'required',
+                                            'string',
+                                            'max:200',
+                                           ],
 
             #InfoBip
-            'InfoBip_Host' => ['exclude_unless:Integration,' . IntegrationsEnum::InfoBip->value, 'required', 'string', 'max:200'],
-            'InfoBip_Email' => ['exclude_unless:Integration,' . IntegrationsEnum::InfoBip->value, 'required', 'string', 'max:200','email:rfc,dns'],
-            'InfoBip_API_Key' => ['exclude_unless:Integration,' . IntegrationsEnum::InfoBip->value, 'required', 'string'],
-        ];
+                'InfoBip_Host'          => [
+                                            'exclude_unless:Integration,' . IntegrationsEnum::InfoBip->value,
+                                            'required',
+                                            'string',
+                                            'max:200',
+                                           ],
+                'InfoBip_Email'         => [
+                                            'exclude_unless:Integration,' . IntegrationsEnum::InfoBip->value,
+                                            'required',
+                                            'string',
+                                            'max:200',
+                                            'email:rfc,dns',
+                                           ],
+                'InfoBip_API_Key'       => [
+                                            'exclude_unless:Integration,' . IntegrationsEnum::InfoBip->value,
+                                            'required',
+                                            'string',
+                                           ],
+               ];
     }
 
     /**
@@ -100,12 +270,10 @@ class IntegrationRequest extends FormRequest
     {
         try {
             return Provider::from($this->validated('LLM_Provider'));
-        } catch (\Exception|\Throwable) {
+        } catch (\Exception | \Throwable) {
         }
 
-        throw ValidationException::withMessages([
-            'LLM_Provider' => 'unknown provider given',
-        ]);
+        throw ValidationException::withMessages(['LLM_Provider' => 'unknown provider given']);
     }
 
     /**
@@ -115,12 +283,10 @@ class IntegrationRequest extends FormRequest
     {
         try {
             return EmailEncryptionEnum::fromValue($this->validated('Outgoing_Encryption'));
-        } catch (\Exception|\Throwable) {
+        } catch (\Exception | \Throwable) {
         }
 
-        throw ValidationException::withMessages([
-            'Outgoing_Encryption' => 'unknown encryption given',
-        ]);
+        throw ValidationException::withMessages(['Outgoing_Encryption' => 'unknown encryption given']);
     }
 
     /**
@@ -130,12 +296,10 @@ class IntegrationRequest extends FormRequest
     {
         try {
             return EmailEncryptionEnum::fromValue($this->validated('Incoming_Encryption'));
-        } catch (\Exception|\Throwable) {
+        } catch (\Exception | \Throwable) {
         }
 
-        throw ValidationException::withMessages([
-            'Incoming_Encryption' => 'unknown encryption given',
-        ]);
+        throw ValidationException::withMessages(['Incoming_Encryption' => 'unknown encryption given']);
     }
 
     /**
@@ -147,12 +311,10 @@ class IntegrationRequest extends FormRequest
             if (Http::get($this->validated('Channel_Callback'))->successful()) {
                 return $this->validated('Channel_Callback');
             }
-        } catch (\Exception|\Throwable) {
+        } catch (\Exception | \Throwable) {
         }
 
-        throw ValidationException::withMessages([
-            'Channel_Callback' => 'url given may not not reachable',
-        ]);
+        throw ValidationException::withMessages(['Channel_Callback' => 'url given may not not reachable']);
     }
 
     /**
@@ -161,27 +323,27 @@ class IntegrationRequest extends FormRequest
     public function getCBSHost(): string
     {
         $credentials = collect([
-            "ConsumerKey" => $this->validated('CBS_ConsumerKey'),
-            "ConsumerSecret" => $this->validated('CBS_ConsumerSecret'),
-        ]);
-        $client = new Client(['verify' => false,
-            'headers' => [
-                'Content-Type' => 'application/json',
-                'Accept' => 'application/json',
-            ]
-        ]);
+                                "ConsumerKey"    => $this->validated('CBS_ConsumerKey'),
+                                "ConsumerSecret" => $this->validated('CBS_ConsumerSecret'),
+                               ]);
+        $client = new Client([
+                              'verify'  => false,
+                              'headers' => [
+                                            'Content-Type' => 'application/json',
+                                            'Accept'       => 'application/json',
+                                           ],
+                             ]);
 
         try {
             if ($client->post($this->validated('CBS_Host') . '/Login', ['body' => $credentials->toJson()])->getStatusCode() === Response::HTTP_OK) {
                 return $this->validated('CBS_Host');
             }
-        } catch (GuzzleException|\Exception) {
+        } catch (GuzzleException | \Exception) {
         }
         throw ValidationException::withMessages([
-            'CBS_Host' => 'host or credentials may be invalid ',
-            'CBS_ConsumerKey' => 'key may be invalid',
-            'CBS_ConsumerSecret' => 'secret may be invalid'
-        ]);
+                                                 'CBS_Host'           => 'host or credentials may be invalid ',
+                                                 'CBS_ConsumerKey'    => 'key may be invalid',
+                                                 'CBS_ConsumerSecret' => 'secret may be invalid',
+                                                ]);
     }
-
 }

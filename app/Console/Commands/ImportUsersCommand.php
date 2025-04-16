@@ -54,14 +54,14 @@ class ImportUsersCommand extends Command
         $headers = array_shift($data);
 
         $requiredHeaders = [
-            "Name",
-            "Title",
-            "Department",
-            "Email Address",
-            "Phone Number",
-            "Member Number",
-            "USERNAME"
-        ];
+                            "Name",
+                            "Title",
+                            "Department",
+                            "Email Address",
+                            "Phone Number",
+                            "Member Number",
+                            "USERNAME",
+                           ];
 
         if (array_diff($requiredHeaders, $headers)) {
             $this->error("The provided CSV file is missing some required fields: " . implode(', ', array_diff($requiredHeaders, $headers)));
@@ -71,17 +71,20 @@ class ImportUsersCommand extends Command
         $branch = Branch::first();
         $actor = SystemHelper::user();
         $Role = Role::query()->createOrFirst(['name' => 'Default'], [
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id
-        ]);
+                                                                     'CreatedBy'  => $actor->Id,
+                                                                     'ModifiedBy' => $actor->Id,
+                                                                    ]);
         $success = 0;
         $failed = 0;
 
         $sendEmails = $this->choice(
-                'Do you want to send welcome email?',
-                ['YES', 'NO'],
-                'NO'
-            ) === "YES";
+            'Do you want to send welcome email?',
+            [
+             'YES',
+             'NO',
+            ],
+            'NO'
+        ) === "YES";
 
         foreach ($data as $row) {
             $userData = array_combine($headers, $row);
@@ -111,12 +114,19 @@ class ImportUsersCommand extends Command
             }
 
             // Create or find the department as a new team
-            $service = UserService::create($branch, $userData['USERNAME'], $userData['Name'], Str::lower($userData['Email Address']), $userData['Phone Number'], GenderEnum::Other, $actor, 'Imported from File',
-                '<p>Best Regards<br>' . $userData['Name'] . '<br>Imarisha Sacco, ' . $userData['Title'] . '<br></p>')->setRole($Role)->syncBR(true);
+            $service = UserService::create(
+                $branch,
+                $userData['USERNAME'],
+                $userData['Name'],
+                Str::lower($userData['Email Address']),
+                $userData['Phone Number'],
+                GenderEnum::Other,
+                $actor,
+                'Imported from File',
+                '<p>Best Regards<br>' . $userData['Name'] . '<br>Imarisha Sacco, ' . $userData['Title'] . '<br></p>'
+            )->setRole($Role)->syncBR(true);
 
-            $service->user->update([
-                'ClientID' => $memberNo,
-            ]);
+            $service->user->update(['ClientID' => $memberNo]);
 
             if ($sendEmails) {
                 $service->welcomeEmail();
@@ -125,22 +135,22 @@ class ImportUsersCommand extends Command
             $team = Team::firstOrCreate(
                 ['Name' => $userData['Department']],
                 [
-                    'Email' => Str::lower($userData['Email Address']),
-                    'Notes' => "{$userData['Department']}",
-                    'CreatedBy' => $actor->Id,
-                    'ModifiedBy' => $actor->Id,
+                 'Email'      => Str::lower($userData['Email Address']),
+                 'Notes'      => "{$userData['Department']}",
+                 'CreatedBy'  => $actor->Id,
+                 'ModifiedBy' => $actor->Id,
                 ]
             );
 
 
             DB::table('t_TeamUser')->insert([
-                'TeamId' => $team->TeamID,
-                'UserId' => $service->user->Id,
-                'CreatedBy' => $actor->Id,
-                'ModifiedBy' => $actor->Id,
-                'CreatedOn' => now(),
-                'ModifiedOn' => now()
-            ]);
+                                             'TeamId'     => $team->TeamID,
+                                             'UserId'     => $service->user->Id,
+                                             'CreatedBy'  => $actor->Id,
+                                             'ModifiedBy' => $actor->Id,
+                                             'CreatedOn'  => now(),
+                                             'ModifiedOn' => now(),
+                                            ]);
             $this->info("User {$userData['Name']} has been successfully imported.");
             $success++;
         }

@@ -11,5 +11,4 @@ enum MarketingListEnum: string
     case Static = 'st';
 
     case Dynamic = 'dy';
-
 }

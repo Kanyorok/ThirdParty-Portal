@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Procurement\ItemController;
+use App\Http\Controllers\Procurement\ItemCategoryController;
 
 require __DIR__ . '/auth.php';
 
@@ -44,10 +46,15 @@ Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function (
 
             Route::resource('users', 'UserController');
         });
-
     });
 
-    Route::get('help','HelpController')->name('help');
+    // Route::prefix('procurement')->name('procurement.')->group(function () {
+    //     Route::resource('items', ItemController::class);
+    //     Route::resource('categories', ItemCategoryController::class);
+    // });
+
+    Route::get('help', 'HelpController')->name('help');
 
     require __DIR__ . '/crm.php';
+    require __DIR__ . '/procurement.php';
 });

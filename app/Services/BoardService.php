@@ -18,7 +18,7 @@ class BoardService
 
     public function sendMessage(string $message, User $actor, bool $immediate = false, BulkNotification $bulkNotification = null): static
     {
-       $service= SMSService::createBoard($this->board, $message, $actor);
+        $service = SMSService::createBoard($this->board, $message, $actor);
         if ($bulkNotification instanceof BulkNotification) {
             $service->setBulk($bulkNotification);
         }
@@ -32,7 +32,6 @@ class BoardService
         if (!filter_var($this->board->Email, FILTER_VALIDATE_EMAIL)) {
             return null;
         }
-        return CRMEmailService::createBoard($this->board, $subject, $body, $actor,$cc,$priorityEnum??EmailPriorityEnum::Normal);
+        return CRMEmailService::createBoard($this->board, $subject, $body, $actor, $cc, $priorityEnum ?? EmailPriorityEnum::Normal);
     }
-
 }

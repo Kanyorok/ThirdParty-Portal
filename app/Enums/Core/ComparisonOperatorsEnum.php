@@ -6,7 +6,6 @@ use App\Exceptions\ErroredException;
 use App\Traits\UsefulEnumTrait;
 use Illuminate\Support\Collection;
 
-
 enum ComparisonOperatorsEnum: string
 {
     use UsefulEnumTrait;
@@ -36,7 +35,6 @@ enum ComparisonOperatorsEnum: string
             self::NotEqual => '!=',
             default => throw new ErroredException("Comparison operators not supported"),
         };
-
     }
 
     public function isBasic(): bool
@@ -48,5 +46,4 @@ enum ComparisonOperatorsEnum: string
     {
         return collect([self::EqualTo, self::GreaterThan, self::GreaterThanOrEqual, self::LessThan, self::LessThanOrEqual, self::NotEqual]);
     }
-
 }

@@ -9,7 +9,6 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class PartyListRequest extends FormRequest
 {
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -18,9 +17,12 @@ class PartyListRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'MarketingList' => ['nullable', 'array'],
-            'MarketingList.*' => ['required'],
-        ];
+                'MarketingList'   => [
+                                      'nullable',
+                                      'array',
+                                     ],
+                'MarketingList.*' => ['required'],
+               ];
     }
 
     public function getLists(): array
@@ -30,7 +32,7 @@ class PartyListRequest extends FormRequest
             foreach ($this->validated('MarketingList') as $item) {
                 $ml = MarketingList::query()->where('Source', '!=', DebtProduct::getPrimaryKey())->where('slug', $item)->first();
                 if ($ml instanceof MarketingList) {
-                    $data->push((int)$ml->MarketingListID);
+                    $data->push((int) $ml->MarketingListID);
                 }
             }
         }

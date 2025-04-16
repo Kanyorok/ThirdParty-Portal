@@ -16,7 +16,6 @@ use Spatie\Permission\Models\Role;
 
 class UserRequest extends FormRequest
 {
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -26,18 +25,60 @@ class UserRequest extends FormRequest
     {
         $id = $this->_getuserId();
         return [
-            'UserID' => ['required', 'string', 'max:100', 'min:3'],
-            'Name' => ['required', 'string', 'max:255'],
-            'Gender' => ['required', Rule::in(GenderEnum::values())],
-            'Phone' => ['nullable', 'min:9', 'max:11', 'regex: /^[(01)(07)]+[0-9]{9}$/i', Rule::unique('t_Users')->ignore($id, 'Id'),/*// 'unique:App\Models\User,Phone'*/],
-            'Email' => ['required', 'email:rfc,dns', 'max:200', Rule::unique('t_Users')->ignore($id, 'Id'), /*'unique:App\Models\User,Phone'*/],
-            'ClientID' => ['required_if_declined:SyncAccount', 'max:20', Rule::unique('t_Users')->ignore($id, 'Id'), 'exists:App\Models\BR\Client,ClientID'],
-            'Notes' => ['nullable', 'string', 'max:5000'],
-            'SyncAccount' => ['nullable'],
-            'Branch' => ['nullable', 'string'],
-            'Role' => ['nullable', 'string'],
-            'Signature' => ['nullable', 'string', 'max:500000'],
-        ];
+                'UserID'      => [
+                                  'required',
+                                  'string',
+                                  'max:100',
+                                  'min:3',
+                                 ],
+                'Name'        => [
+                                  'required',
+                                  'string',
+                                  'max:255',
+                                 ],
+                'Gender'      => [
+                                  'required',
+                                  Rule::in(GenderEnum::values()),
+                                 ],
+                'Phone'       => [
+                                  'nullable',
+                                  'min:9',
+                                  'max:11',
+                                  'regex: /^[(01)(07)]+[0-9]{9}$/i',
+                                  Rule::unique('t_Users')->ignore($id, 'Id'),/*// 'unique:App\Models\User,Phone'*/
+                                 ],
+                'Email'       => [
+                                  'required',
+                                  'email:rfc,dns',
+                                  'max:200',
+                                  Rule::unique('t_Users')->ignore($id, 'Id'), /*'unique:App\Models\User,Phone'*/
+                                 ],
+                'ClientID'    => [
+                                  'required_if_declined:SyncAccount',
+                                  'max:20',
+                                  Rule::unique('t_Users')->ignore($id, 'Id'),
+                                  'exists:App\Models\BR\Client,ClientID',
+                                 ],
+                'Notes'       => [
+                                  'nullable',
+                                  'string',
+                                  'max:5000',
+                                 ],
+                'SyncAccount' => ['nullable'],
+                'Branch'      => [
+                                  'nullable',
+                                  'string',
+                                 ],
+                'Role'        => [
+                                  'nullable',
+                                  'string',
+                                 ],
+                'Signature'   => [
+                                  'nullable',
+                                  'string',
+                                  'max:500000',
+                                 ],
+               ];
     }
 
     private function _getuserId(): string
@@ -51,8 +92,6 @@ class UserRequest extends FormRequest
         }
 
         return '';
-
-
     }
 
     /**
@@ -61,18 +100,14 @@ class UserRequest extends FormRequest
     public function getBranch(): Branch
     {
         if (!is_string($this->validated('Branch'))) {
-            throw ValidationException::withMessages([
-                'Branch' => 'Branch is required.',
-            ]);
+            throw ValidationException::withMessages(['Branch' => 'Branch is required.']);
         }
 
         $branch = Branch::query()->where('OurBranchID', $this->validated('Branch'))->first();
         if ($branch instanceof Branch) {
             return $branch;
         }
-        throw ValidationException::withMessages([
-            'Branch' => 'Branch is not found.',
-        ]);
+        throw ValidationException::withMessages(['Branch' => 'Branch is not found.']);
     }
 
     /**
@@ -84,9 +119,7 @@ class UserRequest extends FormRequest
         if ($role instanceof Role) {
             return $role;
         }
-        throw ValidationException::withMessages([
-            'Role' => 'invalid role defined',
-        ]);
+        throw ValidationException::withMessages(['Role' => 'invalid role defined']);
     }
 
 
@@ -102,9 +135,7 @@ class UserRequest extends FormRequest
         }
 
         if ($query->exists()) {
-            throw ValidationException::withMessages([
-                'Email' => 'Email already taken',
-            ]);
+            throw ValidationException::withMessages(['Email' => 'Email already taken']);
         }
 
         return $Email;
@@ -125,9 +156,7 @@ class UserRequest extends FormRequest
         }
 
         if ($query->exists()) {
-            throw ValidationException::withMessages([
-                'Phone' => 'Phone already taken',
-            ]);
+            throw ValidationException::withMessages(['Phone' => 'Phone already taken']);
         }
 
         return $Phone;
@@ -146,9 +175,7 @@ class UserRequest extends FormRequest
         }
 
         if ($query->exists()) {
-            throw ValidationException::withMessages([
-                'UserID' => 'User already exists',
-            ]);
+            throw ValidationException::withMessages(['UserID' => 'User already exists']);
         }
 
         if ($user instanceof User) {
@@ -161,17 +188,15 @@ class UserRequest extends FormRequest
             if ($brexists) {
                 return $UserID;
             }
-            throw ValidationException::withMessages([
-                'UserID' => 'Sync on and user does not exist in Core.',
-            ]);
+            throw ValidationException::withMessages(['UserID' => 'Sync on and user does not exist in Core.']);
         }
 
 
         if ($brexists) {
             throw ValidationException::withMessages([
-                'UserID' => 'User already exists, if its you turn on sync',
-                'SyncAccount' => 'turn on to sync account',
-            ]);
+                                                     'UserID'      => 'User already exists, if its you turn on sync',
+                                                     'SyncAccount' => 'turn on to sync account',
+                                                    ]);
         }
         return $UserID;
     }
@@ -189,12 +214,8 @@ class UserRequest extends FormRequest
         try {
             $gender = GenderEnum::fromValue($this->validated('Gender'));
         } catch (ErroredException $e) {
-            throw ValidationException::withMessages([
-                'Gender' => 'invalid gender provided',
-            ]);
+            throw ValidationException::withMessages(['Gender' => 'invalid gender provided']);
         }
         return $gender;
-
     }
-
 }

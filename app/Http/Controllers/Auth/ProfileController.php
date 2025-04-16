@@ -40,21 +40,21 @@ class ProfileController extends Controller
         }
 
         $request->validate([
-            'current_password' => 'required',
-            'password' => ['required', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()->uncompromised()],
-        ], [
-            'current_password.required' => 'Please enter current password',
-        ]);
+                            'current_password' => 'required',
+                            'password'         => [
+                                                   'required',
+                                                   'confirmed',
+                                                   Password::min(8)->mixedCase()->numbers()->symbols()->uncompromised(),
+                                                  ],
+                           ], ['current_password.required' => 'Please enter current password']);
 
         if (!(BREncryption::checkAuthUser($user, $request->current_password))) {
-            throw ValidationException::withMessages([
-                'current_password' => 'Current password is incorrect',
-            ]);
+            throw ValidationException::withMessages(['current_password' => 'Current password is incorrect']);
         }
 
         $user->fill([
-            'Password' => BREncryption::hashUser($user, $request->password)
-        ])->save();
+                     'Password' => BREncryption::hashUser($user, $request->password),
+                    ])->save();
 
         activity()->causedBy($user)->performedOn($user)->event('password-change')->log('changed password.');
 
@@ -75,8 +75,18 @@ class ProfileController extends Controller
         try {
             DB::transaction(static function () use ($ClintID, $user, $userID, $email, $gender, $request) {
                 (new UserService($user))
-                    ->update($userID, $request->validated('Name'), $email, $request->validated('Phone'), $gender,
-                        $request->user(), $request->validated('Signature'), ($user->Notes) ?? '', null, $ClintID);
+                    ->update(
+                        $userID,
+                        $request->validated('Name'),
+                        $email,
+                        $request->validated('Phone'),
+                        $gender,
+                        $request->user(),
+                        $request->validated('Signature'),
+                        ($user->Notes) ?? '',
+                        null,
+                        $ClintID
+                    );
             });
         } catch (ErroredException $e) {
             return $e->toJson();

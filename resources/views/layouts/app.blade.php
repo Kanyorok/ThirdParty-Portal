@@ -58,67 +58,52 @@
                     </div>
                 </div>
                 <ul class="pc-navbar">
-                    <li class="pc-item {{ request()->is('/')?'active':'' }}"><a href="{{ route('home') }}"  class="pc-link"><span class="pc-micon">
-                        <i data-feather="home" class="pc-icon"></i>
-                        <use xlink:href="#custom-fatrows"></use>
-                    </svg> </span><span class="pc-mtext" data-i18n="Data">Home</span></a></li>
+                    <li class="pc-item {{ request()->is('/')?'active':'' }}"><a href="{{ route('home') }}"
+                            class="pc-link"><span class="pc-micon">
+                                <i data-feather="home" class="pc-icon"></i>
+                                <use xlink:href="#custom-fatrows"></use>
+                                </svg>
+                            </span><span class="pc-mtext" data-i18n="Data">Home</span></a></li>
                     <li class="pc-item pc-hasmenu"><a href="#!" class="pc-link"><span class="pc-micon"><svg
                                     class="pc-icon">
                                     <use xlink:href="#custom-layer"></use>
                                 </svg> </span><span class="pc-mtext" data-i18n="Online Courses">Procurement </span>
                             <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
                         <ul class="pc-submenu">
-                            <li class="pc-item"><a class="pc-link" href="../admins/course-dashboard.html"
-                                    data-i18n="Dashboard">Dashboard</a></li>
-                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span
-                                        data-i18n="Teacher">Teacher</span> <span class="pc-arrow"><i
-                                            data-feather="chevron-right"></i></span></a>
+                            <li class="pc-item pc-hasmenu">
+                                <a class="pc-link" href="#!">
+                                    <span data-i18n="Requisitions">Purchase Requisition
+                                    </span>
+                                    <span class="pc-arrow">
+                                        <i data-feather="chevron-right">
+                                        </i>
+                                    </span>
+                                </a>
                                 <ul class="pc-submenu">
-                                    <li class="pc-item"><a class="pc-link" href="../admins/course-teacher-list.html"
-                                            data-i18n="List">List</a></li>
-                                    <li class="pc-item"><a class="pc-link" href="../admins/course-teacher-apply.html"
-                                            data-i18n="Apply">Apply</a></li>
+                                    <li class="pc-item"><a class="pc-link" href="{{route('requisitionItem.index')}}"
+                                            data-i18n="List">Requisition List</a></li>
+                                    <li class="pc-item"><a class="pc-link" href="{{route('requisitionItem.create')}}"
+                                            data-i18n="Apply">Requisition Form</a></li>
                                     <li class="pc-item"><a class="pc-link" href="../admins/course-teacher-add.html"
                                             data-i18n="Add">Add</a></li>
                                 </ul>
                             </li>
-                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span
-                                        data-i18n="Student">Student</span> <span class="pc-arrow"><i
+                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Teacher">Items
+                                        Catalogue</span> <span class="pc-arrow"><i
                                             data-feather="chevron-right"></i></span></a>
                                 <ul class="pc-submenu">
-                                    <li class="pc-item"><a class="pc-link" href="../admins/course-student-list.html"
-                                            data-i18n="List">list</a></li>
-                                    <li class="pc-item"><a class="pc-link" href="../admins/course-student-apply.html"
-                                            data-i18n="Apply">Apply</a></li>
-                                    <li class="pc-item"><a class="pc-link" href="../admins/course-student-add.html"
-                                            data-i18n="Add">Add</a></li>
-                                </ul>
-                            </li>
-                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span
-                                        data-i18n="Courses">Courses</span> <span class="pc-arrow"><i
-                                            data-feather="chevron-right"></i></span></a>
-                                <ul class="pc-submenu">
-                                    <li class="pc-item"><a class="pc-link" href="../admins/course-course-view.html"
-                                            data-i18n="View">View</a></li>
-                                    <li class="pc-item"><a class="pc-link" href="../admins/course-course-add.html"
-                                            data-i18n="Add">Add</a></li>
-                                </ul>
-                            </li>
-                            <li class="pc-item"><a class="pc-link" href="../admins/course-pricing.html"
-                                    data-i18n="Pricing">Pricing</a></li>
-                            <li class="pc-item"><a class="pc-link" href="../admins/course-site.html"
-                                    data-i18n="Site">Site</a></li>
-                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span
-                                        data-i18n="Setting">Setting</span> <span class="pc-arrow"><i
-                                            data-feather="chevron-right"></i></span></a>
-                                <ul class="pc-submenu">
-                                    <li class="pc-item"><a class="pc-link" href="../admins/course-setting-payment.html"
-                                            data-i18n="Payment">Payment</a></li>
-                                    <li class="pc-item"><a class="pc-link" href="../admins/course-setting-pricing.html"
-                                            data-i18n="Pricing">Pricing</a></li>
-                                    <li class="pc-item"><a class="pc-link"
-                                            href="../admins/course-setting-notifications.html"
-                                            data-i18n="Notification">Notifications</a></li>
+                                    <li class="pc-item">
+                                        <a class="pc-link" href="{{ route('items.create') }}" data-i18n="List">Add New
+                                            Item</a>
+                                    </li>
+                                    <li class="pc-item">
+                                        <a class="pc-link" href="{{ route('items.index') }}" data-i18n="Apply">Manage
+                                            Items</a>
+                                    </li>
+                                    <li class="pc-item">
+                                        <a class="pc-link" href="{{ route('categories.index') }}" data-i18n="Add">Item
+                                            Categories</a>
+                                    </li>
                                 </ul>
                             </li>
                         </ul>

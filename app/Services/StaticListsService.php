@@ -17,11 +17,11 @@ class StaticListsService
     {
         $detail = new CodeDetail();
         $detail->fill([
-            'CodeID' => $list,
-            'Description' => $description,
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
-        ])->save();
+                       'CodeID'      => $list,
+                       'Description' => $description,
+                       'CreatedBy'   => $actor->Id,
+                       'ModifiedBy'  => $actor->Id,
+                      ])->save();
 
         activity()->causedBy($actor)->performedOn($detail->refresh())->event('create')->log('created ' . $detail->CodeID);
 
@@ -83,14 +83,14 @@ class StaticListsService
     public static function getLists(): Collection
     {
         return collect([
-            self::MarketingModes,
-            self::CustomerResponses,
-            self::LeadLossReason,
-            self::Industries,
-            self::CustomerType,
-            self::TicketCategories,
-            self::ProductDevelopmentStages,
-        ]);
+                        self::MarketingModes,
+                        self::CustomerResponses,
+                        self::LeadLossReason,
+                        self::Industries,
+                        self::CustomerType,
+                        self::TicketCategories,
+                        self::ProductDevelopmentStages,
+                       ]);
     }
 
     public static function getIndustries(): \Illuminate\Database\Eloquent\Collection

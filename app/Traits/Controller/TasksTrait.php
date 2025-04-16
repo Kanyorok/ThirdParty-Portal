@@ -38,20 +38,21 @@ trait TasksTrait
             })->setRowClass(function (Task $task) {
                 return is_null($task->CompletedOn) ? 'user-select-none dbl-click-summary-data' : 'text-decoration-line-through user-select-none dbl-click-summary-data';
             })->setRowData([
-                'dbl_click_url' => function (Task $task) {
-                    return route('tasks.show', [$task->TaskID]);
-                }, 'summary_title' => 'Task Details',
-            ])->rawColumns(['action'])->make();
+                            'dbl_click_url' => function (Task $task) {
+                                return route('tasks.show', [$task->TaskID]);
+                            },
+                            'summary_title' => 'Task Details',
+                           ])->rawColumns(['action'])->make();
     }
 
     public function change(Task $task, string $notes, Carbon $dated, User $actor): void
     {
         DB::transaction(static function () use ($dated, $actor, $task, $notes) {
             $task->fill([
-                "Dated" => $dated,
-                'Notes' => $notes,
-                'ModifiedBy' => $actor->Id,
-            ])->save();
+                         "Dated"      => $dated,
+                         'Notes'      => $notes,
+                         'ModifiedBy' => $actor->Id,
+                        ])->save();
 
             //return ActivityService::task($task,  $actor->UserID . ' added a note.', $actor);
         });
@@ -83,9 +84,9 @@ trait TasksTrait
     {
         DB::transaction(static function () use ($actor, $task) {
             $task->fill([
-                "CompletedOn" => is_null($task->CompletedOn) ? now() : null,
-                'ModifiedBy' => $actor->Id,
-            ])->save();
+                         "CompletedOn" => is_null($task->CompletedOn) ? now() : null,
+                         'ModifiedBy'  => $actor->Id,
+                        ])->save();
             // return ActivityService::task($task,  is_null($task->CompletedOn)$actor->Id . ' added a note.', $actor);
         });
     }
@@ -93,9 +94,9 @@ trait TasksTrait
     public function cancel(Task $task, User $actor): array
     {
         $task->forceFill([
-            'DeletedOn' => now(),
-            'DeletedBy' => $actor->Id
-        ])->save(['timestamps' => false]);
+                          'DeletedOn' => now(),
+                          'DeletedBy' => $actor->Id,
+                         ])->save(['timestamps' => false]);
 
         return ActivityService::task($task, $actor->UserID . ' canceled task', $actor);
     }

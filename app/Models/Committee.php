@@ -9,7 +9,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Committee extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -19,13 +20,16 @@ class Committee extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        "CommitteeID", "Name",  'Notes',
-        'CreatedBy', 'ModifiedBy'
-    ];
+                           "CommitteeID",
+                           "Name",
+                           'Notes',
+                           'CreatedBy',
+                           'ModifiedBy',
+                          ];
 
     public static function getPrimaryKey(): string
     {
-        return (new self)->getRouteKeyName();
+        return (new self())->getRouteKeyName();
     }
 
     /**
@@ -38,8 +42,7 @@ class Committee extends Model
 
     public function members(): BelongsToMany
     {
-        return $this->belongsToMany(Board::class, 't_BoardCommittee',  'CommitteeId','BoardId', 'Id', 'Id')
+        return $this->belongsToMany(Board::class, 't_BoardCommittee', 'CommitteeId', 'BoardId', 'Id', 'Id')
             ->withTimestamps('CreatedOn', 'ModifiedOn')->withPivot(['CreatedBy', 'ModifiedBy'])->using(BoardCommittee::class);
     }
-
 }
