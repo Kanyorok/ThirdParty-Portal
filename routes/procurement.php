@@ -19,4 +19,7 @@ Route::namespace('Procurement')->group(function () {
     //Items
     Route::resource('items', 'ItemController');
     Route::resource('categories', 'ItemCategoryController');
+
+    // Procurement Modes
+    Route::resource('procurement-modes', ProcurementModeController::class);
 });

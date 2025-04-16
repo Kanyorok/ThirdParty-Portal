@@ -112,10 +112,10 @@
                                             data-feather="chevron-right"></i></span></a>
                                 <ul class="pc-submenu">
                                     <li class="pc-item">
-                                        <a class="pc-link" href="{{ route('items.create') }}" data-i18n="List">List Modes</a>
+                                        <a class="pc-link" href="{{ route('procurement-modes.index') }}" data-i18n="List">List Modes</a>
                                     </li>
                                     <li class="pc-item">
-                                        <a class="pc-link" href="{{ route('items.index') }}" data-i18n="Apply">Add Mode</a>
+                                        <a class="pc-link" href="{{ route('procurement-modes.create') }}" data-i18n="Apply">Add Mode</a>
                                     </li>
                                     <li class="pc-item">
                                         <a class="pc-link" href="{{ route('categories.index') }}" data-i18n="Add">Mode Timelines</a>
