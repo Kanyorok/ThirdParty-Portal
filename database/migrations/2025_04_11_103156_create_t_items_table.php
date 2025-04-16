@@ -13,17 +13,17 @@ return new class extends Migration
     {
         Schema::create('t_Items', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique()->comment('Item name');
-            $table->string('description')->nullable()->comment('Item description');
-            $table->enum('type', ['good', 'service'])->default('good')->comment('Item type');
+            $table->string('Name')->unique()->comment('Item name');
+            $table->string('Description')->nullable()->comment('Item description');
+            $table->enum('Type', ['good', 'service'])->default('good')->comment('Item type');
 
             //Fields for goods
-            $table->unsignedInteger('category_id')->nullable()->comment('Category ID');
-            $table->string('unit_of_measure')->nullable()->comment('Unit of measure');
-            $table->decimal('unit_price', 10, 2)->default(0)->comment('Unit price');
+            $table->unsignedInteger('CategoryId')->nullable()->comment('Category ID');
+            $table->string('UOM')->nullable()->comment('Unit of measure');
+            $table->decimal('UnitPrice', 10, 2)->default(0)->comment('Unit price');
 
             //Fields for services
-            $table->text('service_scope')->nullable()->comment('Service scope');
+            $table->text('ServiceScope')->nullable()->comment('Service scope');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
             $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
