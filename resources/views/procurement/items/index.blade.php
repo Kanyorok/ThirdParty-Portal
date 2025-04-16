@@ -45,9 +45,12 @@
     <table class="table table-bordered">
         <thead>
             <tr>
+                <th>Serial</th>
+                <th>Item Code</th>
                 <th>Name</th>
                 <th>Type</th>
                 <th>Category</th>
+                <th>Description</th>
                 <th>Unit Price</th>
                 <th>Actions</th>
             </tr>
@@ -55,9 +58,12 @@
         <tbody>
             @forelse($items as $item)
                 <tr>
+                    <td>{{ $loop->iteration }}</td>
+                    <td>{{ $item->UniqueCode }}</td>
                     <td>{{ $item->Name }}</td>
                     <td>{{ ucfirst($item->Type) }}</td>
                     <td>{{ optional($item->category)->Name }}</td>
+                    <td>{{ $item->Description }}</td>
                     <td>Ksh. {{ $item->UnitPrice }}</td>
                     <td>
                         <a href="{{ route('items.edit', $item) }}" class="btn btn-sm btn-warning">Edit</a>
