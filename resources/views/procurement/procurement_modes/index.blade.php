@@ -1,5 +1,5 @@
 @extends('layouts.app')
-
+@section('title','Available Procurement Modes')
 @section('content')
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -18,6 +18,7 @@
             <thead class="table-light">
                 <tr>
                     <th>#</th>
+                    <th>PMode ID</th>
                     <th>Name</th>
                     <th>Description</th>
                     <th>Created At</th>
@@ -28,8 +29,9 @@
                 @foreach($modes as $index => $mode)
                 <tr>
                     <td>{{ $index + 1 }}</td>
-                    <td>{{ $mode->name }}</td>
-                    <td>{{ $mode->description }}</td>
+                    <td>{{ $mode->UniqueCode }}</td>
+                    <td>{{ $mode->Name }}</td>
+                    <td>{{ $mode->Description }}</td>
                     <td>{{ $mode->created_at->format('Y-m-d') }}</td>
                     <td>
                         <a href="{{ route('procurement-modes.edit', $mode->id) }}" class="btn btn-sm btn-warning">Edit</a>

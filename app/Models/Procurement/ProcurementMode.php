@@ -12,7 +12,10 @@ class ProcurementMode extends Model
     protected $table = 't_ProcurementModes';
 
     protected $fillable = [
-        'name',
-        'description',
+        'Name',
+        'Description',
+        'CreatedBy',
+        'ModifiedBy',
+        'UniqueCode',
     ];
 }

@@ -9,8 +9,11 @@ return new class extends Migration {
     {
         Schema::create('t_ProcurementModes', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique();
-            $table->text('description')->nullable();
+            $table->string('Name')->unique();
+            $table->text('Description')->nullable();
+            $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
+            $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
+            $table->string('UniqueCode', 50)->comment('Unique code for the procurement mode');
             $table->timestamps();
         });
     }

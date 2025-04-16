@@ -1,5 +1,5 @@
 @extends('layouts.app')
-
+@section('title','Edit Procurement Mode')
 @section('content')
 <div class="container mt-4">
     <h3 class="mb-4">Edit Procurement Mode</h3>

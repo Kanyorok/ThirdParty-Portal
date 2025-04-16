@@ -1,5 +1,5 @@
 @extends('layouts.app')
-
+@section('title','Create New Procurement Mode')
 @section('content')
 <div class="container mt-4">
     <h3 class="mb-4">Add Procurement Mode</h3>
