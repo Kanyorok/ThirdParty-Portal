@@ -23,14 +23,15 @@ class RequisitionItemRequest extends FormRequest
     {
         return [
 
-                'Module'        => ['required'],
-                'Item'          => ['required'],
-                'Description'   => ['required'],
-                'Quantity'      => ['required'],
-                'Urgency'       => ['required'],
-                'UOM'           => ['nullable'],
-                'ExpectedPrice' => ['nullable'],
-                'ActualPrice'   => ['nullable'],
+            'Module' => ['required'],
+            'Type' => ['required'],
+            'Item' =>   ['required'],
+            'Description' =>    ['required'],
+            'Quantity' =>   ['required'],
+            'Urgency' =>    ['required'],
+            'UOM' =>    ['nullable'],
+            'ExpectedPrice' =>  ['nullable'],
+            'ActualPrice' =>    ['nullable']
 
             //
                ];
