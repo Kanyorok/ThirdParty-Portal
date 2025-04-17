@@ -30,7 +30,7 @@
                     <tr>
                         <td>{{ $loop->iteration }}</td>
                         <td>{{ $tender->TenderNumber }}</td>
-                        <td>{{ $tender->Title }}</td>
+                        <td><a href="{{ route('tendering-process.show', $tender->Id) }}">{{ $tender->Title }}</a></td>
                         <td>{{ $tender->procurementMode->Name ?? 'N/A' }}</td>
                         <td>{{ number_format($tender->EstimatedValue, 2) }}</td>
                         <td>{{ $tender->Currency }}</td>

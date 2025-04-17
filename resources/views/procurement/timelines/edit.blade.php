@@ -1,5 +1,5 @@
 @extends('layouts.app')
-
+@section('title','Edit Timeline')
 @section('content')
 <div class="container">
     <h2>Edit Timeline for {{ $procurement_mode->Name }}</h2>

@@ -9,7 +9,7 @@ class Tender extends Model
     protected $table = 't_Tenders';
     protected $primaryKey = 'Id';
     public $incrementing = true;
-    
+
     protected $fillable = [
         'TenderNumber',
         'Title',
@@ -37,5 +37,10 @@ class Tender extends Model
     public function modifiedBy()
     {
         return $this->belongsTo(User::class, 'ModifiedBy');
+    }
+
+    public function stages()
+    {
+        return $this->hasMany(TenderStage::class, 'TenderId');
     }
 }

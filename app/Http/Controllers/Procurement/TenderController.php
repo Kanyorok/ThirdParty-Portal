@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class TenderController extends Controller
 {
@@ -58,6 +59,25 @@ class TenderController extends Controller
         $tender->ModifiedBy = Auth::id();
         $tender->save();
 
+        // Auto-generate stage deadlines
+        $timelineStages = \App\Models\Procurement\ModeTimeline::where('ProcurementModeId', $request->ProcurementModeId)->get();
+        $startDate = Carbon::parse($request->StartDate);
+
+        foreach ($timelineStages as $stage) {
+            $endDate = (clone $startDate)->addDays($stage->DurationDays - 1);
+
+            \App\Models\Procurement\TenderStage::create([
+                'TenderId' => $tender->Id,
+                'Stage' => $stage->Stage,
+                'DurationDays' => $stage->DurationDays,
+                'StartDate' => $startDate,
+                'EndDate' => $endDate,
+            ]);
+
+            // Prepare the next stage to start after the current one ends
+            $startDate = $endDate->copy()->addDay();
+        }
+
         return redirect()->route('tendering-process.index')->with('success', 'Tender created successfully.');
     }
 
@@ -66,7 +86,8 @@ class TenderController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $tender = Tender::with(['stages', 'procurementMode'])->findOrFail($id);
+        return view('procurement.tenders.show', compact('tender'));
     }
 
     /**
@@ -94,7 +115,7 @@ class TenderController extends Controller
             'EstimatedValue' => 'required|numeric|min:0',
             'Currency' => 'required|string|max:50',
             'StartDate' => 'required|date|after_or_equal:today',
-            'Status' => 'required|in:open,closed,cancelled',
+            'Status' => 'required|in:open,closed,cancelled,awarded',
         ]);
 
         // Find the tender by ID
@@ -120,7 +141,7 @@ class TenderController extends Controller
      */
     public function destroy(string $id)
     {
-        $tender = Tender::findOrFail($id); // Find the tender or throw a 404 error
+        $tender = Tender::findOrFail($id); 
         $tender->delete(); // Delete the tender
 
         return redirect()->route('tendering-process.index')->with('success', 'Tender deleted successfully.');
