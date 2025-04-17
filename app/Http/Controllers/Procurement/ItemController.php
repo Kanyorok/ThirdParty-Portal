@@ -37,7 +37,8 @@ class ItemController extends Controller
     public function create()
     {
         $categories = ItemCategory::all();
-        return view('procurement.items.create', compact('categories'));
+        $currencies = config('app.currencies'); 
+        return view('procurement.items.create', compact('categories', 'currencies'));
     }
 
     public function store(Request $request)
@@ -84,7 +85,8 @@ class ItemController extends Controller
     public function edit(Item $item)
     {
         $categories = ItemCategory::all();
-        return view('procurement.items.edit', compact('item', 'categories'));
+        $currencies = config('app.currencies'); 
+        return view('procurement.items.edit', compact('item', 'categories', 'currencies'));
     }
 
     public function update(Request $request, Item $item)
