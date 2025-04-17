@@ -36,12 +36,12 @@
     {{-- List Timelines --}}
     <h4>Timelines</h4>
     @if($procurement_mode->timelines->count())
-        <table class="table table-bordered">
-            <thead>
+        <table class="table table-bordered table-striped">
+            <thead class="table-light">
                 <tr>
                     <th>Stage</th>
                     <th>Duration (Days)</th>
-                    <th>Actions</th>
+                    <th style="width: 180px;">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -51,7 +51,7 @@
                         <td>{{ $timeline->DurationDays }}</td>
                         <td>
                             <a href="{{ route('timelines.edit', $timeline->Id) }}" class="btn btn-sm btn-warning">Edit</a>
-                            <form method="POST" action="{{ route('timelines.destroy', $timeline->Id) }}" onsubmit="return confirm('Delete this timeline?');">
+                            <form method="POST" action="{{ route('timelines.destroy', $timeline->Id) }}" class="d-inline" onsubmit="return confirm('Delete this timeline?');">
                                 @csrf
                                 @method('DELETE')
                                 <button class="btn btn-sm btn-danger">Delete</button>
