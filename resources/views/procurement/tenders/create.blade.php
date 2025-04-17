@@ -1,5 +1,5 @@
 @extends('layouts.app')
-
+@section('title','Create Tender')
 @section('content')
 <div class="container">
     <h3>Create New Tender</h3>
