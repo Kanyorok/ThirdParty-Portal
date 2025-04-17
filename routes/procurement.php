@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Procurement\ItemController;
 use App\Http\Controllers\Procurement\ItemCategoryController;
 use App\Http\Controllers\Procurement\ModeTimelineController;
+use App\Http\Controllers\Procurement\ProcurementModeController;
+use App\Http\Controllers\Procurement\TenderingProcessController;
 
 Route::namespace('Procurement')->group(function () {
 
@@ -31,5 +33,5 @@ Route::namespace('Procurement')->group(function () {
     Route::put('timelines/{id}', [ModeTimelineController::class, 'update'])->name('timelines.update');
 
     // Tendering Process
-    Route::resource('tendering-process', 'TenderingProcessController');
+    Route::resource('tendering-process', TenderController::class);
 });

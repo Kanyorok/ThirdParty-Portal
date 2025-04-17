@@ -16,7 +16,8 @@ class TenderController extends Controller
      */
     public function index()
     {
-        //
+        $tenders = Tender::with('procurementMode')->get();
+        return view('procurement.tenders.index', compact('tenders'));
     }
 
     /**
@@ -27,7 +28,7 @@ class TenderController extends Controller
         $procurementModes = ProcurementMode::all();
         $currencies = config('app.currencies'); // Assuming you have a config file for currencies
 
-        return view('procurement.tenders.create', compact('procurementModes'));
+        return view('procurement.tenders.create', compact('procurementModes', 'currencies'));
     }
 
     /**
@@ -35,7 +36,29 @@ class TenderController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'Title' => 'required|string|max:255',
+            'Description' => 'nullable|string',
+            'ProcurementModeId' => 'required|exists:t_ProcurementModes,id',
+            'EstimatedValue' => 'required|numeric|min:0',
+            'Currency' => 'required|string|max:3',
+            'StartDate' => 'required|date|after_or_equal:today',
+        ]);
+
+        $tender = new Tender();
+        $tender->TenderNumber = 'TNDR-' . Str::upper(Str::random(8)); // Generate a unique tender number
+        $tender->Title = $request->Title;
+        $tender->Description = $request->Description;
+        $tender->ProcurementModeId = $request->ProcurementModeId;
+        $tender->EstimatedValue = $request->EstimatedValue;
+        $tender->Currency = $request->Currency;
+        $tender->StartDate = $request->StartDate;
+        $tender->Status = 'Open'; // Default status
+        $tender->CreatedBy = Auth::id(); // Assuming you have authentication set up
+        $tender->ModifiedBy = Auth::id();
+        $tender->save();
+
+        return redirect()->route('tendering-process.index')->with('success', 'Tender created successfully.');
     }
 
     /**
