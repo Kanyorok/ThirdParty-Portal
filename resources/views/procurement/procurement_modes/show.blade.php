@@ -50,6 +50,7 @@
                         <td>{{ $timeline->Stage }}</td>
                         <td>{{ $timeline->DurationDays }}</td>
                         <td>
+                            <a href="{{ route('timelines.edit', $timeline->Id) }}" class="btn btn-sm btn-warning">Edit</a>
                             <form method="POST" action="{{ route('timelines.destroy', $timeline->Id) }}" onsubmit="return confirm('Delete this timeline?');">
                                 @csrf
                                 @method('DELETE')

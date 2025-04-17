@@ -25,12 +25,12 @@
 
         <div class="mb-3">
             <label for="name" class="form-label">Mode Name</label>
-            <input type="text" name="name" id="name" value="{{ old('name', $procurement_mode->name) }}" class="form-control" required>
+            <input type="text" name="name" id="name" value="{{ old('name', $procurement_mode->Name) }}" class="form-control" required>
         </div>
 
         <div class="mb-3">
             <label for="description" class="form-label">Description (Optional)</label>
-            <textarea name="description" id="description" class="form-control" rows="3">{{ old('description', $procurement_mode->description) }}</textarea>
+            <textarea name="description" id="description" class="form-control" rows="3">{{ old('description', $procurement_mode->Description) }}</textarea>
         </div>
 
         <button type="submit" class="btn btn-primary">Update Mode</button>

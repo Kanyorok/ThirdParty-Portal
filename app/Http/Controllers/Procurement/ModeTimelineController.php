@@ -31,7 +31,8 @@ class ModeTimelineController extends Controller
     public function edit($id)
     {
         $timeline = ModeTimeline::findOrFail($id);
-        return view('procurement.timelines.edit', compact('timeline'));
+        $procurement_mode = $timeline->procurementMode;
+        return view('procurement.timelines.edit', compact('timeline', 'procurement_mode'));
     }
 
     /**
@@ -40,17 +41,20 @@ class ModeTimelineController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
+            'ProcurementModeId' => 'required|exists:t_ProcurementModes,Id',
             'Stage' => 'required|string|max:255',
             'DurationDays' => 'required|integer|min:1',
         ]);
 
         $timeline = ModeTimeline::findOrFail($id);
         $timeline->update([
+            'ProcurementModeId' => $request->ProcurementModeId,
             'Stage' => $request->Stage,
             'DurationDays' => $request->DurationDays,
         ]);
 
-        return redirect()->back()->with('success', 'Timeline updated successfully.');
+        return redirect()->route('procurement-modes.show', $request->ProcurementModeId)
+        ->with('success', 'Timeline updated successfully.');
     }
 
     /**
