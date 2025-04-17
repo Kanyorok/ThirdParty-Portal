@@ -29,4 +29,7 @@ Route::namespace('Procurement')->group(function () {
     Route::delete('timelines/{id}', [ModeTimelineController::class, 'destroy'])->name('timelines.destroy');
     Route::get('timelines/{id}/edit', [ModeTimelineController::class, 'edit'])->name('timelines.edit');
     Route::put('timelines/{id}', [ModeTimelineController::class, 'update'])->name('timelines.update');
+
+    // Tendering Process
+    Route::resource('tendering-process', 'TenderingProcessController');
 });

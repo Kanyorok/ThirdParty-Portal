@@ -1,5 +1,5 @@
 @extends('layouts.app')
-
+@section('title','Add Timeline')
 @section('content')
 
 <div class="container">

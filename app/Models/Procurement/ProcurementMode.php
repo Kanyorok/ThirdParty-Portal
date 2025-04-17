@@ -23,4 +23,9 @@ class ProcurementMode extends Model
     {
         return $this->hasMany(ModeTimeline::class, 'ProcurementModeId');
     }
+
+    public function tenders()
+    {
+        return $this->hasMany(Tender::class, 'ProcurementModeId');
+    }
 }

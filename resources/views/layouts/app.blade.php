@@ -107,18 +107,30 @@
                                 </ul>
                             </li>
                             <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Teacher">
-                                Procurement Modes
-                            </span> <span class="pc-arrow"><i
-                                            data-feather="chevron-right"></i></span></a>
+                                        Procurement Modes
+                                    </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
                                 <ul class="pc-submenu">
                                     <li class="pc-item">
-                                        <a class="pc-link" href="{{ route('procurement-modes.index') }}" data-i18n="List">List Modes</a>
+                                        <a class="pc-link" href="{{ route('procurement-modes.index') }}"
+                                            data-i18n="List">List Modes</a>
                                     </li>
                                     <li class="pc-item">
-                                        <a class="pc-link" href="{{ route('procurement-modes.create') }}" data-i18n="Apply">Add Mode</a>
+                                        <a class="pc-link" href="{{ route('procurement-modes.create') }}"
+                                            data-i18n="Apply">Add Mode</a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Teacher">
+                                        Tenders
+                                    </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item">
+                                        <a class="pc-link" href="{{ route('tendering-process.create') }}"
+                                            data-i18n="Create Tender">Create Tender</a>
                                     </li>
                                     <li class="pc-item">
-                                        <a class="pc-link" href="{{ route('categories.index') }}" data-i18n="Add">Mode Timelines</a>
+                                        <a class="pc-link" href="{{ route('tendering-process.index') }}"
+                                            data-i18n="Tender List">Tender List</a>
                                     </li>
                                 </ul>
                             </li>
