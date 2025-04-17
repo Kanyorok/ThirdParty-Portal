@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+
 <div class="container">
     <h2>{{ $procurement_mode->Name }}</h2>
 
@@ -15,7 +16,7 @@
     <h4>Add Timeline</h4>
     <form action="{{ route('timelines.store') }}" method="POST">
         @csrf
-        <input type="hidden" name="ProcurementModeId" value="{{ $procurement_mode->Id }}">
+        <input type="hidden" name="ProcurementModeId" value="{{ $procurement_mode->id }}">
 
         <div class="form-group">
             <label for="Stage">Stage</label>
