@@ -62,18 +62,15 @@
 
     <div class="mb-3">
         <label class="form-label">Currency <span class="text-danger">*</span></label>
-        <select name="Currency" class="form-control" required>
-            <option value="">-- Select Currency --</option>
-            @php
-                $currencies = ['KES', 'USD', 'EUR', 'GBP', 'UGX', 'TZS', 'ZAR']; // extend as needed
-            @endphp
-            @foreach($currencies as $currency)
-                <option value="{{ $currency }}"
+        <select name="Currency" id="Currency" class="form-control" required>
+        <option value="">-- Select Currency --</option>
+        @foreach($currencies as $currency => $name)
+        <option value="{{ $currency }}"
                     {{ old('Currency', $item->Currency ?? '') === $currency ? 'selected' : '' }}>
                     {{ $currency }}
                 </option>
-            @endforeach
-        </select>
+        @endforeach
+    </select>
     </div>
 
     <div class="mb-3">
