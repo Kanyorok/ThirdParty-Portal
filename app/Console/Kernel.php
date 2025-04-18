@@ -15,8 +15,8 @@ class Kernel extends ConsoleKernel
     // ✅ Define your task scheduling here
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('tender:send-reminders')->dailyAt('08:00');
-        $schedule->command('tender:send-reminders')->daily();
+        $schedule->command('tender:send-reminders')->dailyAt('15:00');
+       // $schedule->command('tender:send-reminders')->daily();
     }
 
     // ✅ Register commands from the app/Console/Commands directory

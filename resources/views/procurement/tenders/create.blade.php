@@ -24,7 +24,7 @@
         </div>
 
         <div class="form-group mb-3">
-            <label for="Description">Description <span class="text-danger">*</span></label>
+            <label for="Description">Tender Requirements <span class="text-danger">*</span></label>
             <textarea name="Description" class="form-control"></textarea>
         </div>
 
