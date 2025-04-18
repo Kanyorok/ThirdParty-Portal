@@ -5,7 +5,8 @@ use App\Http\Controllers\Procurement\ItemController;
 use App\Http\Controllers\Procurement\ItemCategoryController;
 use App\Http\Controllers\Procurement\ModeTimelineController;
 use App\Http\Controllers\Procurement\ProcurementModeController;
-use App\Http\Controllers\Procurement\TenderingProcessController;
+use App\Http\Controllers\Procurement\TenderController;
+use App\Http\Controllers\Procurement\SasraAuditorController;
 
 Route::namespace('Procurement')->group(function () {
 
@@ -34,4 +35,10 @@ Route::namespace('Procurement')->group(function () {
 
     // Tendering Process
     Route::resource('tendering-process', TenderController::class);
+
+    //Auditor Routes
+    Route::get('/sasra-auditors', [SasraAuditorController::class, 'index'])->name('sasra-auditors.index');
+    Route::get('/sasra-auditors/upload', [SasraAuditorController::class, 'showImportForm'])->name('sasra-auditors.show');
+    Route::post('/sasra-auditors/upload', [SasraAuditorController::class, 'import'])->name('sasra-auditors.import');
+    Route::get('/sasra-auditors/download', [SasraAuditorController::class, 'download'])->name('sasra-auditors.download');
 });
