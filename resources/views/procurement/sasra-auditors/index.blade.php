@@ -23,9 +23,9 @@
             No auditors found. Please upload a list.
         </div>
     @else
-        <div class="table-responsive">
-            <table class="table table-bordered table-striped">
-                <thead class="table-dark">
+    <div class="table-responsive dt-responsive">
+            <table id="auditorsTable" class="table table-striped table-bordered nowrap">
+                <thead>
                     <tr>
                         <th>#</th>
                         <th>Firm Name</th>
@@ -39,7 +39,7 @@
                 <tbody>
                     @foreach($auditors as $index => $auditor)
                         <tr>
-                            <td>{{ $index + 1 }}</td>
+                            <td>{{ ($auditors->currentPage() - 1) * $auditors->perPage() + $index + 1 }}</td>
                             <td>{{ $auditor->FirmName }}</td>
                             <td>{{ $auditor->PhysicalAddress }}</td>
                             <td>{{ $auditor->PostalAddress }}</td>
@@ -49,8 +49,38 @@
                         </tr>
                     @endforeach
                 </tbody>
+                <tfoot>
+                    <tr>
+                        <th>#</th>
+                        <th>Firm Name</th>
+                        <th>Physical Address</th>
+                        <th>Postal Address</th>
+                        <th>Town</th>
+                        <th>Status</th>
+                        <th>Date Uploaded</th>
+                    </tr>
+                </tfoot>
             </table>
+        </div>
+
+        <!-- Pagination Links -->
+        <div class="d-flex justify-content-center">
+            {{ $auditors->links() }}
         </div>
     @endif
 </div>
+
+<!-- Include DataTables JS -->
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        $('#auditorsTable').DataTable({
+            paging: true, // Disable DataTables pagination since Laravel handles it
+            searching: true,
+            ordering: true,
+            info: false
+        });
+    });
+</script>
+@endpush
 @endsection
