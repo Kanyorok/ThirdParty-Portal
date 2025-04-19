@@ -15,8 +15,8 @@
             <thead>
                 <tr>
                     <th>#</th>
-                    <th>Auditor Name</th>
                     <th>Firm Name</th>
+                    <th>Physical Address</th>
                     <th>Engagement Start Date</th>
                     <th>Engagement End Date</th>
                     <th>Status</th>
@@ -24,11 +24,11 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach ($engagedAuditors as $engaged)
+                @foreach ($engagedAuditors as $index => $engaged)
                     <tr>
                         <td>{{ $loop->iteration }}</td>
-                        <td>{{ $engaged->sasraAuditor->AuditorName ?? '-' }}</td>
-                        <td>{{ $engaged->sasraAuditor->FirmName ?? '-' }}</td>
+                        <td>{{ $engaged->auditor->FirmName ?? '-' }}</td>
+                        <td>{{ $engaged->auditor->PhysicalAddress ?? '-' }}</td>
                         <td>{{ \Carbon\Carbon::parse($engaged->EngagementStartDate)->format('Y-m-d') }}</td>
                         <td>{{ $engaged->EngagementEndDate ? \Carbon\Carbon::parse($engaged->EngagementEndDate)->format('Y-m-d') : 'Ongoing' }}</td>
                         <td>{{ $engaged->EngagementStatus }}</td>
