@@ -7,6 +7,7 @@ use App\Http\Controllers\Procurement\ModeTimelineController;
 use App\Http\Controllers\Procurement\ProcurementModeController;
 use App\Http\Controllers\Procurement\TenderController;
 use App\Http\Controllers\Procurement\SasraAuditorController;
+use App\Http\Controllers\Procurement\EngagedAuditorController;
 
 Route::namespace('Procurement')->group(function () {
 
@@ -41,4 +42,7 @@ Route::namespace('Procurement')->group(function () {
     Route::get('/sasra-auditors/upload', [SasraAuditorController::class, 'showImportForm'])->name('sasra-auditors.show');
     Route::post('/sasra-auditors/upload', [SasraAuditorController::class, 'import'])->name('sasra-auditors.import');
     Route::get('/sasra-auditors/download', [SasraAuditorController::class, 'download'])->name('sasra-auditors.download');
+    Route::get('/engaged-auditors', [EngagedAuditorController::class, 'index'])->name('engaged-auditors.index');
+    Route::post('/engaged-auditors', [EngagedAuditorController::class, 'store'])->name('engaged-auditors.store');
+    Route::get('/engaged-auditors/create', [EngagedAuditorController::class, 'create'])->name('engaged-auditors.create');
 });

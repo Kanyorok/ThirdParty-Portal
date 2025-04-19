@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Procurement\ItemCategory;
 
 class ItemCategoryController extends Controller
@@ -34,8 +35,8 @@ class ItemCategoryController extends Controller
         ItemCategory::create([
             'Name'        => $request->name,
             'Description' => $request->description,
-            'CreatedBy'   => auth()->user()->Id,
-            'ModifiedBy'  => auth()->user()->Id,
+            'CreatedBy'   => Auth::id(),
+            'ModifiedBy'  => Auth::id(),
         ]);
 
         return redirect()->route('categories.index')->with('success', 'Category created successfully.');
@@ -58,7 +59,7 @@ class ItemCategoryController extends Controller
         $category->update([
             'Name'        => $request->name,
             'Description' => $request->description,
-            'ModifiedBy'  => auth()->user()->Id,
+            'ModifiedBy'  => Auth::id(),
         ]);
 
         return redirect()->route('categories.index')->with('success', 'Category updated successfully.');

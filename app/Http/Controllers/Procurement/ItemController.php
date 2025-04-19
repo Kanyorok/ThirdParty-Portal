@@ -6,15 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Procurement\Item;
 use App\Models\Procurement\ItemCategory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use App\Services\Procurement\ItemExportService;
 
 class ItemController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
-
     public function index(Request $request)
     {
         $query = Item::with('category');
@@ -68,8 +64,8 @@ class ItemController extends Controller
         // Assign the generated UniqueCode
         $validated['UniqueCode'] = $prefix . $nextCode;
 
-        $validated['CreatedBy'] = auth()->user()->Id;
-        $validated['ModifiedBy'] = auth()->user()->Id;
+        $validated['CreatedBy'] = Auth::id();
+        $validated['ModifiedBy'] = Auth::id();
 
         Item::create($validated);
 
@@ -119,7 +115,7 @@ class ItemController extends Controller
         }
 
 
-        $validated['ModifiedBy'] = auth()->user()->Id;
+        $validated['ModifiedBy'] = Auth::id();
 
         $item->update($validated);
 
