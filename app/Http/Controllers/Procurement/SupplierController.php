@@ -37,7 +37,7 @@ class SupplierController extends Controller
         // Validate the request data
         $request->validate([
             'SupplierName' => 'required|string|max:255',
-            'ContactEmail' => 'nullable|email|max:255',
+            'ContactEmail' => 'required|email|max:255|unique:t_Suppliers,ContactEmail',
             'ContactPhone' => 'nullable|string|max:20',
             'Address' => 'nullable|string|max:255',
             'IsPrequalified' => 'boolean',
@@ -47,7 +47,7 @@ class SupplierController extends Controller
         Supplier::create($request->all());
 
         // Redirect to the suppliers index with a success message
-        return redirect()->route('procurement.suppliers.index')->with('success', 'Supplier created successfully.');
+        return redirect()->route('suppliers.index')->with('success', 'Supplier created successfully.');
     }
 
     /**
@@ -89,7 +89,7 @@ class SupplierController extends Controller
         $supplier->update($request->all());
 
         // Redirect to the suppliers index with a success message
-        return redirect()->route('procurement.suppliers.index')->with('success', 'Supplier updated successfully.');
+        return redirect()->route('suppliers.index')->with('success', 'Supplier updated successfully.');
     }
 
     /**
@@ -102,6 +102,6 @@ class SupplierController extends Controller
         $supplier->delete();
 
         // Redirect to the suppliers index with a success message
-        return redirect()->route('procurement.suppliers.index')->with('success', 'Supplier deleted successfully.');
+        return redirect()->route('suppliers.index')->with('success', 'Supplier deleted successfully.');
     }
 }
