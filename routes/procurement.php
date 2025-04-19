@@ -2,12 +2,12 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Procurement\ItemController;
-use App\Http\Controllers\Procurement\ItemCategoryController;
 use App\Http\Controllers\Procurement\ModeTimelineController;
 use App\Http\Controllers\Procurement\ProcurementModeController;
 use App\Http\Controllers\Procurement\TenderController;
 use App\Http\Controllers\Procurement\SasraAuditorController;
 use App\Http\Controllers\Procurement\EngagedAuditorController;
+use App\Http\Controllers\Procurement\SupplierController;
 
 Route::namespace('Procurement')->group(function () {
 
@@ -48,4 +48,7 @@ Route::namespace('Procurement')->group(function () {
     Route::get('/engaged-auditors/{id}/edit', [EngagedAuditorController::class, 'edit'])->name('engaged-auditors.edit');
     Route::put('/engaged-auditors/{id}', [EngagedAuditorController::class, 'update'])->name('engaged-auditors.update');
     Route::delete('/engaged-auditors/{id}', [EngagedAuditorController::class, 'destroy'])->name('engaged-auditors.destroy');
+
+    // Suppliers
+    Route::resource('suppliers', SupplierController::class);
 });
