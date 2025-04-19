@@ -33,13 +33,12 @@
                         <td>{{ $engaged->EngagementEndDate ? \Carbon\Carbon::parse($engaged->EngagementEndDate)->format('Y-m-d') : 'Ongoing' }}</td>
                         <td>{{ $engaged->EngagementStatus }}</td>
                         <td>
-                            <!-- Optional: Add edit/delete buttons if applicable -->
-                            {{-- <a href="{{ route('engaged-auditors.edit', $engaged->Id) }}" class="btn btn-sm btn-warning">Edit</a> --}}
-                            {{-- <form method="POST" action="{{ route('engaged-auditors.destroy', $engaged->Id) }}" style="display:inline;">
+                            <a href="{{ route('engaged-auditors.edit', $engaged->Id) }}" class="btn btn-sm btn-warning">Edit</a>
+                            <form method="POST" action="{{ route('engaged-auditors.destroy', $engaged->Id) }}" style="display:inline;">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                            </form> --}}
+                            </form>
                         </td>
                     </tr>
                 @endforeach

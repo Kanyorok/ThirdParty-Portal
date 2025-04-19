@@ -62,7 +62,9 @@ class EngagedAuditorController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $engagedAuditor = EngagedAuditor::findOrFail($id);
+        $auditors = SasraAuditor::where('Status', 'Active')->get();
+        return view('procurement.engaged-auditor.edit', compact('engagedAuditor', 'auditors'));
     }
 
     /**
@@ -70,7 +72,24 @@ class EngagedAuditorController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $validated = $request->validate([
+            'SasraAuditorId' => 'required|exists:t_SasraAuditors,Id',
+            'EngagementStartDate' => 'required|date',
+            'EngagementEndDate' => 'nullable|date|after_or_equal:EngagementStartDate',
+            'EngagementStatus' => 'nullable|string|max:55',
+        ]);
+
+        $validated['ModifiedBy'] = Auth::id();
+
+        // Set EngagementStatus to 'Inactive' if EngagementEndDate is present
+        if (!empty($validated['EngagementEndDate'])) {
+            $validated['EngagementStatus'] = 'Inactive';
+        }
+
+        $engagedAuditor = EngagedAuditor::findOrFail($id);
+        $engagedAuditor->update($validated);
+
+        return redirect()->route('engaged-auditors.index')->with('success', 'Engaged auditor updated successfully.');
     }
 
     /**
@@ -78,6 +97,9 @@ class EngagedAuditorController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $engagedAuditor = EngagedAuditor::findOrFail($id);
+        $engagedAuditor->delete();
+        
+        return redirect()->route('engaged-auditors.index')->with('success', 'Engaged auditor deleted successfully.');
     }
 }
