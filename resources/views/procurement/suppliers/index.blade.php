@@ -20,6 +20,8 @@
                     <th>Supplier Name</th>
                     <th>Prequalification Status</th>
                     <th>Contact Email</th>
+                    <th>Contact Phone</th>
+                    <th>Address</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -36,6 +38,8 @@
                             @endif
                         </td>
                         <td>{{ $supplier->ContactEmail }}</td>
+                        <td>{{ $supplier->ContactPhone }}</td>
+                        <td>{{ $supplier->Address }}</td>
                         <td>
                             <a href="{{ route('suppliers.edit', $supplier->Id) }}" class="btn btn-sm btn-warning">Edit</a>
                             <form action="{{ route('suppliers.destroy', $supplier->Id) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Delete this supplier?');">

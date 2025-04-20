@@ -34,6 +34,11 @@
         </div>
 
         <div class="form-group mb-3">
+            <label for="Address">Address</label>
+            <input type="text" name="Address" class="form-control">
+        </div>
+
+        <div class="form-group mb-3">
             <label for="IsPrequalified">Prequalification Status</label>
             <select name="IsPrequalified" class="form-control">
                 <option value="1">Prequalified</option>
