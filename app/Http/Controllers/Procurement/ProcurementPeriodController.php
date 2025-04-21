@@ -59,7 +59,8 @@ class ProcurementPeriodController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $period = ProcurementPeriod::with('Suppliers')->findOrFail($id);
+        return view('procurement.periods.show', compact('period'));
     }
 
     /**

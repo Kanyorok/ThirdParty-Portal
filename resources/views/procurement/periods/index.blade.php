@@ -27,7 +27,7 @@
                     <tr>
                         <td>{{ $loop->iteration }}</td>
                         <td>{{ $period->ProcurementPeriodNumber }}</td>
-                        <td>{{ $period->Title }}</td>
+                        <td><a href="{{ route('procurement-periods.show', $period->Id) }}">{{ $period->Title }}</a></td>
                         <td>{{ $period->StartDate }}</td>
                         <td>{{ $period->EndDate }}</td>                        <td>
                             <a href="{{ route('procurement-periods.edit', $period->Id) }}" class="btn btn-sm btn-warning">Edit</a>
