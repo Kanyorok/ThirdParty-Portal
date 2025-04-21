@@ -19,6 +19,7 @@
                     <th>#</th>
                     <th>Supplier Name</th>
                     <th>Prequalification Status</th>
+                    <th>Category</th>
                     <th>Contact Email</th>
                     <th>Contact Phone</th>
                     <th>Address</th>
@@ -37,6 +38,7 @@
                                 <span class="badge bg-warning">Not Prequalified</span>
                             @endif
                         </td>
+                        <td>{{ $supplier->category->Name ?? '-' }}</td>
                         <td>{{ $supplier->ContactEmail }}</td>
                         <td>{{ $supplier->ContactPhone }}</td>
                         <td>{{ $supplier->Address }}</td>

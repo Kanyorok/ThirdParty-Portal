@@ -31,8 +31,8 @@ class Supplier extends Model
         $this->attributes['IsPrequalified'] = (bool) $value;
     }
 
-    public function itemCategory()
+    public function category()
     {
-        return $this->belongsTo(ItemCategory::class, 'CategoryId');
+        return $this->belongsTo(ItemCategory::class, 'CategoryId', 'id');
     }
 }

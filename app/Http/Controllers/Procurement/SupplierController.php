@@ -13,13 +13,13 @@ class SupplierController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         // Fetch all suppliers from the database
-        $suppliers = Supplier::orderBy('created_at', 'desc')->paginate(20);
-
+        $suppliers = Supplier::with('category')->orderBy('created_at', 'desc')->paginate(20);
+        $categories = ItemCategory::all();
         // Return the view with the suppliers data
-        return view('procurement.suppliers.index', compact('suppliers'));
+        return view('procurement.suppliers.index', compact('suppliers', 'categories'));
     }
 
     /**
