@@ -8,6 +8,7 @@ use App\Http\Controllers\Procurement\TenderController;
 use App\Http\Controllers\Procurement\SasraAuditorController;
 use App\Http\Controllers\Procurement\EngagedAuditorController;
 use App\Http\Controllers\Procurement\SupplierController;
+use App\Http\Controllers\Procurement\ProcurementPeriodController;
 
 Route::namespace('Procurement')->group(function () {
 
@@ -51,4 +52,7 @@ Route::namespace('Procurement')->group(function () {
 
     // Suppliers
     Route::resource('suppliers', SupplierController::class);
+
+    // Procurement Periods
+    Route::resource('procurement-periods', ProcurementPeriodController::class)->except(['show']);
 });
