@@ -5,14 +5,14 @@
     <h3>Create Supplier</h3>
 
     @if ($errors->any())
-        <div class="alert alert-danger">
-            <strong>Whoops!</strong> Please fix the following issues:<br>
-            <ul>
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
+    <div class="alert alert-danger">
+        <strong>Whoops!</strong> Please fix the following issues:<br>
+        <ul>
+            @foreach ($errors->all() as $error)
+            <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
     @endif
 
     <form action="{{ route('suppliers.store') }}" method="POST">
@@ -31,6 +31,19 @@
         <div class="form-group mb-3">
             <label for="ContactPhone">Contact Phone</label>
             <input type="text" name="ContactPhone" class="form-control">
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Category <span class="text-danger">*</span></label>
+            <select name="CategoryId" class="form-control">
+                <option value="">-- None --</option>
+                @foreach($categories as $category)
+                <option value="{{ $category->id }}"
+                    {{ old('CategoryId', $item->CategoryId ?? '') == $category->id ? 'selected' : '' }}>
+                    {{ $category->Name }}
+                </option>
+                @endforeach
+            </select>
         </div>
 
         <div class="form-group mb-3">

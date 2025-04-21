@@ -14,6 +14,9 @@ class Supplier extends Model
         'ContactPhone',
         'Address',
         'IsPrequalified',
+        'CategoryId',
+        'CreatedBy',
+        'ModifiedBy',
     ];
 
     protected $primaryKey = 'Id';
@@ -26,5 +29,10 @@ class Supplier extends Model
     public function setIsPrequalifiedAttribute($value)
     {
         $this->attributes['IsPrequalified'] = (bool) $value;
+    }
+
+    public function itemCategory()
+    {
+        return $this->belongsTo(ItemCategory::class, 'CategoryId');
     }
 }

@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Procurement\Supplier;
+use App\Models\Procurement\ItemCategory;
 
 class SupplierController extends Controller
 {
@@ -26,7 +28,8 @@ class SupplierController extends Controller
     public function create()
     {
         // Return the view for creating a new supplier
-        return view('procurement.suppliers.create');
+        $categories = ItemCategory::all();
+        return view('procurement.suppliers.create', compact('categories'));
     }
 
     /**
@@ -35,16 +38,20 @@ class SupplierController extends Controller
     public function store(Request $request)
     {
         // Validate the request data
-        $request->validate([
+        $validated = $request->validate([
             'SupplierName' => 'required|string|max:255',
             'ContactEmail' => 'required|email|max:255|unique:t_Suppliers,ContactEmail',
+            'CategoryId' => 'nullable|exists:t_ItemCategories,id',
             'ContactPhone' => 'nullable|string|max:20',
             'Address' => 'nullable|string|max:255',
             'IsPrequalified' => 'boolean',
         ]);
 
+        $validated['CreatedBy'] = Auth::id();
+        $validated['ModifiedBy'] = Auth::id();
+
         // Create a new supplier
-        Supplier::create($request->all());
+        Supplier::create($validated);
 
         // Redirect to the suppliers index with a success message
         return redirect()->route('suppliers.index')->with('success', 'Supplier created successfully.');
