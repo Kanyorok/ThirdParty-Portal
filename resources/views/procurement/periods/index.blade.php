@@ -36,6 +36,7 @@
                                 @method('DELETE')
                                 <button class="btn btn-sm btn-danger">Delete</button>
                             </form>
+                            <a href="{{ route('procurement-periods.assign-suppliers-form', $period->Id) }}" class="btn btn-sm btn-info">Link Periods</a>
                         </td>
                     </tr>
                 @endforeach

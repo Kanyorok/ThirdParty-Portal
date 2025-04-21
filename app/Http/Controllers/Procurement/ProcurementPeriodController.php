@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Procurement;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Procurement\Supplier;
 use App\Models\Procurement\ProcurementPeriod;
 
 
@@ -99,4 +100,26 @@ class ProcurementPeriodController extends Controller
 
         return redirect()->route('procurement-periods.index')->with('success', 'Procurement period deleted.');
     }
+    
+    public function assignSuppliersForm($id)
+    {
+        $period = ProcurementPeriod::with('Suppliers')->findOrFail($id);
+        $suppliers = Supplier::all();
+
+        return view('procurement.periods.assign_supplier', compact('period', 'suppliers'));
+    }
+
+    public function assignSuppliers(Request $request, $id)
+    {
+        $request->validate([
+            'SupplierIds' => 'required|array',
+            'SupplierIds.*' => 'exists:t_Suppliers,Id',
+        ]);
+
+        $period = ProcurementPeriod::findOrFail($id);
+        $period->Suppliers()->sync($request->SupplierIds); // replaces existing
+
+        return redirect()->route('procurement-periods.index')->with('success', 'Suppliers assigned successfully.');
+    }
+
 }

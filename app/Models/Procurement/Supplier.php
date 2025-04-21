@@ -35,4 +35,10 @@ class Supplier extends Model
     {
         return $this->belongsTo(ItemCategory::class, 'CategoryId', 'id');
     }
+
+    public function ProcurementPeriods()
+    {
+        return $this->belongsToMany(ProcurementPeriod::class, 't_ProcurementPeriodSupplier', 'SupplierId', 'ProcurementPeriodId');
+    }
+
 }

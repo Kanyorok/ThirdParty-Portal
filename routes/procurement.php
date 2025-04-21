@@ -55,4 +55,7 @@ Route::namespace('Procurement')->group(function () {
 
     // Procurement Periods
     Route::resource('procurement-periods', ProcurementPeriodController::class)->except(['show']);
+
+    Route::get('/procurement-periods/{id}/assign-suppliers', [ProcurementPeriodController::class, 'assignSuppliersForm'])->name('procurement-periods.assign-suppliers-form');
+    Route::post('/procurement-periods/{id}/assign-suppliers', [ProcurementPeriodController::class, 'assignSuppliers'])->name('procurement-periods.assign-suppliers');
 });

@@ -18,4 +18,10 @@ class ProcurementPeriod extends Model
     ];
 
     protected $primaryKey = 'Id';
+
+    public function Suppliers()
+    {
+        return $this->belongsToMany(Supplier::class, 't_ProcurementPeriodSupplier', 'ProcurementPeriodId', 'SupplierId');
+    }
+
 }
