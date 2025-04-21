@@ -66,7 +66,8 @@ class ProcurementPeriodController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $period = ProcurementPeriod::findOrFail($id);
+        return view('procurement.periods.edit', compact('period'));
     }
 
     /**
@@ -74,7 +75,18 @@ class ProcurementPeriodController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $validated = $request->validate([
+            'Title' => 'nullable|string|max:255',
+            'StartDate' => 'required|date',
+            'EndDate' => 'required|date|after_or_equal:StartDate',
+        ]);
+
+        $validated['ModifiedBy'] = Auth::id();
+
+        $period = ProcurementPeriod::findOrFail($id);
+        $period->update($validated);
+
+        return redirect()->route('procurement-periods.index')->with('success', 'Procurement period updated.');  
     }
 
     /**
@@ -82,6 +94,9 @@ class ProcurementPeriodController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $period = ProcurementPeriod::findOrFail($id);
+        $period->delete();
+
+        return redirect()->route('procurement-periods.index')->with('success', 'Procurement period deleted.');
     }
 }

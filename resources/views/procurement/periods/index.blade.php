@@ -26,8 +26,8 @@
                 @foreach($periods as $period)
                     <tr>
                         <td>{{ $loop->iteration }}</td>
-                        <td>{{ $period->ProcurementNumber }}</td>
-                        <td>{{ $period->Name }}</td>
+                        <td>{{ $period->ProcurementPeriodNumber }}</td>
+                        <td>{{ $period->Title }}</td>
                         <td>{{ $period->StartDate }}</td>
                         <td>{{ $period->EndDate }}</td>                        <td>
                             <a href="{{ route('procurement-periods.edit', $period->Id) }}" class="btn btn-sm btn-warning">Edit</a>
