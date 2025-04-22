@@ -22,18 +22,53 @@
                     <table id="campaignTable"
                         class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
                         <thead>
+
                             <tr>
-                                <th>#</th>
+                                <th>ID</th>
+{{--                                <th>Requisition ID</th>--}}
+                                <th>Module</th>
+                                <th>Type</th>
                                 <th>Item</th>
                                 <th>Description</th>
-                                <th>Quantity</th>
                                 <th>UOM</th>
+                                <th>Quantity</th>
                                 <th>Expected Price</th>
                                 <th>Actual Price</th>
                                 <th>Urgency</th>
+                                <th>Status</th>
+                                <th>Created By</th>
+                                <th>Created On</th>
+{{--                                <th>Modified By</th>--}}
+{{--                                <th>Modified On</th>--}}
                             </tr>
+
                         </thead>
-                        <tbody></tbody>
+                        <tbody>
+                        @forelse($details as $item)
+                            <tr>
+                                <td>{{ $item->Id }}</td>
+{{--                                <td>{{ $item->RequisitionID }}</td>--}}
+                                <td>{{ $item->Module }}</td>
+                                <td>{{ $item->Type }}</td>
+                                <td>{{ $item->ItemName }}</td>
+                                <td>{{ $item->Description }}</td>
+                                <td>{{ $item->UOMx }}</td>
+                                <td>{{ $item->Quantity }}</td>
+                                <td>{{ number_format($item->ExpectedPrice, 2) }}</td>
+                                <td>{{ number_format($item->ActualPrice, 2) }}</td>
+                                <td>{{ $item->Urgency }}</td>
+                                <td>{{ $item->Status }}</td>
+                                <td>{{ $item->UserName }}</td>
+                                <td>{{ $item->CreatedOn }}</td>
+{{--                                <td>{{ $item->ModifiedBy }}</td>--}}
+{{--                                <td>{{ $item->ModifiedOn }}</td>--}}
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="15" class="text-center">No requisition items found.</td>
+                            </tr>
+                        @endforelse
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -149,10 +184,10 @@
 
                                 <select class="form-control" name="Urgency" id="Urgency" required>
                                     <option selected disabled>Select urgency</option>
-                                    <option value="1">1</option>
-                                    <option value="2">2</option>
-                                    <option value="3">3</option>
-                                    <option value="4">4</option>
+                                    <option value="1">Very High</option>
+                                    <option value="2">High</option>
+                                    <option value="3">Medium</option>
+                                    <option value="4">Low</option>
 
                                 </select>
 
