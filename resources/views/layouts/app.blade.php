@@ -132,10 +132,28 @@
                                         <a class="pc-link" href="{{ route('tendering-process.index') }}"
                                             data-i18n="Tender List">Tender List</a>
                                     </li>
+                                    <li class="pc-item pc-hasmenu">
+                                        <a class="pc-link" href="#!">
+                                            <span data-i18n="Auditors">Auditors</span>
+                                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                                        </a>
+                                        <ul class="pc-submenu">
+                                            <li class="pc-item">
+                                                <a class="pc-link" href="{{ route('sasra-auditors.index') }}" data-i18n="SASRA List">SASRA Auditor List</a>
+                                            </li>
+                                            <li class="pc-item">
+                                                <a class="pc-link" href="{{ route('sasra-auditors.import') }}" data-i18n="Upload">Upload Auditor List</a>
+                                            </li>
+                                            <li class="pc-item">
+                                                <a class="pc-link" href="{{ route('engaged-auditors.index') }}" data-i18n="Engaged">Engaged Auditors</a>
+                                            </li>
+                                        </ul>
+                                    </li>
                                 </ul>
-                            </li>
                         </ul>
                     </li>
+                </ul>
+                </li>
                 </ul>
             </div>
         </div>

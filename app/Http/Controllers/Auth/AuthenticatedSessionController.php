@@ -64,7 +64,7 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerateToken();
 
-        $request->session()->flash('status', 'Session timeout, please login again.');
+        $request->session()->put('status', 'Session timeout, please login again.');
 
         return $this->succeeded('Session timeout, please login again.');
     }
