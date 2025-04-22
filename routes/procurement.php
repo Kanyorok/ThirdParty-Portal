@@ -10,6 +10,7 @@ use App\Http\Controllers\Procurement\EngagedAuditorController;
 use App\Http\Controllers\Procurement\SupplierController;
 use App\Http\Controllers\Procurement\ProcurementPeriodController;
 use App\Http\Controllers\Procurement\ProcurementPlanController;
+use App\Http\Controllers\Procurement\RFQController;
 
 Route::namespace('Procurement')->group(function () {
 
@@ -62,5 +63,13 @@ Route::namespace('Procurement')->group(function () {
 
     Route::get('/procurement-periods/{period}/plans/create', [ProcurementPlanController::class, 'create'])->name('procurement-periods.plans.create');
     Route::post('/procurement-periods/{period}/plans', [ProcurementPlanController::class, 'store'])->name('procurement-periods.plans.store');
+
+    // RFQ Routes
+    Route::get('/rfqs/create', [RFQController::class, 'create'])->name('rfqs.create');
+    Route::post('/rfqs', [RFQController::class, 'store'])->name('rfqs.store');
+
+    // Ajax route
+    Route::post('/rfqs/get-suppliers', [RFQController::class, 'getSuppliersByCategory'])->name('rfqs.getSuppliers');
+
 
 });

@@ -23,4 +23,9 @@ class ItemCategory extends Model
     {
         return $this->hasMany(Supplier::class, 'CategoryId');
     }
+
+    public function rfqs()
+    {
+        return $this->hasMany(RFQ::class, 'ItemCategoryId');
+    }
 }
