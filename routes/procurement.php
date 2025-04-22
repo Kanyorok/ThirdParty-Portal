@@ -8,6 +8,8 @@ use App\Http\Controllers\Procurement\TenderController;
 use App\Http\Controllers\Procurement\SasraAuditorController;
 use App\Http\Controllers\Procurement\EngagedAuditorController;
 use App\Http\Controllers\Procurement\SupplierController;
+use App\Http\Controllers\Procurement\ProcurementPeriodController;
+use App\Http\Controllers\Procurement\ProcurementPlanController;
 
 Route::namespace('Procurement')->group(function () {
 
@@ -51,4 +53,14 @@ Route::namespace('Procurement')->group(function () {
 
     // Suppliers
     Route::resource('suppliers', SupplierController::class);
+
+    // Procurement Periods
+    Route::resource('procurement-periods', ProcurementPeriodController::class);
+
+    Route::get('/procurement-periods/{id}/assign-suppliers', [ProcurementPeriodController::class, 'assignSuppliersForm'])->name('procurement-periods.assign-suppliers-form');
+    Route::post('/procurement-periods/{id}/assign-suppliers', [ProcurementPeriodController::class, 'assignSuppliers'])->name('procurement-periods.assign-suppliers');
+
+    Route::get('/procurement-periods/{period}/plans/create', [ProcurementPlanController::class, 'create'])->name('procurement-periods.plans.create');
+    Route::post('/procurement-periods/{period}/plans', [ProcurementPlanController::class, 'store'])->name('procurement-periods.plans.store');
+
 });
