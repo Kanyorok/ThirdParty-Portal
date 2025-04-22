@@ -86,11 +86,12 @@ class RequisitionItemsController extends Controller
      */
     public function create()
     {
-        //  $requisitionItem = DB::table('t_Items')
-        //  ->where;
-
-
-        return view('procurement.requisitionItems.create');
+        try {
+            $details = $this->service->getRequisitionItems();
+            return view('procurement.requisitionItems.create', compact('details'));
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to fetch items: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -120,6 +121,7 @@ class RequisitionItemsController extends Controller
                                      'error'   => $e->getMessage(),
                                     ], 500);
         }
+
     }
     /**
      * Display the specified resource.

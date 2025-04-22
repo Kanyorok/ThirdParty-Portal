@@ -156,6 +156,13 @@ enum PermissionEnum: string
     case RequisitionDelete = 'requisition-delete';
     case RequisitionApproval = 'requisition-approval';
 
+    //Requisitions
+    case RequisitionItemsRead = 'requisitionItem-read';
+    case RequisitionItemsWrite = 'requisitionItem-create';
+    case RequisitionItemsUpdate = 'requisitionItem-update';
+    case RequisitionItemsDelete = 'requisitionItem-delete';
+    case RequisitionItemsApproval = 'requisitionItem-approval';
+
 
     public function module(): string
     {
