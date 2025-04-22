@@ -24,4 +24,9 @@ class ProcurementPeriod extends Model
         return $this->belongsToMany(Supplier::class, 't_ProcurementPeriodSupplier', 'ProcurementPeriodId', 'SupplierId');
     }
 
+    public function ProcurementPlans()
+    {
+        return $this->hasMany(ProcurementPlan::class, 'ProcurementPeriodId');
+    }
+
 }
