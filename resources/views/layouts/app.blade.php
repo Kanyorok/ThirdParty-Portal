@@ -150,6 +150,15 @@
                                         </ul>
                                     </li>
                                 </ul>
+                            </li>
+                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
+                                        Suppliers
+                                    </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item"><a class="pc-link" href="{{ route('suppliers.index') }}" data-i18n="List">Supplier List</a></li>
+                                </ul>
+                            </li>
+
                         </ul>
                     </li>
                 </ul>

@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('t__engaged_auditors');
+        Schema::dropIfExists('t_EngagedAuditors');
     }
 };
