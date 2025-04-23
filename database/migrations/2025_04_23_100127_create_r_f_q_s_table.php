@@ -15,10 +15,9 @@ return new class extends Migration
             $table->id('Id');
             $table->foreignId('TenderId')->constrained('t_Tenders');
             $table->foreignId('ItemCategoryId')->constrained('t_ItemCategories');
-            $table->foreignId('SupplierId')->constrained('t_Suppliers');
-            $table->foreignId('CreatedBy')->constrained('t_Users', 'Id')->comment('User who created the tender');
-            $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id')->comment('User who last modified the tender');
-            $table->timestamps();
+            $table->json('Suppliers');
+            $table->timestamp('CreatedAt')->nullable();
+            $table->timestamp('UpdatedAt')->nullable();
         });
     }
 

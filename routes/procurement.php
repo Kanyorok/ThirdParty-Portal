@@ -64,12 +64,9 @@ Route::namespace('Procurement')->group(function () {
     Route::get('/procurement-periods/{period}/plans/create', [ProcurementPlanController::class, 'create'])->name('procurement-periods.plans.create');
     Route::post('/procurement-periods/{period}/plans', [ProcurementPlanController::class, 'store'])->name('procurement-periods.plans.store');
 
-    // RFQ Routes
+    // RFQ routes
     Route::get('/rfqs/create', [RFQController::class, 'create'])->name('rfqs.create');
     Route::post('/rfqs', [RFQController::class, 'store'])->name('rfqs.store');
-
-    // Ajax route
-    Route::post('/rfqs/get-suppliers', [RFQController::class, 'getSuppliersByCategory'])->name('rfqs.getSuppliers');
-
+    Route::get('/rfqs/{id}', [RFQController::class, 'show'])->name('rfqs.show');
 
 });

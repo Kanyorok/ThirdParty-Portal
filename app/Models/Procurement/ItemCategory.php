@@ -18,14 +18,4 @@ class ItemCategory extends Model
     {
         return $this->hasMany(Item::class, 'CategoryId');
     }
-
-    public function supplier ()
-    {
-        return $this->hasMany(Supplier::class, 'CategoryId');
-    }
-
-    public function rfqs()
-    {
-        return $this->hasMany(RFQ::class, 'ItemCategoryId');
-    }
 }

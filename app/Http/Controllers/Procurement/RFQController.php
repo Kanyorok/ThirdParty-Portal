@@ -4,11 +4,11 @@ namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Models\Procurement\RFQ;
 use App\Models\Procurement\Tender;
 use App\Models\Procurement\ItemCategory;
 use App\Models\Procurement\Supplier;
-use App\Models\Procurement\RFQ;
+use Illuminate\Support\Facades\Mail;
 
 class RFQController extends Controller
 {
@@ -35,32 +35,48 @@ class RFQController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'TenderId' => 'required|exists:tenders,id',
-            'ItemCategoryId' => 'required|exists:item_categories,id',
-            'SupplierIds' => 'required|array',
-            'SupplierIds.*' => 'exists:suppliers,id'
-        ]);
-
-        foreach ($request->SupplierIds as $supplierId) {
-            RFQ::create([
-                'TenderId' => $request->TenderId,
-                'ItemCategoryId' => $request->ItemCategoryId,
-                'SupplierId' => $supplierId,
-                'CreatedBy' => Auth::id(),
-                'ModifiedBy' => Auth::id(), 
+        // \DB::enableQueryLog();
+        
+        try {
+            $request->validate([
+                'TenderId' => 'required|exists:t_Tenders,id',
+                'ItemCategoryId' => 'required|exists:t_ItemCategories,id',
             ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            dd($e->errors()); // Output validation errors
         }
 
-        return redirect()->back()->with('success', 'RFQs created successfully!');
+        // Get suppliers in the selected category
+        $suppliers = Supplier::where('CategoryId', $request->ItemCategoryId)->get();
+        // Your query here
+        // dd(\DB::getQueryLog());
+        // Send emails (replace with actual email logic)
+        foreach ($suppliers as $supplier) {
+            Mail::raw("You have a new RFQ for tender.", function ($message) use ($supplier) {
+                $message->to($supplier->ContactEmail)
+                        ->subject('RFQ Invitation');
+            });
+        }
+
+        // Save RFQ
+        $rfq = RFQ::create([
+            'TenderId' => $request->TenderId,
+            'ItemCategoryId' => $request->ItemCategoryId,
+            'Suppliers' => $suppliers->pluck('Id')->toArray(),
+        ]);
+
+        return redirect()->route('rfqs.show', $rfq->Id)->with('success', 'RFQ sent to suppliers!');
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show($id)
     {
-        //
+        $rfq = RFQ::with(['tender', 'category'])->findOrFail($id);
+        $suppliers = Supplier::whereIn('Id', $rfq->Suppliers)->get();
+
+        return view('procurement.rfqs.show', compact('rfq', 'suppliers'));
     }
 
     /**
@@ -85,14 +101,5 @@ class RFQController extends Controller
     public function destroy(string $id)
     {
         //
-    }
-
-    public function getSuppliersByCategory(Request $request)
-    {
-        $suppliers = Supplier::whereHas('category', function ($q) use ($request) {
-            $q->where('CategoryId', $request->category_id);
-        })->get();
-
-        return response()->json($suppliers);
     }
 }

@@ -3,34 +3,33 @@
 namespace App\Models\Procurement;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Procurement\Tender;
+use App\Models\Procurement\ItemCategory;
+use App\Models\Procurement\Supplier;
 
 class RFQ extends Model
 {
     protected $table = 't_RFQ';
     protected $primaryKey = 'Id';
-    public $incrementing = true;
+
+    public const CREATED_AT = 'CreatedAt';
+    public const UPDATED_AT = 'UpdatedAt';
 
     protected $fillable = [
-        'TenderId',
-        'ItemCategoryId',
-        'SupplierId',
-        'CreatedBy',
-        'ModifiedBy',
+        'TenderId', 'ItemCategoryId', 'Suppliers',
     ];
 
-    // Relationships
+    protected $casts = [
+        'Suppliers' => 'array',
+    ];
+
     public function tender()
     {
         return $this->belongsTo(Tender::class, 'TenderId');
     }
 
-    public function itemCategory()
+    public function category()
     {
         return $this->belongsTo(ItemCategory::class, 'ItemCategoryId');
-    }
-
-    public function supplier()
-    {
-        return $this->belongsTo(Supplier::class, 'SupplierId');
     }
 }
