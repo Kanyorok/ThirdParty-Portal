@@ -16,11 +16,12 @@ class RFQ extends Model
     public const UPDATED_AT = 'UpdatedAt';
 
     protected $fillable = [
-        'TenderId', 'ItemCategoryId', 'Suppliers',
+        'TenderId', 'ItemCategoryId', 'Suppliers', 'RequisitionItems'
     ];
 
     protected $casts = [
         'Suppliers' => 'array',
+        'RequisitionItems' => 'array',
     ];
 
     public function tender()

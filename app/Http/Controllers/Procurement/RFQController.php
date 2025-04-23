@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Procurement\RFQ;
 use App\Models\Procurement\Tender;
 use App\Models\Procurement\ItemCategory;
+use Illuminate\Support\Facades\DB;
 use App\Models\Procurement\Supplier;
 use Illuminate\Support\Facades\Mail;
 
@@ -40,16 +41,39 @@ class RFQController extends Controller
      */
     public function store(Request $request)
     {
-        
         $request->validate([
             'TenderId' => 'required|exists:t_Tenders,id',
             'ItemCategoryId' => 'required|exists:t_ItemCategories,id',
         ]);
 
-        // Get suppliers in the selected category
+        // 1. Fetch suppliers
         $suppliers = Supplier::where('CategoryId', $request->ItemCategoryId)->get();
 
-        // Send emails (replace with actual email logic)
+        // 2. Fetch items + quantities for this category
+        $items = DB::table('t_RequisitionLines as rl')
+            ->join('t_Items as i', 'rl.Item', '=', 'i.id')
+            ->where('rl.CategoryId', $request->ItemCategoryId)
+            ->select('i.Name as name', 'rl.Quantity as quantity')
+            ->get();
+
+        // 3. Format items for JSON storage
+        $requisitionItems = $items->map(function ($item) {
+            return [
+                'name' => $item->name,
+                'quantity' => $item->quantity,
+            ];
+        });
+
+
+        // 4. Create the RFQ
+        $rfq = RFQ::create([
+            'TenderId' => $request->TenderId,
+            'ItemCategoryId' => $request->ItemCategoryId,
+            'Suppliers' => $suppliers->pluck('Id')->toArray(),
+            'RequisitionItems' => $requisitionItems,
+        ]);
+
+        // 5. Notify suppliers
         foreach ($suppliers as $supplier) {
             Mail::raw("You have a new RFQ for tender.", function ($message) use ($supplier) {
                 $message->to($supplier->ContactEmail)
@@ -57,14 +81,7 @@ class RFQController extends Controller
             });
         }
 
-        // Save RFQ
-        $rfq = RFQ::create([
-            'TenderId' => $request->TenderId,
-            'ItemCategoryId' => $request->ItemCategoryId,
-            'Suppliers' => $suppliers->pluck('Id')->toArray(),
-        ]);
-
-        return redirect()->route('rfqs.show', $rfq->Id)->with('success', 'RFQ sent to suppliers!');
+        return redirect()->route('rfqs.show', $rfq->Id)->with('success', 'RFQ created with requisition items and sent to suppliers.');
     }
 
     /**

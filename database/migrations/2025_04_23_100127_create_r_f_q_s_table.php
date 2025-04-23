@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('TenderId')->constrained('t_Tenders');
             $table->foreignId('ItemCategoryId')->constrained('t_ItemCategories');
             $table->json('Suppliers');
+            $table->json('RequisitionItems')->nullable(); 
             $table->timestamp('CreatedAt')->nullable();
             $table->timestamp('UpdatedAt')->nullable();
         });

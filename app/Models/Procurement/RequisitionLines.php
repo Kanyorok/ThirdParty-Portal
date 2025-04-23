@@ -5,6 +5,7 @@ namespace App\Models\Procurement;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Procurement\ItemCategory;
 
 class RequisitionLines extends Model
 {
@@ -38,6 +39,6 @@ class RequisitionLines extends Model
 
     public function category()
     {
-        return $this->belongsTo(ItemCategory::class, 'CategoryId', 'Id');
+        return $this->belongsTo(ItemCategory::class, 'CategoryId');
     }
 }

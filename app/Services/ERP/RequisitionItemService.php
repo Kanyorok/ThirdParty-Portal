@@ -27,6 +27,7 @@ class RequisitionItemService
         'UOM' => $data['UOM'],
         'ExpectedPrice' => $data['ExpectedPrice'],
         'Urgency' => $data['Urgency'],
+        'CategoryId' => $data['CategoryId'],
         'CreatedBy' => $actor->Id,
         'ModifiedBy' => $actor->Id
         // optionally CreatedBy etc.
