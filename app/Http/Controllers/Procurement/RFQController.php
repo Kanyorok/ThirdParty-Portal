@@ -17,7 +17,8 @@ class RFQController extends Controller
      */
     public function index()
     {
-        //
+        $rfqs = RFQ::with(['tender', 'category'])->get();
+        return view('procurement.rfqs.index', compact('rfqs'));
     }
 
     /**
@@ -35,21 +36,15 @@ class RFQController extends Controller
      */
     public function store(Request $request)
     {
-        // \DB::enableQueryLog();
         
-        try {
-            $request->validate([
-                'TenderId' => 'required|exists:t_Tenders,id',
-                'ItemCategoryId' => 'required|exists:t_ItemCategories,id',
-            ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            dd($e->errors()); // Output validation errors
-        }
+        $request->validate([
+            'TenderId' => 'required|exists:t_Tenders,id',
+            'ItemCategoryId' => 'required|exists:t_ItemCategories,id',
+        ]);
 
         // Get suppliers in the selected category
         $suppliers = Supplier::where('CategoryId', $request->ItemCategoryId)->get();
-        // Your query here
-        // dd(\DB::getQueryLog());
+
         // Send emails (replace with actual email logic)
         foreach ($suppliers as $supplier) {
             Mail::raw("You have a new RFQ for tender.", function ($message) use ($supplier) {

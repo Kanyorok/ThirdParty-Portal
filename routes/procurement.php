@@ -68,5 +68,5 @@ Route::namespace('Procurement')->group(function () {
     Route::get('/rfqs/create', [RFQController::class, 'create'])->name('rfqs.create');
     Route::post('/rfqs', [RFQController::class, 'store'])->name('rfqs.store');
     Route::get('/rfqs/{id}', [RFQController::class, 'show'])->name('rfqs.show');
-
+    Route::get('/rfqs', [RFQController::class, 'index'])->name('rfqs.index');
 });
