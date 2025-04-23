@@ -1,5 +1,5 @@
 @extends('layouts.app')
-
+@section('title', 'RFQ Details')
 @section('content')
 <div class="container">
     <h3>RFQ Details</h3>

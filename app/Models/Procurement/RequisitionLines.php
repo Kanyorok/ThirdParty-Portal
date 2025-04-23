@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\ERP;
+namespace App\Models\Procurement;
 
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
@@ -20,7 +20,7 @@ class RequisitionLines extends Model
 
     protected $fillable = [
         'RequisitionID', 'Module', 'Type', 'Item', 'Description', 'UOM', 'Quantity', 'ExpectedPrice',
-        'Urgency', 'CreatedBy', 'ModifiedBy', 'DeletedBy'
+        'Urgency', 'CreatedBy', 'ModifiedBy', 'DeletedBy', 'CategoryId'
     ];
 
     public static function getPrimaryKey(): string
@@ -35,4 +35,9 @@ class RequisitionLines extends Model
                         'ModifiedBy' => 'integer',//,
         // 'Processing' => 'boolean'
                        ];
+
+    public function category()
+    {
+        return $this->belongsTo(ItemCategory::class, 'CategoryId', 'Id');
+    }
 }

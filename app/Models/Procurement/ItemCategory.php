@@ -3,6 +3,7 @@
 namespace App\Models\Procurement;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Procurement\RequisitionLines;
 
 class ItemCategory extends Model
 {
@@ -17,5 +18,10 @@ class ItemCategory extends Model
     public function items()
     {
         return $this->hasMany(Item::class, 'CategoryId');
+    }
+
+    public function requisitionLines()
+    {
+        return $this->hasMany(RequisitionLines::class, 'CategoryId', 'Id');
     }
 }

@@ -54,7 +54,7 @@
 
         <div class="form-group mb-3">
             <label>Start Date</label>
-            <input type="date" name="StartDate" class="form-control" value="{{ old('StartDate', $tender->StartDate) }}" required min="{{ date('Y-m-d') }}">
+            <input type="date" name="StartDate" class="form-control" value="{{ old('StartDate', $tender->StartDate) }}">
         </div>
 
         <div class="form-group mb-3">

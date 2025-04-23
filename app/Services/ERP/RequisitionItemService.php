@@ -2,7 +2,7 @@
 
 namespace App\Services\ERP;
 
-use App\Models\ERP\RequisitionLines;
+use App\Models\Procurement\RequisitionLines;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 

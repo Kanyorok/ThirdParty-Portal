@@ -26,7 +26,11 @@ class RFQController extends Controller
      */
     public function create()
     {
-        $tenders = Tender::all();
+        $usedTenderIds = RFQ::pluck('TenderId')->toArray();
+        $tenders = Tender::whereNotIn('Id', $usedTenderIds)
+                     ->whereNotIn('Status', ['cancelled', 'closed'])
+                     ->get();
+
         $categories = ItemCategory::all();
         return view('procurement.rfqs.create', compact('tenders', 'categories'));
     }
