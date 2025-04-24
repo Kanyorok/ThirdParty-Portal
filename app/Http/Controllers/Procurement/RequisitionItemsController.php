@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
-use App\Models\ERP\RequisitionLines;
+use App\Models\Procurement\RequisitionLines;
 use App\Services\ERP\ItemService;
 use App\Services\ERP\RequisitionItemService;
 use Illuminate\Http\Request;

@@ -41,4 +41,9 @@ class Supplier extends Model
         return $this->belongsToMany(ProcurementPeriod::class, 't_ProcurementPeriodSupplier', 'SupplierId', 'ProcurementPeriodId');
     }
 
+    public function rfqs()
+    {
+        return $this->hasMany(RFQ::class, 'SupplierId');
+    }
+
 }

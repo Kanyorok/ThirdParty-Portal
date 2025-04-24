@@ -31,7 +31,8 @@ class RequisitionItemRequest extends FormRequest
             'Urgency' =>    ['required'],
             'UOM' =>    ['nullable'],
             'ExpectedPrice' =>  ['nullable'],
-            'ActualPrice' =>    ['nullable']
+            'ActualPrice' =>    ['nullable'],
+            'CategoryId' =>    ['nullable'],
 
             //
                ];
