@@ -25,7 +25,7 @@
 
                             <tr>
                                 <th>ID</th>
-{{--                                <th>Requisition ID</th>--}}
+                                {{--                                <th>Requisition ID</th> --}}
                                 <th>Module</th>
                                 <th>Type</th>
                                 <th>Item</th>
@@ -38,36 +38,36 @@
                                 <th>Status</th>
                                 <th>Created By</th>
                                 <th>Created On</th>
-{{--                                <th>Modified By</th>--}}
-{{--                                <th>Modified On</th>--}}
+                                {{--                                <th>Modified By</th> --}}
+                                {{--                                <th>Modified On</th> --}}
                             </tr>
 
                         </thead>
                         <tbody>
-                        @forelse($details as $item)
-                            <tr>
-                                <td>{{ $item->Id }}</td>
-{{--                                <td>{{ $item->RequisitionID }}</td>--}}
-                                <td>{{ $item->Module }}</td>
-                                <td>{{ $item->Type }}</td>
-                                <td>{{ $item->ItemName }}</td>
-                                <td>{{ $item->Description }}</td>
-                                <td>{{ $item->UOMx }}</td>
-                                <td>{{ $item->Quantity }}</td>
-                                <td>{{ number_format($item->ExpectedPrice, 2) }}</td>
-                                <td>{{ number_format($item->ActualPrice, 2) }}</td>
-                                <td>{{ $item->Urgency }}</td>
-                                <td>{{ $item->Status }}</td>
-                                <td>{{ $item->UserName }}</td>
-                                <td>{{ $item->CreatedOn }}</td>
-{{--                                <td>{{ $item->ModifiedBy }}</td>--}}
-{{--                                <td>{{ $item->ModifiedOn }}</td>--}}
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="15" class="text-center">No requisition items found.</td>
-                            </tr>
-                        @endforelse
+                            @forelse($details as $item)
+                                <tr>
+                                    <td>{{ $item->Id }}</td>
+                                    {{--                                <td>{{ $item->RequisitionID }}</td> --}}
+                                    <td>{{ $item->Module }}</td>
+                                    <td>{{ $item->Type }}</td>
+                                    <td>{{ $item->ItemName }}</td>
+                                    <td>{{ $item->Description }}</td>
+                                    <td>{{ $item->UOMx }}</td>
+                                    <td>{{ $item->Quantity }}</td>
+                                    <td>{{ number_format($item->ExpectedPrice, 2) }}</td>
+                                    <td>{{ number_format($item->ActualPrice, 2) }}</td>
+                                    <td>{{ $item->Urgency }}</td>
+                                    <td>{{ $item->Status }}</td>
+                                    <td>{{ $item->UserName }}</td>
+                                    <td>{{ $item->CreatedOn }}</td>
+                                    {{--                                <td>{{ $item->ModifiedBy }}</td> --}}
+                                    {{--                                <td>{{ $item->ModifiedOn }}</td> --}}
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="15" class="text-center">No requisition items found.</td>
+                                </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
@@ -75,7 +75,7 @@
         </div>
     </div>
     <div class="modal fade" id="RequisitionItemModal" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-dialog modal-xl" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">..</h5>
@@ -153,7 +153,7 @@
                                 <label class="form-label" for="UOM">UOM </label>
 
                                 <select class="form-control" name="UOM" id="UOM" required>
-{{--                                    <option selected disabled>Select UOM</option>--}}
+                                    {{--                                    <option selected disabled>Select UOM</option> --}}
 
                                     {{-- @foreach ($MarketingLists as $MarketingList)
                                         <option value="{{ $MarketingList->slug }}">{{ $MarketingList->Label }}</option>
@@ -165,8 +165,8 @@
                             <div class="mb-3">
                                 <label class="form-label" for="ExpectedPrice">Expected Price </label>
 
-                                <input type="number" class="form-control" id="ExpectedPrice" name="ExpectedPrice" required
-                                    placeholder="Expected Price">
+                                <input type="number" class="form-control" id="ExpectedPrice" name="ExpectedPrice"
+                                    required placeholder="Expected Price">
 
                                 <p id="ExpectedPrice_error" class="invalid-feedback d-none error col-12" role="alert">
                                 </p>
@@ -174,7 +174,8 @@
                             <div class="mb-3">
                                 <label class="form-label" for="ActualPrice">Actual Price </label>
 
-                                <input type="number" class="form-control" id="ActualPrice" name="ActualPrice" readonly required
+                                <input type="number" class="form-control" id="ActualPrice" name="ActualPrice" readonly
+                                    required>
 
                                 <p id="ActualPrice_error" class="invalid-feedback d-none error col-12" role="alert">
                                 </p>
@@ -235,8 +236,8 @@
 
             });
 
-            $('#Type').on('change',function(){
-                    // alert('hello');
+            $('#Type').on('change', function() {
+                // alert('hello');
                 let type = $(this).val();
 
                 if (type !== '') {
@@ -244,29 +245,31 @@
                     $.ajax({
                         url: `/requisitionItem/getItem/${type}`,
                         type: 'GET',
-                        success: function (response) {
+                        success: function(response) {
                             // console.log('AJAX Response:', response);
 
                             $('#Item').empty().append('<option value="">Select Item</option>');
-                            $.each(response.data, function (key, item) {
-                                $('#Item').append(`<option value="${item.id}">${item.name}</option>`);
+                            $.each(response.data, function(key, item) {
+                                $('#Item').append(
+                                    `<option value="${item.id}">${item.name}</option>`
+                                    );
 
                             });
                         },
-                        error: function (response) {
+                        error: function(response) {
                             // alert('Failed to load items');
                             alert(response)
                             console.log(response)
                         }
                     });
-                }else{
+                } else {
 
-                 $('#Item').empty().append('<option value="">Select Item</option>')
+                    $('#Item').empty().append('<option value="">Select Item</option>')
                 }
             })
 
 
-            $('#Item').on('change',function(){
+            $('#Item').on('change', function() {
                 // alert('hello');
                 let item = $(this).val();
 
@@ -275,26 +278,29 @@
                     $.ajax({
                         url: `/requisitionItem/getItemDetails/${item}`,
                         type: 'GET',
-                        success: function (response) {
+                        success: function(response) {
                             // console.log('AJAX Response:', response);
 
                             // $('#UOM').empty().append('<option value="">Select UOM</option>');
 
                             if (response.data && response.data.length > 0) {
-                            $.each(response.data, function (key, item) {
-                                $('#UOM').empty().append(`<option value="${item.UOM}">${item.UOM}</option>`);
+                                $.each(response.data, function(key, item) {
+                                    $('#UOM').empty().append(
+                                        `<option value="${item.UOM}">${item.UOM}</option>`
+                                        );
 
-                                $('#Description').val(item.Description || '');
-                                $('#ActualPrice').val(item.UnitPrice || '');
-                            });}
+                                    $('#Description').val(item.Description || '');
+                                    $('#ActualPrice').val(item.UnitPrice || '');
+                                });
+                            }
                         },
-                        error: function (response) {
+                        error: function(response) {
                             // alert('Failed to load items');
                             alert(response)
                             console.log(response)
                         }
                     });
-                }else{
+                } else {
 
                     $('#Item').empty().append('<option value="">Select Item</option>')
                 }
