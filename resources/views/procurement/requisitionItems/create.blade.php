@@ -85,7 +85,7 @@
                     <div class="onboarding-content with-gradient d-none modal-item" id="createRequisitionItem">
                         <form action="{{ route('requisitionItem.store') }}" method="post" id="createRequisitionItemForm">
                             @csrf
-
+                            <input type="hidden" name="CategoryId" id="CategoryId">
                             <div class="mb-3">
                                 <label class="form-label" for="Module">Module <span class="text-danger">*</span></label>
                                 <select class="form-control" name="Module" id="Module" required>
@@ -125,6 +125,7 @@
                                     @endforeach --}}
                                 </select>
                                 <p id="Item_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+
                             </div>
                             <div class="mb-3">
                                 <label class="form-label" for="Description">Description </label>
@@ -274,36 +275,32 @@
                 let item = $(this).val();
 
                 if (item !== '') {
-                    // alert(type + 'eric');
-                    $.ajax({
-                        url: `/requisitionItem/getItemDetails/${item}`,
-                        type: 'GET',
-                        success: function(response) {
-                            // console.log('AJAX Response:', response);
+                $.ajax({
+                    url: `/requisitionItem/getItemDetails/${item}`,
+                    type: 'GET',
+                    success: function (response) {
+                        if (response.data && response.data.length > 0) {
+                            $.each(response.data, function (key, item) {
+                                $('#UOM').empty().append(`<option value="${item.UOM}">${item.UOM}</option>`);
 
-                            // $('#UOM').empty().append('<option value="">Select UOM</option>');
-
-                            if (response.data && response.data.length > 0) {
-                                $.each(response.data, function(key, item) {
-                                    $('#UOM').empty().append(
-                                        `<option value="${item.UOM}">${item.UOM}</option>`
-                                        );
-
-                                    $('#Description').val(item.Description || '');
-                                    $('#ActualPrice').val(item.UnitPrice || '');
-                                });
-                            }
-                        },
-                        error: function(response) {
-                            // alert('Failed to load items');
-                            alert(response)
-                            console.log(response)
+                                $('#Description').val(item.Description || '');
+                                $('#ActualPrice').val(item.UnitPrice || '');
+                                $('#CategoryId').val(item.CategoryId || ''); // Populate the hidden CategoryId field
+                                console.log('CategoryId:', item);
+                            });
                         }
-                    });
-                } else {
-
-                    $('#Item').empty().append('<option value="">Select Item</option>')
-                }
+                    },
+                    error: function (response) {
+                        alert('Failed to load item details');
+                        console.log(response);
+                    }
+                });
+            } else {
+                $('#UOM').empty().append('<option value="">Select UOM</option>');
+                $('#Description').val('');
+                $('#ActualPrice').val('');
+                $('#CategoryId').val(''); // Clear the hidden CategoryId field
+            }
             })
 
             $("#MarketingList").select2({

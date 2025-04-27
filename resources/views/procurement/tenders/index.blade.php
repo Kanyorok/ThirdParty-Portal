@@ -8,7 +8,10 @@
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
-    <a href="{{ route('tendering-process.create') }}" class="btn btn-primary mb-3">+ New Tender</a>
+    <div class="mb-3 justify-content-between">
+        <a href="{{ route('tendering-process.create') }}" class="btn btn-primary mb-3">+ New Tender</a>
+        <a href="{{ route('rfqs.index') }}" class="btn btn-primary mb-3">View RFQs</a>
+    </div>
 
     @if($tenders->count())
         <table class="table table-bordered table-striped">

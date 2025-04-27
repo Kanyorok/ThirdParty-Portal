@@ -114,7 +114,7 @@ class TenderController extends Controller
             'ProcurementModeId' => 'required|exists:t_ProcurementModes,Id',
             'EstimatedValue' => 'required|numeric|min:0',
             'Currency' => 'required|string|max:50',
-            'StartDate' => 'required|date|after_or_equal:today',
+            'StartDate' => 'required|date',
             'Status' => 'required|in:open,closed,cancelled,awarded',
         ]);
 

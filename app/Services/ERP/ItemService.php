@@ -29,7 +29,7 @@ class ItemService
         return DB::table('t_Items')
             ->join('t_ItemCategories','t_Items.CategoryId','=','t_ItemCategories.id')
             ->where('t_Items.id',$item)
-            ->select('t_Items.Description','t_Items.UOM','t_Items.UnitPrice')
+            ->select('t_Items.Description','t_Items.UOM','t_Items.UnitPrice','t_Items.CategoryId')
             ->get();
     }
 
