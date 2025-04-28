@@ -6,18 +6,11 @@
 
     <div class="card mb-3">
         <div class="card-body">
-            <p><strong>Tender Number:</strong> {{ $rfq->tender->TenderNumber }}</p>
-            <p><strong>Tender Title:</strong> {{ $rfq->tender->Title }}</p>
+            <p><strong>RFQ Number:</strong> {{ $rfq->RFQNumber }}</p>
+            <p><strong>RFQ Comments:</strong> {{ $rfq->Comments }}</p>
             <p><strong>Item Category:</strong> {{ $rfq->category->Name }}</p>
         </div>
     </div>
-
-    <h5>Suppliers Contacted:</h5>
-    <ul>
-        @foreach($suppliers as $supplier)
-            <li>{{ $supplier->SupplierName }} — {{ $supplier->ContactEmail }}</li>
-        @endforeach
-    </ul>
 
     <h5>Requisition Items Details:</h5>
     <table class="table table-bordered table-striped">
@@ -26,8 +19,10 @@
                 <th>#</th>
                 <th>Item Name</th>
                 <th>Quantity</th>
-                <th>Unit Price</th>
-                <th>Total Price</th>
+                <th>UOM</th>
+                <th>Submission Deadline</th>
+                <th>Description</th>
+                <th>Status</th>
             </tr>
         </thead>
         <tbody>
@@ -36,8 +31,10 @@
                     <td>{{ $loop->iteration }}</td>
                     <td>{{ $item['name'] }}</td>
                     <td>{{ $item['quantity'] }}</td>
-                    <td></td>
-                    <td></td>
+                    <td>{{ $item['unit'] }}</td>
+                    <td>{{ \Carbon\Carbon::parse($rfq->SubmissionDeadline)->format('d M Y') }}</td>
+                    <td>{{ $item['description'] }}</td>
+                    <td>{{ $rfq->Status}}</td>
                 </tr>
             @endforeach
         </tbody>

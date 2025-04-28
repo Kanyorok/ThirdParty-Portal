@@ -12,25 +12,29 @@ class RFQ extends Model
     protected $table = 't_RFQ';
     protected $primaryKey = 'Id';
 
-    public const CREATED_AT = 'CreatedAt';
-    public const UPDATED_AT = 'UpdatedAt';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
 
     protected $fillable = [
-        'TenderId', 'ItemCategoryId', 'Suppliers', 'RequisitionItems'
+        'RFQNumber', 'ItemCategoryId', 'Comments', 'RequisitionItems', 'Status', 'SubmissionDeadline',  'CreatedBy', 'ModifiedBy'
     ];
 
     protected $casts = [
-        'Suppliers' => 'array',
         'RequisitionItems' => 'array',
     ];
-
-    public function tender()
-    {
-        return $this->belongsTo(Tender::class, 'TenderId');
-    }
 
     public function category()
     {
         return $this->belongsTo(ItemCategory::class, 'ItemCategoryId');
+    }
+
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'CreatedBy');
+    }
+
+    public function modifiedBy()
+    {
+        return $this->belongsTo(User::class, 'ModifiedBy');
     }
 }
