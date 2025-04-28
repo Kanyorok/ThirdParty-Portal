@@ -19,21 +19,21 @@
         <div class="col-12">
             <div class="card mb-3">
                 <div class="card-body">
-                    <table id="requsitionItemsTable"
+                    <table id="campaignTable"
                         class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
                         <thead>
 
                             <tr>
                                 <th>ID</th>
+                                {{--                                <th>Requisition ID</th> --}}
+                                <th>Module</th>
                                 <th>Type</th>
-                                <th>Category</th>
                                 <th>Item</th>
                                 <th>Description</th>
                                 <th>UOM</th>
                                 <th>Quantity</th>
-                                <th>Estimated Cost</th>
+                                <th>Expected Price</th>
                                 <th>Actual Price</th>
-                                <th>Needed By</th>
                                 <th>Urgency</th>
                                 <th>Status</th>
                                 <th>Created By</th>
@@ -75,7 +75,7 @@
         </div>
     </div>
     <div class="modal fade" id="RequisitionItemModal" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog " role="document">
+        <div class="modal-dialog modal-xl" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">..</h5>
@@ -87,16 +87,22 @@
                             @csrf
                             <input type="hidden" name="CategoryId" id="CategoryId">
                             <div class="mb-3">
-                                <label class="form-label" for="RequisitionNo">Requisition No </label>
+                                <label class="form-label" for="Module">Module <span class="text-danger">*</span></label>
+                                <select class="form-control" name="Module" id="Module" required>
+                                    <option selected disabled>Select list</option>
+                                    <option>Purchase Requisition</option>
+                                    <option>Tender</option>
 
-                                <input type="text" class="form-control" id="RequisitionNo" name="RequisitionNo" required
-                                    placeholder="Requisition No" Readonly>
+                                    {{-- @foreach ($MarketingLists as $MarketingList)
+                                        <option value="{{ $MarketingList->slug }}">{{ $MarketingList->Label }}</option>
+                                    @endforeach --}}
+                                </select>
 
-                                <p id="RequisitionNo_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                                <p id="Module_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-labe1l" for="Type">Item Type <span
+                                <label class="form-label" for="Type">Item Type <span
                                         class="text-danger">*</span></label>
                                 <select class="form-control" name="Type" id="Type" required>
                                     <option selected disabled>Select type</option>
@@ -121,7 +127,20 @@
                                 <p id="Item_error" class="invalid-feedback d-none error col-12" role="alert"></p>
 
                             </div>
+                            <div class="mb-3">
+                                <label class="form-label" for="Description">Description </label>
+                                <textarea name="Description" id="Description" rows="3" class="form-control" maxlength="1000" readonly></textarea>
+                                <p id="Description_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                            </div>
+                            {{-- <div class="mb-3">
+                                <label for="Description" class="form-label">Description <span class="text-danger">*</span></label>
+                                <select class="form-control" name="Description" id="Description" required>
+                                    <option selected disabled>select a Type</option>
+                                    <option  >Select a List</option>
 
+                                </select>
+                                <p id="Description_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                            </div> --}}
                             <div class="mb-3">
                                 <label class="form-label" for="Quantity">Quantity </label>
 
@@ -144,27 +163,24 @@
 
                                 <p id="UOM_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
-
                             <div class="mb-3">
-                                <label class="form-label" for="EstimatedPrice">Estimated Price </label>
+                                <label class="form-label" for="ExpectedPrice">Expected Price </label>
 
-                                <input type="number" class="form-control" id="EstimatedPrice" name="EstimatedPrice"
-                                    readonly required>
+                                <input type="number" class="form-control" id="ExpectedPrice" name="ExpectedPrice"
+                                    required placeholder="Expected Price">
 
-                                <p id="EstimatedPrice_error" class="invalid-feedback d-none error col-12" role="alert">
+                                <p id="ExpectedPrice_error" class="invalid-feedback d-none error col-12" role="alert">
                                 </p>
                             </div>
-
                             <div class="mb-3">
-                                <label class="form-label" for="NeededBy">Needed By </label>
+                                <label class="form-label" for="ActualPrice">Actual Price </label>
 
-                                <input type="date" class="form-control" id="NeededBy" name="NeededBy"
-                                     required>
+                                <input type="number" class="form-control" id="ActualPrice" name="ActualPrice" readonly
+                                    required>
 
-                                <p id="NeededBy_error" class="invalid-feedback d-none error col-12" role="alert">
+                                <p id="ActualPrice_error" class="invalid-feedback d-none error col-12" role="alert">
                                 </p>
                             </div>
-
                             <div class="mb-3">
                                 <label class="form-label" for="Urgency">Urgency </label>
 
@@ -237,7 +253,7 @@
                             $.each(response.data, function(key, item) {
                                 $('#Item').append(
                                     `<option value="${item.id}">${item.name}</option>`
-                                );
+                                    );
 
                             });
                         },
@@ -259,35 +275,32 @@
                 let item = $(this).val();
 
                 if (item !== '') {
-                    $.ajax({
-                        url: `/requisitionItem/getItemDetails/${item}`,
-                        type: 'GET',
-                        success: function(response) {
-                            if (response.data && response.data.length > 0) {
-                                $.each(response.data, function(key, item) {
-                                    $('#UOM').empty().append(
-                                        `<option value="${item.UOM}">${item.UOM}</option>`
-                                    );
+                $.ajax({
+                    url: `/requisitionItem/getItemDetails/${item}`,
+                    type: 'GET',
+                    success: function (response) {
+                        if (response.data && response.data.length > 0) {
+                            $.each(response.data, function (key, item) {
+                                $('#UOM').empty().append(`<option value="${item.UOM}">${item.UOM}</option>`);
 
-                                    // $('#Description').val(item.Description || '');
-                                    $('#ActualPrice').val(item.UnitPrice || '');
-                                    $('#CategoryId').val(item.CategoryId ||
-                                        ''); // Populate the hidden CategoryId field
-                                    console.log('CategoryId:', item);
-                                });
-                            }
-                        },
-                        error: function(response) {
-                            alert('Failed to load item details');
-                            console.log(response);
+                                $('#Description').val(item.Description || '');
+                                $('#ActualPrice').val(item.UnitPrice || '');
+                                $('#CategoryId').val(item.CategoryId || ''); // Populate the hidden CategoryId field
+                                console.log('CategoryId:', item);
+                            });
                         }
-                    });
-                } else {
-                    $('#UOM').empty().append('<option value="">Select UOM</option>');
-                    // $('#Description').val('');
-                    $('#ActualPrice').val('');
-                    $('#CategoryId').val(''); // Clear the hidden CategoryId field
-                }
+                    },
+                    error: function (response) {
+                        alert('Failed to load item details');
+                        console.log(response);
+                    }
+                });
+            } else {
+                $('#UOM').empty().append('<option value="">Select UOM</option>');
+                $('#Description').val('');
+                $('#ActualPrice').val('');
+                $('#CategoryId').val(''); // Clear the hidden CategoryId field
+            }
             })
 
             $("#MarketingList").select2({
@@ -297,8 +310,8 @@
         });
 
         // function fetchCampaignsTable() {
-        //     if (!$.fn.DataTable.isDataTable('#requsitionItemsTable')) {
-        //         $('#requsitionItemsTable').DataTable({
+        //     if (!$.fn.DataTable.isDataTable('#campaignTable')) {
+        //         $('#campaignTable').DataTable({
         //             processing: true,
         //             serverSide: true,
         //             responsive: true,
@@ -330,7 +343,7 @@
         //             nWarning("an issue occurred while loading campaigns.");
         //         });
         //     } else {
-        //         $('#requsitionItemsTable').DataTable().ajax.reload();
+        //         $('#campaignTable').DataTable().ajax.reload();
         //     }
         // }
     </script>

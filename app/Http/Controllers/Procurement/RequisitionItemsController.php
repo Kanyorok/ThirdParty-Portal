@@ -3,27 +3,30 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Procurement\Requisition\RequisitionItemRequest;
 use App\Models\Procurement\RequisitionLines;
-use App\Services\ERP\ItemService;
-use App\Services\ERP\RequisitionItemService;
-use Illuminate\Http\Request;
-use App\Http\Requests\ERP\Requisition\RequisitionItemRequest;
-use Illuminate\Support\Facades\DB;
+use App\Services\Procurement\Items\ItemService;
+use App\Services\Procurement\Requisition\RequisitionItemService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class RequisitionItemsController extends Controller
 {
+    public function __construct(protected RequisitionItemService $service,protected ItemService $itemService)
+    {
 
-    public function __construct(protected RequisitionItemService $service,protected ItemService $itemService) {
-
-        $this->middleware('ajax')->except(['index', 'show','create']);
+        $this->middleware('ajax')->except(['index', 'show', 'create']);
         $this->authorizeResource(RequisitionLines::class);
     }
+    /**
+     * Display a listing of the resource.
+     */
 
     public function getItems($type): JsonResponse
     {
         try{
-        $items = $this->itemService->getItemByType($type);
+            $items = $this->itemService->getItemByType($type);
             return response()->json([
                 'success' => true,
                 'data' => $items,
@@ -57,7 +60,7 @@ class RequisitionItemsController extends Controller
     public function getRequisitionItems(): JsonResponse
     {
         try{
-            $details = $this->itemService->getRequisitionItems();
+            $details = $this->service->getRequisitionItems();
             return response()->json([
                 'success' => true,
                 'data' => $details,
@@ -71,14 +74,11 @@ class RequisitionItemsController extends Controller
         }
     }
 
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
+        // use for requisitionItem approval
 
-        //
-        return view ('procurement.requisitionItems.index');
+        return view ('procurement.requisitionItems.approval');
     }
 
     /**
@@ -121,7 +121,6 @@ class RequisitionItemsController extends Controller
                                      'error'   => $e->getMessage(),
                                     ], 500);
         }
-
     }
     /**
      * Display the specified resource.

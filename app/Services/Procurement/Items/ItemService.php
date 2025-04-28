@@ -1,8 +1,7 @@
 <?php
-namespace App\Services\ERP;
+namespace App\Services\Procurement\Items;
 
 use Illuminate\Support\Facades\DB;
-use function Laravel\Prompts\select;
 
 class ItemService
 {

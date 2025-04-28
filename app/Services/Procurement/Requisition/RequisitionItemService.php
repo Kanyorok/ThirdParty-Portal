@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\ERP;
+namespace App\Services\Procurement\Requisition;
 
 use App\Models\Procurement\RequisitionLines;
 use App\Models\User;

@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Add Requisition')
+@section('title', 'Requisitions')
 @section('styles')
     <link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
     <style>
@@ -11,30 +11,34 @@
 @section('content')
     <div class="mb-3">
         <h1 class="h3 d-inline align-middle">@yield('title')</h1>
-        <button class="btn btn-primary float-end ms-2 modal-create-item" type="button"><i class="fas fa-plus-circle"></i> Add
-            Items
+        <button class="btn btn-primary float-end ms-2 modal-create-item" type="button"><i class="fas fa-plus-circle"></i> New
+            Requisition
         </button>
     </div>
     <div class="row">
         <div class="col-12">
             <div class="card mb-3">
                 <div class="card-body">
-                    <table id="campaignTable"
+                    <table id="requsitionTable"
                         class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
                         <thead>
                             <tr>
                                 <th>#</th>
-                                <th>Item</th>
-                                <th>Description</th>
-                                <th>Quantity</th>
-                                <th>UOM</th>
-                                <th>Expected Price</th>
-                                <th>Actual Price</th>
-                                <th>Urgency</th>
+                                <th>Requisition No</th>
+                                <th>Requisition Date</th>
+                                <th>Branch</th>
+                                <th>Department</th>
+                                <th>Remarks</th>
+                                <th>Total Items</th>
+                                <th>Total Cost</th>
+                                <th>Status</th>
+                                <th>Requested By</th>
+                                {{-- <th>Approved By</th> --}}
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($)
+                            {{-- @forelse($) --}}
                             <tr>
 
                             </tr>
@@ -52,14 +56,24 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="onboarding-content with-gradient d-none modal-item" id="createRequistionItem">
-                        <form action="{{ route('requisitionItem.store') }}" method="post" id="createRequistionItemForm">
+                    <div class="onboarding-content with-gradient d-none modal-item" id="createRequisition">
+                        <form action="{{ route('requisitionItem.store') }}" method="post" id="createRequisitionForm">
                             @csrf
 
                             <div class="mb-3">
-                                <label class="form-label" for="Module">Module <span class="text-danger">*</span></label>
-                                <select class="form-control" name="Module" id="Module" required>
-                                    <option selected disabled>Select a List</option>
+                                <label class="form-label" for="RequisitionNo">Requisition No. </label>
+
+                                <input type="text" class="form-control" id="RequisitionNo" name="RequisitionNo" required
+                                    readonly placeholder="Auto Generated">
+
+                                <p id="RequisitionNo_error" class="invalid-feedback d-none error col-12" role="alert">
+                                </p>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label" for="Category">Category <span class="text-danger">*</span></label>
+                                <select class="form-control" name="Category" id="Category" required>
+                                    <option selected disabled>Select Category</option>
                                     <option>Purchase Requisition</option>
                                     <option>Tender</option>
 
@@ -68,101 +82,54 @@
                                     @endforeach --}}
                                 </select>
 
-                                <p id="Module_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                                <p id="Category_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                            </div>
+
+
+                            <div class="mb-3">
+                                <label class="form-label" for="Branch">Branch <span class="text-danger">*</span></label>
+                                <select class="form-control" name="Branch" id="Branch" required>
+                                    <option selected disabled>Select Branch</option>
+                                    <option value="01">Kericho</option>
+                                    <option value="02">Mulot</option>
+
+                                    {{-- @foreach ($MarketingLists as $MarketingList)
+                                        <option value="{{ $MarketingList->slug }}">{{ $MarketingList->Label }}</option>
+                                    @endforeach --}}
+                                </select>
+
+                                <p id="Branch_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label" for="ItemType">Item Type <span
+                                <label class="form-label" for="Department">Department <span
                                         class="text-danger">*</span></label>
-                                <select class="form-control" name="ItemType" id="ItemType" required>
-                                    <option selected disabled>Select a List</option>
-                                    <option>Select a List</option>
+                                <select class="form-control" name="Department" id="Department" required>
+                                    <option selected disabled>Select Department</option>
+                                    <option value="01">Finance</option>
+                                    <option value="02">Procurement</option>
+
                                     {{-- @foreach ($MarketingLists as $MarketingList)
                                         <option value="{{ $MarketingList->slug }}">{{ $MarketingList->Label }}</option>
                                     @endforeach --}}
                                 </select>
 
-                                <p id="ItemType_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                                <p id="Department_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
+
                             <div class="mb-3">
-                                <label for="Item" class="form-label">Item </label>
-                                <select class="form-control" name="Item" id="Item" required>
-                                    <option selected disabled>Select a List</option>
-                                    <option>Select a List</option>
-                                    {{-- @foreach ($MarketingLists as $MarketingList)
-                                        <option value="{{ $MarketingList->slug }}">{{ $MarketingList->Label }}</option>
-                                    @endforeach --}}
-                                </select>
-                                <p id="Item_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                                <label class="form-label" for="Remarks">Remarks </label>
+                                <textarea name="Remarks" id="Remarks" rows="3" class="form-control" maxlength="1000"></textarea>
+                                <p id="Remarks_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label" for="Description">Description </label>
-                                <textarea name="Description" id="Description" rows="3" class="form-control" maxlength="1000"></textarea>
-                                <p id="Description_error" class="invalid-feedback d-none error col-12" role="alert"></p>
-                            </div>
-                            {{-- <div class="mb-3">
-                                <label for="Description" class="form-label">Description <span class="text-danger">*</span></label>
-                                <select class="form-control" name="Description" id="Description" required>
-                                    <option selected disabled>select a Type</option>
-                                    <option  >Select a List</option>
 
-                                </select>
-                                <p id="Description_error" class="invalid-feedback d-none error col-12" role="alert"></p>
-                            </div> --}}
-                            <div class="mb-3">
-                                <label class="form-label" for="Quantity">Quantity </label>
-
-                                <input type="number" class="form-control" id="Quantity" name="Quantity" required
-                                    placeholder="Quantity">
-                                {{-- <textarea name="Quantity" id="Quantity" rows="3" class="form-control"
-                                          maxlength="1000"></textarea> --}}
-                                <p id="Quantity_error" class="invalid-feedback d-none error col-12" role="alert"></p>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label" for="UOM">UOM </label>
-                                <select class="form-control" name="UOM" id="UOM" required>
-                                    <option selected disabled>Select a List</option>
-                                    <option>Select a List</option>
-                                    {{-- @foreach ($MarketingLists as $MarketingList)
-                                        <option value="{{ $MarketingList->slug }}">{{ $MarketingList->Label }}</option>
-                                    @endforeach --}}
-                                </select>
-
-                                <p id="UOM_error" class="invalid-feedback d-none error col-12" role="alert"></p>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label" for="ExpectedPrice">Expected Price </label>
-
-                                <input type="number" class="form-control" id="ExpectedPrice" name="ExpectedPrice" required
-                                    placeholder="Expected Price">
-
-                                <p id="ExpectedPrice_error" class="invalid-feedback d-none error col-12" role="alert">
-                                </p>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label" for="ActualPrice">Actual Price </label>
-
-                                <input type="number" class="form-control" id="ActualPrice" name="ActualPrice" required
-                                    placeholder="Actual Price">
-
-                                <p id="ActualPrice_error" class="invalid-feedback d-none error col-12" role="alert">
-                                </p>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label" for="Urgency">Urgency </label>
-
-                                <input type="number" class="form-control" id="Urgency" min="1" max="4"
-                                    name="Urgency" required placeholder="Urgency">
-
-                                <p id="Urgency" class="invalid-feedback d-none error col-12" role="alert"></p>
-                            </div>
                             <hr>
                             <div class="mt-4">
                                 <button type="button" class="btn btn-secondary float-start" data-bs-dismiss="modal">
                                     cancel
                                 </button>
-                                <button class="btn btn-primary float-end" id="createRequistionItemBtn" type="submit"><i
-                                        class="fas fa-save"></i> add item
+                                <button class="btn btn-primary float-end" id="createRequisitionBtn" type="submit"><i
+                                        class="fas fa-save"></i> Add Requisition
                                 </button>
                             </div>
                         </form>
@@ -182,25 +149,25 @@
             // fetchCampaignsTable();
 
             $(document).on('click', '.modal-create-item', function() {
-                $(".modal-title").html('Add Item');
+                $(".modal-title").html('Add Requisition');
                 $(".modal-item").addClass('d-none');
-                $('#createRequistionItem').removeClass('d-none');
+                $('#createRequisition').removeClass('d-none');
                 $Modal.modal('show');
             });
 
-            $('form#createRequistionItemForm').submit(async function(e) {
+            $('form#createRequisitionForm').submit(async function(e) {
                 // alert('hello');
                 e.preventDefault();
-                if (await saveForm($(this), $('#createRequistionItemBtn'), true, true, true)) {
+                if (await saveForm($(this), $('#createRequisitionBtn'), true, true, true)) {
                     $Modal.modal('hide');
                 }
 
             });
 
-            // $("#createRequistionItemBtn").click(function (e) {
+            // $("#createRequisitionBtn").click(function (e) {
             //     e.preventDefault();
 
-            //     let form = $('#createRequistionItemForm')[0];
+            //     let form = $('#createRequisitionForm')[0];
             //     let data = new FormData(form);
 
             //     $.ajax({
@@ -228,8 +195,8 @@
         });
 
         // function fetchCampaignsTable() {
-        //     if (!$.fn.DataTable.isDataTable('#campaignTable')) {
-        //         $('#campaignTable').DataTable({
+        //     if (!$.fn.DataTable.isDataTable('#requsitionTable')) {
+        //         $('#requsitionTable').DataTable({
         //             processing: true,
         //             serverSide: true,
         //             responsive: true,
@@ -261,7 +228,7 @@
         //             nWarning("an issue occurred while loading campaigns.");
         //         });
         //     } else {
-        //         $('#campaignTable').DataTable().ajax.reload();
+        //         $('#requsitionTable').DataTable().ajax.reload();
         //     }
         // }
     </script>
