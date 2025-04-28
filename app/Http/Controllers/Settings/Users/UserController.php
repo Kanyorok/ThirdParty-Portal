@@ -21,17 +21,25 @@ class UserController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('ajax')->except(['show']);
+        $this->middleware('ajax')->except(['show', 'index']);
         $this->authorizeResource(User::class);
     }
 
     /**
      * Display a listing of the resource.
-     * @throws Exception
      */
-    public function index(Request $request): JsonResponse
+    public function index(Request $request): JsonResponse|View
     {
-        return UserService::dt(User::query(), ['photo', 'branch']);
+        if ($request->ajax()) {
+            try {
+                return UserService::dt(User::query(), ['photo' /*'branch'*/]);
+            } catch (Exception $e) {
+            }
+            return $this->errored('unexpected error, try again later');
+        }
+
+        return view('settings.users.index');
+
     }
 
     /**

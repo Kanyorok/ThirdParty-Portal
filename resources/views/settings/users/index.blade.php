@@ -120,7 +120,7 @@
     </div>
 @endsection
 @section('scripts')
-    <script src="{{ asset('assets/js/datatables.js') }}"></script>
+
     <script> const $Modal = $('#NewUserModal');
         let usersTable = null;
         $(function () {
@@ -157,8 +157,12 @@
                     ],
                     ajax: {
                         url: document.url,
-                        error: function (jqXHR) {
-                            codeNotify(jqXHR.status);
+                        error: function (request) {
+                            if (request.status === 400 && request.responseJSON.message) {
+                                nWarning(request.responseJSON.message);
+                            } else {
+                                codeNotify(request.status);
+                            }
                         }
                     },
                     columns: [

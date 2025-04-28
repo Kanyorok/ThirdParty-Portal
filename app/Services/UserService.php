@@ -73,22 +73,20 @@ class UserService
 
     public static function create(Branch $branch, string $UserID, string $Name, string $Email, string $Phone, GenderEnum $Gender, User $actor, string $Notes = '', string $Signature = ''): UserService
     {
-        $user = new User();
-        $user->fill([
-                     'UserID'          => $UserID,
-                     'Name'            => $Name,
-                     'Email'           => $Email,
-                     'Phone'           => $Phone,
-                     'Gender'          => $Gender->value,
-                     'Linked'          => false,
-                     'Notes'           => $Notes,
-                     'Password'        => Str::random(),
-                     'Email_Signature' => $Signature,
-                     'BranchId'        => $branch->OurBranchID,
-                     'CreatedBy'       => $actor->Id,
-                     'ModifiedBy'      => $actor->Id,
-                    ])->save();
-        return new UserService($user);
+        return new UserService(User::create([
+            'UserID' => $UserID,
+            'Name' => $Name,
+            'Email' => $Email,
+            'Phone' => $Phone,
+            'Gender' => $Gender->value,
+            'Linked' => false,
+            'Notes' => $Notes,
+            'Password' => Str::random(),
+            'Email_Signature' => $Signature,
+            'BranchId' => $branch->OurBranchID,
+            'CreatedBy' => $actor->Id,
+            'ModifiedBy' => $actor->Id,
+        ]));
     }
 
     /**
@@ -99,7 +97,7 @@ class UserService
         if (!empty($with)) {
             $query->with($with);
         }
-        return Datatables::of($query->where('t_Users.UserID', '!=', SystemHelper::ID)->lock('WITH(NOLOCK)')->get())
+        return Datatables::of($query->where('t_Users.UserID', '!=', SystemHelper::ID)->lock('WITH(NOLOCK)')->select('*'))
             ->addColumn('action', function (User $user) use ($extra) {
                 if (array_key_exists('action_team', $extra)) {
                     return '<button type="button"  data-action="' . route('team-users.destroy', [$extra['action_team'], $user->UserID]) . '" data-name="' . $user->Name . '" class="btn btn-danger btn-sm modal-trash-team-users"><i class="fas fa-trash"></i></button>';
