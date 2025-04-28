@@ -40,8 +40,8 @@
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="3" class="text-end"><strong>Total:</strong></td>
-                <td colspan="2"></td>
+                <td colspan="4" class="text-center"><button class="btn btn-success btn-sm">Approve</button></td>
+                <td colspan="3" class="text-center"><button class="btn btn-danger btn-sm">Reject</button></td>
             </tr>
         </tfoot>
     </table>
