@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Procurement\RequisitionItemsController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Procurement\ItemController;
 use App\Http\Controllers\Procurement\ModeTimelineController;
@@ -20,6 +21,11 @@ Route::namespace('Procurement')->group(function () {
     Route::get('items/download', [ItemController::class, 'download'])->name('items.download');
     Route::get('requisitionItem/getItem/{type}', 'RequisitionItemsController@getItems')->name('requisitionItem.getItems');
     Route::get('requisitionItem/getItemDetails/{item}', 'RequisitionItemsController@getItemDetails')->name('requisitionItem.getItemDetails');
+//    Route::get('requisitionItem/{id}', 'RequisitionItemsController@getRelatedRequisitionLines')->name('requisitionItem.list');
+    Route::get('requisition/{id}', [RequisitionItemsController::class, 'show'])->name('requisitionItem.show');
+    Route::get('requisitionItem/create/{id}', [RequisitionItemsController::class, 'create'])->name('requisitionItem.create');
+
+
 
     //Route::get('requisitionItem/getItem/{type}', [RequisitionItemsController::class, 'getItems'])->name('requisitionItem.getItems');
 

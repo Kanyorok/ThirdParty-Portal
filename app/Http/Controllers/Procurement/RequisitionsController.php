@@ -5,13 +5,15 @@ namespace App\Http\Controllers\Procurement;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Procurement\Requisition\RequisitionRequest;
 use App\Models\Procurement\Requisitions;
+use App\Services\Procurement\Requisition\RequisitionItemService;
 use App\Services\Procurement\Requisition\RequisitionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class RequisitionsController extends Controller
 {
-    public function __construct(protected RequisitionService $service)
+    public function __construct(protected RequisitionService $service,protected RequisitionItemService $itemService)
     {
         $this->middleware('ajax')->except(['index', 'show', 'create']);
         // $this->authorizeResource(Requisitions::class); // Uncomment if using authorization
@@ -32,11 +34,13 @@ class RequisitionsController extends Controller
     {
         try {
             $details = $this->service->fetchRequisition();
-            if ($details ) {
-            return view('procurement.requisitions.create', compact('details'));}
-            else{  return view('procurement.requisitions.create', ['details' => []]);}
+            // if ($details ) {
+            return view('procurement.requisitions.create', compact('details'));
+        // /}
+            // else{  return view('procurement.requisitions.create', ['details' => []]);
+            // }
         } catch (\Exception $e) {
-            \Log::error('Create page failed: ' . $e->getMessage());
+            Log::error('Create page failed: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Failed to fetch items: ' . $e->getMessage());
         }
 
@@ -59,7 +63,7 @@ class RequisitionsController extends Controller
             }
 
 
-            $requisitionAdd = $this->addRequisition(
+            $requisitionAdd = $this->service->addRequisition(
                 $validatedData['Branch'],
                 $validatedData['Department'],
                 $validatedData['Remarks'],
@@ -122,8 +126,14 @@ class RequisitionsController extends Controller
      */
     public function show(string $id)
     {
-        //
+        try {
+            $details = $this->itemService->getRequisitionRelatedItems($id);
+            return view('procurement.requisitionItems.create', compact('details'));
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to fetch items: ' . $e->getMessage());
+        }
     }
+
 
     /**
      * Show the form for editing the specified resource.

@@ -12,8 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('t_RequisitionLines', function (Blueprint $table) {
-//            $table->dropColumn(['Module', 'ExpectedPrice']);
-           
+//            $table->dropColumn(['Module', 'ExpectedPrice']);           
             $table->date('NeededBy')->nullable();
             $table->decimal('ExpectedPrice')->nullable();
             $table->unsignedBigInteger('RequisitionID')->nullable()->change(); // make sure it's nullable

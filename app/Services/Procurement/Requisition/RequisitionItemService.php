@@ -38,7 +38,7 @@ class RequisitionItemService
     }
 
 
-    public static function addRequisitionLines($RequisitionId,$Item,$Quantity,$NeededBy,$Urgency,User $actor): RequisitionLines
+    public static function addRequisitionLines($RequisitionId,$Item,$Quantity,$NeededBy,$Urgency,User $actor): array
     {
 
         try {
@@ -117,15 +117,37 @@ class RequisitionItemService
                     ->get();
     }
 
-    // public static function getItemDetails($item){
-    //     // logger('Fetching items details: ' . $item);
+    public static function getRequisitionRelatedItems($RequsitionId){
 
-    //     return DB::table('t_Items')
-    //         ->join('t_ItemCategories','t_Items.CategoryId','=','t_ItemCategories.id')
-    //         ->where('t_Items.id',$item)
-    //         ->select('t_Items.Description','t_Items.UOM','t_Items.UnitPrice')
-    //         ->get();
-    // }
+        return DB::table(DB::raw('t_RequisitionLines WITH (NOLOCK)'))
+            ->leftJoin(DB::raw('t_Items WITH (NOLOCK)'), 't_Items.Id', '=', 't_RequisitionLines.Item')
+            ->leftJoin(DB::raw('t_Users WITH (NOLOCK)'), 't_Users.Id', '=', 't_RequisitionLines.CreatedBy')
+            ->where('t_RequisitionLines.RequisitionId',$RequsitionId)
+            ->select(
+                't_RequisitionLines.*',
+                't_Items.Name as ItemName',
+                't_Users.Name as UserName',
+                't_Items.UOM as UOMx',
+                DB::raw('t_RequisitionLines.ExpectedPrice * t_RequisitionLines.Quantity as ExpectedPrice'),
+                DB::raw('t_Items.UnitPrice * t_RequisitionLines.Quantity as ActualPrice'),
+                DB::raw("CASE
+            WHEN t_RequisitionLines.Status = 'p' THEN 'Pending'
+            WHEN t_RequisitionLines.Status = 'a' THEN 'Approved'
+            WHEN t_RequisitionLines.Status = 'r' THEN 'Rejected'
+            ELSE 'Unknown'
+        END as Status"),
+                DB::raw("CASE
+            WHEN t_RequisitionLines.Urgency = 1 THEN 'Very High'
+            WHEN t_RequisitionLines.Urgency = 2 THEN 'High'
+            WHEN t_RequisitionLines.Urgency = 3 THEN 'Medium'
+            WHEN t_RequisitionLines.Urgency = 4 THEN 'Low'
+            ELSE 'Unknown'
+        END as Urgency"),
+                DB::raw("FORMAT(t_RequisitionLines.CreatedOn, 'dd-MM-yyyy HH:mm') as CreatedOn")
+            )
+            ->get();
+    }
+
 
 
 }

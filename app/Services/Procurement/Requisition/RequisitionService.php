@@ -79,10 +79,12 @@ class RequisitionService {
                 t_Requisitions.Status,
                 t_Requisitions.Category,
                 t_Requisitions.CreatedOn,
-                SUM(t_RequisitionLines.ExpectedPrice) as ExpectedPrice,
+                t_Requisitions.Id,
+                SUM(isnull(t_RequisitionLines.ExpectedPrice,0)) as ExpectedPrice,
                 COUNT(t_RequisitionLines.Id) as itemcount
             '))
             ->groupBy(
+                't_Requisitions.Id',
                 't_Requisitions.RequisitionNo',
                 't_Requisitions.BranchID',
                 't_Requisitions.DepartmentID',
