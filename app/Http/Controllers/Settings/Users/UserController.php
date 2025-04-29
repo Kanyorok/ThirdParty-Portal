@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Settings\Users;
 use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\UserRequest;
-use App\Models\BR\Branch;
+use App\Models\CrmBranch;
 use App\Models\User;
 use App\Services\UserService;
 use Exception;
@@ -32,7 +32,7 @@ class UserController extends Controller
     {
         if ($request->ajax()) {
             try {
-                return UserService::dt(User::query(), ['photo' /*'branch'*/]);
+                return UserService::dt(User::query(), ['photo', 'branch']);
             } catch (Exception $e) {
             }
             return $this->errored('unexpected error, try again later');
@@ -57,15 +57,15 @@ class UserController extends Controller
 
         try {
             DB::transaction(static function () use ($role, $branch, $userID, $email, $gender, $request, $phone) {
-                $service = UserService::create($branch, $userID, $request->validated('Name'), $email, $phone, $gender, $request->user(), ($request->validated('Notes')) ?? '');
-                if ($request->sync()) {
-                    $service->syncBR();
-                }
-                $service->setRole($role)->welcomeEmail();
+                UserService::create($branch, $userID, $request->validated('Name'), $email, $phone, $gender, $request->user(), ($request->validated('Notes')) ?? '')
+                    ->setRole($role)->welcomeEmail();
+                /* if ($request->sync()) {
+                     $service->syncBR();
+                 }*/
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception $e) {
+        } catch (\Throwable|Exception $e) {
             Log::error('Error create user ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }
@@ -77,7 +77,7 @@ class UserController extends Controller
     {
         return view('settings.users.create')
             ->with('Roles', Role::all())
-            ->with('branches', Branch::all());
+            ->with('branches', CrmBranch::all());
     }
 
     /**
@@ -97,7 +97,7 @@ class UserController extends Controller
     {
         return view('settings.users.edit')
             ->with('user', $user)
-            ->with('branches', Branch::all());
+            ->with('branches', CrmBranch::all());
     }
 
     /**
@@ -117,19 +117,8 @@ class UserController extends Controller
         try {
             DB::transaction(static function () use ($branch, $user, $userID, $email, $gender, $request, $phone, $clientID) {
                 (new UserService($user))
-                    ->update(
-                        $userID,
-                        $request->validated('Name'),
-                        $email,
-                        $phone,
-                        $gender,
-                        $request->user(),
-                        ($user->Email_Signature) ?? '',
-                        ($request->validated('Notes')) ?? '',
-                        $branch,
-                        $clientID
-                    )
-                    ->syncBR();
+                    ->update($userID, $request->validated('Name'), $email, $phone, $gender, $request->user(), ($user->Email_Signature) ?? '', ($request->validated('Notes')) ?? '', $branch, $clientID);
+
             });
         } catch (ErroredException $e) {
             return $e->toJson();

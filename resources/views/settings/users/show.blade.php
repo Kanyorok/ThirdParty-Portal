@@ -4,7 +4,7 @@
     User details
 @endsection
 @section('styles')
-    <link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
     <style>
         .select2-container {
             width: 100% !important;
@@ -137,8 +137,7 @@
 @endsection
 @section('scripts')
     @include('snippets.actions.sms')
-    <script src="{{ asset('assets/plugins/select2/js/select2.full.min.js') }}"></script>
-    <script src="{{ asset('assets/js/datatables.js') }}"></script>
+    <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
     <script>let activitiesTable = null;
         $(document).ready(function () {
             $.fn.dataTable.ext.errMode = 'none';

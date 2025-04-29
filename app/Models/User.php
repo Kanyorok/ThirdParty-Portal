@@ -4,7 +4,6 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\GenderEnum;
-use App\Models\BR\Branch;
 use App\Services\UserService;
 use App\Traits\Model\ImageTrait;
 use App\Traits\Model\UserActorTrait;
@@ -116,7 +115,7 @@ class User extends Authenticatable
 
     public function branch(): BelongsTo
     {
-        return $this->belongsTo(Branch::class, 'BranchId', 'OurBranchID');
+        return $this->belongsTo(CrmBranch::class, 'BranchId', 'BranchID');
     }
 
     public function teams(): BelongsToMany
