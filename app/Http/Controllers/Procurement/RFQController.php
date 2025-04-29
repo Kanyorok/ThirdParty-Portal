@@ -91,6 +91,28 @@ class RFQController extends Controller
         return redirect()->route('rfqs.show', $rfq->Id)->with('success', 'RFQ created with requisition items and sent to suppliers.');
     }
 
+    public function approve($id)
+    {
+        $rfq = RFQ::findOrFail($id);
+        $rfq->update(['Status' => 'Approved']);
+
+        return redirect()->back()->with('success', 'RFQ has been approved successfully.');
+    }
+
+    public function reject(Request $request, $id)
+    {
+        $request->validate([
+            'RejectionReason' => 'required|string|max:255',
+        ]);
+
+        $rfq = RFQ::findOrFail($id);
+        $rfq->update([
+            'Status' => 'Rejected',
+            'Comments' => $request->RejectionReason,
+        ]);
+
+        return redirect()->back()->with('success', 'RFQ has been rejected successfully.');
+    }
     /**
      * Display the specified resource.
      */
