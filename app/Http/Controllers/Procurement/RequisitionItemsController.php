@@ -10,6 +10,7 @@ use App\Services\Procurement\Requisition\RequisitionItemService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class RequisitionItemsController extends Controller
@@ -98,29 +99,81 @@ class RequisitionItemsController extends Controller
     /**
      * Store a newly created resource in storage.
      */
+//    public function store(RequisitionItemRequest $request): JsonResponse
+//    {
+//        try {
+//            $actor = $request->user();
+//            $service = $this->service;
+//            $requisitionItem = DB::transaction(static function () use ($service, $request, $actor) {
+//                return $service->create($request->validated(), $actor);
+//            });
+//            return response()->json([
+//                                     'message' => 'Requisition line saved successfully.',
+//                                     'data'    => $requisitionItem,
+//                                    ], 201);
+//        } catch (Throwable $e) {
+//            // Log the error for debugging
+//            Log::error('RequisitionItem store failed', [
+//                                                         'error' => $e->getMessage(),
+//                                                         'trace' => $e->getTraceAsString(),
+//                                                        ]);
+//
+//            return response()->json([
+//                                     'message' => 'Failed to save requisition line.',
+//                                     'error'   => $e->getMessage(),
+//                                    ], 500);
+//        }
+//    }
+
     public function store(RequisitionItemRequest $request): JsonResponse
     {
         try {
+            $validatedData = $request->validated();
+
+
             $actor = $request->user();
-            $service = $this->service;
-            $requisitionItem = DB::transaction(static function () use ($service, $request, $actor) {
-                return $service->create($request->validated(), $actor);
-            });
-            return response()->json([
-                                     'message' => 'Requisition line saved successfully.',
-                                     'data'    => $requisitionItem,
-                                    ], 201);
-        } catch (Throwable $e) {
-            // Log the error for debugging
-            \Log::error('RequisitionItem store failed', [
-                                                         'error' => $e->getMessage(),
-                                                         'trace' => $e->getTraceAsString(),
-                                                        ]);
+            if (!$actor) {
+                return response()->json(['message' => 'Unauthorized'], 401);
+            }
+
+
+            $requisitionAddLines = $this->addRequisitionLines(
+                $validatedData['Item'],
+                $validatedData['Quantity'],
+                $validatedData['NeededBy'],
+                $validatedData['Urgency'],
+                $actor
+            );
+
+            if ($requisitionAddLines['status'] === 'success') {
+                return response()->json([
+                    'message' => $requisitionAddLines['message'],
+                    'route' =>route('requisition.create')
+                ], 200);
+            }
+
+            // Log failure with details
+            Log::error('Failed to create requisition.', [
+                'input' => $validatedData,
+                'user_id' => $actor->id ?? null,
+                'service_response' => $requisitionAddLines,
+            ]);
 
             return response()->json([
-                                     'message' => 'Failed to save requisition line.',
-                                     'error'   => $e->getMessage(),
-                                    ], 500);
+                'message' => $requisitionAddLines['message'],
+                'error' => $requisitionAddLines['error'] ?? 'Unknown error'
+            ], 500);
+
+        } catch (\Throwable $e) {
+            Log::error('Exception occurred while creating requisition.', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'message' => 'Failed to create requisition',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
     /**
