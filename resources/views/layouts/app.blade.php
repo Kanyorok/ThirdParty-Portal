@@ -4,8 +4,6 @@
 <head>
     @include('layouts._partials._head')
     <title>{{ config('app.name') }} - @yield('title')</title>
-    <link href="{{ asset('css/select2.min.css') }}" rel="stylesheet">
-<script src="{{ asset('js/select2.min.js') }}"></script>
 </head>
 
 <body data-pc-preset="preset-1" data-pc-sidebar-caption="true" data-pc-layout="vertical" data-pc-direction="ltr"

@@ -60,6 +60,8 @@
             @endif
             @if(session('fail')) nError('{!!  session('fail') !!}');
             @endif
+            @if(session('warning')) nWarning('{!!  session('warning') !!}');
+            @endif
             $(document).on("click", ".clear-balance", (function () {
                 "**********" === $(this).html() ? $(this).html($(this).data("bal")) : $(this).html("**********")
             }));
