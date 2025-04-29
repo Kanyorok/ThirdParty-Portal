@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::create('t_Requisitions', function (Blueprint $table) {
             $table->id('Id');
-            $table->string('RequisitionNo');
+            $table->string('RequisitionNo')->nullable();
             $table->string('BranchID');
             $table->string('DepartmentID');
             $table->string('Remarks');
             $table->char('Status')->default('p');
-            $table->dateTime('NeededBy');
+            $table->string('Category');
 //            $table->decimal('EstimatedCost');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');

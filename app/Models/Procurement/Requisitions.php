@@ -19,14 +19,14 @@ class Requisitions extends Model
     protected $table = 't_Requisitions';
     protected $primaryKey = 'Id';
 
-//    public static function getPrimaryKey(): string
-//    {
-//        return 'RequisitionID';
-//    }
+    public static function getPrimaryKey(): string
+    {
+        return 'RequisitionID';
+    }
 
     protected $fillable = [
-        'RequisitionNo', 'Branch', 'Department', 'NeededBy', 'Remarks', 'UOM', 'Quantity', 'ExpectedPrice',
-        'Urgency', 'CreatedBy', 'ModifiedBy', 'DeletedBy', 'CategoryId'
+        'RequisitionNo', 'Branch', 'Department', 'NeededBy', 'Remarks', 'Category',
+         'CreatedBy', 'ModifiedBy', 'DeletedBy', 'CategoryId'
     ];
 
     protected $casts = [

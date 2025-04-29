@@ -10,6 +10,7 @@ use App\Services\Procurement\Requisition\RequisitionItemService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 class RequisitionItemsController extends Controller
 {
@@ -109,7 +110,7 @@ class RequisitionItemsController extends Controller
                                      'message' => 'Requisition line saved successfully.',
                                      'data'    => $requisitionItem,
                                     ], 201);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             // Log the error for debugging
             \Log::error('RequisitionItem store failed', [
                                                          'error' => $e->getMessage(),

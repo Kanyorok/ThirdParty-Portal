@@ -57,10 +57,10 @@
                 </div>
                 <div class="modal-body">
                     <div class="onboarding-content with-gradient d-none modal-item" id="createRequisition">
-                        <form action="{{ route('requisitionItem.store') }}" method="post" id="createRequisitionForm">
+                        <form action="{{ route('requisition.store') }}" method="post" id="createRequisitionForm">
                             @csrf
 
-                            <div class="mb-3">
+                            {{-- <div class="mb-3">
                                 <label class="form-label" for="RequisitionNo">Requisition No. </label>
 
                                 <input type="text" class="form-control" id="RequisitionNo" name="RequisitionNo" required
@@ -68,7 +68,7 @@
 
                                 <p id="RequisitionNo_error" class="invalid-feedback d-none error col-12" role="alert">
                                 </p>
-                            </div>
+                            </div> --}}
 
                             <div class="mb-3">
                                 <label class="form-label" for="Category">Category <span class="text-danger">*</span></label>
@@ -164,29 +164,6 @@
 
             });
 
-            // $("#createRequisitionBtn").click(function (e) {
-            //     e.preventDefault();
-
-            //     let form = $('#createRequisitionForm')[0];
-            //     let data = new FormData(form);
-
-            //     $.ajax({
-            //         url: "{{ route('requisitionItem.store') }}",
-            //         type: "POST",
-            //         data: data,
-            //         dataType: "json",
-            //         processData: false,
-            //         contentType: false,
-            //         success: function (response) {
-            //             console.log(response);
-            //             // Show success message or close modal here
-            //         },
-            //         error: function (xhr) {
-            //             console.error(xhr.responseText);
-            //             // Optional: Handle validation or other error display
-            //         }
-            //     });
-            // });
 
             $("#MarketingList").select2({
                 dropdownParent: $Modal,
