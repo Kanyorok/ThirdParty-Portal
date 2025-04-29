@@ -18,18 +18,15 @@ class CrmBranch extends Model
     protected $table = 't_CRMBranches';
     protected $primaryKey = 'Id';
     protected $connection = 'sqlsrv';
+
     /**
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-                           'UserId',
-                           'ManagerId',
-                           'Name',
-                           'BranchID',
-                           'CreatedBy',
-                           'ModifiedBy',
-                           'DeletedBy',
-                          ];
+        'UserId', 'ManagerId', 'Name', 'BranchID', 'Address', 'Address2', 'City', 'State', 'Zip', 'Country', 'Phone', 'Fax', 'Email',
+        'CreatedBy', 'ModifiedBy', 'DeletedBy',
+    ];
+
 
     public static function getPrimaryKey(): string
     {

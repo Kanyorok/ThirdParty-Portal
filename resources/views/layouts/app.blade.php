@@ -182,12 +182,15 @@
                             <span class="pc-mtext" data-i18n="">Users and Roles </span>
                             <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
                         <ul class="pc-submenu">
-                            <li class="pc-item {{ request()->is(['settings/users*'])?'active ':'' }}"><a class="pc-link"
-                                                                                                         href="{{ route('users.index') }}">Users</a>
+                            <li class="pc-item {{ request()->is(['settings/users*'])?'active ':'' }}">
+                                <a class="pc-link" href="{{ route('users.index') }}">Users</a>
                             </li>
                             <li class="pc-item  {{ request()->is(['settings/roles*'])?'active ':'' }}"><a
                                     class="pc-link" href="{{ route('roles.index') }}"
                                     data-i18n="Procurement List">Roles</a></li>
+                            <li class="pc-item  {{ request()->is(['settings/branches*'])?'active ':'' }}"><a
+                                    class="pc-link" href="{{ route('branches.index') }}"
+                                    data-i18n="Procurement List">Branches</a></li>
 
                         </ul>
                     </li>
