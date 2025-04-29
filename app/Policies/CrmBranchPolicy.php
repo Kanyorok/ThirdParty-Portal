@@ -8,12 +8,17 @@ use App\Models\User;
 
 class CrmBranchPolicy
 {
+    public function before(User $user, string $ability): bool
+    {
+        return $user->can(PermissionEnum::Branches->value);
+    }
+
     /**
      * Determine whether the user can view any models.
      */
     public function viewAny(User $user): bool
     {
-        return $user->can(PermissionEnum::Teams->value);
+        return $user->can(PermissionEnum::Branches->value);
     }
 
     /**
@@ -21,7 +26,7 @@ class CrmBranchPolicy
      */
     public function view(User $user, CrmBranch $crmBranch): bool
     {
-        return $user->can(PermissionEnum::Teams->value);
+        return $user->can(PermissionEnum::Branches->value);
     }
 
     /**
@@ -29,7 +34,7 @@ class CrmBranchPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can(PermissionEnum::Teams->value);
+        return $user->can(PermissionEnum::Branches->value);
     }
 
     /**
@@ -37,7 +42,7 @@ class CrmBranchPolicy
      */
     public function update(User $user, CrmBranch $crmBranch): bool
     {
-        return $user->can(PermissionEnum::Teams->value);
+        return $user->can(PermissionEnum::Branches->value);
     }
 
     /**
@@ -45,7 +50,7 @@ class CrmBranchPolicy
      */
     public function delete(User $user, CrmBranch $crmBranch): bool
     {
-        return $user->can(PermissionEnum::Teams->value);
+        return $user->can(PermissionEnum::Branches->value);
     }
 
     /**
@@ -53,7 +58,7 @@ class CrmBranchPolicy
      */
     public function restore(User $user, CrmBranch $crmBranch): bool
     {
-        return $user->can(PermissionEnum::Teams->value);
+        return false;
     }
 
     /**
@@ -61,6 +66,6 @@ class CrmBranchPolicy
      */
     public function forceDelete(User $user, CrmBranch $crmBranch): bool
     {
-        return $user->can(PermissionEnum::Teams->value);
+        return false;
     }
 }

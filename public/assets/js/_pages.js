@@ -155,7 +155,7 @@ function nSuccess(msg)
         dismissible: true,
         position: {
             x: "right",
-            y: "bottom"
+            y: "top"
         }
     });
 }
@@ -170,7 +170,7 @@ function nError(msg)
         dismissible: true,
         position: {
             x: "right",
-            y: "bottom"
+            y: "top"
         }
     });
 }
@@ -186,7 +186,7 @@ function nWarning(msg)
         dismissible: true,
         position: {
             x: "right",
-            y: "bottom"
+            y: "top"
         }
     });
 }

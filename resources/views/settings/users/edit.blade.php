@@ -28,20 +28,13 @@
             <p id="Gender_error" class="invalid-feedback d-none error col-12" role="alert"></p>
         </div>
         <div class="mb-2">
-            <label class="form-label" for="ClientID">Client ID</label>
-            <input type="text" class="form-control" id="ClientID"
-                   placeholder="ClientID"
-                   value="{{ $user->ClientID }}" name="ClientID">
-            <span id="ClientID_error" class="invalid-feedback d-none error" role="alert"></span>
-        </div>
-        <div class="mb-2">
             <label for="Branch" class="form-label">Branch <span
                     class="text-danger">*</span></label>
             <select class="form-control" name="Branch" id="Branch" required>
                 @foreach($branches as $branch)
-                    <option value="{{ $branch->OurBranchID }}"
-                        {{ ($branch->OurBranchID ===  $user->BranchId)?'selected':'' }}
-                    >{{ $branch->BranchName }}</option>
+                    <option value="{{ $branch->BranchID }}"
+                        {{ ($branch->BranchID ===  $user->BranchId)?'selected':'' }}
+                    >{{ $branch->Name }}</option>
                 @endforeach
             </select>
             <p id="Branch_error" class="invalid-feedback d-none error col-12" role="alert"></p>

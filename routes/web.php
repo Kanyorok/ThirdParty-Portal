@@ -27,7 +27,7 @@ Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function (
 
         Route::resource('meeting-room', 'MeetingRoomController')->except(['edit']);
 
-        Route::resource('branches', 'CrmBranchController')->only(['index', 'create', 'store']);
+        Route::resource('branches', 'CrmBranchController')->parameters(['branches' => 'crm_branch'])->except(['edit', 'create', 'show']);
 
         Route::resource('roles', 'RoleController')->except(['show']);
 

@@ -25,20 +25,20 @@ class RolePermissionSeeder extends Seeder
 
         if (!Role::query()->where('name', 'Default')->exists()) {
             Role::create([
-                          'name'       => 'Default',
-                          'guard_name' => $guard,
-                          'created_at' => $date,
-                          'updated_at' => $date,
-                          'CreatedBy'  => $user->Id,
-                          'ModifiedBy' => $user->Id,
-                         ]);
+                'name' => 'Default',
+                'guard_name' => $guard,
+                'created_at' => $date,
+                'updated_at' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedBy' => $user->Id,
+            ]);
         }
 
 
         $adminRole = Role::query()->createOrFirst(['name' => 'admin'], [
-                                                                        'CreatedBy'  => $user->Id,
-                                                                        'ModifiedBy' => $user->Id,
-                                                                       ]);
+            'CreatedBy' => $user->Id,
+            'ModifiedBy' => $user->Id,
+        ]);
 
 
         $permissions = collect([]);
@@ -46,11 +46,11 @@ class RolePermissionSeeder extends Seeder
         foreach (PermissionEnum::values() as $permission) {
             if (!Permission::query()->where('name', $permission)->exists()) {
                 $permissions->add([
-                                   'name'       => $permission,
-                                   'guard_name' => $guard,
-                                   'created_at' => $date,
-                                   'updated_at' => $date,
-                                  ]);
+                    'name' => $permission,
+                    'guard_name' => $guard,
+                    'created_at' => $date,
+                    'updated_at' => $date,
+                ]);
             }
         }
 
@@ -61,8 +61,8 @@ class RolePermissionSeeder extends Seeder
             $adminRole->permissions()->syncWithPivotValues(
                 DB::table(config('permission.table_names.permissions'))->select('id')->get()->pluck('id')->toArray(),
                 [
-                 'CreatedBy'  => $user->Id,
-                 'ModifiedBy' => $user->Id,
+                    'CreatedBy' => $user->Id,
+                    'ModifiedBy' => $user->Id,
                 ],
                 false
             );
@@ -84,11 +84,11 @@ class RolePermissionSeeder extends Seeder
 
         if (!Permission::query()->where('name', $add)->exists()) {
             $permission = Permission::create([
-                                              'name'       => $add,
-                                              'guard_name' => $guard,
-                                              'created_at' => $date,
-                                              'updated_at' => $date,
-                                             ]);
+                'name' => $add,
+                'guard_name' => $guard,
+                'created_at' => $date,
+                'updated_at' => $date,
+            ]);
 
             $adminRole->permissions()->attach($permission->id, ['CreatedBy' => $user->Id, 'ModifiedBy' => $user->Id], false);
             // $adminRole->givePermissionTo($add);

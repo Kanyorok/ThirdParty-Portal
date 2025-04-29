@@ -8,9 +8,9 @@ use App\Enums\EmailPriorityEnum;
 use App\Enums\GenderEnum;
 use App\Helpers\SystemHelper;
 use App\Models\Board;
-use App\Models\BR\Branch;
 use App\Models\BR\BRUser;
 use App\Models\BulkNotification;
+use App\Models\CrmBranch;
 use App\Models\CrmEmail;
 use App\Models\User;
 use App\Services\BR\CBSService;
@@ -71,24 +71,22 @@ class UserService
         return ($query) ? $q : $q->get();
     }
 
-    public static function create(Branch $branch, string $UserID, string $Name, string $Email, string $Phone, GenderEnum $Gender, User $actor, string $Notes = '', string $Signature = ''): UserService
+    public static function create(CrmBranch $branch, string $UserID, string $Name, string $Email, string $Phone, GenderEnum $Gender, User $actor, string $Notes = '', string $Signature = ''): UserService
     {
-        $user = new User();
-        $user->fill([
-                     'UserID'          => $UserID,
-                     'Name'            => $Name,
-                     'Email'           => $Email,
-                     'Phone'           => $Phone,
-                     'Gender'          => $Gender->value,
-                     'Linked'          => false,
-                     'Notes'           => $Notes,
-                     'Password'        => Str::random(),
-                     'Email_Signature' => $Signature,
-                     'BranchId'        => $branch->OurBranchID,
-                     'CreatedBy'       => $actor->Id,
-                     'ModifiedBy'      => $actor->Id,
-                    ])->save();
-        return new UserService($user);
+        return new UserService(User::create([
+            'UserID' => $UserID,
+            'Name' => $Name,
+            'Email' => $Email,
+            'Phone' => $Phone,
+            'Gender' => $Gender->value,
+            'Linked' => false,
+            'Notes' => $Notes,
+            'Password' => Str::random(),
+            'Email_Signature' => $Signature,
+            'BranchId' => $branch->BranchID,
+            'CreatedBy' => $actor->Id,
+            'ModifiedBy' => $actor->Id,
+        ]));
     }
 
     /**
@@ -99,20 +97,20 @@ class UserService
         if (!empty($with)) {
             $query->with($with);
         }
-        return Datatables::of($query->where('t_Users.UserID', '!=', SystemHelper::ID)->lock('WITH(NOLOCK)')->get())
+        return Datatables::of($query->where('t_Users.UserID', '!=', SystemHelper::ID)->lock('WITH(NOLOCK)')->select('*'))
             ->addColumn('action', function (User $user) use ($extra) {
                 if (array_key_exists('action_team', $extra)) {
                     return '<button type="button"  data-action="' . route('team-users.destroy', [$extra['action_team'], $user->UserID]) . '" data-name="' . $user->Name . '" class="btn btn-danger btn-sm modal-trash-team-users"><i class="fas fa-trash"></i></button>';
                 }
                 return '<a  href="' . route('users.show', [$user->UserID]) . '" class="btn btn-info btn-sm"><i class="fas fa-eye"></i> details</button>';
-            })->editColumn('branch.BranchName', function (User $user) use ($with) {
+            })->editColumn('branch.Name', function (User $user) use ($with) {
                 if (in_array('branch', $with, true)) {
-                    if ($user->branch instanceof Branch) {
-                        return $user->branch->BranchName;
+                    if ($user->branch instanceof CrmBranch) {
+                        return $user->branch->Name;
                     }
-                    $branch = Branch::query()->where('OurBranchID', $user->BranchId)->first();
-                    if ($branch instanceof Branch) {
-                        return $branch->BranchName;
+                    $branch = CrmBranch::query()->where('BranchID', $user->BranchId)->first();
+                    if ($branch instanceof CrmBranch) {
+                        return $branch->Name;
                     }
                 }
                 return '';
@@ -177,7 +175,7 @@ class UserService
         return ($user instanceof BRUser) ? $user : null;
     }
 
-    public function update(string $UserID, string $Name, string $Email, string $Phone, GenderEnum $Gender, User $actor, string $Signature = '', string $Notes = '', Branch $branch = null, string $ClientID = null): static
+    public function update(string $UserID, string $Name, string $Email, string $Phone, GenderEnum $Gender, User $actor, string $Signature = '', string $Notes = '', CrmBranch $branch = null): static
     {
         $email_change = ($this->user->Email === $Email) ? null : $this->user->Email;
         $this->user->update([
@@ -185,9 +183,8 @@ class UserService
                              'Name'            => $Name,
                              'Email'           => $Email,
                              'Phone'           => $Phone,
-                             'ClientID'        => $ClientID,
                              'Gender'          => $Gender->value,
-                             'BranchId'        => ($branch instanceof Branch) ? $branch->OurBranchID : $this->user->BranchId,
+            'BranchId' => ($branch instanceof CrmBranch) ? $branch->BranchID : $this->user->BranchId,
                              'Notes'           => $Notes,
                              'Email_Signature' => $Signature,
                              'ModifiedBy'      => $actor->Id,

@@ -60,13 +60,13 @@
                     </div>
                 </div>
                 <ul class="pc-navbar">
-                    <li class="pc-item {{ request()->is('/')?'active':'' }}"><a href="{{ route('home') }}"
-                            class="pc-link"><span class="pc-micon">
-                                <i data-feather="home" class="pc-icon"></i>
+                    <li class="pc-item {{ request()->is('/')?'active':'' }}">
+                        <a href="{{ route('home') }}" class="pc-link">
+                           <span class="pc-micon"><i data-feather="home" class="pc-icon"></i>
                                 <use xlink:href="#custom-fatrows"></use>
-                                </svg>
                             </span><span class="pc-mtext" data-i18n="Data">Home</span></a></li>
-                    <li class="pc-item pc-hasmenu"><a href="#!" class="pc-link"><span class="pc-micon"><svg
+                    <li class="pc-item pc-hasmenu">
+                        <a href="#!" class="pc-link"><span class="pc-micon"><svg
                                     class="pc-icon">
                                     <use xlink:href="#custom-layer"></use>
                                 </svg> </span><span class="pc-mtext" data-i18n="Online Courses">Procurement </span>
@@ -188,8 +188,32 @@
 
                         </ul>
                     </li>
-                </ul>
-                </li>
+
+                    <li class="pc-item pc-caption"><label data-i18n="Widget">Settings</label>
+                        <svg class="pc-icon">
+                            <use xlink:href="#custom-presentation-chart"></use>
+                        </svg>
+                    </li>
+                    <li class="pc-item pc-hasmenu {{ request()->is(['settings/users*', 'settings/roles*'])?'active pc-trigger':'' }}">
+                        <a href="#!" class="pc-link">
+                            <span class="pc-micon">
+                                <i class="fas fa-users"></i>
+                            </span>
+                            <span class="pc-mtext" data-i18n="">Users and Roles </span>
+                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                        <ul class="pc-submenu">
+                            <li class="pc-item {{ request()->is(['settings/users*'])?'active ':'' }}">
+                                <a class="pc-link" href="{{ route('users.index') }}">Users</a>
+                            </li>
+                            <li class="pc-item  {{ request()->is(['settings/roles*'])?'active ':'' }}"><a
+                                    class="pc-link" href="{{ route('roles.index') }}"
+                                    data-i18n="Procurement List">Roles</a></li>
+                            <li class="pc-item  {{ request()->is(['settings/branches*'])?'active ':'' }}"><a
+                                    class="pc-link" href="{{ route('branches.index') }}"
+                                    data-i18n="Procurement List">Branches</a></li>
+
+                        </ul>
+                    </li>
                 </ul>
             </div>
         </div>
