@@ -28,20 +28,34 @@
                                 <th>Requisition Date</th>
                                 <th>Branch</th>
                                 <th>Department</th>
+                                <th>Category</th>
                                 <th>Remarks</th>
                                 <th>Total Items</th>
                                 <th>Total Cost</th>
                                 <th>Status</th>
-                                <th>Requested By</th>
-                                {{-- <th>Approved By</th> --}}
                                 <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {{-- @forelse($) --}}
-                            <tr>
 
+                        @forelse($details as $item)
+                            <tr>
+                                <td>{{$loop->iteration }}</td>
+                                <td>{{ $item->RequisitionNo }}</td>
+                                <td>{{ \Carbon\Carbon::parse($item->CreatedOn)->format('d-m-Y') }}</td>
+                                <td>{{ $item->BranchID }}</td>
+                                <td>{{ $item->DepartmentID }}</td>
+                                <td>{{ $item->Category }}</td>
+                                <td>{{ $item->Remarks }}</td>
+                                <td>{{ $item->itemcount }}</td>
+                                <td>{{ number_format($item->ExpectedPrice, 2) }}</td>
+                                <td>{{ $item->Status }}</td>
                             </tr>
+                        @empty
+                            <tr>
+                                <td colspan="15" class="text-center">No requisition items found.</td>
+                            </tr>
+                        @endforelse
                         </tbody>
                     </table>
                 </div>

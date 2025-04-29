@@ -23,6 +23,7 @@ return new class extends Migration
             $table->decimal('ExpectedPrice')->default(0);
             $table->smallInteger('Urgency');
             $table->char('Status', 1)->default('p');
+            $table->date('NeededBy');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');

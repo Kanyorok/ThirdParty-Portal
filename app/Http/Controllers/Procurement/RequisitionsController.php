@@ -30,8 +30,13 @@ class RequisitionsController extends Controller
      */
     public function create()
     {
-//        dd($request->user());
-        return view('procurement.requisitions.create');
+        try {
+            $details = $this->service->fetchRequisition();
+            return view('procurement.requisitions.create', compact('details'));
+        } catch (\Exception $e) {
+            \Log::error('Create page failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to fetch items: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -42,45 +47,39 @@ class RequisitionsController extends Controller
 //        dd($request->user());
         try {
             $validatedData = $request->validated();
-            $branch = $validatedData['Branch'];
-            $department = $validatedData['Department'];
-            $remarks = $validatedData['Remarks'];
-            $category = $validatedData['Category'];
+
+
             $actor = $request->user();
-
-
             if (!$actor) {
                 return response()->json(['message' => 'Unauthorized'], 401);
             }
 
-            $requisitionAdd = $this->service->addRequisition(
-                $branch,
-                $department,
-                $remarks,
-                $category,
+
+            $requisitionAdd = $this->addRequisition(
+                $validatedData['Branch'],
+                $validatedData['Department'],
+                $validatedData['Remarks'],
+                $validatedData['Category'],
                 $actor
             );
 
-            if ($requisitionAdd) {
+            if ($requisitionAdd['status'] === 'success') {
                 return response()->json([
-                    'message' => 'Requisition added successfully',
-                    'requisitionId' => $requisitionAdd
+                    'message' => $requisitionAdd['message'],
+                    'route' =>route('requisition.create')
                 ], 200);
             }
 
             // Log failure with details
             \Log::error('Failed to create requisition.', [
-                'branch' => $branch,
-                'department' => $department,
-                'remarks' => $remarks,
-                'category' => $category,
-                'user_id' => $actor,
+                'input' => $validatedData,
+                'user_id' => $actor->id ?? null,
                 'service_response' => $requisitionAdd,
             ]);
 
             return response()->json([
-                'message' => 'Failed to create requisition',
-                'details' => 'See server logs for more information.'
+                'message' => $requisitionAdd['message'],
+                'error' => $requisitionAdd['error'] ?? 'Unknown error'
             ], 500);
 
         } catch (\Throwable $e) {
@@ -95,6 +94,24 @@ class RequisitionsController extends Controller
             ], 500);
         }
     }
+
+
+    public function getRequisitions(): JsonResponse{
+        try{
+            $details = $this->service->fetchRequisition();
+            return response()->json([
+                'success' => true,
+                'data' => $details,
+            ]);}
+        catch(\Exception $e){
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch items.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
 
     /**
      * Display the specified resource.

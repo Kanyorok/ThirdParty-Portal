@@ -6,6 +6,7 @@ use App\Models\Procurement\Requisitions;
 use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class RequisitionService {
@@ -39,26 +40,57 @@ class RequisitionService {
 
         } catch (QueryException $e) {
             // Log the SQL error
-            \Log::error('SQL Error executing p_AddRequisition: ' . $e->getMessage(), [
+            Log::error('SQL Error executing p_AddRequisition', [
+                'message' => $e->getMessage(),
                 'exception' => $e
             ]);
 
             // Return the error message back to the controller
-            return response()->json([
-                'message' => 'SQL Error executing requisition creation',
+            return [
+                'status' => 'error',
+                'message' => 'SQL error executing requisition creation',
                 'error' => $e->getMessage()
-            ], 500);
+            ];
         } catch (Throwable $e) {
             // Log the exception for debugging
-            \Log::error('Error executing p_AddRequisition: ' . $e->getMessage(), [
+            Log::error('Error executing p_AddRequisition', [
+                'message' => $e->getMessage(),
                 'exception' => $e
             ]);
 
             // Return a custom error message or handle as needed
-            return response()->json([
+            return[
+                'status' => 'error',
                 'message' => 'Error executing requisition creation',
                 'error' => $e->getMessage()
-            ], 500);
+            ];
         }
+    }
+//
+    public static function fetchRequisition()
+    {
+        return DB::table(DB::raw('t_Requisitions WITH (NOLOCK)'))
+            ->leftJoin(DB::raw('t_RequisitionLines WITH (NOLOCK)'), 't_Requisitions.id', '=', 't_RequisitionLines.RequisitionId')
+            ->select(DB::raw('
+                t_Requisitions.RequisitionNo,
+                t_Requisitions.BranchID,
+                t_Requisitions.DepartmentID,
+                t_Requisitions.Remarks,
+                t_Requisitions.Status,
+                t_Requisitions.Category,
+                t_Requisitions.CreatedOn,
+                SUM(t_RequisitionLines.ExpectedPrice) as ExpectedPrice,
+                COUNT(t_RequisitionLines.Id) as itemcount
+            '))
+            ->groupBy(
+                't_Requisitions.RequisitionNo',
+                't_Requisitions.BranchID',
+                't_Requisitions.DepartmentID',
+                't_Requisitions.Remarks',
+                't_Requisitions.Status',
+                't_Requisitions.Category',
+                't_Requisitions.CreatedOn'
+            )
+            ->get();
     }
 }
