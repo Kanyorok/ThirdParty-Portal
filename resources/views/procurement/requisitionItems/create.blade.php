@@ -85,6 +85,8 @@
                     <div class="onboarding-content with-gradient d-none modal-item" id="createRequisitionItem">
                         <form action="{{ route('requisitionItem.store') }}" method="post" id="createRequisitionItemForm">
                             @csrf
+                            <input type="hidden" name="RequisitionID" id="RequisitionID" value="">
+
                             <input type="hidden" name="CategoryId" id="CategoryId">
                             <div class="mb-3">
                                 <label class="form-label" for="RequisitionNo">Requisition No </label>
@@ -201,25 +203,36 @@
     <script src="{{ asset('assets/js/datatables.js') }}"></script>
     <script>
         const $Modal = $('#RequisitionItemModal');
+
+        function getRequisitionIdFromUrl(){
+            const pathSegments = window.location.pathname.split('/');
+            // Example URL: /requisition/1 → '1' is the last segment
+            return pathSegments[pathSegments.length - 1];
+        }
+
         $(function() {
             // $.fn.dataTable.ext.errMode = 'none';
             // fetchCampaignsTable();
 
             $(document).on('click', '.modal-create-item', function() {
+
                 $(".modal-title").html('Add Item');
+                $('#RequisitionID').val(getRequisitionIdFromUrl());
                 $(".modal-item").addClass('d-none');
                 $('#createRequisitionItem').removeClass('d-none');
                 $Modal.modal('show');
+
             });
 
             $('form#createRequisitionItemForm').submit(async function(e) {
-                // alert('hello');
+                // alert($('#RequisitionID').val());
                 e.preventDefault();
                 if (await saveForm($(this), $('#createRequisitionItemBtn'), true, true, true)) {
                     $Modal.modal('hide');
                 }
 
             });
+
 
             $('#Type').on('change', function() {
                 // alert('hello');
