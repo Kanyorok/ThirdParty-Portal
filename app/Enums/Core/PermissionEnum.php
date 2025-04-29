@@ -11,6 +11,7 @@ use App\Models\Call;
 use App\Models\Campaign;
 use App\Models\CodeDetail;
 use App\Models\Competitor;
+use App\Models\CrmBranch;
 use App\Models\EmailConversation;
 use App\Models\Lead;
 use App\Models\MarketingList;
@@ -28,6 +29,7 @@ use App\Models\Ticket;
 use App\Models\User;
 use App\Traits\UsefulEnumTrait;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 
 enum PermissionEnum: string
@@ -124,6 +126,7 @@ enum PermissionEnum: string
     case ListsView = 'lists-view';
     case ListsUpdate = 'lists-update';
     case Teams = 'teams';
+    case Branches = 'branches';
     case Users = 'users';//set branch manager.
     case UsersMeeting = 'users-meetings';
     case UsersMessaging = 'users-messaging';
@@ -149,7 +152,7 @@ enum PermissionEnum: string
     case MarketingManager = 'marketingManager';
     case Managers = 'manager';
 
-    //Procurement
+    //Procuremen
     //Requisitions
     case RequisitionRead = 'requisition-read';
     case RequisitionWrite = 'requisition-create';
@@ -164,6 +167,43 @@ enum PermissionEnum: string
     case RequisitionItemsDelete = 'requisitionItem-delete';
     case RequisitionItemsApproval = 'requisitionItem-approval';
 
+
+    public static function display(): Collection
+    {
+        return collect([
+            [self::TicketRead, self::TicketWrite, self::TicketUpdate, self::TicketDelete, self::TicketApproval,],
+            [self::TaskCreate, self::TaskDelegate,],
+            [self::Members],
+            [self::LeadRead, self::LeadWrite, self::LeadDelegate, self::LeadUpdate, self::LeadViewAll, self::LeadsManager, self::LeadDelete,],
+            [self::EmailRead, self::EmailAssign, self::EmailDelete,],
+            [self::CallRead, self::CallWrite, self::CallUpdate, self::CallDelete,],
+            [self::ScheduleRead, self::ScheduleWrite, self::ScheduleDelete, self::MeetingRooms,],
+
+            [self::MarketingPlannerRead, self::MarketingPlannerWrite, self::MarketingPlannerUpdate, self::MarketingPlannerDelete, self::MarketingPlannerApproval,],
+            [self::MarketingListRead, self::MarketingListWrite, self::MarketingListUpdate, self::MarketingListDelete,/*, self::MarketingListApproval*/],
+            [self::ReviewsView, self::SurveyRead, self::SurveyWrite, self::SurveyDelete, self::SurveyApproval,],
+            [self::CampaignRead, self::CampaignWrite, self::CampaignUpdate, self::CampaignDelete, self::CampaignApproval,],
+            [self::SocialRead, self::SocialWrite, self::SocialDelete,],
+            [self::Competitor, self::CompetitorLLM,],
+
+            [self::DebtCollectionView, self::DebtCollectionAssignment, self::DebtCollectionAdmin, self::DebtNotificationView, self::DebtNotificationSend, self::DebtCollectionLists,],
+            [self::ProductDevelopmentRead, self::ProductDevelopmentWrite, self::ProductDevelopmentUpdate, self::ProductDevelopmentDelete,],
+
+            [self::ListsView, self::ListsUpdate,],
+            [self::Users, self::UsersMeeting, self::UsersMessaging, self::UsersSessions, self::Teams, self::Branches,],
+            [self::Ceo, self::Managers, self::MarketingManager,],
+
+            [self::BoardManage, self::BoardMeeting,],
+            [self::Integrations],
+            [self::Roles],
+
+        ]);
+    }
+
+    public static function approvals(): Collection
+    {
+        return collect([self::MarketingPlannerApproval, /* self::MarketingListApproval,*/ self::TicketApproval, self::CampaignApproval, self::SurveyApproval, self::Ceo, self::MarketingManager]);
+    }
 
     public function module(): string
     {
@@ -185,6 +225,7 @@ enum PermissionEnum: string
             self::SurveyRead, self::SurveyWrite, self::SurveyDelete, self::SurveyApproval => Survey::getPrimaryKey(),
             self::Competitor, self::CompetitorLLM => Competitor::getPrimaryKey(),
             self::Teams => Team::getPrimaryKey(),
+            self::Branches => CrmBranch::getPrimaryKey(),
             self::Users, self::UsersMeeting, self::UsersMessaging, self::UsersSessions => User::getPrimaryKey(),
             self::Members => Client::getPrimaryKey(),
             self::BoardManage, self::BoardMeeting => Board::getPrimaryKey(),
@@ -195,7 +236,13 @@ enum PermissionEnum: string
             //Requisition
             self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval => Requisitions::getPrimaryKey(),
             self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval => RequisitionLines::getPrimaryKey(),
+
         };
+    }
+
+    public function subName(): string
+    {
+        return Str::of(array_reverse(explode('-', $this->value))[0])->snake(' ')->title()->toString();
     }
 
     public function title(): string
@@ -215,7 +262,7 @@ enum PermissionEnum: string
             self::LeadRead, self::LeadWrite, self::LeadDelegate, self::LeadUpdate, self::LeadDelete, self::LeadViewAll, self::LeadsManager => 'Leads',
             self::ReviewsView, self::SurveyRead, self::SurveyWrite, self::SurveyDelete, self::SurveyApproval => 'Feedback',
             self::Competitor, self::CompetitorLLM => 'Competitor',
-            self::Teams, self::Users, self::UsersMeeting, self::UsersMessaging, self::UsersSessions => 'Users',
+            self::Teams, self::Branches, self::Users, self::UsersMeeting, self::UsersMessaging, self::UsersSessions => 'Users & Roles',
             self::Ceo, self::Managers, self::MarketingManager => 'User Roles',
             self::BoardManage, self::BoardMeeting => 'Board Members',
             self::Integrations => 'Integrations',
@@ -223,137 +270,5 @@ enum PermissionEnum: string
             self::Roles => 'Roles',
             self::ListsView, self::ListsUpdate => 'System Codes',
         };
-    }
-
-    public static function display(): Collection
-    {
-        return collect([
-                        [
-                         self::TicketRead,
-                         self::TicketWrite,
-                         self::TicketUpdate,
-                         self::TicketDelete,
-                         self::TicketApproval,
-                        ],
-                        [
-                         self::TaskCreate,
-                         self::TaskDelegate,
-                        ],
-                        [self::Members],
-                        [
-                         self::LeadRead,
-                         self::LeadWrite,
-                         self::LeadDelegate,
-                         self::LeadUpdate,
-                         self::LeadViewAll,
-                         self::LeadsManager,
-                         self::LeadDelete,
-                        ],
-
-                        [
-                         self::EmailRead,
-                         self::EmailAssign,
-                         self::EmailDelete,
-                        ],
-                        [
-                         self::CallRead,
-                         self::CallWrite,
-                         self::CallUpdate,
-                         self::CallDelete,
-                        ],
-                        [
-                         self::ScheduleRead,
-                         self::ScheduleWrite,
-                         self::ScheduleDelete,
-                         self::MeetingRooms,
-                        ],
-
-                        [
-                         self::MarketingPlannerRead,
-                         self::MarketingPlannerWrite,
-                         self::MarketingPlannerUpdate,
-                         self::MarketingPlannerDelete,
-                         self::MarketingPlannerApproval,
-                        ],
-                        [
-                         self::MarketingListRead,
-                         self::MarketingListWrite,
-                         self::MarketingListUpdate,
-                         self::MarketingListDelete,/*, self::MarketingListApproval*/
-                        ],
-                        [
-                         self::ReviewsView,
-                         self::SurveyRead,
-                         self::SurveyWrite,
-                         self::SurveyDelete,
-                         self::SurveyApproval,
-                        ],
-                        [
-                         self::CampaignRead,
-                         self::CampaignWrite,
-                         self::CampaignUpdate,
-                         self::CampaignDelete,
-                         self::CampaignApproval,
-                        ],
-                        [
-                         self::SocialRead,
-                         self::SocialWrite,
-                         self::SocialDelete,
-                        ],
-                        [
-                         self::Competitor,
-                         self::CompetitorLLM,
-                        ],
-
-                        [
-                         self::DebtCollectionView,
-                         self::DebtCollectionAssignment,
-                         self::DebtCollectionAdmin,
-                         self::DebtNotificationView,
-                         self::DebtNotificationSend,
-                         self::DebtCollectionLists,
-                        ],
-                        [
-                         self::ProductDevelopmentRead,
-                         self::ProductDevelopmentWrite,
-                         self::ProductDevelopmentUpdate,
-                         self::ProductDevelopmentDelete,
-                        ],
-
-                        [
-                         self::ListsView,
-                         self::ListsUpdate,
-                        ],
-                        [
-                         self::Users,
-                         self::UsersMeeting,
-                         self::UsersMessaging,
-                         self::UsersSessions,
-                         self::Teams,
-                        ],
-                        [
-                         self::Ceo,
-                         self::Managers,
-                         self::MarketingManager,
-                        ],
-
-                        [
-                         self::BoardManage,
-                         self::BoardMeeting,
-                        ],
-                        [self::Integrations],
-                        [self::Roles],
-
-                       ]);
-    }
-
-    public static function approvals(): Collection
-    {
-        return collect([self::MarketingPlannerApproval, /* self::MarketingListApproval,*/ self::TicketApproval, self::CampaignApproval, self::SurveyApproval, self::Ceo, self::MarketingManager]);
-    }
-
-    public function subName(): string
-    {
-        return \Illuminate\Support\Str::of(array_reverse(explode('-', $this->value))[0])->snake(' ')->title()->toString();
     }
 }

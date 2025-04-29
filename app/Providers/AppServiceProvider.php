@@ -31,6 +31,7 @@ use App\Models\Task;
 use App\Models\Team;
 use App\Models\Ticket;
 use App\Models\User;
+use App\Policies\CrmBranchPolicy;
 use App\Policies\Procurement\RequisitionLinesPolicy;
 use App\Policies\Procurement\RequisitionPolicy;
 use App\Policies\ProductDevelopmentPolicy;
@@ -56,36 +57,37 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Relation::morphMap([
-                            Account::getPrimaryKey()            => Account::class,
-                            APICredential::getPrimaryKey()      => APICredential::class,
-                            Board::getPrimaryKey()              => Board::class,
-                            Call::getPrimaryKey()               => Call::class,
-                            Campaign::getPrimaryKey()           => Campaign::class,
-                            CampaignParty::getPrimaryKey()      => CampaignParty::class,
-                            Client::getPrimaryKey()             => Client::class,
-                            CrmBranch::getPrimaryKey()          => CrmBranch::class,
-                            CrmEmail::getPrimaryKey()           => CrmEmail::class,
-                            Comment::getPrimaryKey()            => Comment::class,
-                            Competitor::getPrimaryKey()         => Competitor::class,
-                            Contact::getPrimaryKey()            => Contact::class,
-                            DebtProduct::getPrimaryKey()        => DebtProduct::class,
-                            Discussion::getPrimaryKey()         => Discussion::class,
-                            Lead::getPrimaryKey()               => Lead::class,
-                            MarketingPlanner::getPrimaryKey()   => MarketingPlanner::class,
-                            Meeting::getPrimaryKey()            => Meeting::class,
-                            Notes::getPrimaryKey()              => Notes::class,
-                            ProductDevelopment::getPrimaryKey() => ProductDevelopment::class,
-                            Review::getPrimaryKey()             => Review::class,
-                            Schedule::getPrimaryKey()           => Schedule::class,
-                            Social::getPrimaryKey()             => Social::class,
-                            Survey::getPrimaryKey()             => Survey::class,
-                            Task::getPrimaryKey()               => Task::class,
-                            Team::getPrimaryKey()               => Team::class,
-                            Ticket::getPrimaryKey()             => Ticket::class,
-                            User::getPrimaryKey()               => User::class,
-                           ]);
+            Account::getPrimaryKey() => Account::class,
+            APICredential::getPrimaryKey() => APICredential::class,
+            Board::getPrimaryKey() => Board::class,
+            Call::getPrimaryKey() => Call::class,
+            Campaign::getPrimaryKey() => Campaign::class,
+            CampaignParty::getPrimaryKey() => CampaignParty::class,
+            Client::getPrimaryKey() => Client::class,
+            CrmBranch::getPrimaryKey() => CrmBranch::class,
+            CrmEmail::getPrimaryKey() => CrmEmail::class,
+            Comment::getPrimaryKey() => Comment::class,
+            Competitor::getPrimaryKey() => Competitor::class,
+            Contact::getPrimaryKey() => Contact::class,
+            DebtProduct::getPrimaryKey() => DebtProduct::class,
+            Discussion::getPrimaryKey() => Discussion::class,
+            Lead::getPrimaryKey() => Lead::class,
+            MarketingPlanner::getPrimaryKey() => MarketingPlanner::class,
+            Meeting::getPrimaryKey() => Meeting::class,
+            Notes::getPrimaryKey() => Notes::class,
+            ProductDevelopment::getPrimaryKey() => ProductDevelopment::class,
+            Review::getPrimaryKey() => Review::class,
+            Schedule::getPrimaryKey() => Schedule::class,
+            Social::getPrimaryKey() => Social::class,
+            Survey::getPrimaryKey() => Survey::class,
+            Task::getPrimaryKey() => Task::class,
+            Team::getPrimaryKey() => Team::class,
+            Ticket::getPrimaryKey() => Ticket::class,
+            User::getPrimaryKey() => User::class,
+        ]);
 
         Gate::policy(Role::class, RolePolicy::class);
+        Gate::policy(CrmBranch::class, CrmBranchPolicy::class);
         Gate::policy(Requisitions::class, RequisitionPolicy::class);
         Gate::policy(RequisitionLines::class, RequisitionLinesPolicy::class);
         Gate::policy(ProductDevelopment::class, ProductDevelopmentPolicy::class);

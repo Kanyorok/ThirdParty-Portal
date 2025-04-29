@@ -26,7 +26,10 @@
 <script src="{{ asset('assets/js/theme.js') }}"></script>
 {{--<script src="../assets/js/multi-lang.js') }}"></script>--}}
 <script src="{{ asset('assets/js/plugins/feather.min.js') }}"></script>
+<script src="{{ asset('assets/libs/dataTables/dataTables.min.js') }}"></script>
+<script src="{{ asset('assets/libs/dataTables/bootstrap5.min.js') }}"></script>
 
+<script src="{{ asset('assets/libs/notyf/notyf.min.js') }}"></script>
 {{--<script>layout_change('light');</script>
 <script>change_box_container('false');</script>
 <script>layout_caption_change('true');</script>

@@ -38,27 +38,27 @@ class RequisitionItemService
     }
 
 
-    public static function addRequisitionLines($RequisitionId,$ItemType,$Quantity,$NeededBy,$Urgency,User $actor): RequisitionLines
+    public static function addRequisitionLines($RequisitionId,$Item,$Quantity,$NeededBy,$Urgency,User $actor): RequisitionLines
     {
 
         try {
             // Start transaction and execute the stored procedure
-            DB::transaction(function () use ($RequisitionId,$ItemType,$Quantity,$NeededBy,$Urgency,$actor) {
+            DB::transaction(function () use ($RequisitionId,$Item,$Quantity,$NeededBy,$Urgency,$actor) {
 
-                DB::statement('EXEC p_AddRequisition ?, ?, ?, ?, ?,?', [
-                    $RequisitionId,$ItemType,$Quantity,$NeededBy,$Urgency,
+                DB::statement('EXEC p_AddRequisitionLines ?, ?, ?, ?, ?,?', [
+                    $RequisitionId,$Item,$Quantity,$NeededBy,$Urgency,
                     $actor->Id // Pass the User ID, not the entire User model
                 ]);
             });
 
             return [
                 'status' => 'success',
-                'message' => 'Requisition successfully created.'
+                'message' => 'RequisitionLines successfully created.'
             ];
 
         } catch (QueryException $e) {
             // Log the SQL error
-            Log::error('SQL Error executing p_AddRequisition', [
+            Log::error('SQL Error executing p_AddRequisitionLines', [
                 'message' => $e->getMessage(),
                 'exception' => $e
             ]);
@@ -66,12 +66,12 @@ class RequisitionItemService
             // Return the error message back to the controller
             return [
                 'status' => 'error',
-                'message' => 'SQL error executing requisition creation',
+                'message' => 'SQL error executing requisitionlines creation',
                 'error' => $e->getMessage()
             ];
         } catch (Throwable $e) {
             // Log the exception for debugging
-            Log::error('Error executing p_AddRequisition', [
+            Log::error('Error executing p_AddRequisitionlines', [
                 'message' => $e->getMessage(),
                 'exception' => $e
             ]);
@@ -79,7 +79,7 @@ class RequisitionItemService
             // Return a custom error message or handle as needed
             return[
                 'status' => 'error',
-                'message' => 'Error executing requisition creation',
+                'message' => 'Error executing requisitionlines creation',
                 'error' => $e->getMessage()
             ];
         }

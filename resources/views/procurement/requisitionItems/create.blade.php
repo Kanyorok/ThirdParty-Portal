@@ -48,7 +48,7 @@
                                 <tr>
                                     <td>{{ $item->Id }}</td>
                                     {{--                                <td>{{ $item->RequisitionID }}</td> --}}
-                                    <td>{{ $item->Module }}</td>
+{{--                                    <td>{{ $item->Module }}</td>--}}
                                     <td>{{ $item->Type }}</td>
                                     <td>{{ $item->ItemName }}</td>
                                     <td>{{ $item->Description }}</td>

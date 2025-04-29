@@ -32,11 +32,15 @@ class RequisitionsController extends Controller
     {
         try {
             $details = $this->service->fetchRequisition();
-            return view('procurement.requisitions.create', compact('details'));
+            if ($details ) {
+            return view('procurement.requisitions.create', compact('details'));}
+            else{  return view('procurement.requisitions.create', ['details' => []]);}
         } catch (\Exception $e) {
             \Log::error('Create page failed: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Failed to fetch items: ' . $e->getMessage());
         }
+
+//        return view('procurement.requisitions.create');
     }
 
     /**

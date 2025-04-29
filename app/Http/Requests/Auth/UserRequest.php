@@ -4,8 +4,7 @@ namespace App\Http\Requests\Auth;
 
 use App\Enums\GenderEnum;
 use App\Exceptions\ErroredException;
-use App\Models\BR\Branch;
-use App\Models\BR\BRUser;
+use App\Models\CrmBranch;
 use App\Models\User;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -25,60 +24,18 @@ class UserRequest extends FormRequest
     {
         $id = $this->_getuserId();
         return [
-                'UserID'      => [
-                                  'required',
-                                  'string',
-                                  'max:100',
-                                  'min:3',
-                                 ],
-                'Name'        => [
-                                  'required',
-                                  'string',
-                                  'max:255',
-                                 ],
-                'Gender'      => [
-                                  'required',
-                                  Rule::in(GenderEnum::values()),
-                                 ],
-                'Phone'       => [
-                                  'nullable',
-                                  'min:9',
-                                  'max:11',
-                                  'regex: /^[(01)(07)]+[0-9]{9}$/i',
-                                  Rule::unique('t_Users')->ignore($id, 'Id'),/*// 'unique:App\Models\User,Phone'*/
-                                 ],
-                'Email'       => [
-                                  'required',
-                                  'email:rfc,dns',
-                                  'max:200',
-                                  Rule::unique('t_Users')->ignore($id, 'Id'), /*'unique:App\Models\User,Phone'*/
-                                 ],
-                'ClientID'    => [
-                                  'required_if_declined:SyncAccount',
-                                  'max:20',
-                                  Rule::unique('t_Users')->ignore($id, 'Id'),
-                                  'exists:App\Models\BR\Client,ClientID',
-                                 ],
-                'Notes'       => [
-                                  'nullable',
-                                  'string',
-                                  'max:5000',
-                                 ],
-                'SyncAccount' => ['nullable'],
-                'Branch'      => [
-                                  'nullable',
-                                  'string',
-                                 ],
-                'Role'        => [
-                                  'nullable',
-                                  'string',
-                                 ],
-                'Signature'   => [
-                                  'nullable',
-                                  'string',
-                                  'max:500000',
-                                 ],
-               ];
+            'UserID' => ['required', 'string', 'max:100', 'min:3',],
+            'Name' => ['required', 'string', 'max:255',],
+            'Gender' => ['required', Rule::in(GenderEnum::values()),],
+            'Phone' => ['required', 'min:9', 'max:13', 'regex: /^[(2541)(2547)]+[0-9]{9}$/i', Rule::unique('t_Users')->ignore($id, 'Id'),/*// 'unique:App\Models\User,Phone'*/],
+            'Email' => ['required', 'email:rfc,dns', 'max:200', Rule::unique('t_Users')->ignore($id, 'Id'), /*'unique:App\Models\User,Phone'*/],
+            //'ClientID' => ['required_if_declined:SyncAccount', 'max:20', Rule::unique('t_Users')->ignore($id, 'Id'), 'exists:App\Models\BR\Client,ClientID',],
+            'Notes' => ['nullable', 'string', 'max:5000',],
+            //'SyncAccount' => ['nullable'],
+            'Branch' => ['nullable', 'string',],
+            'Role' => ['nullable', 'string',],
+            'Signature' => ['nullable', 'string', 'max:500000',],
+        ];
     }
 
     private function _getuserId(): string
@@ -91,20 +48,20 @@ class UserRequest extends FormRequest
             return ($params['user'] instanceof User) ? $params['user']->Id : '';
         }
 
-        return '';
+        return '0';
     }
 
     /**
      * @throws ValidationException
      */
-    public function getBranch(): Branch
+    public function getBranch(): CrmBranch
     {
         if (!is_string($this->validated('Branch'))) {
             throw ValidationException::withMessages(['Branch' => 'Branch is required.']);
         }
 
-        $branch = Branch::query()->where('OurBranchID', $this->validated('Branch'))->first();
-        if ($branch instanceof Branch) {
+        $branch = CrmBranch::query()->where('BranchID', $this->validated('Branch'))->first();
+        if ($branch instanceof CrmBranch) {
             return $branch;
         }
         throw ValidationException::withMessages(['Branch' => 'Branch is not found.']);
@@ -183,7 +140,7 @@ class UserRequest extends FormRequest
         }
 
 
-        $brexists = BRUser::where('OperatorID', $UserID)->exists();
+        /*$brexists = BRUser::where('OperatorID', $UserID)->exists();
         if ($this->sync()) {
             if ($brexists) {
                 return $UserID;
@@ -194,10 +151,10 @@ class UserRequest extends FormRequest
 
         if ($brexists) {
             throw ValidationException::withMessages([
-                                                     'UserID'      => 'User already exists, if its you turn on sync',
-                                                     'SyncAccount' => 'turn on to sync account',
-                                                    ]);
-        }
+                'UserID' => 'User already exists, if its you turn on sync',
+                'SyncAccount' => 'turn on to sync account',
+            ]);
+        }*/
         return $UserID;
     }
 

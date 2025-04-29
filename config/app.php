@@ -13,9 +13,11 @@ return [
     |
     */
 
-        'name'            => env('APP_NAME', 'BR CRM'),
+    'name' => env('APP_NAME', 'Nimble ERP'),
 
-        'versioning'      => ['version' => '0.9.1'],
+    'versioning' => [
+        'version' => '0.0.1'
+    ],
 
     /*
     |--------------------------------------------------------------------------
@@ -135,4 +137,4 @@ return [
         ],
 ];
 
-       
+

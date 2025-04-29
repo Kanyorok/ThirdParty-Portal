@@ -38,24 +38,24 @@
                         </thead>
                         <tbody>
 
-                        @forelse($details as $item)
-                            <tr>
-                                <td>{{$loop->iteration }}</td>
-                                <td>{{ $item->RequisitionNo }}</td>
-                                <td>{{ \Carbon\Carbon::parse($item->CreatedOn)->format('d-m-Y') }}</td>
-                                <td>{{ $item->BranchID }}</td>
-                                <td>{{ $item->DepartmentID }}</td>
-                                <td>{{ $item->Category }}</td>
-                                <td>{{ $item->Remarks }}</td>
-                                <td>{{ $item->itemcount }}</td>
-                                <td>{{ number_format($item->ExpectedPrice, 2) }}</td>
-                                <td>{{ $item->Status }}</td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="15" class="text-center">No requisition items found.</td>
-                            </tr>
-                        @endforelse
+{{--                        @forelse($details as $item)--}}
+{{--                            <tr>--}}
+{{--                                <td>{{$loop->iteration }}</td>--}}
+{{--                                <td>{{ $item->RequisitionNo }}</td>--}}
+{{--                                <td>{{ \Carbon\Carbon::parse($item->CreatedOn)->format('d-m-Y') }}</td>--}}
+{{--                                <td>{{ $item->BranchID }}</td>--}}
+{{--                                <td>{{ $item->DepartmentID }}</td>--}}
+{{--                                <td>{{ $item->Category }}</td>--}}
+{{--                                <td>{{ $item->Remarks }}</td>--}}
+{{--                                <td>{{ $item->itemcount }}</td>--}}
+{{--                                <td>{{ number_format($item->ExpectedPrice, 2) }}</td>--}}
+{{--                                <td>{{ $item->Status }}</td>--}}
+{{--                            </tr>--}}
+{{--                        @empty--}}
+{{--                            <tr>--}}
+{{--                                <td colspan="15" class="text-center">No requisition items found.</td>--}}
+{{--                            </tr>--}}
+{{--                        @endforelse--}}
                         </tbody>
                     </table>
                 </div>
