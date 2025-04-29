@@ -1,10 +1,13 @@
 <?php
 
-namespace App\Services\ERP;
+namespace App\Services\Procurement\Requisition;
 
 use App\Models\Procurement\RequisitionLines;
 use App\Models\User;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class RequisitionItemService
 {
@@ -33,6 +36,56 @@ class RequisitionItemService
         // optionally CreatedBy etc.
                                          ]);
     }
+
+
+    public static function addRequisitionLines($RequisitionId,$ItemType,$Quantity,$NeededBy,$Urgency,User $actor): RequisitionLines
+    {
+
+        try {
+            // Start transaction and execute the stored procedure
+            DB::transaction(function () use ($RequisitionId,$ItemType,$Quantity,$NeededBy,$Urgency,$actor) {
+
+                DB::statement('EXEC p_AddRequisition ?, ?, ?, ?, ?,?', [
+                    $RequisitionId,$ItemType,$Quantity,$NeededBy,$Urgency,
+                    $actor->Id // Pass the User ID, not the entire User model
+                ]);
+            });
+
+            return [
+                'status' => 'success',
+                'message' => 'Requisition successfully created.'
+            ];
+
+        } catch (QueryException $e) {
+            // Log the SQL error
+            Log::error('SQL Error executing p_AddRequisition', [
+                'message' => $e->getMessage(),
+                'exception' => $e
+            ]);
+
+            // Return the error message back to the controller
+            return [
+                'status' => 'error',
+                'message' => 'SQL error executing requisition creation',
+                'error' => $e->getMessage()
+            ];
+        } catch (Throwable $e) {
+            // Log the exception for debugging
+            Log::error('Error executing p_AddRequisition', [
+                'message' => $e->getMessage(),
+                'exception' => $e
+            ]);
+
+            // Return a custom error message or handle as needed
+            return[
+                'status' => 'error',
+                'message' => 'Error executing requisition creation',
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+//
+
 
     public static function getRequisitionItems(){
 
