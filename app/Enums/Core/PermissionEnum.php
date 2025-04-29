@@ -18,6 +18,7 @@ use App\Models\MarketingList;
 use App\Models\MarketingPlanner;
 use App\Models\MeetingRoom;
 use App\Models\Procurement\RequisitionLines;
+use App\Models\Procurement\Requisitions;
 use App\Models\Review;
 use App\Models\Schedule;
 use App\Models\Social;
@@ -233,7 +234,8 @@ enum PermissionEnum: string
             self::Roles, self::Ceo, self::Managers, self::MarketingManager => Role::class,
             self::ListsView, self::ListsUpdate => CodeDetail::getPrimaryKey(),
             //Requisition
-            self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval => RequisitionLines::getPrimaryKey(),
+            self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval => Requisitions::getPrimaryKey(),
+            self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval => RequisitionLines::getPrimaryKey(),
 
         };
     }

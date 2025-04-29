@@ -17,11 +17,11 @@
             <thead>
                 <tr>
                     <th>#</th>
-                    <th>Tender Number</th>
-                    <th>Tender Title</th>
-                    <th>Item Category</th>
-                    <th>Suppliers</th>
-                    <th>Created At</th>
+                    <th>Quotation Number</th>
+                    <th>Quotation Status</th>
+                    <th>RFQ Category</th>
+                    <th>Submission Deadline</th>
+                    <th>Created On</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -29,20 +29,13 @@
                 @foreach($rfqs as $rfq)
                     <tr>
                         <td>{{ $loop->iteration }}</td>
-                        <td>{{ $rfq->tender->TenderNumber ?? '-' }}</td>
-                        <td>{{ $rfq->tender->Title ?? '-' }}</td>
+                        <td>{{ $rfq->RFQNumber ?? '-' }}</td>
+                        <td>{{ $rfq->Status ?? '-' }}</td>
                         <td>{{ $rfq->category->Name ?? '-' }}</td>
                         <td>
-                            @php
-                                $supplierNames = \App\Models\Procurement\Supplier::whereIn('Id', $rfq->Suppliers)->pluck('SupplierName')->toArray();
-                            @endphp
-                            <ul>
-                                @foreach($supplierNames as $name)
-                                    <li>{{ $name }}</li>
-                                @endforeach
-                            </ul>
+                            {{ $rfq->SubmissionDeadline ? \Carbon\Carbon::parse($rfq->SubmissionDeadline)->format('d M Y') : '-' }}
                         </td>
-                        <td>{{ $rfq->CreatedAt ? \Carbon\Carbon::parse($rfq->CreatedAt)->format('d M Y') : '-' }}</td>
+                        <td>{{ $rfq->CreatedOn ? \Carbon\Carbon::parse($rfq->CreatedAt)->format('d M Y') : '-' }}</td>
                         <td>
                             <a href="{{ route('rfqs.show', $rfq->Id) }}" class="btn btn-sm btn-info">View</a>
                             {{-- Add edit/delete buttons if needed --}}

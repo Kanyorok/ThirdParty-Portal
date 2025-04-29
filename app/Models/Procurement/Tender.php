@@ -43,9 +43,4 @@ class Tender extends Model
     {
         return $this->hasMany(TenderStage::class, 'TenderId');
     }
-
-    public function rfqs()
-    {
-        return $this->hasMany(RFQ::class, 'TenderId');
-    }
 }

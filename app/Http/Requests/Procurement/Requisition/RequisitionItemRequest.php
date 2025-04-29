@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\ERP\Requisition;
+namespace App\Http\Requests\Procurement\Requisition;
 
 use Illuminate\Foundation\Http\FormRequest;
 

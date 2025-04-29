@@ -20,6 +20,8 @@ use App\Models\Lead;
 use App\Models\MarketingPlanner;
 use App\Models\Meeting;
 use App\Models\Notes;
+use App\Models\Procurement\RequisitionLines;
+use App\Models\Procurement\Requisitions;
 use App\Models\ProductDevelopment;
 use App\Models\Review;
 use App\Models\Schedule;
@@ -30,6 +32,8 @@ use App\Models\Team;
 use App\Models\Ticket;
 use App\Models\User;
 use App\Policies\CrmBranchPolicy;
+use App\Policies\Procurement\RequisitionLinesPolicy;
+use App\Policies\Procurement\RequisitionPolicy;
 use App\Policies\ProductDevelopmentPolicy;
 use App\Policies\RolePolicy;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -84,6 +88,8 @@ class AppServiceProvider extends ServiceProvider
 
         Gate::policy(Role::class, RolePolicy::class);
         Gate::policy(CrmBranch::class, CrmBranchPolicy::class);
+        Gate::policy(Requisitions::class, RequisitionPolicy::class);
+        Gate::policy(RequisitionLines::class, RequisitionLinesPolicy::class);
         Gate::policy(ProductDevelopment::class, ProductDevelopmentPolicy::class);
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);
