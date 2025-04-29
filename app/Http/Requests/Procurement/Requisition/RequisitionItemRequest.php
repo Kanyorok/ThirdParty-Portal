@@ -23,10 +23,10 @@ class RequisitionItemRequest extends FormRequest
     {
         return [
 
-            'Module' => ['required'],
+            'RequisitionID' => ['nullable'],
             'Type' => ['required'],
             'Item' =>   ['required'],
-            'Description' =>    ['required'],
+            'NeededBy' =>    ['nullable'],
             'Quantity' =>   ['required'],
             'Urgency' =>    ['required'],
             'UOM' =>    ['nullable'],

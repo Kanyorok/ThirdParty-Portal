@@ -18,7 +18,7 @@ class RequisitionItemsController extends Controller
     public function __construct(protected RequisitionItemService $service,protected ItemService $itemService)
     {
 
-        $this->middleware('ajax')->except(['index', 'show', 'create']);
+        $this->middleware('ajax')->except(['index', 'create']);
         $this->authorizeResource(RequisitionLines::class);
     }
     /**
@@ -86,11 +86,11 @@ class RequisitionItemsController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create($id)
     {
         try {
             $details = $this->service->getRequisitionItems();
-            return view('procurement.requisitionItems.create', compact('details'));
+            return view('procurement.requisitionItems.create', compact('details','id'));
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Failed to fetch items: ' . $e->getMessage());
         }
@@ -127,6 +127,8 @@ class RequisitionItemsController extends Controller
 
     public function store(RequisitionItemRequest $request): JsonResponse
     {
+
+//        dd($request->all());
         try {
             $validatedData = $request->validated();
 
@@ -137,7 +139,8 @@ class RequisitionItemsController extends Controller
             }
 
 
-            $requisitionAddLines = $this->addRequisitionLines(
+            $requisitionAddLines = $this->service->addRequisitionLines(
+                $validatedData['RequisitionID'],
                 $validatedData['Item'],
                 $validatedData['Quantity'],
                 $validatedData['NeededBy'],
@@ -148,12 +151,12 @@ class RequisitionItemsController extends Controller
             if ($requisitionAddLines['status'] === 'success') {
                 return response()->json([
                     'message' => $requisitionAddLines['message'],
-                    'route' =>route('requisition.create')
+                    'route' =>route('requisitionItems.create')
                 ], 200);
             }
 
             // Log failure with details
-            Log::error('Failed to create requisition.', [
+            Log::error('Failed to create requisitionLines **.', [
                 'input' => $validatedData,
                 'user_id' => $actor->id ?? null,
                 'service_response' => $requisitionAddLines,
@@ -165,24 +168,40 @@ class RequisitionItemsController extends Controller
             ], 500);
 
         } catch (\Throwable $e) {
-            Log::error('Exception occurred while creating requisition.', [
+            Log::error('Exception occurred while creating requisitionLines.', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
 
             return response()->json([
-                'message' => 'Failed to create requisition',
+                'message' => 'Failed to create requisitionLines ##',
                 'error' => $e->getMessage()
             ], 500);
         }
     }
+
+//    public function getRelatedRequisitionLines($RequisitionID){
+//        try {
+//            $details = $this->service->getRequisitionRelatedItems($RequisitionID);
+//            return view('procurement.requisitionItems.create', compact('details'));
+//        } catch (\Exception $e) {
+//            return redirect()->back()->with('error', 'Failed to fetch items: ' . $e->getMessage());
+//        }
+//    }
     /**
      * Display the specified resource.
      */
     public function show(string $id)
     {
-        //
+        try {
+            $details = $this->service->getRequisitionRelatedItems($id);
+            return view('procurement.requisitionItems.create', compact('details'));
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to fetch items: ' . $e->getMessage());
+        }
     }
+
+
 
     /**
      * Show the form for editing the specified resource.
