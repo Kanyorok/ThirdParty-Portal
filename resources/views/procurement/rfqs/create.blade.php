@@ -5,34 +5,34 @@
 <div class="container">
     <h3>Create RFQ</h3>
 
-    <form method="POST" action="{{ route('rfqs.store') }}">
-        @csrf
+    <div class="container mt-3">
+        <h3>RFQ Details</h3>
+        <form method="POST" action="{{ route('rfqs.store') }}">
+            @csrf
 
-        <div class="mb-3">
-            <label>Tender</label>
-            <select name="TenderId" class="form-control" required {{ $tenders->isEmpty() ? 'disabled' : '' }}>
-                <option value="">-- Select Tender --</option>
-                @foreach($tenders as $tender)
-                    <option value="{{ $tender->Id }}">{{ $tender->TenderNumber }} - {{ $tender->Title }}</option>
-                @endforeach
-            </select>
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="mb-3">
+                    <label>Item Category</label>
+                    <select name="ItemCategoryId" class="form-control" required>
+                        <option value="">-- Select Category --</option>
+                        @foreach($categories as $cat)
+                            <option value="{{ $cat->id }}">{{ $cat->Name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="form-group mb-3">
+                    <label for="Comments">Comments<span class="text-danger">*</span></label>
+                    <textarea name="Comments" class="form-control" required></textarea>
+                </div>
+                <div class="form-group mb-3">
+                    <label for="SubmissionDeadline">Submission Deadline <span class="text-danger">*</span></label>
+                    <input type="date" name="SubmissionDeadline" class="form-control" required min="{{ date('Y-m-d') }}">
+                </div> 
+            </div>
         </div>
-
-        <div class="mb-3">
-            <label>Item Category</label>
-            <select name="ItemCategoryId" class="form-control" required {{ $tenders->isEmpty() ? 'disabled' : '' }}>
-                <option value="">-- Select Category --</option>
-                @foreach($categories as $cat)
-                    <option value="{{ $cat->id }}">{{ $cat->Name }}</option>
-                @endforeach
-            </select>
-        </div>
-
-        @if($tenders->isEmpty())
-            <p class="text-danger">All tenders have already been added to RFQs.</p>
-        @endif
-
-        <button class="btn btn-primary" {{ $tenders->isEmpty() ? 'disabled' : '' }}>Send RFQ</button>
-    </form>
+        <button class="btn btn-success" type="submit">Save</button>
+        </form>
+    </div>
 </div>
 @endsection

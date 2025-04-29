@@ -4,6 +4,8 @@
 <head>
     @include('layouts._partials._head')
     <title>{{ config('app.name') }} - @yield('title')</title>
+    <link href="{{ asset('css/select2.min.css') }}" rel="stylesheet">
+<script src="{{ asset('js/select2.min.js') }}"></script>
 </head>
 
 <body data-pc-preset="preset-1" data-pc-sidebar-caption="true" data-pc-layout="vertical" data-pc-direction="ltr"
@@ -158,6 +160,24 @@
                                     </li>
                                 </ul>
                             </li>
+                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Teacher">
+                                        RFQS
+                                    </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item">
+                                        <a class="pc-link" href="{{ route('rfqs.index') }}"
+                                            data-i18n="View RFQs">View RFQs</a>
+                                    </li>
+                                    <li class="pc-item">
+                                        <a class="pc-link" href="#"
+                                            data-i18n="RFQ Response">RFQ Response</a>
+                                    </li>
+                                    <li class="pc-item">
+                                        <a class="pc-link" href="#"
+                                            data-i18n="RFQ Evaluation">RFQ Evaluation</a>
+                                    </li>
+                                </ul>
+                            </li>
                             <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
                                         Suppliers
                                     </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
@@ -306,7 +326,7 @@
         </div>
     </footer>
     @include('layouts._partials._scripts')
-
+    @yield('scripts')
 </body>
 
 </html>

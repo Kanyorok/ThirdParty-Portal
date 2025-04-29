@@ -69,4 +69,6 @@ Route::namespace('Procurement')->group(function () {
     Route::post('/rfqs', [RFQController::class, 'store'])->name('rfqs.store');
     Route::get('/rfqs/{id}', [RFQController::class, 'show'])->name('rfqs.show');
     Route::get('/rfqs', [RFQController::class, 'index'])->name('rfqs.index');
+    Route::post('/rfqs/{rfq}/approve', [RFQController::class, 'approve'])->name('rfqs.approve');
+    Route::post('/rfqs/{rfq}/reject', [RFQController::class, 'reject'])->name('rfqs.reject');
 });
