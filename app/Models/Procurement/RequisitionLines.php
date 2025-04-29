@@ -21,7 +21,7 @@ class RequisitionLines extends Model
 
     protected $fillable = [
         'RequisitionID', 'Module', 'Type', 'Item', 'Description', 'UOM', 'Quantity', 'ExpectedPrice',
-        'Urgency', 'CreatedBy', 'ModifiedBy', 'DeletedBy', 'CategoryId'
+        'Urgency','NeededBy', 'CreatedBy', 'ModifiedBy', 'DeletedBy', 'CategoryId'
     ];
 
     public static function getPrimaryKey(): string
