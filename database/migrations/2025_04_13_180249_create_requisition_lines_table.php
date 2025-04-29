@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('t_RequisitionLines', function (Blueprint $table) {
             $table->id('Id');
             $table->integer('RequisitionID')->nullable();
-            $table->string('Module');
             $table->string('Type');
             $table->string('Item');
             $table->longText('Description');

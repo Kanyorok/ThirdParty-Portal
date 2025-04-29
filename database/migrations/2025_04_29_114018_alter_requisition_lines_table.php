@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('t_RequisitionLines', function (Blueprint $table) {
 //            $table->dropColumn(['Module', 'ExpectedPrice']);
-            $table->dropColumn('NeededBy');
+           
             $table->date('NeededBy')->nullable();
             $table->decimal('ExpectedPrice')->nullable();
             $table->unsignedBigInteger('RequisitionID')->nullable()->change(); // make sure it's nullable
@@ -28,7 +28,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('t_RequisitionLines', function (Blueprint $table) {
-//            $table->string('Module')->nullable();
 //            $table->decimal('ExpectedPrice', 15, 2)->nullable();
             $table->dropForeign(['RequisitionID']);
             $table->dropColumn('NeededBy');
