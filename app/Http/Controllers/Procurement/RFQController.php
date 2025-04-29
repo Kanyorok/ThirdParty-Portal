@@ -91,12 +91,33 @@ class RFQController extends Controller
         return redirect()->route('rfqs.show', $rfq->Id)->with('success', 'RFQ created with requisition items and sent to suppliers.');
     }
 
-    public function approve($id)
+    public function approve(Request $request, $id)
     {
-        $rfq = RFQ::findOrFail($id);
-        $rfq->update(['Status' => 'Approved']);
+        $request->validate([
+            'suppliers' => 'required|array',
+            'suppliers.*' => 'exists:t_Suppliers,Id',
+        ]);
 
-        return redirect()->back()->with('success', 'RFQ has been approved successfully.');
+        $rfq = RFQ::findOrFail($id);
+
+        // Fetch supplier details
+        $suppliers = Supplier::whereIn('Id', $request->suppliers)->get(['SupplierName', 'ContactEmail']);
+        dd($suppliers);
+        // Update RFQ status to Approved and store supplier details
+        $rfq->update([
+            'Status' => 'Approved',
+            'Suppliers' => $suppliers->toJson(), // Store supplier details as JSON
+        ]);
+
+        // Notify selected suppliers
+        foreach ($suppliers as $supplier) {
+            Mail::raw("You have a new RFQ for tender.", function ($message) use ($supplier) {
+                $message->to($supplier->ContactEmail)
+                        ->subject('RFQ Invitation');
+            });
+        }
+
+        return redirect()->back()->with('success', 'RFQ has been approved and emails sent to selected suppliers.');
     }
 
     public function reject(Request $request, $id)
@@ -119,7 +140,11 @@ class RFQController extends Controller
     public function show($id)
     {
         $rfq = RFQ::with(['category'])->findOrFail($id);
-        return view('procurement.rfqs.show', compact('rfq'));
+
+        // Get suppliers based on the RFQ's category
+        $suppliers = Supplier::where('CategoryId', $rfq->ItemCategoryId)->get();
+
+        return view('procurement.rfqs.show', compact('rfq', 'suppliers'));
     }
 
     /**
