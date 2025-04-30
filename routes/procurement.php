@@ -78,7 +78,7 @@ Route::namespace('Procurement')->group(function () {
     Route::get('/rfqs', [RFQController::class, 'index'])->name('rfqs.index');
     Route::post('/rfqs/{rfq}/approve', [RFQController::class, 'approve'])->name('rfqs.approve');
     Route::post('/rfqs/{rfq}/reject', [RFQController::class, 'reject'])->name('rfqs.reject');
-    Route::get('/rfqs/{rfqId}/requisition-items', [RFQController::class, 'getRequisitionItems']);
+    
 
     // RFQ Response routes
     Route::get('/rfqresponses', [RFQResponseController::class, 'index'])->name('rfqresponses.index');
@@ -88,4 +88,5 @@ Route::namespace('Procurement')->group(function () {
     Route::get('/rfqresponses/{id}/edit', [RFQResponseController::class, 'edit'])->name('rfqresponses.edit');
     Route::put('/rfqresponses/{id}', [RFQResponseController::class, 'update'])->name('rfqresponses.update');
     Route::delete('/rfqresponses/{id}', [RFQResponseController::class, 'destroy'])->name('rfqresponses.destroy');
+    Route::get('/rfqs/{rfqId}/requisition-items', [RFQResponseController::class, 'getRequisitionItems']);
 });

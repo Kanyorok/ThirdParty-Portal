@@ -10,12 +10,11 @@
         <table class="table table-bordered">
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>RFQ ID</th>
-                    <th>Comments</th>
-                    <th>Submission Deadline</th>
-                    <th>Price</th>
-                    <th>Currency</th>
+                    <th>#</th>
+                    <th>RFQ Response Number</th>
+                    <th>Items Quoted</th>
+                    <th>Total Price</th>
+                    <th>Days to Delivery</th>
                     <th>Delivery Date</th>
                     <th>Actions</th>
                 </tr>
@@ -23,26 +22,41 @@
             <tbody>
                 @foreach($rfqResponses as $response)
                 <tr>
-                    <td>{{ $response->id }}</td>
-                    <td>{{ $response->RFQId }}</td>
-                    <td>{{ $response->Comments }}</td>
-                    <td>{{ $response->SubmissionDeadline }}</td>
-                    <td>{{ $response->Price }}</td>
-                    <td>{{ $response->Currency }}</td>
-                    <td>{{ $response->DeliveryDate }}</td>
+                    <td>{{ $loop->iteration }}</td>
+                    <td>{{ $response->RFQResponseNumber }}</td>
                     <td>
-                        <!-- Add edit and delete actions here -->
-                        <!-- Example: -->
-                        <!--
-                        <a href="{{ route('rfqresponses.edit', $response->id) }}" class="btn btn-warning">Edit</a>
-                        -->
-                        <!--
-                        <form action="{{ route('rfqresponses.destroy', $response->id) }}" method="POST" style="display:inline;">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger">Delete</button>
-                        </form>
-                        -->
+                        @php
+                            $requisitionItems = json_decode($response->RequisitionItems, true); // Decode JSON to array
+                        @endphp
+
+                        @if (is_array($requisitionItems))
+                            @foreach($requisitionItems as $item)
+                                <li>{{ $item['name'] }} — Price Quoted {{ $item['quotedprice'] }} — Total Payable(Tax 16%) {{ $item['totalpayable'] }}</li>
+                            @endforeach
+                        @else
+                            <p>No items found</p>
+                        @endif
+                    </td>
+                    <td>{{$response->Currency}}{{ $response->TotalPayable}}</td>
+                    <td>
+    @php
+        $deliveryDate = \Carbon\Carbon::parse($response->CreatedOn)->addDays((int) $response->DurationDays)->startOfDay();
+        $today = \Carbon\Carbon::now()->startOfDay();
+        $daysRemaining = $today->diffInDays($deliveryDate, false);
+    @endphp
+
+    @if ($daysRemaining > 0)
+        {{ $daysRemaining }} day{{ $daysRemaining > 1 ? 's' : '' }} remaining
+    @elseif ($daysRemaining === 0)
+        Delivery is today
+    @else
+        Delivered {{ abs($daysRemaining) }} day{{ abs($daysRemaining) > 1 ? 's' : '' }} ago
+    @endif
+</td>
+
+<td>{{ $deliveryDate->format('d M Y') }}</td
+                    <td>
+                        
                     </td>
                 </tr>
                 @endforeach

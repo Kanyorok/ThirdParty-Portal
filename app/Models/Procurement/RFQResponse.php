@@ -8,21 +8,19 @@ class RFQResponse extends Model
 {
     protected $table = 't_RFQResponse';
     protected $primaryKey = 'Id';
-    public $timestamps = true;
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
         'RFQId',
         'RFQResponseNumber',
         'RFQNumber',
-        'Quantity',
-        'QuotedPrice',
+        'SupplierName',
         'TotalPayable',
         'Currency',
         'DurationDays',
-        'Description',
-        'SupplierName',
         'RequisitionItems',
-        'RFQId',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy'

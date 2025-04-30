@@ -130,36 +130,6 @@ class RFQController extends Controller
     /**
      * Display the specified resource.
      */
-    public function getRequisitionItems($rfqId)
-    {
-        // Fetch the RFQ by ID
-        $rfq = RFQ::find($rfqId);
-
-        // Check if the RFQ exists
-        if (!$rfq) {
-            return response()->json(['error' => 'RFQ not found'], 404);
-        }
-
-        // Check if the RequisitionItems field exists
-        if (!$rfq->RequisitionItems) {
-            return response()->json(['error' => 'No requisition items found'], 404);
-        }
-
-        // Decode the RequisitionItems JSON field only if it's a string
-        $requisitionItems = is_string($rfq->RequisitionItems)
-            ? json_decode($rfq->RequisitionItems, true)
-            : $rfq->RequisitionItems;
-
-        // Check if decoding was successful
-        if (is_string($rfq->RequisitionItems) && json_last_error() !== JSON_ERROR_NONE) {
-            return response()->json(['error' => 'Invalid JSON in RequisitionItems'], 500);
-        }
-
-        // Return the requisition items as JSON
-        return response()->json([
-            'requisitionItems' => $requisitionItems,
-        ]);
-    }
 
     public function show($id)
     {
