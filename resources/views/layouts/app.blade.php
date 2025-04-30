@@ -235,7 +235,13 @@
                             <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
                         </a>
                     </li>
-                    
+                    <li class="pc-item pc-hasmenu">
+                        <a href="#!" class="pc-link">
+                            <span class="pc-micon"><i data-feather="archive" class="pc-icon"></i></span>
+                            <span class="pc-mtext" data-i18n="Inventory">Inventory</span>
+                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                        </a>
+                    </li>                   
 
                     <li class="pc-item pc-caption"><label data-i18n="Widget">Settings</label>
                         <svg class="pc-icon">
