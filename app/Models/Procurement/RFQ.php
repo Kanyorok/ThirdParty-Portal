@@ -16,7 +16,7 @@ class RFQ extends Model
     public const UPDATED_AT = 'ModifiedOn';
 
     protected $fillable = [
-        'RFQNumber', 'ItemCategoryId', 'Comments', 'RequisitionItems', 'Status', 'SubmissionDeadline',  'CreatedBy', 'ModifiedBy'
+        'RFQNumber', 'ItemCategoryId', 'Comments', 'RequisitionItems', 'Status', 'SubmissionDeadline',  'CreatedBy', 'ModifiedBy', 'Suppliers'
     ];
 
     protected $casts = [
@@ -26,6 +26,11 @@ class RFQ extends Model
     public function category()
     {
         return $this->belongsTo(ItemCategory::class, 'ItemCategoryId');
+    }
+
+    public function rfqResponses()
+    {
+        return $this->hasMany(RFQResponse::class, 'RFQId', 'Id');
     }
 
     public function createdBy()

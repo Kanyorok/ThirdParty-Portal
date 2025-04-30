@@ -167,8 +167,8 @@
                                             data-i18n="View RFQs">View RFQs</a>
                                     </li>
                                     <li class="pc-item">
-                                        <a class="pc-link" href="#"
-                                            data-i18n="RFQ Response">RFQ Response</a>
+                                        <a class="pc-link" href="{{ route('rfqresponses.index') }}"
+                                            data-i18n="RFQ Response">RFQ Responses</a>
                                     </li>
                                     <li class="pc-item">
                                         <a class="pc-link" href="#"
