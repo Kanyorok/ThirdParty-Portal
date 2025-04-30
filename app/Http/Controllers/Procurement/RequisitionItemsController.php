@@ -151,7 +151,7 @@ class RequisitionItemsController extends Controller
             if ($requisitionAddLines['status'] === 'success') {
                 return response()->json([
                     'message' => $requisitionAddLines['message'],
-                    'route' =>route('requisitionItems.create')
+                    'route' =>route('requisitionItem.create',['id' => $validatedData['RequisitionID']])
                 ], 200);
             }
 
