@@ -90,15 +90,17 @@ class RequisitionItemService
     public static function getRequisitionItems(){
 
         return DB::table(DB::raw('t_RequisitionLines WITH (NOLOCK)'))
+            ->Join(DB::raw('t_Requisitions WITH (NOLOCK)'), 't_RequisitionLines.RequisitionID', '=', 't_Requisitions.Id')
             ->leftJoin(DB::raw('t_Items WITH (NOLOCK)'), 't_Items.Id', '=', 't_RequisitionLines.Item')
             ->leftJoin(DB::raw('t_Users WITH (NOLOCK)'), 't_Users.Id', '=', 't_RequisitionLines.CreatedBy')
-            ->leftJoin(DB::raw('t_ItemCategories WITH (NOLOCK)'), 't_Items.Id', '=', 't_ItemCategories.CategoryId')
+            ->leftJoin(DB::raw('t_ItemCategories WITH (NOLOCK)'), 't_Items.CategoryId', '=', 't_ItemCategories.id')
             ->select(
                 't_RequisitionLines.*',
                 't_Items.Name as ItemName',
                 't_Users.Name as UserName',
                 't_Items.UOM as UOMx',
                 't_ItemCategories.Name as Category',
+                't_Requisitions.RequisitionNo',
                 DB::raw('t_RequisitionLines.ExpectedPrice * t_RequisitionLines.Quantity as ExpectedPrice'),
                 DB::raw('t_Items.UnitPrice * t_RequisitionLines.Quantity as ActualPrice'),
                 DB::raw("CASE

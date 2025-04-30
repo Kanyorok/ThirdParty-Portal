@@ -35,11 +35,11 @@
 
                         </thead>
                         <tbody>
-                            {{-- @forelse($details as $item)
+                             @forelse($details as $item)
                                 <tr>
-                                    <td>{{ $item->Id }}</td>
-                                    <td>{{ $item->Module }}</td>
-                                    <td>{{ $item->Type }}</td>
+                                    <td>{{ $item->RequisitionNo }}</td>
+                                    <td>{{ $item->CreatedOn }}</td>
+                                    <td>{{ $item->Bra }}</td>
                                     <td>{{ $item->ItemName }}</td>
                                     <td>{{ $item->Description }}</td>
                                     <td>{{ $item->UOMx }}</td>
@@ -55,7 +55,7 @@
                                 <tr>
                                     <td colspan="15" class="text-center">No requisition items found.</td>
                                 </tr>
-                            @endforelse --}}
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
