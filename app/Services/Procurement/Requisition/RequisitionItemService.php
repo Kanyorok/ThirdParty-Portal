@@ -90,13 +90,17 @@ class RequisitionItemService
     public static function getRequisitionItems(){
 
         return DB::table(DB::raw('t_RequisitionLines WITH (NOLOCK)'))
+            ->Join(DB::raw('t_Requisitions WITH (NOLOCK)'), 't_RequisitionLines.RequisitionID', '=', 't_Requisitions.Id')
             ->leftJoin(DB::raw('t_Items WITH (NOLOCK)'), 't_Items.Id', '=', 't_RequisitionLines.Item')
             ->leftJoin(DB::raw('t_Users WITH (NOLOCK)'), 't_Users.Id', '=', 't_RequisitionLines.CreatedBy')
+            ->leftJoin(DB::raw('t_ItemCategories WITH (NOLOCK)'), 't_Items.CategoryId', '=', 't_ItemCategories.id')
             ->select(
                 't_RequisitionLines.*',
                 't_Items.Name as ItemName',
                 't_Users.Name as UserName',
                 't_Items.UOM as UOMx',
+                't_ItemCategories.Name as Category',
+                't_Requisitions.RequisitionNo',
                 DB::raw('t_RequisitionLines.ExpectedPrice * t_RequisitionLines.Quantity as ExpectedPrice'),
                 DB::raw('t_Items.UnitPrice * t_RequisitionLines.Quantity as ActualPrice'),
                 DB::raw("CASE
@@ -122,12 +126,14 @@ class RequisitionItemService
         return DB::table(DB::raw('t_RequisitionLines WITH (NOLOCK)'))
             ->leftJoin(DB::raw('t_Items WITH (NOLOCK)'), 't_Items.Id', '=', 't_RequisitionLines.Item')
             ->leftJoin(DB::raw('t_Users WITH (NOLOCK)'), 't_Users.Id', '=', 't_RequisitionLines.CreatedBy')
+            ->leftJoin(DB::raw('t_ItemCategories WITH (NOLOCK)'), 't_Items.CategoryId', '=', 't_ItemCategories.id')
             ->where('t_RequisitionLines.RequisitionId',$RequsitionId)
             ->select(
                 't_RequisitionLines.*',
                 't_Items.Name as ItemName',
                 't_Users.Name as UserName',
                 't_Items.UOM as UOMx',
+                't_ItemCategories.Name as Category',
                 DB::raw('t_RequisitionLines.ExpectedPrice * t_RequisitionLines.Quantity as ExpectedPrice'),
                 DB::raw('t_Items.UnitPrice * t_RequisitionLines.Quantity as ActualPrice'),
                 DB::raw("CASE
@@ -143,7 +149,8 @@ class RequisitionItemService
             WHEN t_RequisitionLines.Urgency = 4 THEN 'Low'
             ELSE 'Unknown'
         END as Urgency"),
-                DB::raw("FORMAT(t_RequisitionLines.CreatedOn, 'dd-MM-yyyy HH:mm') as CreatedOn")
+                DB::raw("FORMAT(t_RequisitionLines.CreatedOn, 'dd-MM-yyyy HH:mm') as CreatedOn"),
+                DB::raw("FORMAT(t_RequisitionLines.NeededBy, 'dd-MM-yyyy') as NeededBy")
             )
             ->get();
     }

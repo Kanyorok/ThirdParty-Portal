@@ -91,10 +91,12 @@
                                 <ul class="pc-submenu">
                                     <li class="pc-item"><a class="pc-link" href="{{route('requisition.create')}}"
                                             data-i18n="List">Requisition List</a></li>
-{{--                                    <li class="pc-item"><a class="pc-link" href="{{route('requisitionItem.create')}}"--}}
-{{--                                            data-i18n="Apply">Requisition Form</a></li>--}}
+
                                     <li class="pc-item"><a class="pc-link" href="{{route('requisitionItem.index')}}"
                                             data-i18n="Add">Requisition Approval</a></li>
+
+                                    <li class="pc-item"><a class="pc-link" href="{{route('requisitionItem.index')}}"
+                                                           data-i18n="Apply">Priority List</a></li>
                                 </ul>
                             </li>
                             <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Teacher">Items
