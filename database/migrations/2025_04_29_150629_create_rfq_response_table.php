@@ -14,14 +14,11 @@ return new class extends Migration
         Schema::create('t_RFQResponse', function (Blueprint $table) {
             $table->id('Id');
             $table->string('RFQNumber')->unique()->comment('Unique identifier for the RFQ');
-            $table->string('SupplierName');
-            $table->Integer('Quantity');
-            $table->string('Description')->nullable()->comment('Quote Response description');
-            $table->decimal('QuotedPrice', 10, 2);
-            $table->decimal('TotalPayable', 10, 2);
-            $table->string('Currency')->default('USD');
-            $table->Integer('DurationDays')->default(0);
-            $table->json('RequisitionItems')->nullable();
+            $table->string('SupplierName'); //Sorted
+            $table->decimal('TotalPayable', 10, 2); //Sorted
+            $table->string('Currency')->default('KES'); //Sorted
+            $table->Integer('DurationDays')->default(0); //Sorted
+            $table->json('RequisitionItems')->nullable(); //sorted
             $table->foreignId('RFQId')->references('Id')->on('t_RFQ')->onDelete('cascade');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');

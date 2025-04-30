@@ -96,7 +96,6 @@ class RFQController extends Controller
 
         // Fetch supplier details
         $suppliers = Supplier::whereIn('Id', $request->suppliers)->get(['SupplierName', 'ContactEmail']);
-        dd($suppliers);
         // Update RFQ status to Approved and store supplier details
         $rfq->update([
             'Status' => 'Approved',
@@ -131,6 +130,7 @@ class RFQController extends Controller
     /**
      * Display the specified resource.
      */
+
     public function show($id)
     {
         $rfq = RFQ::with(['category'])->findOrFail($id);
