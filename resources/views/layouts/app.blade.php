@@ -186,6 +186,56 @@
 
                         </ul>
                     </li>
+                    <li class="pc-item pc-hasmenu">
+                        <a href="#!" class="pc-link">
+                            <span class="pc-micon"><i data-feather="truck" class="pc-icon"></i></span>
+                            <span class="pc-mtext" data-i18n="Fleet Management">Fleet Management</span>
+                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                        </a>
+                    </li>
+                    <li class="pc-item pc-hasmenu">
+                        <a href="#!" class="pc-link">
+                            <span class="pc-micon"><i data-feather="file-text" class="pc-icon"></i></span>
+                            <span class="pc-mtext" data-i18n="Document Management">Document Management</span>
+                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                        </a>
+                    </li>
+                    <li class="pc-item pc-hasmenu">
+                        <a href="#!" class="pc-link">
+                            <span class="pc-micon"><i data-feather="home" class="pc-icon"></i></span>
+                            <span class="pc-mtext" data-i18n="Property Management">Property Management</span>
+                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                        </a>
+                    </li>
+                    <li class="pc-item pc-hasmenu">
+                        <a href="#!" class="pc-link">
+                            <span class="pc-micon"><i data-feather="users" class="pc-icon"></i></span>
+                            <span class="pc-mtext" data-i18n="HRMS">HRMS</span>
+                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                        </a>
+                    </li>
+                    <li class="pc-item pc-hasmenu">
+                        <a href="#!" class="pc-link">
+                            <span class="pc-micon"><i data-feather="briefcase" class="pc-icon"></i></span>
+                            <span class="pc-mtext" data-i18n="Legal">Legal</span>
+                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                        </a>
+                    </li>
+                    <li class="pc-item pc-hasmenu">
+                        <a href="#!" class="pc-link">
+                            <span class="pc-micon"><i data-feather="check-circle" class="pc-icon"></i></span>
+                            <span class="pc-mtext" data-i18n="Audit Management">Audit Management</span>
+                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                        </a>
+                    </li>
+                    <li class="pc-item pc-hasmenu">
+                        <a href="#!" class="pc-link">
+                            <span class="pc-micon"><i data-feather="dollar-sign" class="pc-icon"></i></span>
+                            <span class="pc-mtext" data-i18n="Budgeting">Budgeting</span>
+                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                        </a>
+                    </li>
+                    
 
                     <li class="pc-item pc-caption"><label data-i18n="Widget">Settings</label>
                         <svg class="pc-icon">
