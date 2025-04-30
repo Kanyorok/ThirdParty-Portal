@@ -6,7 +6,6 @@
     <h3>Create RFQ</h3>
 
     <div class="container mt-3">
-        <h3>RFQ Details</h3>
         <form method="POST" action="{{ route('rfqs.store') }}">
             @csrf
 
