@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('t_RFQResponse', function (Blueprint $table) {
             $table->id('Id');
-            $table->string('RFQNumber')->unique()->comment('Unique identifier for the RFQ');
+            $table->string('RFQNumber');
             $table->string('SupplierName'); //Sorted
             $table->decimal('TotalPayable', 10, 2); //Sorted
             $table->string('Currency')->default('KES'); //Sorted

@@ -12,6 +12,8 @@
                 <tr>
                     <th>#</th>
                     <th>RFQ Response Number</th>
+                    <th>RFQ Number</th>
+                    <th>Supplier Name</th>
                     <th>Items Quoted</th>
                     <th>Total Price</th>
                     <th>Days to Delivery</th>
@@ -24,6 +26,8 @@
                 <tr>
                     <td>{{ $loop->iteration }}</td>
                     <td>{{ $response->RFQResponseNumber }}</td>
+                    <td>{{ $response->RFQNumber }}</td>
+                    <td>{{ $response->SupplierName }}</td>
                     <td>
                         @php
                             $requisitionItems = json_decode($response->RequisitionItems, true); // Decode JSON to array
