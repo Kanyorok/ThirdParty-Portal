@@ -13,6 +13,7 @@ use App\Http\Controllers\Procurement\SupplierController;
 use App\Http\Controllers\Procurement\ProcurementPeriodController;
 use App\Http\Controllers\Procurement\ProcurementPlanController;
 use App\Http\Controllers\Procurement\RFQController;
+use App\Http\Controllers\Procurement\RFQResponseController;
 
 Route::namespace('Procurement')->group(function () {
 
@@ -80,4 +81,15 @@ Route::namespace('Procurement')->group(function () {
     Route::get('/rfqs', [RFQController::class, 'index'])->name('rfqs.index');
     Route::post('/rfqs/{rfq}/approve', [RFQController::class, 'approve'])->name('rfqs.approve');
     Route::post('/rfqs/{rfq}/reject', [RFQController::class, 'reject'])->name('rfqs.reject');
+    
+
+    // RFQ Response routes
+    Route::get('/rfqresponses', [RFQResponseController::class, 'index'])->name('rfqresponses.index');
+    Route::get('/rfqresponses/create', [RFQResponseController::class, 'create'])->name('rfqresponses.create');
+    Route::post('/rfqresponses', [RFQResponseController::class, 'store'])->name('rfqresponses.store');
+    Route::get('/rfqresponses/{id}', [RFQResponseController::class, 'show'])->name('rfqresponses.show');
+    Route::get('/rfqresponses/{id}/edit', [RFQResponseController::class, 'edit'])->name('rfqresponses.edit');
+    Route::put('/rfqresponses/{id}', [RFQResponseController::class, 'update'])->name('rfqresponses.update');
+    Route::delete('/rfqresponses/{id}', [RFQResponseController::class, 'destroy'])->name('rfqresponses.destroy');
+    Route::get('/rfqs/{rfqId}/requisition-items', [RFQResponseController::class, 'getRequisitionItems']);
 });

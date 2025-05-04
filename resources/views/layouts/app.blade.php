@@ -4,8 +4,6 @@
 <head>
     @include('layouts._partials._head')
     <title>{{ config('app.name') }} - @yield('title')</title>
-    <link href="{{ asset('css/select2.min.css') }}" rel="stylesheet">
-<script src="{{ asset('js/select2.min.js') }}"></script>
 </head>
 
 <body data-pc-preset="preset-1" data-pc-sidebar-caption="true" data-pc-layout="vertical" data-pc-direction="ltr"
@@ -171,8 +169,8 @@
                                             data-i18n="View RFQs">View RFQs</a>
                                     </li>
                                     <li class="pc-item">
-                                        <a class="pc-link" href="#"
-                                            data-i18n="RFQ Response">RFQ Response</a>
+                                        <a class="pc-link" href="{{ route('rfqresponses.index') }}"
+                                            data-i18n="RFQ Response">RFQ Responses</a>
                                     </li>
                                     <li class="pc-item">
                                         <a class="pc-link" href="#"
@@ -190,6 +188,62 @@
 
                         </ul>
                     </li>
+                    <li class="pc-item pc-hasmenu">
+                        <a href="#!" class="pc-link">
+                            <span class="pc-micon"><i data-feather="truck" class="pc-icon"></i></span>
+                            <span class="pc-mtext" data-i18n="Fleet Management">Fleet Management</span>
+                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                        </a>
+                    </li>
+                    <li class="pc-item pc-hasmenu">
+                        <a href="#!" class="pc-link">
+                            <span class="pc-micon"><i data-feather="file-text" class="pc-icon"></i></span>
+                            <span class="pc-mtext" data-i18n="Document Management">Document Management</span>
+                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                        </a>
+                    </li>
+                    <li class="pc-item pc-hasmenu">
+                        <a href="#!" class="pc-link">
+                            <span class="pc-micon"><i data-feather="home" class="pc-icon"></i></span>
+                            <span class="pc-mtext" data-i18n="Property Management">Property Management</span>
+                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                        </a>
+                    </li>
+                    <li class="pc-item pc-hasmenu">
+                        <a href="#!" class="pc-link">
+                            <span class="pc-micon"><i data-feather="users" class="pc-icon"></i></span>
+                            <span class="pc-mtext" data-i18n="HRMS">HRMS</span>
+                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                        </a>
+                    </li>
+                    <li class="pc-item pc-hasmenu">
+                        <a href="#!" class="pc-link">
+                            <span class="pc-micon"><i data-feather="briefcase" class="pc-icon"></i></span>
+                            <span class="pc-mtext" data-i18n="Legal">Legal</span>
+                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                        </a>
+                    </li>
+                    <li class="pc-item pc-hasmenu">
+                        <a href="#!" class="pc-link">
+                            <span class="pc-micon"><i data-feather="check-circle" class="pc-icon"></i></span>
+                            <span class="pc-mtext" data-i18n="Audit Management">Audit Management</span>
+                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                        </a>
+                    </li>
+                    <li class="pc-item pc-hasmenu">
+                        <a href="#!" class="pc-link">
+                            <span class="pc-micon"><i data-feather="dollar-sign" class="pc-icon"></i></span>
+                            <span class="pc-mtext" data-i18n="Budgeting">Budgeting</span>
+                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                        </a>
+                    </li>
+                    <li class="pc-item pc-hasmenu">
+                        <a href="#!" class="pc-link">
+                            <span class="pc-micon"><i data-feather="archive" class="pc-icon"></i></span>
+                            <span class="pc-mtext" data-i18n="Inventory">Inventory</span>
+                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                        </a>
+                    </li>                   
 
                     <li class="pc-item pc-caption"><label data-i18n="Widget">Settings</label>
                         <svg class="pc-icon">

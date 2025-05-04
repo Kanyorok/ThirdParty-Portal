@@ -12,10 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('t_RequisitionLines', function (Blueprint $table) {
-//            $table->dropColumn(['Module', 'ExpectedPrice']);
-//            $table->dropColumn('NeededBy');
-//            $table->date('NeededBy')->nullable();
-//            $table->decimal('ExpectedPrice')->nullable();
+//            $table->dropColumn(['Module', 'ExpectedPrice']);           
+            $table->date('NeededBy')->nullable();
             $table->unsignedBigInteger('RequisitionID')->nullable()->change(); // make sure it's nullable
             $table->foreign('RequisitionID')->references('Id')->on('t_Requisitions')
                 ->onDelete('set null');
@@ -28,7 +26,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('t_RequisitionLines', function (Blueprint $table) {
-//            $table->string('Module')->nullable();
 //            $table->decimal('ExpectedPrice', 15, 2)->nullable();
             $table->dropForeign(['RequisitionID']);
             $table->dropColumn('NeededBy');

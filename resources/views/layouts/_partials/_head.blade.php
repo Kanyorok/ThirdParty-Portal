@@ -20,5 +20,7 @@
 <link rel="stylesheet" href="{{ asset('assets/css/style-preset.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/libs/dataTables/bootstrap5.min.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/libs/notyf/notyf.min.css') }}">
+<link href="{{ asset('css/select2.min.css') }}" rel="stylesheet">
+<script src="{{ asset('js/select2.min.js') }}"></script>
 @yield('styles')
 

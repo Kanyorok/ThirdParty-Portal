@@ -11,18 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('t_RequisitionLines', function (Blueprint $table) {
+        Schema::create('t_RFQResponse', function (Blueprint $table) {
             $table->id('Id');
-            $table->integer('RequisitionID')->nullable();
-            $table->string('Type');
-            $table->string('Item');
-            $table->longText('Description');
-            $table->string('UOM');
-            $table->float('Quantity')->default(0);
-            $table->decimal('ExpectedPrice')->default(0);
-            $table->smallInteger('Urgency');
-            $table->char('Status', 1)->default('p');
-            $table->date('NeededBy');
+            $table->string('RFQNumber');
+            $table->string('SupplierName'); //Sorted
+            $table->decimal('TotalPayable', 10, 2); //Sorted
+            $table->string('Currency')->default('KES'); //Sorted
+            $table->Integer('DurationDays')->default(0); //Sorted
+            $table->json('RequisitionItems')->nullable(); //sorted
+            $table->foreignId('RFQId')->references('Id')->on('t_RFQ')->onDelete('cascade');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
@@ -37,6 +34,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('t_RequisitionLines');
+        Schema::dropIfExists('t_RFQResponse');
     }
 };

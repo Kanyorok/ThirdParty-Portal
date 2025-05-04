@@ -43,14 +43,19 @@ class RFQController extends Controller
             'SubmissionDeadline' => 'required|date|after:today',
         ]);
 
-        // 2. Fetch items + quantities for this category
+        // Fetch items + quantities for this category
         $items = DB::table('t_RequisitionLines as rl')
             ->join('t_Items as i', 'rl.Item', '=', 'i.id')
             ->where('rl.CategoryId', $request->ItemCategoryId)
             ->select('i.Name as name', 'rl.Quantity as quantity', 'i.UOM as uom', 'rl.Description as description')
             ->get();
 
-        // 3. Format items for JSON storage
+        // Check if no items are found
+        if ($items->isEmpty()) {
+            return redirect()->back()->with('warning', 'No items requisitioned with the chosen category.');
+        }
+
+        // Format items for JSON storage
         $requisitionItems = $items->map(function ($item) {
             return [
                 'name' => $item->name,
@@ -65,12 +70,9 @@ class RFQController extends Controller
         $lastNumber = $lastRFQ ? intval(substr($lastRFQ->RFQNumber, strlen($prefix))) : 0;
         $newRFQNumber = $prefix . str_pad($lastNumber + 1, 5, '0', STR_PAD_LEFT);
 
-        // 1. Generate RFQ number
-        $rfqNumber = $newRFQNumber;
-
-        // 4. Create the RFQ
+        // Create the RFQ
         $rfq = RFQ::create([
-            'RFQNumber' => $rfqNumber,
+            'RFQNumber' => $newRFQNumber,
             'ItemCategoryId' => $request->ItemCategoryId,
             'RequisitionItems' => $requisitionItems,
             'Comments' => $request->Comments,
@@ -79,14 +81,6 @@ class RFQController extends Controller
             'ModifiedBy' => auth()->user()->Id,
             'Status' => 'Pending',
         ]);
-
-        // 5. Notify suppliers
-        // foreach ($suppliers as $supplier) {
-        //     Mail::raw("You have a new RFQ for tender.", function ($message) use ($supplier) {
-        //         $message->to($supplier->ContactEmail)
-        //                 ->subject('RFQ Invitation');
-        //     });
-        // }
 
         return redirect()->route('rfqs.show', $rfq->Id)->with('success', 'RFQ created with requisition items and sent to suppliers.');
     }
@@ -102,7 +96,6 @@ class RFQController extends Controller
 
         // Fetch supplier details
         $suppliers = Supplier::whereIn('Id', $request->suppliers)->get(['SupplierName', 'ContactEmail']);
-        dd($suppliers);
         // Update RFQ status to Approved and store supplier details
         $rfq->update([
             'Status' => 'Approved',
@@ -137,6 +130,7 @@ class RFQController extends Controller
     /**
      * Display the specified resource.
      */
+
     public function show($id)
     {
         $rfq = RFQ::with(['category'])->findOrFail($id);
