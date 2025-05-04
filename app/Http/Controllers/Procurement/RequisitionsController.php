@@ -27,6 +27,16 @@ class RequisitionsController extends Controller
         return view('procurement.requisitions.index');
     }
 
+    public function approvalList(){
+        try {
+            $details = $this->service->fetchRequisition();
+            return view('procurement.requisition.approval', compact('details'));
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to fetch items: ' . $e->getMessage());
+        }
+    }
+
+
     /**
      * Show the form for creating a new resource.
      */

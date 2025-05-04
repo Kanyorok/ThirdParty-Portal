@@ -92,7 +92,7 @@
                                     <li class="pc-item"><a class="pc-link" href="{{route('requisition.create')}}"
                                             data-i18n="List">Requisition List</a></li>
 
-                                    <li class="pc-item"><a class="pc-link" href="{{route('requisitionItem.index')}}"
+                                    <li class="pc-item"><a class="pc-link" href="{{route('requisition.approval')}}"
                                             data-i18n="Add">Requisition Approval</a></li>
 
                                     <li class="pc-item"><a class="pc-link" href="{{route('requisitionItem.index')}}"

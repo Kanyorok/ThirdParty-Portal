@@ -37,19 +37,17 @@
                         <tbody>
                              @forelse($details as $item)
                                 <tr>
+                                    <td>{{$loop->iteration }}</td>
                                     <td>{{ $item->RequisitionNo }}</td>
-                                    <td>{{ $item->CreatedOn }}</td>
-                                    <td>{{ $item->Bra }}</td>
-                                    <td>{{ $item->ItemName }}</td>
-                                    <td>{{ $item->Description }}</td>
-                                    <td>{{ $item->UOMx }}</td>
-                                    <td>{{ $item->Quantity }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($item->CreatedOn)->format('d-m-Y') }}</td>
+                                    <td>{{ $item->BranchID }}</td>
+                                    <td>{{ $item->DepartmentID }}</td>
+                                    <td>{{ $item->Category }}</td>
+                                    <td>{{ $item->Remarks }}</td>
+                                    <td>{{ $item->itemcount }}</td>
                                     <td>{{ number_format($item->ExpectedPrice, 2) }}</td>
-                                    <td>{{ number_format($item->ActualPrice, 2) }}</td>
-                                    <td>{{ $item->Urgency }}</td>
                                     <td>{{ $item->Status }}</td>
-                                    <td>{{ $item->UserName }}</td>
-                                    <td>{{ $item->CreatedOn }}</td>
+                                    <td><a href="{{ route('requisitionItem.show',['id' => $item->Id]) }}" class="btn btn-info">View</a></td>
                                 </tr>
                             @empty
                                 <tr>
