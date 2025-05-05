@@ -199,6 +199,13 @@
                             <span class="pc-mtext" data-i18n="Fleet Management">Fleet Management</span>
                             <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
                         </a>
+                        <ul class="pc-submenu">
+                            <li class="pc-item"><a class="pc-link" href="#" data-i18n="Procurement List">Driver Management</a></li>
+                            <li class="pc-item"><a class="pc-link" href="#" data-i18n="Finance">Ledger Accounts</a></li>
+                            <li class="pc-item"><a class="pc-link" href="#" data-i18n="Finance">Transaction Types</a></li>
+                            <li class="pc-item"><a class="pc-link" href="#" data-i18n="Finance">Bank Reconciliation</a></li>
+                            <li class="pc-item"><a class="pc-link" href="#" data-i18n="Finance">Period Mananagement</a></li>
+                        </ul>
                     </li>
                     <li class="pc-item pc-hasmenu">
                         <a href="#!" class="pc-link">
@@ -259,9 +266,26 @@
                     <li class="pc-item pc-hasmenu">
                         <a href="#!" class="pc-link">
                             <span class="pc-micon"><i data-feather="dollar-sign" class="pc-icon"></i></span>
-                            <span class="pc-mtext" data-i18n="Budgeting">Budgeting</span>
+                            <span class="pc-mtext" data-i18n="Budgeting">Finance</span>
                             <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
                         </a>
+                       
+                        <ul class="pc-submenu">
+                            <li class="pc-item"><a class="pc-link" href="{{ route('journalbatch.index') }}" data-i18n="Procurement List">Journal Batch</a></li>
+                            <li class="pc-item"><a class="pc-link" href="{{ route('ledgeraccounts.index') }}" data-i18n="Finance">Ledger Accounts</a></li>
+                            <li class="pc-item"><a class="pc-link" href="{{ route('transactiontypes.index') }}" data-i18n="Finance">Transaction Types</a></li>
+                            <li class="pc-item"><a class="pc-link" href="{{ route('bankreconciliation.index') }}" data-i18n="Finance">Bank Reconciliation</a></li>
+                            <li class="pc-item"><a class="pc-link" href="{{ route('periodmanagement.index') }}" data-i18n="Finance">Period Mananagement</a></li>
+                        </ul>
+                        <!-- <ul class="pc-submenu">
+                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
+                                    Journal Entries
+                                    </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item"><a class="pc-link" href="{{ route('journalbatch.index') }}" data-i18n="Procurement List">Journal Batch</a></li>
+                                </ul>
+                            </li>
+                        </ul> -->
                     </li>
                     <li class="pc-item pc-hasmenu">
                         <a href="#!" class="pc-link">

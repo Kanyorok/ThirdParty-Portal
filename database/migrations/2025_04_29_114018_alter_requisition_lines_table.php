@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('t_RequisitionLines', function (Blueprint $table) {
 //            $table->dropColumn(['Module', 'ExpectedPrice']);           
-            $table->date('NeededBy')->nullable();
+            $table->dropColumn('NeededBy');
             $table->unsignedBigInteger('RequisitionID')->nullable()->change(); // make sure it's nullable
             $table->foreign('RequisitionID')->references('Id')->on('t_Requisitions')
                 ->onDelete('set null');
