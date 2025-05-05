@@ -10,10 +10,10 @@ class AddPropertyController extends Controller
     //
     public function index()
     {
-        return view('property registry.add property.index');
+        return view('property.registry.index');
     }
 
     public function create(){
-        return view('property registry.add property.create');
+        return view('property.registry.create');
     }
 }
