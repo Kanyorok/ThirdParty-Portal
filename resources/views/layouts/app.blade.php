@@ -200,6 +200,7 @@
                             <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
                         </a>
                         <ul class="pc-submenu">
+                            <li class="pc-item"><a class="pc-link" href="{{ route('drivermanagement.index') }}" data-i18n="Driver Management">Driver Management</a></li>
                             <!-- <li class="pc-item"><a class="pc-link" href="#" data-i18n="Procurement List">Driver Management</a></li> -->
                             <li class="pc-item"><a class="pc-link" href="{{ route('tripmanagement.index') }}" data-i18n="fleetmanagement">Trip Management</a></li>
                             <li class="pc-item"><a class="pc-link" href="{{ route('fuelmanagement.index') }}" data-i18n="fleetmanagement">Fuel Management</a></li>
