@@ -178,6 +178,44 @@
                                     </li>
                                 </ul>
                             </li>
+                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Teacher">
+                                        Purchase Order
+                                    </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item">
+                                        <a class="pc-link" href="{{ route('purchaseOrder.index') }}"
+                                           data-i18n="View RFQs">View Orders</a>
+                                    </li>
+                                    <li class="pc-item">
+                                        <a class="pc-link" href="{{ route('purchaseOrder.create') }}"
+                                           data-i18n="RFQ Response">Create Orders</a>
+                                    </li>
+                                    <li class="pc-item">
+                                        <a class="pc-link" href="#"
+                                           data-i18n="RFQ Evaluation">Order Approval</a>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Teacher">
+                                        Sales Order
+                                    </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item">
+                                        <a class="pc-link" href="{{ route('salesOrder.index') }}"
+                                           data-i18n="View RFQs">View Orders</a>
+                                    </li>
+                                    <li class="pc-item">
+                                        <a class="pc-link" href="{{ route('salesOrder.create') }}"
+                                           data-i18n="RFQ Response">Create Orders</a>
+                                    </li>
+                                    <li class="pc-item">
+                                        <a class="pc-link" href="#"
+                                           data-i18n="RFQ Evaluation">Order Approval</a>
+                                    </li>
+                                </ul>
+                            </li>
+
                             <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
                                         Suppliers
                                     </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
