@@ -21,7 +21,15 @@ return new class extends Migration
             $table->dateTime('ModifiedOn');
             $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
             $table->softDeletes('DeletedOn');
+        
+            // New fields for evaluation criteria scores and comments
+            $table->integer('TechnicalQualityScore')->nullable();
+            $table->integer('PricingScore')->nullable();
+            $table->integer('DeliveryTimeScore')->nullable();
+            $table->integer('PastExperienceScore')->nullable();
+            $table->text('Comment')->nullable();
         });
+        
     }
 
     /**
@@ -29,6 +37,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('rfq_evaluate');
+        Schema::dropIfExists('t_RFQEvaluation');
     }
 };
