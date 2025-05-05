@@ -33,7 +33,7 @@ class RFQEvaluationController extends Controller
                             })
                             ->pluck('ContactEmail') // Extract SupplierName
                             ->unique(); // Ensure unique IDs
-
+        dd($supplierIds);
         // Fetch the suppliers based on the extracted IDs
         $suppliers = Supplier::whereIn('ContactEmail', $supplierIds)->get();     
         // Return the view with the form

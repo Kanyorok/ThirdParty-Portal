@@ -4,23 +4,34 @@ namespace App\Models\Procurement;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Procurement\RFQ;
+use App\Traits\Model\UserActorTrait;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class RFQEvaluation extends Model
 {
+    use UserActorTrait;
+    use SoftDeletes;
+
     protected $table = 't_RFQEvaluation';
     protected $primaryKey = 'Id';
-    public $timestamps = false;
+    
+    const CREATED_AT = 'CreatedOn';
+    const UPDATED_AT = 'ModifiedOn';
+    const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
         'RFQId',
-        'RFQNumber',
-        'RequisitionItems',
+        'RFQEvaluateNumber',
+        'TechnicalQualityScore',
+        'PricingScore',
+        'DeliveryTimeScore',
+        'PastExperienceScore',
+        'Comment',
         'SupplierName',
-        'Currency',
-        'DurationDays',
-        'TotalPayable',
-        'Comments',
         'CreatedBy',
+        'ModifiedBy',
+        'DeletedBy',
+        'DeletedOn',
         'CreatedOn',
         'ModifiedOn',
     ];
