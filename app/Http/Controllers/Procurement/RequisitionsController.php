@@ -16,7 +16,7 @@ class RequisitionsController extends Controller
     public function __construct(protected RequisitionService $service,protected RequisitionItemService $itemService)
     {
         $this->middleware('ajax')->except(['index', 'show', 'create']);
-        // $this->authorizeResource(Requisitions::class); // Uncomment if using authorization
+         $this->authorizeResource(Requisitions::class); // Uncomment if using authorization
     }
 
     /**
@@ -24,8 +24,25 @@ class RequisitionsController extends Controller
      */
     public function index()
     {
-        return view('procurement.requisitions.index');
+//        return view('procurement.requisitions.approval');
+        try {
+            $details = $this->service->fetchRequisition();
+            return view('procurement.requisitions.approval', compact('details'));
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to fetch items: ' . $e->getMessage());
+        }
     }
+
+    public function approvalList(){
+        return view("procurement.requisitions.approval");
+//        try {
+//            $details = $this->service->fetchRequisition();
+//            return view('procurement.requisition.approval', compact('details'));
+//        } catch (\Exception $e) {
+//            return redirect()->back()->with('error', 'Failed to fetch items: ' . $e->getMessage());
+//        }
+    }
+
 
     /**
      * Show the form for creating a new resource.

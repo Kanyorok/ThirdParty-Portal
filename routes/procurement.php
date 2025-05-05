@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Procurement\RequisitionItemsController;
+use App\Http\Controllers\Procurement\RequisitionsController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Procurement\ItemController;
 use App\Http\Controllers\Procurement\ModeTimelineController;
@@ -27,6 +28,13 @@ Route::namespace('Procurement')->group(function () {
 //    Route::get('requisitionItem/{id}', 'RequisitionItemsController@getRelatedRequisitionLines')->name('requisitionItem.list');
     Route::get('requisition/{id}', [RequisitionItemsController::class, 'show'])->name('requisitionItem.show');
     Route::get('requisitionItem/create/{id}', [RequisitionItemsController::class, 'create'])->name('requisitionItem.create');
+    Route::get('requisition/approval', [RequisitionsController::class,'approvalList'])->name('requisition.approval');
+
+    //Purchase Order
+    Route::resource('purchaseOrder', 'PurchaseOrderController');
+
+    //Sales Order
+    Route::resource('salesOrder', 'SalesOrderController');
 
 
 
@@ -80,7 +88,7 @@ Route::namespace('Procurement')->group(function () {
     Route::get('/rfqs', [RFQController::class, 'index'])->name('rfqs.index');
     Route::post('/rfqs/{rfq}/approve', [RFQController::class, 'approve'])->name('rfqs.approve');
     Route::post('/rfqs/{rfq}/reject', [RFQController::class, 'reject'])->name('rfqs.reject');
-    
+
 
     // RFQ Response routes
     Route::get('/rfqresponses', [RFQResponseController::class, 'index'])->name('rfqresponses.index');

@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Requisition Approval')
+@section('title', 'Requisition Priority List')
 @section('styles')
     <link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
     <style>
@@ -24,13 +24,16 @@
                             <th>Requisition Date</th>
                             <th>Branch</th>
                             <th>Department</th>
-                            <th>Remarks</th>
-                            <th>Total Items</th>
-                            <th>Total Cost</th>
-                            <th>Status</th>
+                            <th>Item</th>
+                            <th>Quantity</th>
+                            <th>Unit Price</th>
+                            <th>Total Price</th>
+                            <th>Urgency</th>
+                            <th>NeededBy</th>
+                            <th>Approval Status</th>
                             <th>Requested By</th>
                             {{-- <th>Approved By</th> --}}
-                            <th>Action</th>
+{{--                            <th>Action</th>--}}
                         </tr>
 
                         </thead>
@@ -39,15 +42,19 @@
                             <tr>
                                 <td>{{$loop->iteration }}</td>
                                 <td>{{ $item->RequisitionNo }}</td>
-                                <td>{{ \Carbon\Carbon::parse($item->CreatedOn)->format('d-m-Y') }}</td>
+                                <td>{{ ($item->CreatedOn) }}</td>
                                 <td>{{ $item->BranchID }}</td>
                                 <td>{{ $item->DepartmentID }}</td>
-                                <td>{{ $item->Category }}</td>
-                                <td>{{ $item->Remarks }}</td>
-                                <td>{{ $item->itemcount }}</td>
+                                <td>{{ $item->Item }}</td>
+                                <td>{{ $item->Quantity }}</td>
+                                <td>{{ number_format($item->UnitPrice, 2) }}</td>
+{{--                                <td>{{ $item->UnitPrice }}</td>--}}
                                 <td>{{ number_format($item->ExpectedPrice, 2) }}</td>
+                                <td>{{ $item->Urgency }}</td>
+                                <td>{{ $item->NeededBy }}</td>
                                 <td>{{ $item->Status }}</td>
-                                <td><a href="{{ route('requisitionItem.show',['id' => $item->Id]) }}" class="btn btn-info">View</a></td>
+                                <td>{{ $item->UserName }}</td>
+{{--                                <td><a href="{{ route('requisitionItem.show',['id' => $item->Id]) }}" class="btn btn-info">View</a></td>--}}
                             </tr>
                         @empty
                             <tr>

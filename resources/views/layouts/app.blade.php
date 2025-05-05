@@ -89,10 +89,12 @@
                                 <ul class="pc-submenu">
                                     <li class="pc-item"><a class="pc-link" href="{{route('requisition.create')}}"
                                             data-i18n="List">Requisition List</a></li>
-{{--                                    <li class="pc-item"><a class="pc-link" href="{{route('requisitionItem.create')}}"--}}
-{{--                                            data-i18n="Apply">Requisition Form</a></li>--}}
-                                    <li class="pc-item"><a class="pc-link" href="{{route('requisitionItem.index')}}"
+
+                                    <li class="pc-item"><a class="pc-link" href="{{route('requisition.index')}}"
                                             data-i18n="Add">Requisition Approval</a></li>
+
+                                    <li class="pc-item"><a class="pc-link" href="{{route('requisitionItem.index')}}"
+                                                           data-i18n="Apply">Priority List</a></li>
                                 </ul>
                             </li>
                             <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Teacher">Items
@@ -176,6 +178,44 @@
                                     </li>
                                 </ul>
                             </li>
+                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Teacher">
+                                        Purchase Order
+                                    </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item">
+                                        <a class="pc-link" href="{{ route('purchaseOrder.index') }}"
+                                           data-i18n="View RFQs">View Orders</a>
+                                    </li>
+                                    <li class="pc-item">
+                                        <a class="pc-link" href="{{ route('purchaseOrder.create') }}"
+                                           data-i18n="RFQ Response">Create Orders</a>
+                                    </li>
+                                    <li class="pc-item">
+                                        <a class="pc-link" href="#"
+                                           data-i18n="RFQ Evaluation">Order Approval</a>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Teacher">
+                                        Sales Order
+                                    </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item">
+                                        <a class="pc-link" href="{{ route('salesOrder.index') }}"
+                                           data-i18n="View RFQs">View Orders</a>
+                                    </li>
+                                    <li class="pc-item">
+                                        <a class="pc-link" href="{{ route('salesOrder.create') }}"
+                                           data-i18n="RFQ Response">Create Orders</a>
+                                    </li>
+                                    <li class="pc-item">
+                                        <a class="pc-link" href="#"
+                                           data-i18n="RFQ Evaluation">Order Approval</a>
+                                    </li>
+                                </ul>
+                            </li>
+
                             <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
                                         Suppliers
                                     </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
@@ -295,6 +335,7 @@
                             <span class="pc-mtext" data-i18n="Inventory">Inventory</span>
                             <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
                         </a>
+
                         <ul class="pc-submenu">
                             <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
                                         Item Master
@@ -367,11 +408,7 @@
 
                         </ul>
 
-                                
-
-                        
                     </li>                   
-
                     <li class="pc-item pc-caption"><label data-i18n="Widget">Settings</label>
                         <svg class="pc-icon">
                             <use xlink:href="#custom-presentation-chart"></use>
