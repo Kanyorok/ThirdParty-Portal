@@ -57,5 +57,7 @@ Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function (
 
     require __DIR__ . '/crm.php';
     require __DIR__ . '/procurement.php';
+    require __DIR__ . '/inventory.php';
+    require __DIR__ . '/property.php';
     require __DIR__ . '/finance.php';
 });
