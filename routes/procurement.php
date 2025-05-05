@@ -13,6 +13,7 @@ use App\Http\Controllers\Procurement\ProcurementPeriodController;
 use App\Http\Controllers\Procurement\ProcurementPlanController;
 use App\Http\Controllers\Procurement\RFQController;
 use App\Http\Controllers\Procurement\RFQResponseController;
+use App\Http\Controllers\Procurement\RFQEvaluationController;
 
 Route::namespace('Procurement')->group(function () {
 
@@ -24,12 +25,7 @@ Route::namespace('Procurement')->group(function () {
     Route::get('requisitionItem/getItemDetails/{item}', 'RequisitionItemsController@getItemDetails')->name('requisitionItem.getItemDetails');
 //    Route::get('requisitionItem/{id}', 'RequisitionItemsController@getRelatedRequisitionLines')->name('requisitionItem.list');
     Route::get('requisition/{id}', [RequisitionItemsController::class, 'show'])->name('requisitionItem.show');
-    Route::get('requisitionItem/create/{id}', [RequisitionItemsController::class, 'create'])->name('requisitionItem.create');
-
-
-
-    //Route::get('requisitionItem/getItem/{type}', [RequisitionItemsController::class, 'getItems'])->name('requisitionItem.getItems');
-
+    Route::get('requisitionItem/create/{id}', [RequisitionItemsController::class, 'create'])->name('requisitionItems.create');
 
     //Items
     Route::resource('items', 'ItemController');
@@ -89,4 +85,9 @@ Route::namespace('Procurement')->group(function () {
     Route::put('/rfqresponses/{id}', [RFQResponseController::class, 'update'])->name('rfqresponses.update');
     Route::delete('/rfqresponses/{id}', [RFQResponseController::class, 'destroy'])->name('rfqresponses.destroy');
     Route::get('/rfqs/{rfqId}/requisition-items', [RFQResponseController::class, 'getRequisitionItems']);
+
+    // RFQ Evaluation routes
+    Route::get('/rfq-evaluations', [RFQEvaluationController::class, 'index'])->name('evaluations.index');
+    Route::get('/rfq-evaluations/create', [RFQEvaluationController::class, 'create'])->name('evaluations.create');
+    Route::post('/rfq-evaluations', [RFQEvaluationController::class, 'store'])->name('evaluations.store');
 });
