@@ -95,20 +95,16 @@ class RequisitionItemService
             ->leftJoin(DB::raw('t_Users WITH (NOLOCK)'), 't_Users.Id', '=', 't_RequisitionLines.CreatedBy')
             ->leftJoin(DB::raw('t_ItemCategories WITH (NOLOCK)'), 't_Items.CategoryId', '=', 't_ItemCategories.id')
             ->select(
-                't_RequisitionLines.*',
-                't_Items.Name as ItemName',
+                't_Items.Name as Item',
                 't_Users.Name as UserName',
                 't_Items.UOM as UOMx',
                 't_ItemCategories.Name as Category',
                 't_Requisitions.RequisitionNo',
+                't_Requisitions.BranchID',
+                't_Requisitions.DepartmentID',
+                't_Items.UnitPrice',
                 DB::raw('t_RequisitionLines.ExpectedPrice * t_RequisitionLines.Quantity as ExpectedPrice'),
                 DB::raw('t_Items.UnitPrice * t_RequisitionLines.Quantity as ActualPrice'),
-                DB::raw("CASE
-            WHEN t_RequisitionLines.Status = 'p' THEN 'Pending'
-            WHEN t_RequisitionLines.Status = 'a' THEN 'Approved'
-            WHEN t_RequisitionLines.Status = 'r' THEN 'Rejected'
-            ELSE 'Unknown'
-        END as Status"),
                 DB::raw("CASE
             WHEN t_RequisitionLines.Urgency = 1 THEN 'Very High'
             WHEN t_RequisitionLines.Urgency = 2 THEN 'High'
@@ -116,9 +112,22 @@ class RequisitionItemService
             WHEN t_RequisitionLines.Urgency = 4 THEN 'Low'
             ELSE 'Unknown'
         END as Urgency"),
-                DB::raw("FORMAT(t_RequisitionLines.CreatedOn, 'dd-MM-yyyy HH:mm') as CreatedOn")
-                )
-                    ->get();
+                DB::raw("FORMAT(t_RequisitionLines.CreatedOn, 'dd-MM-yyyy') as CreatedOn"),
+                DB::raw(" t_Requisitions.RequisitionNo,
+                t_Requisitions.BranchID,
+                t_Requisitions.DepartmentID,
+                t_Requisitions.Remarks,
+                t_Requisitions.Category,
+                t_Requisitions.Id,
+                FORMAT(t_RequisitionLines.NeededBy, 'dd-MM-yyyy') as NeededBy,
+                case when t_RequisitionLines.Status = 'p' then 'Pending' when t_RequisitionLines.Status = 'a'
+                then 'Approved' when t_RequisitionLines.Status = 'r' then 'Rejected'
+                when t_RequisitionLines.Status = 'd' then 'Deferred'
+                else  'Unknown' end as Status,
+                t_RequisitionLines.ExpectedPrice,
+                t_RequisitionLines.Quantity"),
+                )->orderByRaw('t_RequisitionLines.Urgency, t_RequisitionLines.NeededBy ASC')
+                ->get();
     }
 
     public static function getRequisitionRelatedItems($RequsitionId){

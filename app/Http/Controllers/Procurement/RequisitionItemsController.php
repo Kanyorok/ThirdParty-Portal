@@ -84,7 +84,7 @@ class RequisitionItemsController extends Controller
 //
         try {
             $details = $this->service->getRequisitionItems();
-            return view('procurement.requisitionItems.approval', compact('details'));
+            return view('procurement.requisitionItems.priorityList', compact('details'));
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Failed to fetch items: ' . $e->getMessage());
         }

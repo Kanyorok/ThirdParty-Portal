@@ -90,7 +90,7 @@
                                     <li class="pc-item"><a class="pc-link" href="{{route('requisition.create')}}"
                                             data-i18n="List">Requisition List</a></li>
 
-                                    <li class="pc-item"><a class="pc-link" href="{{route('requisition.approval')}}"
+                                    <li class="pc-item"><a class="pc-link" href="{{route('requisition.index')}}"
                                             data-i18n="Add">Requisition Approval</a></li>
 
                                     <li class="pc-item"><a class="pc-link" href="{{route('requisitionItem.index')}}"
@@ -243,7 +243,7 @@
                             <span class="pc-mtext" data-i18n="Inventory">Inventory</span>
                             <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
                         </a>
-                    </li>                   
+                    </li>
 
                     <li class="pc-item pc-caption"><label data-i18n="Widget">Settings</label>
                         <svg class="pc-icon">
