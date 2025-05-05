@@ -14,6 +14,8 @@ use App\Http\Controllers\Procurement\ProcurementPeriodController;
 use App\Http\Controllers\Procurement\ProcurementPlanController;
 use App\Http\Controllers\Procurement\RFQController;
 use App\Http\Controllers\Procurement\RFQResponseController;
+use App\Http\Controllers\Procurement\GoodsReceiptController;
+
 
 Route::namespace('Procurement')->group(function () {
 
@@ -97,4 +99,9 @@ Route::namespace('Procurement')->group(function () {
     Route::put('/rfqresponses/{id}', [RFQResponseController::class, 'update'])->name('rfqresponses.update');
     Route::delete('/rfqresponses/{id}', [RFQResponseController::class, 'destroy'])->name('rfqresponses.destroy');
     Route::get('/rfqs/{rfqId}/requisition-items', [RFQResponseController::class, 'getRequisitionItems']);
+
+    //Receipts
+
+    Route::resource('procurementreceipts', GoodsReceiptController::class);
+
 });
