@@ -60,4 +60,6 @@ Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function (
     require __DIR__ . '/inventory.php';
     require __DIR__ . '/property.php';
     require __DIR__ . '/finance.php';
+    require __DIR__ . '/fleet.php';
+
 });
