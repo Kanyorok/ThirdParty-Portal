@@ -18,8 +18,8 @@ class RequisitionItemsController extends Controller
     public function __construct(protected RequisitionItemService $service,protected ItemService $itemService)
     {
 
-        $this->middleware('ajax')->except(['index', 'create']);
-        $this->authorizeResource(RequisitionLines::class);
+        $this->middleware('ajax')->except(['index', 'create','show']);
+//        $this->authorizeResource(RequisitionLines::class);
     }
     /**
      * Display a listing of the resource.
@@ -27,6 +27,7 @@ class RequisitionItemsController extends Controller
 
     public function getItems($type): JsonResponse
     {
+//        $this->authorize('view',RequisitionLines::class);
         try{
             $items = $this->itemService->getItemByType($type);
             return response()->json([
@@ -200,6 +201,7 @@ class RequisitionItemsController extends Controller
      */
     public function show(string $id)
     {
+//        dd($id);
         try {
             $details = $this->service->getRequisitionRelatedItems($id);
             return view('procurement.requisitionItems.create', compact('details'));

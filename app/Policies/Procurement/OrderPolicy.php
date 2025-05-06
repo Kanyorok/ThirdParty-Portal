@@ -2,24 +2,30 @@
 
 namespace App\Policies\Procurement;
 
-use App\Models\Procurement\Requisitions;
+use App\Models\Procurement\Order;
 use App\Models\User;
 
-class RequisitionPolicy
+class OrderPolicy
 {
+    /**
+     * Create a new policy instance.
+     */
+    public function __construct()
+    {
+        //
+    }
     /**
      * Determine whether the user can view any models.
      */
     public function viewAny(User $user): bool
     {
-
         return true;
     }
 
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, Requisitions $requisition): bool
+    public function view(User $user, Order $order): bool
     {
         return true;
     }
@@ -35,7 +41,7 @@ class RequisitionPolicy
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, Requisitions $requisition): bool
+    public function update(User $user, Order $order): bool
     {
         return true;
     }
@@ -43,7 +49,7 @@ class RequisitionPolicy
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, Requisitions $requisition): bool
+    public function delete(User $user, Order $order): bool
     {
         return true;
     }
@@ -51,7 +57,7 @@ class RequisitionPolicy
     /**
      * Determine whether the user can restore the model.
      */
-    public function restore(User $user, Requisitions $requisition): bool
+    public function restore(User $user, Order $order): bool
     {
         return true;
     }
@@ -59,7 +65,7 @@ class RequisitionPolicy
     /**
      * Determine whether the user can permanently delete the model.
      */
-    public function forceDelete(User $user, Requisitions $requisition): bool
+    public function forceDelete(User $user, Order $order): bool
     {
         return true;
     }

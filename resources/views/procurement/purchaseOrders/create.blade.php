@@ -31,7 +31,11 @@
             <div class="col-md-6">
                 <label>Supplier</label>
                 <select class="form-control">
-                    <option>Select supplier</option>
+                    <option selected disabled>Select supplier</option>
+{{--                     @foreach ($Details as $vendor)--}}
+{{--                <option value="{{ $vendor->Id }}">{{ $vendor->Name }}</option>--}}
+{{--                    @endforeach--}}
+
                     <!-- Loop suppliers here -->
                 </select>
             </div>
