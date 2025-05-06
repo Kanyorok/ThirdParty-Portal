@@ -266,7 +266,7 @@
                     <option disabled selected>Select Item Code</option>
                 </select>
             </td>
-            <td><input type="text" class="form-control form-control-sm itemDescription" name="item_description[]" id="Description" ></td>
+            <td><input type="text" class="form-control form-control-sm itemDescription" name="item_description[]" id="Description" readonly></td>
             <td><input type="number" class="form-control form-control-sm qty quantity" name="quantity[]" id="Quantity" ></td>
             <td><input type="number" class="form-control form-control-sm unit-price" name="unit_price[]" id="Price" ></td>
             <td><input type="number" class="form-control form-control-sm tax" name="tax[]" id="Tax" ></td>
