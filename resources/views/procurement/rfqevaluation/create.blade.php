@@ -12,11 +12,11 @@
     <div class="mb-3 row">
         <label class="col-sm-2 col-form-label">Committee Member</label>
         <div class="col-sm-4">
-            <input type="text" class="form-control" value="John Doe" readonly>
+            <input type="text" class="form-control" value="John Doe" readonly />
         </div>
         <label class="col-sm-2 col-form-label">UserID</label>
         <div class="col-sm-4">
-            <input type="text" class="form-control" value="auto-populated" readonly>
+            <input type="text" class="form-control" value="auto-populated" readonly />
         </div>
     </div>
 
@@ -24,21 +24,22 @@
     <div class="mb-3 row">
         <label class="col-sm-2 col-form-label">RFQ No</label>
         <div class="col-sm-4">
-            <select class="form-select">
-                <option>Select DropDown Or Search</option>
-                <option>RFQ001</option>
-                <option>RFQ002</option>
+            <select class="form-select" id="rfq-select">
+                <option value="">Select DropDown Or Search</option>
+                @foreach($rfqs as $rfq)
+                    <option value="{{ $rfq->Id }}" data-comments="{{ $rfq->Comments }}">{{ $rfq->RFQNumber }}</option>
+                @endforeach
             </select>
         </div>
-        <label class="col-sm-2 col-form-label">RFQ Description</label>
+        <label class="col-sm-2 col-form-label">RFQ Comments</label>
         <div class="col-sm-4">
-            <input type="text" class="form-control" placeholder="Load from DB" readonly>
+            <input type="text" class="form-control" id="rfq-total-comments" placeholder="Load from DB" readonly />
         </div>
     </div>
 
     <!-- Supplier Table -->
     <div class="table-responsive mb-4">
-        <table class="table table-bordered">
+        <table class="table table-bordered" id="supplier-table">
             <thead class="table-light">
                 <tr>
                     <th>Suppliers</th>
@@ -50,25 +51,7 @@
             </thead>
             <tbody>
                 <tr>
-                    <td>Supplier A</td>
-                    <td>Kes. 2,500</td>
-                    <td>6 Days</td>
-                    <td>Submitted</td>
-                    <td><a href="#" class="btn btn-sm btn-link">View Quote</a></td>
-                </tr>
-                <tr>
-                    <td>Supplier B</td>
-                    <td>Kes. 3,000</td>
-                    <td>5 Days</td>
-                    <td>Submitted</td>
-                    <td><a href="#" class="btn btn-sm btn-link">View Quote</a></td>
-                </tr>
-                <tr>
-                    <td>Supplier C</td>
-                    <td>-</td>
-                    <td>-</td>
-                    <td>No Reply</td>
-                    <td><a href="#" class="btn btn-sm btn-link disabled">View Quote</a></td>
+                    <td colspan="5" class="text-center">Select an RFQ to view supplier details</td>
                 </tr>
             </tbody>
         </table>
@@ -138,3 +121,63 @@
 
 </div>
 @endsection
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const rfqSelect = document.getElementById('rfq-select');
+        const rfqComments = document.getElementById('rfq-total-comments');
+        const supplierTableBody = document.querySelector('#supplier-table tbody');
+
+        // Update RFQ Comments when an RFQ is selected
+        rfqSelect.addEventListener('change', function () {
+            const selectedOption = rfqSelect.options[rfqSelect.selectedIndex];
+            const comments = selectedOption.getAttribute('data-comments') || '';
+
+            // Update the RFQ Comments input field
+            rfqComments.value = comments;
+
+            // Fetch supplier details for the selected RFQ
+            const rfqId = this.value;
+
+            // Clear the table body
+            supplierTableBody.innerHTML = '<tr><td colspan="5" class="text-center">Loading...</td></tr>';
+
+            if (!rfqId) {
+                supplierTableBody.innerHTML = '<tr><td colspan="5" class="text-center">Select an RFQ to view supplier details</td></tr>';
+                return;
+            }
+
+            // Fetch RFQ responses for the selected RFQ
+            fetch(`/rfq-responses/${rfqId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length > 0) {
+                        supplierTableBody.innerHTML = ''; // Clear the loading message
+
+                        data.forEach(response => {
+                            const status = response.TotalPayable ? 'Submitted' : 'No Reply';
+                            const action = response.TotalPayable
+                                ? `<a href="#" class="btn btn-sm btn-link">View Quote</a>`
+                                : `<a href="#" class="btn btn-sm btn-link disabled">View Quote</a>`;
+
+                            supplierTableBody.innerHTML += `
+                                <tr>
+                                    <td>${response.SupplierName ? response.SupplierName : 'Unknown'}</td>
+                                    <td>${response.TotalPayable ? `Kes. ${response.TotalPayable}` : '-'}</td>
+                                    <td>${response.DurationDays ? `${response.DurationDays} Days` : '-'}</td>
+                                    <td>${status}</td>
+                                    <td>${action}</td>
+                                </tr>
+                            `;
+                        });
+                    } else {
+                        supplierTableBody.innerHTML = '<tr><td colspan="5" class="text-center">No supplier details found for the selected RFQ</td></tr>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching RFQ responses:', error);
+                    supplierTableBody.innerHTML = '<tr><td colspan="5" class="text-center">Failed to load supplier details. Please try again.</td></tr>';
+                });
+        });
+    });
+</script>
