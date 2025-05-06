@@ -277,7 +277,7 @@
                                     </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
                                 <ul class="pc-submenu">
                                     <li class="pc-item"><a class="pc-link" href="{{ route('addproperty.index') }}" data-i18n="Property List">Add Property</a></li>
-                                    <li class="pc-item"><a class="pc-link" href="{{ route('itemmaster.index') }}" data-i18n="Property List">Property Type</a></li>
+                                    <li class="pc-item"><a class="pc-link" href="{{ route('propertytype.index') }}" data-i18n="Property List">Property Type</a></li>
                                     <li class="pc-item"><a class="pc-link" href="{{ route('itemmaster.index') }}" data-i18n="Property List">Property Category</a></li>
                                     <li class="pc-item"><a class="pc-link" href="{{ route('itemmaster.index') }}" data-i18n="Property List">Structure Mapping</a></li>
                                 </ul>
@@ -288,6 +288,13 @@
                         <a href="#!" class="pc-link">
                             <span class="pc-micon"><i data-feather="users" class="pc-icon"></i></span>
                             <span class="pc-mtext" data-i18n="HRMS">HRMS</span>
+                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                        </a>
+                    </li>
+                    <li class="pc-item pc-hasmenu">
+                        <a href="#!" class="pc-link">
+                            <span class="pc-micon"><i data-feather="shield" class="pc-icon"></i></span>
+                            <span class="pc-mtext" data-i18n="Insurance">Insurance</span>
                             <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
                         </a>
                     </li>

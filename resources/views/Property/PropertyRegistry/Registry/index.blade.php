@@ -2,7 +2,11 @@
 @section('title', 'Item Sub Category')
 @section('content')
 <div class="container mt-4">
+
+<a href="{{ route('addproperty.create') }}" class="btn btn-primary mb-3">Add Property</a>
+
   <h4 class="fw-bold mb-3">📋 Registered Properties</h4>
+
 
   <table class="table table-bordered table-striped align-middle">
     <thead class="table-light">
