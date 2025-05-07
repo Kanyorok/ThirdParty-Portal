@@ -284,36 +284,7 @@
                             </li>
                         </ul>
                     </li>
-                    <li class="pc-item pc-hasmenu">
-                        <a href="#!" class="pc-link">
-                            <span class="pc-micon"><i data-feather="users" class="pc-icon"></i></span>
-                            <span class="pc-mtext" data-i18n="HRMS">HRMS </span>
-                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
-                        </a>
-                        <ul class="pc-submenu">
-
-                            <li class="pc-item"><a class="pc-link" href="{{ route('employeemanagement.index') }}" data-i18n="hrms">Employee Management</a></li>
-                            <li class="pc-item"><a class="pc-link" href="{{ route('leaverequests.index') }}" data-i18n="hrms">Leave Request</a></li>
-                            <li class="pc-item"><a class="pc-link" href="{{ route('leavebalance.index') }}" data-i18n="hrms">Leave Balance</a></li>
-                            <!-- <li class="pc-item"><a class="pc-link" href="{{ route('servicetracking.index') }}" data-i18n="fleetmanagement">Maintenance & Service Tracking</a></li> -->
-                            <!-- <li class="pc-item"><a class="pc-link" href="{{ route('tripmanagement.index') }}" data-i18n="fleetmanagement">Trip Management</a></li> -->
-                            <!-- <li class="pc-item"><a class="pc-link" href="{{ route('fuelmanagement.index') }}" data-i18n="fleetmanagement">Fuel Management</a></li> -->
-                            <!-- <li class="pc-item"><a class="pc-link" href="{{ route('licensing.index') }}" data-i18n="fleetmanagement">Licensing & Insurance</a></li> --> 
-                        </ul>
-                            <li class="pc-item"><a class="pc-link" href="{{ route('attendancemanagement.index') }}" data-i18n="hrms">Attendance Management</a></li>
-                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
-                                         Payroll Management
-                                    </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
-                                <ul class="pc-submenu">
-                                    <li class="pc-item"><a class="pc-link" href="{{ route('payrolldashboard.index') }}" data-i18n="hrms">Payroll Dashboard</a></li>
-                                    <li class="pc-item"><a class="pc-link" href="{{ route('generatepayslip.index') }}" data-i18n="hrms">Generate Pay Slip</a></li>
-                                    <li class="pc-item"><a class="pc-link" href="{{ route('payrollsettings.index') }}" data-i18n="hrms"> Payroll Settings</a></li>
-
-
-                                </ul>
-                            </li>
-                        </ul>
-                    </li>
+                   
                     <li class="pc-item pc-hasmenu">
                         <a href="#!" class="pc-link">
                             <span class="pc-micon"><i data-feather="shield" class="pc-icon"></i></span>
@@ -505,13 +476,6 @@
                            
                             </li>
                         </ul>
-                    </li>
-                    <li class="pc-item pc-hasmenu">
-                        <a href="#!" class="pc-link">
-                            <span class="pc-micon"><i data-feather="users" class="pc-icon"></i></span>
-                            <span class="pc-mtext" data-i18n="HRMS">HRMS</span>
-                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
-                        </a>
                     </li>
                     <li class="pc-item pc-hasmenu">
                         <a href="#!" class="pc-link">
