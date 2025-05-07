@@ -1,19 +1,19 @@
 version: '3.8'
 
 services:
-  laravel:
+  nimble:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: laravel-app
+    container_name: ERP
     working_dir: /var/www
     volumes:
       - .:/var/www
     networks:
-      - laravel-net
+        - Applications
     ports:
-      - "9000:9000"
+        - "80:80"
 
 networks:
-  laravel-net:
-    external: true
+    Applications:
+        external: true

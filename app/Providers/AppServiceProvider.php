@@ -20,6 +20,7 @@ use App\Models\Lead;
 use App\Models\MarketingPlanner;
 use App\Models\Meeting;
 use App\Models\Notes;
+use App\Models\Procurement\Order;
 use App\Models\Procurement\RequisitionLines;
 use App\Models\Procurement\Requisitions;
 use App\Models\ProductDevelopment;
@@ -32,6 +33,7 @@ use App\Models\Team;
 use App\Models\Ticket;
 use App\Models\User;
 use App\Policies\CrmBranchPolicy;
+use App\Policies\Procurement\OrderPolicy;
 use App\Policies\Procurement\RequisitionLinesPolicy;
 use App\Policies\Procurement\RequisitionPolicy;
 use App\Policies\ProductDevelopmentPolicy;
@@ -84,6 +86,9 @@ class AppServiceProvider extends ServiceProvider
             Team::getPrimaryKey() => Team::class,
             Ticket::getPrimaryKey() => Ticket::class,
             User::getPrimaryKey() => User::class,
+            Requisitions::getPrimaryKey() => Requisitions::class,
+            RequisitionLines::getPrimaryKey() => RequisitionLines::class,
+            Order::getPrimaryKey() => Order::class,
         ]);
 
         Gate::policy(Role::class, RolePolicy::class);
@@ -91,6 +96,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Requisitions::class, RequisitionPolicy::class);
         Gate::policy(RequisitionLines::class, RequisitionLinesPolicy::class);
         Gate::policy(ProductDevelopment::class, ProductDevelopmentPolicy::class);
+        Gate::policy(Order::class, OrderPolicy::class);
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);
          Event::listen(SMSSendEvent::class, SMSSendListener::class);
