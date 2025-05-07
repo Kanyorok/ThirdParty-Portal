@@ -22,12 +22,13 @@ class RFQEvaluation extends Model
     protected $fillable = [
         'RFQId',
         'RFQEvaluateNumber',
+        'CommitteeMemberName',
         'TechnicalQualityScore',
         'PricingScore',
         'DeliveryTimeScore',
         'PastExperienceScore',
         'Comment',
-        'SupplierName',
+        'SupplierId',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy',
@@ -36,13 +37,13 @@ class RFQEvaluation extends Model
         'ModifiedOn',
     ];
 
-    protected $casts = [
-        'RequisitionItems' => 'array', // Assuming this is a JSON field
-        'CreatedOn' => 'datetime',
-    ];
-
     public function rfq()
     {
         return $this->belongsTo(RFQ::class, 'RFQId', 'Id');
+    }
+
+    public function supplier()
+    {
+        return $this->belongsTo(Supplier::class, 'SupplierId', 'Id');
     }
 }
