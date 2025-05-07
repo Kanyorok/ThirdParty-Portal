@@ -237,12 +237,14 @@
                             <span class="pc-micon"><i data-feather="truck" class="pc-icon"></i></span>
                             <!DOCTYPE html>
                             <span class="pc-mtext" data-i18n="Fleet Management">Fleet Management</span>
-                        <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
-                    </a>
-                    <ul class="pc-submenu">
-                        <li class="pc-item"><a class="pc-link" href="{{ route('drivermanagement.index') }}" data-i18n="Driver Management">Driver Management</a></li>
-                            <li class="pc-item"><a class="pc-link" href="{{ route('vehicle-registry.index') }}" data-i18n="fleetmanagement">Vehicle Registry</a></li> 
-                            <body data-pc-preset="preset-1" data-pc-sidebar-caption="true" data-pc-layout="vertical" data-pc-direction="ltr"body>
+                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                        </a>
+                        <ul class="pc-submenu">
+                            <li class="pc-item"><a class="pc-link" href="{{ route('drivermanagement.index') }}" data-i18n="Driver Management">Driver Management</a></li>
+                            <li class="pc-item"><a class="pc-link" href="{{ route('servicetracking.index') }}" data-i18n="fleetmanagement">Maintenance & Service Tracking</a></li>
+                            <li class="pc-item"><a class="pc-link" href="{{ route('tripmanagement.index') }}" data-i18n="fleetmanagement">Trip Management</a></li>
+                            <li class="pc-item"><a class="pc-link" href="{{ route('fuelmanagement.index') }}" data-i18n="fleetmanagement">Fuel Management</a></li>
+                            <li class="pc-item"><a class="pc-link" href="{{ route('licensing.index') }}" data-i18n="fleetmanagement">Licensing & Insurance</a></li>
                             <li class="pc-item"><a class="pc-link" href="{{ route('tripmanagement.index') }}" data-i18n="fleetmanagement">Trip Management</a></li>
                             <li class="pc-item"><a class="pc-link" href="{{ route('fuelmanagement.index') }}" data-i18n="fleetmanagement">Fuel Management</a></li>
                         </ul>
@@ -285,10 +287,19 @@
                     <li class="pc-item pc-hasmenu">
                         <a href="#!" class="pc-link">
                             <span class="pc-micon"><i data-feather="users" class="pc-icon"></i></span>
-                            <span class="pc-mtext" data-i18n="HRMS">HRMS</span>
+                            <span class="pc-mtext" data-i18n="HRMS">HRMS </span>
                             <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
                         </a>
                         <ul class="pc-submenu">
+
+                            <li class="pc-item"><a class="pc-link" href="{{ route('employeemanagement.index') }}" data-i18n="hrms">Employee Management</a></li>
+                            <li class="pc-item"><a class="pc-link" href="{{ route('leaverequests.index') }}" data-i18n="hrms">Leave Request</a></li>
+                            <li class="pc-item"><a class="pc-link" href="{{ route('leavebalance.index') }}" data-i18n="hrms">Leave Balance</a></li>
+                            <!-- <li class="pc-item"><a class="pc-link" href="{{ route('servicetracking.index') }}" data-i18n="fleetmanagement">Maintenance & Service Tracking</a></li> -->
+                            <!-- <li class="pc-item"><a class="pc-link" href="{{ route('tripmanagement.index') }}" data-i18n="fleetmanagement">Trip Management</a></li> -->
+                            <!-- <li class="pc-item"><a class="pc-link" href="{{ route('fuelmanagement.index') }}" data-i18n="fleetmanagement">Fuel Management</a></li> -->
+                            <!-- <li class="pc-item"><a class="pc-link" href="{{ route('licensing.index') }}" data-i18n="fleetmanagement">Licensing & Insurance</a></li> --> 
+                        </ul>
                             <li class="pc-item"><a class="pc-link" href="{{ route('attendancemanagement.index') }}" data-i18n="hrms">Attendance Management</a></li>
                             <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
                                          Payroll Management
@@ -314,7 +325,7 @@
                             <li class="pc-item"><a class="pc-link" href="{{ route('insurancetypemanagement.index') }}" data-i18n=" insurancetypeManagement">insurance type Management</a></li>  
                             <li class="pc-item"><a class="pc-link" href="{{ route('contactmanagement.index') }}" data-i18n=" contactManagement">contact Management</a></li>  
                          
-                        </ul
+                        </ul>
                     </li>
                     <li class="pc-item pc-hasmenu">
                         <a href="#!" class="pc-link">
