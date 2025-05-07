@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Orders\PurchaseOrderRequest;
 use App\Models\Procurement\Order;
 use App\Models\Procurement\RequisitionLines;
+use App\Services\Orders\OrderService;
 use App\Services\Procurement\Items\ItemService;
 use App\Services\ThirdParty\SupplierService;
 use Illuminate\Http\JsonResponse;
@@ -13,7 +14,7 @@ use Illuminate\Http\Request;
 
 class PurchaseOrderController extends Controller
 {
-    public function __construct(protected ItemService $itemService, protected SupplierService $supplierService)
+    public function __construct(protected ItemService $itemService, protected SupplierService $supplierService, protected OrderService $orderService)
     {
 
         $this->middleware('ajax')->except(['index', 'create']);
@@ -77,7 +78,7 @@ class PurchaseOrderController extends Controller
     public function index()
     {
         //
-        return view("procurement.purchaseOrders.index");
+        return view("procurement.orders.index");
     }
 
     /**
@@ -86,7 +87,7 @@ class PurchaseOrderController extends Controller
     public function create()
     {
         //
-        return view("procurement.purchaseOrders.create");
+        return view("procurement.orders.create");
     }
 
     /**
@@ -98,10 +99,65 @@ class PurchaseOrderController extends Controller
         try {
             $validatedData = $request->validated();
 
-        }catch{
+            $actor = $request->user();
+            if (!$actor) {
+                return response()->json(['message' => 'Unauthorized'], 401);
+            }
 
+            $POAdd = $this->orderService->addPO(
+                $actor,
+                $validatedData['supplier'],
+                $validatedData['poDate'],
+                $validatedData['rfqNo'],
+                $validatedData['priority'],
+                $validatedData['terms']
+            );
+
+
+            $POLinesAdd = $this->orderService->addPOLines(
+                $actor,
+                $validatedData['itemCode'],
+                $validatedData['quantity'],
+                $validatedData['unitPrice'],
+                $validatedData['tax'],
+                $validatedData['discount'],
+                $validatedData['lineTotal']
+
+            );
+
+
+            if ($POAdd['status'] === 'success') {
+                return response()->json([
+                    'message' => $POAdd['message'],
+                    'route' =>route('order.create')
+                ], 200);
+            }
+
+            // Log failure with details
+            \Log::error('Failed to create order.', [
+                'input' => $validatedData,
+                'user_id' => $actor->id ?? null,
+                'service_response' => $POAdd,
+            ]);
+
+            return response()->json([
+                'message' => $POAdd['message'],
+                'error' => $POAdd['error'] ?? 'Unknown error'
+            ], 500);
+
+
+
+        } catch (\Throwable $e) {
+            \Log::error('Exception occurred while creating order.', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'message' => 'Failed to create order',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
     }
 
     /**
