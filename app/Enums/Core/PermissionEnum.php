@@ -19,6 +19,7 @@ use App\Models\MarketingPlanner;
 use App\Models\MeetingRoom;
 use App\Models\Procurement\RequisitionLines;
 use App\Models\Procurement\Requisitions;
+use App\Models\Procurement\RFQ;
 use App\Models\Review;
 use App\Models\Schedule;
 use App\Models\Social;
@@ -167,6 +168,12 @@ enum PermissionEnum: string
     case RequisitionItemsDelete = 'requisitionItem-delete';
     case RequisitionItemsApproval = 'requisitionItem-approval';
 
+    //RFQ
+    case RfqRead = 'rfqItem-read';
+    case RfWrite = 'rfqItem-create';
+    case RfqUpdate = 'rfqItem-update';
+    case RfqDelete = 'rfqItem-delete';
+    case RfqApproval = 'rfqItem-approval';
 
     public static function display(): Collection
     {
@@ -236,6 +243,7 @@ enum PermissionEnum: string
             //Requisition
             self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval => Requisitions::getPrimaryKey(),
             self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval => RequisitionLines::getPrimaryKey(),
+            self::RfqRead, self::RfqWrite, self::RfqUpdate, self::RfqApproval => RFQ::getPrimaryKey(),
 
         };
     }

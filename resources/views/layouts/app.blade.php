@@ -173,7 +173,7 @@
                                             data-i18n="RFQ Response">RFQ Responses</a>
                                     </li>
                                     <li class="pc-item">
-                                        <a class="pc-link" href="#"
+                                        <a class="pc-link" href="{{ route('evaluations.index') }}"
                                             data-i18n="RFQ Evaluation">RFQ Evaluation</a>
                                     </li>
                                 </ul>
