@@ -233,7 +233,7 @@
                             </li>
                         </ul>
                     </li>
-                    
+   
                     <li class="pc-item pc-hasmenu">
                         <a href="#!" class="pc-link">
                             <span class="pc-micon"><i data-feather="archive" class="pc-icon"></i></span>
@@ -356,8 +356,23 @@
                             </li>
                             <li class="pc-item"><a class="pc-link" href="{{ route('attachments.index') }}" data-i18n="Property List">Property Attachments</a></li>
                             </ul>
-                           
                             </li>
+                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
+                                        Tenant & Lease
+                                    </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item"><a class="pc-link" href="{{ route('addtenant.index') }}" data-i18n="Procurement List">Tenant Maintenance</a></li>
+                                    <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
+                                        Lease Management
+                                    </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item"><a class="pc-link" href="{{ route('addlease.index') }}" data-i18n="Procurement List">Lease Maintenance</a></li>
+                                    <li class="pc-item"><a class="pc-link" href="{{ route('schedulelease.index') }}" data-i18n="Procurement List">Lease Schedule</a></li>
+                                </ul>                       
+                            </li> 
+                                </ul>  
+                       
+                            </li>                            
                         </ul>
                     </li>
                     <li class="pc-item pc-hasmenu">
