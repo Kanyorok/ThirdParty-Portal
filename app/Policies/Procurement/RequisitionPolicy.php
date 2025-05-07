@@ -2,6 +2,7 @@
 
 namespace App\Policies\Procurement;
 
+use App\Enums\Core\PermissionEnum;
 use App\Models\Procurement\Requisitions;
 use App\Models\User;
 
@@ -12,6 +13,7 @@ class RequisitionPolicy
      */
     public function viewAny(User $user): bool
     {
+//        return $user->can(PermissionEnum::RequisitionRead->value);
 
         return true;
     }
@@ -21,6 +23,8 @@ class RequisitionPolicy
      */
     public function view(User $user, Requisitions $requisition): bool
     {
+//        return $user->can(PermissionEnum::RequisitionRead->value);
+
         return true;
     }
 
@@ -29,6 +33,7 @@ class RequisitionPolicy
      */
     public function create(User $user): bool
     {
+//        return $user->can(PermissionEnum::RequisitionWrite->value);
         return true;
     }
 
