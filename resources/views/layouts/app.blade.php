@@ -1,30 +1,33 @@
+<!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    
+
 <head>
     @include('layouts._partials._head')
     <title>{{ config('app.name') }} - @yield('title')</title>
 </head>
 
-<body data-pc-theme_contrast="" data-pc-theme="light">
-<div class="loader-bg">
-    <div class="loader-track">
-        <div class="loader-fill"></div>
+<body data-pc-preset="preset-1" data-pc-sidebar-caption="true" data-pc-layout="vertical" data-pc-direction="ltr"
+    data-pc-theme_contrast="" data-pc-theme="light">
+    <div class="loader-bg">
+        <div class="loader-track">
+            <div class="loader-fill"></div>
+        </div>
     </div>
-</div>
-<nav class="pc-sidebar">
-    <div class="navbar-wrapper">
-        <div class="m-header">
-            <a href="{{ route('home') }}" class="b-brand text-primary">
+    <nav class="pc-sidebar">
+        <div class="navbar-wrapper">
+            <div class="m-header">
+                <a href="{{ route('home') }}" class="b-brand text-primary">
                     <img src="{{ asset('assets/img/icons/android-icon-36x36.png') }}" class="img-fluid " alt="logo">
                     <span class="ms-3 h3 text-decoration-none"> {{ config('app.name') }}</span>
-                </div>
-                <div class="navbar-content">
-                    <div class="card pc-user-card">
-                        <div class="card-body">
+                    <span class="badge bg-light-success rounded-pill ms-2 theme-version">v0.0.1</span></a>
+            </div>
+            <div class="navbar-content">
+                <div class="card pc-user-card">
+                    <div class="card-body">
                         <div class="d-flex align-items-center">
                             <div class="flex-shrink-0">
                                 {!! auth()->user()->getImage('class="avatar-1 user-avtar wid-45 rounded-circle"
-                                    alt="user-image"') !!}
+                                alt="user-image"') !!}
                             </div>
                             <div class="flex-grow-1 ms-3 me-2">
                                 <h6 class="mb-0" data-i18n="Jonh Smith">{{ auth()->user()->UserID }}</h6>
@@ -40,42 +43,42 @@
                         <div class="pc-user-links collapse" id="pc_sidebar_userlink">
                             <div class="pt-3">
                                 <a href="{{ route('profile') }}"><i class="ti ti-user"></i> <span
-                                data-i18n="My Account">My Account</span>
-                            </a>
-                            <a href="{{ route('logout') }}"
-                            onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                            <i class="ti ti-power"></i> <span data-i18n="Logout">Logout</span>
-                        </a>
-                        
-                        <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                            @csrf
-                        </form>
+                                        data-i18n="My Account">My Account</span>
+                                </a>
+                                <a href="{{ route('logout') }}"
+                                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                    <i class="ti ti-power"></i> <span data-i18n="Logout">Logout</span>
+                                </a>
+
+                                <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                                    @csrf
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
-        <ul class="pc-navbar">
-            <li class="pc-item {{ request()->is('/')?'active':'' }}">
-                <a href="{{ route('home') }}" class="pc-link">
-                        <span class="pc-micon"><i data-feather="home" class="pc-icon"></i>
-                        <use xlink:href="#custom-fatrows"></use>
-                    </span><span class="pc-mtext" data-i18n="Data">Home</span></a></li>
+                <ul class="pc-navbar">
+                    <li class="pc-item {{ request()->is('/')?'active':'' }}">
+                        <a href="{{ route('home') }}" class="pc-link">
+                           <span class="pc-micon"><i data-feather="home" class="pc-icon"></i>
+                                <use xlink:href="#custom-fatrows"></use>
+                            </span><span class="pc-mtext" data-i18n="Data">Home</span></a></li>
                     <li class="pc-item pc-hasmenu">
-                            <a href="#!" class="pc-link"><span class="pc-micon"><svg
-                            class="pc-icon">
-                            <use xlink:href="#custom-layer"></use>
-                        </svg> </span><span class="pc-mtext" data-i18n="Online Courses">Procurement </span>
+                        <a href="#!" class="pc-link"><span class="pc-micon"><svg
+                                    class="pc-icon">
+                                    <use xlink:href="#custom-layer"></use>
+                                </svg> </span><span class="pc-mtext" data-i18n="Online Courses">Procurement </span>
                             <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
-                            <ul class="pc-submenu">
-                                <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
-                                    Procurement Plan
-                                </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                        <ul class="pc-submenu">
+                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
+                                        Procurement Plan
+                                    </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
                                 <ul class="pc-submenu">
                                     <li class="pc-item"><a class="pc-link" href="{{ route('procurement-periods.index') }}" data-i18n="Procurement List">Procurement Period</a></li>
-                            </ul>
-                        </li>
-                        <li class="pc-item pc-hasmenu">
-                            <a class="pc-link" href="#!">
+                                </ul>
+                            </li>
+                            <li class="pc-item pc-hasmenu">
+                                <a class="pc-link" href="#!">
                                     <span data-i18n="Requisitions">Purchase Requisition
                                     </span>
                                     <span class="pc-arrow">
@@ -122,21 +125,21 @@
                                     </li>
                                     <li class="pc-item">
                                         <a class="pc-link" href="{{ route('procurement-modes.create') }}"
-                                        data-i18n="Apply">Add Mode</a>
+                                            data-i18n="Apply">Add Mode</a>
                                     </li>
                                 </ul>
                             </li>
                             <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Teacher">
-                                Tenders
-                            </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
-                            <ul class="pc-submenu">
-                                <li class="pc-item">
-                                    <a class="pc-link" href="{{ route('tendering-process.create') }}"
-                                    data-i18n="Create Tender">Create Tender</a>
-                                </li>
+                                        Tenders
+                                    </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item">
+                                        <a class="pc-link" href="{{ route('tendering-process.create') }}"
+                                            data-i18n="Create Tender">Create Tender</a>
+                                    </li>
                                     <li class="pc-item">
                                         <a class="pc-link" href="{{ route('tendering-process.index') }}"
-                                        data-i18n="Tender List">Tender List</a>
+                                            data-i18n="Tender List">Tender List</a>
                                     </li>
                                     <li class="pc-item pc-hasmenu">
                                         <a class="pc-link" href="#!">
@@ -158,7 +161,6 @@
                                 </ul>
                             </li>
                             <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Teacher">
-
                                         RFQS
                                     </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
                                 <ul class="pc-submenu">
@@ -175,7 +177,6 @@
                                             data-i18n="RFQ Evaluation">RFQ Evaluation</a>
                                     </li>
                                 </ul>
-
                             </li>
                             <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Teacher">
                                         Purchase Order
@@ -216,17 +217,17 @@
                             </li>
 
                             <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
-                                Suppliers
-                            </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
-                            <ul class="pc-submenu">
-                                <li class="pc-item"><a class="pc-link" href="{{ route('suppliers.index') }}" data-i18n="List">Supplier List</a></li>
-                            </ul>
-                        </li>
-                        
-                        <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Receipts">
-                            Good Receipts
-                        </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
-                        <ul class="pc-submenu">
+                                        Suppliers
+                                    </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item"><a class="pc-link" href="{{ route('suppliers.index') }}" data-i18n="List">Supplier List</a></li>
+                                </ul>
+                            </li>
+
+                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Receipts">
+                                        Good Receipts
+                                    </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
                                     <li class="pc-item"><a class="pc-link" href="{{ route('procurementreceipts.index') }}" data-i18n="List">Good Receipts</a></li>
                                 </ul>
                             </li>
@@ -235,18 +236,17 @@
                     <li class="pc-item pc-hasmenu">
                         <a href="#!" class="pc-link">
                             <span class="pc-micon"><i data-feather="truck" class="pc-icon"></i></span>
-                            <!DOCTYPE html>
                             <span class="pc-mtext" data-i18n="Fleet Management">Fleet Management</span>
                             <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
                         </a>
                         <ul class="pc-submenu">
                             <li class="pc-item"><a class="pc-link" href="{{ route('drivermanagement.index') }}" data-i18n="Driver Management">Driver Management</a></li>
-                            <li class="pc-item"><a class="pc-link" href="{{ route('servicetracking.index') }}" data-i18n="fleetmanagement">Maintenance & Service Tracking</a></li>
+                            <!-- <li class="pc-item"><a class="pc-link" href="#" data-i18n="Procurement List">Driver Management</a></li> -->
                             <li class="pc-item"><a class="pc-link" href="{{ route('tripmanagement.index') }}" data-i18n="fleetmanagement">Trip Management</a></li>
                             <li class="pc-item"><a class="pc-link" href="{{ route('fuelmanagement.index') }}" data-i18n="fleetmanagement">Fuel Management</a></li>
-                            <li class="pc-item"><a class="pc-link" href="{{ route('licensing.index') }}" data-i18n="fleetmanagement">Licensing & Insurance</a></li>
-                            <li class="pc-item"><a class="pc-link" href="{{ route('tripmanagement.index') }}" data-i18n="fleetmanagement">Trip Management</a></li>
-                            <li class="pc-item"><a class="pc-link" href="{{ route('fuelmanagement.index') }}" data-i18n="fleetmanagement">Fuel Management</a></li>
+                            <!-- <li class="pc-item"><a class="pc-link" href="#" data-i18n="Finance">Transaction Types</a></li> -->
+                            <!-- <li class="pc-item"><a class="pc-link" href="#" data-i18n="Finance">Bank Reconciliation</a></li> -->
+                            <!-- <li class="pc-item"><a class="pc-link" href="#" data-i18n="Finance">Period Mananagement</a></li> -->
                         </ul>
                     </li>
                     <li class="pc-item pc-hasmenu">
@@ -262,18 +262,18 @@
                             <span class="pc-mtext" data-i18n="Property Management">Property Management</span>
                             <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
                         </a>
-                        
+
                         <ul class="pc-submenu">
-                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
-                                Dashboard
-                            </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
-                            <ul class="pc-submenu">
-                                <li class="pc-item"><a class="pc-link" href="{{ route('itemmaster.index') }}" data-i18n="List">Dashboard</a></li>
-                            </ul>
-                        </li>
-                        
                         <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
-                            Propery Registry
+                                        Dashboard
+                                    </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item"><a class="pc-link" href="{{ route('itemmaster.index') }}" data-i18n="List">Dashboard</a></li>
+                                </ul>
+                            </li>
+
+                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
+                                        Propery Registry
                                     </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
                                 <ul class="pc-submenu">
                                     <li class="pc-item"><a class="pc-link" href="{{ route('addproperty.index') }}" data-i18n="Property List">Add Property</a></li>
@@ -284,7 +284,13 @@
                             </li>
                         </ul>
                     </li>
-                   
+                    <li class="pc-item pc-hasmenu">
+                        <a href="#!" class="pc-link">
+                            <span class="pc-micon"><i data-feather="users" class="pc-icon"></i></span>
+                            <span class="pc-mtext" data-i18n="HRMS">HRMS</span>
+                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                        </a>
+                    </li>
                     <li class="pc-item pc-hasmenu">
                         <a href="#!" class="pc-link">
                             <span class="pc-micon"><i data-feather="shield" class="pc-icon"></i></span>
@@ -296,7 +302,7 @@
                             <li class="pc-item"><a class="pc-link" href="{{ route('insurancetypemanagement.index') }}" data-i18n=" insurancetypeManagement">insurance type Management</a></li>  
                             <li class="pc-item"><a class="pc-link" href="{{ route('contactmanagement.index') }}" data-i18n=" contactManagement">contact Management</a></li>  
                          
-                        </ul>
+                        </ul
                     </li>
                     <li class="pc-item pc-hasmenu">
                         <a href="#!" class="pc-link">
@@ -476,6 +482,13 @@
                            
                             </li>
                         </ul>
+                    </li>
+                    <li class="pc-item pc-hasmenu">
+                        <a href="#!" class="pc-link">
+                            <span class="pc-micon"><i data-feather="users" class="pc-icon"></i></span>
+                            <span class="pc-mtext" data-i18n="HRMS">HRMS</span>
+                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                        </a>
                     </li>
                     <li class="pc-item pc-hasmenu">
                         <a href="#!" class="pc-link">
