@@ -56,14 +56,7 @@ class RFQController extends Controller
         }
 
         // Format items for JSON storage
-        $requisitionItems = $items->map(function ($item) {
-            return [
-                'name' => $item->name,
-                'quantity' => $item->quantity,
-                'unit' => $item->uom,
-                'description' => $item->description,
-            ];
-        });
+         
 
         $prefix = 'RFQ-';
         $lastRFQ = RFQ::where('RFQNumber', 'like', $prefix . '%')->orderBy('Id', 'desc')->first();

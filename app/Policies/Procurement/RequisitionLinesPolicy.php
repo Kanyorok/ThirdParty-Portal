@@ -20,6 +20,8 @@ class RequisitionLinesPolicy
      */
     public function view(User $user, RequisitionLines $requisitionLines): bool
     {
+
+
         return true;
     }
 

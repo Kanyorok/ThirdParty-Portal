@@ -284,7 +284,7 @@
                                     );
 
                                     // $('#Description').val(item.Description || '');
-                                    $('#ActualPrice').val(item.UnitPrice || '');
+                                    $('#EstimatedPrice').val(item.UnitPrice || '');
                                     $('#CategoryId').val(item.CategoryId ||
                                         ''); // Populate the hidden CategoryId field
                                     console.log('CategoryId:', item);

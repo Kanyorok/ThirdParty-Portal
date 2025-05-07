@@ -16,7 +16,7 @@ class RequisitionsController extends Controller
     public function __construct(protected RequisitionService $service,protected RequisitionItemService $itemService)
     {
         $this->middleware('ajax')->except(['index', 'show', 'create']);
-         $this->authorizeResource(Requisitions::class); // Uncomment if using authorization
+//         $this->authorizeResource(Requisitions::class); // Uncomment if using authorization
     }
 
     /**
@@ -143,7 +143,9 @@ class RequisitionsController extends Controller
      */
     public function show(string $id)
     {
+
         try {
+
             $details = $this->itemService->getRequisitionRelatedItems($id);
             return view('procurement.requisitionItems.create', compact('details'));
         } catch (\Exception $e) {
