@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Orders\PurchaseOrderRequest;
 use App\Models\Procurement\Order;
 use App\Models\Procurement\RequisitionLines;
 use App\Services\Procurement\Items\ItemService;
@@ -91,9 +92,16 @@ class PurchaseOrderController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(PurchaseOrderRequest $request):JsonResponse
     {
         //
+        try {
+            $validatedData = $request->validated();
+
+        }catch{
+
+        }
+
     }
 
     /**
