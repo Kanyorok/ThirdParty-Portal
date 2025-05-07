@@ -80,7 +80,14 @@ class RequisitionItemsController extends Controller
     {
         // use for requisitionItem approval
 
-        return view ('procurement.requisitionItems.approval');
+//        return view ('procurement.requisitionItems.approval');
+//
+        try {
+            $details = $this->service->getRequisitionItems();
+            return view('procurement.requisitionItems.priorityList', compact('details'));
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to fetch items: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -90,7 +97,7 @@ class RequisitionItemsController extends Controller
     {
         try {
             $details = $this->service->getRequisitionItems();
-            return view('procurement.requisitionItems.create', compact('details','id'));
+            return view('procurement.requisitionItems.create', compact('details'));
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Failed to fetch items: ' . $e->getMessage());
         }
@@ -151,11 +158,11 @@ class RequisitionItemsController extends Controller
             if ($requisitionAddLines['status'] === 'success') {
                 return response()->json([
                     'message' => $requisitionAddLines['message'],
-                    'route' =>route('requisitionItems.create')
+                    'route' =>route('requisitionItem.create',['id' => $validatedData['RequisitionID']])
                 ], 200);
             }
 
-            // Log failure with details
+            // Log failure with detailsR
             Log::error('Failed to create requisitionLines **.', [
                 'input' => $validatedData,
                 'user_id' => $actor->id ?? null,

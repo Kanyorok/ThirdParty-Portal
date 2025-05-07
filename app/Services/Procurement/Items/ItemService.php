@@ -19,7 +19,7 @@ class ItemService
         return DB::table('t_Items')
             ->join('t_ItemCategories','t_Items.CategoryId','=','t_ItemCategories.id')
             ->where('t_Items.type',$type)
-            ->select('t_Items.id','t_Items.name')
+            ->select('t_Items.id','t_Items.name','t_Items.UniqueCode')
             ->get();
     }
     public static function getItemDetails($item){

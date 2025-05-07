@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Procurement\RequisitionItemsController;
+use App\Http\Controllers\Procurement\RequisitionsController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Procurement\ItemController;
 use App\Http\Controllers\Procurement\ModeTimelineController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\Procurement\ProcurementPlanController;
 use App\Http\Controllers\Procurement\RFQController;
 use App\Http\Controllers\Procurement\RFQResponseController;
 use App\Http\Controllers\Procurement\RFQEvaluationController;
+use App\Http\Controllers\Procurement\GoodsReceiptController;
 
 Route::namespace('Procurement')->group(function () {
 
@@ -26,6 +28,18 @@ Route::namespace('Procurement')->group(function () {
 //    Route::get('requisitionItem/{id}', 'RequisitionItemsController@getRelatedRequisitionLines')->name('requisitionItem.list');
     Route::get('requisition/{id}', [RequisitionItemsController::class, 'show'])->name('requisitionItem.show');
     Route::get('requisitionItem/create/{id}', [RequisitionItemsController::class, 'create'])->name('requisitionItems.create');
+    Route::get('requisitionItem/create/{id}', [RequisitionItemsController::class, 'create'])->name('requisitionItem.create');
+    Route::get('requisition/approval', [RequisitionsController::class,'approvalList'])->name('requisition.approval');
+
+    //Purchase Order
+    Route::resource('purchaseOrder', 'PurchaseOrderController');
+
+    //Sales Order
+    Route::resource('salesOrder', 'SalesOrderController');
+
+
+
+    //Route::get('requisitionItem/getItem/{type}', [RequisitionItemsController::class, 'getItems'])->name('requisitionItem.getItems');
 
     //Items
     Route::resource('items', 'ItemController');
@@ -74,7 +88,7 @@ Route::namespace('Procurement')->group(function () {
     Route::get('/rfqs', [RFQController::class, 'index'])->name('rfqs.index');
     Route::post('/rfqs/{rfq}/approve', [RFQController::class, 'approve'])->name('rfqs.approve');
     Route::post('/rfqs/{rfq}/reject', [RFQController::class, 'reject'])->name('rfqs.reject');
-    
+
 
     // RFQ Response routes
     Route::get('/rfqresponses', [RFQResponseController::class, 'index'])->name('rfqresponses.index');
@@ -91,4 +105,8 @@ Route::namespace('Procurement')->group(function () {
     Route::get('/rfq-evaluations', [RFQEvaluationController::class, 'index'])->name('evaluations.index');
     Route::get('/rfq-evaluations/create', [RFQEvaluationController::class, 'create'])->name('evaluations.create');
     Route::post('/rfq-evaluations', [RFQEvaluationController::class, 'store'])->name('evaluations.store');
+
+    //Receipts
+
+    Route::resource('procurementreceipts', GoodsReceiptController::class);
 });
