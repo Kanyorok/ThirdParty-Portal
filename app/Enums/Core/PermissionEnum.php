@@ -17,6 +17,7 @@ use App\Models\Lead;
 use App\Models\MarketingList;
 use App\Models\MarketingPlanner;
 use App\Models\MeetingRoom;
+use App\Models\Procurement\Order;
 use App\Models\Procurement\RequisitionLines;
 use App\Models\Procurement\Requisitions;
 use App\Models\Procurement\RFQ;
@@ -153,7 +154,7 @@ enum PermissionEnum: string
     case MarketingManager = 'marketingManager';
     case Managers = 'manager';
 
-    //Procuremen
+    //Procurement
     //Requisitions
     case RequisitionRead = 'requisition-read';
     case RequisitionWrite = 'requisition-create';
@@ -161,7 +162,7 @@ enum PermissionEnum: string
     case RequisitionDelete = 'requisition-delete';
     case RequisitionApproval = 'requisition-approval';
 
-    //Requisitions
+    //RequisitionItems
     case RequisitionItemsRead = 'requisitionItem-read';
     case RequisitionItemsWrite = 'requisitionItem-create';
     case RequisitionItemsUpdate = 'requisitionItem-update';
@@ -174,6 +175,14 @@ enum PermissionEnum: string
     case RfqUpdate = 'rfqItem-update';
     case RfqDelete = 'rfqItem-delete';
     case RfqApproval = 'rfqItem-approval';
+
+    //RequisitionItems
+    case PurchaseOrderRead = 'purchaseOrder-read';
+    case PurchaseOrderWrite = 'purchaseOrder-create';
+    case PurchaseOrderUpdate = 'purchaseOrder-update';
+    case PurchaseOrderDelete = 'purchaseOrder-delete';
+    case PurchaseOrderApproval = 'purchaseOrder-approval';
+
 
     public static function display(): Collection
     {
@@ -243,6 +252,11 @@ enum PermissionEnum: string
             //Requisition
             self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval => Requisitions::getPrimaryKey(),
             self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval => RequisitionLines::getPrimaryKey(),
+
+            //PurchaseOrder
+            self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval => Order::getPrimaryKey(),
+
+
             self::RfqRead, self::RfqWrite, self::RfqUpdate, self::RfqApproval => RFQ::getPrimaryKey(),
 
         };

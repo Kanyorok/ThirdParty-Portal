@@ -3,24 +3,60 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
+use App\Models\Procurement\Order;
 use App\Models\Procurement\RequisitionLines;
 use App\Services\Procurement\Items\ItemService;
+use App\Services\ThirdParty\SupplierService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class PurchaseOrderController extends Controller
 {
-    public function __construct(protected ItemService $itemService)
+    public function __construct(protected ItemService $itemService, protected SupplierService $supplierService)
     {
 
         $this->middleware('ajax')->except(['index', 'create']);
-        $this->authorizeResource(RequisitionLines::class);
+        $this->authorizeResource(Order::class);
     }
 
     public function getItemDetails($item): JsonResponse
     {
         try{
             $details = $this->itemService->getItemDetails($item);
+            return response()->json([
+                'success' => true,
+                'data' => $details,
+            ]);}
+        catch(\Exception $e){
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch items.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getSupplierDetails($supplier): JsonResponse
+    {
+        try{
+            $details = $this->supplierService->getSupplierDetails($supplier);
+            return response()->json([
+                'success' => true,
+                'data' => $details,
+            ]);}
+        catch(\Exception $e){
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch items.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getSuppliers(): JsonResponse
+    {
+        try{
+            $details = $this->supplierService->getSuppliers();
             return response()->json([
                 'success' => true,
                 'data' => $details,

@@ -9,9 +9,9 @@
     </style>
 @endsection
 @section('content')
-{{--    <div class="mb-3">--}}
-{{--        <h1 class="h3 d-inline align-middle">@yield('title')</h1>--}}
-{{--    </div>--}}
+    {{--    <div class="mb-3"> --}}
+    {{--        <h1 class="h3 d-inline align-middle">@yield('title')</h1> --}}
+    {{--    </div> --}}
 
     <div class="container">
         <h2 class="text-center my-4">@yield('title')</h2>
@@ -31,7 +31,11 @@
             <div class="col-md-6">
                 <label>Supplier</label>
                 <select class="form-control">
-                    <option>Select supplier</option>
+                    <option selected disabled>Select supplier</option>
+{{--                     @foreach ($Details as $vendor)--}}
+{{--                <option value="{{ $vendor->Id }}">{{ $vendor->Name }}</option>--}}
+{{--                    @endforeach--}}
+
                     <!-- Loop suppliers here -->
                 </select>
             </div>
@@ -81,43 +85,49 @@
         <div class="table-responsive mb-4">
             <table class="table table-bordered table-sm">
                 <thead class="table-light">
-                <tr>
-                    <th>Line No.</th>
-                    <th>Item Type</th>
-                    <th>Item Code</th>
-                    <th>Item Description</th>
-                    <th>Quantity</th>
-                    <th>Unit Price</th>
-                    <th>Tax</th>
-                    <th>Discount</th>
-                    <th>Line Total</th>
-                </tr>
+                    <tr>
+                        <th style="width:5%;">#</th>
+                        <th style="width:10%;">Item Type</th>
+                        <th style="width:15%;">Item Code</th>
+                        <th style="width:15%;">Item Description</th>
+                        <th style="width:10%;">Quantity</th>
+                        <th style="width:10%;">Unit Price</th>
+                        <th style="width:10%;">Tax</th>
+                        <th style="width:10%;">Discount</th>
+                        <th style="width:20%;">Line Total</th>
+                    </tr>
                 </thead>
                 <tbody id="po-items">
-                <tr>
-                    <td class="line-no">1.</td>
-                    <td class="text-start">
-                        <select class="form-select form-select-sm" name="type[]" id="Type">
-                            <option disabled selected>Select Type</option>
-                            <option value="good">Goods</option>
-                            <option value="service">Services</option>
-                        </select>
-                    </td>
-                    <td class="text-start">
-                        <select class="form-select form-select-sm" name="itemCode[]" id="Item">
-                            <option disabled selected>Select Item Code</option>
-{{--                            <option value="good">Goods</option>--}}
-{{--                            <option value="services">Services</option>--}}
-                        </select>
-                    </td>
-{{--                    <td><input type="text" class="form-control" name="itemCode[]"></td>--}}
-                    <td class="text-start"><input type="text" class="form-control form-control-sm" name="itemDescription[]" id="Description" readonly></td>
-                    <td class="text-start"><input type="number" class="form-control form-control-sm qty" name="quantity[]" id="Quantity"></td>
-                    <td class="text-start"><input type="number" class="form-control form-control-sm unit-price" name="unitPrice[]" id ="Price"></td>
-                    <td class="text-start"><input type="number" class="form-control form-control-sm tax" name="tax[]" id="Tax"></td>
-                    <td class="text-start"><input type="number" class="form-control form-control-sm discount" name="discount[]" id="Discount"></td>
-                    <td class="text-start"><input type="number" class="form-control form-control-sm line-total" name="lineTotal[]"  id="lineTotal"></td>
-                </tr>
+                    <tr>
+                        <td class="line-no">1.</td>
+                        <td class="text-start">
+                            <select class="form-select form-select-sm type" name="type[]" id="Type">
+                                <option disabled selected>Select Type</option>
+                                <option value="good">Goods</option>
+                                <option value="service">Services</option>
+                            </select>
+                        </td>
+                        <td class="text-start">
+                            <select class="form-select form-select-sm itemCode" name="itemCode[]" id="Item">
+                                <option disabled selected>Select Item Code</option>
+                                {{--                            <option value="good">Goods</option> --}}
+                                {{--                            <option value="services">Services</option> --}}
+                            </select>
+                        </td>
+                        {{--                    <td><input type="text" class="form-control" name="itemCode[]"></td> --}}
+                        <td class="text-start"><input type="text" class="form-control form-control-sm itemDescription"
+                                name="itemDescription[]" id="Description" readonly></td>
+                        <td class="text-start"><input type="number" class="form-control form-control-sm qty quantity"
+                                name="quantity[]" id="Quantity"></td>
+                        <td class="text-start"><input type="number" class="form-control form-control-sm unit-price "
+                                name="unitPrice[]" id ="Price"></td>
+                        <td class="text-start"><input type="number" class="form-control form-control-sm tax" name="tax[]"
+                                id="Tax"></td>
+                        <td class="text-start"><input type="number" class="form-control form-control-sm discount"
+                                name="discount[]" id="Discount"></td>
+                        <td class="text-start"><input type="number" class="form-control form-control-sm line-total"
+                                name="lineTotal[]" id="lineTotal"></td>
+                    </tr>
                 </tbody>
             </table>
 
@@ -160,55 +170,50 @@
 @endsection
 @section('scripts')
     <script>
-        $(function() {
-            $('#Type').on('change', function () {
-                // alert('hello');
+        $(function () {
+            // Handle item type change using event delegation
+            $(document).on('change', '.type', function () {
+                let row = $(this).closest('tr');
                 let type = $(this).val();
 
                 if (type !== '') {
-                    // alert(type + 'eric');
                     $.ajax({
                         url: `/requisitionItem/getItem/${type}`,
                         type: 'GET',
                         success: function (response) {
-                            // console.log('AJAX Response:', response);
+                            let itemCodeSelect = row.find('.itemCode');
+                            itemCodeSelect.empty().append('<option value="">Select Item</option>');
 
-                            $('#Item').empty().append('<option value="">Select Item</option>');
                             $.each(response.data, function (key, item) {
-                                $('#Item').append(
+                                itemCodeSelect.append(
                                     `<option value="${item.id}">${item.name}</option>`
                                 );
-
                             });
                         },
                         error: function (response) {
-                            // alert('Failed to load items');
-                            alert(response)
-                            console.log(response)
+                            alert('Failed to load items');
+                            console.log(response);
                         }
                     });
                 } else {
-
-                    $('#Item').empty().append('<option value="">Select Item</option>')
+                    row.find('.itemCode').empty().append('<option value="">Select Item</option>');
                 }
-            })
+            });
 
+            // Handle item code change using event delegation
+            $(document).on('change', '.itemCode', function () {
+                let row = $(this).closest('tr');
+                let itemId = $(this).val();
 
-            $('#Item').on('change', function () {
-                // alert('hello');
-                let item = $(this).val();
-
-                if (item !== '') {
+                if (itemId !== '') {
                     $.ajax({
-                        url: `/requisitionItem/getItemDetails/${item}`,
+                        url: `/requisitionItem/getItemDetails/${itemId}`,
                         type: 'GET',
                         success: function (response) {
                             if (response.data && response.data.length > 0) {
                                 $.each(response.data, function (key, item) {
-
-                                    $('#Description').val(item.Description || '');
-                                    $('#Price').val(item.UnitPrice || '');
-
+                                    row.find('.itemDescription').val(item.Description || '');
+                                    row.find('.unit-price').val(item.UnitPrice || '');
                                 });
                             }
                         },
@@ -218,63 +223,60 @@
                         }
                     });
                 } else {
-
-                    $('#Description').val('');
-                    $('#Price').val('');
-
+                    row.find('.itemDescription').val('');
+                    row.find('.unit-price').val('');
                 }
-            })
-        })
+            });
 
-        $('#Quantity').on('change', function () {
+            // Handle quantity or price change and calculate line total
+            $(document).on('change', '.quantity, .unit-price, .tax, .discount', function () {
+                let row = $(this).closest('tr');
+                let qty = parseFloat(row.find('.quantity').val()) || 0;
+                let price = parseFloat(row.find('.unit-price').val()) || 0;
+                let tax = parseFloat(row.find('.tax').val()) || 0;
+                let discount = parseFloat(row.find('.discount').val()) || 0;
 
-            let Qty = $(this).val();
-            let Price = $('#Price').val()
-            // let LineTotal = $('#lineTotal').val()
-            let cost = 0
+                let total = qty * price;
 
-            if ( Qty !=='' && Price !==''){
+                if (tax > 0) {
+                    total += total * (tax / 100);
+                }
+                if (discount > 0) {
+                    total -= total * (discount / 100);
+                }
 
-                let cost =Qty * Price
-
-                $('#lineTotal').val(cost || 0);
-            }
-            else {
-                $('#lineTotal').val('');
-            }
-
-
-        })
+                row.find('.line-total').val(total.toFixed(2));
+            });
+        });
     </script>
 
     <script>
         let rowCount = 1;
 
-        document.getElementById('add-row').addEventListener('click', function () {
+        document.getElementById('add-row').addEventListener('click', function() {
             rowCount++;
             const row = `
         <tr>
             <td class="line-no">${rowCount}.</td>
-<td class="text-start">
-                        <select class="form-select form-select-sm" name="type[]" id="Type">
-                            <option disabled selected>Select Type</option>
-                            <option value="good">Goods</option>
-                            <option value="service">Services</option>
-                        </select>
-                    </td>
-                    <td class="text-start">
-                        <select class="form-select form-select-sm" name="itemCode[]" id="Item">
-                            <option disabled selected>Select Item Code</option>
-
-            </select>
-        </td>
-<td><input type="text" class="form-control form-control-sm" name="item_description[]" id="Description" ></td>
-<td><input type="number" class="form-control form-control-sm qty" name="quantity[]" id="Quantity" ></td>
-<td><input type="number" class="form-control form-control-sm unit-price" name="unit_price[]" id="Price" ></td>
-<td><input type="number" class="form-control form-control-sm tax" name="tax[]" id="Tax" ></td>
-<td><input type="number" class="form-control form-control-sm discount" name="discount[]" id="Discount" ></td>
-<td><input type="number" class="form-control form-control-sm line-total" name="line_total[]"  id="lineTotal" readonly></td>
-</tr>`;
+            <td class="text-start">
+                <select class="form-select form-select-sm type" name="type[]" id="Type">
+                    <option disabled selected>Select Type</option>
+                    <option value="good">Goods</option>
+                    <option value="service">Services</option>
+                </select>
+            </td>
+            <td class="text-start">
+                <select class="form-select form-select-sm itemCode" name="itemCode[]" id="Item">
+                    <option disabled selected>Select Item Code</option>
+                </select>
+            </td>
+            <td><input type="text" class="form-control form-control-sm itemDescription" name="item_description[]" id="Description" readonly></td>
+            <td><input type="number" class="form-control form-control-sm qty quantity" name="quantity[]" id="Quantity" ></td>
+            <td><input type="number" class="form-control form-control-sm unit-price" name="unit_price[]" id="Price" ></td>
+            <td><input type="number" class="form-control form-control-sm tax" name="tax[]" id="Tax" ></td>
+            <td><input type="number" class="form-control form-control-sm discount" name="discount[]" id="Discount" ></td>
+            <td><input type="number" class="form-control form-control-sm line-total" name="line_total[]"  id="lineTotal" readonly></td>
+        </tr>`;
             document.getElementById('po-items').insertAdjacentHTML('beforeend', row);
         });
     </script>

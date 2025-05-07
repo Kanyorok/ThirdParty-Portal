@@ -33,6 +33,8 @@ Route::namespace('Procurement')->group(function () {
 
     //Purchase Order
     Route::resource('purchaseOrder', 'PurchaseOrderController');
+//    Route::get('requisitionItem/getItem', 'PurchaseOrderController@getSuppliers')->name('purchaseOrder.getSuppliers');
+//    Route::get('requisitionItem/getItem/{supplier}', 'PurchaseOrderController@getSupplierDetails')->name('purchaseOrder.getSupplierDetails');
 
     //Sales Order
     Route::resource('salesOrder', 'SalesOrderController');
