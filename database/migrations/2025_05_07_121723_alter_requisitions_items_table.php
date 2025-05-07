@@ -11,12 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        //
         Schema::table('t_RequisitionLines', function (Blueprint $table) {
-//            $table->dropColumn(['Module', 'ExpectedPrice']);
-            $table->dropColumn('NeededBy');
-            $table->unsignedBigInteger('RequisitionID')->nullable()->change(); // make sure it's nullable
-            $table->foreign('RequisitionID')->references('Id')->on('t_Requisitions')
-                ->onDelete('set null');
+            $table->dropColumn('ExpectedPrice');
+            $table->decimal('ExpectedPrice',15,2)->default(0);
         });
     }
 
@@ -25,10 +23,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        //
         Schema::table('t_RequisitionLines', function (Blueprint $table) {
-//            $table->decimal('ExpectedPrice', 15, 2)->nullable();
-            $table->dropForeign(['RequisitionID']);
-            $table->dropColumn('NeededBy');
+//            $table->decimal('ExpectedPrice',15,2);
+            $table->dropColumn('ExpectedPrice');
         });
     }
 };

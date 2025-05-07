@@ -32,3 +32,5 @@ BEGIN
 
     SET NOCOUNT OFF
 END
+EXEC p_AddRequisitionLines @RequisitionId =6, @Item =18, @Quantity =7,
+@NeededBy ='2025-05-07', @Urgency= 3, @User =2
