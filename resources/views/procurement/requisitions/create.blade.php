@@ -51,7 +51,7 @@
                                 <td>{{ $item->itemcount }}</td>
                                 <td>{{ number_format($item->ExpectedPrice, 2) }}</td>
                                 <td>{{ $item->Status }}</td>
-                                <td><a href="{{ route('requisitionItem.show',['id' => $item->Id]) }}" class="btn btn-info">View</a></td>
+                                <td><a href="{{ route('requisition.show',['id' => $item->Id]) }}" class="btn btn-info">View</a></td>
 
 
                             </tr>
