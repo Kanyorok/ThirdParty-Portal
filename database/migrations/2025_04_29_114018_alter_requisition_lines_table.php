@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('t_RequisitionLines', function (Blueprint $table) {
-//            $table->dropColumn(['Module', 'ExpectedPrice']);           
+//            $table->dropColumn(['Module', 'ExpectedPrice']);
             $table->dropColumn('NeededBy');
             $table->unsignedBigInteger('RequisitionID')->nullable()->change(); // make sure it's nullable
             $table->foreign('RequisitionID')->references('Id')->on('t_Requisitions')

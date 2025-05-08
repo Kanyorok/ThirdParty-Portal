@@ -8,6 +8,9 @@ use App\Http\Controllers\Property\PropertyBlockController;
 use App\Http\Controllers\Property\PropertyFloorController;
 use App\Http\Controllers\Property\PropertyUnitController;
 use App\Http\Controllers\Property\PropertyAttachmentsController;
+use App\Http\Controllers\Property\PropertyNewTenantController;
+use App\Http\Controllers\Property\PropertyNewLeaseController;
+use App\Http\Controllers\Property\PropertyLeaseScheduleController;
 
 Route::namespace('Property')->group(function () {
     Route::resource('addproperty', AddPropertyController::class);
@@ -17,4 +20,7 @@ Route::namespace('Property')->group(function () {
     Route::resource('addfloor', PropertyFloorController::class);
     Route::resource('addunit', PropertyUnitController::class);
     Route::resource('attachments', PropertyAttachmentsController::class);
+    Route::resource('addtenant', PropertyNewTenantController::class);
+    Route::resource('addlease', PropertyNewLeaseController::class);
+    Route::resource('schedulelease', PropertyLeaseScheduleController::class);
 });

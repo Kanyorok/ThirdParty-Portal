@@ -10,10 +10,10 @@ class GoodsReceiptController extends Controller
     //
     public function index()
     {
-        return view('procurement.good receipts.index');
+        return view('procurement.goodreceipts.index');
     }
 
     public function create(){
-        return view('procurement.good receipts.create');
+        return view('procurement.goodreceipts.create');
     }
 }
