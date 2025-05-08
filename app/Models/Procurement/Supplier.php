@@ -36,6 +36,11 @@ class Supplier extends Model
         return $this->belongsTo(ItemCategory::class, 'CategoryId', 'id');
     }
 
+    public function rfqEvaluations()
+    {
+        return $this->hasMany(RFQEvaluation::class, 'SupplierId');
+    }
+
     public function ProcurementPeriods()
     {
         return $this->belongsToMany(ProcurementPeriod::class, 't_ProcurementPeriodSupplier', 'SupplierId', 'ProcurementPeriodId');
