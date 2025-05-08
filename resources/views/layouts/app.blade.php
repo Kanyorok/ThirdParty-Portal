@@ -422,6 +422,17 @@
                             <span class="pc-mtext" data-i18n="Insurance">Insurance</span>
                             <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
                         </a>
+                        <ul class="pc-submenu">
+                            <li class="pc-item"><a class="pc-link" href="{{ route('providermanagement.index') }}" data-i18n="Provider Management">Provider Management</a></li>  
+                            <li class="pc-item"><a class="pc-link" href="{{ route('insurancetypemanagement.index') }}" data-i18n=" insurancetypeManagement">Insurance Management</a></li>  
+                            <li class="pc-item"><a class="pc-link" href="{{ route('insurancepolicymanagement.index') }}" data-i18n=" insurancepolicymanagement">policy Management</a></li>  
+                            <li class="pc-item"><a class="pc-link" href="{{ route('coveredassetmanagement.index') }}" data-i18n=" coveredassetmanagement">Asset Management</a></li>  
+                            <li class="pc-item"><a class="pc-link" href="{{ route('premiumpaymentmanagement.index') }}" data-i18n=" premiumpaymentmanagement">Premium Management</a></li>  
+                            <li class="pc-item"><a class="pc-link" href="{{ route('claimsmanagement.index') }}" data-i18n=" claimsmanagement">Claims Management</a></li>  
+                            <li class="pc-item"><a class="pc-link" href="{{ route('renewalmanagement.index') }}" data-i18n=" renewalmanagement">Renewal Management</a></li>  
+                            <li class="pc-item"><a class="pc-link" href="{{ route('reportmanagement.index') }}" data-i18n=" reportmanagement">Report Management</a></li>  
+                         
+                        </ul
                     </li>
                     <li class="pc-item pc-hasmenu">
                         <a href="#!" class="pc-link">
