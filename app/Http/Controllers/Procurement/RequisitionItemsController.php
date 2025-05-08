@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Procurement;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Procurement\Requisition\RequisitionItemRequest;
 use App\Models\Procurement\RequisitionLines;
+use App\Models\Procurement\Requisitions;
 use App\Services\Procurement\Items\ItemService;
 use App\Services\Procurement\Requisition\RequisitionItemService;
 use Illuminate\Http\JsonResponse;
@@ -19,7 +20,7 @@ class RequisitionItemsController extends Controller
     {
 
         $this->middleware('ajax')->except(['index', 'create','show']);
-//        $this->authorizeResource(RequisitionLines::class);
+       // $this->authorizeResource(RequisitionLines::class);
     }
     /**
      * Display a listing of the resource.
@@ -79,6 +80,7 @@ class RequisitionItemsController extends Controller
 
     public function index()
     {
+        $this->authorize('viewAny', RequisitionLines::class);
         // use for requisitionItem approval
 
 //        return view ('procurement.requisitionItems.approval');
@@ -96,6 +98,7 @@ class RequisitionItemsController extends Controller
      */
     public function create($id)
     {
+        $this->authorize('create', RequisitionLines::class);
         try {
             $details = $this->service->getRequisitionItems();
             return view('procurement.requisitionItems.create', compact('details'));
@@ -107,35 +110,10 @@ class RequisitionItemsController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-//    public function store(RequisitionItemRequest $request): JsonResponse
-//    {
-//        try {
-//            $actor = $request->user();
-//            $service = $this->service;
-//            $requisitionItem = DB::transaction(static function () use ($service, $request, $actor) {
-//                return $service->create($request->validated(), $actor);
-//            });
-//            return response()->json([
-//                                     'message' => 'Requisition line saved successfully.',
-//                                     'data'    => $requisitionItem,
-//                                    ], 201);
-//        } catch (Throwable $e) {
-//            // Log the error for debugging
-//            Log::error('RequisitionItem store failed', [
-//                                                         'error' => $e->getMessage(),
-//                                                         'trace' => $e->getTraceAsString(),
-//                                                        ]);
-//
-//            return response()->json([
-//                                     'message' => 'Failed to save requisition line.',
-//                                     'error'   => $e->getMessage(),
-//                                    ], 500);
-//        }
-//    }
 
     public function store(RequisitionItemRequest $request): JsonResponse
     {
-
+        $this->authorize('create', RequisitionLines::class);
 //        dd($request->all());
         try {
             $validatedData = $request->validated();
@@ -159,11 +137,11 @@ class RequisitionItemsController extends Controller
             if ($requisitionAddLines['status'] === 'success') {
                 return response()->json([
                     'message' => $requisitionAddLines['message'],
-                    'route' =>route('requisitionItem.create',['id' => $validatedData['RequisitionID']])
+                    'route' =>route('requisition.show',['id' => $validatedData['RequisitionID']])
                 ], 200);
             }
 
-            // Log failure with detailsR
+            // Log failure with details
             Log::error('Failed to create requisitionLines **.', [
                 'input' => $validatedData,
                 'user_id' => $actor->id ?? null,
@@ -188,20 +166,13 @@ class RequisitionItemsController extends Controller
         }
     }
 
-//    public function getRelatedRequisitionLines($RequisitionID){
-//        try {
-//            $details = $this->service->getRequisitionRelatedItems($RequisitionID);
-//            return view('procurement.requisitionItems.create', compact('details'));
-//        } catch (\Exception $e) {
-//            return redirect()->back()->with('error', 'Failed to fetch items: ' . $e->getMessage());
-//        }
-//    }
     /**
      * Display the specified resource.
      */
     public function show(string $id)
     {
 //        dd($id);
+        $this->authorize('view', Requisitions::query()->findOrFail($id));
         try {
             $details = $this->service->getRequisitionRelatedItems($id);
             return view('procurement.requisitionItems.create', compact('details'));
