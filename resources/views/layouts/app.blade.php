@@ -233,23 +233,6 @@
                             </li>
                         </ul>
                     </li>
-
-                    <li class="pc-item pc-hasmenu">
-                        <a href="#!" class="pc-link">
-                            <span class="pc-micon"><i data-feather="truck" class="pc-icon"></i></span>
-                            <span class="pc-mtext" data-i18n="Fleet Management">Fleet Management</span>
-                        <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
-                    </a>
-                    <ul class="pc-submenu">
-                        <li class="pc-item"><a class="pc-link" href="{{ route('drivermanagement.index') }}" data-i18n="Driver Management">Driver Management</a></li>
-                            <li class="pc-item"><a class="pc-link" href="{{ route('vehicle-registry.index') }}" data-i18n="fleetmanagement">Vehicle Registry</a></li> 
-                            <li class="pc-item"><a class="pc-link" href="{{ route('tripmanagement.index') }}" data-i18n="fleetmanagement">Trip Management</a></li>
-                            <li class="pc-item"><a class="pc-link" href="{{ route('fuelmanagement.index') }}" data-i18n="fleetmanagement">Fuel Management</a></li>
-                            <li class="pc-item"><a class="pc-link" href="{{ route('complianceanddocumentation.index') }}" data-i18n="fleetmanagement">Compliance</a></li>
-                            <li class="pc-item"><a class="pc-link" href="{{ route('fleetprocurementanddisposal.index') }}" data-i18n="fleetmanagement">Fleet Disposal</a></li>
-                            <li class="pc-item"><a class="pc-link" href="{{ route('inventoryofspareparts.index') }}" data-i18n="fleetmanagement">Inventory Of Spare Parts</a></li>
-                        </ul>
-                    </li>
                     <li class="pc-item pc-hasmenu">
                         <a href="#!" class="pc-link">
                             <span class="pc-micon"><i data-feather="archive" class="pc-icon"></i></span>
@@ -342,6 +325,9 @@
                             <li class="pc-item"><a class="pc-link" href="{{ route('vehicle-registry.index') }}" data-i18n="fleetmanagement">Vehicle Registry</a></li> 
                             <li class="pc-item"><a class="pc-link" href="{{ route('tripmanagement.index') }}" data-i18n="fleetmanagement">Trip Management</a></li>
                             <li class="pc-item"><a class="pc-link" href="{{ route('fuelmanagement.index') }}" data-i18n="fleetmanagement">Fuel Management</a></li>
+                            <li class="pc-item"><a class="pc-link" href="{{ route('complianceanddocumentation.index') }}" data-i18n="fleetmanagement">Compliance</a></li>
+                            <li class="pc-item"><a class="pc-link" href="{{ route('fleetprocurementanddisposal.index') }}" data-i18n="fleetmanagement">Fleet Disposal</a></li>
+                            <li class="pc-item"><a class="pc-link" href="{{ route('inventoryofspareparts.index') }}" data-i18n="fleetmanagement">Inventory Of Spare Parts</a></li>
                             <li class="pc-item"><a class="pc-link" href="{{ route('utilization.index') }}" data-i18n="fleetmanagement">Utilization & Costing</a></li>
                             <li class="pc-item"><a class="pc-link" href="{{ route('servicetracking.index') }}" data-i18n="fleetmanagement">Service Tracking</a></li>
                             <li class="pc-item"><a class="pc-link" href="{{ route('gps.index') }}" data-i18n="fleetmanagement">GPS Integration</a></li>
@@ -411,13 +397,6 @@
                     </li>
                     <li class="pc-item pc-hasmenu">
                         <a href="#!" class="pc-link">
-                            <span class="pc-micon"><i data-feather="users" class="pc-icon"></i></span>
-                            <span class="pc-mtext" data-i18n="HRMS">HRMS</span>
-                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
-                        </a>
-                    </li>
-                    <li class="pc-item pc-hasmenu">
-                        <a href="#!" class="pc-link">
                             <span class="pc-micon"><i data-feather="shield" class="pc-icon"></i></span>
                             <span class="pc-mtext" data-i18n="Insurance">Insurance</span>
                             <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
@@ -438,13 +417,6 @@
                         <a href="#!" class="pc-link">
                             <span class="pc-micon"><i data-feather="briefcase" class="pc-icon"></i></span>
                             <span class="pc-mtext" data-i18n="Legal">Legal</span>
-                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
-                        </a>
-                    </li>
-                    <li class="pc-item pc-hasmenu">
-                        <a href="#!" class="pc-link">
-                            <span class="pc-micon"><i data-feather="check-circle" class="pc-icon"></i></span>
-                            <span class="pc-mtext" data-i18n="Audit Management">Audit Management</span>
                             <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
                         </a>
                     </li>
