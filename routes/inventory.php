@@ -19,6 +19,8 @@ use App\Http\Controllers\Inventory\StockValuationHistoryController;
 use App\Http\Controllers\Inventory\InterBranchRequisitionController;
 use App\Http\Controllers\Inventory\ReportsController; 
 use App\Http\Controllers\Inventory\InterBranchRequisitionApprovalController;
+use App\Http\Controllers\Inventory\PropertyReceiptPrintController;
+
 
 
 Route::namespace('Inventory')->group(function () {
@@ -41,4 +43,6 @@ Route::namespace('Inventory')->group(function () {
     Route::resource('interbranchrequisition', InterBranchRequisitionController::class);
     Route::resource('interbranchrequisitionapproval', InterBranchRequisitionApprovalController::class);
     Route::resource('inventoryreports', ReportsController::class);
+    Route::resource('rentdashboard', RentDashboardController::class);
+    Route::resource('receiptprint', PropertyReceiptPrintController::class);
 });
