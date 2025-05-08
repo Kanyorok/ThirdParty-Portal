@@ -337,26 +337,12 @@
                     
                     <li class="pc-item pc-hasmenu">
                         <a href="#!" class="pc-link">
-                            <span class="pc-micon"><i data-feather="file-text" class="pc-icon"></i></span>
-                            <span class="pc-mtext" data-i18n="Document Management">Document Management</span>
-                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
-                        </a>
-                    </li>
-                    <li class="pc-item pc-hasmenu">
-                        <a href="#!" class="pc-link">
                             <span class="pc-micon"><i data-feather="home" class="pc-icon"></i></span>
                             <span class="pc-mtext" data-i18n="Property Management">Property Management</span>
                             <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
                         </a>
 
                         <ul class="pc-submenu">
-                        <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
-                                        Dashboard
-                                    </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
-                                <ul class="pc-submenu">
-                                    <li class="pc-item"><a class="pc-link" href="{{ route('itemmaster.index') }}" data-i18n="List">Dashboard</a></li>
-                                </ul>
-                            </li>
 
                             <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
                                         Propery Registry
@@ -382,16 +368,50 @@
                                     </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
                                 <ul class="pc-submenu">
                                     <li class="pc-item"><a class="pc-link" href="{{ route('addtenant.index') }}" data-i18n="Procurement List">Tenant Maintenance</a></li>
+                                    <li class="pc-item"><a class="pc-link" href="{{ route('tenantclearance.index') }}" data-i18n="Procurement List">Tenant Clearance</a></li>
                                     <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
                                         Lease Management
                                     </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
                                 <ul class="pc-submenu">
                                     <li class="pc-item"><a class="pc-link" href="{{ route('addlease.index') }}" data-i18n="Procurement List">Lease Maintenance</a></li>
                                     <li class="pc-item"><a class="pc-link" href="{{ route('schedulelease.index') }}" data-i18n="Procurement List">Lease Schedule</a></li>
+                                    <li class="pc-item"><a class="pc-link" href="{{ route('renewlease.index') }}" data-i18n="Procurement List">Lease Renewal</a></li>
+                                    <li class="pc-item"><a class="pc-link" href="{{ route('terminatelease.index') }}" data-i18n="Procurement List">Lease Termination</a></li>
+                                    <li class="pc-item"><a class="pc-link" href="{{ route('paymentfrequency.index') }}" data-i18n="Procurement List">Payment Frequency</a></li>
                                 </ul>                       
                             </li> 
                                 </ul>  
-                       
+                                <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
+                            Billing & Receipting
+                                    </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item"><a class="pc-link" href="{{ route('rentinvoice.index') }}" data-i18n="Procurement List">Invoicing</a></li>
+                                    <li class="pc-item"><a class="pc-link" href="{{ route('rentreceipt.index') }}" data-i18n="Procurement List">Receipting</a></li>
+                                    <li class="pc-item"><a class="pc-link" href="{{ route('tenantledger.index') }}" data-i18n="Procurement List">Tenant Ledger</a></li>
+                                    <li class="pc-item"><a class="pc-link" href="{{ route('rentdashboard.index') }}" data-i18n="Procurement List">Rent Dashboard</a></li>
+                                </ul>
+                            </li>  
+                            
+                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
+                            Maintenance & Issues
+                                    </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item"><a class="pc-link" href="{{ route('maintenancerequest.index') }}" data-i18n="Procurement List">Maintenance request</a></li>
+                                    <li class="pc-item"><a class="pc-link" href="{{ route('assignrequest.index') }}" data-i18n="Procurement List">Assign</a></li>
+                                    <li class="pc-item"><a class="pc-link" href="{{ route('maintenancedashboard.index') }}" data-i18n="Procurement List">Dashboard</a></li>
+                                    <li class="pc-item"><a class="pc-link" href="{{ route('workcompletion.index') }}" data-i18n="Procurement List">Work Completion</a></li>
+                                </ul>
+                            </li>
+
+                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
+                            Reports
+                                    </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item"><a class="pc-link" href="{{ route('propertyreports.index') }}" data-i18n="Procurement List">Reports</a></li>
+                                    <li class="pc-item"><a class="pc-link" href="{{ route('propertyanalytics.index') }}" data-i18n="Procurement List">Analytics</a></li>
+                                </ul>
+                            </li>
+
                             </li>                            
                         </ul>
                     </li>

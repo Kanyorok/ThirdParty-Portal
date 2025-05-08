@@ -1,7 +1,8 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Payment Frequencies')
 @section('content')
 <div class="container mt-4">
+<a href="{{ route('paymentfrequency.create') }}" class="btn btn-primary mb-3">New Payment Frequency</a>
   <h4 class="fw-bold mb-3">📋 Payment Frequencies</h4>
 
   <table class="table table-bordered table-striped align-middle">
