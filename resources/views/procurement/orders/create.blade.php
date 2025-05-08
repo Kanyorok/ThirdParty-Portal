@@ -30,7 +30,7 @@
         <div class="row mb-4">
             <div class="col-md-6">
                 <label>Supplier</label>
-                <select class="form-control">
+                <select class="form-control supplier">
                     <option selected disabled>Select supplier</option>
 {{--                     @foreach ($Details as $vendor)--}}
 {{--                <option value="{{ $vendor->Id }}">{{ $vendor->Name }}</option>--}}
@@ -53,15 +53,15 @@
             </div>
             <div class="col-md-4">
                 <label>Date</label>
-                <input type="date" class="form-control" />
+                <input type="date" class="form-control poDate" />
             </div>
             <div class="col-md-4">
                 <label>Reference Number</label>
-                <input type="text" class="form-control" placeholder="RFQ Number" />
+                <input type="text" class="form-control rfqNo" placeholder="RFQ Number" />
             </div>
             <div class="col-md-4 mt-2">
                 <label>Priority</label>
-                <select class="form-control">
+                <select class="form-control priority">
                     <option>High</option>
                     <option>Medium</option>
                     <option>Low</option>
@@ -69,7 +69,7 @@
             </div>
             <div class="col-md-4 mt-2">
                 <label>Payment Terms</label>
-                <input type="text" class="form-control" placeholder="e.g., Net 30, 50%" />
+                <input type="text" class="form-control terms" placeholder="e.g., Net 30, 50%" />
             </div>
         </div>
 

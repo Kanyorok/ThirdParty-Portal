@@ -143,11 +143,11 @@ class RequisitionsController extends Controller
      */
     public function show(string $id)
     {
-
+        $this->authorize('view', Requisitions::query()->findOrFail($id));
         try {
 
             $details = $this->itemService->getRequisitionRelatedItems($id);
-            return view('procurement.requisitionItems.create', compact('details'));
+            return view('procurement.requisitions.show', compact('details'));
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Failed to fetch items: ' . $e->getMessage());
         }

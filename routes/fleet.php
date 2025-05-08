@@ -6,6 +6,13 @@ use App\Http\Controllers\Fleetmanagement\DriverManagementController;
 use App\Http\Controllers\Fleetmanagement\ServiceTrackingController;
 use App\Http\Controllers\Fleetmanagement\LicensingController;
 use App\Http\Controllers\Fleetmanagement\VehicleManagementController;
+use App\Http\Controllers\Fleetmanagement\ComplianceAndDocumentationController;
+use App\Http\Controllers\Fleetmanagement\FleetProcurementAndDisposalController;
+use App\Http\Controllers\Fleetmanagement\InventoryOfSparePartsController;
+use App\Http\Controllers\Fleetmanagement\UtilizationController;
+use App\Http\Controllers\Fleetmanagement\ReportsController;
+use App\Http\Controllers\Fleetmanagement\GpsController;
+
 
 Route::namespace('Fleetmanagement')->group(function () {
     Route::resource('tripmanagement', TripManagementController::class);
@@ -14,5 +21,10 @@ Route::namespace('Fleetmanagement')->group(function () {
     Route::resource('servicetracking', ServiceTrackingController::class);
     Route::resource('licensing', LicensingController::class);
     Route::resource('vehicle-registry', VehicleManagementController::class);
-   
+    Route::resource('complianceanddocumentation', ComplianceAndDocumentationController::class);
+    Route::resource('fleetprocurementanddisposal', FleetProcurementAndDisposalController::class);
+    Route::resource('inventoryofspareparts', InventoryOfSparePartsController::class);
+    Route::resource('utilization', UtilizationController::class);
+    Route::resource('reports', ReportsController::class);
+    Route::resource('gps', GpsController::class);
 });
