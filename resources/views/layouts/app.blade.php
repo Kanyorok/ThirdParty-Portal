@@ -299,8 +299,13 @@
                         </a>
                         <ul class="pc-submenu">
                             <li class="pc-item"><a class="pc-link" href="{{ route('providermanagement.index') }}" data-i18n="Provider Management">Provider Management</a></li>  
-                            <li class="pc-item"><a class="pc-link" href="{{ route('insurancetypemanagement.index') }}" data-i18n=" insurancetypeManagement">insurance type Management</a></li>  
-                            <li class="pc-item"><a class="pc-link" href="{{ route('contactmanagement.index') }}" data-i18n=" contactManagement">contact Management</a></li>  
+                            <li class="pc-item"><a class="pc-link" href="{{ route('insurancetypemanagement.index') }}" data-i18n=" insurancetypeManagement">Insurance Management</a></li>  
+                            <li class="pc-item"><a class="pc-link" href="{{ route('insurancepolicymanagement.index') }}" data-i18n=" insurancepolicymanagement">policy Management</a></li>  
+                            <li class="pc-item"><a class="pc-link" href="{{ route('coveredassetmanagement.index') }}" data-i18n=" coveredassetmanagement">Asset Management</a></li>  
+                            <li class="pc-item"><a class="pc-link" href="{{ route('premiumpaymentmanagement.index') }}" data-i18n=" premiumpaymentmanagement">Premium Management</a></li>  
+                            <li class="pc-item"><a class="pc-link" href="{{ route('claimsmanagement.index') }}" data-i18n=" claimsmanagement">Claims Management</a></li>  
+                            <li class="pc-item"><a class="pc-link" href="{{ route('renewalmanagement.index') }}" data-i18n=" renewalmanagement">Renewal Management</a></li>  
+                            <li class="pc-item"><a class="pc-link" href="{{ route('reportmanagement.index') }}" data-i18n=" reportmanagement">Report Management</a></li>  
                          
                         </ul
                     </li>
