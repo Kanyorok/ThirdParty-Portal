@@ -19,6 +19,13 @@ use App\Http\Controllers\Property\PropertyRentDashboardController;
 use App\Http\Controllers\Property\PropertyReceiptPrintController; 
 use App\Http\Controllers\Property\TenantStatementController;  
 use App\Http\Controllers\Property\PropertyLeaseRenewalController;  
+use App\Http\Controllers\Property\PropertyTenantClearanceController;  
+use App\Http\Controllers\Property\PropertyMaintenanceRequestController;  
+use App\Http\Controllers\Property\PropertyMaintananceAssignController;  
+use App\Http\Controllers\Property\PropertyMaintenanceDashboardController;  
+use App\Http\Controllers\Property\PropertyMaintenanceWorkCompletionController;
+use App\Http\Controllers\Property\PropertyReportsController;
+Route::resource('propertyreports', PropertyReportsVisualController::class);
 
 
 Route::namespace('Property')->group(function () {
@@ -40,5 +47,12 @@ Route::namespace('Property')->group(function () {
     Route::resource('rentdashboard', RentDashboardController::class);
     Route::resource('receiptprint', PropertyReceiptPrintController::class);
     Route::resource('tenantledger', TenantStatementController::class); 
+    Route::resource('tenantclearance', PropertyTenantClearanceController::class);
+    Route::resource('maintenancerequest', PropertyMaintenanceRequestController::class);
+    Route::resource('assignrequest', PropertyMaintananceAssignController::class);  
+    Route::resource('maintenancedashboard', PropertyMaintenanceDashboardController::class);  
+    Route::resource('workcompletion', PropertyMaintenanceWorkCompletionController::class);
+    Route::resource('propertyreports', PropertyReportsController::class);
+    Route::resource('propertyanalytics', PropertyReportsVisualController::class);
     
 });
