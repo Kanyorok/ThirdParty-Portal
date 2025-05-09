@@ -61,6 +61,14 @@ class RFQController extends Controller
         $lastRFQ = RFQ::where('RFQNumber', 'like', $prefix . '%')->orderBy('Id', 'desc')->first();
         $lastNumber = $lastRFQ ? intval(substr($lastRFQ->RFQNumber, strlen($prefix))) : 0;
         $newRFQNumber = $prefix . str_pad($lastNumber + 1, 5, '0', STR_PAD_LEFT);
+        $requisitionItems = $items->map(function ($item) {
+            return [
+                'name' => $item->name,
+                'quantity' => $item->quantity,
+                'unit' => $item->uom,
+                'description' => $item->description,
+            ];
+        });
 
         // Create the RFQ
         $rfq = RFQ::create([
