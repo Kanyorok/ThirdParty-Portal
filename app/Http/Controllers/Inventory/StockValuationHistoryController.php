@@ -10,10 +10,10 @@ class StockValuationHistoryController extends Controller
     //
     public function index()
     {
-        return view('inventory.StockManagement.stockvaluation.index');
+        return view('inventory.stockmanagement.stockvaluation.index');
     }
 
     public function create(){
-        return view('inventory.StockManagement.stockvaluation.create');
+        return view('inventory.stockmanagement.stockvaluation.create');
     }
 }
