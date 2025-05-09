@@ -138,41 +138,41 @@
                                             data-i18n="Apply">Add Mode</a>
                                     </li>
                                 </ul>
-                            </li>
-                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Teacher">
-                                        Tenders
-                                    </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
-                                <ul class="pc-submenu">
-                                    <li class="pc-item">
-                                        <a class="pc-link" href="{{ route('tendering-process.create') }}"
-                                            data-i18n="Create Tender">Create Tender</a>
-                                    </li>
-                                    <li class="pc-item">
-                                        <a class="pc-link" href="{{ route('tendering-process.index') }}"
-                                            data-i18n="Tender List">Tender List</a>
-                                    </li>
-                                    <li class="pc-item pc-hasmenu">
-                                        <a class="pc-link" href="#!">
-                                            <span data-i18n="Auditors">Auditors</span>
-                                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
-                                        </a>
-                                        <ul class="pc-submenu">
-                                            <li class="pc-item">
-                                                <a class="pc-link" href="{{ route('sasra-auditors.index') }}"
-                                                    data-i18n="SASRA List">SASRA Auditor List</a>
-                                            </li>
-                                            <li class="pc-item">
-                                                <a class="pc-link" href="{{ route('sasra-auditors.import') }}"
-                                                    data-i18n="Upload">Upload Auditor List</a>
-                                            </li>
-                                            <li class="pc-item">
-                                                <a class="pc-link" href="{{ route('engaged-auditors.index') }}"
-                                                    data-i18n="Engaged">Engaged Auditors</a>
-                                            </li>
-                                        </ul>
-                                    </li>
-                                </ul>
-                            </li>
+                </li>
+                <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Teacher">
+                    Tendering
+                     </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                     <ul class="pc-submenu">
+
+                     <li class="pc-item pc-hasmenu">
+                    <a class="pc-link" href="#!"> <span data-i18n="Auditors">Tender Setup</span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                    <ul class="pc-submenu">
+                    <li class="pc-item"> <a class="pc-link" href="{{ route('initiatetender.index') }}" data-i18n="Create Tender">Tender Initiation</a></li>
+                    <li class="pc-item"> <a class="pc-link" href="{{ route('initiateapprove.index') }}" data-i18n="Create Tender">Initiation Approval</a></li> 
+                    <li class="pc-item"> <a class="pc-link" href="{{ route('tendercategory.index') }}" data-i18n="Tender List">Tender Category</a></li>
+                     <li class="pc-item"> <a class="pc-link" href="{{ route('tendertype.index') }}" data-i18n="Tender List">Tender Type</a></li> 
+                    </ul>
+                </li>
+
+                <li class="pc-item pc-hasmenu">
+                    <a class="pc-link" href="#!"> <span data-i18n="Auditors">Manage Tender Suppliers</span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                    <ul class="pc-submenu">
+                    <li class="pc-item"> <a class="pc-link" href="{{ route('tenderresponse.index') }}" data-i18n="Create Tender">Response Tracking</a></li>
+                    <li class="pc-item"> <a class="pc-link" href="{{ route('initiateapprove.index') }}" data-i18n="Create Tender">Clarifications Handling</a></li> 
+                    <li class="pc-item"> <a class="pc-link" href="{{ route('tendercategory.index') }}" data-i18n="Tender List">Tender Submission</a></li>
+                     <li class="pc-item"> <a class="pc-link" href="{{ route('tendertype.index') }}" data-i18n="Tender List">Tender Type</a></li> 
+                    </ul>
+                </li>                
+                    <li class="pc-item pc-hasmenu">
+                    <a class="pc-link" href="#!"> <span data-i18n="Auditors">Auditors</span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                    <ul class="pc-submenu">
+                    <li class="pc-item"> <a class="pc-link" href="{{ route('sasra-auditors.index') }}" data-i18n="SASRA List">SASRA Auditor List</a></li>
+                    <li class="pc-item"> <a class="pc-link" href="{{ route('sasra-auditors.import') }}" data-i18n="Upload">Upload Auditor List</a></li>
+                    <li class="pc-item"> <a class="pc-link" href="{{ route('engaged-auditors.index') }}" data-i18n="Engaged">Engaged Auditors</a></li>
+                 </ul>
+                </li>
+            </ul>
+    </li>
                             <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Teacher">
                                         RFQS
                                     </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
@@ -538,15 +538,7 @@
                             <li class="pc-item"><a class="pc-link" href="{{ route('periodmanagement.index') }}"
                                     data-i18n="Finance">Period Mananagement</a></li>
                         </ul>
-                        <!-- <ul class="pc-submenu">
-                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
-                                    Journal Entries
-                                    </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
-                                <ul class="pc-submenu">
-                                    <li class="pc-item"><a class="pc-link" href="{{ route('journalbatch.index') }}" data-i18n="Procurement List">Journal Batch</a></li>
-                                </ul>
-                            </li>
-                        </ul> -->
+         
                     </li>
 
                     <li class="pc-item pc-caption"><label data-i18n="Widget">Settings</label>

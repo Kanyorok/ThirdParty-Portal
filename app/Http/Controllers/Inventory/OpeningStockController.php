@@ -10,10 +10,10 @@ class OpeningStockController extends Controller
     //
     public function index()
     {
-        return view('inventory.Stock Management.opening stock load.index');
+        return view('inventory.StockManagement.openingstockload.index');
     }
 
     public function create(){
-        return view('inventory.Stock Management.opening stock load.create');
+        return view('inventory.StockManagement.openingstockload.create');
     }
 }

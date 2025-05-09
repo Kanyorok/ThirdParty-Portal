@@ -10,10 +10,10 @@ class InterBranchRequisitionApprovalController extends Controller
     //
     public function index()
     {
-        return view('inventory.interbranch requisition.approval.index');
+        return view('inventory.interbranchrequisition.approval.index');
     }
 
     public function create(){
-        return view('inventory.interbranch requisition.approval.create');
+        return view('inventory.interbranchrequisition.approval.create');
     }
 }

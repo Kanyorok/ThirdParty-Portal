@@ -10,10 +10,10 @@ class MovementDashboardController extends Controller
     //
     public function index()
     {
-        return view('inventory.inventory dashboard.stock movement.index');
+        return view('inventory.inventorydashboard.stockmovement.index');
     }
 
     public function create(){
-        return view('inventory.inventory dashboard.stock movement.create');
+        return view('inventory.inventorydashboard.stockmovement.create');
     }
 }
