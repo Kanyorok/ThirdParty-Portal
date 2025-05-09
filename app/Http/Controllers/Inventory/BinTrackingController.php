@@ -10,10 +10,10 @@ class BinTrackingController extends Controller
     //
     public function index()
     {
-        return view('inventory.Stock Management.Bin-Rack Location Tracking.index');
+        return view('inventory.StockManagement.Bin-RackLocationTracking.index');
     }
 
     public function create(){
-        return view('inventory.Stock Management.Bin-Rack Location Tracking.create');
+        return view('inventory.StockManagement.Bin-RackLocationTracking.create');
     }
 }

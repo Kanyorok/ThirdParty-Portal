@@ -4,7 +4,7 @@
 <div class="container bg-white shadow-sm rounded p-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h4>🔁 Goods Transfer List</h4>
-      <a href="stock-transfer-form.html" class="btn btn-success">➕ New Transfer</a>
+      <a href="{{ route('transactionstransfers.create') }}" class="btn btn-success">➕ New Transfer</a>
     </div>
 
     <div class="mb-3">

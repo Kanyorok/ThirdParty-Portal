@@ -16,6 +16,11 @@ use App\Http\Controllers\Procurement\RFQController;
 use App\Http\Controllers\Procurement\RFQResponseController;
 use App\Http\Controllers\Procurement\RFQEvaluationController;
 use App\Http\Controllers\Procurement\GoodsReceiptController;
+use App\Http\Controllers\Procurement\TenderInitiationController; 
+use App\Http\Controllers\Procurement\TenderCategoryController; 
+use App\Http\Controllers\Procurement\TenderTypeController;   
+use App\Http\Controllers\Procurement\TenderInitiationApproveController;  
+use App\Http\Controllers\Procurement\TenderResponseController;
 
 Route::namespace('Procurement')->group(function () {
 
@@ -112,4 +117,10 @@ Route::namespace('Procurement')->group(function () {
     //Receipts
 
     Route::resource('procurementreceipts', GoodsReceiptController::class);
+    Route::resource('initiatetender', TenderInitiationController::class);
+    Route::resource('tendercategory', TenderCategoryController::class);
+    Route::resource('tendertype', TenderTypeController::class);
+    Route::resource('initiateapprove', TenderInitiationApproveController::class);
+    Route::resource('tenderresponse', TenderResponseController::class);
+
 });
