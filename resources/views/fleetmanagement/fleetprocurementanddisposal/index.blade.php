@@ -3,89 +3,71 @@
 @section('content')
 
 <div class="container mt-5">
-    <h1 class="text-center text-primary mb-4">Fleet Procurement and Disposal</h1>
+    <h1 class="text-center text-primary mb-4">Cashlink Financial Modules</h1>
 
-    <?php
-    // Define sample fleet records
-    $fleetRecords = [
-        ['id' => 1, 'vehicle_type' => 'Toyota Hilux', 'purchase_date' => '2024-06-01', 'vendor' => 'Toyota Kenya', 'status' => 'Procured'],
-        ['id' => 2, 'vehicle_type' => 'Mitsubishi Canter', 'purchase_date' => '2023-11-10', 'vendor' => 'MMC Auto', 'status' => 'Disposed'],
-        ['id' => 3, 'vehicle_type' => 'Isuzu NQR', 'purchase_date' => '2024-02-15', 'vendor' => 'General Motors', 'status' => 'Procured']
-    ];
-
-    // Extract vendors
-    $vendors = array_unique(array_column($fleetRecords, 'vendor'));
-
-    // Count status
-    $procured = array_filter($fleetRecords, fn($r) => $r['status'] === 'Procured');
-    $disposed = array_filter($fleetRecords, fn($r) => $r['status'] === 'Disposed');
-    ?>
-
+    <!-- Bank Accounts Setup -->
     <section class="mt-4">
-        <h3 class="text-secondary">Fleet Records</h3>
-        <div class="table-responsive">
-            <table class="table table-striped">
-                <thead class="thead-dark">
-                    <tr>
-                        <th>ID</th>
-                        <th>Vehicle Type</th>
-                        <th>Date</th>
-                        <th>Vendor</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($fleetRecords as $record): ?>
-                        <tr>
-                            <td><?= $record['id'] ?></td>
-                            <td><?= $record['vehicle_type'] ?></td>
-                            <td><?= $record['purchase_date'] ?></td>
-                            <td><?= $record['vendor'] ?></td>
-                            <td>
-                                <span class="badge bg-<?= $record['status'] === 'Procured' ? 'success' : 'danger' ?>">
-                                    <?= $record['status'] ?>
-                                </span>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-    </section>
-
-    <section class="mt-5">
-        <h3 class="text-secondary">Fleet Status Summary</h3>
-        <div class="row">
-            <div class="col-md-6">
-                <div class="card bg-success text-white mb-3">
-                    <div class="card-body">
-                        <h5 class="card-title">Total Procured</h5>
-                        <p class="card-text"><?= count($procured) ?> Vehicles</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card bg-danger text-white mb-3">
-                    <div class="card-body">
-                        <h5 class="card-title">Total Disposed</h5>
-                        <p class="card-text"><?= count($disposed) ?> Vehicles</p>
-                    </div>
-                </div>
+        <h3 class="text-secondary">Bank Accounts Setup</h3>
+        <div class="card mb-3">
+            <div class="card-body">
+                <p class="card-text">Manage your organization's bank accounts for transaction mapping.</p>
             </div>
         </div>
     </section>
 
-    <section class="mt-5">
-        <h3 class="text-secondary">Vendors</h3>
-        <ul class="list-group">
-            <?php foreach ($vendors as $vendor): ?>
-                <li class="list-group-item"><?= $vendor ?></li>
-            <?php endforeach; ?>
-        </ul>
+    <!-- Bank Reconciliation -->
+    <section class="mt-4">
+        <h3 class="text-secondary">Bank Reconciliation</h3>
+        <div class="card mb-3">
+            <div class="card-body">
+                <p class="card-text">Reconcile bank statements with internal cash book records.</p>
+            </div>
+        </div>
     </section>
 
+    <!-- Cash Book -->
+    <section class="mt-4">
+        <h3 class="text-secondary">Cash Book</h3>
+        <div class="card mb-3">
+            <div class="card-body">
+                <p class="card-text">Monitor all cash and bank transactions in one consolidated ledger.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Payment & Receipt Vouchers -->
+    <section class="mt-4">
+        <h3 class="text-secondary">Payment & Receipt Vouchers</h3>
+        <div class="card mb-3">
+            <div class="card-body">
+                <p class="card-text">Generate and record incoming and outgoing payment transactions.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Petty Cash Management -->
+    <section class="mt-4">
+        <h3 class="text-secondary">Petty Cash Management</h3>
+        <div class="card mb-3">
+            <div class="card-body">
+                <p class="card-text">Track and control petty cash usage for small operational expenses.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Cheque Management -->
+    <section class="mt-4">
+        <h3 class="text-secondary">Cheque Management</h3>
+        <div class="card mb-3">
+            <div class="card-body">
+                <p class="card-text">Manage cheques issued, received, and voided across accounts.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Add New Record Button -->
     <div class="text-end mt-4">
-        <a href="{{route('fleetprocurementanddisposal.create')}}" class="btn btn-success">Add New Fleet Record</a>
+        <a href="{{route('cashlink.create')}} " class="btn btn-success">Add New Cashlink Record</a>
     </div>
 </div>
 @endsection
