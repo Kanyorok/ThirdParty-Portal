@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Settings;
+namespace App\Http\Controllers\Settings\Codes;
 
 use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
