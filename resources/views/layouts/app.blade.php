@@ -16,11 +16,17 @@
     <nav class="pc-sidebar">
         <div class="navbar-wrapper">
             <div class="m-header">
-                <a href="{{ route('home') }}" class="b-brand text-primary">
-                    <img src="{{ asset('assets/img/icons/android-icon-36x36.png') }}" class="img-fluid " alt="logo">
-                    <span class="ms-3 h3 text-decoration-none"> {{ config('app.name') }}</span>
-                    <span class="badge bg-light-success rounded-pill ms-2 theme-version">v0.0.1</span></a>
+                <a href="{{ route('home') }}" class="b-brand text-primary d-flex align-items-center">
+                    <img src="{{ asset('assets/img/icons/android-icon-48x48.png') }}" class="img-fluid" alt="logo">
+                    <div class="ms-3">
+                        <div class="h2 mb-0 text-decoration-none">
+                            {{ config('app.name') }}
+                        </div>
+                        <div class="small text-muted text-center">Unity Is Strength</div>
+                    </div>
+                </a>
             </div>
+            
             <div class="navbar-content">
                 <div class="card pc-user-card">
                     <div class="card-body">
@@ -64,7 +70,7 @@
                         <a href="{{ route('home') }}" class="pc-link">
                             <span class="pc-micon"><i data-feather="home" class="pc-icon"></i>
                                 <use xlink:href="#custom-fatrows"></use>
-                            </span><span class="pc-mtext" data-i18n="Data">Home</span></a>
+                            </span><span class="pc-mtext fw-bold" data-i18n="Data">Home</span></a>
                     </li>
                     <li class="pc-item pc-hasmenu">
                         <a href="#!" class="pc-link"><span class="pc-micon"><svg class="pc-icon">
@@ -258,31 +264,6 @@
                             <li class="pc-item"><a class="pc-link" href="{{ route('trailmanagement.index') }}" data-i18n="trailmanagement"> Audit trail</a></li>
                             <li class="pc-item"><a class="pc-link" href="{{ route('uploadmanagement.index') }}" data-i18n="uploadmanagement"> Bulk Upload</a></li>
                             
-                        </ul>
-                    </li>
-                    <li class="pc-item pc-hasmenu">
-                        <a href="#!" class="pc-link">
-                            <span class="pc-micon"><i data-feather="truck" class="pc-icon"></i></span>
-                            <span class="pc-mtext" data-i18n="Fleet Management">Fleet Management</span>
-                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
-                        </a>
-                        <ul class="pc-submenu">
-                            <li class="pc-item"><a class="pc-link" href="{{ route('drivermanagement.index') }}"
-                                    data-i18n="Driver Management">Driver Management</a></li>
-                            <li class="pc-item"><a class="pc-link" href="{{ route('vehicle-registry.index') }}"
-                                    data-i18n="fleetmanagement">Vehicle Registry</a></li>
-                            <li class="pc-item"><a class="pc-link" href="{{ route('tripmanagement.index') }}"
-                                    data-i18n="fleetmanagement">Trip Management</a></li>
-                            <li class="pc-item"><a class="pc-link" href="{{ route('fuelmanagement.index') }}"
-                                    data-i18n="fleetmanagement">Fuel Management</a></li>
-                            <li class="pc-item"><a class="pc-link"
-                                    href="{{ route('complianceanddocumentation.index') }}"
-                                    data-i18n="fleetmanagement">Compliance</a></li>
-                            <li class="pc-item"><a class="pc-link"
-                                    href="{{ route('fleetprocurementanddisposal.index') }}"
-                                    data-i18n="fleetmanagement">Fleet Disposal</a></li>
-                            <li class="pc-item"><a class="pc-link" href="{{ route('inventoryofspareparts.index') }}"
-                                    data-i18n="fleetmanagement">Inventory Of Spare Parts</a></li>
                         </ul>
                     </li>
                     <li class="pc-item pc-hasmenu">
