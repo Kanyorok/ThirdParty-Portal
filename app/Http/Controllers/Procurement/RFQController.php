@@ -5,12 +5,10 @@ namespace App\Http\Controllers\Procurement;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Procurement\RFQ;
-use App\Models\Procurement\Tender;
+use App\Models\Procurement\Supplier;
 use App\Models\Procurement\ItemCategory;
 use Illuminate\Support\Facades\DB;
-use App\Models\Procurement\Supplier;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Auth;
 
 class RFQController extends Controller
 {
@@ -19,7 +17,7 @@ class RFQController extends Controller
      */
     public function index()
     {
-        $rfqs = RFQ::with(['category'])->get();
+        $rfqs = RFQ::with(['category', 'suppliers'])->get();
         return view('procurement.rfqs.index', compact('rfqs'));
     }
 
@@ -29,7 +27,8 @@ class RFQController extends Controller
     public function create()
     {
         $categories = ItemCategory::all();
-        return view('procurement.rfqs.create', compact('categories'));
+        $suppliers = Supplier::all(); // Fetch all suppliers for selection
+        return view('procurement.rfqs.create', compact('categories', 'suppliers'));
     }
 
     /**
@@ -62,6 +61,14 @@ class RFQController extends Controller
         $lastRFQ = RFQ::where('RFQNumber', 'like', $prefix . '%')->orderBy('Id', 'desc')->first();
         $lastNumber = $lastRFQ ? intval(substr($lastRFQ->RFQNumber, strlen($prefix))) : 0;
         $newRFQNumber = $prefix . str_pad($lastNumber + 1, 5, '0', STR_PAD_LEFT);
+        $requisitionItems = $items->map(function ($item) {
+            return [
+                'name' => $item->name,
+                'quantity' => $item->quantity,
+                'unit' => $item->uom,
+                'description' => $item->description,
+            ];
+        });
 
         // Create the RFQ
         $rfq = RFQ::create([
@@ -78,6 +85,9 @@ class RFQController extends Controller
         return redirect()->route('rfqs.show', $rfq->Id)->with('success', 'RFQ created with requisition items and sent to suppliers.');
     }
 
+    /**
+     * Approve the RFQ and notify suppliers.
+     */
     public function approve(Request $request, $id)
     {
         $request->validate([
@@ -87,15 +97,14 @@ class RFQController extends Controller
 
         $rfq = RFQ::findOrFail($id);
 
-        // Fetch supplier details
-        $suppliers = Supplier::whereIn('Id', $request->suppliers)->get(['SupplierName', 'ContactEmail']);
-        // Update RFQ status to Approved and store supplier details
-        $rfq->update([
-            'Status' => 'Approved',
-            'Suppliers' => $suppliers->toJson(), // Store supplier details as JSON
-        ]);
+        // Update RFQ status to Approved
+        $rfq->update(['Status' => 'Approved']);
+
+        // Update supplier statuses in the pivot table
+        $rfq->suppliers()->syncWithPivotValues($request->suppliers, ['Status' => 'Approved']);
 
         // Notify selected suppliers
+        $suppliers = Supplier::whereIn('Id', $request->suppliers)->get(['SupplierName', 'ContactEmail']);
         foreach ($suppliers as $supplier) {
             Mail::raw("You have a new RFQ for tender.", function ($message) use ($supplier) {
                 $message->to($supplier->ContactEmail)
@@ -106,6 +115,9 @@ class RFQController extends Controller
         return redirect()->back()->with('success', 'RFQ has been approved and emails sent to selected suppliers.');
     }
 
+    /**
+     * Reject the RFQ.
+     */
     public function reject(Request $request, $id)
     {
         $request->validate([
@@ -120,10 +132,10 @@ class RFQController extends Controller
 
         return redirect()->back()->with('success', 'RFQ has been rejected successfully.');
     }
+
     /**
      * Display the specified resource.
      */
-
     public function show($id)
     {
         $rfq = RFQ::with(['category'])->findOrFail($id);
@@ -137,24 +149,52 @@ class RFQController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit($id)
     {
-        //
+        $rfq = RFQ::with('suppliers')->findOrFail($id);
+        $categories = ItemCategory::all();
+        $suppliers = Supplier::all();
+
+        return view('procurement.rfqs.edit', compact('rfq', 'categories', 'suppliers'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, $id)
     {
-        //
+        $request->validate([
+            'ItemCategoryId' => 'required|exists:t_ItemCategories,id',
+            'Comments' => 'nullable|string|max:255',
+            'SubmissionDeadline' => 'required|date|after:today',
+            'suppliers' => 'required|array',
+            'suppliers.*' => 'exists:t_Suppliers,Id',
+        ]);
+
+        $rfq = RFQ::findOrFail($id);
+
+        // Update RFQ details
+        $rfq->update([
+            'ItemCategoryId' => $request->ItemCategoryId,
+            'Comments' => $request->Comments,
+            'SubmissionDeadline' => $request->SubmissionDeadline,
+            'ModifiedBy' => auth()->user()->Id,
+        ]);
+
+        // Update suppliers in the pivot table
+        $rfq->suppliers()->sync($request->suppliers);
+
+        return redirect()->route('rfqs.show', $rfq->Id)->with('success', 'RFQ updated successfully.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy($id)
     {
-        //
+        $rfq = RFQ::findOrFail($id);
+        $rfq->delete();
+
+        return redirect()->route('rfqs.index')->with('success', 'RFQ deleted successfully.');
     }
 }
