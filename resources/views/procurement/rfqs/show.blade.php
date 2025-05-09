@@ -111,7 +111,11 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label for="suppliers" class="form-label">Suppliers</label>
-                            
+                            <select name="suppliers[]" id="suppliers" class="form-control" multiple>
+                                @foreach ($suppliers as $supplier)
+                                    <option value="{{ $supplier->Id }}">{{ $supplier->SupplierName }}</option>
+                                @endforeach
+                            </select>
                         </div>
                     </div>
                     <div class="modal-footer">

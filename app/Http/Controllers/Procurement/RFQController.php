@@ -138,9 +138,12 @@ class RFQController extends Controller
      */
     public function show($id)
     {
-        $rfq = RFQ::with(['category', 'suppliers'])->findOrFail($id);
+        $rfq = RFQ::with(['category'])->findOrFail($id);
 
-        return view('procurement.rfqs.show', compact('rfq'));
+        // Get suppliers based on the RFQ's category
+        $suppliers = Supplier::where('CategoryId', $rfq->ItemCategoryId)->get();
+
+        return view('procurement.rfqs.show', compact('rfq', 'suppliers'));
     }
 
     /**
