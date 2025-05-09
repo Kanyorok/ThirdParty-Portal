@@ -109,7 +109,9 @@ Route::namespace('Procurement')->group(function () {
     Route::get('/rfq-evaluations/create', [RFQEvaluationController::class, 'create'])->name('evaluations.create');
     Route::post('/rfq-evaluations', [RFQEvaluationController::class, 'store'])->name('evaluations.store');
 
-    //Receipts
-
-    Route::resource('procurementreceipts', GoodsReceiptController::class);
+    //GoodsReceipts
+    //Route::resource('procurementreceipts', GoodsReceiptController::class);
+    Route::get('/procurementreceipts', [GoodsReceiptController::class,'index'])->name('procurementreceipts.index');
+    Route::get('/procurementreceipts/create', [GoodsReceiptController::class, 'create'])->name('procurementreceipts.create');
+    //Route::get('/procurementreceipts', [GoodsReceiptController::class, 'store'])->name('procurementreceipts.store');
 });

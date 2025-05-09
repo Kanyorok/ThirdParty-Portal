@@ -41,30 +41,25 @@
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <td>1</td>
-          <td>GRN-2025-001</td>
-          <td>PO-1001</td>
-          <td>ABC Suppliers</td>
-          <td>2025-05-07</td>
-          <td><span class="badge bg-warning">Draft</span></td>
-          <td>Moses K.</td>
-          <td>
-            <a href="#">View</a> | <a href="#">Edit</a> | <a href="#">Print</a>
-          </td>
-        </tr>
-        <tr>
-          <td>2</td>
-          <td>GRN-2025-002</td>
-          <td>PO-1002</td>
-          <td>XYZ Limited</td>
-          <td>2025-05-06</td>
-          <td><span class="badge bg-success">Posted</span></td>
-          <td>Jane D.</td>
-          <td>
-            <a href="#">View</a> | <a href="#">Print</a>
-          </td>
-        </tr>
+        @foreach($goodsReceipts as $key => $receipt)
+          <tr>
+            <td>{{ $key + 1 }}</td>
+            <td>{{ $receipt->GRNID }}</td>
+            <td>{{ $receipt->POID }}</td>
+            <td>{{ $receipt->supplier->name ?? 'N/A' }}</td>
+            <td>{{ \Carbon\Carbon::parse($receipt->ReceivedDate)->format('yy-m-d') }}</td>
+            <td>
+              <span class="badge bg-{{ $receipt->InspectionStatus == 'Posted' ? 'success' : 'warning' }}">
+                {{ $receipt->InspectionStatus }}
+              </span>
+            </td>
+            <td>{{ $receipt->ReceivedBy }}</td>
+            <td>
+              <a href="#">View</a> |
+              <a href="#">Edit</a>
+            </td>
+          </tr>
+        @endforeach
       </tbody>
     </table>
   </div>
