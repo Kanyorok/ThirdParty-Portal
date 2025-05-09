@@ -10,10 +10,10 @@ class ItemMasterController extends Controller
     //
     public function index()
     {
-        return view('inventory.item master.item master list.index');
+        return view('inventory.itemmaster.itemmasterlist.index');
     }
 
     public function create(){
-        return view('inventory.item master.item master list.create');
+        return view('inventory.itemmaster.itemmasterlist.create');
     }
 }
