@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Settings;
+namespace App\Http\Controllers\Settings\Codes;
 
 use App\Enums\LocalityTypeEnum;
 use App\Exceptions\ErroredException;
