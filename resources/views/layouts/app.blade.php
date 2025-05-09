@@ -242,7 +242,7 @@
                     </a>
                     <ul class="pc-submenu">
                         <li class="pc-item"><a class="pc-link" href="{{ route('drivermanagement.index') }}" data-i18n="Driver Management">Driver Management</a></li>
-                            <li class="pc-item"><a class="pc-link" href="{{ route('vehicle-registry.index') }}" data-i18n="fleetmanagement">Vehicle Registry</a></li> 
+                            <li class="pc-item"><a class="pc-link" href="{{ route('vehicle-registry.index') }}" data-i18n="fleetmanagement">Vehicle Registry</a></li>
                             <li class="pc-item"><a class="pc-link" href="{{ route('tripmanagement.index') }}" data-i18n="fleetmanagement">Trip Management</a></li>
                             <li class="pc-item"><a class="pc-link" href="{{ route('fuelmanagement.index') }}" data-i18n="fleetmanagement">Fuel Management</a></li>
                             <li class="pc-item"><a class="pc-link" href="{{ route('complianceanddocumentation.index') }}" data-i18n="fleetmanagement">Compliance</a></li>
@@ -277,7 +277,7 @@
 
                                 </ul>
                             </li>
-                          
+
 
                             <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
                                         Inventory Dashboard
@@ -288,7 +288,7 @@
 
                                 </ul>
                             </li>
-                            
+
                             <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
                                         Transactions
                                     </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
@@ -297,9 +297,9 @@
                                     <li class="pc-item"><a class="pc-link" href="{{ route('transactionstransfers.index') }}" data-i18n="Procurement List">Transfers</a></li>
                                     <li class="pc-item"><a class="pc-link" href="{{ route('transactionsadjustment.index') }}" data-i18n="Procurement List">Adjustments</a></li>
                                 </ul>
-                        
+
                             </li>
-                              
+
                             <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
                                         Stock Management
                                     </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
@@ -310,7 +310,7 @@
                                     <li class="pc-item"><a class="pc-link" href="{{ route('stockvaluationhistory.index') }}" data-i18n="Procurement List">Stock Valuation</a></li>
                                     <li class="pc-item"><a class="pc-link" href="{{ route('expirytracking.index') }}" data-i18n="Procurement List">Expiry Batch Tracking</a></li>
                                 </ul>
-                        
+
                             </li>
 
                             <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
@@ -330,7 +330,7 @@
 
                         </ul>
 
-                    </li> 
+                    </li>
                     <li class="pc-item pc-hasmenu">
                         <a href="#!" class="pc-link">
                             <span class="pc-micon"><i data-feather="truck" class="pc-icon"></i></span>
@@ -339,7 +339,7 @@
                     </a>
                     <ul class="pc-submenu">
                         <li class="pc-item"><a class="pc-link" href="{{ route('drivermanagement.index') }}" data-i18n="Driver Management">Driver Management</a></li>
-                            <li class="pc-item"><a class="pc-link" href="{{ route('vehicle-registry.index') }}" data-i18n="fleetmanagement">Vehicle Registry</a></li> 
+                            <li class="pc-item"><a class="pc-link" href="{{ route('vehicle-registry.index') }}" data-i18n="fleetmanagement">Vehicle Registry</a></li>
                             <li class="pc-item"><a class="pc-link" href="{{ route('tripmanagement.index') }}" data-i18n="fleetmanagement">Trip Management</a></li>
                             <li class="pc-item"><a class="pc-link" href="{{ route('fuelmanagement.index') }}" data-i18n="fleetmanagement">Fuel Management</a></li>
                             <li class="pc-item"><a class="pc-link" href="{{ route('utilization.index') }}" data-i18n="fleetmanagement">Utilization & Costing</a></li>
@@ -348,7 +348,7 @@
                             <li class="pc-item"><a class="pc-link" href="{{ route('reports.index') }}" data-i18n="fleetmanagement">Reports</a></li>
                         </ul>
                     </li>
-                    
+
                     <li class="pc-item pc-hasmenu">
                         <a href="#!" class="pc-link">
                             <span class="pc-micon"><i data-feather="file-text" class="pc-icon"></i></span>
@@ -386,7 +386,7 @@
                                     <li class="pc-item"><a class="pc-link" href="{{ route('addblock.index') }}" data-i18n="Procurement List">Add Block</a></li>
                                     <li class="pc-item"><a class="pc-link" href="{{ route('addfloor.index') }}" data-i18n="Procurement List">Add Floor</a></li>
                                     <li class="pc-item"><a class="pc-link" href="{{ route('addunit.index') }}" data-i18n="Procurement List">Add Unit</a></li>
-                                </ul>                                          
+                                </ul>
                             </li>
                             <li class="pc-item"><a class="pc-link" href="{{ route('attachments.index') }}" data-i18n="Property List">Property Attachments</a></li>
                             </ul>
@@ -402,11 +402,11 @@
                                 <ul class="pc-submenu">
                                     <li class="pc-item"><a class="pc-link" href="{{ route('addlease.index') }}" data-i18n="Procurement List">Lease Maintenance</a></li>
                                     <li class="pc-item"><a class="pc-link" href="{{ route('schedulelease.index') }}" data-i18n="Procurement List">Lease Schedule</a></li>
-                                </ul>                       
-                            </li> 
-                                </ul>  
-                       
-                            </li>                            
+                                </ul>
+                            </li>
+                                </ul>
+
+                            </li>
                         </ul>
                     </li>
                     <li class="pc-item pc-hasmenu">
@@ -443,7 +443,7 @@
                             <span class="pc-mtext" data-i18n="Budgeting">Finance</span>
                             <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
                         </a>
-                       
+
                         <ul class="pc-submenu">
                             <li class="pc-item"><a class="pc-link" href="{{ route('journalbatch.index') }}" data-i18n="Procurement List">Journal Batch</a></li>
                             <li class="pc-item"><a class="pc-link" href="{{ route('ledgeraccounts.index') }}" data-i18n="Finance">Ledger Accounts</a></li>
@@ -461,7 +461,7 @@
                             </li>
                         </ul> -->
                     </li>
-                                      
+
                     <li class="pc-item pc-caption"><label data-i18n="Widget">Settings</label>
                         <svg class="pc-icon">
                             <use xlink:href="#custom-presentation-chart"></use>
@@ -479,14 +479,17 @@
                                 <a class="pc-link" href="{{ route('users.index') }}">Users</a>
                             </li>
                             <li class="pc-item  {{ request()->is(['settings/roles*'])?'active ':'' }}"><a
-                                    class="pc-link" href="{{ route('roles.index') }}"
-                                    data-i18n="Procurement List">Roles</a></li>
+                                    class="pc-link" href="{{ route('roles.index') }}">Roles</a></li>
                             <li class="pc-item  {{ request()->is(['settings/branches*'])?'active ':'' }}"><a
-                                    class="pc-link" href="{{ route('branches.index') }}"
-                                    data-i18n="Procurement List">Branches</a></li>
+                                    class="pc-link" href="{{ route('branches.index') }}">Branches</a></li>
 
                         </ul>
                     </li>
+                    <li class="pc-item {{ request()->is('settings/lists*')?'active':'' }}">
+                        <a href="{{ route('settings.lists') }}" class="pc-link">
+                           <span class="pc-micon"><i data-feather="settings" class="pc-icon"></i>
+                                <use xlink:href="#custom-fatrows"></use>
+                            </span><span class="pc-mtext" data-i18n="Data">Code Details</span></a></li>
                 </ul>
             </div>
         </div>
