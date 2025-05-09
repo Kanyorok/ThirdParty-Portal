@@ -87,6 +87,18 @@ h2,
   font-weight: 700;
 }
 
+.navbar-content {
+  background-color: lightblue;
+}
+
+.m-header {
+  background-color: lightblue;
+}
+
+.pc-item.pc-hasmenu > .pc-link > .pc-mtext {
+  font-weight: bold;
+}
+
 /* $btn-border-radius: 12px;
 $btn-border-radius-sm: 8px;
 $btn-border-radius-lg: 14px; */
