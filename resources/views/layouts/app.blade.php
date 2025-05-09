@@ -527,16 +527,34 @@
                         </a>
 
                         <ul class="pc-submenu">
-                            <li class="pc-item"><a class="pc-link" href="{{ route('journalbatch.index') }}"
-                                    data-i18n="Procurement List">Journal Batch</a></li>
-                            <li class="pc-item"><a class="pc-link" href="{{ route('ledgeraccounts.index') }}"
-                                    data-i18n="Finance">Ledger Accounts</a></li>
-                            <li class="pc-item"><a class="pc-link" href="{{ route('transactiontypes.index') }}"
-                                    data-i18n="Finance">Transaction Types</a></li>
-                            <li class="pc-item"><a class="pc-link" href="{{ route('bankreconciliation.index') }}"
-                                    data-i18n="Finance">Bank Reconciliation</a></li>
-                            <li class="pc-item"><a class="pc-link" href="{{ route('periodmanagement.index') }}"
-                                    data-i18n="Finance">Period Mananagement</a></li>
+                            <li class="pc-item"><a class="pc-link" href="{{ route('journalbatch.index') }}" data-i18n="Procurement List">Journal Batch</a></li>
+                            <li class="pc-item"><a class="pc-link" href="{{ route('ledgeraccounts.index') }}" data-i18n="Finance">Ledger Accounts</a></li>
+                            <li class="pc-item"><a class="pc-link" href="{{ route('transactiontypes.index') }}" data-i18n="Finance">Transaction Types</a></li>
+                            <li class="pc-item"><a class="pc-link" href="{{ route('bankreconciliation.index') }}" data-i18n="Finance">Bank Reconciliation</a></li>
+                            <li class="pc-item"><a class="pc-link" href="{{ route('periodmanagement.index') }}" data-i18n="Finance">Period Mananagement</a></li>
+                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
+                                        Bank Management
+                                    </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('bankaccountsetup.index') }}" data-i18n="finance">Account Setup</a></li>
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('cashbook.index') }}" data-i18n="finance">Cash Book</a></li>
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('cashmanagement.index') }}" data-i18n="finance">Cash Management</a></li>
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('chequemanagement.index') }}" data-i18n="finance">Cheque Management</a></li>
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('paymentandreceiptvouchers.index') }}" data-i18n="finance">Vouchers</a></li>
+
+                                </ul>
+                            </li>
+                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
+                                         Financial Reports
+                                    </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('balancesheet.index') }}" data-i18n="finance">Balance Sheet</a></li>
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('cashflowstatement.index') }}" data-i18n="finance">Cash Flow Statement</a></li>
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('consolidationreports.index') }}" data-i18n="finance">Consolidation Reports</a></li>
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('incomestatement.index') }}" data-i18n="finance">Income Statement</a></li>
+                                    </ul>
+                            </li>
+                           
                         </ul>
          
                     </li>
