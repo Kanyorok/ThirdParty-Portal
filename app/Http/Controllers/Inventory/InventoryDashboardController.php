@@ -10,10 +10,10 @@ class InventoryDashboardController extends Controller
     //
     public function index()
     {
-        return view('inventory.inventory dashboard.by branch or store.index');
+        return view('inventory.inventorydashboard.bybranchorstore.index');
     }
 
     public function create(){
-        return view('inventory.inventory dashboard.by branch or store.create');
+        return view('inventory.inventorydashboard.bybranchorstore.create');
     }
 }

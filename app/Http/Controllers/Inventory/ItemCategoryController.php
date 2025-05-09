@@ -10,10 +10,10 @@ class ItemCategoryController extends Controller
     //
     public function index()
     {
-        return view('inventory.item master.item category.index');
+        return view('inventory.itemmaster.itemcategory.index');
     }
 
     public function create(){
-        return view('inventory.item master.item category.create');
+        return view('inventory.itemmaster.itemcategory.create');
     }
 }
