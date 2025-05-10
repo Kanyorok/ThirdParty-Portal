@@ -16,9 +16,9 @@ class ItemMasterListSeeder extends Seeder
     
         ItemMasterList::insert([
             [
-                'ItemCode'      => '001',
-                'BarCode'       => 'ABC123',
-                'ItemName'      => 'Laptop',
+                'ItemCode'      => '003',
+                'BarCode'       => 'BSI123',
+                'ItemName'      => 'Lenovo Thinkpad',
                 'ItemType'      => 'Electronics',
                 'Category'      => 'Computers',
                 'SubCategory'   => 'Gaming Laptops',
@@ -26,12 +26,12 @@ class ItemMasterListSeeder extends Seeder
                 'InventoryType' => 'Stock',
             ],
             [
-                'ItemCode'       => '0007',
-                'BarCode'      => 'XYZ456',
+                'ItemCode'       => '0004',
+                'BarCode'      => 'RCBS456',
                 'ItemName'      => 'Smartphone',
                 'ItemType'      => 'Electronics',
                 'Category'      => 'Mobile Devices',
-                'SubCategory'   => 'Flagship Phones',
+                'SubCategory'   => 'Phones',
                 'UOM'           => 'Piece',
                 'InventoryType' => 'Stock',
             ]

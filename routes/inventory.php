@@ -29,12 +29,14 @@ Route::namespace('Inventory')->group(function () {
     Route::resource('transactionsreceipts', TransactionReceiptsController::class);
     Route::resource('transactionstransfers', TransactionTransfersController::class);
     Route::resource('transactionsadjustment', TransactionAdjustmentController::class);
-    Route::resource('itemmaster', ItemMasterController::class);
+    //Route::resource('itemmaster', ItemMasterController::class);
+    Route::get('/itemmaster', [ItemMasterListController::class, 'index'])->name('itemmaster.index');
+    Route::get('/itemmaster/create', [ItemMasterListController::class, 'create'])->name('itemmaster.create');
     Route::resource('sku', SKUController::class);
     
     //Route::resource('itemmasterlist', ItemMasterListController::class);
     Route::get('/itemmasterlist', [ItemMasterListController::class, 'index'])->name('itemmasterlist.index');
-        Route::get('/itemmasterlist/create', [ItemMasterListController::class, 'create'])->name('itemmasterlist.create');
+    Route::get('/itemmasterlist/create', [ItemMasterListController::class, 'create'])->name('itemmasterlist.create');
     
     Route::resource('itemcategory', ItemCategoryController::class);
     Route::resource('itemsubcategory', ItemSubCategoryController::class);
