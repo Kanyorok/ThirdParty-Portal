@@ -32,12 +32,14 @@ Route::namespace('Inventory')->group(function () {
     //Route::resource('itemmaster', ItemMasterController::class);
     Route::get('/itemmaster', [ItemMasterListController::class, 'index'])->name('itemmaster.index');
     Route::get('/itemmaster/create', [ItemMasterListController::class, 'create'])->name('itemmaster.create');
+    Route::post('/itemmaster/store', [ItemMasterListController::class, 'store'])->name('itemmaster.store');
     Route::resource('sku', SKUController::class);
     
     //Route::resource('itemmasterlist', ItemMasterListController::class);
-    Route::get('/itemmasterlist', [ItemMasterListController::class, 'index'])->name('itemmasterlist.index');
-    Route::get('/itemmasterlist/create', [ItemMasterListController::class, 'create'])->name('itemmasterlist.create');
-    
+    //Route::get('/itemmasterlist', [ItemMasterListController::class, 'index'])->name('itemmasterlist.index');
+   // Route::get('/itemmasterlist/create', [ItemMasterListController::class, 'create'])->name('itemmasterlist.create');
+    //Route::resource('sku', SKUController::class);
+
     Route::resource('itemcategory', ItemCategoryController::class);
     Route::resource('itemsubcategory', ItemSubCategoryController::class);
     Route::resource('inventorydashboard', InventoryDashboardController::class);

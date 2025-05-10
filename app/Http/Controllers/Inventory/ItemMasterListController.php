@@ -31,11 +31,17 @@ class ItemMasterListController extends Controller
             'SubCategory'   => 'required',
             'UOM'           => 'required',
             'InventoryType' => 'required',
+            'imageUpload'   => 'nullable|image|.pdf,.doc,.docx', 
         ]);
+       
+        if ($request->hasFile('imageUpload')) {
+        $imagePath = $request->file('imageUpload')->store('items', 'public');
+        $validatedData['imageUpload'] = $imagePath;
+    }
 
         ItemMasterList::create($validatedData);
 
-        return redirect()->route('items.index')->with('success', 'Item added successfully!');
+        return redirect()->route('itemmaster.index')->with('success', 'Item added successfully!');
     }
 }
 
