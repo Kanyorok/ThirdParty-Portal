@@ -20,5 +20,6 @@ class DatabaseSeeder extends Seeder
         $this->call(SysFilterSeeder::class);
         $this->call(SysFilterSeeder::class);
         $this->call(RolePermissionSeeder::class);
+        $this->call(ItemMasterListSeeder::class);
     }
 }

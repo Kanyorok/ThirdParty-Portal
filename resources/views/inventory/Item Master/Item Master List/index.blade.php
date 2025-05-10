@@ -30,36 +30,23 @@
           </tr>
         </thead>
         <tbody>
+          @foreach($items as $key => $item)
           <tr>
-            <td>1</td>
-            <td>ITM-001</td>
-            <td>1234567890123</td>
-            <td>Toner Cartridge</td>
-            <td>Stock</td>
-            <td>Office Supplies</td>
-            <td>Ink & Toners</td>
-            <td>pcs</td>
-            <td>Consumable</td>
+            <td>{{ $key + 1 }}</td>
+            <td>{{ $item->ItemCode }}</td>
+            <td>{{ $item->BarCode }}</td>
+            <td>{{ $item->ItemName }}</td>
+            <td>{{ $item->ItemType }}</td>
+            <td>{{ $item->Category }}</td>
+            <td>{{ $item->SubCategory }}</td>
+            <td>{{ $item->UOM }}</td>
+            <td>{{ $item->InventoryType }}</td>
             <td>
-              <a href="#" class="btn btn-sm btn-primary">🔍 View</a>
-              <a href="#" class="btn btn-sm btn-secondary">✏️ Edit</a>
+              <a href="#">View</a> |
+              <a href="#">Edit</a> |
             </td>
           </tr>
-          <tr>
-            <td>2</td>
-            <td>ITM-002</td>
-            <td>9876543210987</td>
-            <td>A4 Paper (Ream)</td>
-            <td>Stock</td>
-            <td>Stationery</td>
-            <td>Paper Products</td>
-            <td>pcs</td>
-            <td>Consumable</td>
-            <td>
-              <a href="#" class="btn btn-sm btn-primary">🔍 View</a>
-              <a href="#" class="btn btn-sm btn-secondary">✏️ Edit</a>
-            </td>
-          </tr>
+        @endforeach
           <!-- Add more rows as needed -->
         </tbody>
       </table>

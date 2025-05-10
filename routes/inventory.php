@@ -6,6 +6,7 @@ use App\Http\Controllers\Inventory\TransactionReceiptsController;
 use App\Http\Controllers\Inventory\TransactionTransfersController;
 use App\Http\Controllers\Inventory\TransactionAdjustmentController;
 use App\Http\Controllers\Inventory\ItemMasterController;
+use App\Http\Controllers\Inventory\ItemMasterListController;
 use App\Http\Controllers\Inventory\SKUController;
 use App\Http\Controllers\Inventory\ItemCategoryController;
 use App\Http\Controllers\Inventory\ItemSubCategoryController;
@@ -30,6 +31,11 @@ Route::namespace('Inventory')->group(function () {
     Route::resource('transactionsadjustment', TransactionAdjustmentController::class);
     Route::resource('itemmaster', ItemMasterController::class);
     Route::resource('sku', SKUController::class);
+    
+    //Route::resource('itemmasterlist', ItemMasterListController::class);
+    Route::get('/itemmasterlist', [ItemMasterListController::class, 'index'])->name('itemmasterlist.index');
+        Route::get('/itemmasterlist/create', [ItemMasterListController::class, 'create'])->name('itemmasterlist.create');
+    
     Route::resource('itemcategory', ItemCategoryController::class);
     Route::resource('itemsubcategory', ItemSubCategoryController::class);
     Route::resource('inventorydashboard', InventoryDashboardController::class);
