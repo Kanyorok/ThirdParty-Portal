@@ -3,6 +3,16 @@
 @section('title', 'Create New Inventory')
 
 @section('content')
+@if ($errors->any())
+    <div class="alert alert-danger">
+        <ul>
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
 <div class="container bg-white shadow-sm rounded p-4">
     <h4 class="mb-4">📦 Item Master Form</h4>
 

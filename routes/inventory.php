@@ -33,6 +33,12 @@ Route::namespace('Inventory')->group(function () {
     Route::get('/itemmaster', [ItemMasterListController::class, 'index'])->name('itemmaster.index');
     Route::get('/itemmaster/create', [ItemMasterListController::class, 'create'])->name('itemmaster.create');
     Route::post('/itemmaster/store', [ItemMasterListController::class, 'store'])->name('itemmaster.store');
+    Route::get('/itemmaster/{ItemCode}', [ItemMasterListController::class, 'show'])->name('itemmaster.show');
+    Route::get('/itemmaster/{ItemCode}/edit', [ItemMasterListController::class, 'edit'])->name('itemmaster.edit');
+    Route::put('/itemmaster/{ItemCode}', [ItemMasterListController::class, 'update'])->name('itemmaster.update');
+    Route::delete('/itemmaster/{ItemCode}', [ItemMasterListController::class, 'destroy'])->name('itemmaster.destroy');
+
+
     Route::resource('sku', SKUController::class);
     
     //Route::resource('itemmasterlist', ItemMasterListController::class);

@@ -1,6 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Create New Inventory')
 @section('content')
+
 <body class="bg-light p-4">
 
   <div class="container bg-white shadow-sm rounded p-4">
@@ -12,6 +13,13 @@
     <div class="mb-3">
       <input type="text" class="form-control" placeholder="🔍 Search by Item Code, Name, or Category">
     </div>
+
+    @if(session('success'))
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+          {{ session('success') }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    @endif
 
     <div class="table-responsive">
       <table class="table table-bordered table-hover align-middle">
@@ -42,16 +50,30 @@
             <td>{{ $item->UOM }}</td>
             <td>{{ $item->InventoryType }}</td>
             <td>
-              <a href="#">View</a> |
-              <a href="#">Edit</a> |
+              <a href="{{ route('itemmaster.show', $item->ItemCode) }}">View</a> |
+              <a href="{{ route('itemmaster.edit', $item->ItemCode) }}">Edit</a> |
+              <a href="#" onclick="confirmDelete('{{ $item->ItemCode }}')">Delete</a>
+
+              <form id="delete-form-{{ $item->ItemCode }}" action="{{ route('itemmaster.destroy', $item->ItemCode) }}" method="POST" style="display:none;">
+               @csrf
+               @method('DELETE')
+              </form>
+
+              <script>
+              function confirmDelete(ItemCode) {
+              if (confirm('⚠️ Are you sure you want to delete this item?')) {
+               document.getElementById('delete-form-' + ItemCode).submit();
+               }
+               }
+               </script>
+
             </td>
           </tr>
-        @endforeach
-          <!-- Add more rows as needed -->
+          @endforeach
         </tbody>
       </table>
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
 @endsection
