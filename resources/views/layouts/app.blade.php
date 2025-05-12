@@ -681,6 +681,14 @@
                         <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
                     </a>
                     <ul class="pc-submenu">
+                        <li class="pc-item pc-hasmenu"><a class="pc-link" href="javascript:void(0)">
+                                         Employees
+                                 <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                            <ul class="pc-submenu">
+                                <li class="pc-item"><a class="pc-link" href="{{ route('employees.create') }}">New Employee</a></li>
+                                <li class="pc-item"><a class="pc-link" href="{{ route('employees.index') }}">Employees</a></li>
+                            </ul>
+                        </li>
                         <li class="pc-item">
                             <a class="pc-link" href="{{ route('departments.index') }}">Departments</a>
                         </li>
