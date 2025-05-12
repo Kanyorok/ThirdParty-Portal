@@ -10,10 +10,10 @@ class StockTakeController extends Controller
     //
     public function index()
     {
-        return view('inventory.Stock Management.stock take.index');
+        return view('inventory.stockmanagement.stocktake.index');
     }
 
     public function create(){
-        return view('inventory.Stock Management.stock take.create');
+        return view('inventory.stockmanagement.stocktake.create');
     }
 }

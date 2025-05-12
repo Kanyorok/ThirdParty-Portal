@@ -10,10 +10,10 @@ class SKUController extends Controller
     //
     public function index()
     {
-        return view('inventory.item master.stock item.index');
+        return view('inventory.itemmaster.stockitem.index');
     }
 
     public function create(){
-        return view('inventory.item master.stock item.create');
+        return view('inventory.itemmaster.stockitem.create');
     }
 }
