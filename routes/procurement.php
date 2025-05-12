@@ -31,7 +31,8 @@ use App\Http\Controllers\Procurement\TenderAssignRoleController;
 use App\Http\Controllers\Procurement\EvaluationCriteriaController;  
 use App\Http\Controllers\Procurement\BidEvaluationController; 
 use App\Http\Controllers\Procurement\BidScoreConsolidationController; 
-use App\Http\Controllers\Procurement\EvaluatorDashboardController; 
+use App\Http\Controllers\Procurement\EvaluatorDashboardController;  
+use App\Http\Controllers\Procurement\ProcurementReportsController;
 
 Route::namespace('Procurement')->group(function () {
 
@@ -144,5 +145,7 @@ Route::namespace('Procurement')->group(function () {
     Route::resource('bidevaluation', BidEvaluationController::class);
     Route::resource('evaluationdashboard', EvaluatorDashboardController::class);  
     Route::resource('bidscores', BidScoreConsolidationController::class); 
+    Route::resource('procurementreports', ProcurementReportsController::class); 
+
 
 });
