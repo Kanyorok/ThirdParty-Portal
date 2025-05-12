@@ -50,19 +50,19 @@
             <td>{{ $item->UOM }}</td>
             <td>{{ $item->InventoryType }}</td>
             <td>
-              <a href="{{ route('itemmaster.show', $item->ItemCode) }}">View</a> |
-              <a href="{{ route('itemmaster.edit', $item->ItemCode) }}">Edit</a> |
-              <a href="#" onclick="confirmDelete('{{ $item->ItemCode }}')">Delete</a>
+              <a href="{{ route('itemmaster.show', $item->Id) }}">View</a> |
+              <a href="{{ route('itemmaster.edit', $item->Id) }}">Edit</a> |
+              <a href="#" onclick="confirmDelete('{{ $item->Id }}')">Delete</a>
 
-              <form id="delete-form-{{ $item->ItemCode }}" action="{{ route('itemmaster.destroy', $item->ItemCode) }}" method="POST" style="display:none;">
+              <form id="delete-form-{{ $item->Id }}" action="{{ route('itemmaster.destroy', $item->Id) }}" method="POST" style="display:none;">
                @csrf
                @method('DELETE')
               </form>
 
               <script>
-              function confirmDelete(ItemCode) {
+              function confirmDelete(Id) {
               if (confirm('⚠️ Are you sure you want to delete this item?')) {
-               document.getElementById('delete-form-' + ItemCode).submit();
+               document.getElementById('delete-form-' + Id).submit();
                }
                }
                </script>

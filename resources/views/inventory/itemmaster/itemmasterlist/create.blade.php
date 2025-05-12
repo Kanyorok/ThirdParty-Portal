@@ -85,17 +85,17 @@
             </div>
             <div class="col-md-4">
                 <label for="imageUpload" class="form-label">Item Image</label>
-                <input type="file" name="imageUpload" id="imageUpload" class="form-control" accept="image/*">
+                <input type="file" name="ImageUpload" id="imageUpload" class="form-control" accept="image/*">
             </div>
         </div>
 
         <div class="mb-3">
-            <label for="description" class="form-label">Item Description</label>
-            <textarea name="Description" id="description" class="form-control" rows="3"></textarea>
+            <label for="ItemDescription" class="form-label">Item Description</label>
+            <textarea name="ItemDescription" id="description" class="form-control" rows="3"></textarea>
         </div>
 
         <div class="mb-3">
-            <label for="documentUpload" class="form-label">Upload Documentation</label>
+            <label for="DocumentUpload" class="form-label">Upload Documentation</label>
             <input type="file" name="DocumentUpload" id="documentUpload" class="form-control" accept=".pdf,.doc,.docx">
         </div>
 

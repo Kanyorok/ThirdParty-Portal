@@ -26,7 +26,7 @@ class ItemMasterListController extends Controller
 {
     // Validate input fields
     $validatedData = $request->validate([
-        'ItemCode'      => 'required|unique:t_ItemMasterList,ItemCode',
+        'ItemCode'      => 'required',
         'BarCode'       => 'required',
         'ItemName'      => 'required',
         'ItemType'      => 'required',
@@ -34,14 +34,16 @@ class ItemMasterListController extends Controller
         'SubCategory'   => 'required',
         'UOM'           => 'required',
         'InventoryType' => 'required',
-        'imageUpload'   => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        'ImageUpload'   => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        'ItemDescription' => 'nullable',
+        'DocumentUpload' => 'nullable',
     ], [
         'ItemCode.unique' => '🚨 The ItemCode already exists! Please choose a different code.',
     ]);
    
-    if ($request->hasFile('imageUpload')) {
-        $imagePath = $request->file('imageUpload')->store('items', 'public');
-        $validatedData['imageUpload'] = $imagePath;
+    if ($request->hasFile('ImageUpload')) {
+        $imagePath = $request->file('ImageUpload')->store('items', 'public');
+        $validatedData['ImageUpload'] = $imagePath;
     }
 
     ItemMasterList::create($validatedData);
@@ -50,21 +52,21 @@ class ItemMasterListController extends Controller
 }
 
 
-    public function show($ItemCode)
+    public function show($Id)
     {
-        $item = ItemMasterList::findOrFail($ItemCode);
+        $item = ItemMasterList::findOrFail($Id);
         return view('inventory.item master.item master list.show', compact('item'));
     }
 
-    public function edit($ItemCode)
+    public function edit($Id)
 {
-    $item = ItemMasterList::where('ItemCode', $ItemCode)->firstOrFail();
+    $item = ItemMasterList::where('Id', $Id)->firstOrFail();
     return view('inventory.item master.item master list.edit', compact('item'));
 }
 
-public function update(Request $request, $ItemCode)
+public function update(Request $request, $Id)
 {
-    $item = ItemMasterList::where('ItemCode', $ItemCode)->firstOrFail();
+    $item = ItemMasterList::where('Id', $Id)->firstOrFail();
 
     $validatedData = $request->validate([
         'ItemCode'      => 'required',
@@ -75,12 +77,13 @@ public function update(Request $request, $ItemCode)
         'SubCategory'   => 'required',
         'UOM'           => 'required',
         'InventoryType' => 'required',
-        'imageUpload'   => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        'ImageUpload'   => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        'ItemDescription' => 'nullable',
+        'DocumentUpload' => 'nullable'
     ]);
-
-    if ($request->hasFile('imageUpload')) {
-        $imagePath = $request->file('imageUpload')->store('items', 'public');
-        $validatedData['imageUpload'] = $imagePath;
+  if ($request->hasFile('ImageUpload')) {
+        $path = $request->file('ImageUpload')->store('items', 'public');
+        $item->ImageUpload = $path;
     }
 
     $item->update($validatedData);
@@ -89,9 +92,9 @@ public function update(Request $request, $ItemCode)
 }
 
   
-    public function destroy($ItemCode)
+    public function destroy($Id)
     {
-        $item = ItemMasterList::findOrFail($ItemCode);
+        $item = ItemMasterList::findOrFail($Id);
         $item->delete();
 
         return redirect()->route('itemmaster.index')->with('success', 'Item deleted successfully!');

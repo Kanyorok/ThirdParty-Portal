@@ -15,8 +15,7 @@ class ItemMasterList extends Model
 
     protected $connection = 'sqlsrv';
     protected $table = 't_ItemMasterList';
-    protected $primaryKey = 'ItemCode';
-    protected $keyType = 'string';
+    protected $primaryKey = 'Id';
 
     protected $fillable = [
                            'ItemCode',
@@ -27,6 +26,9 @@ class ItemMasterList extends Model
                            'SubCategory',
                            'UOM',
                            'InventoryType',
+                           'ImageUpload',
+                           'ItemDescription',
+                           'DocumentUpload'
                           ];
 
     protected $casts = [
@@ -37,6 +39,10 @@ class ItemMasterList extends Model
                             'Category'      => 'string',
                             'SubCategory'   => 'string',
                             'UOM'           => 'string', 
-                            'InventoryType' => 'string'
+                            'InventoryType' => 'string',
+                            'ImageUpload' => 'string',
+                            'ItemDescription' => 'string',
+                            'DocumentUpload' => 'string',
+
                         ];                
 }

@@ -21,6 +21,9 @@ return new class extends Migration
             $table->string('SubCategory');
             $table->string('UOM');
             $table->string('InventoryType');
+            $table->string('ImageUpload')->nullable();
+            $table->string('ItemDescription')->nullable();
+            $table->string('DocumentUpload')->nullable();
             $table->timestamp('CreatedOn')->useCurrent();
             $table->timestamp('ModifiedOn')->useCurrent();
             $table->timestamp('DeletedOn')->useCurrent();
