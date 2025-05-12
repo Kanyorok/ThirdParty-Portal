@@ -250,7 +250,7 @@
                     <li class="pc-item pc-hasmenu">
                         <a href="#!" class="pc-link">
                             <span class="pc-micon"><i data-feather="file-text" class="pc-icon"></i></span>
-                            <span class="pc-mtext" data-i18n="Document Management">Document Management</span>
+                            <span class="pc-mtext" data-i18n="Document Management">D.M.S.</span>
                             <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
                         </a>
                         <ul class="pc-submenu">
