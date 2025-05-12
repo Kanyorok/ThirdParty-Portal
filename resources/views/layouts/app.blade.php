@@ -245,6 +245,15 @@
                                             Receipts</a></li>
                                 </ul>
                             </li>
+
+                                                        <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
+                                        Reports
+                                    </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item"><a class="pc-link" href="{{ route('procurementreports.index') }}"
+                                            data-i18n="Procurement List">Reports</a></li>
+                                </ul>
+                            </li>
                         </ul>
                     </li>
                     <li class="pc-item pc-hasmenu">
