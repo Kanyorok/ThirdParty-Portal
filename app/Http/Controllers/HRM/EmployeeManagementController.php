@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\HRMS;
+namespace App\Http\Controllers\HRM;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;

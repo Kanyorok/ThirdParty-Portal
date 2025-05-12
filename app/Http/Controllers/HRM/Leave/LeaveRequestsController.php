@@ -1,9 +1,8 @@
 <?php
 
-namespace App\Http\Controllers\HRMS;
+namespace App\Http\Controllers\HRM\Leave;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 
 class LeaveRequestsController extends Controller
 {
@@ -17,5 +16,5 @@ class LeaveRequestsController extends Controller
         return view("hrms.leaverequests.create");
     }
 
-    
+
 }

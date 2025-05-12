@@ -12,6 +12,7 @@ use App\Models\Campaign;
 use App\Models\CodeDetail;
 use App\Models\Competitor;
 use App\Models\CrmBranch;
+use App\Models\Department;
 use App\Models\EmailConversation;
 use App\Models\Lead;
 use App\Models\MarketingList;
@@ -154,7 +155,10 @@ enum PermissionEnum: string
     case MarketingManager = 'marketingManager';
     case Managers = 'manager';
 
-    //Procurement
+    /*
+     *
+     * ========================================  Procurement  ========================================
+     */
     //Requisitions
     case RequisitionRead = 'requisition-read';
     case RequisitionWrite = 'requisition-create';
@@ -171,7 +175,7 @@ enum PermissionEnum: string
 
     //RFQ
     case RfqRead = 'rfqItem-read';
-    case RfWrite = 'rfqItem-create';
+    case RfqWrite = 'rfqItem-create';
     case RfqUpdate = 'rfqItem-update';
     case RfqDelete = 'rfqItem-delete';
     case RfqApproval = 'rfqItem-approval';
@@ -183,6 +187,12 @@ enum PermissionEnum: string
     case PurchaseOrderDelete = 'purchaseOrder-delete';
     case PurchaseOrderApproval = 'purchaseOrder-approval';
 
+
+    /*
+     *
+     * ========================================  Human Resource management  ========================================
+     */
+    case Departments = 'department';
 
     public static function display(): Collection
     {
@@ -212,6 +222,8 @@ enum PermissionEnum: string
             [self::BoardManage, self::BoardMeeting,],
             [self::Integrations],
             [self::Roles],
+
+            [self::Departments]
 
         ]);
     }
@@ -256,9 +268,9 @@ enum PermissionEnum: string
             //PurchaseOrder
             self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval => Order::getPrimaryKey(),
 
-
             self::RfqRead, self::RfqWrite, self::RfqUpdate, self::RfqApproval => RFQ::getPrimaryKey(),
 
+            self::Departments => Department::getPrimaryKey(),
         };
     }
 
@@ -291,6 +303,8 @@ enum PermissionEnum: string
             self::Members => 'Members',
             self::Roles => 'Roles',
             self::ListsView, self::ListsUpdate => 'System Codes',
+
+            self::Departments => 'Departments',
         };
     }
 }

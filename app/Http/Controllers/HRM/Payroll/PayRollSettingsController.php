@@ -1,9 +1,8 @@
 <?php
 
-namespace App\Http\Controllers\Hrms;
+namespace App\Http\Controllers\HRM\Payroll;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 
 class PayRollSettingsController extends Controller
 {
