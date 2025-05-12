@@ -10,10 +10,10 @@ class ReportsController extends Controller
     //
     public function index()
     {
-        return view('inventory.inventory reports.index');
+        return view('inventory.inventoryreports.index');
     }
 
     public function create(){
-        return view('inventory.inventory reports.create');
+        return view('inventory.inventoryreports.create');
     }
 }
