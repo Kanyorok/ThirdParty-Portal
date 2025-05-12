@@ -2,6 +2,7 @@
 
 namespace App\Models\Procurement;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Procurement\Tender;
 use App\Models\Procurement\ItemCategory;
@@ -9,6 +10,8 @@ use App\Models\Procurement\Supplier;
 
 class RFQ extends Model
 {
+    use HasFactory;
+
     protected $table = 't_RFQ';
     protected $primaryKey = 'Id';
 
@@ -41,5 +44,12 @@ class RFQ extends Model
     public function modifiedBy()
     {
         return $this->belongsTo(User::class, 'ModifiedBy');
+    }
+
+    public function suppliers()
+    {
+        return $this->belongsToMany(Supplier::class, 't_RFQ_Supplier', 'RFQId', 'SupplierId')
+                    ->withPivot('Status')
+                    ->withTimestamps();
     }
 }
