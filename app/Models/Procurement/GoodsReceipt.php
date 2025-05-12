@@ -13,7 +13,8 @@ class GoodsReceipt extends Model
                            'GRNID',
                            'POID',
                            'ReceivedDate',
-                           'StoreID',
+                           'Supplier',
+                           //'StoreID',
                            'ReceivedBy',
                            'InspectionStatus',
                            'TransferStatus',
@@ -21,7 +22,9 @@ class GoodsReceipt extends Model
                            'POQTY',
                            'ReceivedQTY',
                            'TransferTo',
+                           'TagRequest',
                            'CreatedBy',
                            'ModifiedBy',
                           ];
+    
 }

@@ -2,140 +2,126 @@
 @section('title', 'Add GRN')
 @section('content')
 <div class="container mt-4">
-  <h4 class="mb-3">🧾 Add GRN – Goods Received (Stock / Asset Update)</h4>
+  <h4 class="mb-3"> Add GRN – Goods Received (Stock / Asset Update)</h4>
 
   <!-- GRN & PO Details -->
   <div class="row mb-3">
-  <div class="col-md-2 mb-2 d-grid">
-    <button class="btn btn-primary btn-sm" onclick="startNewReceipt()">New Receipt</button>
-  </div>
-  <div class="col-md-3 mb-2">
-    <label class="form-label">GRN No.</label>
-    <input type="text" id="grnNo" class="form-control" readonly placeholder="Auto-generated">
-  </div>
-  <div class="col-md-3 mb-2">
-    <label class="form-label">PO No.</label>
-    <select id="poSelect" class="form-select" disabled onchange="populatePODetails()">
-      <option value="">-- Select PO --</option>
-      <option value="PO-1001">PO-1001</option>
-      <option value="PO-1002">PO-1002</option>
-    </select>
-  </div>
-  <div class="col-md-4 mb-2">
-    <label class="form-label">PO Description</label>
-    <div class="form-control form-control-lg bg-light" id="poDesc" >--</div>
-  </div>
-</div>
-
-  <!-- Items Table -->
-  <div class="table-responsive">
-    <table class="table table-bordered" id="itemsTable">
-      <thead class="table-light">
-        <tr>
-          <th>Item No</th>
-          <th>Item Name</th>
-          <th>Description</th>
-          <th>Category</th>
-          <th>UOM</th>
-          <th>PO Qty</th>
-          <th>Received Qty</th>
-          <th>Accepted Qty</th>
-          <th>Transfer To</th>
-          <th>Tag Required?</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody id="itemsBody">
-        <!-- Item rows load dynamically -->
-      </tbody>
-    </table>
+    <div class="col-md-2 mb-2 d-grid">
+      <button class="btn btn-primary btn-sm" onclick="startNewReceipt()">New Receipt</button>
+    </div>
+    <div class="col-md-3 mb-2">
+      <label class="form-label">GRN No.</label>
+      <input type="text" id="grnNo" class="form-control" readonly placeholder="Auto-generated">
+    </div>
+    <div class="col-md-3 mb-2">
+      <label class="form-label">PO No.</label>
+      <select id="poSelect" name="poSelectDisplay" class="form-select" onchange="populatePODetails()">
+        <option value="">-- Select PO --</option>
+        @foreach($Orders as $po)
+          <option value="{{ $po->RequisitionNo }}" 
+            data-requisitionno="{{ $po->RequisitionNo }}" 
+            data-remarks="{{ $po->Remarks }}" 
+            data-lines='@json($po->requisitionLines)'>
+            {{ $po->RequisitionNo }}
+          </option>
+        @endforeach
+      </select>
+    </div>
+    <div class="col-md-4 mb-2">
+      <label class="form-label">PO Description</label>
+      <div class="form-control form-control-lg bg-light" id="poDesc">--</div>
+    </div>
   </div>
 
-  <!-- Links & Options -->
-  <div class="mb-3">
-    <a href="#" class="me-4">🔍 View Inspection Report</a>
-    <a href="#">📄 View PO Details</a>
-  </div>
+  <form method="POST" action="{{ route('procurementreceipts.store') }}" id="grnForm" onsubmit="return handleFormSubmit()">
+    @csrf
+    <input type="hidden" name="GRNID" id="grnNoInput">
+    <input type="hidden" name="POID" id="poIDInput">
 
-  <div class="form-check form-check-inline">
-    <input class="form-check-input" type="checkbox" id="markInventory" checked>
-    <label class="form-check-label" for="markInventory">Mark for Inventory Update</label>
-  </div>
-  <div class="form-check form-check-inline">
-    <input class="form-check-input" type="checkbox" id="markAsset" checked>
-    <label class="form-check-label" for="markAsset">Mark for Asset Register Update</label>
-  </div>
+    <div class="table-responsive">
+      <table class="table table-bordered" id="itemsTable">
+        <thead class="table-light">
+          <tr>
+            <th>Item No</th>
+            <th>Item Name</th>
+            <th>Description</th>
+            <th>Category</th>
+            <th>UOM</th>
+            <th>PO Qty</th>
+            <th>Received Qty</th>
+            <th>Accepted Qty</th>
+            <th>Transfer To</th>
+            <th>Tag Required?</th>
+          </tr>
+        </thead>
+        <tbody id="itemsBody">
+          <!-- Item rows load dynamically -->
+        </tbody>
+      </table>
+    </div>
 
-  <!-- Footer Buttons -->
-  <div class="mt-4">
-    <button class="btn btn-secondary me-2">Cancel</button>
-    <button class="btn btn-primary me-2">Save Receipt</button>
-    <button class="btn btn-success">Post and Transfer</button>
-  </div>
+    <div class="mt-4">
+      <button type="button" class="btn btn-secondary me-2">Cancel</button>
+      <button type="submit" class="btn btn-primary me-2">Save Receipt</button>
+      <button type="button" class="btn btn-success">Post and Transfer</button>
+    </div>
+  </form>
 </div>
 
 <script>
-// Simulated PO Data
-const poData = {
-  'PO-1001': {
-    description: 'HP Laptops & Office Furniture',
-    items: [
-      { no: '1', name: 'Laptop', desc: 'HP 840 G5', cat: 'Computer', uom: 'Pieces', qty: 3, transfer: 'Asset' },
-      { no: '2', name: 'Table', desc: 'Office Table', cat: 'Furniture', uom: 'Pieces', qty: 10, transfer: 'Inventory' }
-    ]
-  },
-  'PO-1002': {
-    description: 'Stationery Supplies',
-    items: [
-      { no: '1', name: 'Printer Paper', desc: 'A4, 500 Sheets', cat: 'Consumables', uom: 'Reams', qty: 20, transfer: 'Inventory' }
-    ]
-  }
-};
+function handleFormSubmit() {
+  const select = document.getElementById("poSelect");
+  const selectedOption = select.options[select.selectedIndex];
 
-// Start a new receipt
+  if (!selectedOption || !selectedOption.value) {
+    alert("Please select a PO.");
+    return false;
+  }
+
+  // Manually set the hidden input with the selected PO RequisitionNo
+  document.getElementById("poIDInput").value = selectedOption.value;
+
+  return true;
+}
+
 function startNewReceipt() {
-  const grnField = document.getElementById("grnNo");
-  const poSelect = document.getElementById("poSelect");
   const now = new Date();
   const random = Math.floor(Math.random() * 900 + 100);
   const grnNo = `GRN-${now.getFullYear()}${now.getMonth() + 1}${now.getDate()}-${random}`;
 
-  grnField.value = grnNo;
-  poSelect.disabled = false;
-  poSelect.focus();
+  document.getElementById("grnNo").value = grnNo;
+  document.getElementById("grnNoInput").value = grnNo;
+  document.getElementById("poSelect").disabled = false;
   document.getElementById("itemsBody").innerHTML = "";
   document.getElementById("poDesc").textContent = "--";
 }
 
-// Load PO details + items
 function populatePODetails() {
-  const poNumber = document.getElementById("poSelect").value;
-  const descBox = document.getElementById("poDesc");
+  const select = document.getElementById("poSelect");
+  const selectedOption = select.options[select.selectedIndex];
+  const poId = selectedOption.value;
+  const remarks = selectedOption.getAttribute("data-remarks");
+  const lines = JSON.parse(selectedOption.getAttribute("data-lines"));
+
+  document.getElementById("poIDInput").value = poId;
+  document.getElementById("poDesc").textContent = remarks || "--";
+
   const itemsBody = document.getElementById("itemsBody");
   itemsBody.innerHTML = "";
 
-  if (!poNumber || !poData[poNumber]) {
-    descBox.textContent = "--";
-    return;
-  }
-
-  const po = poData[poNumber];
-  descBox.textContent = po.description;
-
-  po.items.forEach(item => {
+  lines.forEach((item, index) => {
     const row = `
       <tr>
-        <td>Item ${item.no}</td>
-        <td>${item.name}</td>
-        <td>${item.desc}</td>
-        <td>${item.cat}</td>
-        <td>${item.uom}</td>
-        <td>${item.qty}</td>
-        <td><input class="form-control" type="number" value="${item.qty}"></td>
-        <td><input class="form-control" type="number" value="${item.qty}"></td>
-        <td><span class="badge bg-${item.transfer === 'Asset' ? 'info' : 'success'}">${item.transfer}</span></td>
-        <td><input type="checkbox"></td>
-        <td><a href="#">Enter Tags</a> | <a href="#">View Details</a></td>
+        <td><input type="text" class="form-control" name="items[${index}][ItemNo]" value="${item.Item}" readonly></td>
+        <td>${item.Item}</td>
+        <td>${item.Description}</td>
+        <td>${item.CategoryId}</td>
+        <td>${item.UOM}</td>
+        <td><input type="number" class="form-control" name="items[${index}][POQTY]" value="${item.Quantity}" readonly></td>
+        <td><input type="number" class="form-control" name="items[${index}][ReceivedQTY]" value="${item.Quantity}"></td>
+        <td><input type="number" class="form-control" name="items[${index}][AcceptedQTY]" value="${item.Quantity}"></td>
+        <td><input type="text" class="form-control" name="items[${index}][TransferTo]" value="${item.Type}" readonly></td>
+        <td><input type="checkbox" name="items[${index}][TagRequired]" value="1"></td>
       </tr>
     `;
     itemsBody.insertAdjacentHTML('beforeend', row);
