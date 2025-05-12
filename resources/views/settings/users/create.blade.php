@@ -2,7 +2,7 @@
     <form action="{{ route('users.store') }}" method="post" id="createUserForm"> @csrf
         <div class="mb-3">
             <label class="form-label" for="UserID">UserID <span
-                    class="text-danger">*</span></label>
+                        class="text-danger">*</span></label>
             <input type="text" class="form-control" id="UserID" name="UserID" required
                    style="text-transform: uppercase;"
                    placeholder="UserID">
@@ -19,7 +19,7 @@
            </div>--}}
         <div class="mb-3">
             <label class="form-label" for="Name">Full Name <span
-                    class="text-danger">*</span></label>
+                        class="text-danger">*</span></label>
             <input type="text" class="form-control" id="Name" name="Name" required
                    placeholder="Name">
             <p id="Name_error" class="invalid-feedback d-none error col-12" role="alert"></p>
@@ -29,7 +29,7 @@
                 <span class="text-danger">*</span></label>
             <select class="form-control" name="Gender" id="Gender" required>
                 <option selected disabled>select gender</option>
-                @foreach(App\Enums\GenderEnum::getAll() as $gender)
+                @foreach(App\Enums\Employee\GenderEnum::getAll() as $gender)
                     <option value="{{ $gender->value }}">{{ $gender->name }}</option>
                 @endforeach
             </select>
@@ -37,7 +37,7 @@
         </div>
         <div class="mb-3">
             <label for="Branch" class="form-label">Branch <span
-                    class="text-danger">*</span></label>
+                        class="text-danger">*</span></label>
             <select class="form-control" name="Branch" id="Branch" required>
                 <option selected disabled>Select user Branch</option>
                 @foreach($branches as $branch)
@@ -64,7 +64,7 @@
         </div>
         <div class="mb-3">
             <label class="form-label" for="Email">Email <span
-                    class="text-danger">*</span></label>
+                        class="text-danger">*</span></label>
             <input type="text" class="form-control" id="Email" name="Email"
                    placeholder="Email">
             <p id="Email_error" class="invalid-feedback d-none error col-12" role="alert"></p>
@@ -78,11 +78,11 @@
         <hr>
         <div class="mt-4">
             <button type="button" class="btn btn-secondary float-start"
-                 onclick="window.bsOffcanvas.hide();">
+                    onclick="window.bsOffcanvas.hide();">
                 cancel
             </button>
             <button class="btn btn-primary float-end" id="createUserBtn" type="submit"><i
-                    class="fas fa-save"></i> add User
+                        class="fas fa-save"></i> add User
             </button>
         </div>
     </form>

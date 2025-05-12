@@ -12,7 +12,7 @@ use App\Helpers\SystemHelper;
 use App\Models\MarketingPlanner;
 use App\Models\PendingWorkflow;
 use App\Models\User;
-use App\Services\UserService;
+use App\Services\HRM\UserService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\DB;

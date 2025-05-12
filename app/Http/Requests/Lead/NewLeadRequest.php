@@ -3,7 +3,7 @@
 namespace App\Http\Requests\Lead;
 
 use App\Enums\Core\PermissionEnum;
-use App\Enums\GenderEnum;
+use App\Enums\Employee\GenderEnum;
 use App\Enums\LeadTypeEnum;
 use App\Enums\LocalityTypeEnum;
 use App\Helpers\SystemHelper;

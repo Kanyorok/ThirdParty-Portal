@@ -7,7 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\UserRequest;
 use App\Models\CrmBranch;
 use App\Models\User;
-use App\Services\UserService;
+use App\Services\HRM\UserService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

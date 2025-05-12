@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\HRM;
 
 use App\Enums\Core\ExtensionsEnum;
 use App\Enums\Core\PermissionEnum;
 use App\Enums\EmailPriorityEnum;
-use App\Enums\GenderEnum;
+use App\Enums\Employee\GenderEnum;
 use App\Helpers\SystemHelper;
 use App\Models\Board;
 use App\Models\BR\BRUser;
@@ -14,6 +14,8 @@ use App\Models\CrmBranch;
 use App\Models\CrmEmail;
 use App\Models\User;
 use App\Services\BR\CBSService;
+use App\Services\CRMEmailService;
+use App\Services\SMSService;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
@@ -154,10 +156,10 @@ class UserService
         }
 
         $this->user->update([
-                             'Linked'   => true,
-                             'Password' => $br_user->Password,
-                             'ClientID' => $br_user->ClientID,
-                            ]);
+             'Linked'   => true,
+             'Password' => $br_user->Password,
+             'ClientID' => $br_user->ClientID,
+        ]);
 
         if ($pullImages) {
             $str = (new CBSService())->getClientImage($this->user->ClientID);

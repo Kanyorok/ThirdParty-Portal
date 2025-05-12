@@ -2,7 +2,6 @@
 
 namespace App\Listeners\Board;
 
-use App\Enums\Core\ExtensionsEnum;
 use App\Enums\EmailPriorityEnum;
 use App\Events\Board\BoardMeetingUpdatedEvent;
 use App\Helpers\SystemHelper;
@@ -11,12 +10,9 @@ use App\Models\Meeting;
 use App\Models\Schedule;
 use App\Models\User;
 use App\Services\BoardService;
-use App\Services\ImageService;
+use App\Services\HRM\UserService;
 use App\Services\MeetingService;
-use App\Services\ScheduleService;
-use App\Services\UserService;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
 
 class BoardMeetingUpdatedListener implements ShouldQueue
 {

@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Settings\Users;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Services\UserService;
+use App\Services\HRM\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;

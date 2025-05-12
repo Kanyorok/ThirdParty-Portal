@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\GenderEnum;
+use App\Enums\Employee\GenderEnum;
 use App\Enums\LeadStatusEnum;
 use App\Enums\LeadTypeEnum;
 use App\Traits\Model\ImageTrait;

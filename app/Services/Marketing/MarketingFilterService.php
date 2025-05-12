@@ -3,7 +3,7 @@
 namespace App\Services\Marketing;
 
 use App\Enums\Core\ComparisonOperatorsEnum;
-use App\Enums\GenderEnum;
+use App\Enums\Employee\GenderEnum;
 use App\Enums\LeadStatusEnum;
 use App\Enums\LeadTypeEnum;
 use App\Models\BR\Branch;
