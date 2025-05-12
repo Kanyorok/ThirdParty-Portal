@@ -15,11 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('GRNID')->default(0);
             $table->string('POID')->default(0);
-<<<<<<< HEAD:database/migrations/2025_05_09_090620_create_goods_receipts_table.php
             //$table->foreignId('SupplierID')->constrained('t_Supplier', 'Id');
-=======
-            $table->foreignId('SupplierID')->constrained('t_Suppliers', 'Id');
->>>>>>> dev:database/migrations/2025_05_08_091651_create_goods_receipt.php
             $table->dateTime('ReceivedDate');
             $table->string('StoreID')->nullable();
             $table->string('ReceivedBy')->nullable();
@@ -29,6 +25,7 @@ return new class extends Migration
             $table->decimal('POQTY')->nullable();
             $table->decimal('ReceivedQTY')->nullable();
             $table->string('TransferTo')->nullable();
+            $table->boolean('TagRequired')->nullable();
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->timestamp('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');

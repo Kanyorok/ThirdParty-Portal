@@ -27,8 +27,8 @@ class GoodsReceiptController extends Controller
         $validated = $request->validate([
             'GRNID'  =>  'nullable|string|max:55',
             'POID'   =>  'nullable|string|max:55',
+            //'Supplier'  => 'require|string|max:55',
             'ReceivedDate'  =>  'required|date',
-            'StoreID'    =>  'nullable|string|max:55',
             'ReceivedBy'     =>  'nullable|string|max:55',
             'InspectionStatus'   =>  'nullable|string|max:55',
             'TransferStatus'     =>  'nullable|string|max:55',
@@ -36,12 +36,9 @@ class GoodsReceiptController extends Controller
             'POQTY' => 'nullable|decimal|max:55',
             'ReceivedQTY'   => 'nullable|decimal|max:55',
             'TransferTo'  =>  'nullable|string|max:55',
+            'TagRequired'   => 'nullable|boolean|max:2',
             'CreatedBy'  =>  'nullable|string|max:55',
             'ModifiedBy'     =>  'nullable|string|max:55',
-            'SasraAuditorId' => 'required|exists:t_SasraAuditors,Id',
-            'EngagementStartDate' => 'required|date',
-            'EngagementEndDate' => 'nullable|date|after_or_equal:EngagementStartDate',
-            'EngagementStatus' => 'nullable|string|max:55',
         ]);
         $validated['CreatedBy'] = Auth::id();
         $validated['ModifiedBy'] = Auth::id(); 
