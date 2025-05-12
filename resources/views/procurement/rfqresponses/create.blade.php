@@ -94,7 +94,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (Array.isArray(data)) {
                     data.forEach(supplier => {
                         supplierSelect.innerHTML += `
-                            <option value="${supplier.SupplierName}">${supplier.SupplierName}</option>
+                            <option value="${supplier.Id}">${supplier.SupplierName}</option>
                         `;
                     });
                 } else {
