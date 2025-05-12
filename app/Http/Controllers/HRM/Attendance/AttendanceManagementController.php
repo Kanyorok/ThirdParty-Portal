@@ -1,9 +1,8 @@
 <?php
 
-namespace App\Http\Controllers\Hrms;
+namespace App\Http\Controllers\HRM\Attendance;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 
 class AttendanceManagementController extends Controller
 {
@@ -13,5 +12,5 @@ class AttendanceManagementController extends Controller
     public function index(){
         return view("hrms.attendancemanagement.index");
     }
-    
+
 }
