@@ -3,33 +3,80 @@
 namespace App\Http\Controllers\HRM;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\HRM\AddEmployeeRequest;
+use App\Models\CrmBranch;
+use App\Models\Department;
 use App\Models\Employee;
+use App\Services\HRM\EmployeeService;
+use App\Traits\Controller\EmployeeTrait;
+use Exception;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\View\View;
+use Throwable;
 
 class EmployeeController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    use EmployeeTrait;
+
+    public function __construct()
     {
+        $this->middleware('ajax')->except(['index', 'create', 'show']);
+        $this->authorizeResource(Employee::class);
+    }
+
+    public function index(Request $request): View|JsonResponse
+    {
+        if ($request->ajax()) {
+            return $this->getEmployees(Employee::query()->select('*'), with: ['department', 'photo']);
+        }
         return view('hrms.employee.index');
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function create(): View
     {
-        return view('hrms.employee.create');
+        return view('hrms.employee.create')
+            ->with('departments', Department::query()->get(['Name', 'DepartmentID']))
+            ->with('branches', CrmBranch::query()->get(['Name', 'BranchID']));
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(AddEmployeeRequest $request)
     {
-        //
+        $image = $request->getImage();
+        $joinDate = $request->getJoinDate();
+        $dob = $request->getDateOfBirth();
+        $gender = $request->getGender();
+        $branch = $request->getBranch();
+        $department = $request->getDepartment();
+        $actor = $request->user();
+
+        try {
+            return DB::transaction(function () use ($request, $image, $joinDate, $dob, $gender, $branch, $department, $actor) {
+                $employee = EmployeeService::create(department: $department, branch: $branch, actor: $actor, JobTitle: $request->string('JobTitle')->trim()->toString(),
+                    FirstName: $request->string('FirstName')->trim()->toString(), Surname: $request->string('LastName')->trim()->toString(), Email: $request->string('Email')->trim()->toString(),
+                    Phone: $request->string('Phone')->trim()->toString(), JoinDate: $joinDate, Gender: $gender, MiddleName: $request->string('MiddleName')->trim()->toString(),
+                    Address: $request->string('Address')->trim()->toString(), DateOfBirth: $dob);
+                if ($image instanceof UploadedFile) {
+                    $employee->setImage($image, $actor);
+                }
+                if ($request->addUser()) {
+                    $employee->createUser($actor)->welcomeEmail();
+                }
+
+                return $this->succeeded($employee->employee->EmployeeID . ' created successfully.', route('employees.show', [$employee->employee->EmployeeID]));
+            });
+        } catch (Throwable|Exception $e) {
+            Log::error("--- CREATE EMPLOYEE ERROR --- " . $e->getMessage());
+            Log::error($e);
+        }
+
+        return $this->errored('create employee failed.');
     }
 
     /**

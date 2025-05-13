@@ -29,6 +29,7 @@
                             <th>No.</th>
                             <th>Employee ID</th>
                             <th>Full Name</th>
+                            <th>Last Name</th>
                             <th>Job Title</th>
                             <th>Department</th>
                             {{-- <th>Phone</th>
@@ -58,9 +59,18 @@
                     serverSide: true,
                     responsive: true,
                     "order": [[3, 'desc']],
-                    "columnDefs": [
-                        {"className": "text-center", "targets": [2]}
+                    columnDefs: [
+                        /*  {"className": "text-center", "targets": [2]},*/
+                        {
+                            "render": function (data, type, row) {
+                                const M = isNullOrEmpty(row.MiddleName) ? "" : " " + row.MiddleName;
+                                return row.LastName + "," + M + " " + data;
+                            },
+                            "targets": 2 // the place of col2
+                        },
+                        {"visible": false, "targets": [3]}
                     ],
+                    dom: '<"row"<"col-12"r><"col-6"l><"col-6"f><"col-12 w-100 my-3"t><"col-6"i><"col-6"p>>',
                     ajax: {
                         url: getDocumentUrl(),
                         error: function (jqXHR) {
@@ -68,11 +78,17 @@
                         }
                     },
                     columns: [
-                        {data: "DT_RowIndex", name: 'DT_RowIndex', searchable: false, orderable: false},
+                        {
+                            data: {
+                                _: "photo",
+                                sort: "Id",
+                            }, name: 'Id', searchable: false
+                        },
                         {data: "EmployeeID", name: 'EmployeeID'},
-                        {data: 'Name', name: 'Name'},
+                        {data: 'FirstName', name: 'FirstName'},
+                        {data: 'LastName', name: 'LastName'},
                         {data: 'JobTitle', name: 'JobTitle'},
-                        {data: 'Department', name: 'Department'},
+                        {data: 'department.Name', name: 'department.Name'},
                         {data: 'action', name: 'action', orderable: false, searchable: false},
                     ], "oLanguage": {
                         "sEmptyTable": "no employees under filter"

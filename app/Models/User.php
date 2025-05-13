@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\Employee\GenderEnum;
+use App\Models\DebtRecovery\LoanAssignment;
 use App\Services\HRM\UserService;
 use App\Traits\Model\ImageTrait;
 use App\Traits\Model\UserActorTrait;
@@ -33,7 +34,7 @@ class User extends Authenticatable
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'UserID', 'Name', 'Email', 'Phone', 'ImageId', 'Gender', 'Linked', 'EmployeeId', 'Notes', 'Password', 'Email_Signature', 'BranchId', 'ClientID', 'ExtensionNo',
+        'UserID', 'Name', 'Email', 'Phone', 'ImageId', 'Linked', 'EmployeeId', 'Notes', 'Password', 'Email_Signature', 'ClientID', 'ExtensionNo',
        'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
 
@@ -42,7 +43,6 @@ class User extends Authenticatable
     ];
 
     protected $casts = [
-        //  'Password' => 'hashed',
         'Gender'    => GenderEnum::class,
         'Linked'    => 'bool',
         'CreatedBy' => 'integer',
@@ -80,23 +80,13 @@ class User extends Authenticatable
 
     public function loansAssigned(): HasMany
     {
-        return $this->hasMany(\App\Models\DebtRecovery\LoanAssignment::class, 'UserId', 'Id');
+        return $this->hasMany(LoanAssignment::class, 'UserId', 'Id');
     }
 
     public function role(): ?Role
     {
         $role = $this->roles()->first();
         return ($role instanceof Role) ? $role : null;
-    }
-
-    public function photo(): BelongsTo
-    {
-        return $this->belongsTo(CRMImage::class, 'ImageId', 'ImageID');
-    }
-
-    public function branch(): BelongsTo
-    {
-        return $this->belongsTo(CrmBranch::class, 'BranchId', 'BranchID');
     }
 
     public function teams(): BelongsToMany

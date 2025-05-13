@@ -861,7 +861,6 @@
     </div>
 </footer>
 @include('layouts._partials._scripts')
-@yield('scripts')
 </body>
 
 </html>

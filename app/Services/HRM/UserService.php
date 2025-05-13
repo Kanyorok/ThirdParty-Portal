@@ -12,6 +12,7 @@ use App\Models\BR\BRUser;
 use App\Models\BulkNotification;
 use App\Models\CrmBranch;
 use App\Models\CrmEmail;
+use App\Models\Employee;
 use App\Models\User;
 use App\Services\BR\CBSService;
 use App\Services\CRMEmailService;
@@ -73,22 +74,40 @@ class UserService
         return ($query) ? $q : $q->get();
     }
 
-    public static function create(CrmBranch $branch, string $UserID, string $Name, string $Email, string $Phone, GenderEnum $Gender, User $actor, string $Notes = '', string $Signature = ''): UserService
+    public static function create(Employee $employee, User $actor): UserService
     {
-        return new UserService(User::create([
-            'UserID' => $UserID,
-            'Name' => $Name,
-            'Email' => $Email,
-            'Phone' => $Phone,
-            'Gender' => $Gender->value,
+        $user = $employee->user;
+        if ($user instanceof User) {
+            return new self($user);
+        }
+        $user = User::create([
+            'UserID' => self::_ID($employee->FirstName, $employee->LastName),
+            'Name' => $employee->full_name,
+            'Email' => $employee->Email,
+            'Phone' => $employee->Phone,
+            'ImageId' => $employee->ImageId,
+            'EmployeeId' => $employee->Id,
             'Linked' => false,
-            'Notes' => $Notes,
-            'Password' => Str::random(),
-            'Email_Signature' => $Signature,
-            'BranchId' => $branch->BranchID,
+            'Password' => Str::random(10),
             'CreatedBy' => $actor->Id,
             'ModifiedBy' => $actor->Id,
-        ]));
+        ]);
+
+        activity()->causedBy($actor)->performedOn($user)->event('create')->log('Created user account ' . $user->UserID . ' for employee ' . $employee->EmployeeID);
+
+        return new self($user);
+    }
+
+    protected static function _ID(string $FirstName, string $Surname): string
+    {
+        $baseId = Str::of($FirstName)->trim()->substr(0, 1) . Str::of($Surname)->trim()->slug('')->upper()->toString();
+        $number = 0;
+        do {
+            $userId = $number === 0 ? Str::of($baseId) : Str::of($baseId . $number);
+            $number++;
+        } while (User::query()->where('UserID', $userId->slug('')->upper()->toString())->withTrashed()->exists());
+
+        return $userId->slug('')->upper()->toString();
     }
 
     /**
@@ -105,41 +124,27 @@ class UserService
                     return '<button type="button"  data-action="' . route('team-users.destroy', [$extra['action_team'], $user->UserID]) . '" data-name="' . $user->Name . '" class="btn btn-danger btn-sm modal-trash-team-users"><i class="fas fa-trash"></i></button>';
                 }
                 return '<a  href="' . route('users.show', [$user->UserID]) . '" class="btn btn-info btn-sm"><i class="fas fa-eye"></i> details</button>';
-            })->editColumn('branch.Name', function (User $user) use ($with) {
-                if (in_array('branch', $with, true)) {
-                    if ($user->branch instanceof CrmBranch) {
-                        return $user->branch->Name;
-                    }
-                    $branch = CrmBranch::query()->where('BranchID', $user->BranchId)->first();
-                    if ($branch instanceof CrmBranch) {
-                        return $branch->Name;
-                    }
-                }
-                return '';
             })->editColumn('pivot', function (User $user) use ($extra) {
                 if (!in_array('pivot_date', $extra, true)) {
                     return '';
                 }
-
                 try {
                     return Carbon::parse($user->pivot->CreatedOn)->format('M d, Y h:i A');
                 } catch (Exception) {
                 }
                 return $user->pivot->CreatedOn;
             })->editColumn('Name', function (User $user) {
-                $str = ($user->Linked) ? ' - linked' : ' - crm';
+                $str = ($user->Linked) ? '(one account)' : '';
                 return $user->Name . $str;
-            })->editColumn('Gender', function (User $user) {
-                return $user->Gender->name;
             })->editColumn('photo', function (User $user) use ($with) {
                 return (in_array('photo', $with, true)) ?
                     $user->getImage('class="img-thumbnail" style="height: 70px; max-width: inherit;"')
                     : '';
             })->setRowClass('mouse_pointer user-select-none dbl-click-redirect-data')->setRowData([
-                                                                                                   'dbl_click_url' => function (User $user) {
-                                                                                                    return route('users.show', [$user->UserID]);
-                                                                                                   },
-                                                                                                  ])->rawColumns(['action', 'photo'])->make();
+                'dbl_click_url' => function (User $user) {
+                    return route('users.show', [$user->UserID]);
+                },
+            ])->rawColumns(['action', 'photo'])->make();
     }
 
     public function setRole(Role $role): static

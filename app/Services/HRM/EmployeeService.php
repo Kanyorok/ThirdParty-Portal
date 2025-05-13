@@ -3,12 +3,12 @@
 namespace App\Services\HRM;
 
 use App\Enums\Employee\GenderEnum;
-use App\Models\BR\BranchDetails;
 use App\Models\CrmBranch;
 use App\Models\Department;
 use App\Models\Employee;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
 
 class EmployeeService
@@ -41,11 +41,24 @@ class EmployeeService
             'ModifiedBy' => $actor->Id,
         ]);
 
-        activity()->causedBy($actor)->performedOn($employee)->event('create')->log("Added employee {$employee->EmployeeID} .");
+        activity()->causedBy($actor)->performedOn($employee)->event('create')->log("Added employee {$employee->EmployeeID}.");
         return new self($employee);
     }
 
+    public function createUser(User $actor): UserService
+    {
+        return UserService::create($this->employee, $actor);
 
+    }
+
+    public function setImage(UploadedFile $file, User $actor): static
+    {
+        $this->employee->setImage($file, $actor, 'ImageId');
+
+        activity()->causedBy($actor)->performedOn($this->employee)->event('update')->log("Updated employee Image {$this->employee->EmployeeID}.");
+        return $this;
+
+    }
     private static function _id(): string
     {
         $number = Employee::query()->withTrashed()->count();

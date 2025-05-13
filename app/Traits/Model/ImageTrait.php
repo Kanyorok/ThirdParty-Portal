@@ -6,11 +6,17 @@ use App\Enums\Core\ExtensionsEnum;
 use App\Models\CRMImage;
 use App\Models\User;
 use App\Services\ImageService;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Http\UploadedFile;
 use RuntimeException;
 
 trait ImageTrait
 {
+    public function photo(): BelongsTo
+    {
+        return $this->belongsTo(CRMImage::class, 'ImageId', 'ImageID');
+    }
+
     public function getImage(string $attr = '', bool $placeholder = true, string $ImageRelationFn = 'photo'): string
     {
         if (!method_exists($this, $ImageRelationFn)) {
@@ -51,8 +57,8 @@ trait ImageTrait
     {
         if (is_string($field)) {
             $this->update([
-                           $field => $service->image->ImageID,
-                          ]);
+                $field => $service->image->ImageID,
+            ]);
         }
         return $this;
     }

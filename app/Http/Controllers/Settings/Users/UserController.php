@@ -32,7 +32,7 @@ class UserController extends Controller
     {
         if ($request->ajax()) {
             try {
-                return UserService::dt(User::query(), ['photo', 'branch']);
+                return UserService::dt(User::query(), ['photo']);
             } catch (Exception $e) {
             }
             return $this->errored('unexpected error, try again later');
@@ -55,22 +55,23 @@ class UserController extends Controller
         $role = $request->getRole();
         $branch = $request->getBranch();
 
-        try {
-            DB::transaction(static function () use ($role, $branch, $userID, $email, $gender, $request, $phone) {
-                UserService::create($branch, $userID, $request->validated('Name'), $email, $phone, $gender, $request->user(), ($request->validated('Notes')) ?? '')
-                    ->setRole($role)->welcomeEmail();
-                /* if ($request->sync()) {
-                     $service->syncBR();
-                 }*/
+        /*  try {
+             DB::transaction( function () use ($role, $branch, $userID, $email, $gender, $request, $phone) {
+                 UserService::create($branch, $userID, $request->validated('Name'), $email, $phone, $gender, $request->user(), ($request->validated('Notes')) ?? '')
+                     ->setRole($role)->welcomeEmail();
+              /* if ($request->sync()) {
+                      $service->syncBR();
+                  }
+                return $this->succeeded('user added successfully');
             });
         } catch (ErroredException $e) {
             return $e->toJson();
         } catch (\Throwable|Exception $e) {
             Log::error('Error create user ' . $e->getMessage());
-            return $this->errored('unexpected error, try again later');
-        }
 
-        return $this->succeeded('user added successfully');
+        }*/
+
+        return $this->errored('unexpected error, try again later');
     }
 
     public function create(): View

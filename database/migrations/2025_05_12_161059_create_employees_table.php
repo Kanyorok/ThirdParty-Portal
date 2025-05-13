@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Employee\GenderEnum;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -26,7 +27,8 @@ return new class extends Migration
             $table->foreignId('DepartmentId')->constrained('t_Departments', 'Id');
             $table->foreignId('BranchId')->constrained('t_CRMBranches', 'Id');
             $table->string('JobTitle');
-            $table->string('Gender',1)->default(\App\Enums\Employee\GenderEnum::Other->value);
+            $table->foreignId('ImageId')->nullable()->constrained('t_CRMImages', 'ImageID');
+            $table->string('Gender',1)->default(GenderEnum::Other->value);
             $table->string('MaritalStatus',2)->nullable();
 
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
@@ -65,9 +67,10 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('t_Users', static function (Blueprint $table) {
+            $table->dropUnique('t_users_employeeid_unique');
             $table->dropConstrainedForeignId('EmployeeId');
-            $table->char('BranchId', '5')->index();
-            $table->char('Gender', 1)->default(\App\Enums\Employee\GenderEnum::Other->value);
+            $table->char('BranchId', '5')->nullable()->index();
+            $table->char('Gender', 1)->default(GenderEnum::Other->value);
         });
 
         Schema::table('t_Departments', static function (Blueprint $table) {
