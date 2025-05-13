@@ -542,49 +542,49 @@
                         <li class="pc-item pc-hasmenu"><a class="pc-link" href="javascript:void(0)"><span data-i18n="Supplier">
                             Reports
                                     </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
-                                <ul class="pc-submenu">
-                                    <li class="pc-item"><a class="pc-link" href="{{ route('propertyreports.index') }}" data-i18n="Procurement List">Reports</a></li>
-                                    <li class="pc-item"><a class="pc-link" href="{{ route('propertyanalytics.index') }}" data-i18n="Procurement List">Analytics</a></li>
-                                </ul>
-                            </li>
+                            <ul class="pc-submenu">
+                                <li class="pc-item"><a class="pc-link" href="{{ route('propertyreports.index') }}"
+                                                       data-i18n="Procurement List">Reports</a></li>
+                                <li class="pc-item"><a class="pc-link" href="{{ route('propertyanalytics.index') }}"
+                                                       data-i18n="Procurement List">Analytics</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
 
-                            </li>                            
-                        </ul>
-                    </li>
-                    
-                    <li class="pc-item pc-hasmenu">
-                        <a href="#!" class="pc-link">
-                            <span class="pc-micon"><i data-feather="shield" class="pc-icon"></i></span>
-                            <span class="pc-mtext" data-i18n="Insurance">Insurance</span>
-                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
-                        </a>
-                        <ul class="pc-submenu">
-                            <li class="pc-item"><a class="pc-link" href="{{ route('providermanagement.index') }}"
-                                    data-i18n="Provider Management">Provider Management</a></li>
-                            <li class="pc-item"><a class="pc-link" href="{{ route('insurancetypemanagement.index') }}"
-                                    data-i18n=" insurancetypeManagement">Insurance Management</a></li>
-                            <li class="pc-item"><a class="pc-link" href="{{ route('insurancepolicymanagement.index') }}"
-                                    data-i18n=" insurancepolicymanagement">policy Management</a></li>
-                            <li class="pc-item"><a class="pc-link" href="{{ route('coveredassetmanagement.index') }}"
-                                    data-i18n=" coveredassetmanagement">Asset Management</a></li>
-                            <li class="pc-item"><a class="pc-link" href="{{ route('premiumpaymentmanagement.index') }}"
-                                    data-i18n=" premiumpaymentmanagement">Premium Management</a></li>
-                            <li class="pc-item"><a class="pc-link" href="{{ route('claimsmanagement.index') }}"
-                                    data-i18n=" claimsmanagement">Claims Management</a></li>
-                            <li class="pc-item"><a class="pc-link" href="{{ route('renewalmanagement.index') }}"
-                                    data-i18n=" renewalmanagement">Renewal Management</a></li>
-                            <li class="pc-item"><a class="pc-link" href="{{ route('reportmanagement.index') }}"
-                                    data-i18n=" reportmanagement">Report Management</a></li>
-
-                        </ul </li>
-                    <li class="pc-item pc-hasmenu">
+                <li class="pc-item pc-hasmenu">
+                    <a href="javascript:void(0)" class="pc-link">
+                        <span class="pc-micon"><i data-feather="shield" class="pc-icon"></i></span>
+                        <span class="pc-mtext" data-i18n="Insurance">Insurance</span>
+                        <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                    </a>
+                    <ul class="pc-submenu">
+                        <li class="pc-item"><a class="pc-link" href="{{ route('providermanagement.index') }}"
+                                               data-i18n="Provider Management">Provider Management</a></li>
+                        <li class="pc-item"><a class="pc-link" href="{{ route('insurancetypemanagement.index') }}"
+                                               data-i18n=" insurancetypeManagement">Insurance Management</a></li>
+                        <li class="pc-item"><a class="pc-link" href="{{ route('insurancepolicymanagement.index') }}"
+                                               data-i18n=" insurancepolicymanagement">policy Management</a></li>
+                        <li class="pc-item"><a class="pc-link" href="{{ route('coveredassetmanagement.index') }}"
+                                               data-i18n=" coveredassetmanagement">Asset Management</a></li>
+                        <li class="pc-item"><a class="pc-link" href="{{ route('premiumpaymentmanagement.index') }}"
+                                               data-i18n=" premiumpaymentmanagement">Premium Management</a></li>
+                        <li class="pc-item"><a class="pc-link" href="{{ route('claimsmanagement.index') }}"
+                                               data-i18n=" claimsmanagement">Claims Management</a></li>
+                        <li class="pc-item"><a class="pc-link" href="{{ route('renewalmanagement.index') }}"
+                                               data-i18n=" renewalmanagement">Renewal Management</a></li>
+                        <li class="pc-item"><a class="pc-link" href="{{ route('reportmanagement.index') }}"
+                                               data-i18n=" reportmanagement">Report Management</a></li>
+                    </ul>
+                </li>
+                <li class="pc-item pc-hasmenu">
                         <a href="#!" class="pc-link">
                             <span class="pc-micon"><i data-feather="briefcase" class="pc-icon"></i></span>
                             <span class="pc-mtext" data-i18n="Legal">Legal</span>
                             <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
                         </a>
                         <ul class="pc-submenu">
-                        <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
+                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
                                         Case Management
                                     </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
                                 <ul class="pc-submenu">
@@ -645,61 +645,45 @@
                                     
                                 </ul>
                             </li>
-
+                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
+                                         Intellectual Property
+                                    </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('copyrightlicenseagreement.index') }}" data-i18n="legal">License Agreement</a></li>
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('patenttracking.index') }}" data-i18n="legal">Patent Tracking</a></li>
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('trademarkregister.index') }}" data-i18n="legal">Trademark Register</a></li>
+                                    </ul>
+                            </li>
+                             <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
+                                         Legal Notices
+                                    </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('archive.index') }}" data-i18n="legal">Correspondance </a></li>
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('register.index') }}" data-i18n="legal">Notice Register</a></li>
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('responsetracker.index') }}" data-i18n="legal">Response Tracker</a></li>
+                                    </ul>
+                             </li>
+                             <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
+                                     Lawyer Management
+                                    </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('externaldirectory.index') }}" data-i18n="legal">External Directory </a></li>
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('feetracker.index') }}" data-i18n="legal">Fee Tracker</a></li>
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('performancelog.index') }}" data-i18n="legal">Performance Log</a></li>
+                                    </ul>
+                            </li>
+                             <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
+                                        Legal Reports
+                                    </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('compliancestatus.index') }}" data-i18n="legal">Compliance Status</a></li>
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('pendingcontracts.index') }}" data-i18n="legal">Pending Contracts</a></li>                                    </ul>
+                            </li>
 
 
                         </ul>
 
                 
-                        
-                    </li>
-                    <li class="pc-item pc-hasmenu">
-                        <a href="#!" class="pc-link">
-                            <span class="pc-micon"><i data-feather="dollar-sign" class="pc-icon"></i></span>
-                            <span class="pc-mtext" data-i18n="Budgeting">Finance</span>
-                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
-                        </a>
-                            <ul class="pc-submenu">
-                                <li class="pc-item"><a class="pc-link" href="{{ route('propertyreports.index') }}"
-                                                       data-i18n="Procurement List">Reports</a></li>
-                                <li class="pc-item"><a class="pc-link" href="{{ route('propertyanalytics.index') }}"
-                                                       data-i18n="Procurement List">Analytics</a></li>
-                            </ul>
-                        </li>
-                    </ul>
-                </li>
-
-                <li class="pc-item pc-hasmenu">
-                    <a href="javascript:void(0)" class="pc-link">
-                        <span class="pc-micon"><i data-feather="shield" class="pc-icon"></i></span>
-                        <span class="pc-mtext" data-i18n="Insurance">Insurance</span>
-                        <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
-                    </a>
-                    <ul class="pc-submenu">
-                        <li class="pc-item"><a class="pc-link" href="{{ route('providermanagement.index') }}"
-                                               data-i18n="Provider Management">Provider Management</a></li>
-                        <li class="pc-item"><a class="pc-link" href="{{ route('insurancetypemanagement.index') }}"
-                                               data-i18n=" insurancetypeManagement">Insurance Management</a></li>
-                        <li class="pc-item"><a class="pc-link" href="{{ route('insurancepolicymanagement.index') }}"
-                                               data-i18n=" insurancepolicymanagement">policy Management</a></li>
-                        <li class="pc-item"><a class="pc-link" href="{{ route('coveredassetmanagement.index') }}"
-                                               data-i18n=" coveredassetmanagement">Asset Management</a></li>
-                        <li class="pc-item"><a class="pc-link" href="{{ route('premiumpaymentmanagement.index') }}"
-                                               data-i18n=" premiumpaymentmanagement">Premium Management</a></li>
-                        <li class="pc-item"><a class="pc-link" href="{{ route('claimsmanagement.index') }}"
-                                               data-i18n=" claimsmanagement">Claims Management</a></li>
-                        <li class="pc-item"><a class="pc-link" href="{{ route('renewalmanagement.index') }}"
-                                               data-i18n=" renewalmanagement">Renewal Management</a></li>
-                        <li class="pc-item"><a class="pc-link" href="{{ route('reportmanagement.index') }}"
-                                               data-i18n=" reportmanagement">Report Management</a></li>
-                    </ul>
-                </li>
-                <li class="pc-item pc-hasmenu">
-                    <a href="javascript:void(0)" class="pc-link">
-                        <span class="pc-micon"><i data-feather="briefcase" class="pc-icon"></i></span>
-                        <span class="pc-mtext" data-i18n="Legal">Legal</span>
-                        <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
-                    </a>
                 </li>
                 <li class="pc-item pc-hasmenu">
                     <a href="javascript:void(0)" class="pc-link">
