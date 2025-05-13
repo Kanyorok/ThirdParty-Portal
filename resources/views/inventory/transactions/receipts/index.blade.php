@@ -3,7 +3,7 @@
 @section('content')
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h4>Transactions View</h4>
-      <a href={{ route('receipts.create') }} class="btn btn-success">➕ New Receipt</a>
+      <a href="{{ route('transactionsreceipts.create') }}" class="btn btn-success">➕ New Receipt</a>
     </div>
 
     <div class="mb-3">

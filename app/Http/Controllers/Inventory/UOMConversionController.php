@@ -10,11 +10,11 @@ class UOMConversionController extends Controller
     //
     public function index()
     {
-        return view('inventory.uom conversion.index');
+        return view('inventory.uomconversion.index');
     }
 
     public function create(){
-        return view('inventory.uom conversion.create');
+        return view('inventory.uomconversion.create');
     }
 
 }

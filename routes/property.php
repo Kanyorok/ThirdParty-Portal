@@ -25,7 +25,8 @@ use App\Http\Controllers\Property\PropertyMaintananceAssignController;
 use App\Http\Controllers\Property\PropertyMaintenanceDashboardController;  
 use App\Http\Controllers\Property\PropertyMaintenanceWorkCompletionController;
 use App\Http\Controllers\Property\PropertyReportsController;
-Route::resource('propertyreports', PropertyReportsVisualController::class);
+use App\Http\Controllers\Property\PropertyReportsVisualController;
+
 
 
 Route::namespace('Property')->group(function () {
@@ -55,4 +56,5 @@ Route::namespace('Property')->group(function () {
     Route::resource('propertyreports', PropertyReportsController::class);
     Route::resource('propertyanalytics', PropertyReportsVisualController::class);
     
+
 });

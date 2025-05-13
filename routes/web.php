@@ -68,5 +68,5 @@ Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function (
     require __DIR__ . '/insurance.php';
     require __DIR__ . '/documentmanagement.php';
     require __DIR__ . '/legal.php';
-    
+    require __DIR__ . '/hrms.php';
 });
