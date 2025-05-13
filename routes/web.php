@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Procurement\ItemController;
 use App\Http\Controllers\Procurement\ItemCategoryController;
+use App\Http\Controllers\Procurement\TenderInvitationController;
+
 
 require __DIR__ . '/auth.php';
 

@@ -133,7 +133,7 @@ Route::namespace('Procurement')->group(function () {
     Route::resource('tendercategory', TenderCategoryController::class);
     Route::resource('tendertype', TenderTypeController::class);
     Route::resource('initiateapprove', TenderInitiationApproveController::class);
-    Route::resource('tenderresponse', TenderResponseController::class);
+    //Route::resource('tenderresponse', TenderResponseController::class);
     Route::resource('tenderclarification', TenderclarificationController::class); 
     Route::resource('tendersubmission', TenderSubmissionController::class);  
     Route::resource('tenderopening', TenderOpeningController::class); 
@@ -146,6 +146,11 @@ Route::namespace('Procurement')->group(function () {
     Route::resource('evaluationdashboard', EvaluatorDashboardController::class);  
     Route::resource('bidscores', BidScoreConsolidationController::class); 
     Route::resource('procurementreports', ProcurementReportsController::class); 
+
+    //Tendering
+    Route::get('/tenderresponse', [TenderResponseController::class, 'index'])->name('tenderresponse.index');
+    Route::get('/tenderresponse/create', [TenderResponseController::class, 'create'])->name('tenderresponse.create');
+    Route::post('/tenderresponse', [TenderResponseController::class, 'storeResponse'])->name('tenderresponse.storeResponse');
 
 
 });
