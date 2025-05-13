@@ -16,7 +16,6 @@ return new class extends Migration
             $table->string('RFQNumber')->unique()->comment('Unique identifier for the RFQ');
             $table->foreignId('ItemCategoryId')->constrained('t_ItemCategories');
             $table->json('RequisitionItems')->nullable();
-            $table->json('Suppliers')->nullable();
             $table->text('Comments')->comment('Detailed description of the requisition');
             $table->string('Status')->default('Pending');
             $table->date('SubmissionDeadline');
@@ -28,7 +27,6 @@ return new class extends Migration
             $table->softDeletes('DeletedOn');
         });
     }
-
     /**
      * Reverse the migrations.
      */

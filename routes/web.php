@@ -14,12 +14,16 @@ Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function (
 
         Route::get('integrations', 'SettingsController@integrations')->name('settings.integrations');
         Route::post('integrations', 'IntegrationController');
+        Route::namespace('Codes')->group(function () {
+            Route::resource('currencies', 'CurrencyController')->only('index');
 
-        Route::post('code-lists-change-order', 'CodeDetailController@order')->name('code-lists.order');
-        Route::resource('code-lists', 'CodeDetailController')->parameters(['code-lists' => 'code_detail'])->except(['create', 'show', 'edit']);
+            Route::post('code-lists-change-order', 'CodeDetailController@order')->name('code-lists.order');
+            Route::resource('code-lists', 'CodeDetailController')->parameters(['code-lists' => 'code_detail'])->except(['create', 'show', 'edit']);
 
-        Route::get('locality', 'LocalitySelectController')->name('locality.select2');
-        Route::resource('localities', 'LocalityController')->except(['create', 'show', 'edit']);
+            Route::get('locality', 'LocalitySelectController')->name('locality.select2');
+            Route::resource('localities', 'LocalityController')->except(['create', 'show', 'edit']);
+        });
+
 
         Route::post('teams/{team}/notification', 'TeamMessagingController')->name('bulk-notification.team');
         Route::resource('teams/{team}/team-users', 'TeamUserController')->parameters(['team-users' => 'user'])->except(['create', 'edit']);
@@ -62,6 +66,7 @@ Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function (
     require __DIR__ . '/finance.php';
     require __DIR__ . '/fleet.php';
     require __DIR__ . '/insurance.php';
-
+    require __DIR__ . '/documentmanagement.php';
+    require __DIR__ . '/legal.php';
+    require __DIR__ . '/hrms.php';
 });
-   

@@ -12,11 +12,11 @@
     <div class="mb-3 row">
         <label class="col-sm-2 col-form-label">Committee Member</label>
         <div class="col-sm-4">
-            <input type="text" class="form-control" value="John Doe" readonly />
+            <input type="text" class="form-control" placeholder="John Doe"/>
         </div>
         <label class="col-sm-2 col-form-label">UserID</label>
         <div class="col-sm-4">
-            <input type="text" class="form-control" value="auto-populated" readonly />
+            <input type="text" class="form-control" placeholder="Enter User ID"/>
         </div>
     </div>
 
@@ -58,51 +58,9 @@
     </div>
 
     <!-- Evaluation Forms -->
-    @for ($i = 1; $i <= 3; $i++)
-    <div class="card mb-4">
-        <div class="card-header">
-            Supplier {{ $i }}
-        </div>
-        <div class="card-body p-0">
-            <table class="table mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>Evaluation Criteria</th>
-                        <th>Weight (%)</th>
-                        <th>Score (1-10)</th>
-                        <th>Comments</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Technical Quality</td>
-                        <td>40%</td>
-                        <td><input type="number" class="form-control" min="1" max="10"></td>
-                        <td><input type="text" class="form-control"></td>
-                    </tr>
-                    <tr>
-                        <td>Pricing</td>
-                        <td>30%</td>
-                        <td><input type="number" class="form-control" min="1" max="10"></td>
-                        <td><input type="text" class="form-control"></td>
-                    </tr>
-                    <tr>
-                        <td>Delivery Time</td>
-                        <td>20%</td>
-                        <td><input type="number" class="form-control" min="1" max="10"></td>
-                        <td><input type="text" class="form-control"></td>
-                    </tr>
-                    <tr>
-                        <td>Past Experience</td>
-                        <td>10%</td>
-                        <td><input type="number" class="form-control" min="1" max="10"></td>
-                        <td><input type="text" class="form-control"></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+    <div id="evaluation-forms-container">
+        <!-- Evaluation forms will be dynamically added here -->
     </div>
-    @endfor
 
     <!-- Confirmation Checkbox -->
     <div class="form-check mb-4">
@@ -127,6 +85,7 @@
         const rfqSelect = document.getElementById('rfq-select');
         const rfqComments = document.getElementById('rfq-total-comments');
         const supplierTableBody = document.querySelector('#supplier-table tbody');
+        const evaluationFormsContainer = document.getElementById('evaluation-forms-container');
 
         // Update RFQ Comments when an RFQ is selected
         rfqSelect.addEventListener('change', function () {
@@ -139,8 +98,9 @@
             // Fetch supplier details for the selected RFQ
             const rfqId = this.value;
 
-            // Clear the table body
+            // Clear the table body and evaluation forms
             supplierTableBody.innerHTML = '<tr><td colspan="5" class="text-center">Loading...</td></tr>';
+            evaluationFormsContainer.innerHTML = '';
 
             if (!rfqId) {
                 supplierTableBody.innerHTML = '<tr><td colspan="5" class="text-center">Select an RFQ to view supplier details</td></tr>';
@@ -154,7 +114,7 @@
                     if (data.length > 0) {
                         supplierTableBody.innerHTML = ''; // Clear the loading message
 
-                        data.forEach(response => {
+                        data.forEach((response, index) => {
                             const status = response.TotalPayable ? 'Submitted' : 'No Reply';
                             const action = response.TotalPayable
                                 ? `<a href="#" class="btn btn-sm btn-link">View Quote</a>`
@@ -168,6 +128,53 @@
                                     <td>${status}</td>
                                     <td>${action}</td>
                                 </tr>
+                            `;
+
+                            // Dynamically add evaluation forms for each supplier
+                            evaluationFormsContainer.innerHTML += `
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        Supplier ${response.SupplierName ? response.SupplierName : `#${index + 1}`}
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <table class="table mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Evaluation Criteria</th>
+                                                    <th>Weight (%)</th>
+                                                    <th>Score (1-10)</th>
+                                                    <th>Comments</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>Technical Quality</td>
+                                                    <td>40%</td>
+                                                    <td><input type="number" class="form-control" min="1" max="10"></td>
+                                                    <td><input type="text" class="form-control"></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Pricing</td>
+                                                    <td>30%</td>
+                                                    <td><input type="number" class="form-control" min="1" max="10"></td>
+                                                    <td><input type="text" class="form-control"></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Delivery Time</td>
+                                                    <td>20%</td>
+                                                    <td><input type="number" class="form-control" min="1" max="10"></td>
+                                                    <td><input type="text" class="form-control"></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Past Experience</td>
+                                                    <td>10%</td>
+                                                    <td><input type="number" class="form-control" min="1" max="10"></td>
+                                                    <td><input type="text" class="form-control"></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
                             `;
                         });
                     } else {
