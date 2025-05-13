@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Procurement\GoodsReceipt;
 use App\Models\Procurement\Requisitions;
+use App\Models\Procurement\GoodsReceivedHeaderView;
 use Illuminate\Support\Facades\Log;
 
 class GoodsReceiptController extends Controller
@@ -14,7 +15,7 @@ class GoodsReceiptController extends Controller
     //
     public function index()
     {
-        $goodsReceipts = GoodsReceipt::all();
+        $goodsReceipts = GoodsReceivedHeaderView::all();
         return view('procurement.goodreceipts.index', compact('goodsReceipts'));
         //return view('procurement.goodreceipts.index');
     }
@@ -26,38 +27,16 @@ class GoodsReceiptController extends Controller
         return view('procurement.goodreceipts.create', compact('Orders'));
     }
 
-    // //Saving the Good Receipts on creation
-    // public function store(Request $request)
-    // {
-    //     $validated = $request->validate([
-    //         'GRNID'  =>  'nullable|string|max:55',
-    //         'POID'   =>  'nullable|string|max:55',
-    //         //'Supplier'  => 'require|string|max:55',
-    //         'ReceivedDate'  =>  'required|date',
-    //         'ReceivedBy'     =>  'nullable|string|max:55',
-    //         'InspectionStatus'   =>  'nullable|string|max:55',
-    //         'TransferStatus'     =>  'nullable|string|max:55',
-    //         'ItemNo'    =>  'nullable|string|max:55',
-    //         'POQTY' => 'nullable|decimal|max:55',
-    //         'ReceivedQTY'   => 'nullable|decimal|max:55',
-    //         'TransferTo'  =>  'nullable|string|max:55',
-    //         'TagRequired'   => 'nullable|boolean|max:2',
-    //         'CreatedBy'  =>  'nullable|string|max:55',
-    //         'ModifiedBy'     =>  'nullable|string|max:55',
-    //     ]);
-    //     $validated['CreatedBy'] = Auth::id();
-    //     $validated['ModifiedBy'] = Auth::id(); 
-    // }
     public function store(Request $request)
     {
         Log::info('Store method reached');
         Log::info('Request data:', $request->all());
         $request->validate([
             'GRNID' => 'required|string',
-            'POID' => 'required|integer',
+            'POID' => 'required|string',
             'items' => 'required|array',
         ]);
-
+// dd($request->items);
         foreach ($request->items as $item) {
 
             GoodsReceipt::create([

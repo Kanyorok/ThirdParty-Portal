@@ -47,7 +47,7 @@
             <td>{{ $receipt->GRNID }}</td>
             <td>{{ $receipt->POID }}</td>
             <td>{{ $receipt->supplier->name ?? 'N/A' }}</td>
-            <td>{{ \Carbon\Carbon::parse($receipt->ReceivedDate)->format('yy-m-d') }}</td>
+            <td>{{ $receipt->ReceivedDate}}</td>
             <td>
               <span class="badge bg-{{ $receipt->InspectionStatus == 'Posted' ? 'success' : 'warning' }}">
                 {{ $receipt->InspectionStatus }}

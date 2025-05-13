@@ -26,5 +26,4 @@ class GoodsReceipt extends Model
                            'CreatedBy',
                            'ModifiedBy',
                           ];
-    
 }

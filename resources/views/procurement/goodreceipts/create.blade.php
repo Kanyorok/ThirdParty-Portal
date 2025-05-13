@@ -3,7 +3,9 @@
 @section('content')
 <div class="container mt-4">
   <h4 class="mb-3"> Add GRN – Goods Received (Stock / Asset Update)</h4>
-
+  {{-- @if (isset($errors))
+    @dd($errors)
+  @endif --}}
   <!-- GRN & PO Details -->
   <div class="row mb-3">
     <div class="col-md-2 mb-2 d-grid">
@@ -61,7 +63,7 @@
     </div>
 
     <div class="mt-4">
-      <button type="button" class="btn btn-secondary me-2">Cancel</button>
+      <button type="button" class="btn btn-secondary me-2" onclick="window.location='{{ route('procurementreceipts.index') }}'">Cancel</button>
       <button type="submit" class="btn btn-primary me-2">Save Receipt</button>
       <button type="button" class="btn btn-success">Post and Transfer</button>
     </div>
