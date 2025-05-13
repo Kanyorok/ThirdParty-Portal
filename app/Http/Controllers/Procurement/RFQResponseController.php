@@ -45,6 +45,7 @@ class RFQResponseController extends Controller
             'RequisitionItems.*.quotedprice' => 'required|numeric|min:0',
             'RequisitionItems.*.description' => 'required|string|max:255',
             'RequisitionItems.*.totalpayable' => 'required|numeric|min:0',
+            'Id' => 'required|string|max:255',
             'SupplierName' => 'required|string|max:255',
             'Currency' => 'required|string|max:3',
             'DurationDays' => 'required|integer|min:1',
@@ -60,6 +61,7 @@ class RFQResponseController extends Controller
             'RFQId' => $request->RFQId,
             'RFQResponseNumber' => $newRFQResponseNumber,
             'RFQNumber' => $request->RFQNumber,
+            'SupplierId' => $request->Id,
             'SupplierName' => $request->SupplierName,
             'TotalPayable' => $request->TotalPayable,
             'Currency' => $request->Currency,
@@ -153,6 +155,7 @@ class RFQResponseController extends Controller
                 return [
                     'SupplierName' => $supplier->SupplierName,
                     'ContactEmail' => $supplier->ContactEmail,
+                    'Id' => $supplier->Id,
                 ];
             });
             return response()->json($suppliers);

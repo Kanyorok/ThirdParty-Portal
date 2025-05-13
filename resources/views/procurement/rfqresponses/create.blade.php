@@ -37,7 +37,7 @@
                             <option value="">-- Select Supplier --</option>
                         </select>
                     </div>
-
+                    <input type="hidden" name="SupplierId" id="supplier-id" value=""/>
                     <h5>Requisition Items Details:</h5>
                     <div id="requisition-items-container"></div>
 
@@ -56,6 +56,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const requisitionItemsContainer = document.getElementById('requisition-items-container');
     const rfqNumberInput = document.getElementById('rfq-number');
     const supplierSelect = document.getElementById('supplier-select');
+    const supplierId = document.getElementById('supplier-id');
 
     function calculateAggregateTotal() {
         let aggregateTotal = 0;
@@ -94,7 +95,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (Array.isArray(data)) {
                     data.forEach(supplier => {
                         supplierSelect.innerHTML += `
-                            <option value="${supplier.Id}">${supplier.SupplierName}</option>
+                            <input type="hidden" name="Id" value="${supplier.Id}" value=""/>
+                            <option value="${supplier.SupplierName}">${supplier.SupplierName}</option>
                         `;
                     });
                 } else {
