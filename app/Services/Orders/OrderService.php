@@ -69,8 +69,55 @@ class OrderService
     }
 //
 
-    public static function addPOLines($supplier,$poDate,$rfqNo,$priority,$terms)
+    public static function addPOLines($item,$quantity,$price,$tax,$discount,$linetotal,User $actor)
     {
+        try {
+            // Start transaction and execute the stored procedure
+            DB::transaction(function () use ($item, $quantity, $price, $tax, $discount, $linetotal, $actor) {
 
+                DB::statement('EXEC p_AddPurchaseOrderLines ?, ?, ?, ?, ?, ?', [
+                    $item,
+                    $quantity,
+                    $price,
+                    $tax,
+                    $discount,
+                    $linetotal,
+                    $actor->Id // Pass the User ID, not the entire User model
+                ]);
+            });
+
+            return [
+                'status' => 'success',
+                'message' => 'Order successfully created.'
+            ];
+
+        } catch (QueryException $e) {
+            // Log the SQL error
+            Log::error('SQL Error executing p_AddPurchaseOrder', [
+                'message' => $e->getMessage(),
+                'exception' => $e
+            ]);
+
+            // Return the error message back to the controller
+            return [
+                'status' => 'error',
+                'message' => 'SQL error executing order creation',
+                'error' => $e->getMessage()
+            ];
+        } catch (Throwable $e) {
+            // Log the exception for debugging
+            Log::error('Error executing p_AddPurchaseOrder', [
+                'message' => $e->getMessage(),
+                'exception' => $e
+            ]);
+
+            // Return a custom error message or handle as needed
+            return[
+                'status' => 'error',
+                'message' => 'Error executing order creation',
+                'error' => $e->getMessage()
+            ];
+        }
     }
+
 }

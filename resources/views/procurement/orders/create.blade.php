@@ -115,8 +115,11 @@
                             </select>
                         </td>
                         {{--                    <td><input type="text" class="form-control" name="itemCode[]"></td> --}}
-                        <td class="text-start"><input type="text" class="form-control form-control-sm itemDescription"
-                                name="itemDescription[]" id="Description" readonly></td>
+                        <td class="text-start">
+                            <textarea class="form-control form-control-sm itemDescription" name="itemDescription[]" id="Description" cols="30" rows="5" readonly></textarea>
+{{--                            <input type="text" class="form-control form-control-sm itemDescription"--}}
+{{--                                name="itemDescription[]" id="Description" readonly>--}}
+                        </td>
                         <td class="text-start"><input type="number" class="form-control form-control-sm qty quantity"
                                 name="quantity[]" id="Quantity"></td>
                         <td class="text-start"><input type="number" class="form-control form-control-sm unit-price "

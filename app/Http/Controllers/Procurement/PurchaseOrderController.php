@@ -126,7 +126,7 @@ class PurchaseOrderController extends Controller
             );
 
 
-            if ($POAdd['status'] === 'success') {
+            if ($POAdd['status'] === 'success' || $POLinesAdd['status'] === 'success') {
                 return response()->json([
                     'message' => $POAdd['message'],
                     'route' =>route('order.create')
