@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const requisitionItemsContainer = document.getElementById('requisition-items-container');
     const rfqNumberInput = document.getElementById('rfq-number');
     const supplierSelect = document.getElementById('supplier-select');
-    const supplierId = document.getElementById('supplier-id');
+    const supplierIdInput = document.getElementById('supplier-id'); // Hidden input for SupplierId
 
     function calculateAggregateTotal() {
         let aggregateTotal = 0;
@@ -84,6 +84,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!rfqId) {
             requisitionItemsContainer.innerHTML = '';
             supplierSelect.innerHTML = '<option value="">-- Select Supplier --</option>';
+            supplierIdInput.value = ''; // Clear the hidden SupplierId field
             return;
         }
 
@@ -95,8 +96,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (Array.isArray(data)) {
                     data.forEach(supplier => {
                         supplierSelect.innerHTML += `
-                            <input type="hidden" name="Id" value="${supplier.Id}" value=""/>
-                            <option value="${supplier.SupplierName}">${supplier.SupplierName}</option>
+                            <option value="${supplier.Id}" data-id="${supplier.Id}">${supplier.SupplierName}</option>
                         `;
                     });
                 } else {
@@ -175,6 +175,12 @@ document.addEventListener('DOMContentLoaded', function () {
             .catch(() => {
                 requisitionItemsContainer.innerHTML = '<p>Error loading requisition items.</p>';
             });
+    });
+
+    // Update hidden SupplierId field when a supplier is selected
+    supplierSelect.addEventListener('change', function () {
+        const selectedOption = supplierSelect.options[supplierSelect.selectedIndex];
+        supplierIdInput.value = selectedOption.value || ''; // Set the hidden SupplierId field
     });
 });
 </script>

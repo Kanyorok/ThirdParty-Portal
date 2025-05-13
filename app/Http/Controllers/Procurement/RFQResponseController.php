@@ -34,6 +34,7 @@ class RFQResponseController extends Controller
         return view('procurement.rfqresponses.create', compact('rfqs', 'suppliers', 'currencies'));
     }
 
+
     public function store(Request $request)
     {
         $request->validate([
@@ -45,12 +46,14 @@ class RFQResponseController extends Controller
             'RequisitionItems.*.quotedprice' => 'required|numeric|min:0',
             'RequisitionItems.*.description' => 'required|string|max:255',
             'RequisitionItems.*.totalpayable' => 'required|numeric|min:0',
-            'Id' => 'required|string|max:255',
-            'SupplierName' => 'required|string|max:255',
+            'SupplierId' => 'required|exists:t_Suppliers,Id',
             'Currency' => 'required|string|max:3',
             'DurationDays' => 'required|integer|min:1',
             'TotalPayable' => 'required|numeric|min:0',
         ]);
+
+        // Fetch the SupplierName based on SupplierId
+        $supplier = Supplier::findOrFail($request->SupplierId);
 
         $prefix = 'RFQRE-';
         $lastRFQResponse = RFQResponse::where('RFQResponseNumber', 'like', $prefix . '%')->orderBy('Id', 'desc')->first();
@@ -61,8 +64,8 @@ class RFQResponseController extends Controller
             'RFQId' => $request->RFQId,
             'RFQResponseNumber' => $newRFQResponseNumber,
             'RFQNumber' => $request->RFQNumber,
-            'SupplierId' => $request->Id,
-            'SupplierName' => $request->SupplierName,
+            'SupplierId' => $request->SupplierId,
+            'SupplierName' => $supplier->SupplierName, // Insert the SupplierName from the Supplier table
             'TotalPayable' => $request->TotalPayable,
             'Currency' => $request->Currency,
             'DurationDays' => $request->DurationDays,

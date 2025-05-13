@@ -137,65 +137,61 @@
                                 </li>
                             </ul>
                         </li>
-                        <li class="pc-item pc-hasmenu"><a class="pc-link" href="javascript:void(0)"><span data-i18n="Teacher">
-                    Tendering
-                     </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                        <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Teacher">
+                            Tendering
+                            </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
                             <ul class="pc-submenu">
 
-                                <li class="pc-item pc-hasmenu">
-                                    <a class="pc-link" href="javascript:void(0)"> <span data-i18n="Auditors">Tender Setup</span> <span
-                                            class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
-                                    <ul class="pc-submenu">
-                                        <li class="pc-item"><a class="pc-link"
-                                                               href="{{ route('initiatetender.index') }}"
-                                                               data-i18n="Create Tender">Tender Initiation</a></li>
-                                        <li class="pc-item"><a class="pc-link"
-                                                               href="{{ route('initiateapprove.index') }}"
-                                                               data-i18n="Create Tender">Initiation Approval</a></li>
-                                        <li class="pc-item"><a class="pc-link"
-                                                               href="{{ route('tendercategory.index') }}"
-                                                               data-i18n="Tender List">Tender Category</a></li>
-                                        <li class="pc-item"><a class="pc-link" href="{{ route('tendertype.index') }}"
-                                                               data-i18n="Tender List">Tender Type</a></li>
-                                    </ul>
-                                </li>
-
-                                <li class="pc-item pc-hasmenu">
-                                    <a class="pc-link" href="javascript:void(0)"> <span
-                                            data-i18n="Auditors">Manage Tender Suppliers</span> <span
-                                            class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
-                                    <ul class="pc-submenu">
-                                        <li class="pc-item"><a class="pc-link"
-                                                               href="{{ route('tenderresponse.index') }}"
-                                                               data-i18n="Create Tender">Response Tracking</a></li>
-                                        <li class="pc-item"><a class="pc-link"
-                                                               href="{{ route('initiateapprove.index') }}"
-                                                               data-i18n="Create Tender">Clarifications Handling</a>
-                                        </li>
-                                        <li class="pc-item"><a class="pc-link"
-                                                               href="{{ route('tendercategory.index') }}"
-                                                               data-i18n="Tender List">Tender Submission</a></li>
-                                        <li class="pc-item"><a class="pc-link" href="{{ route('tendertype.index') }}"
-                                                               data-i18n="Tender List">Tender Type</a></li>
-                                    </ul>
-                                </li>
-                                <li class="pc-item pc-hasmenu">
-                                    <a class="pc-link" href="javascript:void(0)"> <span data-i18n="Auditors">Auditors</span> <span
-                                            class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
-                                    <ul class="pc-submenu">
-                                        <li class="pc-item"><a class="pc-link"
-                                                               href="{{ route('sasra-auditors.index') }}"
-                                                               data-i18n="SASRA List">SASRA Auditor List</a></li>
-                                        <li class="pc-item"><a class="pc-link"
-                                                               href="{{ route('sasra-auditors.import') }}"
-                                                               data-i18n="Upload">Upload Auditor List</a></li>
-                                        <li class="pc-item"><a class="pc-link"
-                                                               href="{{ route('engaged-auditors.index') }}"
-                                                               data-i18n="Engaged">Engaged Auditors</a></li>
-                                    </ul>
-                                </li>
+                            <li class="pc-item pc-hasmenu"> 
+                            <a class="pc-link" href="#!"> <span data-i18n="Auditors">Tender Setup</span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                            <ul class="pc-submenu">
+                            <li class="pc-item"> <a class="pc-link" href="{{ route('initiatetender.index') }}" data-i18n="Create Tender">Tender Initiation</a></li>
+                            <li class="pc-item"> <a class="pc-link" href="{{ route('initiateapprove.index') }}" data-i18n="Create Tender">Initiation Approval</a></li> 
+                            <li class="pc-item"> <a class="pc-link" href="{{ route('tendercategory.index') }}" data-i18n="Tender List">Tender Category</a></li>
+                            <li class="pc-item"> <a class="pc-link" href="{{ route('tendertype.index') }}" data-i18n="Tender List">Tender Type</a></li> 
+                            <li class="pc-item"> <a class="pc-link" href="{{ route('evaluationcriteria.index') }}" data-i18n="Tender List">Criteria Setup</a></li> 
+                            
                             </ul>
                         </li>
+
+                        <li class="pc-item pc-hasmenu">
+                            <a class="pc-link" href="#!"> <span data-i18n="Auditors">Suppliers</span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                            <ul class="pc-submenu">
+                            <li class="pc-item"> <a class="pc-link" href="{{ route('tenderresponse.index') }}" data-i18n="Create Tender">Response Tracking</a></li>
+                            <li class="pc-item"> <a class="pc-link" href="{{ route('tenderclarification.index') }}" data-i18n="Create Tender">Clarifications</a></li> 
+                            <li class="pc-item"> <a class="pc-link" href="{{ route('tendersubmission.index') }}" data-i18n="Tender List">Submission</a></li>
+                            
+                            </ul>
+                        </li> 
+                        
+                                <li class="pc-item pc-hasmenu">
+                            <a class="pc-link" href="#!"> <span data-i18n="Auditors">Opening</span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                            <ul class="pc-submenu">
+                            <li class="pc-item"> <a class="pc-link" href="{{ route('tenderopening.index') }}" data-i18n="Create Tender">Opening</a></li>
+                            </ul>
+                        </li>  
+                        
+                                    <li class="pc-item pc-hasmenu">
+                            <a class="pc-link" href="#!"> <span data-i18n="Auditors">Evaluation</span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                            <ul class="pc-submenu"> 
+                            <li class="pc-item"> <a class="pc-link" href="{{ route('tendercommittee.index') }}" data-i18n="Create Tender">Appoint Committee</a></li>
+                            <li class="pc-item"> <a class="pc-link" href="{{ route('memberresponse.index') }}" data-i18n="Create Tender">Member Response</a></li>
+                            <li class="pc-item"> <a class="pc-link" href="{{ route('assignrole.index') }}" data-i18n="Create Tender">Assign Roles</a></li>
+                            <li class="pc-item"> <a class="pc-link" href="{{ route('evaluationdashboard.index') }}" data-i18n="Create Tender">Evaluators Dashboard</a></li>
+                            <li class="pc-item"> <a class="pc-link" href="{{ route('bidscores.index') }}" data-i18n="Create Tender">Consolidated Scores</a></li>    
+                        </ul>
+                        </li> 
+
+                            <li class="pc-item pc-hasmenu">
+                            <a class="pc-link" href="#!"> <span data-i18n="Auditors">Auditors</span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                            <ul class="pc-submenu">
+                            <li class="pc-item"> <a class="pc-link" href="{{ route('sasra-auditors.index') }}" data-i18n="SASRA List">SASRA Auditor List</a></li>
+                            <li class="pc-item"> <a class="pc-link" href="{{ route('sasra-auditors.import') }}" data-i18n="Upload">Upload Auditor List</a></li>
+                            <li class="pc-item"> <a class="pc-link" href="{{ route('engaged-auditors.index') }}" data-i18n="Engaged">Engaged Auditors</a></li>
+                        </ul>
+                        </li>
+                    </ul>
+            </li>
                         <li class="pc-item pc-hasmenu"><a class="pc-link" href="javascript:void(0)"><span data-i18n="Teacher">
                                         RFQS
                                     </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
