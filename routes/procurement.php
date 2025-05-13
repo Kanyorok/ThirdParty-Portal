@@ -134,7 +134,7 @@ Route::namespace('Procurement')->group(function () {
     Route::resource('tendertype', TenderTypeController::class);
     Route::resource('initiateapprove', TenderInitiationApproveController::class);
     //Route::resource('tenderresponse', TenderResponseController::class);
-    Route::resource('tenderclarification', TenderclarificationController::class); 
+    //Route::resource('tenderclarification', TenderclarificationController::class); 
     Route::resource('tendersubmission', TenderSubmissionController::class);  
     Route::resource('tenderopening', TenderOpeningController::class); 
     Route::resource('tenderdecrypt', TenderDecryptController::class);
@@ -152,5 +152,11 @@ Route::namespace('Procurement')->group(function () {
     Route::get('/tenderresponse/create', [TenderResponseController::class, 'create'])->name('tenderresponse.create');
     Route::post('/tenderresponse', [TenderResponseController::class, 'storeResponse'])->name('tenderresponse.storeResponse');
 
+   // Route::resource('tenderclarification', TenderclarificationController::class);
+    Route::get('/tenderclarification', [TenderclarificationController::class, 'index'])->name('tenderclarification.index');
+    //Route::get('/tenderclarification/create', [TenderclarificationController::class, 'create'])->name('tenderclarification.create');
+    Route::patch('/tenderclarification/update', [TenderclarificationController::class, 'update'])->name('tenderclarification.update');
+    Route::get('/clarifications/edit', [TenderclarificationController::class, 'edit'])->name('tenderclarification.edit');
+    Route::get('/tenderclarifications/{clarification_id}/create', [TenderclarificationController::class, 'create'])->name('tenderclarification.create');
 
 });
