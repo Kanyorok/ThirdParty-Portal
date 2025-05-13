@@ -15,6 +15,7 @@ use App\Models\Competitor;
 use App\Models\Contact;
 use App\Models\CrmBranch;
 use App\Models\CrmEmail;
+use App\Models\Department;
 use App\Models\Discussion;
 use App\Models\Lead;
 use App\Models\MarketingPlanner;
@@ -23,6 +24,7 @@ use App\Models\Notes;
 use App\Models\Procurement\Order;
 use App\Models\Procurement\RequisitionLines;
 use App\Models\Procurement\Requisitions;
+use App\Models\Procurement\RFQ;
 use App\Models\ProductDevelopment;
 use App\Models\Review;
 use App\Models\Schedule;
@@ -72,12 +74,14 @@ class AppServiceProvider extends ServiceProvider
             Competitor::getPrimaryKey() => Competitor::class,
             Contact::getPrimaryKey() => Contact::class,
             DebtProduct::getPrimaryKey() => DebtProduct::class,
+            Department::getPrimaryKey() => Department::class,
             Discussion::getPrimaryKey() => Discussion::class,
             Lead::getPrimaryKey() => Lead::class,
             MarketingPlanner::getPrimaryKey() => MarketingPlanner::class,
             Meeting::getPrimaryKey() => Meeting::class,
             Notes::getPrimaryKey() => Notes::class,
             ProductDevelopment::getPrimaryKey() => ProductDevelopment::class,
+            RFQ::getPrimaryKey() => RFQ::class,
             Review::getPrimaryKey() => Review::class,
             Schedule::getPrimaryKey() => Schedule::class,
             Social::getPrimaryKey() => Social::class,

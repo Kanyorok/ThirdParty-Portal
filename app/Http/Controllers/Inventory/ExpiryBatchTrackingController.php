@@ -10,10 +10,10 @@ class ExpiryBatchTrackingController extends Controller
     //
     public function index()
     {
-        return view('inventory.StockManagement.expirybatchtracking.index');
+        return view('inventory.stockmanagement.expirybatchtracking.index');
     }
 
     public function create(){
-        return view('inventory.Stock Management.expirybatchtracking.create');
+        return view('inventory.stockmanagement.expirybatchtracking.create');
     }
 }
