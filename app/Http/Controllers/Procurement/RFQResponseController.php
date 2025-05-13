@@ -167,4 +167,13 @@ class RFQResponseController extends Controller
         }
     }
 
+    public function getRFQResponses($rfqId)
+    {
+        $responses = RFQResponse::with('supplier')
+            ->where('RFQId', $rfqId)
+            ->get(['SupplierId', 'SupplierName', 'TotalPayable', 'DurationDays']);
+
+        return response()->json($responses);
+    }
+
 }
