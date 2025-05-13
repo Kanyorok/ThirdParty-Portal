@@ -7,6 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 class SupplierResponseEvaluation extends Model
 {
     protected $table = 't_SupplierResponseEvaluations';
+     protected $primaryKey = 'Id';
+    
+    const CREATED_AT = 'CreatedOn';
+    const UPDATED_AT = 'ModifiedOn';
+    const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
         'SupplierId',
@@ -18,5 +23,7 @@ class SupplierResponseEvaluation extends Model
         'DeliveryTimeComments',
         'PastExperience',
         'PastExperienceComments',
+        'CreatedBy',
+        'ModifiedBy',
     ];
 }

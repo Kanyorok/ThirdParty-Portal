@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Procurement\SupplierResponseEvaluation;
 use App\Models\Core\Currency;
 use App\Models\Procurement\RFQEvaluation;
 use App\Models\Procurement\RFQResponse;
@@ -36,28 +37,48 @@ class RFQEvaluationController extends Controller
 
     public function store(Request $request)
     {
-        // Validate the request
-        $request->validate([
-            'RFQId' => 'required|exists:t_RFQs,id',
-            'SupplierId' => 'required|exists:t_Suppliers,id',
-            'PricingScore' => 'required|numeric|min:0|max:100',
-            'DeliveryTimeScore' => 'required|numeric|min:0|max:100',
-            'PastExperienceScore' => 'required|numeric|min:0|max:100',
-            'TechnicalQualityScore' => 'required|numeric|min:0|max:100',
-            'CommitteeMemberName' => 'required|string|max:255',
-            'Comments' => 'nullable|string|max:255',
+        // 1. Validate main fields
+        $validated = $request->validate([
+            'CommitteeMember' => 'required|string',
+            'UserID' => 'required|string',
+            'RFQId' => 'required|integer',
+            'RFQComments' => 'nullable|string',
+            'Confirmation' => 'required|boolean',
+            'Evaluations' => 'required|array',
         ]);
 
-        // Create a new RFQ evaluation
-        RFQEvaluation::create([
+        // 2. Create RFQ Evaluation
+        $rfqEval = RFQEvaluation::create([
+            'CommitteeMemberName' => $request->CommitteeMember,
+            'UserCode' => $request->UserID,
             'RFQId' => $request->RFQId,
-            'SupplierId' => $request->SupplierId,
-            'EvaluationScore' => $request->EvaluationScore,
-            'Comments' => $request->Comments,
+            'RFQComment' => $request->RFQComments,
+            'Confirmation' => $request->Confirmation,
+            'CreatedBy' => auth()->user()->Id,
+            'ModifiedBy' => auth()->user()->Id,
         ]);
 
-        // Redirect back with success message
-        return redirect()->route('rfqevaluation.index')->with('success', 'RFQ Evaluation created successfully.');
+        // 3. Loop through supplier evaluations
+        foreach ($request->Evaluations as $eval) {
+            $evalModel = SupplierResponseEvaluation::create([
+                'SupplierId' => $eval['SupplierId'],
+                'TechnicalQuality' => $eval['TechnicalQuality'],
+                'TechnicalQualityComments' => $eval['TechnicalQualityComments'],
+                'Pricing' => $eval['Pricing'],
+                'PricingComments' => $eval['PricingComments'],
+                'DeliveryTime' => $eval['DeliveryTime'],
+                'DeliveryTimeComments' => $eval['DeliveryTimeComments'],
+                'PastExperience' => $eval['PastExperience'],
+                'PastExperienceComments' => $eval['PastExperienceComments'],
+                'CreatedBy' => auth()->user()->Id,
+                'ModifiedBy' => auth()->user()->Id,
+            ]);
+
+            // Attach to pivot
+            $rfqEval->evaluations()->attach($evalModel->id);
+        }
+
+        return redirect()->route('evaluations.index')->with('success', 'Evaluation submitted successfully.');
     }
 
     public function getRFQResponses($rfqId)

@@ -25,6 +25,8 @@ class RFQEvaluation extends Model
         'RFQId',
         'RFQComment',
         'Confirmation',
+        'CreatedBy',
+        'ModifiedBy',
     ];
 
     public function rfq()

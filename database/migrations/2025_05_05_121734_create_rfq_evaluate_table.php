@@ -15,10 +15,10 @@ return new class extends Migration
             $table->id('Id');
             $table->string('CommitteeMemberName');
             $table->string('UserCode');
-            $table->unsignedBigInteger('RFQResponseId'); // foreign to RFQs
+            $table->unsignedBigInteger('RFQId'); // foreign to RFQs
             $table->string('RFQComment')->nullable();
             $table->boolean('Confirmation')->default(false);
-            $table->foreign('RFQResponseId')->references('Id')->on('t_RFQResponse')->onDelete('cascade');
+            $table->foreign('RFQId')->references('Id')->on('t_RFQ')->onDelete('cascade');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
@@ -34,6 +34,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('t_RFQEvaluation');
+        Schema::dropIfExists('t_RFQEvaluations');
     }
 };
