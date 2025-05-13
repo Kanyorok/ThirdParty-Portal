@@ -27,7 +27,7 @@
             <td>{{ $key + 1 }}</td>
             <td>{{ $item->SubCategoryCode }}</td>
             <td>{{ $item->SubCategoryName }}</td>
-            <td>{{ $item->Parent Category }}</td>
+            <td>{{ $item->ParentCategory }}</td>
             <td>{{ $item->Description }}</td>
             <td>{{ $item->Status }}</td>
             <td>{{ $item->Actions }}</td>
@@ -48,10 +48,13 @@
                }
                }
                </script>
+            </tr>
+            @endforeach   
         </tbody>
       </table>
 
     </div>
   </div>
 </div>
+
 @endsection

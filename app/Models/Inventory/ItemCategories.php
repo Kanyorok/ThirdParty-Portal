@@ -33,7 +33,6 @@ class ItemCategories extends Model
         'ModifiedBy'    => 'integer',
         'DeletedBy'     => 'integer'
     ];
-
    
     public function creator()
     {

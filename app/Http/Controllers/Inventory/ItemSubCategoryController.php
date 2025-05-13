@@ -1,73 +1,77 @@
 <?php
+
 namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Inventory\ItemSubCategory;
+use App\Models\Inventory\ItemSubCategories;
 use App\Models\Inventory\ItemCategories;
 
 class ItemSubCategoryController extends Controller
 {
-
     public function index()
     {
-        $items = ItemSubCategory::with('ParentCategory')->get();
-        return view('itemsubcategory.index', compact('items'));
+        $items = ItemSubCategories::with('parentCategory')->get(); // eager load parent
+        return view('inventory.itemmaster.itemsubcategory.index', compact('items'));
     }
 
     public function create()
     {
-        $items = ItemCategories::all(); // Fetch all categories
-        return view('itemsubcategory.create', compact('items'));
+        $categories = ItemCategories::all(); // list of all parent categories
+        return view('inventory.itemmaster.itemsubcategory.create', compact('categories'));
     }
 
-    public function store(Request $Id)
+    public function store(Request $request)
     {
-        $request->validate([
-            'SubCategoryName' => 'required|string|max:255',
+        $validatedData = $request->validate([
             'SubCategoryCode' => 'required|string|max:50',
-            'ParentCategory'  => 'required|exists:t_ItemCategories,id',
+            'SubCategoryName' => 'required|string|max:255',
+            'ParentCategory'  => 'required|exists:t_ItemCategories,Id',
             'Description'     => 'nullable|string',
             'Status'          => 'nullable|boolean',
         ]);
 
-        ItemSubCategory::create($Id->all());
+        ItemSubCategories::create($validatedData);
 
-        return redirect()->route('itemsubcategory.index')->with('success', 'Subcategory created successfully.');
+        return redirect()->route('itemsubcategory.index')->with('success', '✅ Subcategory added successfully!');
     }
 
-    public function show(ItemSubCategory $item)
+    public function show($Id)
     {
-        return view('itemsubcategory.show', compact('items'));
+        $item = ItemSubCategories::with('parentCategory')->findOrFail($Id);
+        return view('inventory.itemmaster.itemsubcategory.show', compact('item'));
     }
 
-    public function edit(ItemSubCategory $item)
+    public function edit($Id)
     {
-        $items = ItemCategories::all();
-        return view('itemsubcategory.edit', compact('items', 'categories'));
+        $item = ItemSubCategories::findOrFail($Id);
+        $categories = ItemCategories::all(); // for dropdown
+        return view('inventory.itemmaster.itemsubcategory.edit', compact('item', 'categories'));
     }
 
-    // Update an existing subcategory
-    public function update(Request $r, ItemSubCategory $subCategory)
+    public function update(Request $request, $Id)
     {
-        $request->validate([
-            'SubCategoryName' => 'required|string|max:255',
+        $item = ItemSubCategories::findOrFail($Id);
+
+        $validatedData = $request->validate([
             'SubCategoryCode' => 'required|string|max:50',
-            'ParentCategory'  => 'required|exists:t_ItemCategories,id',
+            'SubCategoryName' => 'required|string|max:255',
+            'ParentCategory'  => 'required|exists:t_ItemCategories,Id',
             'Description'     => 'nullable|string',
             'Status'          => 'nullable|boolean',
         ]);
 
-        $items->update($request->all());
+        $item->update($validatedData);
 
-        return redirect()->route('itemsubcategory.index')->with('success', 'Subcategory updated successfully.');
+        return redirect()->route('itemsubcategory.index')->with('success', '✅ Subcategory updated successfully!');
     }
 
-    // Delete a subcategory
-    public function destroy(ItemSubCategory $Id)
+
+    public function destroy($Id)
     {
+        $item = ItemSubCategories::findOrFail($Id);
         $item->delete();
-        return redirect()->route('itemsubcategory.index')->with('success', 'Subcategory deleted successfully.');
+
+        return redirect()->route('itemsubcategory.index')->with('success', '🗑️ Subcategory deleted successfully!');
     }
 }
-

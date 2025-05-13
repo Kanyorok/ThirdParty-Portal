@@ -56,8 +56,8 @@ Route::namespace('Inventory')->group(function () {
     Route::post('/itemsubcategory', [ItemSubCategoryController::class, 'store'])->name('itemsubcategory.store');
     Route::get('/itemsubcategory/{Id}', [ItemSubCategoryController::class, 'show'])->name('itemsubcategory.show');
     Route::get('/itemsubcategory/{Id}/edit', [ItemSubCategoryController::class, 'edit'])->name('itemsubcategory.edit');
-    Route::put('/itemcategory/{Id}', [ItemSubCategoryController::class, 'update'])->name('itemsubcategory.update');
-    Route::delete('/itemcategory/{Id}', [ItemSubCategoryController::class, 'destroy'])->name('itemsubcategory.destroy');
+    Route::put('/itemsubcategory/{Id}', [ItemSubCategoryController::class, 'update'])->name('itemsubcategory.update');
+    Route::delete('/itemsubcategory/{Id}', [ItemSubCategoryController::class, 'destroy'])->name('itemsubcategory.destroy');
     Route::resource('sku', SKUController::class);
 
     Route::resource('inventorydashboard', InventoryDashboardController::class);

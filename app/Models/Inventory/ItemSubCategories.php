@@ -4,8 +4,9 @@ namespace App\Models\Inventory;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\Model\UserActorTrait;
+use App\Models\Inventory\ItemCategories;
 
-class ItemSubCategory extends Model
+class ItemSubCategories extends Model
 {
     use UserActorTrait;
 
@@ -14,7 +15,7 @@ class ItemSubCategory extends Model
     const DELETED_AT = 'DeletedOn';
 
     protected $connection = 'sqlsrv';
-    protected $table = 't_ItemSubCategory';
+    protected $table = 't_ItemSubCategories';
     protected $primaryKey = 'Id';
 
     protected $fillable = [
@@ -28,9 +29,9 @@ class ItemSubCategory extends Model
     protected $casts = [
                             'SubCategoryCode'       => 'string',
                             'SubCategoryName'       => 'string',
-                            'ParentCategory'      => 'string',
+                            'ParentCategory'     => 'string',
                             'Description'      => 'string',
-                            'Status'      => 'string',
+                            'Status'      => 'boolean',
 
                         ];   
 
