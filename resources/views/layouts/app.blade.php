@@ -518,6 +518,42 @@
                             <span class="pc-mtext" data-i18n="Legal">Legal</span>
                             <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
                         </a>
+                        <ul class="pc-submenu">
+                            <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
+                                         Intellectual Property
+                                    </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('copyrightlicenseagreement.index') }}" data-i18n="legal">License Agreement</a></li>
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('patenttracking.index') }}" data-i18n="legal">Patent Tracking</a></li>
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('trademarkregister.index') }}" data-i18n="legal">Trademark Register</a></li>
+                                    </ul>
+                            </li>
+                             <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
+                                         Legal Notices
+                                    </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('archive.index') }}" data-i18n="legal">Correspondance </a></li>
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('register.index') }}" data-i18n="legal">Notice Register</a></li>
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('responsetracker.index') }}" data-i18n="legal">Response Tracker</a></li>
+                                    </ul>
+                             </li>
+                             <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
+                                     Lawyer Management
+                                    </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('externaldirectory.index') }}" data-i18n="legal">External Directory </a></li>
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('feetracker.index') }}" data-i18n="legal">Fee Tracker</a></li>
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('performancelog.index') }}" data-i18n="legal">Performance Log</a></li>
+                                    </ul>
+                            </li>
+                             <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
+                                        Legal Reports
+                                    </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                                <ul class="pc-submenu">
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('compliancestatus.index') }}" data-i18n="legal">Compliance Status</a></li>
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('pendingcontracts.index') }}" data-i18n="legal">Pending Contracts</a></li>                                    </ul>
+                            </li>
+                        </ul>
                     </li>
                     <li class="pc-item pc-hasmenu">
                         <a href="#!" class="pc-link">
