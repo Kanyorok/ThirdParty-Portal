@@ -1,0 +1,19 @@
+<?php
+
+namespace App\Http\Controllers\Legal;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+
+class ArchiveController extends Controller
+{
+        public function create()
+    {
+        return view("legal.notices.archive.create");
+    }
+
+    public function index()
+    {
+        return view("legal.notices.archive.index");
+    }
+}

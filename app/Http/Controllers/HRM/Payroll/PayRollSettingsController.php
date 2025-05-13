@@ -1,0 +1,15 @@
+<?php
+
+namespace App\Http\Controllers\HRM\Payroll;
+
+use App\Http\Controllers\Controller;
+
+class PayRollSettingsController extends Controller
+{
+    public function create(){
+        return view("hrms.payrollmanagement.payrollsettings.create");
+    }
+    public function index(){
+        return view("hrms.payrollmanagement.payrollsettings.index");
+    }
+}
