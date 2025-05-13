@@ -13,8 +13,8 @@
         <thead class="table-light">
           <tr>
             <th>#</th>
-            <th>Sub Category Code</th>
-            <th>Sub Category Name</th>
+            <th>SubCategory Code</th>
+            <th>SubCategory Name</th>
             <th>Parent Category</th>
             <th>Description</th>
             <th>Status</th>
@@ -22,20 +22,32 @@
           </tr>
         </thead>
         <tbody>
-          <!-- Sample Row -->
+         @foreach($items as $key => $item)
           <tr>
-            <td>1</td>
-            <td>SUB-CAT-001</td>
-            <td>Toners & Ink</td>
-            <td>Office Supplies</td>
-            <td>All printer consumables</td>
-            <td><span class="badge bg-success">Active</span></td>
+            <td>{{ $key + 1 }}</td>
+            <td>{{ $item->SubCategoryCode }}</td>
+            <td>{{ $item->SubCategoryName }}</td>
+            <td>{{ $item->Parent Category }}</td>
+            <td>{{ $item->Description }}</td>
+            <td>{{ $item->Status }}</td>
+            <td>{{ $item->Actions }}</td>
             <td>
-              <button class="btn btn-sm btn-primary">Edit</button>
-              <button class="btn btn-sm btn-danger">Delete</button>
-            </td>
-          </tr>
-          <!-- Add more rows dynamically -->
+              <a href="{{ route('itemsubcategory.show', $item->Id) }}">View</a> |
+              <a href="{{ route('itemsubcategory.edit', $item->Id) }}">Edit</a> |
+              <a href="#" onclick="confirmDelete('{{ $item->Id }}')">Delete</a>
+
+              <form id="delete-form-{{ $item->Id }}" action="{{ route('itemsubcategory.destroy', $item->Id) }}" method="POST" style="display:none;">
+               @csrf
+               @method('DELETE')
+              </form>
+
+              <script>
+              function confirmDelete(Id) {
+              if (confirm('⚠️ Are you sure you want to delete this item?')) {
+               document.getElementById('delete-form-' + Id).submit();
+               }
+               }
+               </script>
         </tbody>
       </table>
 

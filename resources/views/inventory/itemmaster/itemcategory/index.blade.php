@@ -1,15 +1,28 @@
 @extends('layouts.app')
 @section('title', 'Create New Inventory')
 @section('content')
-<div class="container mt-5">
-  <div class="card shadow rounded-4">
-    <div class="card-header bg-secondary text-white rounded-top-4 d-flex justify-content-between align-items-center">
-      <h4 class="mb-0">📂 Item Category List</h4>
-      <a href="{{ route('itemcategory.create') }}" class="btn btn-sm btn-light">➕ Add New</a>
-    </div>
-    <div class="card-body">
 
-      <table class="table table-striped table-bordered table-hover align-middle">
+<body class="bg-light p-4">
+
+  <div class="container bg-white shadow-sm rounded p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4>📂 Item Category List</h4>
+      <a href="{{ route('itemcategory.create') }}" class="btn btn-success">➕ Add New Category</a>
+    </div>
+
+    <div class="mb-3">
+      <input type="text" class="form-control" placeholder="🔍 Search by Category Code or Name">
+    </div>
+
+    @if(session('success'))
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+          {{ session('success') }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    @endif
+
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover align-middle">
         <thead class="table-light">
           <tr>
             <th>#</th>
@@ -21,23 +34,43 @@
           </tr>
         </thead>
         <tbody>
-          <!-- Example row -->
+          @foreach($items as $key => $item)
           <tr>
-            <td>1</td>
-            <td>CAT-001</td>
-            <td>Office Supplies</td>
-            <td>Includes all stationary and desk items</td>
-            <td><span class="badge bg-success">Active</span></td>
+            <td>{{ $key + 1 }}</td>
+            <td>{{ $item->CategoryCode }}</td>
+            <td>{{ $item->Name }}</td>
+            <td>{{ $item->Description }}</td>
             <td>
-              <button class="btn btn-sm btn-primary">Edit</button>
-              <button class="btn btn-sm btn-danger">Delete</button>
+              <span class="badge {{ $item->Status ? 'bg-success' : 'bg-warning' }}">
+              {{ $item->Status ? 'Active' : 'Inactive' }}
+              </span>
+</td>
+
+            <td>
+              <a href="{{ route('itemcategory.show', $item->id) }}">View</a> |
+              <a href="{{ route('itemcategory.edit', $item->id) }}">Edit</a> |
+              <a href="#" onclick="confirmDelete('{{ $item->id}}')">Delete</a>
+
+              <form id="delete-form-{{ $item->id}}" action="{{ route('itemcategory.destroy', $item->id) }}" method="POST" style="display:none;">
+               @csrf
+               @method('DELETE')
+              </form>
+
+              <script>
+              function confirmDelete(id) {
+              if (confirm('⚠️ Are you sure you want to delete this item?')) {
+               document.getElementById('delete-form-' + id).submit();
+               }
+               }
+               </script>
+
             </td>
           </tr>
-          <!-- Repeat rows dynamically -->
+          @endforeach
         </tbody>
       </table>
-
     </div>
   </div>
-</div>
+
+
 @endsection

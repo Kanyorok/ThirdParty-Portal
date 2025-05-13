@@ -12,13 +12,13 @@ class ItemMasterListController extends Controller
     public function index()
     {
         $items = ItemMasterList::all();
-        return view('inventory.item master.item master list.index', compact('items'));
+        return view('inventory.itemmaster.itemmasterlist.index', compact('items'));
     }
 
   
     public function create()
     {
-        return view('inventory.item master.item master list.create');
+        return view('inventory.itemmaster.itemmasterlist.create');
     }
 
    
@@ -55,13 +55,13 @@ class ItemMasterListController extends Controller
     public function show($Id)
     {
         $item = ItemMasterList::findOrFail($Id);
-        return view('inventory.item master.item master list.show', compact('item'));
+        return view('inventory.itemmaster.itemmasterlist.show', compact('item'));
     }
 
     public function edit($Id)
 {
     $item = ItemMasterList::where('Id', $Id)->firstOrFail();
-    return view('inventory.item master.item master list.edit', compact('item'));
+    return view('inventory.itemmaster.itemmasterlist.edit', compact('item'));
 }
 
 public function update(Request $request, $Id)

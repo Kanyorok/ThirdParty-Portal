@@ -7,7 +7,7 @@
   <div class="container bg-white shadow-sm rounded p-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h4>📋 Item Master List</h4>
-      <a href="{{ route('itemmaster.create') }}" class="btn btn-success">➕ Add New Item</a>
+      <a href="{{ route('itemmasterlist.create') }}" class="btn btn-success">➕ Add New Item</a>
     </div>
 
     <div class="mb-3">
@@ -50,11 +50,11 @@
             <td>{{ $item->UOM }}</td>
             <td>{{ $item->InventoryType }}</td>
             <td>
-              <a href="{{ route('itemmaster.show', $item->Id) }}">View</a> |
-              <a href="{{ route('itemmaster.edit', $item->Id) }}">Edit</a> |
+              <a href="{{ route('itemmasterlist.show', $item->Id) }}">View</a> |
+              <a href="{{ route('itemmasterlist.edit', $item->Id) }}">Edit</a> |
               <a href="#" onclick="confirmDelete('{{ $item->Id }}')">Delete</a>
 
-              <form id="delete-form-{{ $item->Id }}" action="{{ route('itemmaster.destroy', $item->Id) }}" method="POST" style="display:none;">
+              <form id="delete-form-{{ $item->Id }}" action="{{ route('itemmasterlist.destroy', $item->Id) }}" method="POST" style="display:none;">
                @csrf
                @method('DELETE')
               </form>

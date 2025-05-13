@@ -16,7 +16,7 @@
 <div class="container bg-white shadow-sm rounded p-4">
     <h4 class="mb-4">📦 Item Master Form</h4>
 
-    <form action="{{ route('itemmaster.store') }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ route('itemmasterlist.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
 
         <div class="row mb-3">
