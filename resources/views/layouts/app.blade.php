@@ -80,9 +80,60 @@
                                         Procurement Plan
                                     </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
                             <ul class="pc-submenu">
-                                <li class="pc-item"><a class="pc-link"
-                                                       href="{{ route('procurement-periods.index') }}"
-                                                       data-i18n="Procurement List">Procurement Period</a></li>
+                                <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
+                                    Department Needs
+                                    </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                                      <ul class="pc-submenu">
+                                      <li class="pc-item"><a class="pc-link" href="{{ route('procurementdepartmentalplan.index') }}" data-i18n="Procurement List">Raise Needs</a></li> 
+                                      <li class="pc-item"><a class="pc-link" href="{{ route('needsapproval.index') }}" data-i18n="Procurement List">Approve Needs</a></li>
+                              </ul>
+                                        </li>
+                                                <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
+                                    Plan Consolidation
+                                    </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                                      <ul class="pc-submenu">
+                                      <li class="pc-item"><a class="pc-link" href="{{ route('consolidated.index') }}" data-i18n="Procurement List">Consolidated Needs</a></li> 
+                                      <li class="pc-item"><a class="pc-link" href="{{ route('procurementplanmaintain.index') }}" data-i18n="Procurement List">New Plan</a></li>
+                                      <li class="pc-item"><a class="pc-link" href="{{ route('editplan.index') }}" data-i18n="Procurement List">Ammend Plan</a></li>
+                                      <li class="pc-item"><a class="pc-link" href="{{ route('maptobudget.index') }}" data-i18n="Procurement List">Link Budget Lines</a></li>
+                                      <li class="pc-item"><a class="pc-link" href="{{ route('procurementassignitem.index') }}" data-i18n="Procurement List">Set Method</a></li>                    
+                                      <li class="pc-item"><a class="pc-link" href="{{ route('procurementplanquaterly.index') }}" data-i18n="Procurement List">Schedule Plan</a></li> 
+                                     
+                                    </ul>
+                                        </li>        
+                    
+                                <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
+                                    Dashboard
+                                    </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                                      <ul class="pc-submenu">
+                                       <li class="pc-item"><a class="pc-link" href="{{ route('procurementplandetails.index') }}" data-i18n="Procurement List">Plan View</a></li>
+                                      <li class="pc-item"><a class="pc-link" href="{{ route('plantimeline.index') }}" data-i18n="Procurement List">Timeline</a></li>
+                                      <li class="pc-item"><a class="pc-link" href="{{ route('calenderbased.index') }}" data-i18n="Procurement List">Calender Based</a></li>
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('delayeditems.index') }}" data-i18n="Procurement List">Flagged Items</a></li>    
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('planvsactual.index') }}" data-i18n="Procurement List">Plan vs Actual</a></li> 
+                                    </ul>
+                                        </li>
+                    
+                                <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
+                                    Approval
+                                    </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                                      <ul class="pc-submenu">
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('submitplan.index') }}" data-i18n="Procurement List">Submit For Approval</a></li>
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('approvalinbox.index') }}" data-i18n="Procurement List">Approval Inbox</a></li>
+                                    <li class="pc-item"><a class="pc-link" href="{{ route('procurementplanapproval.index') }}" data-i18n="Procurement List">Approve Plan</a></li>
+                                    </ul>
+                                        </li>    
+                    
+                                <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
+                                    Plan Execution
+                                    </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+                                      <ul class="pc-submenu">
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('submitplan.index') }}" data-i18n="Procurement List">Execution Dashboard</a></li>
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('approvalinbox.index') }}" data-i18n="Procurement List">Pending Execution</a></li>
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('submitplan.index') }}" data-i18n="Procurement List">Execution Calendar</a></li>
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('approvalinbox.index') }}" data-i18n="Procurement List">Deviations</a></li>
+                                    </ul>
+                                        </li>
                             </ul>
                         </li>
                         <li class="pc-item pc-hasmenu">
