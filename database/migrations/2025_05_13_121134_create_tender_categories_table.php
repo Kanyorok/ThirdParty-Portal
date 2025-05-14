@@ -11,17 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tenders_tab', function (Blueprint $table) {
-            $table->id();
+        Schema::create('t_TenderCategories', function (Blueprint $table) {
+            $table->id('Id');
+            $table->string('CategoryCode')->unique();
+            $table->string('TenderCategory');
+            $table->text('Description')->nullable();
             $table->timestamps();
         });
     }
 
-    /**
+    /** 
      * Reverse the migrations.
      */
     public function down(): void
     {
-        Schema::dropIfExists('tenders_tab');
+        Schema::dropIfExists('t_TenderCategories');
     }
 };
