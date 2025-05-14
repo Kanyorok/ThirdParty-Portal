@@ -2,21 +2,24 @@
 
 namespace App\Models\Procurement;
 
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Procurement\Tender;
 use App\Models\Procurement\ItemCategory;
 use App\Models\Procurement\Supplier;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class RFQ extends Model
 {
-    use HasFactory;
+    use UserActorTrait, SoftDeletes;
 
     protected $table = 't_RFQ';
     protected $primaryKey = 'Id';
 
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
+    const string DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
         'RFQNumber', 'ItemCategoryId', 'Comments', 'RequisitionItems', 'Status', 'SubmissionDeadline',  'CreatedBy', 'ModifiedBy', 'Suppliers'
@@ -25,6 +28,11 @@ class RFQ extends Model
     protected $casts = [
         'RequisitionItems' => 'array',
     ];
+
+    public static function getPrimaryKey(): string
+    {
+        return 'RFQId';
+    }
 
     public function category()
     {
@@ -36,15 +44,6 @@ class RFQ extends Model
         return $this->hasMany(RFQResponse::class, 'RFQId', 'Id');
     }
 
-    public function createdBy()
-    {
-        return $this->belongsTo(User::class, 'CreatedBy');
-    }
-
-    public function modifiedBy()
-    {
-        return $this->belongsTo(User::class, 'ModifiedBy');
-    }
 
     public function suppliers()
     {
