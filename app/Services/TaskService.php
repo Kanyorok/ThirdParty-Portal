@@ -10,6 +10,7 @@ use App\Models\Lead;
 use App\Models\Task;
 use App\Models\Ticket;
 use App\Models\User;
+use App\Services\HRM\UserService;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use RuntimeException;

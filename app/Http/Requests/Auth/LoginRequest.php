@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Enums\Core\PermissionEnum;
+use App\Models\Employee;
 use App\Models\User;
 use App\Services\BR\BREncryption;
 use Illuminate\Auth\Events\Lockout;
@@ -23,15 +25,9 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-                'UserID'   => [
-                               'required',
-                               'string',
-                              ],
-                'password' => [
-                               'required',
-                               'string',
-                              ],
-               ];
+            'UserID' => ['required', 'string'],
+            'password' => ['required', 'string']
+        ];
     }
 
     /**
@@ -45,17 +41,18 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
         $user = User::query()->where('UserID', $this->string('UserID')->upper()->toString())->first();
-        if ($user instanceof User && BREncryption::checkAuthUser($user, $this->get('password'))) {
+        if ($user instanceof User && ($user->employee instanceof Employee) && BREncryption::checkAuthUser($user, $this->get('password'))) {
+            //check if user has a employee profile if not fail.
             RateLimiter::clear($this->throttleKey());
+
             //remove other sessions
             if (config(key: 'session.driver') === 'database') {
                 DB::connection(config(key: 'session.connection'))->table(table: config(key: 'session.table', default: 'sessions'))
                     ->where(column: 'user_id', operator: '=', value: $user->getAuthIdentifier())->delete();
             }
 
-
             //new session
-            Auth::login($user, $user->can(\App\Enums\Core\PermissionEnum::UsersSessions));
+            Auth::login($user, $user->can(PermissionEnum::UsersSessions));
             $this->session()->regenerate();
             activity()->causedBy($user)->performedOn($user)->event('authentication')->log('Signed in from ' . $this->getClientIp());
             return;
@@ -63,8 +60,8 @@ class LoginRequest extends FormRequest
 
         RateLimiter::hit($this->throttleKey());
         throw ValidationException::withMessages([
-                                                 'UserID' => trans('auth.failed'),
-                                                ]);
+            'UserID' => trans('auth.failed'),
+        ]);
     }
 
     /**
@@ -85,11 +82,11 @@ class LoginRequest extends FormRequest
         $seconds = RateLimiter::availableIn($this->throttleKey());
 
         throw ValidationException::withMessages([
-                                                 'UserID' => trans('auth.throttle', [
-                                                                                     'seconds' => $seconds,
-                                                                                     'minutes' => ceil($seconds / 60),
-                                                                                    ]),
-                                                ]);
+            'UserID' => trans('auth.throttle', [
+                'seconds' => $seconds,
+                'minutes' => ceil($seconds / 60),
+            ]),
+        ]);
     }
 
     /**

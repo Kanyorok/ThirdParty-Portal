@@ -97,4 +97,9 @@ class CrmEmail extends Model
     {
         return $this->belongsTo(EmailConversation::class, 'EmailConversationId', 'Id');
     }
+
+    protected function getImageName(): string
+    {
+        return $this->Subject;
+    }
 }

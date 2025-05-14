@@ -3,8 +3,9 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use App\Enums\GenderEnum;
-use App\Services\UserService;
+use App\Enums\Employee\GenderEnum;
+use App\Models\DebtRecovery\LoanAssignment;
+use App\Services\HRM\UserService;
 use App\Traits\Model\ImageTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Builder;
@@ -21,17 +22,11 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use ImageTrait;
-    use HasFactory;
-    use Notifiable;
-    use UserActorTrait;
-    use SoftDeletes;
-    use HasRoles;
+    use ImageTrait, HasFactory, Notifiable,UserActorTrait, SoftDeletes, HasRoles;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
-    protected $connection = 'sqlsrv';
+    const string CREATED_AT = 'CreatedOn';
+    const string UPDATED_AT = 'ModifiedOn';
+    const string DELETED_AT = 'DeletedOn';
     protected $table = 't_Users';
     protected $primaryKey = 'Id';
 
@@ -39,43 +34,29 @@ class User extends Authenticatable
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-                           'UserID',
-                           'Name',
-                           'Email',
-                           'Phone',
-                           'ImageId',
-                           'Gender',
-                           'Linked',
-                           'Notes',
-                           'Password',
-                           'Email_Signature',
-                           'BranchId',
-                           'ClientID',
-                           'ExtensionNo',
-                           'CreatedBy',
-                           'ModifiedBy',
-                           'DeletedBy',
-                          ];
+        'UserID', 'Name', 'Email', 'Phone', 'ImageId', 'Linked', 'EmployeeId', 'Notes', 'Password', 'Email_Signature', 'ClientID', 'ExtensionNo',
+       'CreatedBy', 'ModifiedBy', 'DeletedBy',
+    ];
 
     protected $hidden = [
-                         'Password',
-                         'remember_token',
-                         'Linked',
-                         'Email_Signature',
-                        ];
+        'Password', 'remember_token', 'Linked', 'Email_Signature',
+    ];
 
     protected $casts = [
-        //  'Password' => 'hashed',
-                        'Gender'    => GenderEnum::class,
-                        'Linked'    => 'bool',
-                        'CreatedBy' => 'integer',
-                       ];
+        'Gender'    => GenderEnum::class,
+        'Linked'    => 'bool',
+        'CreatedBy' => 'integer',
+    ];
 
     public static function getPrimaryKey(): string
     {
         return (new self())->getRouteKeyName();
     }
 
+    public function employee():BelongsTo
+    {
+        return $this->belongsTo(Employee::class, 'EmployeeId', 'Id');
+    }
 
     public function getRouteKeyName(): string
     {
@@ -99,23 +80,13 @@ class User extends Authenticatable
 
     public function loansAssigned(): HasMany
     {
-        return $this->hasMany(\App\Models\DebtRecovery\LoanAssignment::class, 'UserId', 'Id');
+        return $this->hasMany(LoanAssignment::class, 'UserId', 'Id');
     }
 
     public function role(): ?Role
     {
         $role = $this->roles()->first();
         return ($role instanceof Role) ? $role : null;
-    }
-
-    public function photo(): BelongsTo
-    {
-        return $this->belongsTo(CRMImage::class, 'ImageId', 'ImageID');
-    }
-
-    public function branch(): BelongsTo
-    {
-        return $this->belongsTo(CrmBranch::class, 'BranchId', 'BranchID');
     }
 
     public function teams(): BelongsToMany
@@ -151,5 +122,10 @@ class User extends Authenticatable
     public function tickets(): MorphMany
     {
         return $this->morphMany(Ticket::class, 'party', "Party", "PartyID", 'Id');
+    }
+
+    protected function getImageName(): string
+    {
+        return $this->Name;
     }
 }

@@ -6,7 +6,7 @@ use App\Helpers\SystemHelper;
 use App\Models\BR\DebtProduct;
 use App\Models\DebtRecovery\LoanAssignment;
 use App\Models\User;
-use App\Services\UserService;
+use App\Services\HRM\UserService;
 use Carbon\Exceptions\InvalidFormatException;
 use Exception;
 use Illuminate\Console\Command;

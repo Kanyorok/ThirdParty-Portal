@@ -11,11 +11,10 @@ use App\Models\Meeting;
 use App\Models\Schedule;
 use App\Models\User;
 use App\Services\BoardService;
-use App\Services\CRMEmailService;
+use App\Services\HRM\UserService;
 use App\Services\ImageService;
 use App\Services\MeetingService;
 use App\Services\ScheduleService;
-use App\Services\UserService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 
 class NotifyScheduleListener implements ShouldQueue

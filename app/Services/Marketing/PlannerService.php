@@ -16,7 +16,7 @@ use App\Models\MarketingPlannerActivity;
 use App\Models\PendingWorkflow;
 use App\Models\User;
 use App\Models\Workflow;
-use App\Services\UserService;
+use App\Services\HRM\UserService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;

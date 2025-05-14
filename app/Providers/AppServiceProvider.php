@@ -17,6 +17,7 @@ use App\Models\CrmBranch;
 use App\Models\CrmEmail;
 use App\Models\Department;
 use App\Models\Discussion;
+use App\Models\Employee;
 use App\Models\Lead;
 use App\Models\MarketingPlanner;
 use App\Models\Meeting;
@@ -76,6 +77,7 @@ class AppServiceProvider extends ServiceProvider
             DebtProduct::getPrimaryKey() => DebtProduct::class,
             Department::getPrimaryKey() => Department::class,
             Discussion::getPrimaryKey() => Discussion::class,
+            Employee::getPrimaryKey() => Employee::class,
             Lead::getPrimaryKey() => Lead::class,
             MarketingPlanner::getPrimaryKey() => MarketingPlanner::class,
             Meeting::getPrimaryKey() => Meeting::class,

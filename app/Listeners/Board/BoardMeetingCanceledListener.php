@@ -10,10 +10,9 @@ use App\Models\Meeting;
 use App\Models\Schedule;
 use App\Models\User;
 use App\Services\BoardService;
+use App\Services\HRM\UserService;
 use App\Services\MeetingService;
-use App\Services\UserService;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
 
 class BoardMeetingCanceledListener implements ShouldQueue
 {

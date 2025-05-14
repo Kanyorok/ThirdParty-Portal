@@ -8,7 +8,7 @@ use App\Models\BR\DebtProduct;
 use App\Models\DebtRecovery\LoanAssignment;
 use App\Models\User;
 use App\Services\DebtCollection\LoanService;
-use App\Services\UserService;
+use App\Services\HRM\UserService;
 use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
