@@ -18,17 +18,17 @@ class TenderSubmissionController extends Controller
     {
         return view('procurement.tendering.suppliermanagement.bidsubmission.create');
     }
-    public function view($id)
+    public function view($Id)
 {
-    $submission = BidSubmission::findOrFail($id);
+    $submission = BidSubmission::findOrFail($Id);
     return view('procurement.tendering.suppliermanagement.bidsubmission.view', compact('submission'));
 }
 
-public function edit($id)
+public function edit($Id)
 {
-    $submission = BidSubmission::findOrFail($id);
+    $submission = BidSubmission::findOrFail($Id);
     return view('procurement.tendering.suppliermanagement.bidsubmission.edit', compact('submission'));
-}   
+}
 public function store(Request $request)
     {
         // Validate the input

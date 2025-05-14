@@ -16,22 +16,22 @@ use App\Http\Controllers\Procurement\RFQController;
 use App\Http\Controllers\Procurement\RFQResponseController;
 use App\Http\Controllers\Procurement\RFQEvaluationController;
 use App\Http\Controllers\Procurement\GoodsReceiptController;
-use App\Http\Controllers\Procurement\TenderInitiationController; 
-use App\Http\Controllers\Procurement\TenderCategoryController; 
-use App\Http\Controllers\Procurement\TenderTypeController;   
-use App\Http\Controllers\Procurement\TenderInitiationApproveController;  
-use App\Http\Controllers\Procurement\TenderResponseController; 
-use App\Http\Controllers\Procurement\TenderclarificationController; 
-use App\Http\Controllers\Procurement\TenderSubmissionController;  
-use App\Http\Controllers\Procurement\TenderOpeningController;  
-use App\Http\Controllers\Procurement\TenderDecryptController;  
-use App\Http\Controllers\Procurement\TenderCommitteeController; 
-use App\Http\Controllers\Procurement\TenderAcceptController; 
-use App\Http\Controllers\Procurement\TenderAssignRoleController; 
-use App\Http\Controllers\Procurement\EvaluationCriteriaController;  
-use App\Http\Controllers\Procurement\BidEvaluationController; 
-use App\Http\Controllers\Procurement\BidScoreConsolidationController; 
-use App\Http\Controllers\Procurement\EvaluatorDashboardController;  
+use App\Http\Controllers\Procurement\TenderInitiationController;
+use App\Http\Controllers\Procurement\TenderCategoryController;
+use App\Http\Controllers\Procurement\TenderTypeController;
+use App\Http\Controllers\Procurement\TenderInitiationApproveController;
+use App\Http\Controllers\Procurement\TenderResponseController;
+use App\Http\Controllers\Procurement\TenderclarificationController;
+use App\Http\Controllers\Procurement\TenderSubmissionController;
+use App\Http\Controllers\Procurement\TenderOpeningController;
+use App\Http\Controllers\Procurement\TenderDecryptController;
+use App\Http\Controllers\Procurement\TenderCommitteeController;
+use App\Http\Controllers\Procurement\TenderAcceptController;
+use App\Http\Controllers\Procurement\TenderAssignRoleController;
+use App\Http\Controllers\Procurement\EvaluationCriteriaController;
+use App\Http\Controllers\Procurement\BidEvaluationController;
+use App\Http\Controllers\Procurement\BidScoreConsolidationController;
+use App\Http\Controllers\Procurement\EvaluatorDashboardController;
 use App\Http\Controllers\Procurement\ProcurementReportsController;
 
 Route::namespace('Procurement')->group(function () {
@@ -132,19 +132,19 @@ Route::namespace('Procurement')->group(function () {
     Route::resource('tendertype', TenderTypeController::class);
     Route::resource('initiateapprove', TenderInitiationApproveController::class);
     //Route::resource('tenderresponse', TenderResponseController::class);
-    //Route::resource('tenderclarification', TenderclarificationController::class); 
-    Route::resource('tendersubmission', TenderSubmissionController::class);  
-    Route::resource('tenderopening', TenderOpeningController::class); 
+    //Route::resource('tenderclarification', TenderclarificationController::class);
+    Route::resource('tendersubmission', TenderSubmissionController::class);
+    Route::resource('tenderopening', TenderOpeningController::class);
     Route::resource('tenderdecrypt', TenderDecryptController::class);
-    Route::resource('tendercommittee', TenderCommitteeController::class); 
-    Route::resource('memberresponse', TenderAcceptController::class); 
+    Route::resource('tendercommittee', TenderCommitteeController::class);
+    Route::resource('memberresponse', TenderAcceptController::class);
     Route::resource('assignrole', TenderAssignRoleController::class);
-    Route::resource('evaluationcriteria', EvaluationCriteriaController::class); 
+    Route::resource('evaluationcriteria', EvaluationCriteriaController::class);
     Route::resource('bidevaluation', BidEvaluationController::class);
-    Route::resource('evaluationdashboard', EvaluatorDashboardController::class);  
-    Route::resource('bidscores', BidScoreConsolidationController::class); 
-    Route::resource('procurementreports', ProcurementReportsController::class); 
-  
+    Route::resource('evaluationdashboard', EvaluatorDashboardController::class);
+    Route::resource('bidscores', BidScoreConsolidationController::class);
+    Route::resource('procurementreports', ProcurementReportsController::class);
+
     //Tendering
     Route::get('/tenderresponse', [TenderResponseController::class, 'index'])->name('tenderresponse.index');
     Route::get('/tenderresponse/create', [TenderResponseController::class, 'create'])->name('tenderresponse.create');
@@ -160,8 +160,8 @@ Route::namespace('Procurement')->group(function () {
     //Bid Submission
 Route::get('/bid-submissions', [TenderSubmissionController::class, 'index'])->name('tendersubmission.index');
 Route::get('/bid-submissions/create', [TenderSubmissionController::class, 'create'])->name('tendersubmission.create');
-Route::get('/bid-submission/manual/view', [TenderSubmissionController::class, 'view'])->name('tendersubmission.view');
-Route::get('/bid-submission/manual/edit', [TenderSubmissionController::class, 'edit'])->name('tendersubmission.edit');
+Route::get('/bid-submission/manual/{Id}/view', [TenderSubmissionController::class, 'view'])->name('tendersubmission.view');
+Route::get('/bid-submission/manual/{Id}/edit', [TenderSubmissionController::class, 'edit'])->name('tendersubmission.edit');
 Route::post('/bid-submissions', [TenderSubmissionController::class, 'store'])->name('tendersubmission.store');
 
 });

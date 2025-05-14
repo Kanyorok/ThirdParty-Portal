@@ -40,8 +40,8 @@
                             @endif
                         </td>
                         <td>
-                            <a href="{{ route('tendersubmission.view', $submission->id) }}" class="btn btn-sm btn-outline-info">View</a>
-                            <a href="{{ route('tendersubmission.edit', $submission->id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                            <a href="{{ route('tendersubmission.view', $submission->Id) }}" class="btn btn-sm btn-outline-info">View</a>
+                            <a href="{{ route('tendersubmission.edit', $submission->Id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
                         </td>
                     </tr>
                 @empty

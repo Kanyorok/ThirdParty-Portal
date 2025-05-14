@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class BidSubmission extends Model
 {
     protected $table = 't_BidSubmissions'; // Table name in the database
-    //protected $primaryKey = 'TenderRef'; // Adjust if your primary key is different (e.g., 'BidID')
+    protected $primaryKey = 'Id'; // Adjust if your primary key is different (e.g., 'BidID')
 
     protected $fillable = [
         'TenderRef',

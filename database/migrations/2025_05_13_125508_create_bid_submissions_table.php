@@ -9,6 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('t_BidSubmissions', function (Blueprint $table) {
+            $table->id('Id'); // Custom primary key as specified in the model
             $table->string('TenderRef'); // e.g., 'TND/PROC/2025/001'
             $table->string('SupplierName'); // e.g., 'Tech Supplies Ltd'
             $table->enum('SubmissionMode', ['Hand delivered', 'Courier', 'Email', 'Other']); // Submission mode options

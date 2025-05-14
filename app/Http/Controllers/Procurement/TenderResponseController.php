@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\TenderInvitation;
 
-class TenderResponseController extends Controller 
+class TenderResponseController extends Controller
 {
     //
 
