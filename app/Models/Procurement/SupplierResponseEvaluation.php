@@ -3,6 +3,10 @@
 namespace App\Models\Procurement;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Procurement\RFQEvaluation;
+use App\Traits\Model\UserActorTrait;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class SupplierResponseEvaluation extends Model
 {
@@ -26,4 +30,10 @@ class SupplierResponseEvaluation extends Model
         'CreatedBy',
         'ModifiedBy',
     ];
+
+     public function rfqEvaluations()
+    {
+        return $this->belongsToMany(RFQEvaluation::class, 't_RFQEvaluation_Evaluation', 'EvaluationId', 'RFQEvaluationId')
+                    ->withTimestamps();
+    }
 }

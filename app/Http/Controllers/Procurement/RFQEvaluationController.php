@@ -75,7 +75,7 @@ class RFQEvaluationController extends Controller
             ]);
 
             // Attach to pivot
-            $rfqEval->evaluations()->attach($evalModel->id);
+            $rfqEval->evaluations()->attach($evalModel->Id);
         }
 
         return redirect()->route('evaluations.index')->with('success', 'Evaluation submitted successfully.');

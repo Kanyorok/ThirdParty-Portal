@@ -4,6 +4,7 @@ namespace App\Models\Procurement;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Procurement\RFQ;
+use App\Models\Procurement\SupplierResponseEvaluation;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -39,8 +40,9 @@ class RFQEvaluation extends Model
         return $this->belongsTo(Supplier::class, 'SupplierId', 'Id');
     }
 
-    public function evaluations()
+     public function evaluations()
     {
-        return $this->belongsToMany(SupplierResponseEvaluation::class, 't_RFQEvaluation_Evaluation', 'RFQEvaluationId', 'EvaluationId');
+        return $this->belongsToMany(SupplierResponseEvaluation::class, 't_RFQEvaluation_Evaluation', 'RFQEvaluationId', 'EvaluationId')
+                    ->withTimestamps();
     }
 }
