@@ -53,9 +53,7 @@ use App\Http\Controllers\Procurement\PlanManualInputController;
 use App\Http\Controllers\Procurement\SubmitForApprovalController;
 use App\Http\Controllers\Procurement\PlanEditController; 
 use App\Http\Controllers\Procurement\PlanApprovalInboxController;
-use App\Http\Controllers\Procurement\PlanExectionDashboardController;   
-
-
+use App\Http\Controllers\Procurement\PlanExectionDashboardController;
 
 Route::namespace('Procurement')->group(function () {
 
@@ -63,8 +61,8 @@ Route::namespace('Procurement')->group(function () {
     Route::resource('requisition', 'RequisitionsController');
     Route::resource('requisitionItem', 'RequisitionItemsController');
     Route::get('items/download', [ItemController::class, 'download'])->name('items.download');
-    Route::get('requisitionItem/getItem/{type}', 'RequisitionItemsController@getItems')->name('requisitionItem.getItems');
-    Route::get('requisitionItem/getItemDetails/{item}', 'RequisitionItemsController@getItemDetails')->name('requisitionItem.getItemDetails');
+    //Route::get('requisitionItem/getItem/{type}', 'RequisitionItemsController@getItems')->name('requisitionItem.getItems');
+    //Route::get('requisitionItem/getItemDetails/{item}', 'RequisitionItemsController@getItemDetails')->name('requisitionItem.getItemDetails');
 //    Route::get('requisitionItem/{id}', 'RequisitionItemsController@getRelatedRequisitionLines')->name('requisitionItem.list');
     Route::get('requisitionItem/{id}', [RequisitionItemsController::class, 'show'])->name('requisitionItem.show');
     Route::get('requisition/{id}', [RequisitionsController::class, 'show'])->name('requisition.show');
@@ -148,7 +146,20 @@ Route::namespace('Procurement')->group(function () {
     Route::post('/rfq-evaluations', [RFQEvaluationController::class, 'store'])->name('evaluations.store');
     Route::get('/rfq-suppliers/{rfqId}', [RFQResponseController::class, 'getSuppliersByRFQ']);
 
-    //Receipts
+    //GoodsReceipts
+    //Route::resource('procurementreceipts', GoodsReceiptController::class);
+    Route::get('/procurementreceipts', [GoodsReceiptController::class,'index'])->name('procurementreceipts.index');
+    Route::get('/procurementreceipts/create', [GoodsReceiptController::class, 'create'])->name('procurementreceipts.create');
+    Route::post('/procurementreceipts', [GoodsReceiptController::class, 'store'])->name('procurementreceipts.store');
+    Route::get('/procurementreceipts/lines/{grnId}/{poId}', [GoodsReceiptController::class, 'fetchLinesByGRN']);
+    Route::put('/procurementreceipts/update-line', [GoodsReceiptController::class, 'updateLine'])->name('procurementreceipts.updateLine');
+    Route::delete('/procurementreceipts/delete/{grnId}/{poId}', [GoodsReceiptController::class, 'destroy'])->name('procurementreceipts.destroy');
+
+
+
+
+
+
     Route::resource('procurementreceipts', GoodsReceiptController::class);
 
     //Tenders
