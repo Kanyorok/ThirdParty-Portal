@@ -36,5 +36,9 @@ class Requisitions extends Model
         'ModifiedBy' => 'integer',//,
         // 'Processing' => 'boolean'
     ];
+    public function requisitionLines()
+    {
+        return $this->hasMany(RequisitionLines::class, 'RequisitionID', 'Id');
+    }
 
 }
