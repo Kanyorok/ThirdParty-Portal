@@ -181,33 +181,6 @@
                             <li class="pc-item"> <a class="pc-link" href="{{ route('bidscores.index') }}" data-i18n="Create Tender">Consolidated Scores</a></li>    
                         </ul>
                         </li> 
-                 <li class="pc-item pc-hasmenu">
-                    <a class="pc-link" href="#!"> <span data-i18n="Auditors">Suppliers</span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
-                    <ul class="pc-submenu">
-                    <li class="pc-item"> <a class="pc-link" href="{{ route('tenderresponse.index') }}" data-i18n="Create Tender">Response Tracking</a></li>
-                    <li class="pc-item"> <a class="pc-link" href="{{ route('tenderclarification.index') }}" data-i18n="Create Tender">Clarifications</a></li> 
-                    <li class="pc-item"> <a class="pc-link" href="{{ route('tendersubmission.index') }}" data-i18n="Tender List">Submission</a></li>
-                     
-                    </ul>
-                </li> 
-                
-                           <li class="pc-item pc-hasmenu">
-                    <a class="pc-link" href="#!"> <span data-i18n="Auditors">Opening</span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
-                    <ul class="pc-submenu">
-                    <li class="pc-item"> <a class="pc-link" href="{{ route('tenderopening.index') }}" data-i18n="Create Tender">Opening</a></li>
-                    </ul>
-                </li>  
-                
-                            <li class="pc-item pc-hasmenu">
-                    <a class="pc-link" href="#!"> <span data-i18n="Auditors">Evaluation</span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
-                    <ul class="pc-submenu"> 
-                    <li class="pc-item"> <a class="pc-link" href="{{ route('tendercommittee.index') }}" data-i18n="Create Tender">Appoint Committee</a></li>
-                    <li class="pc-item"> <a class="pc-link" href="{{ route('memberresponse.index') }}" data-i18n="Create Tender">Member Response</a></li>
-                    <li class="pc-item"> <a class="pc-link" href="{{ route('assignrole.index') }}" data-i18n="Create Tender">Assign Roles</a></li>
-                    <li class="pc-item"> <a class="pc-link" href="{{ route('evaluationdashboard.index') }}" data-i18n="Create Tender">Evaluators Dashboard</a></li>
-                    <li class="pc-item"> <a class="pc-link" href="{{ route('bidscores.index') }}" data-i18n="Create Tender">Consolidated Scores</a></li>    
-                </ul>
-                </li> 
 
                     <li class="pc-item pc-hasmenu">
                     <a class="pc-link" href="#!"> <span data-i18n="Auditors">Auditors</span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
