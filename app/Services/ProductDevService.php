@@ -3,12 +3,12 @@
 namespace App\Services;
 
 use App\Exceptions\ErroredException;
-use App\Models\CodeDetail;
-use App\Models\Comment;
-use App\Models\CRMImage;
-use App\Models\ProductDevelopment;
-use App\Models\ProductDevelopmentFeature;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\Communication\Comment;
+use App\Models\Core\CodeDetail;
+use App\Models\CRM\ProductDevelopment;
+use App\Models\CRM\ProductDevelopmentFeature;
+use App\Models\DMS\Image;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
 
@@ -62,7 +62,7 @@ class ProductDevService
         return $slug;
     }
 
-    public function document(UploadedFile $file, User $actor): CRMImage
+    public function document(UploadedFile $file, User $actor): Image
     {
         $document = ImageService::createUpload($file, ProductDevelopment::getPrimaryKey(), $this->product->Id, $actor)->image;
         activity()->causedBy($actor)->performedOn($this->product)->event('document')->log('added a document  ' . $document->Name . ' to Product Development ' . Str::upper($this->product->ProductID) . '.');

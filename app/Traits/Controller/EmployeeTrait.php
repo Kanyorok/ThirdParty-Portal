@@ -2,9 +2,9 @@
 
 namespace App\Traits\Controller;
 
-use App\Models\CrmBranch;
-use App\Models\Department;
-use App\Models\Employee;
+use App\Models\Core\Branch;
+use App\Models\HRM\Department;
+use App\Models\HRM\Employee;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -24,7 +24,7 @@ trait EmployeeTrait
                     return '<a  href="' . route('employees.show', [$employee->EmployeeID]) . '" class="btn btn-info btn-sm"><i class="fas fa-eye"></i> details</button>';
                 })->editColumn('branch.Name', function (Employee $employee) use ($with) {
                     if (in_array('branch', $with, true)) {
-                        if ($employee->branch instanceof CrmBranch) {
+                        if ($employee->branch instanceof Branch) {
                             return $employee->branch->Name;
                         }
                         return ' ? ';

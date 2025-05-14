@@ -52,7 +52,7 @@
                                                 aria-selected="false" onclick="fetchLeadsTable()">Leads</a></li>
                         <li class="nav-item"><a class="nav-link" href="#tab-0" data-bs-toggle="tab" role="tab"
                                                 aria-selected="false" onclick="fetchMembersTable()">Members </a></li>
-                    @elseif($list->Source === \App\Models\Lead::getPrimaryKey())
+                    @elseif($list->Source === \App\Models\CRM\Lead::getPrimaryKey())
                         <li class="nav-item"><a class="nav-link active" href="#tab-1" data-bs-toggle="tab" role="tab"
                                                 aria-selected="false" onclick="fetchLeadsTable()">Leads</a></li>
                     @elseif($list->Source === \App\Models\BR\Client::getPrimaryKey())
@@ -66,25 +66,26 @@
                         id="tab-0" role="tabpanel">
                         @if( $list->Type->value === \App\Enums\MarketingListEnum::Static->value && !$isProcessing)
                             @can('update',$list)
-                        <div class="row mb-0">
-                            <div class="col-8 mb-0">
-                                <h3 class="mb-1 mt-2">
-                                    Select Member(s) to Remove
-                                </h3>
-                            </div>
-                            <div class="col-4 mb-0">
-                                <form action="{{ route('marketing-list.clients', [$list->slug,'q'=> 'current']) }}"
-                                      method="post"
-                                      id="removeMembersListForm">@csrf
-                                    <button class="float-end btn btn-danger disabled" type="submit"
-                                            id="removeMembersList">
-                                        <i class="fas fa-minus-circle"></i> remove members
-                                    </button>
-                                    <input type="hidden" name="members" id="MembersList" class="d-none">
-                                </form>
-                            </div>
-                        </div>
-                        <hr class="mt-0 mb-2">
+                                <div class="row mb-0">
+                                    <div class="col-8 mb-0">
+                                        <h3 class="mb-1 mt-2">
+                                            Select Member(s) to Remove
+                                        </h3>
+                                    </div>
+                                    <div class="col-4 mb-0">
+                                        <form
+                                            action="{{ route('marketing-list.clients', [$list->slug,'q'=> 'current']) }}"
+                                            method="post"
+                                            id="removeMembersListForm">@csrf
+                                            <button class="float-end btn btn-danger disabled" type="submit"
+                                                    id="removeMembersList">
+                                                <i class="fas fa-minus-circle"></i> remove members
+                                            </button>
+                                            <input type="hidden" name="members" id="MembersList" class="d-none">
+                                        </form>
+                                    </div>
+                                </div>
+                                <hr class="mt-0 mb-2">
                             @endcan
                         @endif
                         <table id="membersTable"
@@ -107,25 +108,26 @@
                         id="tab-1" role="tabpanel">
                         @if($list->Type->value === \App\Enums\MarketingListEnum::Static->value  && !$isProcessing)
                             @can('update',$list)
-                        <div class="row mb-0">
-                            <div class="col-8 mb-0">
-                                <h3 class="mb-1 mt-2">
-                                    Select Lead(s) to Remove
-                                </h3>
-                            </div>
-                            <div class="col-4 mb-0">
-                                <form action="{{ route('marketing-list.leads',[$list->slug, 'q'=> 'current']) }}"
-                                      method="post"
-                                      id="saveLeadsToListForm">@csrf
-                                    <button class="float-end btn btn-primary disabled" type="submit"
-                                            id="saveLeadsToList">
-                                        <i class="fas fa-minus-circle"></i> remove leads
-                                    </button>
-                                    <input type="hidden" name="leads" id="LeadsToList" class="d-none">
-                                </form>
-                            </div>
-                        </div>
-                        <hr class="mt-0 mb-2">
+                                <div class="row mb-0">
+                                    <div class="col-8 mb-0">
+                                        <h3 class="mb-1 mt-2">
+                                            Select Lead(s) to Remove
+                                        </h3>
+                                    </div>
+                                    <div class="col-4 mb-0">
+                                        <form
+                                            action="{{ route('marketing-list.leads',[$list->slug, 'q'=> 'current']) }}"
+                                            method="post"
+                                            id="saveLeadsToListForm">@csrf
+                                            <button class="float-end btn btn-primary disabled" type="submit"
+                                                    id="saveLeadsToList">
+                                                <i class="fas fa-minus-circle"></i> remove leads
+                                            </button>
+                                            <input type="hidden" name="leads" id="LeadsToList" class="d-none">
+                                        </form>
+                                    </div>
+                                </div>
+                                <hr class="mt-0 mb-2">
                             @endcan
                         @endif
                         <table id="leadsTable"

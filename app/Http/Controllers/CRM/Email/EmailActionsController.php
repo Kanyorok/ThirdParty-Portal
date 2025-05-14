@@ -7,7 +7,7 @@ use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Base\UploadDocumentRequest;
 use App\Http\Requests\Email\SendDraftMailRequest;
-use App\Models\CrmEmail;
+use App\Models\Communication\Email;
 use App\Services\CRMEmailService;
 use App\Services\ImageService;
 use Illuminate\Http\JsonResponse;
@@ -27,15 +27,15 @@ class EmailActionsController extends Controller
     public function attachment(UploadDocumentRequest $request, string $email_id): JsonResponse
     {
         //todo check permissions
-        $crmEmail = CrmEmail::query()->where('EmailID', $email_id)
+        $crmEmail = Email::query()->where('EmailID', $email_id)
             ->where('Status', EmailStatusEnum::Draft->value)->where('CreatedBy', $request->user()->Id)->first();
-        if (!$crmEmail instanceof CrmEmail) {
+        if (!$crmEmail instanceof Email) {
             return $this->errored('could not load email');
         }
 
         try {
             $document = DB::transaction(static function () use ($crmEmail, $request) {
-                $service = ImageService::createUpload($request->file('file'), CrmEmail::getPrimaryKey(), $crmEmail->EmailID, $request->user());
+                $service = ImageService::createUpload($request->file('file'), Email::getPrimaryKey(), $crmEmail->EmailID, $request->user());
                 (new CRMEmailService($crmEmail))->addAttachment($service->image);
                 return $service->image;
             });
@@ -54,9 +54,9 @@ class EmailActionsController extends Controller
 
     public function send(SendDraftMailRequest $request, string $email_id): JsonResponse
     {
-        $crmEmail = CrmEmail::query()->where('EmailID', $email_id)
+        $crmEmail = Email::query()->where('EmailID', $email_id)
             ->where('Status', EmailStatusEnum::Draft->value)->where('CreatedBy', $request->user()->Id)->first();
-        if (!$crmEmail instanceof CrmEmail) {
+        if (!$crmEmail instanceof Email) {
             return $this->errored('could not load email');
         }
 

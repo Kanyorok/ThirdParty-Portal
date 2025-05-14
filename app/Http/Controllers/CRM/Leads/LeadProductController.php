@@ -4,8 +4,8 @@ namespace App\Http\Controllers\CRM\Leads;
 
 use App\Http\Controllers\Controller;
 use App\Models\BR\Product;
-use App\Models\Lead;
-use App\Models\LeadProduct;
+use App\Models\CRM\Lead;
+use App\Models\CRM\LeadProduct;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

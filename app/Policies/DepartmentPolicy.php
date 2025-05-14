@@ -3,9 +3,8 @@
 namespace App\Policies;
 
 use App\Enums\Core\PermissionEnum;
-use App\Models\Department;
-use App\Models\User;
-use Illuminate\Auth\Access\Response;
+use App\Models\Auth\User;
+use App\Models\HRM\Department;
 
 class DepartmentPolicy
 {

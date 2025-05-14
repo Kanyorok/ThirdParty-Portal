@@ -1,5 +1,5 @@
-@php use App\Models\BR\Client; @endphp
-@php use App\Models\Lead; @endphp
+@php use App\Models\BR\Client;use App\Models\CRM\Lead; @endphp
+@php @endphp
 <div class="card">
     <div class="card-header">
         <div class="card-actions float-end">

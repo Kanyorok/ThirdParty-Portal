@@ -23,7 +23,7 @@
                 </div>
                 <div class=" border-top card-body">
                     <h5 class="h6 card-title">Team Lead</h5>
-                    @if($team->lead instanceof \App\Models\User)
+                    @if($team->lead instanceof \App\Models\Auth\User)
                         @include('snippets.user_summary', ['user'=>$team->lead])
                     @else
                         <h3 class="h3 text-center">No Lead</h3>
@@ -104,7 +104,7 @@
                             <div class="mb-3">
                                 <label for="team_lead" class="form-label">Team Lead</label>
                                 <select class="form-control " name="team_lead" id="team_lead">
-                                    @if($team->lead instanceof \App\Models\User)
+                                    @if($team->lead instanceof \App\Models\Auth\User)
                                         <option value="{{ $team->lead->UserID }}">{{ $team->lead->Name }}</option>
                                     @endif
                                 </select>
@@ -216,9 +216,11 @@
                                 </div>
                             </div>
                         </div>
-                        <form method="post" id="usersBulkNotificationForm" action="{{ route('bulk-notification.team',[$team->TeamID]) }}">
+                        <form method="post" id="usersBulkNotificationForm"
+                              action="{{ route('bulk-notification.team',[$team->TeamID]) }}">
                             <div class="col-12 mb-3">@csrf
-                                <label class="form-label" for="NotificationLabel">Label <span class="text-danger">*</span></label>
+                                <label class="form-label" for="NotificationLabel">Label <span
+                                        class="text-danger">*</span></label>
                                 <input type="text" class="search-form-item form-control" required
                                        id="NotificationLabel" name="NotificationLabel"
                                        placeholder="Label">
@@ -226,9 +228,11 @@
                                    role="alert"></p>
                             </div>
                             <div class="mb-3 col-12">
-                                <label class="form-label" for="NotificationContent">Content <span class="text-danger">*</span></label>
+                                <label class="form-label" for="NotificationContent">Content <span
+                                        class="text-danger">*</span></label>
                                 <b class="float-end text-info" id="msgCounter"></b>
-                                <textarea name="NotificationContent" id="NotificationContent" class="form-control" rows="4"
+                                <textarea name="NotificationContent" id="NotificationContent" class="form-control"
+                                          rows="4"
                                           maxlength="50000" minlength="2"></textarea>
                                 <p id="NotificationContent_error" class="invalid-feedback d-none error col-12"
                                    role="alert"></p>

@@ -2,10 +2,10 @@
 
 namespace App\Models\BR;
 
-use App\Models\CrmSMS;
+use App\Models\Communication\SMS;
+use App\Models\Core\Task;
+use App\Models\CRM\Schedule;
 use App\Models\DebtRecovery\LoanAssignment;
-use App\Models\Schedule;
-use App\Models\Task;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -71,7 +71,7 @@ class DebtProduct extends Model
 
     public function crmsms(): MorphMany
     {
-        return $this->morphMany(CrmSMS::class, 'source', 'Source', 'SourceID', 'AccountID');
+        return $this->morphMany(SMS::class, 'source', 'Source', 'SourceID', 'AccountID');
     }
 
     public function client(): BelongsTo

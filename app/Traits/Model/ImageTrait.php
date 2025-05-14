@@ -3,8 +3,8 @@
 namespace App\Traits\Model;
 
 use App\Enums\Core\ExtensionsEnum;
-use App\Models\CRMImage;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\DMS\Image;
 use App\Services\ImageService;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Http\UploadedFile;
@@ -14,7 +14,7 @@ trait ImageTrait
 {
     public function photo(): BelongsTo
     {
-        return $this->belongsTo(CRMImage::class, 'ImageId', 'ImageID');
+        return $this->belongsTo(Image::class, 'ImageId', 'ImageID');
     }
 
     public function getImage(string $attr = '', bool $placeholder = true, string $ImageRelationFn = 'photo'): string
@@ -24,7 +24,7 @@ trait ImageTrait
         }
 
         $photo = $this->$ImageRelationFn;
-        if ($photo instanceof CRMImage) {
+        if ($photo instanceof Image) {
             $service = new ImageService($photo);
             if ($service->isPrevieable()) {
                 return $service->preview($attr);

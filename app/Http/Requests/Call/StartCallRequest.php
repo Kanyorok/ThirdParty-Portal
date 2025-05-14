@@ -3,8 +3,8 @@
 namespace App\Http\Requests\Call;
 
 use App\Enums\ScheduleStatusEnum;
-use App\Models\Call;
-use App\Models\Schedule;
+use App\Models\Communication\Call;
+use App\Models\CRM\Schedule;
 use Carbon\Carbon;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;

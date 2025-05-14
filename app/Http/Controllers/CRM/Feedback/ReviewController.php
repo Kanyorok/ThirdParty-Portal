@@ -4,8 +4,8 @@ namespace App\Http\Controllers\CRM\Feedback;
 
 use App\Http\Controllers\Controller;
 use App\Models\BR\Client;
-use App\Models\Lead;
-use App\Models\Review;
+use App\Models\CRM\Lead;
+use App\Models\CRM\Review;
 use App\Traits\Controller\ReviewsTrait;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

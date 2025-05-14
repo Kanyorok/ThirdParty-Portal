@@ -62,9 +62,9 @@ class CodeDetailSeeder extends Seeder
                        ]);
         }
 
-        DB::table('t_CRMCodeDetails')->insert($data->toArray());
+        DB::table('t_CodeDetails')->insert($data->toArray());
 
-        DB::table('t_CRMCodeDetails')->insert([
+        DB::table('t_CodeDetails')->insert([
                                                [
                                                 'CodeID'       => StaticListsService::MarketingModes,
                                                 'Description'  => 'Outdoor Marketing',

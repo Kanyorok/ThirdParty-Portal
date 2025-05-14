@@ -5,7 +5,7 @@ namespace App\Http\Controllers\CRM\Client;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Marketing\ContactRequest;
 use App\Models\BR\Client;
-use App\Models\EmailConversation;
+use App\Models\Communication\EmailConversation;
 use App\Traits\Controller\ContactsTrait;
 use Exception;
 use Illuminate\Http\JsonResponse;

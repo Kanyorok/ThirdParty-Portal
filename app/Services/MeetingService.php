@@ -4,19 +4,17 @@ namespace App\Services;
 
 use App\Enums\MeetingStatusEnum;
 use App\Enums\Schedule\MeetingLocationEnum;
+use App\Models\Auth\User;
 use App\Models\BR\Client;
-use App\Models\CRMImage;
-use App\Models\Lead;
-use App\Models\Meeting;
-use App\Models\MeetingRoom;
-use App\Models\ProductDevelopment;
-use App\Models\Schedule;
-use App\Models\User;
+use App\Models\CRM\Lead;
+use App\Models\CRM\Meeting;
+use App\Models\CRM\MeetingRoom;
+use App\Models\CRM\Schedule;
+use App\Models\DMS\Image;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class MeetingService
 {
@@ -74,7 +72,7 @@ class MeetingService
         return $this;
     }
 
-    public function document(UploadedFile $file, User $actor): CRMImage
+    public function document(UploadedFile $file, User $actor): Image
     {
         $document = ImageService::createUpload($file, Meeting::getPrimaryKey(), $this->meeting->MeetingID, $actor)->image;
         activity()->causedBy($actor)->performedOn($this->meeting)->event('document')->log('added a document  ' . $document->Name . ' to meeting ' . $this->meeting->Title . '.');

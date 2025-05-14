@@ -105,7 +105,7 @@
                                                 aria-selected="false" onclick="fetchLeadsTable()">Leads</a></li>
                         <li class="nav-item"><a class="nav-link" href="#tab-0" data-bs-toggle="tab" role="tab"
                                                 aria-selected="false" onclick="fetchMembersTable()">Members </a></li>
-                    @elseif($list->Source === \App\Models\Lead::getPrimaryKey())
+                    @elseif($list->Source === \App\Models\CRM\Lead::getPrimaryKey())
                         <li class="nav-item"><a class="nav-link active" href="#tab-1" data-bs-toggle="tab" role="tab"
                                                 aria-selected="false" onclick="fetchLeadsTable()">Leads</a></li>
                     @elseif($list->Source === \App\Models\BR\Client::getPrimaryKey())

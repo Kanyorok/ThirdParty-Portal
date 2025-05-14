@@ -6,7 +6,7 @@ use App\Enums\EmailStatusEnum;
 use App\Enums\EmailTypeEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Base\MailToRequest;
-use App\Models\CrmEmail;
+use App\Models\Communication\Email;
 use App\Services\CRMEmailService;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -32,9 +32,9 @@ class EmailDraftController extends Controller
         //todo permissions
         $lock = Cache::lock($email_id . '-create-draft', 5);
         if ($lock->get()) {
-            $replyTo = CrmEmail::query()->where('EmailID', $email_id)
+            $replyTo = Email::query()->where('EmailID', $email_id)
                 ->where('Type', EmailTypeEnum::Incoming->value)->first();
-            if (!$replyTo instanceof CrmEmail) {
+            if (!$replyTo instanceof Email) {
                 $lock->release();
                 return $this->errored('could not load email');
             }
@@ -62,9 +62,9 @@ class EmailDraftController extends Controller
 
     public function edit(Request $request, string $email_id): View|JsonResponse
     {
-        $email = CrmEmail::query()->where('EmailID', $email_id)
+        $email = Email::query()->where('EmailID', $email_id)
             ->where('Status', EmailStatusEnum::Draft->value)->where('CreatedBy', $request->user()->Id)->first();
-        if (!$email instanceof CrmEmail) {
+        if (!$email instanceof Email) {
             return $this->errored('could not load email');
         }
 

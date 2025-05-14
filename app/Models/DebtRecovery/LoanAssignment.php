@@ -2,9 +2,9 @@
 
 namespace App\Models\DebtRecovery;
 
+use App\Models\Auth\User;
 use App\Models\BR\Account;
 use App\Models\BR\DebtProduct;
-use App\Models\User;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;

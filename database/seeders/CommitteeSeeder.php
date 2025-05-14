@@ -3,8 +3,6 @@
 namespace Database\Seeders;
 
 use App\Helpers\SystemHelper;
-use App\Models\Committee;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 

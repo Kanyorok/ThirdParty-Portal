@@ -7,7 +7,7 @@ use App\Enums\CallTypeEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Call\StartCallRequest;
 use App\Models\BR\Client;
-use App\Models\Call;
+use App\Models\Communication\Call;
 use App\Services\Call\CallService;
 use App\Traits\Controller\CallsTrait;
 use Carbon\Carbon;

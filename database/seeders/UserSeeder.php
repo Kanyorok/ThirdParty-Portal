@@ -3,10 +3,9 @@
 namespace Database\Seeders;
 
 use App\Helpers\SystemHelper;
-use App\Models\BR\BRUser;
-use App\Models\User;
-use Illuminate\Database\Seeder;
+use App\Models\Auth\User;
 use App\Services\BR\BREncryption;
+use Illuminate\Database\Seeder;
 
 class UserSeeder extends Seeder
 {
@@ -47,7 +46,7 @@ class UserSeeder extends Seeder
         $user->update([
             'Password' => BREncryption::hashUser($user,'123456')
         ]);
-        
+
 
     }
 }

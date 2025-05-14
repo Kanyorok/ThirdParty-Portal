@@ -22,11 +22,11 @@ return new class extends Migration {
             $table->char('Status', 2)->default('wa');//enum
             $table->string('RelationshipManagerID', 30);
             $table->foreignId('LocationID')->nullable()->constrained('t_Localities', 'ID');
-            $table->foreignId('ImageId')->nullable()->constrained('t_CRMImages', 'ImageID');
-            $table->foreignId('LeadLossReason')->nullable()->constrained('t_CRMCodeDetails', 'ID');
-            $table->foreignId('Industry')->nullable()->constrained('t_CRMCodeDetails', 'ID');
-            $table->foreignId('Source')->nullable()->comment('MarketingModes')->constrained('t_CRMCodeDetails', 'ID');
-            $table->foreignId('CustomerType')->nullable()->constrained('t_CRMCodeDetails', 'ID');
+            $table->foreignId('ImageId')->nullable()->constrained('t_Images', 'ImageID');
+            $table->foreignId('LeadLossReason')->nullable()->constrained('t_CodeDetails', 'ID');
+            $table->foreignId('Industry')->nullable()->constrained('t_CodeDetails', 'ID');
+            $table->foreignId('Source')->nullable()->comment('MarketingModes')->constrained('t_CodeDetails', 'ID');
+            $table->foreignId('CustomerType')->nullable()->constrained('t_CodeDetails', 'ID');
             $table->string('JobTitle')->nullable();
             $table->dateTime('LastContacted')->nullable();
             $table->longText('Notes')->nullable();

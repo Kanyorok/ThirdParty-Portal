@@ -3,9 +3,9 @@
 namespace Database\Seeders;
 
 use App\Helpers\SystemHelper;
-use App\Models\CrmBranch;
-use App\Models\Department;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\Core\Branch;
+use App\Models\HRM\Department;
 use App\Services\HRM\EmployeeService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -25,8 +25,8 @@ class EmployeeSeeder extends Seeder
             if (!$department instanceof Department) {
                 throw new RuntimeException('No department found');
             }
-            $branch = CrmBranch::query()->first();
-            if (!$branch instanceof CrmBranch) {
+            $branch = Branch::query()->first();
+            if (!$branch instanceof Branch) {
                 throw new RuntimeException('No branch found');
             }
 

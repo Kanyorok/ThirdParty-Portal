@@ -2,7 +2,7 @@
 
 namespace App\Events\Marketing;
 
-use App\Models\Competitor;
+use App\Models\ThirdParies\Competitor;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;

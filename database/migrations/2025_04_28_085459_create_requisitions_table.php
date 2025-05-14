@@ -29,6 +29,9 @@ return new class extends Migration
 //            $table->timestamps();
         });
 
+        Schema::table('t_Tenders', function (Blueprint $table) {
+            $table->foreignId('RelatedPRID')->constrained('t_Requisitions', 'Id');
+        });
     }
 
     /**
@@ -36,6 +39,9 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::table('t_Tenders', function (Blueprint $table) {
+            $table->dropConstrainedForeignId('RelatedPRID');
+        });
         Schema::dropIfExists('t_Requisitions');
     }
 };

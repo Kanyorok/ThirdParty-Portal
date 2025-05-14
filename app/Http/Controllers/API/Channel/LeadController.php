@@ -5,7 +5,7 @@ namespace App\Http\Controllers\API\Channel;
 use App\Enums\LeadTypeEnum;
 use App\Helpers\SystemHelper;
 use App\Http\Controllers\Controller;
-use App\Models\Lead;
+use App\Models\CRM\Lead;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -39,12 +39,12 @@ class LeadController extends Controller
                                         'phone'        => [
                                                            'required',
                                                            'string',
-                                                           'max:15', /*'unique:App\Models\Lead,Phone'*/
+                                            'max:15', /*'unique:App\Models\CRM\Lead,Phone'*/
                                                           ],
                                         'email'        => [
                                                            'nullable',
                                                            'email:rfc,dns',
-                                                           'max:250',/* 'unique:App\Models\Lead,Email'*/
+                                            'max:250',/* 'unique:App\Models\CRM\Lead,Email'*/
                                                           ],
                                         'last_contact' => [
                                                            'nullable',
@@ -124,12 +124,12 @@ class LeadController extends Controller
                                         'phone'        => [
                                                            'required',
                                                            'string',
-                                                           'max:15',/* 'unique:App\Models\Lead,Phone'*/
+                                            'max:15',/* 'unique:App\Models\CRM\Lead,Phone'*/
                                                           ],
                                         'email'        => [
                                                            'nullable',
                                                            'email:rfc,dns',
-                                                           'max:250',/*, 'unique:App\Models\Lead,Email'*/
+                                            'max:250',/*, 'unique:App\Models\CRM\Lead,Email'*/
                                                           ],
                                         'job_title'    => [
                                                            'nullable',

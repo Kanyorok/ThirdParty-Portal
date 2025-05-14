@@ -10,7 +10,7 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::table('t_CRMBranches', function (Blueprint $table) {
+        Schema::table('t_Branches', function (Blueprint $table) {
             $table->string('Address')->nullable();
             $table->string('Address2')->nullable();
             $table->string('City')->nullable();
@@ -29,7 +29,7 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::table('t_CRMBranches', function (Blueprint $table) {
+        Schema::table('t_Branches', function (Blueprint $table) {
             $table->dropColumn(['Address', 'Address2', 'City', 'State', 'Zip', 'Country', 'Phone', 'Fax', 'Email']);
         });
     }

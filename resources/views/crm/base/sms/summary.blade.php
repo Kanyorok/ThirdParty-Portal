@@ -1,4 +1,4 @@
-@php use App\Models\BR\Client, App\Models\Lead; @endphp
+@php use App\Models\BR\Client;use App\Models\CRM\Lead; @endphp
 <div class="d-flex flex-column" style="height: 85%">
     <div class="mb-3">
         <b>To</b>

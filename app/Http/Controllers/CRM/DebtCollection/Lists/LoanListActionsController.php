@@ -6,7 +6,7 @@ use App\Enums\MarketingListEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\DebtCollection\LoanQueryRequest;
 use App\Models\BR\DebtProduct;
-use App\Models\MarketingList;
+use App\Models\CRM\MarketingList;
 use App\Services\HRM\UserService;
 use App\Services\Marketing\ListService;
 use App\Traits\Controller\LoansTrait;

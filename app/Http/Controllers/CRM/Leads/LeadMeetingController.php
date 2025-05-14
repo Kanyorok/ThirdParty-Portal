@@ -4,10 +4,10 @@ namespace App\Http\Controllers\CRM\Leads;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Call\StartMeetingRequest;
-use App\Models\Lead;
-use App\Models\Meeting;
-use App\Models\Schedule;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\CRM\Lead;
+use App\Models\CRM\Meeting;
+use App\Models\CRM\Schedule;
 use App\Traits\Controller\MeetingTrait;
 use Carbon\Carbon;
 use Exception;

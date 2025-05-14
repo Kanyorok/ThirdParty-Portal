@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Settings\Users;
 
 use App\Helpers\SystemHelper;
 use App\Http\Controllers\Controller;
-use App\Models\Team;
-use App\Models\TeamUser;
-use App\Models\User;
+use App\Models\Auth\Team;
+use App\Models\Auth\TeamUser;
+use App\Models\Auth\User;
 use App\Services\HRM\UserService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;

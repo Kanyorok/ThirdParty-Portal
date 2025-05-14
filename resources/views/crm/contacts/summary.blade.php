@@ -1,7 +1,7 @@
 <div class="d-flex flex-column" style="height: 80%">
     @if($party instanceof \App\Models\BR\Client)
         @include('snippets.client_summary', ['client'=>$party])
-    @elseif($party instanceof \App\Models\Lead)
+    @elseif($party instanceof \App\Models\CRM\Lead)
         @include('snippets.lead_summary', ['lead'=>$party])
     @else
         <h3>Unknown party</h3>

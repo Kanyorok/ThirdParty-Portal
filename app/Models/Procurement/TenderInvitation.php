@@ -3,17 +3,18 @@
 namespace App\Models;
 
 use App\Enums\InvitationResponseStatus;
+use App\Models\ThirdParies\Supplier;
+use Illuminate\Database\Eloquent\{Model, SoftDeletes};
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\{Model,SoftDeletes};
 
 class TenderInvitation extends Model
 {
-    use SoftDeletes; 
+    use SoftDeletes;
 
     protected $table = 't_TenderInvitations';
     protected $primaryKey = 'InvitationID';
     protected $keyType = 'integer';
-    public $incrementing = true; 
+    public $incrementing = true;
 
     protected $fillable = [
         'TenderID',
@@ -48,6 +49,6 @@ class TenderInvitation extends Model
     }
 
     public function isPending(): bool {
-        return $this->ResponseStatus === ResponseStatusEnum::Pending; 
+        return $this->ResponseStatus === ResponseStatusEnum::Pending;
     }
 }

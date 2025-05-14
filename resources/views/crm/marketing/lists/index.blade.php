@@ -1,6 +1,6 @@
-@php use App\Enums\MarketingListEnum; @endphp
-@php use App\Models\BR\Client; @endphp
-@php use App\Models\Lead; @endphp
+@php use App\Enums\MarketingListEnum;use App\Models\BR\Client;use App\Models\CRM\Lead; @endphp
+@php @endphp
+@php @endphp
 @extends('layouts.app')
 
 @section('title','Marketing Lists')

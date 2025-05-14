@@ -2,7 +2,7 @@
     @if($party instanceof \App\Models\BR\Client)
         @include('snippets.client_summary', ['client'=>$party])
         @php $updateUrl = route('client-marketing-lists.store',[$party->ClientID]); @endphp
-    @elseif($party instanceof \App\Models\Lead)
+    @elseif($party instanceof \App\Models\CRM\Lead)
         @include('snippets.lead_summary', ['lead'=>$party])
         @php $updateUrl = route('lead-marketing-lists.store',$party->LeadID); @endphp
     @else

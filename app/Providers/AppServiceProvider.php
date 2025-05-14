@@ -2,39 +2,39 @@
 
 namespace App\Providers;
 
-use App\Models\APICredential;
-use App\Models\Board;
+use App\Models\Auth\Team;
+use App\Models\Auth\User;
 use App\Models\BR\Account;
 use App\Models\BR\Client;
 use App\Models\BR\DebtProduct;
-use App\Models\Call;
-use App\Models\Campaign;
-use App\Models\CampaignParty;
-use App\Models\Comment;
-use App\Models\Competitor;
-use App\Models\Contact;
-use App\Models\CrmBranch;
-use App\Models\CrmEmail;
-use App\Models\Department;
-use App\Models\Discussion;
-use App\Models\Employee;
-use App\Models\Lead;
-use App\Models\MarketingPlanner;
-use App\Models\Meeting;
-use App\Models\Notes;
+use App\Models\Communication\Call;
+use App\Models\Communication\Comment;
+use App\Models\Communication\Email;
+use App\Models\Core\Branch;
+use App\Models\Core\Task;
+use App\Models\CRM\Campaign;
+use App\Models\CRM\CampaignParty;
+use App\Models\CRM\Contact;
+use App\Models\CRM\Discussion;
+use App\Models\CRM\Lead;
+use App\Models\CRM\MarketingPlanner;
+use App\Models\CRM\Meeting;
+use App\Models\CRM\Notes;
+use App\Models\CRM\ProductDevelopment;
+use App\Models\CRM\Review;
+use App\Models\CRM\Schedule;
+use App\Models\CRM\Social;
+use App\Models\CRM\Survey;
+use App\Models\CRM\Ticket;
+use App\Models\HRM\Department;
+use App\Models\HRM\Employee;
 use App\Models\Procurement\Order;
 use App\Models\Procurement\RequisitionLines;
 use App\Models\Procurement\Requisitions;
 use App\Models\Procurement\RFQ;
-use App\Models\ProductDevelopment;
-use App\Models\Review;
-use App\Models\Schedule;
-use App\Models\Social;
-use App\Models\Survey;
-use App\Models\Task;
-use App\Models\Team;
-use App\Models\Ticket;
-use App\Models\User;
+use App\Models\Settings\APICredential;
+use App\Models\ThirdParies\Board;
+use App\Models\ThirdParies\Competitor;
 use App\Policies\CrmBranchPolicy;
 use App\Policies\Procurement\OrderPolicy;
 use App\Policies\Procurement\RequisitionLinesPolicy;
@@ -69,8 +69,8 @@ class AppServiceProvider extends ServiceProvider
             Campaign::getPrimaryKey() => Campaign::class,
             CampaignParty::getPrimaryKey() => CampaignParty::class,
             Client::getPrimaryKey() => Client::class,
-            CrmBranch::getPrimaryKey() => CrmBranch::class,
-            CrmEmail::getPrimaryKey() => CrmEmail::class,
+            Branch::getPrimaryKey() => Branch::class,
+            Email::getPrimaryKey() => Email::class,
             Comment::getPrimaryKey() => Comment::class,
             Competitor::getPrimaryKey() => Competitor::class,
             Contact::getPrimaryKey() => Contact::class,
@@ -98,7 +98,7 @@ class AppServiceProvider extends ServiceProvider
         ]);
 
         Gate::policy(Role::class, RolePolicy::class);
-        Gate::policy(CrmBranch::class, CrmBranchPolicy::class);
+        Gate::policy(Branch::class, CrmBranchPolicy::class);
         Gate::policy(Requisitions::class, RequisitionPolicy::class);
         Gate::policy(RequisitionLines::class, RequisitionLinesPolicy::class);
         Gate::policy(ProductDevelopment::class, ProductDevelopmentPolicy::class);

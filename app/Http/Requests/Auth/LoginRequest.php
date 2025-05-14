@@ -3,8 +3,8 @@
 namespace App\Http\Requests\Auth;
 
 use App\Enums\Core\PermissionEnum;
-use App\Models\Employee;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\HRM\Employee;
 use App\Services\BR\BREncryption;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;

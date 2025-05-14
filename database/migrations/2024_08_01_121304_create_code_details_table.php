@@ -10,7 +10,7 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('t_CRMCodeDetails', static function (Blueprint $table) {
+        Schema::create('t_CodeDetails', static function (Blueprint $table) {
             $table->id('ID');
             $table->string('CodeID');
             $table->string('Description');
@@ -30,6 +30,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('t_CRMCodeDetails');
+        Schema::dropIfExists('t_CodeDetails');
     }
 };

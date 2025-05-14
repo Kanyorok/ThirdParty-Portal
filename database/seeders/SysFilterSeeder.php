@@ -8,7 +8,7 @@ use App\Helpers\SystemHelper;
 use App\Models\BR\Branch;
 use App\Models\BR\Client;
 use App\Models\BR\SystemCodeDetail;
-use App\Models\Lead;
+use App\Models\CRM\Lead;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 

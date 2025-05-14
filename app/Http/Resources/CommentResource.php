@@ -2,7 +2,7 @@
 
 namespace App\Http\Resources;
 
-use App\Models\Comment;
+use App\Models\Communication\Comment;
 use App\Services\CommentService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;

@@ -3,10 +3,10 @@
 namespace App\Services\HRM;
 
 use App\Enums\Employee\GenderEnum;
-use App\Models\CrmBranch;
-use App\Models\Department;
-use App\Models\Employee;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\Core\Branch;
+use App\Models\HRM\Department;
+use App\Models\HRM\Employee;
 use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
@@ -17,9 +17,9 @@ class EmployeeService
     {
     }
 
-    public static function create(Department $department,CrmBranch $branch, User $actor,string $JobTitle,
-        string $FirstName, string $Surname, string $Email, string $Phone, Carbon $JoinDate, GenderEnum $Gender,
-        string $MiddleName=null, string $Address=null, Carbon $DateOfBirth=null,
+    public static function create(Department $department, Branch $branch, User $actor, string $JobTitle,
+                                  string     $FirstName, string $Surname, string $Email, string $Phone, Carbon $JoinDate, GenderEnum $Gender,
+                                  string     $MiddleName = null, string $Address = null, Carbon $DateOfBirth = null,
     ): self
     {
         $employee = Employee::create([

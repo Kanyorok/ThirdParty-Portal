@@ -2,10 +2,10 @@
 
 namespace App\Traits\Controller;
 
+use App\Models\Auth\User;
 use App\Models\BR\Client;
-use App\Models\Contact;
-use App\Models\Lead;
-use App\Models\User;
+use App\Models\CRM\Contact;
+use App\Models\CRM\Lead;
 use Exception;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
