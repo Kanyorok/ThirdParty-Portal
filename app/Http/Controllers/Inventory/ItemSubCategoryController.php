@@ -26,7 +26,7 @@ class ItemSubCategoryController extends Controller
         $validatedData = $request->validate([
             'SubCategoryCode' => 'required|string|max:50',
             'SubCategoryName' => 'required|string|max:255',
-            'ParentCategory'  => 'required|exists:t_ItemCategories,Id',
+            'ParentCategory'  => 'required|exists:t_ItemCategories,id',
             'Description'     => 'nullable|string',
             'Status'          => 'nullable|boolean',
         ]);
@@ -56,7 +56,7 @@ class ItemSubCategoryController extends Controller
         $validatedData = $request->validate([
             'SubCategoryCode' => 'required|string|max:50',
             'SubCategoryName' => 'required|string|max:255',
-            'ParentCategory'  => 'required|exists:t_ItemCategories,Id',
+            'ParentCategory'  => 'required|exists:t_ItemCategories,id',
             'Description'     => 'nullable|string',
             'Status'          => 'nullable|boolean',
         ]);

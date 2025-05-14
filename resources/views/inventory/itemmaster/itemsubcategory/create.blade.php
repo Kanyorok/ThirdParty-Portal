@@ -1,17 +1,6 @@
 @extends('layouts.app')
 @section('title', 'Create New Inventory')
 @section('content')
-
-@if ($errors->any())
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <ul class="mb-0">
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-@endif
 <div class="container mt-5">
   <div class="card shadow rounded-4">
     <div class="card-header bg-info text-white rounded-top-4">
@@ -19,14 +8,14 @@
     </div>
     <div class="card-body">
 
-<form action="{{ route('itemsubcategory.store') }}" method="POST">
-    @csrf
+      <form action="{{ route('itemsubcategory.store') }}" method="POST">
+        @csrf 
         <div class="mb-3">
           <label for="categoryID" class="form-label">Parent Category</label>
           <select class="form-select" name="ParentCategory" required>
             <option value="">-- Select Category --</option>
-            @foreach($items as $item)
-              <option value="{{ $item->Id }}">{{ $item->Name }}</option>
+            @foreach($categories as $category)
+              <option value="{{ $category->id }}">{{ $category->Name }}</option>
             @endforeach
           </select>
         </div>

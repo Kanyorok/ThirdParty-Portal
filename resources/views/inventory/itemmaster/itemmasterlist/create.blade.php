@@ -44,22 +44,20 @@
                     <option value="Non-Stock">Non-Stock</option>
                 </select>
             </div>
+        </div>
+
             <div class="col-md-4">
                 <label for="category" class="form-label">Category</label>
-                <select name="Category" id="category" class="form-select">
-                    <option selected disabled>Select Category</option>
-                    <option>Office Supplies</option>
-                    <option>IT Equipment</option>
-                    <option>Stationery</option>
+                <select name="Category" id="category" class="form-select" required>
+                <option value="">-- Select Category --</option>
+                 
                 </select>
             </div>
             <div class="col-md-4">
                 <label for="subcategory" class="form-label">Subcategory</label>
-                <select name="SubCategory" id="subcategory" class="form-select">
-                    <option selected disabled>Select Subcategory</option>
-                    <option>Ink & Toners</option>
-                    <option>Laptops</option>
-                    <option>Files & Folders</option>
+                <select name="SubCategory" id="subcategory" class="form-select" required>
+                <option value="">-- Select SubCategory --</option>
+                 
                 </select>
             </div>
         </div>

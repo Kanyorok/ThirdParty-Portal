@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('BarCode');
             $table->string('ItemName');
             $table->string('ItemType');
-            $table->string('Category');
-            $table->string('SubCategory');
+            $table->foreignId('Category')->constrained('t_ItemCategories','id')->onDelete('cascade');
+            $table->foreignId('SubCategory')->constrained('t_ItemSubCategories','Id')->onDelete('cascade');
             $table->string('UOM');
             $table->string('InventoryType');
             $table->string('ImageUpload')->nullable();

@@ -25,7 +25,7 @@
       <div class="row mb-3">
         <div class="col-md-6">
           <strong>Parent Category:</strong>
-          <p>{{ optional($item->ParentCategory)->Name ?? 'Unknown' }}</p>
+          <p>{{ $item->parentCategory->Name }}</p>
         </div>
         <div class="col-md-6">
           <strong>Description:</strong>
@@ -34,7 +34,7 @@
       </div>
 
       <div class="row mb-3">
-        <div class="col-md-6">
+         <div class="col-md-6">
           <strong>Status:</strong>
           <span class="badge {{ $item->Status ? 'bg-success' : 'bg-warning' }}">
             {{ $item->Status ? 'Active' : 'Inactive' }}

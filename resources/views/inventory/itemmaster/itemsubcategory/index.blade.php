@@ -27,9 +27,13 @@
             <td>{{ $key + 1 }}</td>
             <td>{{ $item->SubCategoryCode }}</td>
             <td>{{ $item->SubCategoryName }}</td>
-            <td>{{ $item->ParentCategory }}</td>
+            <td>{{ $item->parentCategory->Name }}</td>
             <td>{{ $item->Description }}</td>
-            <td>{{ $item->Status }}</td>
+            <td>
+              <span class="badge {{ $item->Status ? 'bg-success' : 'bg-warning' }}">
+              {{ $item->Status ? 'Active' : 'Inactive' }}
+              </span>
+            </td>
             <td>{{ $item->Actions }}</td>
             <td>
               <a href="{{ route('itemsubcategory.show', $item->Id) }}">View</a> |

@@ -38,7 +38,7 @@
 <select class="form-select" name="ParentCategory" id="parentCategoryCode" required>
   <option value="">-- Select Category --</option>
   @foreach($categories as $category)
-    <option value="{{ $category->Id }}">{{ $category->Name }}</option>
+    <option value="{{ $category->id }}">{{ $category->Name }}</option>
   @endforeach
 </select>
 
@@ -49,7 +49,7 @@
             </div>
         </div>
 
-        <div class="row mb-3">
+            </div>
             <div class="col-md-4">
                 <label for="Status" class="form-label">Status</label>
                 <div class="form-check">

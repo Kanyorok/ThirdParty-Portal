@@ -14,7 +14,7 @@
         <div class="row mb-3">
             <div class="col-md-4">
                 <label for="ItemCode" class="form-label">Item Code</label>
-                <input type="text" name="ItemCode" value="{{ $item->ItemCode }}" class="form-control" readonly>
+                <input type="text" name="ItemCode" value="{{ $item->ItemCode }}" class="form-control" re>
             </div>
             <div class="col-md-4">
                 <label for="BarCode" class="form-label">Bar Code</label>

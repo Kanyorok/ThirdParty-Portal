@@ -44,5 +44,16 @@ class ItemMasterList extends Model
                             'ItemDescription' => 'string',
                             'DocumentUpload' => 'string',
 
-                        ];                
+                        ];  
+                        
+    public function category()
+    {
+        return $this->belongsTo(ItemCategories::class, 'Category', 'id');
+    }      
+    
+    public function subcategory()
+    {
+        return $this->belongsTo(ItemSubCategories::class, 'SubCategory', 'Id');
+    }  
 }
+
