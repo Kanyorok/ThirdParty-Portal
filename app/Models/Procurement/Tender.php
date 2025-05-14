@@ -6,21 +6,15 @@ use App\Enums\TenderStatusEnum;
 use App\Enums\TenderTypeEnum;
 use App\Enums\TenderCategoryEnum;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\{
-    BelongsTo,
-    HasMany,
-    BelongsToMany
-};
-use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Tender extends Model 
-{
-    use SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
+class Tender extends Model {
     protected $table = 't_Tenders';
-    protected $primaryKey = 'TenderID';
+    protected $primaryKey = 'Id';
     protected $keyType = 'integer';
-    public $incrementing = true;
 
     protected $fillable = [
         'TenderNo',
@@ -37,7 +31,6 @@ class Tender extends Model
         'DateCreated',
         'CreatedBy',
         'ModifiedBy',
-        // 'DateUpdated' TODO: consider adding this field
     ];
 
     protected $casts = [

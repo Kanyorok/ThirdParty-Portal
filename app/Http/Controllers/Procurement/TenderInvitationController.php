@@ -2,24 +2,19 @@
 
 namespace App\Http\Controllers\Procurement;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\TenderInvitation;
+use App\Http\Controllers\Controller;
 
-class TenderResponseController extends Controller 
+
+class TenderInvitationController extends Controller
 {
-    //
-
     public function index()
-    {
-        $invitations = TenderInvitation::all();
-        return view('procurement.tendering.suppliermanagement.invitationresponsetracking.index', compact('invitations'));
-    }
+{
+    return view('procurement.tendering.suppliermanagement.invitationresponsetracking.index');
+}
 
-    public function create(){
-        return view('procurement.tendering.suppliermanagement.invitationresponsetracking.create');
-    }
-     public function storeResponse(Request $request)
+    public function storeResponse(Request $request)
     {
         $validated = $request->validate([
             'TenderID' => 'required|integer',
@@ -37,7 +32,7 @@ class TenderResponseController extends Controller
         TenderInvitation::create([
             'TenderID' => $validated['TenderID'],
             'SupplierID' => $validated['SupplierID'],
-            'InvitationDate' => now(), // Or get from DB if already exists
+            'InvitationDate' => now(),
             'ResponseStatus' => $validated['ResponseStatus'],
             'ResponseDate' => now(),
             'DeclineReason' => $validated['DeclineReason'] ?? null,

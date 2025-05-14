@@ -13,17 +13,40 @@ return new class extends Migration
     {
         Schema::create('t_Tenders', function (Blueprint $table) {
             $table->id('Id');
-            $table->string('TenderNumber')->unique()->comment('Unique identifier for the tender');
-            $table->string('Title')->comment('Title of the tender');
-            $table->text('Description')->comment('Detailed description of the tender');
-            $table->foreignId('ProcurementModeId')->constrained('t_ProcurementModes')->onDelete('cascade')->comment('Foreign key to procurement modes');
-            $table->date('StartDate')->comment('Start date of the tender');
-            $table->enum('Status', ['open', 'closed', 'awarded', 'cancelled'])->default('open')->comment('Current status of the tender');
-            $table->decimal('EstimatedValue', 15, 2)->comment('Estimated value of the tender');
-            $table->string('Currency', 10)->comment('Currency of the estimated value');
-            $table->foreignId('CreatedBy')->constrained('t_Users', 'Id')->comment('User who created the tender');
-            $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id')->comment('User who last modified the tender');
+            $table->string('TenderNo', 50)->unique()->comment('Auto-generated tender number');
+            $table->string('Title', 255);
+            $table->string('TenderType', 20)->comment('Enum: Open, Restricted');
+            $table->string('TenderCategory', 20)->comment('Enum: Goods, Services, Works');
+            $table->text('ScopeOfWork')->nullable();
+            $table->text('Instructions')->nullable();
+            $table->date('SubmissionDeadline');
+            $table->date('OpeningDate');
+            $table->string('Status', 20)->default('draft')->comment('Enum: Draft, Published, Closed');
+            $table->unsignedBigInteger('RelatedPRID')->nullable()->comment('Linked requisition ID');
+            $table->unsignedBigInteger('ProcurementModeId')->nullable()->comment('Linked procurement mode');
+            $table->decimal('EstimatedValue', 18, 2)->nullable();
+            $table->string('Currency', 3)->default('USD');
+            $table->datetime('DateCreated')->useCurrent();
+            $table->unsignedBigInteger('CreatedBy');
+            $table->datetime('ModifiedOn')->nullable();
+            $table->unsignedBigInteger('ModifiedBy')->nullable();
+            $table->datetime('PublishedAt')->nullable();
+            $table->softDeletes();
             $table->timestamps();
+
+            // Foreign key constraints
+            $table->foreign('RelatedPRID')->references('id')->on('t_Requisitions')->onDelete('set null');
+            $table->foreign('ProcurementModeId')->references('id')->on('t_ProcurementModes')->onDelete('set null');
+            $table->foreign('CreatedBy')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('ModifiedBy')->references('id')->on('users')->onDelete('set null');
+        });
+
+        // Add index for better performance
+        Schema::table('t_Tenders', function (Blueprint $table) {
+            $table->index('Status');
+            $table->index('TenderType');
+            $table->index('TenderCategory');
+            $table->index('SubmissionDeadline');
         });
     }
 
