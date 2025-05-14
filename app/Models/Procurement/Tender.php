@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Tender extends Model {
     protected $table = 't_Tenders';
-    protected $primaryKey = 'TenderID';
+    protected $primaryKey = 'Id';
     protected $keyType = 'integer';
 
     protected $fillable = [

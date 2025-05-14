@@ -14,6 +14,8 @@ class TenderType extends Model
     protected $table = 't_TenderTypes';
     public $incrementing = true;
 
+    
+
     protected $fillable = [
         'TypeCode',
         'TenderType',
