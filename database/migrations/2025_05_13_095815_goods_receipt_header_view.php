@@ -21,7 +21,7 @@ public function up()
             FORMAT(ReceivedDate, 'dd/MM/yyyy') AS ReceivedDate, 
             InspectionStatus, 
             ReceivedBy 
-            FROM t_GoodsReceipts;
+            FROM t_GoodsReceipts where DeletedOn IS NULL
         ");
     }
 

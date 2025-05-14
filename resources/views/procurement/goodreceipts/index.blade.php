@@ -76,10 +76,13 @@
     </form>
   </div>
 </div>
+
+{{-- delete form --}}
 <form id="deleteForm" method="POST" style="display: none;">
-  @csrf
-  @method('DELETE')
+    @csrf
+    @method('DELETE')
 </form>
+
 
 <script>
 function confirmDelete(grnId, poId) {

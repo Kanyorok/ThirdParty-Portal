@@ -13,14 +13,15 @@ class GoodsReceipt extends Model
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
+    const DELETED_AT = 'DeletedOn';
     
     protected $table = 't_GoodsReceipts';
     protected $fillable = [
                            'GRNID',
                            'POID',
                            'ReceivedDate',
-                           'Supplier',
-                           //'StoreID',
+                           'SupplierId',
+                           'StoreID',
                            'ReceivedBy',
                            'InspectionStatus',
                            'TransferStatus',
@@ -28,8 +29,10 @@ class GoodsReceipt extends Model
                            'POQTY',
                            'ReceivedQTY',
                            'TransferTo',
-                           'TagRequest',
+                           'TagRequired',
                            'CreatedBy',
                            'ModifiedBy',
+                           'DeletedBy',
+                           'DeletedOn',
                           ];
 }

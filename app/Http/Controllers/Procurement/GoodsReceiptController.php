@@ -29,6 +29,7 @@ class GoodsReceiptController extends Controller
 
     public function store(Request $request)
     {
+    //dd($request->all());
         $authUser = Auth::user();
         Log::info('Store method reached');
         Log::info('Request data:', $request->all());
@@ -45,8 +46,9 @@ class GoodsReceiptController extends Controller
                 'ReceivedDate'     => now(),
                 'ReceivedBy'       => $authUser->name,
                 'POID'             => $request->POID,
+                'SupplierId'       => Auth::id(),
                 'ItemNo'           => $item['ItemNo'],
-                'StoreID'          => $item['TransferTo'],
+                'StoreID'          => 'STORE-001',
                 'TransferTo'       => $item['TransferTo'],
                 'TransferStatus'   => $item['TransferTo'],
                 'POQTY'            => $item['POQTY'],
@@ -94,18 +96,20 @@ class GoodsReceiptController extends Controller
 
     public function destroy($grnId, $poId)
     {
-        // Optionally: check for confirmation or authorization
-
         $deleted = GoodsReceipt::where('GRNID', $grnId)
-                    ->where('POID', $poId)
-                    ->delete();
+                ->where('POID', $poId)
+                ->update([
+                    'DeletedBy' => Auth::id(), 
+                    'DeletedOn' => now(), 
+                ]);
 
         if ($deleted) {
-            return redirect()->route('procurementreceipts.index')->with('success', 'GRN items deleted successfully.');
+            return redirect()->route('procurementreceipts.index')->with('success', 'GRN items soft-deleted successfully.');
         } else {
             return redirect()->route('procurementreceipts.index')->with('error', 'No records found to delete.');
         }
     }
+
 
 
 }
