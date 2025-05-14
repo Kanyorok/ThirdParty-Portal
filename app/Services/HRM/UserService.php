@@ -78,6 +78,17 @@ class UserService
     {
         $user = $employee->user;
         if ($user instanceof User) {
+            if ($user->trashed()) {
+                $user->forceFill([
+                    'Name' => $employee->full_name,
+                    'Email' => $employee->Email,
+                    'Phone' => $employee->Phone,
+                    'Password' => Str::random(10),
+                    'ModifiedBy' => $actor->Id,
+                    'DeletedOn' => null,
+                    'DeletedBy' => null,
+                ])->save();
+            }
             return new self($user);
         }
         $user = User::create([
@@ -147,9 +158,12 @@ class UserService
             ])->rawColumns(['action', 'photo'])->make();
     }
 
-    public function setRole(Role $role): static
+    public function setRole(Role $role, User $actor): static
     {
         $this->user->syncRoles($role->name);
+
+        activity()->causedBy($actor)->performedOn($this->user)->event('update')->log('Updated user ' . $this->user->UserID . ' role to ' . $role->name);
+
         return $this;
     }
 
