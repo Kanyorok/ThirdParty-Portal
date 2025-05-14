@@ -13,11 +13,11 @@ class TenderResponseController extends Controller
     public function index()
     {
         $invitations = TenderInvitation::all();
-        return view('procurement.tendering.suppliermanagement.InvitationResponseTracking.index', compact('invitations'));
+        return view('procurement.tendering.suppliermanagement.invitationresponsetracking.index', compact('invitations'));
     }
 
     public function create(){
-        return view('procurement.tendering.suppliermanagement.InvitationResponseTracking.create');
+        return view('procurement.tendering.suppliermanagement.invitationresponsetracking.create');
     }
      public function storeResponse(Request $request)
     {
