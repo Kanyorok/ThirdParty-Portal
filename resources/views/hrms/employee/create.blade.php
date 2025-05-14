@@ -2,6 +2,9 @@
 @extends('layouts.app')
 
 @section('title', 'Add Employee')
+@section('breadcrumbs')
+    <li class="breadcrumb-item"><a href="{{ route('employees.index') }}">Employees</a></li>
+@endsection
 @section('styles')
     <link rel="stylesheet" href="{{ asset('assets/libs/flatpickr/flatpickr.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">

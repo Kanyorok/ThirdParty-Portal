@@ -88,18 +88,7 @@
                                            value="{{ $user->ClientID }}" name="ClientID">
                                     <span id="ClientID_error" class="invalid-feedback d-none error" role="alert"></span>
                                 </div>
-                                <div class="col-sm-6 col-12 mb-3">
-                                    <label for="Gender" class="form-label">Gender <span
-                                                class="text-danger">*</span></label>
-                                    <select class="form-control profile-form" name="Gender" disabled id="Gender"
-                                            required>
-                                        @foreach(App\Enums\Employee\GenderEnum::getAll() as $gender)
-                                            <option
-                                                    value="{{ $gender->value }}" {{ ($gender->value===$user->Gender->value)?'selected' :''}}>{{ $gender->name }}</option>
-                                        @endforeach
-                                    </select>
-                                    <p id="Gender_error" class="invalid-feedback d-none error col-12" role="alert"></p>
-                                </div>
+
                                 <div class="mb-3 col-md-6">
                                     <label class="form-label" for="Email">Email</label>
                                     <input type="Email" class="form-control  profile-form" id="Email" disabled
@@ -122,7 +111,7 @@
                                             id="userProfileCancelBtn">
                                         cancel
                                     </button>
-                                    <button type="button" class="btn btn-primar`y` float-start" id="userProfileEditBtn">
+                                    <button type="button" class="btn btn-primary float-start" id="userProfileEditBtn">
                                         edit profile
                                     </button>
                                 </div>

@@ -123,4 +123,9 @@ class User extends Authenticatable
     {
         return $this->morphMany(Ticket::class, 'party', "Party", "PartyID", 'Id');
     }
+
+    protected function getImageName(): string
+    {
+        return $this->Name;
+    }
 }

@@ -60,4 +60,9 @@ class Employee extends Model
     {
         return 'EmployeeID';
     }
+
+    protected function getImageName(): string
+    {
+        return $this->full_name;
+    }
 }

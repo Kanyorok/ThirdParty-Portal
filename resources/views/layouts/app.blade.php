@@ -31,8 +31,8 @@
             <div class="card pc-user-card">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            {!! auth()->user()->getImage('class="avatar-1 user-avtar wid-45 rounded-circle"
+                        <div class="flex-shrink-0 ">
+                            {!! auth()->user()->getImage('class="avatar-1 user-avtar wid-45 hei-45 rounded-circle"
                             alt="user-image"') !!}
                         </div>
                         <div class="flex-grow-1 ms-3 me-2">
@@ -674,23 +674,27 @@
                     </ul>
                 </li>
 
-                <li class="pc-item pc-hasmenu">
+                <li class="pc-item pc-hasmenu {{ request()->is('hrm*')?'active pc-trigger':'' }}">
                     <a href="javascript:void(0)" class="pc-link">
                         <span class="pc-micon"><i data-feather="users" class="pc-icon"></i></span>
                         <span class="pc-mtext" >H.R.M</span>
                         <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
                     </a>
                     <ul class="pc-submenu">
-                        <li class="pc-item pc-hasmenu"><a class="pc-link" href="javascript:void(0)">
+                        <li class="pc-item pc-hasmenu {{ request()->is('hrm/employees*')?'active pc-trigger':'' }}"><a
+                                class="pc-link" href="javascript:void(0)">
                                          Employees
                                  <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
                             <ul class="pc-submenu">
-                                <li class="pc-item"><a class="pc-link" href="{{ route('employees.create') }}">New Employee</a></li>
-                                <li class="pc-item"><a class="pc-link" href="{{ route('employees.index') }}">Employees</a></li>
+                                <li class="pc-item {{ request()->is('hrm/employees/create')?'active pc-trigger':'' }}">
+                                    <a class="pc-link" href="{{ route('employees.create') }}">New Employee</a></li>
+                                <li class="pc-item {{ request()->is('hrm/employees/e*')?'active pc-trigger':'' }}"><a
+                                        class="pc-link" href="{{ route('employees.index') }}">Employees</a></li>
                             </ul>
                         </li>
                         <li class="pc-item">
-                            <a class="pc-link" href="{{ route('departments.index') }}">Departments</a>
+                            <a class="pc-link {{ request()->is('hrm/departments*')?'active pc-trigger':'' }}"
+                               href="{{ route('departments.index') }}">Departments</a>
                         </li>
 
                     </ul>
@@ -835,6 +839,23 @@
 
 <div class="pc-container">
     <div class="pc-content">
+        <div class="page-header">
+            <div class="page-block">
+                <div class="row align-items-center">
+                    <div class="col-12 col-sm-6">
+                        <div class="page-header-title"><h2 class="mb-0">@yield('title')</h2></div>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <ul class="breadcrumb float-end">
+                            <li class="breadcrumb-item"><a href="{{ route('home') }}">Home</a></li>
+                            @yield('breadcrumbs')
+                            <li class="breadcrumb-item" aria-current="page">@yield('title')</li>
+                        </ul>
+                    </div>
+
+                </div>
+            </div>
+        </div>
         @yield('content')
     </div>
 </div>

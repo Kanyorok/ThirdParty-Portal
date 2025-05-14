@@ -138,7 +138,7 @@ class UserService
                 return $user->Name . $str;
             })->editColumn('photo', function (User $user) use ($with) {
                 return (in_array('photo', $with, true)) ?
-                    $user->getImage('class="img-thumbnail" style="height: 70px; max-width: inherit;"')
+                    $user->getImage('class="img-thumbnail" style="height: 70px;width: 70px; max-width: inherit;"')
                     : '';
             })->setRowClass('mouse_pointer user-select-none dbl-click-redirect-data')->setRowData([
                 'dbl_click_url' => function (User $user) {

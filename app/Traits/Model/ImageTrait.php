@@ -31,8 +31,16 @@ trait ImageTrait
             }
         }
 
+        /* if($placeholder){
+             return  '<div '.$attr.'><div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center w-100 h-100"
+                                  style="margin: 0 auto;">
+                  <span>' . mb_substr($this->getImageName(), 0, 2) . '</span></div></div>';
+         }
+         return '';*/
         return ($placeholder) ? '<img src="https://placehold.co/200x200?font=roboto&text=No+Image" ' . $attr . '/>' : '';
     }
+
+    abstract protected function getImageName(): string;
 
     public function setImage(UploadedFile $file, User $actor, string $field = null): static
     {

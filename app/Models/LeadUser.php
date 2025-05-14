@@ -12,9 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class LeadUser extends Model
 {
-    use ImageTrait;
-    use UserActorTrait;
-    use SoftDeletes;
+    use ImageTrait, UserActorTrait, SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -23,20 +21,14 @@ class LeadUser extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-                           'LeadId',
-                           'Party',
-                           'PartyID',
-                           'Role',
-                           'Notes',
-                           'CreatedBy',
-                           'ModifiedBy',
-                           'DeletedBy',
-                          ];
+        'LeadId', 'Party', 'PartyID', 'Role', 'Notes',
+        'CreatedBy', 'ModifiedBy', 'DeletedBy',
+    ];
 
     protected $casts = [
-                        'Role'   => RoleEnum::class,
-                        'LeadId' => 'integer',
-                       ];
+        'Role' => RoleEnum::class,
+        'LeadId' => 'integer',
+    ];
 
     /**
      * User or Team
@@ -49,5 +41,10 @@ class LeadUser extends Model
     public function lead(): BelongsTo
     {
         return $this->belongsTo(Lead::class, 'LeadId', 'Id');
+    }
+
+    protected function getImageName(): string
+    {
+        return " Lead User";
     }
 }

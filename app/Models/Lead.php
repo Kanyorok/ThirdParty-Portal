@@ -28,41 +28,19 @@ class Lead extends Model
     protected $primaryKey = 'LeadID';
 
     protected $fillable = [
-                           "Name",
-                           "Email",
-                           "Phone",
-                           "Website",
-                           "Gender",
-                           "Status",
-                           "RelationshipManagerID",
-                           "LocationID",
-                           "ImageId",
-                           "LeadLossReason",
-                           "Industry",
-                           "Source",
-                           "JobTitle",
-                           "OtherNames",
-                           "LastContacted",
-                           "CustomerType",
-                           "Type",
-                           "Website",
-                           'Notes',
-                           'ApplicationID',
-                           'ArchivedOn',
-                           'ArchivedBy',
-                           'CreatedBy',
-                           'ModifiedBy',
-                           'DeletedBy',
+        "Name", "Email", "Phone", "Website", "Gender", "Status", "RelationshipManagerID", "LocationID", "ImageId",
+        "LeadLossReason", "Industry", "Source", "JobTitle", "OtherNames", "LastContacted", "CustomerType", "Type", "Website", 'Notes', 'ApplicationID',
+        'ArchivedOn', 'ArchivedBy', 'CreatedBy', 'ModifiedBy', 'DeletedBy',
                           ];
 
     protected $casts = [
-                        'Status'                => LeadStatusEnum::class,
-                        'Gender'                => GenderEnum::class,
-                        'Type'                  => LeadTypeEnum::class,
-                        'LastContacted'         => 'datetime',
-                        'ArchivedOn'            => 'datetime',
-                        'RelationshipManagerID' => 'integer',
-                       ];
+        'Status' => LeadStatusEnum::class,
+        'Gender' => GenderEnum::class,
+        'Type' => LeadTypeEnum::class,
+        'LastContacted' => 'datetime',
+        'ArchivedOn' => 'datetime',
+        'RelationshipManagerID' => 'integer',
+    ];
 
     public function photo(): BelongsTo
     {
@@ -171,5 +149,10 @@ class Lead extends Model
     public function crmsms(): MorphMany
     {
         return $this->morphMany(CrmSMS::class, 'party', "Party", "PartyID", 'LeadID');
+    }
+
+    protected function getImageName(): string
+    {
+        return $this->Name;
     }
 }

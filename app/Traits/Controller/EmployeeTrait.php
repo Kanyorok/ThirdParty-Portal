@@ -42,7 +42,7 @@ trait EmployeeTrait
                     return strtoupper($employee->EmployeeID);
                 })->editColumn('photo', function (Employee $employee) use ($with) {
                     return (in_array('photo', $with, true)) ?
-                        $employee->getImage('class="img-thumbnail" style="height: 70px; max-width: inherit;"')
+                        $employee->getImage('class="img-thumbnail" style="height: 70px; width: 70px;"')
                         : '';
                 })->setRowClass('mouse_pointer user-select-none dbl-click-redirect-data')->setRowData([
                     'dbl_click_url' => function (Employee $employee) {

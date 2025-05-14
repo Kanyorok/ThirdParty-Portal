@@ -56,7 +56,7 @@ class AddEmployeeRequest extends FormRequest
 
     public function getJoinDate(): Carbon
     {
-        $date = $this->_date($this->validated('JoinDate'), 'JoinDate');
+        $date = self::formatedDate($this->validated('JoinDate'), 'JoinDate');
 
         if ($date->greaterThan(Carbon::now())) {
             throw ValidationException::withMessages(['JoinDate' => 'invalid date should be today or in the past']);
@@ -65,7 +65,7 @@ class AddEmployeeRequest extends FormRequest
         return $date;
     }
 
-    protected function _date(string $value, string $name): Carbon
+    public static function formatedDate(string $value, string $name): Carbon
     {
         try {
             $date = Carbon::createFromFormat('Y-m-d', $value)?->startOfDay();
@@ -81,7 +81,7 @@ class AddEmployeeRequest extends FormRequest
 
     public function getDateOfBirth(): Carbon
     {
-        $date = $this->_date($this->validated('DateOfBirth'), 'DateOfBirth');
+        $date = self::formatedDate($this->validated('DateOfBirth'), 'DateOfBirth');
 
         if ($date->greaterThan(Carbon::now()->subYears(18))) {
             throw ValidationException::withMessages(['DateOfBirth' => 'employee should be 18 years or older']);

@@ -69,4 +69,9 @@ class Competitor extends Model
     {
          return $this->morphMany(DescriptionItem::class, 'item', 'Item', 'ItemID', 'CompetitorID');
     }
+
+    protected function getImageName(): string
+    {
+        return $this->CompetitorName;
+    }
 }

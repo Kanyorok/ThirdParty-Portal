@@ -4,8 +4,10 @@ namespace Database\Seeders;
 
 use App\Exceptions\ErroredException;
 use App\Helpers\SystemHelper;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use DB;
 use Illuminate\Database\Seeder;
+use Log;
+use Throwable;
 
 class CurrencySeeder extends Seeder
 {
@@ -28,8 +30,8 @@ class CurrencySeeder extends Seeder
             if (!$currencies) {
                 throw new ErroredException('Unable to fetch or decode the currencies data.');
             }
-        } catch (\Throwable $e) {
-            \Log::error('Could not fetch currencies data from ' . $source . '. Error: ' . $e->getMessage() . '');
+        } catch (Throwable $e) {
+            Log::error('Could not fetch currencies data from ' . $source . '. Error: ' . $e->getMessage());
             SystemHelper::notifyAdmin('Could not fetch currencies data from ' . $source . '.');
             return;
         }
@@ -51,6 +53,6 @@ class CurrencySeeder extends Seeder
             ];
         }
 
-        \DB::table('t_Currencies')->insert($insertData);
+        DB::table('t_Currencies')->insert($insertData);
     }
 }
