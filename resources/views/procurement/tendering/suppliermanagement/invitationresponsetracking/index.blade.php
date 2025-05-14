@@ -17,27 +17,35 @@
                     <th>Remarks</th>
                 </tr>
             </thead>
+
             <tbody>
-                <tr>
-                    <td>1</td>
-                    <td>TND/PROC/2025/001</td>
-                    <td>Tech Supplies Ltd</td>
-                    <td>2025-05-09</td>
-                    <td><span class="badge bg-success">Accepted</span></td>
-                    <td>2025-05-10</td>
-                    <td>Ready to submit bid</td>
-                </tr>
-                <tr>
-                    <td>2</td>
-                    <td>TND/PROC/2025/001</td>
-                    <td>Nova Systems</td>
-                    <td>2025-05-09</td>
-                    <td><span class="badge bg-danger">Declined</span></td>
-                    <td>2025-05-10</td>
-                    <td>Currently overbooked</td>
-                </tr>
-                <!-- Additional rows -->
-            </tbody>
+    @forelse ($invitations as $index => $invitation)
+        <tr>
+            <td>{{ $index + 1 }}</td>
+            <td>{{ $invitation->TenderID }}</td>
+            <td>{{ $invitation->SupplierID  }}</td>
+            <td>{{ \Carbon\Carbon::parse($invitation->InvitationDate)->format('Y-m-d') }}</td>
+            <td>
+                @if($invitation->ResponseStatus === 'Accepted')
+                    <span class="badge bg-success">Accepted</span>
+                @elseif($invitation->ResponseStatus === 'Declined')
+                    <span class="badge bg-danger">Declined</span>
+                @else
+                    <span class="badge bg-secondary">{{ $invitation->ResponseStatus }}</span>
+                @endif
+            </td>
+            <td>{{ \Carbon\Carbon::parse($invitation->ResponseDate)->format('Y-m-d') }}</td>
+            <td>{{ $invitation->DeclineReason ?? 'Ready to submit bid' }}</td>
+        </tr>
+    @empty
+        <tr>
+            <td colspan="7" class="text-center">No invitations found.</td>
+        </tr>
+    @endforelse
+</tbody>
+
+           
+
         </table>
     </div>
 </div>

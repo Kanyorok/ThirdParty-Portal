@@ -1,110 +1,108 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+
+@section('title', 'Create Tender Category')
 @section('content')
 <div class="container mt-4">
-    <h4 class="mb-4">Tender Initiation Form</h4>
-    <form>
-        <!-- Title -->
-        <div class="mb-3">
-            <label for="tenderTitle" class="form-label fw-bold">Tender Title:</label>
-            <input type="text" class="form-control" id="tenderTitle" placeholder="Enter tender title">
+    <div class="card shadow-sm">
+        <div class="card-header bg-white py-3 border-bottom">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">+ New Tender Category</h5>
+                <a href="{{ route('tender-categories.index') }}" class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> Back
+                </a>
+            </div>
         </div>
-
-        <!-- Tender Type -->
-        <div class="mb-3">
-            <label class="form-label fw-bold">Tender Type:</label>
-            <div>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="tenderType" id="openTender" value="Open">
-                    <label class="form-check-label" for="openTender">Open Tender (Public posting)</label>
+        <div class="card-body">
+            <form action="{{ route('tender-categories.store') }}" method="POST" id="tenderCategoryForm">
+                @csrf
+                
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="TenderCategory" class="form-label">Category Type <span class="text-danger">*</span></label>
+                        <select class="form-select @error('TenderCategory') is-invalid @enderror" 
+                                id="TenderCategory" name="TenderCategory" required>
+                            <option value="" disabled selected>Select a category type</option>
+                            @foreach($tenderCatOptions as $category)
+                                <option value="{{ $category->value }}" 
+                                    @selected(old('TenderCategory', $defaultCategory) == $category->value)>
+                                    {{ $category->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('TenderCategory')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                        <small class="text-muted">Select the category of tender</small>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label for="CategoryCode" class="form-label">Category Code</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control bg-light" id="CategoryCode" 
+                                   name="CategoryCode" value="{{ $newCatCode }}" readonly>
+                            <span class="input-group-text bg-light">
+                                <i class="fas fa-hashtag"></i>
+                            </span>
+                        </div>
+                        <small class="text-muted">Automatically generated code</small>
+                    </div>
                 </div>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="tenderType" id="restrictedTender" value="Restricted">
-                    <label class="form-check-label" for="restrictedTender">Restricted Tender (Selected vendors only)</label>
+
+                <div class="mt-3">
+                    <label for="Description" class="form-label">Description</label>
+                    <textarea class="form-control @error('Description') is-invalid @enderror" 
+                              id="Description" name="Description" rows="4"
+                              placeholder="Enter a detailed description of this tender category...">{{ old('Description') }}</textarea>
+                    @error('Description')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
                 </div>
-            </div>
-        </div>
 
-        <!-- Category and Requisition -->
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label for="tenderCategory" class="form-label fw-bold">Tender Category:</label>
-                <select class="form-select" id="tenderCategory">
-                    <option selected disabled>-- Select Category --</option>
-                    <option>Goods</option>
-                    <option>Services</option>
-                    <option>Works</option>
-                </select>
-            </div>
-            <div class="col-md-6 mb-3">
-                <label for="relatedPR" class="form-label fw-bold">Related PR No: <small>(optional)</small></label>
-                <select class="form-select" id="relatedPR">
-                    <option selected disabled>-- Search Requisitions --</option>
-                    <option>PR/2025/001</option>
-                    <option>PR/2025/002</option>
-                </select>
-            </div>
+                <div class="d-flex justify-content-end mt-4 border-top pt-3">
+                    <button type="reset" class="btn btn-outline-secondary me-2">
+                        <i class="fas fa-undo me-1"></i> Reset
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> Save Category
+                    </button>
+                </div>
+            </form>
         </div>
-
-        <!-- Scope -->
-        <div class="mb-3">
-            <label for="scopeOfWork" class="form-label fw-bold">Scope of Work</label>
-            <textarea class="form-control" id="scopeOfWork" rows="3"></textarea>
-        </div>
-
-        <!-- Instructions -->
-        <div class="mb-3">
-            <label for="instructions" class="form-label fw-bold">Instructions to Bidders:</label>
-            <textarea class="form-control" id="instructions" rows="3"></textarea>
-        </div>
-
-        <!-- Dates -->
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label for="submissionDeadline" class="form-label fw-bold">Submission Deadline:</label>
-                <input type="date" class="form-control" id="submissionDeadline">
-            </div>
-            <div class="col-md-6 mb-3">
-                <label for="openingDate" class="form-label fw-bold">Opening Date:</label>
-                <input type="date" class="form-control" id="openingDate">
-            </div>
-        </div>
-
-        <!-- Upload -->
-        <div class="mb-3">
-            <label for="tenderDocuments" class="form-label fw-bold">Attach Tender Documents:</label>
-            <input class="form-control" type="file" id="tenderDocuments" multiple>
-        </div>
-
-        <!-- Conditional Suppliers List -->
-        <div class="mb-3" id="restrictedSuppliersSection" style="display: none;">
-            <label for="suppliersList" class="form-label fw-bold">Add Suppliers to Invite:</label>
-            <select class="form-select" id="suppliersList" multiple>
-                <option>Supplier A - Tech Supplies Ltd</option>
-                <option>Supplier B - Nova Solutions</option>
-                <option>Supplier C - EquiBuild Ltd</option>
-            </select>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="d-flex gap-2">
-            <button type="submit" class="btn btn-primary">Publish Tender</button>
-            <button type="button" class="btn btn-outline-secondary">Save Draft</button>
-            <button type="reset" class="btn btn-outline-dark">Cancel</button>
-            <button type="button" class="btn btn-outline-info">Edit</button>
-        </div>
-    </form>
+    </div>
 </div>
+@endsection
 
-<!-- Script to toggle supplier selection -->
+@section('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const open = document.getElementById('openTender');
-        const restricted = document.getElementById('restrictedTender');
-        const section = document.getElementById('restrictedSuppliersSection');
+    document.addEventListener('DOMContentLoaded', function() {
+        const categorySelect = document.getElementById('TenderCategory');
+        const codeInput = document.getElementById('CategoryCode');
+        
+        // Update code when category changes
+        categorySelect.addEventListener('change', function() {
+            fetch(`/tender-categories/generate-code?category=${this.value}`)
+                .then(response => response.json())
+                .then(data => {
+                    codeInput.value = data.code;
+                })
+                .catch(error => console.error('Error:', error));
+        });
 
-        open.addEventListener('change', () => section.style.display = 'none');
-        restricted.addEventListener('change', () => section.style.display = 'block');
+        // Form validation
+        const form = document.getElementById('tenderCategoryForm');
+        form.addEventListener('submit', function(event) {
+            if (!categorySelect.value) {
+                event.preventDefault();
+                categorySelect.classList.add('is-invalid');
+                categorySelect.focus();
+            }
+        });
+        
+        categorySelect.addEventListener('change', function() {
+            if (this.value) {
+                this.classList.remove('is-invalid');
+            }
+        });
     });
 </script>
 @endsection

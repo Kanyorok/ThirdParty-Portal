@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Procurement\ItemController;
 use App\Http\Controllers\Procurement\ItemCategoryController;
+use App\Http\Controllers\Procurement\TenderInvitationController;
+
 
 require __DIR__ . '/auth.php';
 
@@ -51,6 +53,27 @@ Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function (
             Route::resource('users', 'UserController');
         });
     });
+
+    // tender types
+    Route::resource('tender-types', Procurement\TenderTypeController::class)
+        ->names([
+            'index' => 'tender-types.index',
+            'create' => 'tender-types.create',
+            'store' => 'tender-types.store',
+            'edit' => 'tender-types.edit',
+            'update' => 'tender-types.update',
+            'destroy' => 'tender-types.destroy'
+        ]);
+
+    // Tender categories
+    Route::resource('tender-categories', Procurement\TenderCategoryController::class)
+        ->names([
+            'index' => 'tender-categories.index',
+            'create' => 'tender-categories.create',
+            'store' => 'tender-categories.store',
+            'edit' => 'tender-categories.edit',
+            'destroy' => 'tender-categories.destroy'
+        ]);
 
     // Route::prefix('procurement')->name('procurement.')->group(function () {
     //     Route::resource('items', ItemController::class);
