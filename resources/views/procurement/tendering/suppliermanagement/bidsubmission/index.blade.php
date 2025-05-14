@@ -23,27 +23,34 @@
                 </tr>
             </thead>
             <tbody>
-                <!-- Sample Row -->
-                <tr>
-                    <td>1</td>
-                    <td>TND/PROC/2025/002</td>
-                    <td>Nova Systems Ltd</td>
-                    <td>Courier</td>
-                    <td>2025-05-09 09:30 AM</td>
-                    <td>Procurement Assistant</td>
-                    <td>Delivered in sealed envelope</td>
-                    <td><a href="#">Download</a></td>
-                    <td>
-                        <a href="/bid-submission/manual/view/1" class="btn btn-sm btn-outline-info">View</a>
-                        <a href="/bid-submission/manual/edit/1" class="btn btn-sm btn-outline-primary">Edit</a>
-                    </td>
-                </tr>
-                <!-- Repeat for other entries -->
+                @forelse ($submissions as $index => $submission)
+                    <tr>
+                        <td>{{ $index + 1 }}</td>
+                        <td>{{ $submission->TenderRef }}</td>
+                        <td>{{ $submission->SupplierName }}</td>
+                        <td>{{ $submission->SubmissionMode }}</td>
+                        <td>{{ $submission->ReceivedAt->format('Y-m-d h:i A') }}</td>
+                        <td>{{ $submission->RecordedBy }}</td>
+                        <td>{{ $submission->Remarks ?? 'N/A' }}</td>
+                        <td>
+                            @if ($submission->Documents)
+                                <a href="#" class="btn btn-sm btn-link">Download</a>
+                            @else
+                                N/A
+                            @endif
+                        </td>
+                        <td>
+                            <a href="{{ route('tendersubmission.view', $submission->id) }}" class="btn btn-sm btn-outline-info">View</a>
+                            <a href="{{ route('tendersubmission.edit', $submission->id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="9" class="text-center">No submissions found.</td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
     </div>
 </div>
 @endsection
-
-
-
