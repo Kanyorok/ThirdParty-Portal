@@ -12,7 +12,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('t_GoodsReceipts', function (Blueprint $table) {
-            $table->foreignId('SupplierId')->nullable()->constrained('t_Suppliers', 'Id');
             $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
             $table->softDeletes('DeletedOn');
         });
