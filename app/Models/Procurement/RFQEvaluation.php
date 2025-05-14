@@ -4,6 +4,7 @@ namespace App\Models\Procurement;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Procurement\RFQ;
+use App\Models\Procurement\SupplierResponseEvaluation;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -12,7 +13,7 @@ class RFQEvaluation extends Model
     use UserActorTrait;
     use SoftDeletes;
 
-    protected $table = 't_RFQEvaluation';
+    protected $table = 't_RFQEvaluations';
     protected $primaryKey = 'Id';
     
     const CREATED_AT = 'CreatedOn';
@@ -20,21 +21,13 @@ class RFQEvaluation extends Model
     const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
-        'RFQId',
-        'RFQEvaluateNumber',
         'CommitteeMemberName',
-        'TechnicalQualityScore',
-        'PricingScore',
-        'DeliveryTimeScore',
-        'PastExperienceScore',
-        'Comment',
-        'SupplierId',
+        'UserCode',
+        'RFQId',
+        'RFQComment',
+        'Confirmation',
         'CreatedBy',
         'ModifiedBy',
-        'DeletedBy',
-        'DeletedOn',
-        'CreatedOn',
-        'ModifiedOn',
     ];
 
     public function rfq()
@@ -45,5 +38,11 @@ class RFQEvaluation extends Model
     public function supplier()
     {
         return $this->belongsTo(Supplier::class, 'SupplierId', 'Id');
+    }
+
+     public function evaluations()
+    {
+        return $this->belongsToMany(SupplierResponseEvaluation::class, 't_RFQEvaluation_Evaluation', 'RFQEvaluationId', 'EvaluationId')
+                    ->withTimestamps();
     }
 }

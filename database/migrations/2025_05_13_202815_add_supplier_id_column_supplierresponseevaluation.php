@@ -11,11 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('t_RFQEvaluations', function (Blueprint $table) {
-            $table->foreignId('SupplierId')
-                  ->after('RFQId') // Optional: places the column right after RFQId
-                  ->constrained('t_Suppliers', 'Id')
-                  ->onDelete('cascade');
+        Schema::table('t_SupplierResponseEvaluations', function (Blueprint $table) {
+            $table->unsignedBigInteger('SupplierId')->nullable()->after('Id'); // Adjust position if needed
+            $table->foreign('SupplierId')->references('Id')->on('t_Suppliers')->onDelete('set null');
         });
     }
 
@@ -24,7 +22,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('t_RFQEvaluation', function (Blueprint $table) {
+        Schema::table('t_SupplierResponseEvaluations', function (Blueprint $table) {
             $table->dropForeign(['SupplierId']);
             $table->dropColumn('SupplierId');
         });

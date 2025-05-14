@@ -11,8 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('t_RFQEvaluation', function (Blueprint $table) {
-            $table->string('CommitteeMemberName')->nullable()->after('RFQEvaluateNumber'); // replace 'some_existing_column' with the actual one
+        Schema::table('t_RFQResponse', function (Blueprint $table) {
+            $table->unsignedBigInteger('SupplierId')->nullable()->after('Id'); // Adjust position if needed
+            $table->foreign('SupplierId')->references('Id')->on('t_Suppliers')->onDelete('set null');
         });
     }
 
@@ -22,7 +23,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('t_RFQResponse', function (Blueprint $table) {
-            $table->dropColumn('CommitteeMemberName');
+            $table->dropForeign(['SupplierId']);
+            $table->dropColumn('SupplierId');
         });
     }
 };

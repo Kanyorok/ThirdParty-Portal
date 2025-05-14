@@ -11,14 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('t_RFQEvaluations', function (Blueprint $table) {
+        Schema::create('t_SupplierResponseEvaluations', function (Blueprint $table) {
             $table->id('Id');
-            $table->string('CommitteeMemberName');
-            $table->string('UserCode');
-            $table->unsignedBigInteger('RFQId'); // foreign to RFQs
-            $table->string('RFQComment')->nullable();
-            $table->boolean('Confirmation')->default(false);
-            $table->foreign('RFQId')->references('Id')->on('t_RFQ')->onDelete('cascade');
+            $table->tinyInteger('TechnicalQuality');
+            $table->text('TechnicalQualityComments')->nullable();
+            $table->tinyInteger('Pricing');
+            $table->text('PricingComments')->nullable();
+            $table->tinyInteger('DeliveryTime');
+            $table->text('DeliveryTimeComments')->nullable();
+            $table->tinyInteger('PastExperience');
+            $table->text('PastExperienceComments')->nullable();
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
@@ -26,7 +28,6 @@ return new class extends Migration
             $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
             $table->softDeletes('DeletedOn');
         });
-        
     }
 
     /**
@@ -34,6 +35,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('t_RFQEvaluations');
+        Schema::dropIfExists('t_SupplierResponseEvaluations');
     }
 };
