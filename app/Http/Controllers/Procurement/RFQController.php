@@ -104,13 +104,10 @@ class RFQController extends Controller
         $rfq->suppliers()->syncWithPivotValues($request->suppliers, ['Status' => 'Approved']);
 
         // Notify selected suppliers
-        $suppliers = Supplier::whereIn('Id', $request->suppliers)->get(['SupplierName', 'ContactEmail']);
-        foreach ($suppliers as $supplier) {
-            Mail::raw("You have a new RFQ for tender.", function ($message) use ($supplier) {
-                $message->to($supplier->ContactEmail)
-                        ->subject('RFQ Invitation');
-            });
-        }
+        // $suppliers = Supplier::whereIn('Id', $request->suppliers)->get(['SupplierName', 'ContactEmail']);
+        // foreach ($suppliers as $supplier) {
+             //todo @mureithi send email to supplier
+        // }
 
         return redirect()->back()->with('success', 'RFQ has been approved and emails sent to selected suppliers.');
     }
