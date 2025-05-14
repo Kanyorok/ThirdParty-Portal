@@ -29,6 +29,7 @@ class GoodsReceiptController extends Controller
 
     public function store(Request $request)
     {
+        $authUser = Auth::user();
         Log::info('Store method reached');
         Log::info('Request data:', $request->all());
         $request->validate([
@@ -42,7 +43,7 @@ class GoodsReceiptController extends Controller
             GoodsReceipt::create([
                 'GRNID'            => $request->GRNID,
                 'ReceivedDate'     => now(),
-                'ReceivedBy'       => Auth::id(),
+                'ReceivedBy'       => $authUser->name,
                 'POID'             => $request->POID,
                 'ItemNo'           => $item['ItemNo'],
                 'StoreID'          => $item['TransferTo'],
@@ -58,6 +59,52 @@ class GoodsReceiptController extends Controller
 
         }
         return redirect()->back()->with('success', 'Goods receipt saved successfully.');
+    }
+
+    public function fetchLinesByGRN($grnId, $poId)
+    {
+        $items = GoodsReceipt::where('GRNID', $grnId)
+                    ->where('POID', $poId)
+                    ->get();
+
+        return response()->json($items);
+    }
+
+    public function updateLine(Request $request)
+    {
+        $request->validate([
+            'items' => 'required|array',
+            'items.*.id' => 'required|exists:t_GoodsReceipts,id',
+            'items.*.ReceivedQTY' => 'required|numeric|min:0',
+            'items.*.TransferTo' => 'nullable|string',
+            'items.*.TagRequired' => 'required|boolean',
+        ]);
+
+        foreach ($request->items as $item) {
+            $line = GoodsReceipt::find($item['id']);
+            $line->ReceivedQTY = $item['ReceivedQTY'];
+            $line->TransferTo = $item['TransferTo'];
+            $line->TagRequired = $item['TagRequired'];
+            $line->ModifiedOn = now();
+            $line->save();
+        }
+
+        return redirect()->route('procurementreceipts.index')->with('success', 'All GRN line items updated.');
+    }
+
+    public function destroy($grnId, $poId)
+    {
+        // Optionally: check for confirmation or authorization
+
+        $deleted = GoodsReceipt::where('GRNID', $grnId)
+                    ->where('POID', $poId)
+                    ->delete();
+
+        if ($deleted) {
+            return redirect()->route('procurementreceipts.index')->with('success', 'GRN items deleted successfully.');
+        } else {
+            return redirect()->route('procurementreceipts.index')->with('error', 'No records found to delete.');
+        }
     }
 
 

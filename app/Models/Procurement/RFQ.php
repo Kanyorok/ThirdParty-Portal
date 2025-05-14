@@ -2,10 +2,7 @@
 
 namespace App\Models\Procurement;
 
-<<<<<<< HEAD
-=======
 use App\Traits\Model\UserActorTrait;
->>>>>>> dev
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Procurement\Tender;
@@ -15,11 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class RFQ extends Model
 {
-<<<<<<< HEAD
-    use HasFactory;
-=======
     use UserActorTrait, SoftDeletes;
->>>>>>> dev
 
     protected $table = 't_RFQ';
     protected $primaryKey = 'Id';
@@ -51,13 +44,6 @@ class RFQ extends Model
         return $this->hasMany(RFQResponse::class, 'RFQId', 'Id');
     }
 
-
-    public function suppliers()
-    {
-        return $this->belongsToMany(Supplier::class, 't_RFQ_Supplier', 'RFQId', 'SupplierId')
-                    ->withPivot('Status')
-                    ->withTimestamps();
-    }
 
     public function suppliers()
     {

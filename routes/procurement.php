@@ -131,7 +131,15 @@ Route::namespace('Procurement')->group(function () {
     Route::get('/procurementreceipts', [GoodsReceiptController::class,'index'])->name('procurementreceipts.index');
     Route::get('/procurementreceipts/create', [GoodsReceiptController::class, 'create'])->name('procurementreceipts.create');
     Route::post('/procurementreceipts', [GoodsReceiptController::class, 'store'])->name('procurementreceipts.store');
-    //Receipts
+    Route::get('/procurementreceipts/lines/{grnId}/{poId}', [GoodsReceiptController::class, 'fetchLinesByGRN']);
+    Route::put('/procurementreceipts/update-line', [GoodsReceiptController::class, 'updateLine'])->name('procurementreceipts.updateLine');
+    Route::delete('/procurementreceipts/delete/{grnId}/{poId}', [GoodsReceiptController::class, 'destroy'])->name('procurementreceipts.destroy');
+
+
+
+
+
+
 
     Route::resource('procurementreceipts', GoodsReceiptController::class);
     Route::resource('initiatetender', TenderInitiationController::class);

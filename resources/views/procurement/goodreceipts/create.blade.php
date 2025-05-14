@@ -51,7 +51,6 @@
             <th>UOM</th>
             <th>PO Qty</th>
             <th>Received Qty</th>
-            <th>Accepted Qty</th>
             <th>Transfer To</th>
             <th>Tag Required?</th>
           </tr>
@@ -121,9 +120,9 @@ function populatePODetails() {
         <td>${item.UOM}</td>
         <td><input type="number" class="form-control" name="items[${index}][POQTY]" value="${item.Quantity}" readonly></td>
         <td><input type="number" class="form-control" name="items[${index}][ReceivedQTY]" value="${item.Quantity}"></td>
-        <td><input type="number" class="form-control" name="items[${index}][AcceptedQTY]" value="${item.Quantity}"></td>
         <td><input type="text" class="form-control" name="items[${index}][TransferTo]" value="${item.Type}" readonly></td>
-        <td><input type="checkbox" name="items[${index}][TagRequired]" value="1"></td>
+        <td><input type="hidden" name="items[${index}][TagRequired]" value="0">
+        <input type="checkbox" name="items[${index}][TagRequired]" value="1"></td>
       </tr>
     `;
     itemsBody.insertAdjacentHTML('beforeend', row);

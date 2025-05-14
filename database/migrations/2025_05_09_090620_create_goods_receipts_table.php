@@ -16,7 +16,6 @@ return new class extends Migration
             $table->string('GRNID')->default(0);
             $table->string('POID')->default(0);
             $table->foreignId('SupplierID')->constrained('t_Suppliers', 'Id');
-            //$table->foreignId('SupplierID')->constrained('t_Supplier', 'Id');
             $table->dateTime('ReceivedDate');
             $table->string('StoreID')->nullable();
             $table->string('ReceivedBy')->nullable();
