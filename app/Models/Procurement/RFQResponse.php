@@ -16,6 +16,7 @@ class RFQResponse extends Model
         'RFQId',
         'RFQResponseNumber',
         'RFQNumber',
+        'SupplierId',
         'SupplierName',
         'TotalPayable',
         'Currency',
