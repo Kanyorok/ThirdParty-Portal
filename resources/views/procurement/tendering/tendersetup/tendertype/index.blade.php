@@ -1,15 +1,17 @@
 @extends('layouts.app')
+
 @section('title', 'Item Sub Category')
+
 @section('content')
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4>Tender Types</h4>
-        <a href="{{ route('tendertype.create') }}" class="btn btn-sm btn-success">+ New Type</a>
+        <a href="{{ route('tender-types.create') }}" class="btn btn-sm btn-success">+ New Type</a>
     </div>
 
     <div class="table-responsive">
         <table class="table table-bordered table-striped">
-            <thead class="table-light">
+            <thead>
                 <tr>
                     <th>#</th>
                     <th>Type Code</th>
@@ -19,21 +21,30 @@
                 </tr>
             </thead>
             <tbody>
-                <!-- Sample Row -->
+                @forelse($tenderTypes as $index => $type)
                 <tr>
-                    <td>1</td>
-                    <td>TYP-001</td>
-                    <td>Open</td>
-                    <td>Tenders available to all qualified suppliers for competitive bidding.</td>
+                    <td>{{ $index + 1 }}</td>
+                    <td>{{ $type->TypeCode }}</td>
+                    <td>{{ $type->TenderType }}</td>
+                    <td>{{ $type->Description }}</td>
                     <td>
-                        <button class="btn btn-sm btn-outline-primary">Edit</button>
-                        <button class="btn btn-sm btn-outline-danger">Delete</button>
+                        <a href="{{ route('tender-types.edit', $type->Id) }}" class="btn btn-sm btn-warning">Edit</a>
+                        <form action="{{ route('tender-types.destroy', $type->Id) }}" method="POST" class="d-inline">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
+                                Delete
+                            </button>
+                        </form>
                     </td>
                 </tr>
-                <!-- Additional rows -->
+                @empty
+                <tr>
+                    <td colspan="5" class="text-center">No tender types found.</td>
+                </tr>
+                @endforelse
             </tbody>
         </table>
     </div>
 </div>
-
 @endsection

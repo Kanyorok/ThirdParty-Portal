@@ -57,8 +57,6 @@ Route::namespace('Procurement')->group(function () {
     //Sales Order
     Route::resource('salesOrder', 'SalesOrderController');
 
-
-
     //Route::get('requisitionItem/getItem/{type}', [RequisitionItemsController::class, 'getItems'])->name('requisitionItem.getItems');
 
     //Items
@@ -125,9 +123,9 @@ Route::namespace('Procurement')->group(function () {
     Route::get('/rfq-evaluations', [RFQEvaluationController::class, 'index'])->name('evaluations.index');
     Route::get('/rfq-evaluations/create', [RFQEvaluationController::class, 'create'])->name('evaluations.create');
     Route::post('/rfq-evaluations', [RFQEvaluationController::class, 'store'])->name('evaluations.store');
+    Route::get('/rfq-suppliers/{rfqId}', [RFQResponseController::class, 'getSuppliersByRFQ']);
 
     //Receipts
-
     Route::resource('procurementreceipts', GoodsReceiptController::class);
     Route::resource('initiatetender', TenderInitiationController::class);
     Route::resource('tendercategory', TenderCategoryController::class);
@@ -146,7 +144,7 @@ Route::namespace('Procurement')->group(function () {
     Route::resource('evaluationdashboard', EvaluatorDashboardController::class);  
     Route::resource('bidscores', BidScoreConsolidationController::class); 
     Route::resource('procurementreports', ProcurementReportsController::class); 
-
+  
     //Tendering
     Route::get('/tenderresponse', [TenderResponseController::class, 'index'])->name('tenderresponse.index');
     Route::get('/tenderresponse/create', [TenderResponseController::class, 'create'])->name('tenderresponse.create');
@@ -165,4 +163,5 @@ Route::get('/bid-submissions/create', [TenderSubmissionController::class, 'creat
 Route::get('/bid-submission/manual/view', [TenderSubmissionController::class, 'view'])->name('tendersubmission.view');
 Route::get('/bid-submission/manual/edit', [TenderSubmissionController::class, 'edit'])->name('tendersubmission.edit');
 Route::post('/bid-submissions', [TenderSubmissionController::class, 'store'])->name('tendersubmission.store');
+
 });
