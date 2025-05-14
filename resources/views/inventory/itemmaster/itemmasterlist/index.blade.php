@@ -22,7 +22,7 @@
     @endif
 
     <div class="table-responsive">
-      <table class="table table-bordered table-hover align-middle">
+      <table class="table table-bordered table-hover align-middle" id="itemMasterListTbl">
         <thead class="table-light">
           <tr>
             <th>#</th>
@@ -30,23 +30,20 @@
             <th>Bar Code</th>
             <th>Item Name</th>
             <th>Item Type</th>
-            <th>Category</th>
-            <th>Subcategory</th>
-            <th>UOM</th>
-            <th>Inventory Type</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
-          @foreach($items as $key => $item)
+          {{--
+          <!-- @foreach($items as $item)
           <tr>
-            <td>{{ $key + 1 }}</td>
+            <td>{{ $loop->iteration }}</td>
             <td>{{ $item->ItemCode }}</td>
             <td>{{ $item->BarCode }}</td>
             <td>{{ $item->ItemName }}</td>
             <td>{{ $item->ItemType }}</td>
-            <td>{{ $item->Category }}</td>
-            <td>{{ $item->SubCategory }}</td>
+            <td>{{ $item->category->Name }}</td>
+            <td>{{ $item->subcategory->SubCategoryName }}</td>
             <td>{{ $item->UOM }}</td>
             <td>{{ $item->InventoryType }}</td>
             <td>
@@ -69,11 +66,54 @@
 
             </td>
           </tr>
-          @endforeach
+          @endforeach -->--}}
         </tbody>
       </table>
+
     </div>
   </div>
+@endsection
+@section('scripts')
+    <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
+    <script>
+        let itemMasterListTbl = null;
+        $(function () {
+            $.fn.dataTable.ext.errMode = 'none';
+            fetchItemMasterListTbl();
+        });
 
+        function fetchItemMasterListTbl() {
+            if (itemMasterListTbl === null) {
+                itemMasterListTbl = $('#itemMasterListTbl').DataTable({
+                    processing: true,
+                    serverSide: true,
+                    responsive: true,
+                    //"order": [[6, 'desc']],
+                    ajax: {
+                        url: getDocumentUrl(),
+                        error: function (jqXHR) {
+                            codeNotify(jqXHR.status);
+                        }
+                    },
+                    columns: [
+                        {data: "DT_RowIndex", name: 'DT_RowIndex', orderable: false, searchable: false},
+                        {data: 'ItemCode', name: 'ItemCode'},
+                        {data: 'BarCode', name: 'BarCode'},
+                        {data: 'ItemName', name: 'ItemName'},
+                        {data: 'ItemType', name: 'ItemType'},
+                        {data: 'Action', name: 'Action', orderable: false, searchable: false},
+                    ], "oLanguage": {
+                        "sEmptyTable": "no items found here"
+                    }
+                });
 
+                itemMasterListTbl.on('error', function (er) {
+                    nWarning("an issue occurred while loading items.");
+                    console.log(er);
+                });
+            } else {
+                itemMasterListTbl.ajax.reload();
+            }
+        }
+    </script>
 @endsection

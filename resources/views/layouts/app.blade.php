@@ -607,11 +607,11 @@
                                     <li class="pc-item"><a class="pc-link" href="{{ route('contractapproval.index') }}"
                                             data-i18n="Contract Approval">Contract Approval</a></li>
                                     <li class="pc-item"><a class="pc-link"href="{{ route('contractdrafting.index') }}"
-                                            data-i18n="Contract Drafting">Contract Drafting</a></li>              
+                                            data-i18n="Contract Drafting">Contract Drafting</a></li>
                                     <li class="pc-item"><a class="pc-link"href="{{ route('contractrepository.index') }}"
-                                            data-i18n="Contract Repository">Contract Repository</a></li>         
+                                            data-i18n="Contract Repository">Contract Repository</a></li>
                                     <li class="pc-item"><a class="pc-link"href="{{ route('obligationtracker.index') }}"
-                                            data-i18n="Obligation Tracker">Obligation Tracker</a></li>  
+                                            data-i18n="Obligation Tracker">Obligation Tracker</a></li>
                                     <li class="pc-item"><a class="pc-link"href="{{ route('renewals.index') }}"
                                             data-i18n="Expiry Alerts & Renewals">Expiry Alerts & Renewals</a></li>
 
@@ -624,11 +624,11 @@
                                     <li class="pc-item"><a class="pc-link" href="{{ route('regulatorychecklist.index') }}"
                                             data-i18n="Regulatory Checklist">Regulatory Checklist</a></li>
                                     <li class="pc-item"><a class="pc-link"href="{{ route('compliancecalendar.index') }}"
-                                            data-i18n="Compliance calendar">Compliance calendar</a></li>              
+                                            data-i18n="Compliance calendar">Compliance calendar</a></li>
                                     <li class="pc-item"><a class="pc-link"href="{{ route('fillingtracker.index') }}"
-                                            data-i18n="Filling Tracker">Filing Tracker</a></li>         
+                                            data-i18n="Filling Tracker">Filing Tracker</a></li>
                                     <li class="pc-item"><a class="pc-link"href="{{ route('noncomplianceregister.index') }}"
-                                            data-i18n="Non-compliance Register">Non-compliance Register</a></li>  
+                                            data-i18n="Non-compliance Register">Non-compliance Register</a></li>
 
                                 </ul>
                             </li>
@@ -639,10 +639,10 @@
                                     <li class="pc-item"><a class="pc-link" href="{{ route('casessummary.index') }}"
                                             data-i18n="Cases  Summary">Open vs Closed Cases Summary</a></li>
                                     <li class="pc-item"><a class="pc-link"href="{{ route('legalexpenses.index') }}"
-                                            data-i18n="Legal Expenses">Legal Expenses by Case or Department</a></li>              
+                                            data-i18n="Legal Expenses">Legal Expenses by Case or Department</a></li>
                                     <li class="pc-item"><a class="pc-link"href="{{ route('hearings.index') }}"
-                                            data-i18n="hearings">Upcoming Hearings Calendar</a></li>         
-                                    
+                                            data-i18n="hearings">Upcoming Hearings Calendar</a></li>
+
                                 </ul>
                             </li>
                             <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
@@ -683,7 +683,7 @@
 
                         </ul>
 
-                
+
                 </li>
                 <li class="pc-item pc-hasmenu">
                     <a href="javascript:void(0)" class="pc-link">
@@ -954,7 +954,6 @@
     </div>
 </footer>
 @include('layouts._partials._scripts')
-@yield('scripts')
 </body>
 
 </html>

@@ -18,7 +18,7 @@ use App\Http\Controllers\Inventory\UOMConversionController;
 use App\Http\Controllers\Inventory\BinTrackingController;
 use App\Http\Controllers\Inventory\StockValuationHistoryController;
 use App\Http\Controllers\Inventory\InterBranchRequisitionController;
-use App\Http\Controllers\Inventory\ReportsController; 
+use App\Http\Controllers\Inventory\ReportsController;
 use App\Http\Controllers\Inventory\InterBranchRequisitionApprovalController;
 use App\Http\Controllers\Inventory\PropertyReceiptPrintController;
 
@@ -38,7 +38,7 @@ Route::namespace('Inventory')->group(function () {
     Route::put('/itemmasterlist/{Id}', [ItemMasterListController::class, 'update'])->name('itemmasterlist.update');
     Route::delete('/itemmasterlist/{Id}', [ItemMasterListController::class, 'destroy'])->name('itemmasterlist.destroy');
     Route::resource('sku', SKUController::class);
-    
+
 
     //Route::resource('itemcategory', ItemCategoryController::class);
     Route::get('/itemcategory', [ItemCategoryController::class, 'index'])->name('itemcategory.index');

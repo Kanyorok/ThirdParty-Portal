@@ -20,13 +20,13 @@
             <p><strong>Item Type:</strong> {{ $item->ItemType }}</p>
         </div>
         <div class="col-md-6">
-            <p><strong>Category:</strong> {{ $item->Category }}</p>
+            <p><strong>Category:</strong> {{  $item->category->Name}}</p>
         </div>
     </div>
 
     <div class="row mb-3">
         <div class="col-md-6">
-            <p><strong>Subcategory:</strong> {{ $item->SubCategory }}</p>
+            <p><strong>Subcategory:</strong> {{  $item->subcategory->SubCategoryName }}</p>
         </div>
         <div class="col-md-6">
             <p><strong>Unit of Measure (UOM):</strong> {{ $item->UOM }}</p>

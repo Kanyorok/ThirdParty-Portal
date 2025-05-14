@@ -14,7 +14,7 @@
         <div class="row mb-3">
             <div class="col-md-4">
                 <label for="ItemCode" class="form-label">Item Code</label>
-                <input type="text" name="ItemCode" value="{{ $item->ItemCode }}" class="form-control" re>
+                <input type="text" name="ItemCode" value="{{ $item->ItemCode }}" class="form-control" readonly>
             </div>
             <div class="col-md-4">
                 <label for="BarCode" class="form-label">Bar Code</label>
@@ -35,15 +35,32 @@
                     <option value="Non-Stock" {{ $item->ItemType == 'Non-Stock' ? 'selected' : '' }}>Non-Stock</option>
                 </select>
             </div>
+
             <div class="col-md-4">
-                <label for="Category" class="form-label">Category</label>
-                <input type="text" name="Category" value="{{ $item->Category }}" class="form-control" required>
+                <label for="category" class="form-label">Category</label>
+                <select name="Category" id="category" class="form-select" required>
+                <option value="">-- Select Category --</option>
+                  @foreach($categories as $category)
+                   <option value="{{ $category->id }}">{{ $category->Name }}</option>
+                  @endforeach
+                </select>
             </div>
+
             <div class="col-md-4">
-                <label for="SubCategory" class="form-label">Subcategory</label>
-                <input type="text" name="SubCategory" value="{{ $item->SubCategory }}" class="form-control" required>
+                <label for="Description" class="form-label">Description</label>
+                <input type="text" name="Description" value="{{ $item->Description }}" class="form-control">
             </div>
         </div>
+
+            <div class="col-md-4">
+                <label for="subcategory" class="form-label">Subcategory</label>
+                <select name="SubCategory" id="subcategory" class="form-select" required>
+                <option value="">-- Select SubCategory --</option>
+                  @foreach($subcategories as $subcategory)
+                   <option value="{{ $subcategory->Id }}">{{ $subcategory->SubCategoryName }}</option>
+                  @endforeach
+                </select>
+            </div>
 
         <div class="row mb-4">
             <div class="col-md-4">

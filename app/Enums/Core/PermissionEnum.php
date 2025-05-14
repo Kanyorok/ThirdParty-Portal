@@ -194,6 +194,8 @@ enum PermissionEnum: string
      */
     case Departments = 'department';
 
+    case MasterListView = 'masterList-view';
+
     public static function display(): Collection
     {
         return collect([

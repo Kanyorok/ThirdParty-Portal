@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::create('t_ItemMasterList', function (Blueprint $table) {
             $table->id('Id');
-            $table->string('ItemCode');
+            $table->string('ItemCode')->unique();
             $table->string('BarCode');
             $table->string('ItemName');
             $table->string('ItemType');
-            $table->foreignId('Category')->constrained('t_ItemCategories','id')->onDelete('cascade');
-            $table->foreignId('SubCategory')->constrained('t_ItemSubCategories','Id')->onDelete('cascade');
+            $table->foreignId('Category')->constrained('t_ItemCategories','id');
+            $table->foreignId('SubCategory')->constrained('t_ItemSubCategories','Id');
             $table->string('UOM');
             $table->string('InventoryType');
             $table->string('ImageUpload')->nullable();
@@ -27,6 +27,13 @@ return new class extends Migration
             $table->timestamp('CreatedOn')->useCurrent();
             $table->timestamp('ModifiedOn')->useCurrent();
             $table->timestamp('DeletedOn')->useCurrent();
+
+            $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('CreatedOn');
+            $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('ModifiedOn');
+            $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
+            $table->softDeletes('DeletedOn');
         });
     }
 

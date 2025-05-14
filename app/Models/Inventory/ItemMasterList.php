@@ -2,12 +2,14 @@
 
 namespace App\Models\Inventory;
 
+use App\Traits\Model\ImageTrait;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\Model\UserActorTrait;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ItemMasterList extends Model
 {
-    use UserActorTrait;
+    use UserActorTrait, SoftDeletes, ImageTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -36,24 +38,24 @@ class ItemMasterList extends Model
                             'BarCode'       => 'string',
                             'ItemName'      => 'string',
                             'ItemType'      => 'string',
-                            'Category'      => 'string',
-                            'SubCategory'   => 'string',
-                            'UOM'           => 'string', 
+                            'Category'      => 'int',
+                            'SubCategory'   => 'int',
+                            'UOM'           => 'string',
                             'InventoryType' => 'string',
                             'ImageUpload' => 'string',
                             'ItemDescription' => 'string',
                             'DocumentUpload' => 'string',
 
-                        ];  
-                        
+                        ];
+
     public function category()
     {
         return $this->belongsTo(ItemCategories::class, 'Category', 'id');
-    }      
-    
+    }
+
     public function subcategory()
     {
         return $this->belongsTo(ItemSubCategories::class, 'SubCategory', 'Id');
-    }  
+    }
 }
 

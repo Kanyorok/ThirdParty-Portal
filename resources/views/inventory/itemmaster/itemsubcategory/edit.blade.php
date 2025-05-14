@@ -33,14 +33,14 @@
         </div>
 
         <div class="row mb-3">
-            <div class="col-md-4">
-          <label for="categoryID" class="form-label">Parent Category</label>
-<select class="form-select" name="ParentCategory" id="parentCategoryCode" required>
-  <option value="">-- Select Category --</option>
-  @foreach($categories as $category)
-    <option value="{{ $category->id }}">{{ $category->Name }}</option>
-  @endforeach
-</select>
+        <div class="col-md-4">
+        <label for="categoryID" class="form-label">Parent Category</label>
+        <select class="form-select" name="ParentCategory" id="parentCategoryCode" required>
+          <option value="">-- Select Category --</option>
+          @foreach($categories as $category)
+          <option value="{{ $category->id }}">{{ $category->Name }}</option>
+          @endforeach
+        </select>
 
             </div>
             <div class="col-md-4">

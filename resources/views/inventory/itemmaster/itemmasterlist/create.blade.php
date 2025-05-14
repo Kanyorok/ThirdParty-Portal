@@ -3,30 +3,23 @@
 @section('title', 'Create New Inventory')
 
 @section('content')
-@if ($errors->any())
-    <div class="alert alert-danger">
-        <ul>
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
 
 <div class="container bg-white shadow-sm rounded p-4">
     <h4 class="mb-4">📦 Item Master Form</h4>
 
-    <form action="{{ route('itemmasterlist.store') }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ route('itemmasterlist.store') }}" method="POST"  id="itemMasterListForm">
         @csrf
 
         <div class="row mb-3">
             <div class="col-md-4">
                 <label for="itemCode" class="form-label">Item Code</label>
                 <input type="text" name="ItemCode" id="itemCode" class="form-control" required>
+                <p id="ItemCode_error" class="d-none text-danger"></p>
             </div>
             <div class="col-md-4">
-                <label for="barcode" class="form-label">Bar Code</label>
-                <input type="text" name="BarCode" id="barcode" class="form-control">
+                <label for="BarCode" class="form-label">Bar Code</label>
+                <input type="text" name="BarCode" id="BarCode" class="form-control">
+                <p id="BarCode_error" class="d-none text-danger"></p>
             </div>
             <div class="col-md-4">
                 <label for="itemName" class="form-label">Item Name</label>
@@ -44,24 +37,25 @@
                     <option value="Non-Stock">Non-Stock</option>
                 </select>
             </div>
-        </div>
-
             <div class="col-md-4">
                 <label for="category" class="form-label">Category</label>
                 <select name="Category" id="category" class="form-select" required>
                 <option value="">-- Select Category --</option>
-                 
+                  @foreach($categories as $category)
+                   <option value="{{ $category->id }}">{{ $category->Name }}</option>
+                  @endforeach
                 </select>
             </div>
             <div class="col-md-4">
                 <label for="subcategory" class="form-label">Subcategory</label>
                 <select name="SubCategory" id="subcategory" class="form-select" required>
                 <option value="">-- Select SubCategory --</option>
-                 
+                  @foreach($subcategories as $subcategory)
+                   <option value="{{ $subcategory->Id }}">{{ $subcategory->SubCategoryName }}</option>
+                  @endforeach
                 </select>
             </div>
-        </div>
-
+     </div>
         <div class="row mb-3">
             <div class="col-md-4">
                 <label for="uom" class="form-label">Unit of Measure (UOM)</label>
@@ -81,10 +75,10 @@
                     <option>Perishable</option>
                 </select>
             </div>
-            <div class="col-md-4">
-                <label for="imageUpload" class="form-label">Item Image</label>
-                <input type="file" name="ImageUpload" id="imageUpload" class="form-control" accept="image/*">
-            </div>
+{{--            <div class="col-md-4">--}}
+{{--                <label for="imageUpload" class="form-label">Item Image</label>--}}
+{{--                <input type="file" name="ImageUpload" id="imageUpload" class="form-control" accept="image/*">--}}
+{{--            </div>--}}
         </div>
 
         <div class="mb-3">
@@ -92,14 +86,23 @@
             <textarea name="ItemDescription" id="description" class="form-control" rows="3"></textarea>
         </div>
 
-        <div class="mb-3">
-            <label for="DocumentUpload" class="form-label">Upload Documentation</label>
-            <input type="file" name="DocumentUpload" id="documentUpload" class="form-control" accept=".pdf,.doc,.docx">
-        </div>
+{{--        <div class="mb-3">--}}
+{{--            <label for="DocumentUpload" class="form-label">Upload Documentation</label>--}}
+{{--            <input type="file" name="DocumentUpload" id="documentUpload" class="form-control" accept=".pdf,.doc,.docx">--}}
+{{--        </div>--}}
 
-        <button type="submit" class="btn btn-primary">✅ Save Item</button>
+        <button type="submit" class="btn btn-primary" id="itemMasterListBtn">✅ Save Item</button>
     </form>
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+@endsection
+@section('scripts')
+    <script>
+        $(function () {
+            $('form#itemMasterListForm').submit(async function (e) {
+                e.preventDefault();
+                console.log($(this).attr('action'))
+                await saveForm($(this), $('#itemMasterListBtn'), true, true, true);
+            });
+        });
+    </script>
 @endsection

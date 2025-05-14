@@ -11,7 +11,7 @@ class ItemSubCategoryController extends Controller
 {
     public function index()
     {
-        $items = ItemSubCategories::with('parentCategory')->get(); // eager load parent
+        $items = ItemSubCategories::with('parentCategory')->get(); 
         return view('inventory.itemmaster.itemsubcategory.index', compact('items'));
     }
 
