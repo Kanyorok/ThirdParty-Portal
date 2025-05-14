@@ -34,6 +34,29 @@ use App\Http\Controllers\Procurement\BidScoreConsolidationController;
 use App\Http\Controllers\Procurement\EvaluatorDashboardController;  
 use App\Http\Controllers\Procurement\ProcurementReportsController;
 
+use App\Http\Controllers\Procurement\ProcurementPlanMaintainController;
+use App\Http\Controllers\Procurement\ProcurementApprovalController; 
+use App\Http\Controllers\Procurement\RaiseNeedsController;
+use App\Http\Controllers\Procurement\NeedApprovalController; 
+use App\Http\Controllers\Procurement\ConsolidatedDashboardController; 
+use App\Http\Controllers\Procurement\ProcurementPlanDetailController;
+use App\Http\Controllers\Procurement\ProcurementquaterlyController;
+use App\Http\Controllers\Procurement\ProcurementPlanDashboardController;
+use App\Http\Controllers\Procurement\ProcurementAssignMethodController; 
+use App\Http\Controllers\Procurement\MapToBudgetController; 
+use App\Http\Controllers\Procurement\TimelineController;
+use App\Http\Controllers\Procurement\CalenderBasedController;
+use App\Http\Controllers\Procurement\DelayedItemsController; 
+use App\Http\Controllers\Procurement\PlanvsActualController; 
+use App\Http\Controllers\Procurement\PlanFromNeedsController; 
+use App\Http\Controllers\Procurement\PlanManualInputController;
+use App\Http\Controllers\Procurement\SubmitForApprovalController;
+use App\Http\Controllers\Procurement\PlanEditController; 
+use App\Http\Controllers\Procurement\PlanApprovalInboxController;
+use App\Http\Controllers\Procurement\PlanExectionDashboardController;   
+
+
+
 Route::namespace('Procurement')->group(function () {
 
     //Requisitions
@@ -127,6 +150,8 @@ Route::namespace('Procurement')->group(function () {
 
     //Receipts
     Route::resource('procurementreceipts', GoodsReceiptController::class);
+
+    //Tenders
     Route::resource('initiatetender', TenderInitiationController::class);
     Route::resource('tendercategory', TenderCategoryController::class);
     Route::resource('tendertype', TenderTypeController::class);
@@ -144,6 +169,28 @@ Route::namespace('Procurement')->group(function () {
     Route::resource('evaluationdashboard', EvaluatorDashboardController::class);  
     Route::resource('bidscores', BidScoreConsolidationController::class); 
     Route::resource('procurementreports', ProcurementReportsController::class); 
+
+    //Procurementplan
+    Route::resource('procurementplanmaintain', ProcurementPlanMaintainController::class); 
+    Route::resource('procurementplanapproval', ProcurementApprovalController::class); 
+    Route::resource('procurementdepartmentalplan', RaiseNeedsController::class); 
+    Route::resource('consolidated', ConsolidatedDashboardController::class); 
+    Route::resource('procurementplandetails', ProcurementPlanDetailController::class); 
+    Route::resource('procurementplanquaterly', ProcurementquaterlyController::class); 
+    Route::resource('procurementitemsdashboard', ConsolidatedDashboardController::class); 
+    Route::resource('procurementassignitem', ProcurementAssignMethodController::class); 
+    Route::resource('maptobudget', MapToBudgetController::class);
+    Route::resource('plantimeline', TimelineController::class); 
+    Route::resource('calenderbased', CalenderBasedController::class);
+    Route::resource('delayeditems', DelayedItemsController::class); 
+    Route::resource('planvsactual', PlanvsActualController::class); 
+    Route::resource('needsapproval', NeedApprovalController::class);
+    Route::resource('planfromneeds', PlanFromNeedsController::class);  
+    Route::resource('planmanualinput', PlanManualInputController::class);
+    Route::resource('submitplan', SubmitForApprovalController::class);
+    Route::resource('editplan', PlanEditController::class); 
+    Route::resource('approvalinbox', PlanApprovalInboxController::class); 
+    Route::resource('exectiondashboard', PlanExectionDashboardController::class); 
   
     //Tendering
     Route::get('/tenderresponse', [TenderResponseController::class, 'index'])->name('tenderresponse.index');
