@@ -330,34 +330,6 @@
                 </li>
                 <li class="pc-item pc-hasmenu">
                     <a href="javascript:void(0)" class="pc-link">
-                        <span class="pc-micon"><i data-feather="file-text" class="pc-icon"></i></span>
-                        <span class="pc-mtext" data-i18n="Document Management">D.M.S.</span>
-                        <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
-                    </a>
-                    <ul class="pc-submenu">
-                        <li class="pc-item"><a class="pc-link" href="{{ route('drepositorymanagement.index') }}"
-                                               data-i18n="drepositorymanagement">Repository Management</a></li>
-                        <li class="pc-item"><a class="pc-link" href="{{ route('dtypessetupmanagement.index') }}"
-                                               data-i18n="dtypessetupmanagement">setup Management</a></li>
-                        <li class="pc-item"><a class="pc-link" href="{{ route('categoriesmanagement.index') }}"
-                                               data-i18n="categoriesmanagement">Categories Management</a></li>
-                        <li class="pc-item"><a class="pc-link" href="{{ route('versioncontrolmanagement.index') }}"
-                                               data-i18n="versioncontrolmanagement">Version Control</a></li>
-                        <li class="pc-item"><a class="pc-link" href="{{ route('searchmanagement.index') }}"
-                                               data-i18n="searchmanagement">Search Management </a></li>
-                        <li class="pc-item"><a class="pc-link" href="{{ route('renewalmanagement.index') }}"
-                                               data-i18n="renewalmanagement"> Renewal Management</a></li>
-                        <li class="pc-item"><a class="pc-link" href="{{ route('accessmanagement.index') }}"
-                                               data-i18n="accessmanagement"> Access Control</a></li>
-                        <li class="pc-item"><a class="pc-link" href="{{ route('trailmanagement.index') }}"
-                                               data-i18n="trailmanagement"> Audit trail</a></li>
-                        <li class="pc-item"><a class="pc-link" href="{{ route('uploadmanagement.index') }}"
-                                               data-i18n="uploadmanagement"> Bulk Upload</a></li>
-
-                    </ul>
-                </li>
-                <li class="pc-item pc-hasmenu">
-                    <a href="javascript:void(0)" class="pc-link">
                         <span class="pc-micon"><i data-feather="archive" class="pc-icon"></i></span>
                         <span class="pc-mtext" data-i18n="Inventory">Inventory</span>
                         <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
@@ -461,6 +433,34 @@
 
                     </ul>
 
+                </li>
+                <li class="pc-item pc-hasmenu">
+                    <a href="javascript:void(0)" class="pc-link">
+                        <span class="pc-micon"><i data-feather="file-text" class="pc-icon"></i></span>
+                        <span class="pc-mtext" data-i18n="Document Management">D.M.S.</span>
+                        <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                    </a>
+                    <ul class="pc-submenu">
+                        <li class="pc-item"><a class="pc-link" href="{{ route('drepositorymanagement.index') }}"
+                                               data-i18n="drepositorymanagement">Repository Management</a></li>
+                        <li class="pc-item"><a class="pc-link" href="{{ route('dtypessetupmanagement.index') }}"
+                                               data-i18n="dtypessetupmanagement">setup Management</a></li>
+                        <li class="pc-item"><a class="pc-link" href="{{ route('categoriesmanagement.index') }}"
+                                               data-i18n="categoriesmanagement">Categories Management</a></li>
+                        <li class="pc-item"><a class="pc-link" href="{{ route('versioncontrolmanagement.index') }}"
+                                               data-i18n="versioncontrolmanagement">Version Control</a></li>
+                        <li class="pc-item"><a class="pc-link" href="{{ route('searchmanagement.index') }}"
+                                               data-i18n="searchmanagement">Search Management </a></li>
+                        <li class="pc-item"><a class="pc-link" href="{{ route('renewalmanagement.index') }}"
+                                               data-i18n="renewalmanagement"> Renewal Management</a></li>
+                        <li class="pc-item"><a class="pc-link" href="{{ route('accessmanagement.index') }}"
+                                               data-i18n="accessmanagement"> Access Control</a></li>
+                        <li class="pc-item"><a class="pc-link" href="{{ route('trailmanagement.index') }}"
+                                               data-i18n="trailmanagement"> Audit trail</a></li>
+                        <li class="pc-item"><a class="pc-link" href="{{ route('uploadmanagement.index') }}"
+                                               data-i18n="uploadmanagement"> Bulk Upload</a></li>
+
+                    </ul>
                 </li>
                 <li class="pc-item pc-hasmenu">
                     <a href="javascript:void(0)" class="pc-link">
