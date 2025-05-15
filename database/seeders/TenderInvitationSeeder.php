@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\TenderInvitation;
+use App\Models\Procurement\TenderInvitation;
 use Illuminate\Database\Seeder;
 use Faker\Factory as Faker;
 
@@ -25,9 +25,12 @@ class TenderInvitationSeeder extends Seeder
         // Create 20 sample tender invitations
         for ($i = 0; $i < 20; $i++) {
             $supplierId = $faker->numberBetween(1, 50); // Select random SupplierID
+            $userId = $faker->numberBetween(1, 10); // Assuming 10 users exist
+            $hasModification = $faker->boolean(50); // 50% chance of modification
+
             TenderInvitation::create([
                 'TenderID' => $faker->numberBetween(1, 10), // Assuming 10 tenders exist
-                'SupplierID' => $supplierId, // Numeric ID for schema
+                'SupplierID' => $supplierId,
                 'InvitationDate' => $faker->dateTimeBetween('-1 year', 'now'),
                 'ResponseStatus' => $faker->randomElement([
                     TenderInvitation::STATUS_PENDING,
@@ -37,6 +40,10 @@ class TenderInvitationSeeder extends Seeder
                 'ResponseDate' => $faker->optional(0.7)->dateTimeBetween('-6 months', 'now'), // 70% chance of response
                 'DeclineReason' => $faker->optional(0.3)->sentence(), // 30% chance of decline reason
                 'ConfirmationAttachment' => $faker->optional(0.5)->filePath(), // 50% chance of attachment
+                'CreatedBy' => $userId,
+                'CreatedOn' => now(),
+                'ModifiedBy' => $hasModification ? $faker->numberBetween(1, 10) : $userId, // Use CreatedBy if no modification
+                'ModifiedOn' => $hasModification ? $faker->dateTimeBetween('-6 months', 'now') : null,
             ]);
         }
 

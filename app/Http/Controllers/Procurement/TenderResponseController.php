@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
+use App\Models\Procurement\Tender;
 use App\Models\Procurement\TenderInvitation;
+use App\Models\ThirdParies\Supplier;
 use Illuminate\Http\Request;
 
 class TenderResponseController extends Controller
@@ -17,7 +19,9 @@ class TenderResponseController extends Controller
     }
 
     public function create(){
-        return view('procurement.tendering.suppliermanagement.invitationresponsetracking.create');
+        $tenders = Tender::select('TenderNo')->get();
+        $suppliers = Supplier::select('SupplierName')->get();
+        return view('procurement.tendering.suppliermanagement.invitationresponsetracking.create', compact('tenders', 'suppliers'));
     }
      public function storeResponse(Request $request)
     {
@@ -42,6 +46,8 @@ class TenderResponseController extends Controller
             'ResponseDate' => now(),
             'DeclineReason' => $validated['DeclineReason'] ?? null,
             'ConfirmationAttachment' => $path,
+            'CreatedBy' => $request->user()->Id,
+            'ModifiedBy' => $request->user()->Id,
         ]);
 
         return redirect()->back()->with('success', 'Your response has been recorded.');

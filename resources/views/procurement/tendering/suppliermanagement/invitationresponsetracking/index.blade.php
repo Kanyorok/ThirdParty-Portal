@@ -1,9 +1,9 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Invitation Response Tracker')
 @section('content')
 <div class="container mt-4">
 <a href="{{ route('tenderresponse.create') }}" class="btn btn-success">➕ Add Response</a>
-    <h4>Invitation Response Tracker</h4>
+    <h4></h4>
     <div class="table-responsive">
         <table class="table table-bordered table-striped mt-3">
             <thead class="table-light">

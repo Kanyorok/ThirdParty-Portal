@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Procurement;
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\BidSubmission;
 use Illuminate\Http\Request;
+use App\Models\Procurement\Tender;
+use App\Models\ThirdParies\Supplier;
 
 class TenderSubmissionController extends Controller
 {
@@ -16,7 +18,9 @@ class TenderSubmissionController extends Controller
 
     public function create()
     {
-        return view('procurement.tendering.suppliermanagement.bidsubmission.create');
+        $tenders = Tender::select('TenderNo')->get();
+        $suppliers = Supplier::select('SupplierName')->get();
+        return view('procurement.tendering.suppliermanagement.bidsubmission.create', compact('tenders', 'suppliers'));
     }
     public function view($Id)
 {

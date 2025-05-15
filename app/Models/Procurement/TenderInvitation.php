@@ -2,11 +2,19 @@
 
 namespace App\Models\Procurement;
 
+use App\Models\ThirdParies\Supplier;
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class TenderInvitation extends Model
 {
-    // Table name (optional if follows Laravel convention)
+    use SoftDeletes, UserActorTrait;
+
+    const string CREATED_AT = 'CreatedOn';
+    const string UPDATED_AT = 'ModifiedOn';
+    const string DELETED_AT = 'DeletedOn';
+
     protected $table = 't_TenderInvitations';
 
     // Mass assignable attributes
@@ -18,6 +26,11 @@ class TenderInvitation extends Model
         'ResponseDate',
         'DeclineReason',
         'ConfirmationAttachment',
+        'CreatedBy',
+        'CreatedOn',
+        'ModifiedBy',
+        'ModifiedOn',
+        'DeletedBy',
     ];
 
     // Casts for automatic type conversion
@@ -31,14 +44,15 @@ class TenderInvitation extends Model
     public const STATUS_ACCEPTED = 'Accepted';
     public const STATUS_DECLINED = 'Declined';
 
-    // Relationships (assuming relevant models exist)
-    //public function tender()
-    // {
-    //     return $this->belongsTo(Tender::class, 'TenderID');
-    // }
+    //Relationships
+    public function tenderID()
+    {
+        return $this->belongsTo(Tender::class, 'TenderID', 'Id');
+    }
+    public function supplierID()
+    {
+        return $this->belongsTo(Supplier::class, 'SupplierID', 'Id');
+    }
 
-    // public function supplier()
-    // {
-    //   return $this->belongsTo(Supplier::class, 'SupplierID');
-    // }
+
 }

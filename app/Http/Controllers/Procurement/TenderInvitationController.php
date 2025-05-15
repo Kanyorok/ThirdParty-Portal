@@ -37,6 +37,8 @@ class TenderInvitationController extends Controller
             'ResponseDate' => now(),
             'DeclineReason' => $validated['DeclineReason'] ?? null,
             'ConfirmationAttachment' => $path,
+            'CreatedBy' => $request->user()->Id,
+            'ModifiedBy' => $request->user()->Id,
         ]);
 
         return redirect()->back()->with('success', 'Your response has been recorded.');
