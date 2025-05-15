@@ -5,8 +5,8 @@ namespace App\Http\Controllers\CRM\Marketing\Socials;
 use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Marketing\NewSocialPostRequest;
-use App\Models\CRMImage;
-use App\Models\Social;
+use App\Models\CRM\Social;
+use App\Models\DMS\Image;
 use App\Services\ImageService;
 use App\Services\SocialMediaService;
 use Exception;
@@ -40,11 +40,11 @@ class SocialController extends Controller
                 $query->whereNotNull('Published_at');
             }
 
-            return Datatables::of($query->lock('WITH(NOLOCK)')->with(['creator', 'images' => fn($query) => $query->where('t_CRMImages.MIMEType', 'like', 'image/%')])->select('*'))->addIndexColumn()
+            return Datatables::of($query->lock('WITH(NOLOCK)')->with(['creator', 'images' => fn($query) => $query->where('t_Images.MIMEType', 'like', 'image/%')])->select('*'))->addIndexColumn()
                 ->addColumn('image', function (Social $social) {
                     $image = $social->images->first();
                     $attr = 'class="img-thumbnail" style="width: 70px;"';
-                    if ($image instanceof CRMImage) {
+                    if ($image instanceof Image) {
                         $service = new ImageService($image);
                         if ($service->isPrevieable()) {
                             return $service->preview($attr);
@@ -123,8 +123,8 @@ class SocialController extends Controller
     public function show(Social $social): View
     {
         return view('crm.marketing.socials.show')
-            ->with('images', $social->images()->where('t_CRMImages.MIMEType', 'like', 'image/%')->get())
-            ->with('video', $social->images()->where('t_CRMImages.MIMEType', 'like', 'video/%')->first())
+            ->with('images', $social->images()->where('t_Images.MIMEType', 'like', 'image/%')->get())
+            ->with('video', $social->images()->where('t_Images.MIMEType', 'like', 'video/%')->first())
             ->with('social', $social);
     }
 

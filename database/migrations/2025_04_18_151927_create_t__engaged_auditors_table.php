@@ -13,13 +13,16 @@ return new class extends Migration
     {
         Schema::create('t_EngagedAuditors', function (Blueprint $table) {
             $table->id('Id');
-            $table->foreignId('SasraAuditorId')->constrained('t_SasraAuditors')->onDelete('cascade');
+            $table->foreignId('AuditorId')->constrained('t_Auditors')->onDelete('cascade');
             $table->date('EngagementStartDate');
             $table->date('EngagementEndDate')->nullable();
             $table->string('EngagementStatus')->default('Engaged'); // Engaged, Completed, Terminated
-            $table->foreignId('CreatedBy')->constrained('t_Users', 'Id')->comment('User who created the auditors');
-            $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id')->comment('User who last modified the auditors');
-            $table->timestamps();
+            $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('CreatedOn');
+            $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('ModifiedOn');
+            $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
+            $table->softDeletes('DeletedOn');
         });
     }
 

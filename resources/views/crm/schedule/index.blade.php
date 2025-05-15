@@ -9,13 +9,15 @@
         .select2-container {
             width: 100% !important;
         }
+
         .avatars {
             display: flex;
             list-style-type: none;
             margin: auto;
-            padding:0px;
+            padding: 0px;
             flex-direction: row;
-            &__item{
+
+            & __item {
                 background-color: #596376;
                 border: 2px solid #1f2532;
                 border-radius: 100%;
@@ -31,27 +33,39 @@
                 transition: margin 0.1s ease-in-out;
                 overflow: hidden;
                 margin-left: -10px;
+
                 &:first-child {
                     z-index: 5;
                 }
+
                 &:nth-child(2) {
                     z-index: 4;
                 }
+
                 &:nth-child(3) {
                     z-index: 3;
                 }
+
                 &:nth-child(4) {
                     z-index: 2;
                 }
+
                 &:nth-child(5) {
                     z-index: 1;
                 }
-                &:last-child {z-index: 0}
-                img{width:100%}
+
+                &:last-child {
+                    z-index: 0
+                }
+
+                img {
+                    width: 100%
+                }
             }
+
             &:hover {
                 .avatars__item {
-                    margin-right:10px;
+                    margin-right: 10px;
                 }
             }
         }
@@ -64,7 +78,7 @@
             <div class="float-end">
                 {{--<button type="button" class="btn btn-outline-primary modal-create-call-schedule"><i class="fas fa-calendar-plus"></i>&nbsp; add scheduled call</button>
                 <button type="button" class="btn btn-outline-primary modal-create-meeting-schedule"><i class="fas fa-calendar-plus"></i>&nbsp; add scheduled meeting</button>--}}
-                 @can('meetings',\App\Models\User::class)
+                @can('meetings',\App\Models\Auth\User::class)
                     <button type="button" class="btn btn-outline-primary m-1" id="triggerStaffMeetingBtn"><i
                             class="fas fa-calendar-plus"></i>&nbsp; Staff Meeting
                     </button>
@@ -88,7 +102,7 @@
                             aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    @can('meetings',\App\Models\User::class)
+                    @can('meetings',\App\Models\Auth\User::class)
                         <div class="onboarding-content with-gradient d-none modal-item" id="createStaffMeetingModal">
                             <form action="{{ route('user-meetings.store') }}" method="post"
                                   id="createStaffMeetingForm" class="row">
@@ -266,10 +280,10 @@
                 displayEventTime: true,
                 navLinks: true,
                 height: 700,
-                nowIndicator:true,
-                businessHours:  [
+                nowIndicator: true,
+                businessHours: [
                     {
-                        daysOfWeek: [ 1, 2, 3, 4,5 ],
+                        daysOfWeek: [1, 2, 3, 4, 5],
 
                         startTime: '08:00',
                         endTime: '18:00',
@@ -293,47 +307,47 @@
                 },
                 selectable: true,
                 selectHelper: true,
-                events:  function(info, successCallback, failureCallback) {
+                events: function (info, successCallback, failureCallback) {
                     let start = moment(info.start.valueOf()).format('YYYY-MM-DD'),
-                     end = moment(info.end.valueOf()).format('YYYY-MM-DD');
+                        end = moment(info.end.valueOf()).format('YYYY-MM-DD');
                     $.ajax({
-                        url:windowLocation.replace('#','') +"?start="+ start + "&end=" + end,
+                        url: windowLocation.replace('#', '') + "?start=" + start + "&end=" + end,
                         type: 'GET',
                         headers: {
                             'X-CSRF-TOKEN': window.csrf_token,
-                            'accept':'application/json'
+                            'accept': 'application/json'
                         }, success: function (response) {
                             successCallback(response.data);
-                        },   error: function (xhr,status,error) {
+                        }, error: function (xhr, status, error) {
                             failureCallback(error);
                         }
                     });
-                 },
-                select: function (info){
+                },
+                select: function (info) {
                     showCreateModal(moment(info.start.valueOf()).format('YYYY-MM-DD HH:mm'), moment(info.end.valueOf()).format('YYYY-MM-DD HH:mm'), 'call')
                 },
                 eventChange: function (eventInfo) {
-                    if (!eventInfo.event.extendedProps.permission.editable){
+                    if (!eventInfo.event.extendedProps.permission.editable) {
                         nWarning('Schedule cannot be moved');
                         eventInfo.revert();
                         return;
                     }
                     let ended = moment(eventInfo.event.end.valueOf());
                     let start = moment(eventInfo.event.start.valueOf());
-                    if (ended.isBefore(moment().startOf('day'))){
+                    if (ended.isBefore(moment().startOf('day'))) {
                         nWarning('Schedule cannot be moved');
                         eventInfo.revert();
                         return;
                     }
 
-                    if(ended.diff(start, 'hours')>8){
+                    if (ended.diff(start, 'hours') > 8) {
                         nWarning('Schedule cannot be more than 6 hours');
                         eventInfo.revert();
                         return;
                     }
 
                     $.ajax({
-                        url: windowLocation.replace('#','')+"/"+ eventInfo.event._def.publicId ,
+                        url: windowLocation.replace('#', '') + "/" + eventInfo.event._def.publicId,
                         type: 'PUT',
                         data: [{name: '_token', value: window.csrf_token}, {
                             name: 'schedule_start',
@@ -344,10 +358,10 @@
                         }, {name: 'client[]', value: 'RI'}],
                         headers: {
                             'X-CSRF-TOKEN': window.csrf_token,
-                            'accept':'application/json'
+                            'accept': 'application/json'
                         }, success: function (response) {
                             nSuccess(response.message);
-                        },   error: function (xhr,status,error) {
+                        }, error: function (xhr, status, error) {
                             nWarning('Schedule moving failed');
                             eventInfo.revert();
                         }
@@ -473,35 +487,35 @@
 
             let start_time = moment($("#" + startId).val(), "YYYY-MM-DD HH:mm");
 
-            if (!start_time.isValid()){
+            if (!start_time.isValid()) {
                 setInvalid(startId, 'Invalid date here');
                 return false;
             }
             let end_time = moment($("#" + endId).val(), "YYYY-MM-DD HH:mm");
-            if (isStart){
+            if (isStart) {
                 end_time = start_time.clone().add(30, 'm');
                 end.setDate(new Date(end_time.format('YYYY-MM-DD HH:mm')));
             }
 
 
-            if (!end_time.isValid()){
+            if (!end_time.isValid()) {
                 setInvalid(endId, 'Invalid date here');
                 return false;
             }
-           if (moment().subtract(2,'m').isAfter(start_time)){
-               setInvalid(startId, 'cannot schedule date after now');
-               return false;
-           }
+            if (moment().subtract(2, 'm').isAfter(start_time)) {
+                setInvalid(startId, 'cannot schedule date after now');
+                return false;
+            }
 
-           if(start_time.isSame(end_time) || end_time.isBefore(start_time)){
-               setInvalid(endId, 'End time should be after start.');
-               return false;
-           }
+            if (start_time.isSame(end_time) || end_time.isBefore(start_time)) {
+                setInvalid(endId, 'End time should be after start.');
+                return false;
+            }
 
-           if (Math.abs(start_time.diff(end_time, 'minutes'))<1){
-               setInvalid(endId, 'Duration should be atleast a minute.');
-               return false;
-           }
+            if (Math.abs(start_time.diff(end_time, 'minutes')) < 1) {
+                setInvalid(endId, 'Duration should be atleast a minute.');
+                return false;
+            }
             return true;
         }
 

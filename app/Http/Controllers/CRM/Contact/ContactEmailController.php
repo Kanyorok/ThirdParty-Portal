@@ -4,7 +4,7 @@ namespace App\Http\Controllers\CRM\Contact;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Base\MailToRequest;
-use App\Models\Contact;
+use App\Models\CRM\Contact;
 use App\Services\CRMEmailService;
 use Exception;
 use Illuminate\Http\JsonResponse;

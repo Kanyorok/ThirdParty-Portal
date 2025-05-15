@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('t_Tenders', function (Blueprint $table) {
+        Schema::create('t_Tenders', static function (Blueprint $table) {
             $table->id('Id');
             $table->string('TenderNo', 50)->unique()->comment('Auto-generated tender number');
             $table->string('Title', 255);
@@ -22,31 +22,16 @@ return new class extends Migration
             $table->date('SubmissionDeadline');
             $table->date('OpeningDate');
             $table->string('Status', 20)->default('draft')->comment('Enum: Draft, Published, Closed');
-            $table->unsignedBigInteger('RelatedPRID')->nullable()->comment('Linked requisition ID');
-            $table->unsignedBigInteger('ProcurementModeId')->nullable()->comment('Linked procurement mode');
+            $table->foreignId('ProcurementModeId')->nullable()->comment('Linked procurement mode')->constrained('t_ProcurementModes', 'Id');
             $table->decimal('EstimatedValue', 18, 2)->nullable();
-            $table->string('Currency', 3)->default('USD');
-            $table->datetime('DateCreated')->useCurrent();
-            $table->unsignedBigInteger('CreatedBy');
-            $table->datetime('ModifiedOn')->nullable();
-            $table->unsignedBigInteger('ModifiedBy')->nullable();
-            $table->datetime('PublishedAt')->nullable();
-            $table->softDeletes();
-            $table->timestamps();
 
-            // Foreign key constraints
-            $table->foreign('RelatedPRID')->references('id')->on('t_Requisitions')->onDelete('set null');
-            $table->foreign('ProcurementModeId')->references('id')->on('t_ProcurementModes')->onDelete('set null');
-            $table->foreign('CreatedBy')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('ModifiedBy')->references('id')->on('users')->onDelete('set null');
-        });
+            $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('CreatedOn');
+            $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('ModifiedOn');
+            $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
+            $table->softDeletes('DeletedOn');
 
-        // Add index for better performance
-        Schema::table('t_Tenders', function (Blueprint $table) {
-            $table->index('Status');
-            $table->index('TenderType');
-            $table->index('TenderCategory');
-            $table->index('SubmissionDeadline');
         });
     }
 

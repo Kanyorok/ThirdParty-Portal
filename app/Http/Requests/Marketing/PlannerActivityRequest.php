@@ -3,7 +3,7 @@
 namespace App\Http\Requests\Marketing;
 
 use App\Helpers\SystemHelper;
-use App\Models\User;
+use App\Models\Auth\User;
 use Carbon\Carbon;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;

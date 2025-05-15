@@ -2,8 +2,8 @@
 
 namespace App\Events\Marketing;
 
-use App\Models\MarketingPlanner;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\CRM\MarketingPlanner;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;

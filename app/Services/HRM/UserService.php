@@ -7,13 +7,13 @@ use App\Enums\Core\PermissionEnum;
 use App\Enums\EmailPriorityEnum;
 use App\Enums\Employee\GenderEnum;
 use App\Helpers\SystemHelper;
-use App\Models\Board;
+use App\Models\Auth\User;
 use App\Models\BR\BRUser;
-use App\Models\BulkNotification;
-use App\Models\CrmBranch;
-use App\Models\CrmEmail;
-use App\Models\Employee;
-use App\Models\User;
+use App\Models\Communication\BulkNotification;
+use App\Models\Communication\Email;
+use App\Models\Core\Branch;
+use App\Models\HRM\Employee;
+use App\Models\ThirdParies\Board;
 use App\Services\BR\CBSService;
 use App\Services\CRMEmailService;
 use App\Services\SMSService;
@@ -196,7 +196,7 @@ class UserService
         return ($user instanceof BRUser) ? $user : null;
     }
 
-    public function update(string $UserID, string $Name, string $Email, string $Phone, GenderEnum $Gender, User $actor, string $Signature = '', string $Notes = '', CrmBranch $branch = null): static
+    public function update(string $UserID, string $Name, string $Email, string $Phone, GenderEnum $Gender, User $actor, string $Signature = '', string $Notes = '', Branch $branch = null): static
     {
         $email_change = ($this->user->Email === $Email) ? null : $this->user->Email;
         $this->user->update([
@@ -205,7 +205,7 @@ class UserService
                              'Email'           => $Email,
                              'Phone'           => $Phone,
                              'Gender'          => $Gender->value,
-            'BranchId' => ($branch instanceof CrmBranch) ? $branch->BranchID : $this->user->BranchId,
+            'BranchId' => ($branch instanceof Branch) ? $branch->BranchID : $this->user->BranchId,
                              'Notes'           => $Notes,
                              'Email_Signature' => $Signature,
                              'ModifiedBy'      => $actor->Id,
@@ -223,7 +223,7 @@ class UserService
         return $this;
     }
 
-    public function sendEmail(string $subject, string $body, array $cc = [], bool|null $immediate = false, EmailPriorityEnum $priorityEnum = EmailPriorityEnum::Normal, CrmEmail $email = null): ?CRMEmailService
+    public function sendEmail(string $subject, string $body, array $cc = [], bool|null $immediate = false, EmailPriorityEnum $priorityEnum = EmailPriorityEnum::Normal, Email $email = null): ?CRMEmailService
     {
         if (SystemHelper::isSystem($this->user)) {
             return null;

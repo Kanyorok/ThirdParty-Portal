@@ -8,8 +8,8 @@ use App\Enums\EmailStatusEnum;
 use App\Enums\EmailTypeEnum;
 use App\Exceptions\ErroredException;
 use App\Helpers\SystemHelper;
-use App\Models\APICredential;
-use App\Models\CrmEmail;
+use App\Models\Communication\Email;
+use App\Models\Settings\APICredential;
 use App\Services\CRMEmailService;
 use Carbon\Carbon;
 use Exception;
@@ -90,13 +90,13 @@ class CheckEmailCommand extends Command
             if (empty($messageID)) {
                 continue;
             }
-            if (CrmEmail::query()->where('MailID', $messageID)->exists()) {
+            if (Email::query()->where('MailID', $messageID)->exists()) {
                 continue;
             }
             try {
                 DB::transaction(function () use ($ref, $dated, $email, $actor) {
 
-                    $crmEmail = new CrmEmail();
+                    $crmEmail = new Email();
                     $crmEmail->fill([
                                      'MailID'      => trim($email->messageId ?? '', '<>'),
                                      'Type'        => EmailTypeEnum::Incoming->value,
@@ -120,8 +120,8 @@ class CheckEmailCommand extends Command
                             $service->addAttachmentContent($attachment->getContents(), $attachment->mimeType ?? '', $attachment->name ?? '', $actor);
                             /*  if (in_array($attachment->mimeType, ['image/png', 'image/jpeg', 'image/jpeg', 'image/jpeg', 'image/gif', 'image/bmp'], true)) {
                                   ImageService::create('')
-                                  $imgID = CRMImage::insertGetId([
-                                      "ImageType" => CrmEmail::getPrimaryKey(),
+                                  $imgID = Image::insertGetId([
+                                      "ImageType" => Email::getPrimaryKey(),
                                       "ImageTypeID" => $crmEmail->EmailID,
                                       "Image" => base64_encode(),
                                       "MIMEType" => $attachment->mimeType,

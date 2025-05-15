@@ -4,12 +4,12 @@ namespace App\Http\Controllers\CRM\DebtCollection;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Base\ActivityCollection;
-use App\Models\Activity;
 use App\Models\BR\DebtProduct;
-use App\Models\Call;
-use App\Models\CrmEmail;
-use App\Models\CrmSMS;
-use App\Models\Task;
+use App\Models\Communication\Call;
+use App\Models\Communication\Email;
+use App\Models\Communication\SMS;
+use App\Models\Core\Activity;
+use App\Models\Core\Task;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -35,11 +35,11 @@ class LoanActivityController extends Controller
         return new ActivityCollection(Activity::query()
             ->where(function (Builder $builder) use ($product) {
                 $builder->where(function (Builder $query) use ($product) {
-                    $query->where('ActivityType', CrmSMS::getPrimaryKey())
-                        ->whereIn('ActivityTypeID', CrmSMS::query()->where('SourceID', $product->AccountID)->where('t_SMS.Source', DebtProduct::getPrimaryKey())->select('t_SMS.Id'));
+                    $query->where('ActivityType', SMS::getPrimaryKey())
+                        ->whereIn('ActivityTypeID', SMS::query()->where('SourceID', $product->AccountID)->where('t_SMS.Source', DebtProduct::getPrimaryKey())->select('t_SMS.Id'));
                 })->orWhere(function (Builder $query) use ($product) {
-                    $query->where('ActivityType', CrmEmail::getPrimaryKey())
-                        ->whereIn('ActivityTypeID', CrmEmail::query()->where('t_CRMEmails.SourceID', $product->AccountID)->where('t_CRMEmails.Source', DebtProduct::getPrimaryKey())->select('t_CRMEmails.EmailID'));
+                    $query->where('ActivityType', Email::getPrimaryKey())
+                        ->whereIn('ActivityTypeID', Email::query()->where('t_Emails.SourceID', $product->AccountID)->where('t_Emails.Source', DebtProduct::getPrimaryKey())->select('t_Emails.EmailID'));
                 })->orWhere(function (Builder $query) use ($product) {
                     $query->where('ActivityType', Call::getPrimaryKey())
                         ->whereIn('ActivityTypeID', Call::query()->where('t_Calls.SourceID', $product->AccountID)->where('t_Calls.Source', DebtProduct::getPrimaryKey())->select('t_Calls.CallID'));

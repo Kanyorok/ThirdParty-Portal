@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Procurement\RFQResponse;
 use App\Models\Procurement\RFQ;
-use App\Models\Procurement\Supplier;
-use Illuminate\Support\Facades\Auth;
+use App\Models\Procurement\RFQResponse;
+use App\Models\ThirdParies\Supplier;
+use Exception;
+use Illuminate\Http\Request;
 
 class RFQResponseController extends Controller
 {
@@ -162,7 +162,7 @@ class RFQResponseController extends Controller
                 ];
             });
             return response()->json($suppliers);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return response()->json(['error' => 'Failed to load suppliers again'], 500);
         }
     }

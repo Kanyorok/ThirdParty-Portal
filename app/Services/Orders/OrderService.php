@@ -2,7 +2,7 @@
 
 namespace App\Services\Orders;
 
-use App\Models\User;
+use App\Models\Auth\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;

@@ -1,7 +1,7 @@
 <?php
 
 use App\Enums\Core\VisibilityEnum;
-use App\Models\MarketingList;
+use App\Models\CRM\MarketingList;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;

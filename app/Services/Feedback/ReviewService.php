@@ -3,12 +3,12 @@
 namespace App\Services\Feedback;
 
 use App\Enums\TonalityEnum;
+use App\Models\Auth\User;
 use App\Models\BR\Account;
 use App\Models\BR\Branch;
 use App\Models\BR\Client;
-use App\Models\Lead;
-use App\Models\Review;
-use App\Models\User;
+use App\Models\CRM\Lead;
+use App\Models\CRM\Review;
 use Illuminate\Support\Str;
 use Sentiment\Analyzer;
 

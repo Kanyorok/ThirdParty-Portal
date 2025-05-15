@@ -18,7 +18,7 @@
             $party = $parties;
         @endphp
         @include('snippets.client_summary', ['client'=>$parties])
-    @elseif($parties instanceof \App\Models\Lead)
+    @elseif($parties instanceof \App\Models\CRM\Lead)
         @php
             $party = $parties;
         @endphp
@@ -45,7 +45,7 @@
                 </div>
             @endif
         </div>
-    @elseif($meeting->Type === \App\Models\User::getPrimaryKey())
+    @elseif($meeting->Type === \App\Models\Auth\User::getPrimaryKey())
         <h4 class="mb-0">Users/staff</h4>
         <hr class="mt-0">
         <div class="row">
@@ -92,7 +92,7 @@
                     @if($service->actionable())
                         @if($party instanceof \App\Models\BR\Client)
                             onclick="scheduleRedirect('{{ $service->actionLink($party->ClientID) }}')"
-                    @elseif($party instanceof \App\Models\Lead)
+                    @elseif($party instanceof \App\Models\CRM\Lead)
                         onclick="scheduleRedirect('{{ $service->actionLink($party->LeadID) }}')"
                     @endif
                     @else
@@ -125,7 +125,7 @@
                     <form id="deleteCallScheduleForm"
                           @if($party instanceof \App\Models\BR\Client)
                               action="{{ $service->cancelLink($party->ClientID) }}"
-                          @elseif($party instanceof \App\Models\Lead)
+                          @elseif($party instanceof \App\Models\CRM\Lead)
                               action="{{ $service->cancelLink($party->LeadID) }}"
                           @else
                               class="d-none"

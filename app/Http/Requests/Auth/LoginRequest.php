@@ -3,8 +3,8 @@
 namespace App\Http\Requests\Auth;
 
 use App\Enums\Core\PermissionEnum;
-use App\Models\Employee;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\HRM\Employee;
 use App\Services\BR\BREncryption;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -41,7 +41,7 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
         $user = User::query()->where('UserID', $this->string('UserID')->upper()->toString())->first();
-        if ($user instanceof User && ($user->employee instanceof Employee) && BREncryption::checkAuthUser($user, $this->get('password'))) {
+        if ($user instanceof User && ($user->employee instanceof Employee) && BREncryption::checkAuthUser($user, $this->validated('password'))) {
             //check if user has a employee profile if not fail.
             RateLimiter::clear($this->throttleKey());
 

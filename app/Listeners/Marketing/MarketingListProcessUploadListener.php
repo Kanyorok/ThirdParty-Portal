@@ -4,9 +4,9 @@ namespace App\Listeners\Marketing;
 
 use App\Enums\Core\ExtensionsEnum;
 use App\Events\Marketing\MarketingListUploadedEvent;
+use App\Models\Auth\User;
 use App\Models\BR\Client;
-use App\Models\MarketingList;
-use App\Models\User;
+use App\Models\CRM\MarketingList;
 use App\Services\HRM\UserService;
 use App\Services\Marketing\ListService;
 use Illuminate\Contracts\Queue\ShouldQueue;

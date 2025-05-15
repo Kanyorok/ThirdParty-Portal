@@ -11,14 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('t_ItemCategories', function (Blueprint $table) {
-            $table->id();
-            $table->string('Name')->unique()->comment('Category name');
-            $table->string('Description')->nullable()->comment('Category description');
-            $table->timestamps();
+        Schema::create('t_ItemCategories', static function (Blueprint $table) {
+            $table->id('Id');
+            $table->string('Name')->unique();
+            $table->string('Description')->nullable();
+            $table->foreignId('ParentId')->nullable()->constrained('t_ItemCategories', 'Id');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('ModifiedOn');
             $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
+            $table->softDeletes('DeletedOn');
         });
     }
 

@@ -4,7 +4,7 @@ namespace App\Http\Controllers\CRM\Tickets;
 
 use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
-use App\Models\Ticket;
+use App\Models\CRM\Ticket;
 use App\Services\TicketService;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;

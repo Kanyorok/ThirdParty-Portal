@@ -16,11 +16,16 @@ return new class extends Migration
             $table->string('CategoryCode')->unique();
             $table->string('TenderCategory');
             $table->text('Description')->nullable();
-            $table->timestamps();
+            $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('CreatedOn');
+            $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('ModifiedOn');
+            $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
+            $table->softDeletes('DeletedOn');
         });
     }
 
-    /** 
+    /**
      * Reverse the migrations.
      */
     public function down(): void

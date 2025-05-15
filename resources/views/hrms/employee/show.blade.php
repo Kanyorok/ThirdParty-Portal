@@ -165,7 +165,7 @@
                                                 class="text-danger">*</span></label>
                                         <input type="text" class="form-control personal-form" disabled id="DateOfBirth"
                                                name="DateOfBirth"
-                                               required value="{{ $employee->DateOfBirth->format('Y-m-d') }}">
+                                               required value="{{ $employee->DateOfBirth?->format('Y-m-d') }}">
                                         <p id="DateOfBirth_error" class="invalid-feedback d-none error col-12"
                                            role="alert"></p>
                                     </div>

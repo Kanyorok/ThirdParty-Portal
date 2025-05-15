@@ -2,7 +2,7 @@
 
 namespace App\Traits\Model;
 
-use App\Models\User;
+use App\Models\Auth\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Spatie\Activitylog\ActivitylogServiceProvider;
@@ -33,7 +33,7 @@ trait UserActorTrait
     public function deleter(): ?BelongsTo
     {
         return (in_array("DeletedBy", $this->fillable, true))
-            ? $this->belongsTo(User::class, 'DeletedOn', 'Id')->withTrashed() : null;
+            ? $this->belongsTo(User::class, 'DeletedBy', 'Id')->withTrashed() : null;
     }
 
     /**

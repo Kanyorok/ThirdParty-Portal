@@ -1,7 +1,7 @@
 <div class="d-flex flex-column" style="height: 85%">
     @if($party instanceof \App\Models\BR\Client)
         @include('snippets.client_summary', ['client'=>$party])
-    @elseif($party instanceof \App\Models\Lead)
+    @elseif($party instanceof \App\Models\CRM\Lead)
         @include('snippets.lead_summary', ['lead'=>$party])
     @endif
     <hr class="mx-0 my-2">

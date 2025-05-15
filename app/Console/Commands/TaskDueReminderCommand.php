@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\User;
+use App\Models\Auth\User;
 use App\Services\HRM\UserService;
 use App\Services\PartyService;
 use Illuminate\Console\Command;

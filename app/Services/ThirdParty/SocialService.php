@@ -3,7 +3,7 @@
 namespace App\Services\ThirdParty;
 
 use App\Exceptions\ErroredException;
-use App\Models\Social;
+use App\Models\CRM\Social;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 

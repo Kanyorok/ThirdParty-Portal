@@ -4,9 +4,9 @@ namespace App\Http\Controllers\CRM\Contact;
 
 use App\Enums\CallStatusEnum;
 use App\Http\Controllers\Controller;
-use App\Models\Call;
-use App\Models\Contact;
-use App\Models\Schedule;
+use App\Models\Communication\Call;
+use App\Models\CRM\Contact;
+use App\Models\CRM\Schedule;
 use App\Traits\Controller\ContactsTrait;
 use Carbon\Carbon;
 use Illuminate\Http\Request;

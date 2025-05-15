@@ -2,8 +2,8 @@
 
 namespace App\Events\DebtCollection;
 
-use App\Models\BulkNotification;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\Communication\BulkNotification;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;

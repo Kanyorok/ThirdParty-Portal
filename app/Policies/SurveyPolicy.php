@@ -4,8 +4,8 @@ namespace App\Policies;
 
 use App\Enums\Core\PermissionEnum;
 use App\Enums\Feedback\SurveyStatusEnum;
-use App\Models\Survey;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\CRM\Survey;
 
 class SurveyPolicy
 {

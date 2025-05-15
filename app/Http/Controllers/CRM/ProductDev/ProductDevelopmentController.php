@@ -6,7 +6,7 @@ use App\Enums\Core\PermissionEnum;
 use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductDev\UpdateProductDevelopmentRequest;
-use App\Models\ProductDevelopment;
+use App\Models\CRM\ProductDevelopment;
 use App\Services\ProductDevService;
 use App\Services\StaticListsService;
 use Exception;

@@ -4,7 +4,7 @@ namespace App\Http\Controllers\CRM\Feedback;
 
 use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
-use App\Models\Survey;
+use App\Models\CRM\Survey;
 use App\Services\Feedback\SurveyService;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;

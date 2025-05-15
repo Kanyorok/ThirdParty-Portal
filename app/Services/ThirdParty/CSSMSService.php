@@ -4,9 +4,9 @@ namespace App\Services\ThirdParty;
 
 use App\Enums\Core\IntegrationsEnum;
 use App\Exceptions\ErroredException;
-use App\Models\APICredential;
-use App\Models\CrmSMS;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\Communication\SMS;
+use App\Models\Settings\APICredential;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Facades\Log;
@@ -98,7 +98,7 @@ class CSSMSService
         throw new ErroredException("Invalid phone number given ! ");
     }
 
-    public function sendMessage(CrmSMS $sms): bool
+    public function sendMessage(SMS $sms): bool
     {
         try {
             $response = $this->client->post('smsservice', [

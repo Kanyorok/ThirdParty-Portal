@@ -3,8 +3,8 @@
 namespace App\Http\Resources\Feedback;
 
 use App\Enums\Feedback\SurveyQuestionTypeEnum;
-use App\Models\Survey;
-use App\Models\SurveyQuestion;
+use App\Models\CRM\Survey;
+use App\Models\CRM\SurveyQuestion;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 

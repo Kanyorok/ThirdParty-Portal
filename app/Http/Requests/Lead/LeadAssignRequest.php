@@ -3,8 +3,8 @@
 namespace App\Http\Requests\Lead;
 
 use App\Helpers\SystemHelper;
-use App\Models\Lead;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\CRM\Lead;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;

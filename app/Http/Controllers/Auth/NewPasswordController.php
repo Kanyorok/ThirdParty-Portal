@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Models\Auth\User;
 use App\Services\BR\BREncryption;
 use App\Services\HRM\UserService;
 use Illuminate\Auth\Events\PasswordReset;

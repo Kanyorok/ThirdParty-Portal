@@ -5,8 +5,8 @@ namespace App\Http\Controllers\CRM\Leads;
 use App\Enums\MarketingListEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Marketing\PartyListRequest;
-use App\Models\Lead;
-use App\Models\MarketingList;
+use App\Models\CRM\Lead;
+use App\Models\CRM\MarketingList;
 use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
 

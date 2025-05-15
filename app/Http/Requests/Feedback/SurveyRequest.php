@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\Feedback;
 
-use App\Models\Survey;
+use App\Models\CRM\Survey;
 use Carbon\Carbon;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;

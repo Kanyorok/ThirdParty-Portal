@@ -4,7 +4,7 @@ namespace App\Http\Controllers\CRM\Leads;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Base\Select2Request;
-use App\Models\Lead;
+use App\Models\CRM\Lead;
 use Illuminate\Http\JsonResponse;
 
 class LeadSelectController extends Controller

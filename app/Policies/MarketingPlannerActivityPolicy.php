@@ -4,9 +4,9 @@ namespace App\Policies;
 
 use App\Enums\Core\PermissionEnum;
 use App\Enums\Marketing\PlannerStatus;
-use App\Models\MarketingPlanner;
-use App\Models\MarketingPlannerActivity;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\CRM\MarketingPlanner;
+use App\Models\CRM\MarketingPlannerActivity;
 
 class MarketingPlannerActivityPolicy
 {

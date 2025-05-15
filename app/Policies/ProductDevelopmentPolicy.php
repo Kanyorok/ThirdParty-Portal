@@ -3,8 +3,8 @@
 namespace App\Policies;
 
 use App\Enums\Core\PermissionEnum;
-use App\Models\ProductDevelopment;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\CRM\ProductDevelopment;
 use App\Services\ProductDevService;
 use Illuminate\Auth\Access\HandlesAuthorization;
 

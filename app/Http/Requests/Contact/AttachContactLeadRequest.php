@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\Contact;
 
-use App\Models\Lead;
+use App\Models\CRM\Lead;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\ValidationException;
 

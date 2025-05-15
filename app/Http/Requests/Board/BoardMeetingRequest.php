@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Board;
 
-use App\Models\Committee;
-use App\Models\MeetingRoom;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\CRM\MeetingRoom;
+use App\Models\HRM\Committee;
 use Carbon\Carbon;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;

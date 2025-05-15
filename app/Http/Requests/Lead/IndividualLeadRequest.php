@@ -32,13 +32,13 @@ class IndividualLeadRequest extends FormRequest
                                    'required',
                                    'string',
                                    'max:15',
-                                   'unique:App\Models\Lead,Phone',
+                    'unique:App\Models\CRM\Lead,Phone',
                                   ],
                 'email'        => [
                                    'nullable',
                                    'email:rfc,dns',
                                    'max:250',
-                                   'unique:App\Models\Lead,Email',
+                    'unique:App\Models\CRM\Lead,Email',
                                   ],
                 'job_title'    => [
                                    'nullable',

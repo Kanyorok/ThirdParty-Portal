@@ -2,24 +2,13 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Enums\EmailStatusEnum;
 use App\Enums\LeadStatusEnum;
-use App\Enums\TicketStatusEnum;
 use App\Http\Controllers\Controller;
-use App\Models\Call;
-use App\Models\Campaign;
-use App\Models\Lead;
-use App\Models\Meeting;
-use App\Models\Schedule;
-use App\Models\ScheduleUser;
-use App\Models\Team;
-use App\Models\Ticket;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\CRM\Lead;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
-use Illuminate\Support\Number;
 
 class DashboardController extends Controller
 {

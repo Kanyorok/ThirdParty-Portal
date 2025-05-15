@@ -9,7 +9,7 @@ class EngagedAuditor extends Model
     protected $table = 't_EngagedAuditors';
 
     protected $fillable = [
-        'SasraAuditorId',
+        'AuditorId',
         'EngagementStartDate',
         'EngagementEndDate',
         'EngagementStatus',
@@ -20,6 +20,6 @@ class EngagedAuditor extends Model
 
     public function auditor()
     {
-        return $this->belongsTo(SasraAuditor::class, 'SasraAuditorId');
+        return $this->belongsTo(SasraAuditor::class, 'AuditorId');
     }
 }
