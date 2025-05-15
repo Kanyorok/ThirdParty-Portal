@@ -16,7 +16,7 @@ use App\Models\Campaign;
 use App\Models\Lead;
 use App\Models\MarketingList;
 use App\Models\User;
-use App\Services\UserService;
+use App\Services\HRM\UserService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;

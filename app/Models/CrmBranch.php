@@ -27,7 +27,6 @@ class CrmBranch extends Model
         'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
 
-
     public static function getPrimaryKey(): string
     {
         return 'BranchID';

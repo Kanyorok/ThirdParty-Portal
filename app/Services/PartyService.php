@@ -10,6 +10,7 @@ use App\Models\Lead;
 use App\Models\Team;
 use App\Models\User;
 use App\Services\BR\ClientService;
+use App\Services\HRM\UserService;
 use Illuminate\Database\Eloquent\Model;
 
 class PartyService

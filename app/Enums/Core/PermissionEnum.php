@@ -14,6 +14,7 @@ use App\Models\Competitor;
 use App\Models\CrmBranch;
 use App\Models\Department;
 use App\Models\EmailConversation;
+use App\Models\Employee;
 use App\Models\Lead;
 use App\Models\MarketingList;
 use App\Models\MarketingPlanner;
@@ -194,6 +195,13 @@ enum PermissionEnum: string
      */
     case Departments = 'department';
 
+    case EmployeesView = 'employee-read';
+    case EmployeesCreate = 'employee-create';
+    case EmployeesUpdate = 'employee-update';
+    case EmployeesDelete = 'employee-delete';
+
+
+
     public static function display(): Collection
     {
         return collect([
@@ -223,8 +231,8 @@ enum PermissionEnum: string
             [self::Integrations],
             [self::Roles],
 
-            [self::Departments]
 
+            [self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete, self::Departments],
         ]);
     }
 
@@ -271,6 +279,8 @@ enum PermissionEnum: string
             self::RfqRead, self::RfqWrite, self::RfqUpdate, self::RfqApproval => RFQ::getPrimaryKey(),
 
             self::Departments => Department::getPrimaryKey(),
+            self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete => Employee::getPrimaryKey(),
+
         };
     }
 
@@ -304,7 +314,7 @@ enum PermissionEnum: string
             self::Roles => 'Roles',
             self::ListsView, self::ListsUpdate => 'System Codes',
 
-            self::Departments => 'Departments',
+            self::Departments, self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete => 'Employees',
         };
     }
 }

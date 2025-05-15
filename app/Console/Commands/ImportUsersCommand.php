@@ -3,13 +3,13 @@
 namespace App\Console\Commands;
 
 use App\Enums\Core\ExtensionsEnum;
-use App\Enums\GenderEnum;
+use App\Enums\Employee\GenderEnum;
 use App\Helpers\SystemHelper;
 use App\Models\BR\Branch;
 use App\Models\BR\Client;
 use App\Models\Team;
 use App\Models\User;
-use App\Services\UserService;
+use App\Services\HRM\UserService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
