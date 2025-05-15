@@ -4,7 +4,7 @@ namespace App\Policies;
 
 use App\Enums\Core\PermissionEnum;
 use App\Models\User;
-use App\Services\UserService;
+use App\Services\HRM\UserService;
 
 class UserPolicy
 {

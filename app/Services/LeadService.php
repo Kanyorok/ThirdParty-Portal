@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Enums\Core\RoleEnum;
-use App\Enums\GenderEnum;
+use App\Enums\Employee\GenderEnum;
 use App\Enums\LeadStatusEnum;
 use App\Enums\LeadTypeEnum;
 use App\Exceptions\ErroredException;
@@ -15,6 +15,7 @@ use App\Models\LeadUser;
 use App\Models\Locality;
 use App\Models\Team;
 use App\Models\User;
+use App\Services\HRM\UserService;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;

@@ -76,4 +76,9 @@ class Social extends Model
     {
         return $this->images()->whereLike('t_CrmImages.ImageType', 'image/%')->first();
     }
+
+    protected function getImageName(): string
+    {
+        return $this->SocialID;
+    }
 }
