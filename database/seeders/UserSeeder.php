@@ -3,10 +3,7 @@
 namespace Database\Seeders;
 
 use App\Helpers\SystemHelper;
-use App\Models\BR\BRUser;
-use App\Models\User;
 use Illuminate\Database\Seeder;
-use App\Services\BR\BREncryption;
 
 class UserSeeder extends Seeder
 {
@@ -15,7 +12,7 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        $actor = SystemHelper::user();
+        SystemHelper::user();
 
         // $brUser = BRUser::query()->where('OperatorID', 'CSADM')->with('client')->first();
         // if ($brUser instanceof BRUser) {
@@ -32,22 +29,7 @@ class UserSeeder extends Seeder
         //     ]);
         // }
 
-       $user= User::create([
-            'UserID' => 'CSADM',
-            'Name' => 'Defualt User',
-            'Email' => 'admin@test.co.ke',
-            'Phone' => '0700100100',
-            'Password' => "Nor set",
-            'BranchId' => '00',
-            'Linked' => false,
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
-        ]);
 
-        $user->update([
-            'Password' => BREncryption::hashUser($user,'123456')
-        ]);
-        
 
     }
 }

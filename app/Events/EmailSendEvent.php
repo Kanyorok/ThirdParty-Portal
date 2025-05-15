@@ -2,7 +2,7 @@
 
 namespace App\Events;
 
-use App\Models\CrmEmail;
+use App\Models\Communication\Email;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
@@ -16,7 +16,7 @@ class EmailSendEvent
     /**
      * Create a new event instance.
      */
-    public function __construct(public CrmEmail $crmEmail)
+    public function __construct(public Email $crmEmail)
     {
         //
     }

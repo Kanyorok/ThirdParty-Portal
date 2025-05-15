@@ -10,7 +10,7 @@ use App\Models\BR\Branch;
 use App\Models\BR\DebtProduct;
 use App\Models\BR\Product;
 use App\Models\BR\UserCodeDetail;
-use App\Models\MarketingList;
+use App\Models\CRM\MarketingList;
 use App\Traits\Controller\MarketingListTrait;
 use Exception;
 use Illuminate\Http\JsonResponse;

@@ -5,7 +5,7 @@ namespace App\Console\Commands;
 use App\Enums\LeadStatusEnum;
 use App\Helpers\SystemHelper;
 use App\Models\BR\Client;
-use App\Models\Lead;
+use App\Models\CRM\Lead;
 use App\Services\BR\ClientService;
 use Exception;
 use Illuminate\Console\Command;

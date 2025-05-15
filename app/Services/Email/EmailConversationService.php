@@ -5,11 +5,10 @@ namespace App\Services\Email;
 use App\Enums\Core\RoleEnum;
 use App\Exceptions\ErroredException;
 use App\Helpers\SystemHelper;
-use App\Models\EmailConversation;
-use App\Models\EmailConversationUser;
-use App\Models\LeadUser;
-use App\Models\Team;
-use App\Models\User;
+use App\Models\Auth\Team;
+use App\Models\Auth\User;
+use App\Models\Communication\EmailConversation;
+use App\Models\Communication\EmailConversationUser;
 use App\Services\CRMEmailService;
 use App\Services\PartyService;
 

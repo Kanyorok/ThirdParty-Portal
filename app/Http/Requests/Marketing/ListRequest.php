@@ -6,7 +6,7 @@ use App\Enums\Core\VisibilityEnum;
 use App\Enums\MarketingListEnum;
 use App\Exceptions\ErroredException;
 use App\Models\BR\Client;
-use App\Models\Lead;
+use App\Models\CRM\Lead;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;

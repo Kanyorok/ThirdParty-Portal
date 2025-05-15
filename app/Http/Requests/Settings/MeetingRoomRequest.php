@@ -3,7 +3,7 @@
 namespace App\Http\Requests\Settings;
 
 use App\Models\BR\Branch;
-use App\Models\MeetingRoom;
+use App\Models\CRM\MeetingRoom;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;

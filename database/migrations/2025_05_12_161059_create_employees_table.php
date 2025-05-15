@@ -25,9 +25,9 @@ return new class extends Migration
             $table->date('DateOfBirth')->nullable();
             $table->date('JoinDate');
             $table->foreignId('DepartmentId')->constrained('t_Departments', 'Id');
-            $table->foreignId('BranchId')->constrained('t_CRMBranches', 'Id');
+            $table->foreignId('BranchId')->constrained('t_Branches', 'Id');
             $table->string('JobTitle');
-            $table->foreignId('ImageId')->nullable()->constrained('t_CRMImages', 'ImageID');
+            $table->foreignId('ImageId')->nullable()->constrained('t_Images', 'ImageID');
             $table->string('Gender',1)->default(GenderEnum::Other->value);
             $table->string('MaritalStatus',2)->nullable();
 
@@ -44,9 +44,9 @@ return new class extends Migration
         });
 
         //seed users
-        \Illuminate\Support\Facades\Artisan::call('db:seed', [
-            '--class' => 'EmployeeSeeder'
-        ]);
+        /* \Illuminate\Support\Facades\Artisan::call('db:seed', [
+             '--class' => 'EmployeeSeeder'
+         ]);*/
 
         //create employees for users
         Schema::table('t_Users', static function (Blueprint $table) {

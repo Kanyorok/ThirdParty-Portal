@@ -18,7 +18,7 @@
         </div>
         <div class="col-sm-6 col-6 mb-3">
             <div class="float-end">
-                @can('create',\App\Models\BulkNotification::class)
+                @can('create',\App\Models\Communication\BulkNotification::class)
                     <a href="{{ route('debt-notification.create') }}" class="btn btn-primary"><i
                             class="fas fa-plane-departure"></i> send notification</a>
                 @endcan

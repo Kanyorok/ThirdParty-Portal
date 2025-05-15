@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\CodeDetail;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\Core\CodeDetail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 

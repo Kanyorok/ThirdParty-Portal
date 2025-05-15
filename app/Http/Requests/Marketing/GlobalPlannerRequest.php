@@ -3,7 +3,7 @@
 namespace App\Http\Requests\Marketing;
 
 use App\Enums\Marketing\PlannerTypeEnum;
-use App\Models\MarketingPlanner;
+use App\Models\CRM\MarketingPlanner;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;

@@ -4,11 +4,11 @@ namespace App\Http\Controllers\Auth;
 
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
-use App\Models\Campaign;
-use App\Models\MarketingPlanner;
-use App\Models\PendingWorkflow;
-use App\Models\Survey;
-use App\Models\Ticket;
+use App\Models\Core\PendingWorkflow;
+use App\Models\CRM\Campaign;
+use App\Models\CRM\MarketingPlanner;
+use App\Models\CRM\Survey;
+use App\Models\CRM\Ticket;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

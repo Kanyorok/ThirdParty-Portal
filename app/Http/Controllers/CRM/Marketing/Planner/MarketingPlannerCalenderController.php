@@ -4,7 +4,7 @@ namespace App\Http\Controllers\CRM\Marketing\Planner;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Marketing\PlannerActivitiesCollection;
-use App\Models\MarketingPlanner;
+use App\Models\CRM\MarketingPlanner;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 

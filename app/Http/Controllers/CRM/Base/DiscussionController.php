@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\CRM\Base;
 
 use App\Http\Controllers\Controller;
-use App\Models\Call;
-use App\Models\Discussion;
-use App\Models\Meeting;
+use App\Models\Communication\Call;
+use App\Models\CRM\Discussion;
+use App\Models\CRM\Meeting;
 use App\Services\PartyService;
 use Exception;
 use Illuminate\Http\JsonResponse;

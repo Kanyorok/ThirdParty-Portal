@@ -24,7 +24,7 @@
                         <select class="form-control" name="Party" id="Party" required>
                             <option disabled selected>Select a Party</option>
                             <option value="{{ \App\Models\BR\Client::getPrimaryKey() }}">Members</option>
-                            <option value="{{ \App\Models\Lead::getPrimaryKey() }}">Leads</option>
+                            <option value="{{ \App\Models\CRM\Lead::getPrimaryKey() }}">Leads</option>
                         </select>
                         <p id="Party_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                     </div>
@@ -117,7 +117,7 @@
                 if (this.value === '{{ \App\Models\BR\Client::getPrimaryKey() }}') {
                     $('.leads-fields').addClass('d-none');
                     $('.client-fields').removeClass('d-none');
-                } else if (this.value === '{{ \App\Models\Lead::getPrimaryKey() }}') {
+                } else if (this.value === '{{ \App\Models\CRM\Lead::getPrimaryKey() }}') {
                     $('.leads-fields').removeClass('d-none');
                     $('.client-fields').addClass('d-none');
                 }

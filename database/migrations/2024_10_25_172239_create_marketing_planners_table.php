@@ -19,7 +19,7 @@ return new class extends Migration {
             $table->longText('Notes')->nullable();
             $table->dateTime('StartOn')->nullable();
             $table->dateTime('EndOn')->nullable();
-            $table->foreignId('Modes')->nullable()->constrained('t_CRMCodeDetails', 'ID');
+            $table->foreignId('Modes')->nullable()->constrained('t_CodeDetails', 'ID');
             $table->char('Status', 2);
             $table->foreignId('OwnerId')->constrained('t_Users', 'Id');
             $table->foreignId('MasterPlannerId')->nullable()->constrained('t_MarketingPlanner', 'Id');

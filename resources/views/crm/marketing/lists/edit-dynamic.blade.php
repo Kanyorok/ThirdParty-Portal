@@ -19,7 +19,7 @@
                 <div class="card-body">
                     <h2 class="float-start">{!! $list->Visibility->icon() !!} <a
                             href="{{ route('marketing-list.show',$list->slug) }}"
-                                               class="text-black text-decoration-underline">{{ $list->Label }}</a></h2>
+                            class="text-black text-decoration-underline">{{ $list->Label }}</a></h2>
 
                     <button type="button" class="btn btn-danger modal-trash-list float-end mx-2">
                         <i class="fas fa-trash-alt"></i> trash
@@ -72,7 +72,7 @@
                     <h3 class="card-title float-start">Contacts -
                         @if($list->Source === \App\Models\BR\Client::getPrimaryKey())
                             Clients
-                        @elseif($list->Source === \App\Models\Lead::getPrimaryKey())
+                        @elseif($list->Source === \App\Models\CRM\Lead::getPrimaryKey())
                             Leads
                         @else
                             Unkown Contacts
@@ -98,7 +98,7 @@
                                 <tbody></tbody>
                             </table>
                             @break
-                        @case(\App\Models\Lead::getPrimaryKey())
+                        @case(\App\Models\CRM\Lead::getPrimaryKey())
                             <table id="leadsTable"
                                    class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
                                 <thead>
@@ -348,7 +348,7 @@
                 }
             </script>
             @break
-        @case(\App\Models\Lead::getPrimaryKey())
+        @case(\App\Models\CRM\Lead::getPrimaryKey())
             <script>let leadsTable = null;
 
                 function fetchContacts() {

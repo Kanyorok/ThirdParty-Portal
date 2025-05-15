@@ -1,4 +1,4 @@
-@php use App\Enums\TicketPriorityEnum; use App\Enums\TicketStatusEnum; @endphp
+@php use App\Enums\TicketStatusEnum;  @endphp
 @extends('layouts.app')
 
 @section('title','Tickets')
@@ -29,7 +29,7 @@
         <div class="col-sm-2 col-6">
             <div class="mx-1 mb-2">
                 <select class="form-control w-100 filter-field" name="TicketUser" id="TicketUser">
-                    @can('viewAny', \App\Models\Ticket::class)
+                    @can('viewAny', \App\Models\CRM\Ticket::class)
                         <option value="all">Assigned: Any</option>
                         <option value="none">Assigned: None</option>
                     @endcan

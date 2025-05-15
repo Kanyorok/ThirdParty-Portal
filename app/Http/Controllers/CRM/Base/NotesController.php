@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\CRM\Base;
 
 use App\Http\Controllers\Controller;
-use App\Models\Notes;
+use App\Models\CRM\Notes;
 use App\Services\PartyService;
 use Exception;
 use Illuminate\Http\JsonResponse;

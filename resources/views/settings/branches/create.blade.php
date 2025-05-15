@@ -28,7 +28,7 @@
         <div class="mb-3">
             <label for="Manager" class="form-label">Branch Manager </label>
             <select class="form-control form-control-lg w-100 select-users" name="Manager" id="Manager">
-                @if($local?->manager instanceof \App\Models\User)
+                @if($local?->manager instanceof \App\Models\Auth\User)
                     <option selected value="{{ $local->manager->UserID }}">{{ $local->manager->Name }}
                         - {{ $local->manager->UserID }}</option>
                 @endif
@@ -39,7 +39,7 @@
         <div class="mb-3">
             <label for="Operation" class="form-label">Operation Manager </label>
             <select class="form-control form-control-lg w-100 select-users" name="Operation" id="Operation">
-                @if($local?->operation instanceof \App\Models\User)
+                @if($local?->operation instanceof \App\Models\Auth\User)
                     <option selected value="{{ $local->operation->UserID }}">{{ $local->operation->Name }}
                         - {{ $local->operation->UserID }}</option>
                 @endif

@@ -6,8 +6,8 @@ use App\Enums\EmailStatusEnum;
 use App\Enums\EmailTypeEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Base\MailToRequest;
-use App\Models\CrmEmail;
-use App\Models\EmailConversation;
+use App\Models\Communication\Email;
+use App\Models\Communication\EmailConversation;
 use App\Services\CRMEmailService;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -33,10 +33,10 @@ class CrmEmailController extends Controller
         if ($request->ajax()) {
             $actor = $request->user();
             if ($request->_filter === 'DRAFTS') {
-                $query = CrmEmail::query()->where('Type', EmailTypeEnum::Outgoing->value)->where('Status', EmailStatusEnum::Draft->value)
+                $query = Email::query()->where('Type', EmailTypeEnum::Outgoing->value)->where('Status', EmailStatusEnum::Draft->value)
                     ->where('CreatedBy', $actor->Id);
             } elseif ($request->_filter === 'SENT') {
-                $query = CrmEmail::query()->where('Type', EmailTypeEnum::Outgoing->value)->whereIn('Status', [EmailStatusEnum::Queued->value, EmailStatusEnum::Sending->value, EmailStatusEnum::Sent->value, EmailStatusEnum::Failed->value])
+                $query = Email::query()->where('Type', EmailTypeEnum::Outgoing->value)->whereIn('Status', [EmailStatusEnum::Queued->value, EmailStatusEnum::Sending->value, EmailStatusEnum::Sent->value, EmailStatusEnum::Failed->value])
                 ->where('CreatedBy', $actor->Id);
             } else {
                 throw new RuntimeException("Unexpected error");
@@ -70,8 +70,8 @@ class CrmEmailController extends Controller
      */
     public function show(string $email_id): JsonResponse|View
     {
-        $crmEmail = CrmEmail::query()->where('EmailID', $email_id)->first();
-        if (!$crmEmail instanceof CrmEmail) {
+        $crmEmail = Email::query()->where('EmailID', $email_id)->first();
+        if (!$crmEmail instanceof Email) {
             return $this->errored('could not load email');
         }
 
@@ -84,8 +84,8 @@ class CrmEmailController extends Controller
      */
     public function summary(string $email_id): JsonResponse|View
     {
-        $crmEmail = CrmEmail::query()->where('EmailID', $email_id)->first();
-        if (!$crmEmail instanceof CrmEmail) {
+        $crmEmail = Email::query()->where('EmailID', $email_id)->first();
+        if (!$crmEmail instanceof Email) {
             return $this->errored('could not load email');
         }
 
@@ -99,8 +99,8 @@ class CrmEmailController extends Controller
     public function update(Request $request, string $email_id): JsonResponse
     {
         //todo check permissions
-        $crmEmail = CrmEmail::query()->where('EmailID', $email_id)->first();
-        if ($crmEmail instanceof CrmEmail) {
+        $crmEmail = Email::query()->where('EmailID', $email_id)->first();
+        if ($crmEmail instanceof Email) {
             try {
                 DB::transaction(static function () use ($crmEmail, $request) {
                     $crmEmail->update([
@@ -122,8 +122,8 @@ class CrmEmailController extends Controller
     public function destroy(Request $request, string $email_id): JsonResponse
     {
         //todo check permissions
-        $crmEmail = CrmEmail::query()->where('EmailID', $email_id)->first();
-        if (!$crmEmail instanceof CrmEmail) {
+        $crmEmail = Email::query()->where('EmailID', $email_id)->first();
+        if (!$crmEmail instanceof Email) {
             return $this->errored('could not load email');
         }
         try {

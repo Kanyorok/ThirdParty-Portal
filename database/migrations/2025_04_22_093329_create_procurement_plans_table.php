@@ -17,9 +17,12 @@ return new class extends Migration
             $table->foreignId('ItemId')->constrained('t_Items');
             $table->integer('Quantity');
             $table->decimal('TotalCost', 12, 2)->nullable();
-            $table->foreignId('CreatedBy')->constrained('t_Users', 'Id')->comment('User who created the tender');
-            $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id')->comment('User who last modified the tender');
-            $table->timestamps();
+            $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('CreatedOn');
+            $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('ModifiedOn');
+            $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
+            $table->softDeletes('DeletedOn');
         });
     }
 

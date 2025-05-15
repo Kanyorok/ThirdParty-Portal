@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
+use App\Models\Procurement\BidSubmission;
 use Illuminate\Http\Request;
-use App\Models\BidSubmission;
 
 class TenderSubmissionController extends Controller
 {
@@ -28,7 +28,7 @@ public function edit($id)
 {
     $submission = BidSubmission::findOrFail($id);
     return view('procurement.tendering.suppliermanagement.bidsubmission.edit', compact('submission'));
-}   
+}
 public function store(Request $request)
     {
         // Validate the input

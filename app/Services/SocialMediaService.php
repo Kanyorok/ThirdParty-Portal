@@ -5,10 +5,10 @@ namespace App\Services;
 use App\Enums\Core\ExtensionsEnum;
 use App\Enums\Core\IntegrationsEnum;
 use App\Exceptions\ErroredException;
-use App\Models\Comment;
-use App\Models\CRMImage;
-use App\Models\Social;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\Communication\Comment;
+use App\Models\CRM\Social;
+use App\Models\DMS\Image;
 use App\Services\ThirdParty\FacebookService;
 use App\Services\ThirdParty\TwitterService;
 use Carbon\Carbon;
@@ -96,7 +96,7 @@ class SocialMediaService
         return $this->addImage(ImageService::createURL($url, Social::getPrimaryKey(), $this->social->Id, $actor, $MimeType)->image, $actor);
     }
 
-    public function addImage(CRMImage $image, User $actor): static
+    public function addImage(Image $image, User $actor): static
     {
         $this->social->images()->attach($image->ImageID, ['CreatedBy' => $actor->Id, 'ModifiedBy' => $actor->Id]);
         return $this;

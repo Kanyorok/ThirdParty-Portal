@@ -4,7 +4,7 @@ namespace App\Services\ThirdParty;
 
 use App\Enums\Core\IntegrationsEnum;
 use App\Exceptions\ErroredException;
-use App\Models\APICredential;
+use App\Models\Settings\APICredential;
 use EchoLabs\Prism\Contracts\Schema;
 use EchoLabs\Prism\Enums\Provider;
 use EchoLabs\Prism\Prism;

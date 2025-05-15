@@ -4,12 +4,12 @@ namespace App\Services\Marketing;
 
 use App\Enums\MarketingListEnum;
 use App\Exceptions\ErroredException;
+use App\Models\Auth\User;
 use App\Models\BR\Client;
-use App\Models\Lead;
-use App\Models\MarketingList;
-use App\Models\MarketingListFilter;
-use App\Models\SysFilter;
-use App\Models\User;
+use App\Models\CRM\Lead;
+use App\Models\CRM\MarketingList;
+use App\Models\CRM\MarketingListFilter;
+use App\Models\CRM\SysFilter;
 use Illuminate\Database\Eloquent\Builder;
 
 class DynamicListService

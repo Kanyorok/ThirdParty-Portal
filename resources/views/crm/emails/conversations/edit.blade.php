@@ -27,7 +27,7 @@
                   maxlength="5000" minlength="2">{!! $email->Body !!}</textarea>
     </div>
     <div id="emailAttachmentsContent">
-        @foreach($email->attachments()->get(['t_CRMImages.ImageID','MIMEType','Name']) as $document)
+        @foreach($email->attachments()->get(['t_Images.ImageID','MIMEType','Name']) as $document)
             <span class="btn btn-outline-info modal-preview-document"
                   title="{{ $document->Name }}"
                   data-url="{{ route('documents.show',[$document->ImageID]) }}"

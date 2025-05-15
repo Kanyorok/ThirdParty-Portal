@@ -4,8 +4,8 @@ namespace App\Services;
 
 use App\Enums\Core\ExtensionsEnum;
 use App\Exceptions\ErroredException;
-use App\Models\CRMImage;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\DMS\Image;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
 
@@ -13,7 +13,7 @@ class ImageService
 {
     public ExtensionsEnum $type;
 
-    public function __construct(public CRMImage $image)
+    public function __construct(public Image $image)
     {
         $this->setType();
     }
@@ -46,7 +46,7 @@ class ImageService
 
     public static function create(string $Type, string $TypeID, string $Content, string $MimeType, string $Name, User $actor): self
     {
-        $img = new CRMImage();
+        $img = new Image();
         $img->fill([
                     "Name"        => $Name,
                     "ImageType"   => $Type,

@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
+use App\Models\Procurement\ProcurementPeriod;
+use App\Models\ThirdParies\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Procurement\Supplier;
-use App\Models\Procurement\ProcurementPeriod;
 
 
 class ProcurementPeriodController extends Controller
@@ -90,7 +90,7 @@ class ProcurementPeriodController extends Controller
         $period = ProcurementPeriod::findOrFail($id);
         $period->update($validated);
 
-        return redirect()->route('procurement-periods.index')->with('success', 'Procurement period updated.');  
+        return redirect()->route('procurement-periods.index')->with('success', 'Procurement period updated.');
     }
 
     /**
@@ -103,7 +103,7 @@ class ProcurementPeriodController extends Controller
 
         return redirect()->route('procurement-periods.index')->with('success', 'Procurement period deleted.');
     }
-    
+
     public function assignSuppliersForm($id)
     {
         $period = ProcurementPeriod::with('Suppliers')->findOrFail($id);

@@ -2,8 +2,8 @@
 
 namespace App\Services\Procurement\Requisition;
 
+use App\Models\Auth\User;
 use App\Models\Procurement\RequisitionLines;
-use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;

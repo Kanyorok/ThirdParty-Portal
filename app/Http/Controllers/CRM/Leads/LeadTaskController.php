@@ -4,8 +4,8 @@ namespace App\Http\Controllers\CRM\Leads;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Schedule\PartyTaskRequest;
-use App\Models\Lead;
-use App\Models\Task;
+use App\Models\Core\Task;
+use App\Models\CRM\Lead;
 use App\Traits\Controller\TasksTrait;
 use Exception;
 use Illuminate\Http\JsonResponse;

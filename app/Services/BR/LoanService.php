@@ -2,11 +2,11 @@
 
 namespace App\Services\BR;
 
+use App\Models\Auth\User;
 use App\Models\BR\Client;
 use App\Models\BR\DebtProduct;
 use App\Models\BR\Guarantor;
-use App\Models\BulkNotification;
-use App\Models\User;
+use App\Models\Communication\BulkNotification;
 use App\Services\CRMEmailService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;

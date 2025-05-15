@@ -4,8 +4,8 @@ namespace App\Http\Controllers\CRM\Tickets;
 
 use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
-use App\Models\Ticket;
-use App\Models\TicketUsers;
+use App\Models\CRM\Ticket;
+use App\Models\CRM\TicketUsers;
 use App\Services\PartyService;
 use App\Services\TicketService;
 use Exception;

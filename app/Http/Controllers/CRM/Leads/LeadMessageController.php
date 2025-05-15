@@ -4,7 +4,7 @@ namespace App\Http\Controllers\CRM\Leads;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Base\MessageRequest;
-use App\Models\Lead;
+use App\Models\CRM\Lead;
 use App\Services\SMSService;
 use Exception;
 use Illuminate\Http\JsonResponse;

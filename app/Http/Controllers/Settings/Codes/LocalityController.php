@@ -6,7 +6,7 @@ use App\Enums\LocalityTypeEnum;
 use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\LocalityRequest;
-use App\Models\Locality;
+use App\Models\Core\Locality;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

@@ -15,7 +15,7 @@ return new class extends Migration {
             $table->id('Id');
             $table->string("Party");
             $table->string("PartyID", 100);
-            $table->foreignId('EmailConversationId')->after('Source')->constrained('t_CRMEmailsConversations', 'Id');
+            $table->foreignId('EmailConversationId')->after('Source')->constrained('t_EmailsConversations', 'Id');
             $table->char('Role', '1')->default(RoleEnum::Read->value);
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');

@@ -67,9 +67,9 @@
                                                        class="btn btn-lg btn-link me-1 my-1">{{ $client->Mobile }}</a>
                                                 @endif--}}
                         @if(!empty($client->Email))
-                                <a href="javascript:void(0)"
-                                   data-info="{{ route('client-mail.store', [$client->ClientID]) }}~{{ $client->Name }}~{{ $client->Email }}"
-                                   class="btn btn-lg btn-link me-1 my-1 send-mail-to-action">{{ $client->Email }}</a>
+                            <a href="javascript:void(0)"
+                               data-info="{{ route('client-mail.store', [$client->ClientID]) }}~{{ $client->Name }}~{{ $client->Email }}"
+                               class="btn btn-lg btn-link me-1 my-1 send-mail-to-action">{{ $client->Email }}</a>
                         @endif
                     </div>
                 </div>
@@ -132,11 +132,13 @@
                                         <li><a class="dropdown-item add-party-appointment-btn"
                                                href="javascript:void(0);"
                                                data-action="{{ route('client-schedule.meeting',[$client->ClientID]) }}"><i
-                                                    class="fas fa-calendar-plus"></i> schedule an appointment</a></li>
+                                                    class="fas fa-calendar-plus"></i> schedule an appointment</a>
+                                        </li>
                                         <li><a class="dropdown-item add-party-scheduled-call-btn"
                                                href="javascript:void(0);"
                                                data-action="{{ route('client-schedule.call',[$client->ClientID]) }}"> <i
-                                                    class="align-middle" data-feather="phone-forwarded"></i> schedule a
+                                                    class="align-middle" data-feather="phone-forwarded"></i>
+                                                schedule a
                                                 call</a></li>
                                         <li><a class="dropdown-item" id="triggerStartMeetingBtn"
                                                href="javascript:void(0);">
@@ -184,7 +186,7 @@
                         </div>
                     </div>
                 </div>
-                @if($call instanceof \App\Models\Call)
+                @if($call instanceof \App\Models\Communication\Call)
                     <div class="col-12">
                         <div class="card">
                             <div class="card-body row ">
@@ -203,7 +205,7 @@
                                         @endif
                                     </b>
                                 </div>
-                                @if($schedule instanceof \App\Models\Schedule)
+                                @if($schedule instanceof \App\Models\CRM\Schedule)
                                     <div class="col-12"><b>Notes</b> <br>{{ $schedule->Notes }}</div>
                                 @endif
                                 <div class="col-12">
@@ -219,7 +221,7 @@
                                                     class="text-danger">*</span> </label>
                                             <textarea name="call_discussion" id="call_discussion" class="form-control"
                                                       rows="5" maxlength="5000" minlength="5">
-                                               {{($call->discussion instanceof \App\Models\Discussion)?$call->discussion->Discussion:''}}
+                                               {{($call->discussion instanceof \App\Models\CRM\Discussion)?$call->discussion->Discussion:''}}
                                            </textarea>
                                             <p id="call_discussion_error" class="invalid-feedback d-none error col-12"
                                                role="alert"></p>
@@ -255,7 +257,7 @@
                             </div>
                         </div>
                     </div>
-                @elseif($meeting instanceof \App\Models\Meeting)
+                @elseif($meeting instanceof \App\Models\CRM\Meeting)
                     <div class="col-12">
                         <div class="card">
                             <div class="card-header border border-bottom pb-0">
@@ -322,7 +324,7 @@
                                                     class="text-danger">*</span> </label>
                                             <textarea name="ongoing_meeting_discussion" id="ongoing_meeting_discussion"
                                                       class="form-control" rows="5" maxlength="5000" minlength="5"
-                                            >{{($meeting->discussion instanceof \App\Models\Discussion)?$meeting->discussion->Discussion:''}}</textarea>
+                                            >{{($meeting->discussion instanceof \App\Models\CRM\Discussion)?$meeting->discussion->Discussion:''}}</textarea>
                                             <p id="ongoing_meeting_discussion_error"
                                                class="invalid-feedback d-none error col-12"
                                                role="alert"></p>
@@ -349,45 +351,46 @@
                             </div>
                         </div>
                     </div>
-                @elseif($schedule instanceof \App\Models\Schedule)
+                @elseif($schedule instanceof \App\Models\CRM\Schedule)
                     <div class="col-12">
                         <div class="card">
-                            @if($schedule->ScheduledType === \App\Models\Call::getPrimaryKey())
+                            @if($schedule->ScheduledType === \App\Models\Communication\Call::getPrimaryKey())
                                 <div class="card-header border border-bottom pb-0">
                                     <h3 class="card-title">Scheduled Call </h3>
                                 </div>
                                 <div class="card-body row">
-                                <div class="col-md-4 col-12 text-center">
-                                    Start <br> <b>{{ $schedule->StartOn->format('M d, Y h:i a') }}</b>
+                                    <div class="col-md-4 col-12 text-center">
+                                        Start <br> <b>{{ $schedule->StartOn->format('M d, Y h:i a') }}</b>
+                                    </div>
+                                    <div class="col-md-4 col-12 text-center">
+                                        End <br><b> {{ $schedule->EndOn->format('M d, Y h:i a') }}</b>
+                                    </div>
+                                    <div class="col-md-4 col-12 text-center">
+                                        Duration <br> <b>{{ $schedule->EndOn->diffInMinutes($schedule->StartOn,true) }}
+                                            min</b>
+                                    </div>
+                                    <div class="col-12"><b>Notes</b> <br>{{ $schedule->Notes }}</div>
+                                    <div class="col-12">
+                                        <hr>
+                                    </div>
+                                    <div class="col-4">
+                                        <button class="btn btn-warning w-100" type="button" id="triggerUnreachableBtn">
+                                            <i
+                                                class="fas fa-phone-slash"></i> Unreachable
+                                        </button>
+                                    </div>
+                                    <div class="col-4">
+                                        <button class="btn btn-info w-100" type="button" id="triggerRescheduleBtn"><i
+                                                class="fas fa-refresh"></i> Reschedule
+                                        </button>
+                                    </div>
+                                    <div class="col-4">
+                                        <button class="btn btn-primary w-100" type="button" id="triggerStartCallBtn"><i
+                                                class="fas fa-phone"></i> Start Call
+                                        </button>
+                                    </div>
                                 </div>
-                                <div class="col-md-4 col-12 text-center">
-                                    End <br><b> {{ $schedule->EndOn->format('M d, Y h:i a') }}</b>
-                                </div>
-                                <div class="col-md-4 col-12 text-center">
-                                    Duration <br> <b>{{ $schedule->EndOn->diffInMinutes($schedule->StartOn,true) }}
-                                        min</b>
-                                </div>
-                                <div class="col-12"><b>Notes</b> <br>{{ $schedule->Notes }}</div>
-                                <div class="col-12">
-                                    <hr>
-                                </div>
-                                <div class="col-4">
-                                    <button class="btn btn-warning w-100" type="button" id="triggerUnreachableBtn"><i
-                                            class="fas fa-phone-slash"></i> Unreachable
-                                    </button>
-                                </div>
-                                <div class="col-4">
-                                    <button class="btn btn-info w-100" type="button" id="triggerRescheduleBtn"><i
-                                            class="fas fa-refresh"></i> Reschedule
-                                    </button>
-                                </div>
-                                <div class="col-4">
-                                    <button class="btn btn-primary w-100" type="button" id="triggerStartCallBtn"><i
-                                            class="fas fa-phone"></i> Start Call
-                                    </button>
-                                </div>
-                            </div>
-                            @elseif($schedule->scheduled instanceof \App\Models\Meeting)
+                            @elseif($schedule->scheduled instanceof \App\Models\CRM\Meeting)
                                 <div class="card-header border border-bottom pb-0">
                                     <h3 class="card-title">Scheduled Meeting : {{ $schedule->scheduled->Title }} </h3>
                                 </div>
@@ -655,7 +658,8 @@
                     <div class="tab-pane m-2" id="tab-12" role="tabpanel">
                         <div class="float-end">
                             <button class="btn btn-primary click-summary-data" type="button"
-                                    data-click_url="{{ route('client-contacts.create',[$client->ClientID]) }}" data-summary_title="Add Contact">
+                                    data-click_url="{{ route('client-contacts.create',[$client->ClientID]) }}"
+                                    data-summary_title="Add Contact">
                                 <i class="fas fa-plus-circle"></i> add contact
                             </button>
                         </div>
@@ -691,7 +695,7 @@
                          id="showImageModal">
                         {!! $client->getSignature('alt=".." class="w-100"',true) !!}
                     </div>
-                    @if($schedule instanceof \App\Models\Schedule)
+                    @if($schedule instanceof \App\Models\CRM\Schedule)
                         <div class="onboarding-content with-gradient d-none modal-item" id="CallUnreachableModal">
                             <form action="{{ route('call.unreachable',[$schedule->ScheduleID]) }}" method="post"
                                   id="CallUnreachableForm">
@@ -794,7 +798,7 @@
                                    role="alert"></p>
                             </div>
                             <input type="hidden" class="d-none" id="schedule" name="schedule" readonly
-                                   value="{{ ($schedule instanceof \App\Models\Schedule)?$schedule->ScheduleID:\App\Http\Requests\Call\StartCallRequest::NoSchedule }}">
+                                   value="{{ ($schedule instanceof \App\Models\CRM\Schedule)?$schedule->ScheduleID:\App\Http\Requests\Call\StartCallRequest::NoSchedule }}">
                             <p id="schedule_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             <hr>
                             <div class="mt-4">
@@ -818,7 +822,7 @@
                                 <input type="text" class="form-control" id="`meeting_initiated_title`"
                                        name="meeting_initiated_title"
                                        placeholder="Title"
-                                       value="{{ ($schedule instanceof \App\Models\Schedule)?$schedule->Title:'' }}">
+                                       value="{{ ($schedule instanceof \App\Models\CRM\Schedule)?$schedule->Title:'' }}">
                                 <p id="meeting_initiated_title" class="invalid-feedback d-none error col-12"
                                    role="alert"></p>
                             </div>
@@ -828,7 +832,7 @@
                                 <input type="text" class="form-control" id="meeting_initiated_location"
                                        name="meeting_initiated_location"
                                        placeholder="Location"
-                                       value="{{ ($schedule instanceof \App\Models\Schedule && $schedule->scheduled instanceof \App\Models\Meeting)?$schedule->scheduled->Location:'' }}">
+                                       value="{{ ($schedule instanceof \App\Models\CRM\Schedule && $schedule->scheduled instanceof \App\Models\CRM\Meeting)?$schedule->scheduled->Location:'' }}">
                                 <p id="meeting_location_error" class="invalid-feedback d-none error col-12"
                                    role="alert"></p>
                             </div>
@@ -842,7 +846,7 @@
                                    role="alert"></p>
                             </div>
                             <input type="hidden" class="d-none" id="meeting_schedule" name="meeting_schedule" readonly
-                                   value="{{ ($schedule instanceof \App\Models\Schedule)?$schedule->ScheduleID:\App\Http\Requests\Call\StartMeetingRequest::NoSchedule }}">
+                                   value="{{ ($schedule instanceof \App\Models\CRM\Schedule)?$schedule->ScheduleID:\App\Http\Requests\Call\StartMeetingRequest::NoSchedule }}">
                             <p id="meeting_schedule_error" class="invalid-feedback d-none error col-12"
                                role="alert"></p>
                             <hr>
@@ -891,7 +895,7 @@
                 $Modal.modal('show');
             });
 
-            @if($call instanceof \App\Models\Call)
+            @if($call instanceof \App\Models\Communication\Call)
             durationTimer(document.getElementById("callTimer"), '{{ $call->StartOn->toDateTimeString() }}')
 
             $('form#OngoingCallForm').submit(async function (e) {
@@ -899,7 +903,7 @@
                 await saveForm($(this), $('#OngoingCallBtn'), true, false, true);
             });
 
-            @elseif($meeting instanceof \App\Models\Meeting)
+            @elseif($meeting instanceof \App\Models\CRM\Meeting)
             durationTimer(document.getElementById("meetingTimer"), '{{ $meeting->StartOn->toDateTimeString() }}')
 
             $('form#OngoingMeetingForm').submit(async function (e) {
@@ -930,7 +934,7 @@
             @foreach($meeting?->users as $attendee)
             $("#ongoing_meeting_users option[value='{{ $attendee->UserID }}']").prop("selected", true).trigger("change")
             @endforeach
-            @elseif($schedule instanceof \App\Models\Schedule)
+            @elseif($schedule instanceof \App\Models\CRM\Schedule)
             $(document).on('click', '#triggerUnreachableBtn', function () {
                 if (unreachable_start !== null) {
                     unreachable_start.destroy();
@@ -959,7 +963,7 @@
 
             $(document).on('click', '#triggerStartCallBtn', function () {
                 startACall();
-                });
+            });
 
             $(document).on('click', '#triggerStartMeetingBtn', function () {
                 startAMeeting();
@@ -1446,25 +1450,25 @@
         function fetchMailsTable() {
             if (EmailsTable === null) {
                 EmailsTable = $('#EmailsTable').DataTable({
-                processing: true,
-                serverSide: true,
-                responsive: true,
-                "order": [[2, 'desc']],
-                ajax: {
-                    url: '{{ route('client-mail.index', [$client->ClientID]) }}',
-                    error: function (jqXHR) {
-                        codeNotify(jqXHR.status);
+                    processing: true,
+                    serverSide: true,
+                    responsive: true,
+                    "order": [[2, 'desc']],
+                    ajax: {
+                        url: '{{ route('client-mail.index', [$client->ClientID]) }}',
+                        error: function (jqXHR) {
+                            codeNotify(jqXHR.status);
+                        }
+                    },
+                    columns: [
+                        {data: "Type", name: 'Type'},
+                        {data: 'Subject', name: 'Subject'},
+                        {data: 'Dated', name: 'CreatedOn'},
+                        {data: 'action', name: 'action', orderable: false, searchable: false},
+                    ], "oLanguage": {
+                        "sEmptyTable": "<span class='text-center'>No records found</span>"
                     }
-                },
-                columns: [
-                    {data: "Type", name: 'Type'},
-                    {data: 'Subject', name: 'Subject'},
-                    {data: 'Dated', name: 'CreatedOn'},
-                    {data: 'action', name: 'action', orderable: false, searchable: false},
-                ], "oLanguage": {
-                    "sEmptyTable": "<span class='text-center'>No records found</span>"
-                }
-            });
+                });
 
                 EmailsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading emails.");

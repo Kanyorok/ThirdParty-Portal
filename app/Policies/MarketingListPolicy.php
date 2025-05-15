@@ -4,9 +4,9 @@ namespace App\Policies;
 
 use App\Enums\Core\PermissionEnum;
 use App\Enums\Core\VisibilityEnum;
+use App\Models\Auth\User;
 use App\Models\BR\DebtProduct;
-use App\Models\MarketingList;
-use App\Models\User;
+use App\Models\CRM\MarketingList;
 
 class MarketingListPolicy
 {

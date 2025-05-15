@@ -20,8 +20,8 @@
         @csrf
 
         <div class="form-group mb-3">
-            <label for="SasraAuditorId">Select Auditor <span class="text-danger">*</span></label>
-            <select name="SasraAuditorId" class="form-control" required>
+            <label for="AuditorId">Select Auditor <span class="text-danger">*</span></label>
+            <select name="AuditorId" class="form-control" required>
                 <option value="">-- Select Auditor --</option>
                 @foreach ($auditors as $auditor)
                     <option value="{{ $auditor->Id }}">{{ $auditor->AuditorName }} ({{ $auditor->FirmName }})</option>

@@ -5,9 +5,9 @@ namespace App\Services\ThirdParty;
 use App\Enums\Core\IntegrationsEnum;
 use App\Exceptions\ErroredException;
 use App\Helpers\SystemHelper;
-use App\Models\APICredential;
-use App\Models\CRMImage;
-use App\Models\Social;
+use App\Models\CRM\Social;
+use App\Models\DMS\Image;
+use App\Models\Settings\APICredential;
 use Carbon\Carbon;
 use Exception;
 use FacebookAds\Api;
@@ -265,7 +265,7 @@ class FacebookService extends SocialService
         $comments = $this->getComments($social->RemoteId, $social->CreatedOn);
         foreach ($comments->data as $comment) {
             $cmt = $social->comments()->where('RemoteId', $comment->id)->first();
-            if ($cmt instanceof \App\Models\Comment) {
+            if ($cmt instanceof \App\Models\Communication\Comment) {
                 $cmt->update([
                               'Notes'    => $comment->message,
                               'Response' => json_encode($comment),
@@ -273,7 +273,7 @@ class FacebookService extends SocialService
                 $cmtID = $cmt->Id;
             } else {
                 $cmtID = $social->comments()->insertGetId([
-                                                           'CommentType'   => \App\Models\Social::getPrimaryKey(),
+                    'CommentType' => \App\Models\CRM\Social::getPrimaryKey(),
                                                            'CommentTypeID' => $social->Id,
                                                            'Notes'         => $comment->message,
                                                            'Response'      => json_encode($comment),
@@ -290,7 +290,7 @@ class FacebookService extends SocialService
                 $commentComments = $this->getComments($social->RemoteId, $social->CreatedOn, $comment->id);
                 foreach ($commentComments->data as $commentComment) {
                     $toSave->add([
-                                  'CommentType'   => \App\Models\Comment::getPrimaryKey(),
+                        'CommentType' => \App\Models\Communication\Comment::getPrimaryKey(),
                                   'CommentTypeID' => $cmtID,
                                   'Notes'         => $commentComment->message,
                                   'Response'      => json_encode($commentComment),
@@ -347,7 +347,7 @@ class FacebookService extends SocialService
         $images = collect();
         if ($medias instanceof Collection && $medias->count() > 0) {
             foreach ($medias as $media) {
-                if ($media instanceof CRMImage) {
+                if ($media instanceof Image) {
                     $images = $images->merge([
                                               "attached_media[" . $id . "]" => json_encode(['media_fbid' => $this->_uploadMedia($media)]),
                                              ]);
@@ -375,7 +375,7 @@ class FacebookService extends SocialService
     /**
      * @throws ErroredException
      */
-    protected function _uploadMedia(CRMImage $image): string
+    protected function _uploadMedia(Image $image): string
     {
         try {/*file_get_contents($imagePath), basename($imagePath)*/
             $response = Http::attach(

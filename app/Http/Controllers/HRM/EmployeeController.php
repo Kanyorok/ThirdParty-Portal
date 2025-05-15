@@ -6,9 +6,9 @@ use App\Enums\Employee\GenderEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\HRM\AddEmployeeRequest;
 use App\Http\Requests\HRM\EmployeePersonalRequest;
-use App\Models\CrmBranch;
-use App\Models\Department;
-use App\Models\Employee;
+use App\Models\Core\Branch;
+use App\Models\HRM\Department;
+use App\Models\HRM\Employee;
 use App\Services\HRM\EmployeeService;
 use App\Traits\Controller\EmployeeTrait;
 use Exception;
@@ -42,7 +42,7 @@ class EmployeeController extends Controller
     {
         return view('hrms.employee.create')
             ->with('departments', Department::query()->get(['Name', 'DepartmentID']))
-            ->with('branches', CrmBranch::query()->get(['Name', 'BranchID']));
+            ->with('branches', Branch::query()->get(['Name', 'BranchID']));
     }
 
     /**

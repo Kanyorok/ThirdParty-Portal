@@ -4,8 +4,8 @@ namespace App\Services\ThirdParty;
 
 use App\Enums\Core\IntegrationsEnum;
 use App\Exceptions\ErroredException;
-use App\Models\APICredential;
-use App\Models\Social;
+use App\Models\CRM\Social;
+use App\Models\Settings\APICredential;
 use Carbon\Carbon;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Collection;

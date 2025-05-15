@@ -29,7 +29,7 @@
     </div>
     <div class="card-body p-1">
         <div class="accordion accordion-flush" id="MailConversation">
-            @foreach($conversation->emails()->latest('t_CRMEmails.ModifiedOn')->get() as $email)
+            @foreach($conversation->emails()->latest('t_Emails.ModifiedOn')->get() as $email)
                 <div class="accordion-item m-1">
                     <div class="accordion-header row" id="{{ $email->EmailID }}">
                         <div class="col-11 p-0">

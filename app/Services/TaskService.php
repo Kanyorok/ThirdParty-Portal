@@ -2,14 +2,14 @@
 
 namespace App\Services;
 
+use App\Models\Auth\User;
 use App\Models\BR\Account;
 use App\Models\BR\Client;
-use App\Models\Campaign;
-use App\Models\CampaignParty;
-use App\Models\Lead;
-use App\Models\Task;
-use App\Models\Ticket;
-use App\Models\User;
+use App\Models\Core\Task;
+use App\Models\CRM\Campaign;
+use App\Models\CRM\CampaignParty;
+use App\Models\CRM\Lead;
+use App\Models\CRM\Ticket;
 use App\Services\HRM\UserService;
 use Carbon\Carbon;
 use Illuminate\Support\Str;

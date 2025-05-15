@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\Ticket;
 
-use App\Models\CodeDetail;
+use App\Models\Core\CodeDetail;
 use App\Services\StaticListsService;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;

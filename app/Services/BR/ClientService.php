@@ -3,8 +3,8 @@
 namespace App\Services\BR;
 
 use App\Enums\EmailPriorityEnum;
+use App\Models\Auth\User;
 use App\Models\BR\Client;
-use App\Models\User;
 use App\Services\CRMEmailService;
 use App\Services\SMSService;
 use Exception;
