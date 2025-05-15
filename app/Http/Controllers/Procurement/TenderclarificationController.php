@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
+use App\Models\Procurement\VendorClarifications;
 use Illuminate\Http\Request;
-use App\Models\VendorClarifications;
 
 class TenderclarificationController extends Controller
 {

@@ -1,21 +1,15 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Procurement;
 
-use App\Enums\InvitationResponseStatus;
-use App\Models\ThirdParies\Supplier;
-use Illuminate\Database\Eloquent\{Model, SoftDeletes};
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Model;
 
 class TenderInvitation extends Model
 {
-    use SoftDeletes;
-
+    // Table name (optional if follows Laravel convention)
     protected $table = 't_TenderInvitations';
-    protected $primaryKey = 'InvitationID';
-    protected $keyType = 'integer';
-    public $incrementing = true;
 
+    // Mass assignable attributes
     protected $fillable = [
         'TenderID',
         'SupplierID',
@@ -23,32 +17,28 @@ class TenderInvitation extends Model
         'ResponseStatus',
         'ResponseDate',
         'DeclineReason',
-        'ConfirmationAttachmentPath',
+        'ConfirmationAttachment',
     ];
 
+    // Casts for automatic type conversion
     protected $casts = [
-        'InvitationDate' => 'date:Y-m-d',
-        'ResponseDate' => 'date:Y-m-d',
-        'ResponseStatus' => InvitationStatusEnum::class,
+        'InvitationDate' => 'datetime',
+        'ResponseDate' => 'datetime',
     ];
 
-    public function tender(): BelongsTo {
-        return $this->belongsTo(Tender::class, 'TenderID');
-    }
+    // Enum-like accessor for response status
+    public const STATUS_PENDING = 'Pending';
+    public const STATUS_ACCEPTED = 'Accepted';
+    public const STATUS_DECLINED = 'Declined';
 
-    public function supplier(): BelongsTo {
-        return $this->belongsTo(Supplier::class, 'Id');
-    }
+    // Relationships (assuming relevant models exist)
+    //public function tender()
+    // {
+    //     return $this->belongsTo(Tender::class, 'TenderID');
+    // }
 
-    public function isAccepted(): bool {
-        return $this->ResponseStatus === ResponseStatusEnum::Accepted;
-    }
-
-    public function isDeclined(): bool {
-        return $this->ResponseStatus === ResponseStatusEnum::Declined;
-    }
-
-    public function isPending(): bool {
-        return $this->ResponseStatus === ResponseStatusEnum::Pending;
-    }
+    // public function supplier()
+    // {
+    //   return $this->belongsTo(Supplier::class, 'SupplierID');
+    // }
 }

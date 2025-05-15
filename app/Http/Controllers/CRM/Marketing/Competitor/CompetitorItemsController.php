@@ -5,8 +5,9 @@ namespace App\Http\Controllers\CRM\Marketing\Competitor;
 use App\Enums\ItemTypeEnum;
 use App\Enums\TonalityEnum;
 use App\Http\Controllers\Controller;
-use App\Models\DescriptionItem;
+use App\Models\CRM\DescriptionItem;
 use App\Models\ThirdParies\Competitor;
+use ErrorException;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -63,7 +64,7 @@ class CompetitorItemsController extends Controller
                                      'CreatedBy'   => $request->user()->Id,
                                      'ModifiedBy'  => $request->user()->Id,
                                     ]);
-        } catch (\ErrorException) {
+        } catch (ErrorException) {
             return $this->errored('could not save try again latter');
         }
 

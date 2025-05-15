@@ -5,7 +5,7 @@ namespace App\Console\Commands;
 use App\Helpers\SystemHelper;
 use App\Models\Auth\User;
 use App\Models\BR\DebtProduct;
-use App\Models\DebtRecovery\LoanAssignment;
+use App\Models\CRM\DebtRecovery\LoanAssignment;
 use App\Services\HRM\UserService;
 use Carbon\Exceptions\InvalidFormatException;
 use Exception;

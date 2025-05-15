@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\DebtRecovery;
+namespace App\Models\CRM\DebtRecovery;
 
 use App\Models\Auth\User;
 use App\Models\BR\Account;

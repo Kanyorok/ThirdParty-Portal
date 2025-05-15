@@ -13,6 +13,7 @@ return new class extends Migration {
         Schema::create('t_CodeDetails', static function (Blueprint $table) {
             $table->id('ID');
             $table->string('CodeID');
+            $table->string('Value')->nullable();
             $table->string('Description');
             $table->smallInteger('DisplayOrder')->nullable();
             $table->boolean('IsActive')->default(true);

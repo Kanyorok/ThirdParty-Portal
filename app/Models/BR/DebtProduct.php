@@ -4,8 +4,8 @@ namespace App\Models\BR;
 
 use App\Models\Communication\SMS;
 use App\Models\Core\Task;
+use App\Models\CRM\DebtRecovery\LoanAssignment;
 use App\Models\CRM\Schedule;
-use App\Models\DebtRecovery\LoanAssignment;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;

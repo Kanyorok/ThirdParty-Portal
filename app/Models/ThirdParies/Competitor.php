@@ -5,7 +5,7 @@ namespace App\Models\ThirdParies;
 use App\Models\Core\CodeDetail;
 use App\Models\Core\Locality;
 use App\Models\CRM\CompetitorProduct;
-use App\Models\DescriptionItem;
+use App\Models\CRM\DescriptionItem;
 use App\Models\DMS\Image;
 use App\Services\StaticListsService;
 use App\Traits\Model\ImageTrait;

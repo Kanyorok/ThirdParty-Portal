@@ -1,4 +1,4 @@
-@php use App\Models\BR\Client;use App\Services\BR\ClientService; @endphp
+@php use App\Models\Auth\User;use App\Models\BR\Client;use App\Models\CRM\DebtRecovery\LoanAssignment;use App\Services\BR\ClientService; @endphp
 @php @endphp
 @extends('layouts.app')
 
@@ -66,7 +66,7 @@
                     </p>
                     <div class="clearfix"></div>
                     <hr class="my-0">
-                    @if($assignment instanceof  \App\Models\DebtRecovery\LoanAssignment && $assignment->user instanceof \App\Models\Auth\User)
+                    @if($assignment instanceof  LoanAssignment && $assignment->user instanceof User)
                         @include('snippets.user_summary', ['user'=>$assignment->user])
                     @else
                         <h4 class="mt-2 text-center">Unassigned</h4>
@@ -385,7 +385,7 @@
                                     cancel
                                 </button>
                                 <button class="btn btn-primary float-end" id="reassignLoanBtn" type="submit"><i
-                                            class="fas fa-shuffle"></i> reassign
+                                        class="fas fa-shuffle"></i> reassign
                                 </button>
                             </div>
                         </form>

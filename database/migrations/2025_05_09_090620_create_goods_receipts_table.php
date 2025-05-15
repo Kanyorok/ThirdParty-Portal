@@ -30,6 +30,8 @@ return new class extends Migration
             $table->timestamp('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
             $table->timestamp('ModifiedOn');
+            $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
+            $table->timestamp('DeletedOn')->nullable();
         });
     }
 

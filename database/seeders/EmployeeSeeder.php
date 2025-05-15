@@ -2,14 +2,15 @@
 
 namespace Database\Seeders;
 
+use App\Enums\Employee\GenderEnum;
 use App\Helpers\SystemHelper;
-use App\Models\Auth\User;
 use App\Models\Core\Branch;
 use App\Models\HRM\Department;
+use App\Services\BR\BREncryption;
 use App\Services\HRM\EmployeeService;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 use RuntimeException;
+use Spatie\Permission\Models\Role;
 
 class EmployeeSeeder extends Seeder
 {
@@ -18,9 +19,8 @@ class EmployeeSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::transaction(static function () {
+
             $actor = SystemHelper::user();
-            $users = User::all();
             $department = Department::query()->first();
             if (!$department instanceof Department) {
                 throw new RuntimeException('No department found');
@@ -29,21 +29,23 @@ class EmployeeSeeder extends Seeder
             if (!$branch instanceof Branch) {
                 throw new RuntimeException('No branch found');
             }
+        $role = Role::query()->latest('id')->first();
+        if (!$role instanceof Role) {
+            throw new RuntimeException('No branch found');
+        }
 
-            foreach ($users as $user) {
-                if (SystemHelper::isSystem($user)){
-                    continue;
-                }
+        $user = EmployeeService::create(department: $department, branch: $branch, actor: $actor,
+            JobTitle: 'ICT ADMIN', FirstName: 'Default', Surname: 'User',
+            Email: "admin@test.co.ke", Phone: '254700100100', JoinDate: now(), Gender: GenderEnum::Other)
+            ->createUser($actor)->setRole($role, $actor)->user->refresh();
 
-                $names = explode(' ', $user->Name);
-                $employee = EmployeeService::create(department: $department, branch: $branch, actor: $actor,
-                    JobTitle: 'ICT ADMIN', FirstName: $names[0], Surname: count($names)>0?$names[1]:'?',
-                    Email: $user->Email, Phone: $user->Phone, JoinDate: now(), Gender: $user->Gender);
-                if ($user->ImageId) {
-                    $employee->employee->update(['ImageId' => $user->ImageId]);
-                }
-                $user->update(['EmployeeId' => $employee->employee->Id]);
-            }
-        });
+        $user->update([
+            'UserID' => 'CSADM',
+        ]);
+        $user->update([
+            'Password' => BREncryption::hashUser($user, '2')
+        ]);
+
+
     }
 }

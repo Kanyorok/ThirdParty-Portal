@@ -11,14 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('t_SasraAuditors', function (Blueprint $table) {
+        Schema::create('t_Auditors', function (Blueprint $table) {
             $table->id('Id');
             $table->string('FirmName');
             $table->string('PhysicalAddress')->nullable();
             $table->string('PostalAddress')->nullable();
             $table->string('Town')->nullable();
             $table->string('Status')->default('Active');
-            $table->timestamps();
+            $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('CreatedOn');
+            $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('ModifiedOn');
+            $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
+            $table->softDeletes('DeletedOn');
         });
     }
 
@@ -27,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('t_SasraAuditors');
+        Schema::dropIfExists('t_Auditors');
     }
 };

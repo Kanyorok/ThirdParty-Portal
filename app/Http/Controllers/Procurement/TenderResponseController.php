@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
+use App\Models\Procurement\TenderInvitation;
 use Illuminate\Http\Request;
-use App\Models\TenderInvitation;
 
-class TenderResponseController extends Controller 
+class TenderResponseController extends Controller
 {
     //
 

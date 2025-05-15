@@ -41,7 +41,7 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
         $user = User::query()->where('UserID', $this->string('UserID')->upper()->toString())->first();
-        if ($user instanceof User && ($user->employee instanceof Employee) && BREncryption::checkAuthUser($user, $this->get('password'))) {
+        if ($user instanceof User && ($user->employee instanceof Employee) && BREncryption::checkAuthUser($user, $this->validated('password'))) {
             //check if user has a employee profile if not fail.
             RateLimiter::clear($this->throttleKey());
 

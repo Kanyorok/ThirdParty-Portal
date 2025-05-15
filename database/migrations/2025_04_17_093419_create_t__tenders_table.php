@@ -24,9 +24,7 @@ return new class extends Migration
             $table->string('Status', 20)->default('draft')->comment('Enum: Draft, Published, Closed');
             $table->foreignId('ProcurementModeId')->nullable()->comment('Linked procurement mode')->constrained('t_ProcurementModes', 'Id');
             $table->decimal('EstimatedValue', 18, 2)->nullable();
-            $table->string('Currency', 3)->default('USD');
-            $table->datetime('DateCreated')->useCurrent();
-            $table->datetime('PublishedAt')->nullable();
+
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
@@ -35,13 +33,6 @@ return new class extends Migration
             $table->softDeletes('DeletedOn');
 
         });
-
-        /*   Schema::table('t_Tenders', function (Blueprint $table) {
-               $table->index('Status');
-               $table->index('TenderType');
-               $table->index('TenderCategory');
-               $table->index('SubmissionDeadline');
-           });*/
     }
 
     /**

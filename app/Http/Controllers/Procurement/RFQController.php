@@ -3,12 +3,11 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Procurement\RFQ;
-use App\Models\Procurement\Supplier;
 use App\Models\Procurement\ItemCategory;
+use App\Models\Procurement\RFQ;
+use App\Models\ThirdParies\Supplier;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 
 class RFQController extends Controller
 {
@@ -55,7 +54,7 @@ class RFQController extends Controller
         }
 
         // Format items for JSON storage
-         
+
 
         $prefix = 'RFQ-';
         $lastRFQ = RFQ::where('RFQNumber', 'like', $prefix . '%')->orderBy('Id', 'desc')->first();

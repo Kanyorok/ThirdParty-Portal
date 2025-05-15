@@ -17,8 +17,9 @@ return new class extends Migration
             $table->string('BranchID');
             $table->string('DepartmentID');
             $table->string('Remarks');
-            $table->char('Status')->default('p');
-            $table->string('Category');
+
+            // $table->char('Status')->default('p');
+            $table->foreignId('StatusID')->comment('RequisitionStatus')->constrained('t_CodeDetails', 'ID');
 //            $table->decimal('EstimatedCost');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
@@ -28,7 +29,6 @@ return new class extends Migration
             $table->softDeletes('DeletedOn');
 //            $table->timestamps();
         });
-
         Schema::table('t_Tenders', function (Blueprint $table) {
             $table->foreignId('RelatedPRID')->constrained('t_Requisitions', 'Id');
         });

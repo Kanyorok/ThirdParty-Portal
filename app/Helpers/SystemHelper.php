@@ -20,16 +20,20 @@ class SystemHelper
     {
         self::notifyAdmin('new system account created ?');
         return User::create([
-                             'UserID'          => self::ID,
-                             'Name'            => 'SYSTEM',
-                             'Email'           => 'SYSTEM ACCOUNT',
-                             'Phone'           => 0,
-                             'BranchId'        => '00',
-                             'Linked'          => false,
-                             'Notes'           => 'SYSTEM ACCOUNT',
-                             'Password'        => 'SYSTEM ACCOUNT',
-                             'Email_Signature' => '<p>Regards,<br>. .<br>' . config('org.name') . '</p>',
-                            ]);
+            'UserID' => self::ID,
+            'Name' => 'SYSTEM',
+            'Email' => 'SYSTEM ACCOUNT',
+            'Phone' => 0,
+            'Linked' => false,
+            'Notes' => 'SYSTEM ACCOUNT',
+            'Password' => 'SYSTEM ACCOUNT',
+            'Email_Signature' => '<p>Regards,<br>. .<br>' . config('org.name') . '</p>',
+        ]);
+    }
+
+    public static function notifyAdmin(string $message): void
+    {
+        Log::error($message);
     }
 
     /**
@@ -38,11 +42,5 @@ class SystemHelper
     public static function isSystem(User $user): bool
     {
         return ($user->UserID === self::ID);
-    }
-
-
-    public static function notifyAdmin(string $message): void
-    {
-        Log::critical($message);
     }
 }

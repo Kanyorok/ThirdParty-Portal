@@ -13,7 +13,17 @@ return new class extends Migration {
         Schema::create('t_Branches', static function (Blueprint $table) {
             $table->id('Id');
             $table->string('Name');
-            $table->string('BranchID');
+            $table->string('BranchID')->unique();
+            $table->string('Address')->nullable();
+            $table->string('Address2')->nullable();
+            $table->string('City')->nullable();
+            $table->string('State')->nullable();
+            $table->string('Zip')->nullable();
+            $table->string('Country')->nullable();
+            $table->string('Phone')->nullable();
+            $table->string('Fax')->nullable();
+            $table->string('Email')->nullable();
+            $table->boolean('IsHQ')->default(false);
             $table->foreignId('UserId')->nullable()->comment('branch manager')->constrained('t_Users', 'Id');
             $table->foreignId('ManagerId')->nullable()->comment('operational manager')->constrained('t_Users', 'Id');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');

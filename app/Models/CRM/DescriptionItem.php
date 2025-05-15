@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\CRM;
 
 use App\Enums\ItemTypeEnum;
 use App\Enums\TonalityEnum;
