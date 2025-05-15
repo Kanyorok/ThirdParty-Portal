@@ -3,8 +3,8 @@
 namespace App\Policies;
 
 use App\Enums\Core\PermissionEnum;
-use App\Models\Locality;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\Core\Locality;
 
 class LocalityPolicy
 {

@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->id('CompetitorID');
             $table->string('CompetitorName');
             $table->foreignId('LocationID')->nullable()->constrained('t_Localities', 'ID');
-            $table->foreignId('Logo')->nullable()->constrained('t_CRMImages', 'ImageID');
+            $table->foreignId('Logo')->nullable()->constrained('t_Images', 'ImageID');
             $table->string('Email')->nullable();
             $table->string('Website')->nullable();
             $table->string('Phone')->nullable();

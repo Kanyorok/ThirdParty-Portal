@@ -4,8 +4,8 @@ namespace App\Http\Controllers\CRM\Marketing\Planner;
 
 use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
-use App\Models\MarketingPlanner;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\CRM\MarketingPlanner;
 use App\Services\Marketing\PlannerService;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;

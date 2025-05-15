@@ -8,8 +8,8 @@ use App\Enums\LeadStatusEnum;
 use App\Enums\LeadTypeEnum;
 use App\Models\BR\Branch;
 use App\Models\BR\SystemCodeDetail;
-use App\Models\MarketingListFilter;
-use App\Models\SysFilter;
+use App\Models\CRM\MarketingListFilter;
+use App\Models\CRM\SysFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 

@@ -3,7 +3,7 @@
 namespace App\Policies;
 
 use App\Enums\Core\PermissionEnum;
-use App\Models\User;
+use App\Models\Auth\User;
 use Spatie\Permission\Models\Role;
 
 class RolePolicy

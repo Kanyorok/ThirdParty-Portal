@@ -1,4 +1,4 @@
-@php use App\Enums\LeadTypeEnum;use App\Enums\LocalityTypeEnum;use App\Models\Contact; @endphp
+@php use App\Enums\LeadTypeEnum;use App\Enums\LocalityTypeEnum;use App\Models\CRM\Contact; @endphp
 <script src='{{ asset('assets/libs/moment/moment-with-locales.js') }}'></script>
 <script src="{{asset('assets/libs/jquery-form/jquery.form.min.js')}}"></script>
 <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>

@@ -3,7 +3,7 @@
 namespace App\Http\Requests\Marketing;
 
 use App\Models\BR\DebtProduct;
-use App\Models\MarketingList;
+use App\Models\CRM\MarketingList;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 

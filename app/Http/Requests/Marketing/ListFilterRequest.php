@@ -3,8 +3,8 @@
 namespace App\Http\Requests\Marketing;
 
 use App\Enums\Core\ComparisonOperatorsEnum;
-use App\Models\MarketingList;
-use App\Models\SysFilter;
+use App\Models\CRM\MarketingList;
+use App\Models\CRM\SysFilter;
 use App\Services\Marketing\MarketingFilterService;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;

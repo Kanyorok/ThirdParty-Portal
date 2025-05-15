@@ -8,7 +8,7 @@ use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Base\UploadDocumentRequest;
 use App\Http\Requests\Ticket\NewTicketRequest;
-use App\Models\Ticket;
+use App\Models\CRM\Ticket;
 use App\Services\ImageService;
 use App\Traits\Controller\ActivitiesTrait;
 use App\Traits\Controller\TicketsTrait;

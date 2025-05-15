@@ -3,12 +3,12 @@
 namespace App\Services;
 
 use App\Helpers\SystemHelper;
+use App\Models\Auth\Team;
+use App\Models\Auth\User;
 use App\Models\BR\Account;
 use App\Models\BR\Client;
 use App\Models\BR\DebtProduct;
-use App\Models\Lead;
-use App\Models\Team;
-use App\Models\User;
+use App\Models\CRM\Lead;
 use App\Services\BR\ClientService;
 use App\Services\HRM\UserService;
 use Illuminate\Database\Eloquent\Model;

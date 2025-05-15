@@ -4,8 +4,8 @@ namespace App\Http\Requests\Base;
 
 use App\Enums\Core\RoleEnum;
 use App\Exceptions\ErroredException;
-use App\Models\Team;
-use App\Models\User;
+use App\Models\Auth\Team;
+use App\Models\Auth\User;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;

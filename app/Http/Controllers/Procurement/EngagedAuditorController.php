@@ -3,14 +3,14 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Procurement\EngagedAuditor;
-use Illuminate\Support\Facades\Auth;
 use App\Models\Procurement\SasraAuditor;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class EngagedAuditorController extends Controller
 {
-    
+
     /**
      * Display a listing of the resource.
      */
@@ -35,7 +35,7 @@ class EngagedAuditorController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'SasraAuditorId' => 'required|exists:t_SasraAuditors,Id',
+            'AuditorId' => 'required|exists:t_Auditors,Id',
             'EngagementStartDate' => 'required|date',
             'EngagementEndDate' => 'nullable|date|after_or_equal:EngagementStartDate',
             'EngagementStatus' => 'nullable|string|max:55',
@@ -44,9 +44,9 @@ class EngagedAuditorController extends Controller
         $validated['EngagementStatus'] = $validated['EngagementStatus'] ?? 'Active';
         $validated['CreatedBy'] = Auth::id();
         $validated['ModifiedBy'] = Auth::id();
-        
-        EngagedAuditor::create($validated);  
-        return redirect()->route('engaged-auditors.index')->with('success', 'Engaged auditor created successfully.'); 
+
+        EngagedAuditor::create($validated);
+        return redirect()->route('engaged-auditors.index')->with('success', 'Engaged auditor created successfully.');
     }
 
     /**
@@ -73,7 +73,7 @@ class EngagedAuditorController extends Controller
     public function update(Request $request, string $id)
     {
         $validated = $request->validate([
-            'SasraAuditorId' => 'required|exists:t_SasraAuditors,Id',
+            'AuditorId' => 'required|exists:t_Auditors,Id',
             'EngagementStartDate' => 'required|date',
             'EngagementEndDate' => 'nullable|date|after_or_equal:EngagementStartDate',
             'EngagementStatus' => 'nullable|string|max:55',
@@ -99,7 +99,7 @@ class EngagedAuditorController extends Controller
     {
         $engagedAuditor = EngagedAuditor::findOrFail($id);
         $engagedAuditor->delete();
-        
+
         return redirect()->route('engaged-auditors.index')->with('success', 'Engaged auditor deleted successfully.');
     }
 }

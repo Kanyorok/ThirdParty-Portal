@@ -4,9 +4,9 @@ namespace App\Policies;
 
 use App\Enums\Core\PermissionEnum;
 use App\Enums\Core\RoleEnum;
-use App\Models\EmailConversation;
-use App\Models\Team;
-use App\Models\User;
+use App\Models\Auth\Team;
+use App\Models\Auth\User;
+use App\Models\Communication\EmailConversation;
 use Illuminate\Database\Query\Builder;
 
 class EmailConversationPolicy

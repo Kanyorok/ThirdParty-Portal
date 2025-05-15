@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests\Settings;
 
-use App\Models\CrmBranch;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\Core\Branch;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\ValidationException;
 
@@ -39,7 +39,7 @@ class BranchRequest extends FormRequest
                 'BranchID' => 'invalid branch id, ate least 2 characters, no special characters allowed'
             ]);
         }
-        if (CrmBranch::query()->where('BranchID', $branchID)->exists()) {
+        if (Branch::query()->where('BranchID', $branchID)->exists()) {
             throw ValidationException::withMessages([
                 'BranchID' => 'branch id already exists'
             ]);

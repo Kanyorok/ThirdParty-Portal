@@ -8,14 +8,14 @@ use App\Enums\Marketing\PlannerTypeEnum;
 use App\Enums\WorkflowStatus;
 use App\Exceptions\ErroredException;
 use App\Helpers\SystemHelper;
+use App\Models\Auth\User;
 use App\Models\BR\Branch;
-use App\Models\CodeDetail;
-use App\Models\CrmBranch;
-use App\Models\MarketingPlanner;
-use App\Models\MarketingPlannerActivity;
-use App\Models\PendingWorkflow;
-use App\Models\User;
-use App\Models\Workflow;
+use App\Models\Core\Branch;
+use App\Models\Core\CodeDetail;
+use App\Models\Core\PendingWorkflow;
+use App\Models\Core\Workflow;
+use App\Models\CRM\MarketingPlanner;
+use App\Models\CRM\MarketingPlannerActivity;
 use App\Services\HRM\UserService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -365,7 +365,7 @@ class PlannerService
      * Submit for approval
      * @throws ErroredException
      */
-    public function submit(CrmBranch $branch, User $actor): static
+    public function submit(Branch $branch, User $actor): static
     {
         $this->syncDates();
 
@@ -437,7 +437,7 @@ class PlannerService
         return in_array($actor->Id, $this->planner->pendingWorkflows()->get('t_PendingWorkflows.UserId')->pluck('UserId')->toArray(), true);
     }
 
-    public static function create(CrmBranch $branch, CodeDetail $Mode, string $Name, string $Notes, User $actor): PlannerService
+    public static function create(Branch $branch, CodeDetail $Mode, string $Name, string $Notes, User $actor): PlannerService
     {
         $planner = new MarketingPlanner();
         $planner->fill([
@@ -546,7 +546,7 @@ class PlannerService
         return $slug;
     }
 
-    public function update(CrmBranch $branch, CodeDetail $Mode, string $Name, string $Notes, User $actor): static
+    public function update(Branch $branch, CodeDetail $Mode, string $Name, string $Notes, User $actor): static
     {
         $this->planner->update([
                                 'Name'       => $Name,

@@ -1,0 +1,39 @@
+<?php
+
+namespace App\Models\Auth;
+
+use App\Traits\Model\UserActorTrait;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class TeamUser extends Model
+{
+    use  UserActorTrait;
+
+    const string CREATED_AT = 'CreatedOn';
+    const string UPDATED_AT = 'ModifiedOn';
+
+    protected $table = 't_TeamUser';
+    protected $primaryKey = 'Id';
+
+    /**
+     * The attributes that are mass assignable.
+     */
+    protected $fillable = [
+                           'TeamId',
+                           'UserId',
+                           'CreatedBy',
+                           'ModifiedBy',
+                          ];
+
+    public function team(): BelongsTo
+    {
+        return $this->belongsTo(Team::class, 'TeamId', 'TeamID');
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'UserId', 'Id');
+    }
+}

@@ -2,20 +2,20 @@
 
 namespace App\Models\BR;
 
-use App\Models\Activity;
-use App\Models\Call;
-use App\Models\Contact;
-use App\Models\CrmEmail;
-use App\Models\CrmSMS;
-use App\Models\Discussion;
-use App\Models\MarketingList;
-use App\Models\Meeting;
-use App\Models\MeetingClient;
-use App\Models\Notes;
-use App\Models\Review;
-use App\Models\Schedule;
-use App\Models\Task;
-use App\Models\Ticket;
+use App\Models\Communication\Call;
+use App\Models\Communication\Email;
+use App\Models\Communication\SMS;
+use App\Models\Core\Activity;
+use App\Models\Core\Task;
+use App\Models\CRM\Contact;
+use App\Models\CRM\Discussion;
+use App\Models\CRM\MarketingList;
+use App\Models\CRM\Meeting;
+use App\Models\CRM\MeetingClient;
+use App\Models\CRM\Notes;
+use App\Models\CRM\Review;
+use App\Models\CRM\Schedule;
+use App\Models\CRM\Ticket;
 use App\Services\BR\ImageService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -63,12 +63,12 @@ class Client extends Model
 
     public function crmmails(): MorphMany
     {
-        return $this->morphMany(CrmEmail::class, 'party', "Party", "PartyID", 'ClientID');
+        return $this->morphMany(Email::class, 'party', "Party", "PartyID", 'ClientID');
     }
 
     public function crmsms(): MorphMany
     {
-        return $this->morphMany(CrmSMS::class, 'party', "Party", "PartyID", 'ClientID');
+        return $this->morphMany(SMS::class, 'party', "Party", "PartyID", 'ClientID');
     }
 
     public function reviews(): MorphMany

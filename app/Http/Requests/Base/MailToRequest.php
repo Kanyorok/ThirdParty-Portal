@@ -3,11 +3,11 @@
 namespace App\Http\Requests\Base;
 
 use App\Helpers\SystemHelper;
+use App\Models\Auth\User;
 use App\Models\BR\Client;
-use App\Models\Contact;
-use App\Models\CrmEmail;
-use App\Models\Lead;
-use App\Models\User;
+use App\Models\Communication\Email;
+use App\Models\CRM\Contact;
+use App\Models\CRM\Lead;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\ValidationException;
@@ -86,10 +86,10 @@ class MailToRequest extends FormRequest
         return ['mail_content.min' => 'Write something about it.'];
     }
 
-    public function getReplyTo(): CrmEmail
+    public function getReplyTo(): Email
     {
-        $mail = CrmEmail::query()->where('EmailID', $this->validated('mail_reply_to'))->first();
-        if ($mail instanceof CrmEmail) {
+        $mail = Email::query()->where('EmailID', $this->validated('mail_reply_to'))->first();
+        if ($mail instanceof Email) {
             return $mail;
         }
 

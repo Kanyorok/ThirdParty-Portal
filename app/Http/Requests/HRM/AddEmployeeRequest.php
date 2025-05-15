@@ -4,8 +4,8 @@ namespace App\Http\Requests\HRM;
 
 use App\Enums\Employee\GenderEnum;
 use App\Exceptions\ErroredException;
-use App\Models\CrmBranch;
-use App\Models\Department;
+use App\Models\Core\Branch;
+use App\Models\HRM\Department;
 use Carbon\Carbon;
 use Carbon\Exceptions\InvalidFormatException;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -90,10 +90,10 @@ class AddEmployeeRequest extends FormRequest
         return $date;
     }
 
-    public function getBranch(): CrmBranch
+    public function getBranch(): Branch
     {
-        $branch = CrmBranch::query()->where('BranchID', $this->validated('Branch'))->first();
-        if ($branch instanceof CrmBranch) {
+        $branch = Branch::query()->where('BranchID', $this->validated('Branch'))->first();
+        if ($branch instanceof Branch) {
             return $branch;
         }
         throw ValidationException::withMessages(['Branch' => 'invalid branch']);

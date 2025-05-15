@@ -4,7 +4,7 @@ namespace App\Http\Controllers\HRM;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\HRM\DepartmentRequest;
-use App\Models\Department;
+use App\Models\HRM\Department;
 use App\Services\HRM\DepartmentService;
 use Exception;
 use Illuminate\Http\JsonResponse;

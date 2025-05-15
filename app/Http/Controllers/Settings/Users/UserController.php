@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Settings\Users;
 use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\UserRequest;
-use App\Models\CrmBranch;
-use App\Models\Employee;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\Core\Branch;
+use App\Models\HRM\Employee;
 use App\Services\HRM\UserService;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -107,7 +107,7 @@ class UserController extends Controller
     {
         return view('settings.users.edit')
             ->with('user', $user)
-            ->with('branches', CrmBranch::all());
+            ->with('branches', Branch::all());
     }
 
     /**

@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Settings\Codes;
 
 use App\Enums\LocalityTypeEnum;
 use App\Http\Controllers\Controller;
-use App\Models\Locality;
+use App\Models\Core\Locality;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

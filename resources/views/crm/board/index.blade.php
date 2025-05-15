@@ -43,9 +43,10 @@
                     <div class="card">
                         <div class="card-header">
                             <div class="card-actions float-end">
-                                @can('meeting', \App\Models\Board::class)
-                                    <button type="button" class="btn btn-outline-primary m-1" id="triggerBoardMeetingBtn">
-                                        <i  class="fas fa-calendar-plus"></i>&nbsp; Schedule a  Meeting
+                                @can('meeting', \App\Models\ThirdParies\Board::class)
+                                    <button type="button" class="btn btn-outline-primary m-1"
+                                            id="triggerBoardMeetingBtn">
+                                        <i class="fas fa-calendar-plus"></i>&nbsp; Schedule a Meeting
                                     </button>
                                 @endcan
                             </div>
@@ -101,9 +102,11 @@
                                     </div>
                                 </div>
                             </div>
-                            <form method="post" id="boardBulkNotificationForm" action="{{ route('bulk-notification.board') }}">
+                            <form method="post" id="boardBulkNotificationForm"
+                                  action="{{ route('bulk-notification.board') }}">
                                 <div class="col-12 mb-3">@csrf
-                                    <label class="form-label" for="NotificationLabel">Label <span class="text-danger">*</span></label>
+                                    <label class="form-label" for="NotificationLabel">Label <span
+                                            class="text-danger">*</span></label>
                                     <input type="text" class="search-form-item form-control" required
                                            id="NotificationLabel" name="NotificationLabel"
                                            placeholder="Label">
@@ -111,8 +114,10 @@
                                        role="alert"></p>
                                 </div>
                                 <div class="mb-3">
-                                    <label for="NotificationCommittee" class="form-label">Committee <span class="text-danger">*</span></label>
-                                    <select class="form-control" name="NotificationCommittee" id="NotificationCommittee" required>
+                                    <label for="NotificationCommittee" class="form-label">Committee <span
+                                            class="text-danger">*</span></label>
+                                    <select class="form-control" name="NotificationCommittee" id="NotificationCommittee"
+                                            required>
                                         <option selected disabled>select a committee</option>
                                         @foreach($committees as $committee)
                                             <option value="{{ $committee->CommitteeID }}">{{ $committee->Name }}</option>
@@ -122,16 +127,19 @@
                                        role="alert"></p>
                                 </div>
                                 <div class="mb-3 col-12">
-                                    <label class="form-label" for="NotificationContent">Content <span class="text-danger">*</span></label>
+                                    <label class="form-label" for="NotificationContent">Content <span
+                                            class="text-danger">*</span></label>
                                     <b class="float-end text-info" id="msgCounter"></b>
-                                    <textarea name="NotificationContent" id="NotificationContent" class="form-control" rows="4"
+                                    <textarea name="NotificationContent" id="NotificationContent" class="form-control"
+                                              rows="4"
                                               maxlength="50000" minlength="2"></textarea>
                                     <p id="NotificationContent_error" class="invalid-feedback d-none error col-12"
                                        role="alert"></p>
                                 </div>
                                 <hr>
                                 <button type="submit" class="float-end btn btn-success w-50 "
-                                        id="boardBulkNotificationBtn"><i class="fa fa-plane-departure"></i> send messages
+                                        id="boardBulkNotificationBtn"><i class="fa fa-plane-departure"></i> send
+                                    messages
                                 </button>
                                 <div class="clearfix"></div>
                             </form>
@@ -205,14 +213,16 @@
                             aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    @can('meeting', \App\Models\Board::class)
+                    @can('meeting', \App\Models\ThirdParies\Board::class)
                         <div class="onboarding-content with-gradient d-none modal-item" id="createBoardMeetingModal">
                             <form action="{{ route('board-meetings.store') }}" method="post"
                                   id="createBoardMeetingForm" class="row">
                                 @csrf
                                 <div class="mb-3">
-                                    <label for="BoardMeetingTitle" class="form-label">Title <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" required id="BoardMeetingTitle" name="BoardMeetingTitle" placeholder="Title">
+                                    <label for="BoardMeetingTitle" class="form-label">Title <span
+                                            class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" required id="BoardMeetingTitle"
+                                           name="BoardMeetingTitle" placeholder="Title">
                                     <p id="BoardMeetingTitle_error" class="invalid-feedback d-none error col-12"
                                        role="alert"></p>
                                 </div>
@@ -243,11 +253,14 @@
                                             </option>
                                         @endforeach
                                     </select>
-                                    <p id="BoardMeetingLocation_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                                    <p id="BoardMeetingLocation_error" class="invalid-feedback d-none error col-12"
+                                       role="alert"></p>
                                 </div>
                                 <div class="col-md-6 col-12 mb-3">
-                                    <label for="BoardMeetingCommittee" class="form-label">Committee <span class="text-danger">*</span></label>
-                                    <select class="form-control" name="BoardMeetingCommittee" id="BoardMeetingCommittee" required>
+                                    <label for="BoardMeetingCommittee" class="form-label">Committee <span
+                                            class="text-danger">*</span></label>
+                                    <select class="form-control" name="BoardMeetingCommittee" id="BoardMeetingCommittee"
+                                            required>
                                         <option selected disabled>select a committee</option>
                                         @foreach($committees as $committee)
                                             <option value="{{ $committee->CommitteeID }}">{{ $committee->Name }}</option>
@@ -258,8 +271,11 @@
                                 </div>
                                 <div class="mb-3 col-12">
                                     <label for="BoardMeetingUsers" class="form-label">Users </label>
-                                    <select class="form-control " name="BoardMeetingUsers[]" id="BoardMeetingUsers" required multiple>
-                                        <option value="{{ auth()->user()->UserID }}" selected>{{  auth()->user()->Name }} - {{  auth()->user()->UserID }}</option>
+                                    <select class="form-control " name="BoardMeetingUsers[]" id="BoardMeetingUsers"
+                                            required multiple>
+                                        <option value="{{ auth()->user()->UserID }}"
+                                                selected>{{  auth()->user()->Name }}
+                                            - {{  auth()->user()->UserID }}</option>
                                     </select>
                                     <p id="BoardMeetingUsers_error"
                                        class="invalid-feedback d-none error col-12" role="alert"></p>
@@ -364,7 +380,7 @@
 
         });
 
-        function fetchMeetingTable(){
+        function fetchMeetingTable() {
             if (!$.fn.DataTable.isDataTable('#meetingTable')) {
                 $('#meetingTable').DataTable({
                     processing: true,
@@ -422,6 +438,7 @@
                 $('#committeesTable').DataTable().ajax.reload();
             }
         }
+
         function fetchBoardMembersTable() {
             if (!$.fn.DataTable.isDataTable('#boardMembersTable')) {
                 $('#boardMembersTable').DataTable({

@@ -13,7 +13,7 @@ return new class extends Migration {
         Schema::create('t_CompetitorStrategy', static function (Blueprint $table) {
             $table->id();
             $table->foreignId('CompetitorId')->constrained('t_Competitors', 'CompetitorID')->cascadeOnDelete();
-            $table->foreignId('StrategyId')->constrained('t_CRMCodeDetails', 'ID')->cascadeOnDelete();
+            $table->foreignId('StrategyId')->constrained('t_CodeDetails', 'ID')->cascadeOnDelete();
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');

@@ -4,8 +4,8 @@ namespace App\Http\Controllers\CRM\Marketing\Competitor;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Marketing\CompetitorProductRequest;
-use App\Models\Competitor;
-use App\Models\CompetitorProduct;
+use App\Models\CRM\CompetitorProduct;
+use App\Models\ThirdParies\Competitor;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

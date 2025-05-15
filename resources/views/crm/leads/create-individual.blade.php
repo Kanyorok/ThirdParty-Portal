@@ -12,17 +12,17 @@
         <input type="hidden" name="Type" class="d-none" value="{{ LeadTypeEnum::Individual->value }}">
         <input type="hidden" name="conversation" class="d-none" value="{{ $conversation }}">
         <input type="hidden" name="contact" class="d-none"
-               value="{{ ($contact instanceof \App\Models\Contact)?$contact->ContactID:0 }}">
+               value="{{ ($contact instanceof \App\Models\CRM\Contact)?$contact->ContactID:0 }}">
         <div class="mb-3">
             <label class="form-label" for="Name">First Name <span
-                        class="text-danger">*</span></label>
+                    class="text-danger">*</span></label>
             <input type="text" class="form-control" id="Name" name="Name" required
-                   placeholder="Name" value="{{ ($contact instanceof \App\Models\Contact)?$contact->Label:'' }}">
+                   placeholder="Name" value="{{ ($contact instanceof \App\Models\CRM\Contact)?$contact->Label:'' }}">
             <p id="Name_error" class="invalid-feedback d-none error col-12" role="alert"></p>
         </div>
         <div class="mb-3">
             <label class="form-label" for="Surname">Surname <span
-                        class="text-danger">*</span></label>
+                    class="text-danger">*</span></label>
             <input type="text" class="form-control" id="Surname" name="Surname" required
                    placeholder="Surname">
             <p id="Surname_error" class="invalid-feedback d-none error col-12"
@@ -37,7 +37,7 @@
         </div>
         <div class="mb-3">
             <label for="Gender" class="form-label">Gender <span
-                        class="text-danger">*</span></label>
+                    class="text-danger">*</span></label>
             <select class="form-control" name="Gender" id="Gender" required>
                 @foreach(App\Enums\Employee\GenderEnum::getAll() as $gender)
                     <option value="{{ $gender->value }}">{{ $gender->name }}</option>
@@ -72,7 +72,7 @@
         </div>
         <div class="mb-3">
             <label for="Source" class="form-label">Source <span
-                        class="text-danger">*</span></label>
+                    class="text-danger">*</span></label>
             <select class="form-control" name="Source" id="Source" required>
                 <option selected disabled>select a Marketing Modes</option>
                 @foreach($MarketingModes as $Source)
@@ -83,12 +83,12 @@
         </div>
         <div class="mb-3">
             <label for="CustomerType" class="form-label">Customer Type <span
-                        class="text-danger">*</span></label>
+                    class="text-danger">*</span></label>
             <select class="form-control" name="CustomerType" id="CustomerType" required>
                 <option selected disabled>select a Customer Type</option>
                 @foreach($CustomerTypes as $CustomerType)
                     <option
-                            value="{{ $CustomerType->ID }}">{{ $CustomerType->Description }}</option>
+                        value="{{ $CustomerType->ID }}">{{ $CustomerType->Description }}</option>
                 @endforeach
             </select>
             <p id="CustomerType_error" class="invalid-feedback d-none error col-12"
@@ -97,10 +97,10 @@
 
         <div class="mb-3">
             <label class="form-label" for="Phone">Phone Number <span
-                        class="text-danger">*</span></label>
+                    class="text-danger">*</span></label>
             <input type="text" class="form-control" id="Phone" name="Phone"
                    placeholder="Phone Number" required
-                   value="{{ ($contact instanceof \App\Models\Contact)?$contact->Phone:'' }}">
+                   value="{{ ($contact instanceof \App\Models\CRM\Contact)?$contact->Phone:'' }}">
             <p id="Phone_error" class="invalid-feedback d-none error col-12" role="alert"></p>
         </div>
         <div class="mb-3">
@@ -111,7 +111,7 @@
         </div>
         <div class="mb-3">
             <label for="RelationshipManager" class="form-label">Relationship Officer <span
-                        class="text-danger">*</span></label>
+                    class="text-danger">*</span></label>
             <select class="form-control relationship-manager" name="RelationshipManager"
                     id="RelationshipManager" required>
                 <option value="{{ auth()->user()->UserID }}"
@@ -133,7 +133,7 @@
                 cancel
             </button>
             <button class="btn btn-primary float-end" id="createIndividualLeadBtn" type="submit"><i
-                        class="fas fa-save"></i> add Individual
+                    class="fas fa-save"></i> add Individual
             </button>
         </div>
     </form>
@@ -195,7 +195,7 @@
             const response = await saveForm($(this), $('#createIndividualLeadBtn'), false, true, true);
             if (response) {
                 window.bsOffcanvas.hide();
-                @if($contact instanceof \App\Models\Contact)
+                @if($contact instanceof \App\Models\CRM\Contact)
                 setTimeout(() => {
                     window.location.replace(response.route);
                 }, 3000);

@@ -3,8 +3,7 @@
 namespace Database\Seeders;
 
 use App\Helpers\SystemHelper;
-use App\Models\Department;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\HRM\Department;
 use Illuminate\Database\Seeder;
 
 class DepartmentSeeder extends Seeder

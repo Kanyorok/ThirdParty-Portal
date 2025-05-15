@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Settings;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\BranchRequest;
 use App\Models\BR\Branch;
-use App\Models\CrmBranch;
+use App\Models\Core\Branch;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -20,7 +20,7 @@ class CrmBranchController extends Controller
     public function __construct()
     {
         $this->middleware('ajax')->except('index');
-        // $this->authorizeResource(CrmBranch::class);
+        // $this->authorizeResource(Branch::class);
     }
 
     /**
@@ -29,20 +29,20 @@ class CrmBranchController extends Controller
      */
     public function index(Request $request): JsonResponse|View
     {
-        $this->authorize('viewAny', CrmBranch::class);
+        $this->authorize('viewAny', Branch::class);
         if ($request->ajax()) {
-            return Datatables::of(CrmBranch::query()->select('*'))->addIndexColumn()
-                ->addColumn('action', function (CrmBranch $branch) {
+            return Datatables::of(Branch::query()->select('*'))->addIndexColumn()
+                ->addColumn('action', function (Branch $branch) {
                     return '<button type="button" class="btn btn-primary btn-sm branch-action-update" data-info="' . $branch->BranchID . '~' . $branch->Name . '~' . $branch->Address . '~' . $branch->Address2 . '~' . $branch->Phone . '~' . $branch->Email . '"
                        data-manager="' . $branch->manager?->UserID . '~' . $branch->manager?->Name . '" data-operation="' . $branch->operation?->UserID . '~' . $branch->operation?->Name . '" data-route="' . route('branches.update', [$branch->Id]) . '" ><i class="fas fa-edit"></i> edit</button>
                          <button type="button" class="btn btn-danger btn-sm  branch-action-trash" data-info="' . $branch->BranchID . '~' . $branch->Name . '"  data-route="' . route('branches.destroy', [$branch->Id]) . '"><i class="fas fa-trash"></i> trash</button>';
-                })->addColumn('Manager', function (CrmBranch $branch) {
+                })->addColumn('Manager', function (Branch $branch) {
                     return $branch->manager?->Name;
-                })->editColumn('Address', function (CrmBranch $branch) {
+                })->editColumn('Address', function (Branch $branch) {
                     return $branch->Address ?? '';
-                })->editColumn('Address2', function (CrmBranch $branch) {
+                })->editColumn('Address2', function (Branch $branch) {
                     return $branch->Address2 ?? '';
-                })->addColumn('Operation', function (CrmBranch $branch) {
+                })->addColumn('Operation', function (Branch $branch) {
                     return $branch->operation?->Name;
                 })->rawColumns(['action', 'Manager', 'Operation'])->make();
         }
@@ -61,7 +61,7 @@ class CrmBranchController extends Controller
         $actor = $request->user();
         try {
             DB::transaction(static function () use ($branchID, $Operation, $actor, $request, $userID) {
-                $crmBranch = CrmBranch::create([
+                $crmBranch = Branch::create([
                     'Name' => $request->string('Name'),
                     'Address' => $request->string('Address', ''),
                     'Address2' => $request->string('Address2', ''),
@@ -87,7 +87,7 @@ class CrmBranchController extends Controller
         return $this->succeeded('branch added successfully');
     }
 
-    public function update(BranchRequest $request, CrmBranch $crmBranch): JsonResponse
+    public function update(BranchRequest $request, Branch $crmBranch): JsonResponse
     {
         $userID = $request->getManager()?->Id ?? null;
         $Operation = $request->getOperation()?->Id ?? null;
@@ -117,7 +117,7 @@ class CrmBranchController extends Controller
         return $this->succeeded('branch updated successfully');
     }
 
-    public function destroy(Request $request, CrmBranch $crmBranch): JsonResponse
+    public function destroy(Request $request, Branch $crmBranch): JsonResponse
     {
         try {
             DB::transaction(static function () use ($request, $crmBranch) {

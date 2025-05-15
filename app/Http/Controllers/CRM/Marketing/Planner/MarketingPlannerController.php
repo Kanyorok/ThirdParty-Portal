@@ -8,8 +8,8 @@ use App\Enums\Marketing\PlannerTypeEnum;
 use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Marketing\PlannerRequest;
-use App\Models\CrmBranch;
-use App\Models\MarketingPlanner;
+use App\Models\Core\Branch;
+use App\Models\CRM\MarketingPlanner;
 use App\Services\HRM\UserService;
 use App\Services\Marketing\PlannerService;
 use App\Services\StaticListsService;
@@ -108,7 +108,7 @@ class MarketingPlannerController extends Controller
                 ->with('isMarketingManager', true)
                 ->with('plans', MarketingPlanner::query()->where('t_MarketingPlanner.Status', PlannerStatus::MarketingManager->value)->whereNull('t_MarketingPlanner.MasterPlannerId')->select(['t_MarketingPlanner.PlannerID', 't_MarketingPlanner.Name', 'BranchId'])->get())
             : view('crm.marketing.planner.index')->with('isMarketingManager', false)
-                ->with('Branches', CrmBranch::query()->get(['t_CRMBranches.Name', 't_CRMBranches.BranchID']))
+                ->with('Branches', Branch::query()->get(['t_Branches.Name', 't_Branches.BranchID']))
                 ->with('MarketingModes', StaticListsService::getList(StaticListsService::MarketingModes));
     }
 
@@ -169,7 +169,7 @@ class MarketingPlannerController extends Controller
 
         return view('crm.marketing.planner.edit')
             ->with('planner', $planner)
-            ->with('Branches', CrmBranch::query()->get(['t_CRMBranches.Name', 't_CRMBranches.BranchID']))
+            ->with('Branches', Branch::query()->get(['t_Branches.Name', 't_Branches.BranchID']))
             ->with('MarketingModes', StaticListsService::getList(StaticListsService::MarketingModes));
     }
 

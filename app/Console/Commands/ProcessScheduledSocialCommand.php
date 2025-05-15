@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use App\Enums\Core\IntegrationsEnum;
 use App\Helpers\SystemHelper;
-use App\Models\Social;
+use App\Models\CRM\Social;
 use App\Services\SocialMediaService;
 use Illuminate\Console\Command;
 

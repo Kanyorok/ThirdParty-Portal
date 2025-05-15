@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\CRM\Base;
 
 use App\Http\Controllers\Controller;
-use App\Models\CrmSMS;
+use App\Models\Communication\SMS;
 use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
 
@@ -19,8 +19,8 @@ class SMSController extends Controller
      */
     public function __invoke(string $sms_id): JsonResponse|View
     {
-        $sms = CrmSMS::query()->where('SMSId', $sms_id)->first();
-        if (!$sms instanceof CrmSMS) {
+        $sms = SMS::query()->where('SMSId', $sms_id)->first();
+        if (!$sms instanceof SMS) {
             return $this->errored('could not load sms');
         }
 

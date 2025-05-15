@@ -6,15 +6,15 @@ use App\Enums\EmailStatusEnum;
 use App\Enums\EmailTypeEnum;
 use App\Events\SMSSendEvent;
 use App\Helpers\SystemHelper;
-use App\Models\Board;
+use App\Models\Auth\User;
 use App\Models\BR\Account;
 use App\Models\BR\Client;
-use App\Models\BulkNotification;
-use App\Models\Campaign;
-use App\Models\CampaignParty;
-use App\Models\CrmSMS;
-use App\Models\Lead;
-use App\Models\User;
+use App\Models\Communication\BulkNotification;
+use App\Models\Communication\SMS;
+use App\Models\CRM\Campaign;
+use App\Models\CRM\CampaignParty;
+use App\Models\CRM\Lead;
+use App\Models\ThirdParies\Board;
 use App\Services\BR\ClientService;
 use App\Services\Marketing\CampaignService;
 use App\Services\ThirdParty\CSSMSService;
@@ -29,7 +29,7 @@ use Yajra\DataTables\DataTables;
 
 class SMSService
 {
-    public function __construct(public CrmSMS $sms)
+    public function __construct(public SMS $sms)
     {
     }
 
@@ -46,7 +46,7 @@ class SMSService
 
     private static function create(User $actor, string $phoneNo, string $content, string $Party, string $PartyID): SMSService
     {
-        $sms = new CrmSMS();
+        $sms = new SMS();
         $sms->fill([
                     'SMSId'      => self::_id(),
                     'Phone'      => $phoneNo,
@@ -64,11 +64,11 @@ class SMSService
 
     protected static function _id(): string
     {
-        $number = CrmSMS::withTrashed()->count();
+        $number = SMS::withTrashed()->count();
         do {
             $number++;
             $slug = Str::slug('M' . Str::padLeft(($number), 4, '0'));
-        } while (CrmSMS::where('SMSId', $slug)->withTrashed()->exists());
+        } while (SMS::where('SMSId', $slug)->withTrashed()->exists());
 
         return $slug;
     }
@@ -158,7 +158,7 @@ class SMSService
         if ($source instanceof CampaignParty) {//update status
             $source->update([
                              'Status'    => $status->value,
-                             'Channel'   => CrmSMS::getPrimaryKey(),
+                'Channel' => SMS::getPrimaryKey(),
                              'ChannelID' => $this->sms->Id,
                             ]);
             if ($source->campaign instanceof Campaign) {
@@ -223,31 +223,31 @@ class SMSService
             $query->with($with);
         }
         return Datatables::of($query->select('*'))->addIndexColumn()
-            ->addColumn('action', function (CrmSMS $sms) {
+            ->addColumn('action', function (SMS $sms) {
                 return '...';
-            })->editColumn('party', function (CrmSMS $sms) use ($with) {
+            })->editColumn('party', function (SMS $sms) use ($with) {
                 if (in_array('party', $with, true)) {
                     return (new PartyService($sms->party))->getDTRow();
                 }
                 return '';
-            })->editColumn('source', function (CrmSMS $sms) use ($with) {
+            })->editColumn('source', function (SMS $sms) use ($with) {
                 if (in_array('source', $with, true)) {
                     return (new self($sms))->source();
                 }
                 return '-';
-            })->editColumn('SMSId', function (CrmSMS $sms) {
+            })->editColumn('SMSId', function (SMS $sms) {
                 return Str::upper($sms->SMSId);
-            })->editColumn('Type', function (CrmSMS $sms) {
+            })->editColumn('Type', function (SMS $sms) {
                 return $sms->Type->name;
-            })->editColumn('CreatedOn', function (CrmSMS $sms) {
+            })->editColumn('CreatedOn', function (SMS $sms) {
                 return $sms->CreatedOn?->format('F d, Y h:i A');
-            })->editColumn('Dated', function (CrmSMS $sms) {
+            })->editColumn('Dated', function (SMS $sms) {
                 if ($sms->Dated instanceof Carbon) {
                     return $sms->Dated->format('F d, Y h:i A');
                 }
                 return $sms->CreatedOn?->format('F d, Y h:i A');
             })->setRowClass('mouse_pointer user-select-none dbl-click-summary-data')->setRowData([
-                                                                                                  'dbl_click_url' => function (CrmSMS $sms) {
+                'dbl_click_url' => function (SMS $sms) {
                                                                                                     return route('sms.summary', [$sms->SMSId]);
                                                                                                   },
                                                                                                   'summary_title' => 'sms details.',

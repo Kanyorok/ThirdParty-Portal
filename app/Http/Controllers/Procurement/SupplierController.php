@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
+use App\Models\Procurement\ItemCategory;
+use App\Models\ThirdParies\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Procurement\Supplier;
-use App\Models\Procurement\ItemCategory;
 
 class SupplierController extends Controller
 {

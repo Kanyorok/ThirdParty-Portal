@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Board;
 
-use App\Models\Board;
 use App\Models\BR\Client;
-use App\Models\Committee;
+use App\Models\HRM\Committee;
+use App\Models\ThirdParies\Board;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;

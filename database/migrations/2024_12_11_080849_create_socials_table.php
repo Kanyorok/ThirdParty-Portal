@@ -32,7 +32,7 @@ return new class extends Migration {
         Schema::create('t_SocialImage', static function (Blueprint $table) {
             $table->id('Id');
             $table->foreignId('SocialId')->constrained('t_Socials', 'Id');
-            $table->foreignId('ImageId')->constrained('t_CRMImages', 'ImageID');
+            $table->foreignId('ImageId')->constrained('t_Images', 'ImageID');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');

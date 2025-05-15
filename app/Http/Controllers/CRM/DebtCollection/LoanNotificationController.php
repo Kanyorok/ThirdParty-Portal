@@ -9,7 +9,7 @@ use App\Models\BR\Branch;
 use App\Models\BR\DebtProduct;
 use App\Models\BR\Product;
 use App\Models\BR\UserCodeDetail;
-use App\Models\BulkNotification;
+use App\Models\Communication\BulkNotification;
 use App\Services\BR\LoanService;
 use App\Services\HRM\UserService;
 use App\Services\SMSService;

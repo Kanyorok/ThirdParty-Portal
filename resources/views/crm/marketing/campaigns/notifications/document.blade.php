@@ -114,7 +114,7 @@
 
             @php
                 $id = 0;
-                    \App\Models\CrmSMS::query()->whereLike('SMSId','ussd-first-ever%')->with('party')->chunk(2000, function ($sms) use ($id){
+                    \App\Models\Communication\SMS::query()->whereLike('SMSId','ussd-first-ever%')->with('party')->chunk(2000, function ($sms) use ($id){
 
                         foreach ($sms as $notification)
                         {
@@ -132,7 +132,7 @@
                         }
                     });
             @endphp
-            {{--@foreach(\App\Models\CrmSMS::query()->whereLike('SMSId','ussd-first-ever%')->with('party')->get() as $notification)
+            {{--@foreach(\App\Models\Communication\SMS::query()->whereLike('SMSId','ussd-first-ever%')->with('party')->get() as $notification)
                 <tr>
                     <td>{{ $loop->iteration }}.</td>
                     <td>{{ ($notification->party instanceof \App\Models\BR\Client)?$notification->party->ClientID:'?'  }}</td>

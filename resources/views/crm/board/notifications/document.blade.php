@@ -114,8 +114,8 @@
             @foreach($notifications->sms as $notification)
                 <tr>
                     <td>{{ \Illuminate\Support\Str::upper($notification->SMSId) }}.</td>
-                    <td>{{ ($notification->party instanceof \App\Models\Board)?$notification->party->BoardMemberID:'?'  }}</td>
-                    <td>{{ ($notification->party instanceof \App\Models\Board)?$notification->party->Name:'?' }}</td>
+                    <td>{{ ($notification->party instanceof \App\Models\ThirdParies\Board)?$notification->party->BoardMemberID:'?'  }}</td>
+                    <td>{{ ($notification->party instanceof \App\Models\ThirdParies\Board)?$notification->party->Name:'?' }}</td>
                     <td>{{ ($notification->Phone)??'?' }}</td>
                     <td>{{ $notification->Status->name }}</td>
                     <td>{{ ($notification->Dated)?$notification->Dated->format('M d, Y h:i a'): $notification->CreatedOn->format('M d, Y h:i a') }}</td>
