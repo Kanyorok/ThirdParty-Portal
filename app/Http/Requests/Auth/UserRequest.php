@@ -2,10 +2,10 @@
 
 namespace App\Http\Requests\Auth;
 
-use App\Enums\GenderEnum;
+use App\Enums\Employee\GenderEnum;
 use App\Exceptions\ErroredException;
-use App\Models\CrmBranch;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\Core\Branch;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
@@ -27,8 +27,8 @@ class UserRequest extends FormRequest
             'UserID' => ['required', 'string', 'max:100', 'min:3',],
             'Name' => ['required', 'string', 'max:255',],
             'Gender' => ['required', Rule::in(GenderEnum::values()),],
-            'Phone' => ['required', 'min:9', 'max:13', 'regex: /^[(2541)(2547)]+[0-9]{9}$/i', Rule::unique('t_Users')->ignore($id, 'Id'),/*// 'unique:App\Models\User,Phone'*/],
-            'Email' => ['required', 'email:rfc,dns', 'max:200', Rule::unique('t_Users')->ignore($id, 'Id'), /*'unique:App\Models\User,Phone'*/],
+            'Phone' => ['required', 'min:9', 'max:13', 'regex: /^[(2541)(2547)]+[0-9]{9}$/i', Rule::unique('t_Users')->ignore($id, 'Id'),/*// 'unique:App\Models\Auth\User,Phone'*/],
+            'Email' => ['required', 'email:rfc,dns', 'max:200', Rule::unique('t_Users')->ignore($id, 'Id'), /*'unique:App\Models\Auth\User,Phone'*/],
             //'ClientID' => ['required_if_declined:SyncAccount', 'max:20', Rule::unique('t_Users')->ignore($id, 'Id'), 'exists:App\Models\BR\Client,ClientID',],
             'Notes' => ['nullable', 'string', 'max:5000',],
             //'SyncAccount' => ['nullable'],
@@ -54,14 +54,14 @@ class UserRequest extends FormRequest
     /**
      * @throws ValidationException
      */
-    public function getBranch(): CrmBranch
+    public function getBranch(): Branch
     {
         if (!is_string($this->validated('Branch'))) {
             throw ValidationException::withMessages(['Branch' => 'Branch is required.']);
         }
 
-        $branch = CrmBranch::query()->where('BranchID', $this->validated('Branch'))->first();
-        if ($branch instanceof CrmBranch) {
+        $branch = Branch::query()->where('BranchID', $this->validated('Branch'))->first();
+        if ($branch instanceof Branch) {
             return $branch;
         }
         throw ValidationException::withMessages(['Branch' => 'Branch is not found.']);

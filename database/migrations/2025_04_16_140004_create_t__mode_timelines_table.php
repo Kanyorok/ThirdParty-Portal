@@ -16,7 +16,12 @@ return new class extends Migration
             $table->foreignId('ProcurementModeId')->constrained('t_ProcurementModes')->onDelete('cascade');
             $table->string('Stage'); // E.g. Approval, Evaluation
             $table->integer('DurationDays'); // E.g. 7, 14, etc.
-            $table->timestamps();
+            $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('CreatedOn');
+            $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('ModifiedOn');
+            $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
+            $table->softDeletes('DeletedOn');
         });
     }
 

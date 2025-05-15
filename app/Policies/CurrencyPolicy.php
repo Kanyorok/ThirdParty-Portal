@@ -3,8 +3,8 @@
 namespace App\Policies;
 
 use App\Enums\Core\PermissionEnum;
+use App\Models\Auth\User;
 use App\Models\Core\Currency;
-use App\Models\User;
 
 class CurrencyPolicy
 {

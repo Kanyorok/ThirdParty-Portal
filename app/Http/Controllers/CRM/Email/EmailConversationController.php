@@ -5,7 +5,7 @@ namespace App\Http\Controllers\CRM\Email;
 use App\Enums\EmailStatusEnum;
 use App\Enums\EmailTypeEnum;
 use App\Http\Controllers\Controller;
-use App\Models\EmailConversation;
+use App\Models\Communication\EmailConversation;
 use App\Services\CRMEmailService;
 use App\Services\PartyService;
 use App\Services\StaticListsService;
@@ -30,16 +30,16 @@ class EmailConversationController extends Controller
     {
         if ($request->ajax()) {
             $query = EmailConversation::query()->with(['party', 'email'])->withCount(['emails', 'emails as unread_emails_count' => function (Builder $builder) {
-                $builder->where('t_CRMEmails.Type', EmailTypeEnum::Incoming)->where('t_CRMEmails.Status', EmailStatusEnum::Unread);
+                $builder->where('t_Emails.Type', EmailTypeEnum::Incoming)->where('t_Emails.Status', EmailStatusEnum::Unread);
             }
                                                                                      ]);
             if ($request->searchByType === 'UNREAD') {
                 $query->whereHas('emails', function (Builder $builder) {
-                    $builder->where('t_CRMEmails.Type', EmailTypeEnum::Incoming)->where('t_CRMEmails.Status', EmailStatusEnum::Unread);
+                    $builder->where('t_Emails.Type', EmailTypeEnum::Incoming)->where('t_Emails.Status', EmailStatusEnum::Unread);
                 });
             } elseif ($request->searchByType === 'INBOX') {
                 $query->whereHas('emails', function (Builder $builder) {
-                    $builder->where('t_CRMEmails.Type', EmailTypeEnum::Incoming)->whereIn('t_CRMEmails.Status', [EmailStatusEnum::Unread, EmailStatusEnum::Read]);
+                    $builder->where('t_Emails.Type', EmailTypeEnum::Incoming)->whereIn('t_Emails.Status', [EmailStatusEnum::Unread, EmailStatusEnum::Read]);
                 });
             } else {
                 $query = collect();
@@ -81,7 +81,7 @@ class EmailConversationController extends Controller
      */
     public function show($conversation_id)
     {
-        $conversation = EmailConversation::query()->where('t_CRMEmailsConversations.Id', $conversation_id)->first();
+        $conversation = EmailConversation::query()->where('t_EmailsConversations.Id', $conversation_id)->first();
         if (!$conversation instanceof EmailConversation) {
             throw new RuntimeException('Conversation does not exist');
         }
@@ -97,7 +97,7 @@ class EmailConversationController extends Controller
      */
     public function summary($conversation_id)
     {
-        $conversation = EmailConversation::query()->where('t_CRMEmailsConversations.Id', $conversation_id)->first();
+        $conversation = EmailConversation::query()->where('t_EmailsConversations.Id', $conversation_id)->first();
         if (!$conversation instanceof EmailConversation) {
             throw new RuntimeException('Conversation does not exist');
         }

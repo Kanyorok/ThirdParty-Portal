@@ -8,7 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Marketing\PartyListRequest;
 use App\Models\BR\Client;
 use App\Models\BR\DebtProduct;
-use App\Models\MarketingList;
+use App\Models\CRM\MarketingList;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;

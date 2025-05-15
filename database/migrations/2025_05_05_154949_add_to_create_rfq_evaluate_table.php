@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('t_RFQEvaluation', function (Blueprint $table) {
+        Schema::table('t_RFQEvaluations', function (Blueprint $table) {
             $table->foreignId('SupplierId')
                   ->after('RFQId') // Optional: places the column right after RFQId
                   ->constrained('t_Suppliers', 'Id')
@@ -25,8 +25,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('t_RFQEvaluation', function (Blueprint $table) {
-            $table->dropForeign(['SupplierId']);
-            $table->dropColumn('SupplierId');
+            $table->dropConstrainedForeignId('SupplierId');
         });
     }
 };

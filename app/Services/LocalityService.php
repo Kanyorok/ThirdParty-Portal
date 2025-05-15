@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Enums\LocalityTypeEnum;
-use App\Models\Locality;
+use App\Models\Core\Locality;
 
 class LocalityService
 {

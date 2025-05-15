@@ -10,7 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\TicketCollection;
 use App\Http\Resources\TicketResource;
 use App\Models\BR\Client;
-use App\Models\CodeDetail;
+use App\Models\Core\CodeDetail;
 use App\Services\StaticListsService;
 use App\Traits\Controller\TicketsTrait;
 use Exception;

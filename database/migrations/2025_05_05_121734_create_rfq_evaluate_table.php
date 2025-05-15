@@ -11,23 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('t_RFQEvaluation', function (Blueprint $table) {
+        Schema::create('t_RFQEvaluations', function (Blueprint $table) {
             $table->id('Id');
-            $table->string('RFQEvaluateNumber')->unique()->comment('Unique identifier for the RFQ');
-            $table->foreignId('RFQId')->constrained('t_RFQ', 'Id')->onDelete('cascade');
+            $table->string('CommitteeMemberName');
+            $table->string('UserCode');
+            $table->unsignedBigInteger('RFQId'); // foreign to RFQs
+            $table->string('RFQComment')->nullable();
+            $table->boolean('Confirmation')->default(false);
+            $table->foreign('RFQId')->references('Id')->on('t_RFQ')->onDelete('cascade');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
             $table->dateTime('ModifiedOn');
             $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
             $table->softDeletes('DeletedOn');
-        
-            // New fields for evaluation criteria scores and comments
-            $table->integer('TechnicalQualityScore')->nullable();
-            $table->integer('PricingScore')->nullable();
-            $table->integer('DeliveryTimeScore')->nullable();
-            $table->integer('PastExperienceScore')->nullable();
-            $table->text('Comment')->nullable();
         });
         
     }
@@ -37,6 +34,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('t_RFQEvaluation');
+        Schema::dropIfExists('t_RFQEvaluations');
     }
 };

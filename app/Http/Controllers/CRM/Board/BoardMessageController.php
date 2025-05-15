@@ -4,7 +4,7 @@ namespace App\Http\Controllers\CRM\Board;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Base\MessageRequest;
-use App\Models\Board;
+use App\Models\ThirdParies\Board;
 use App\Services\BoardService;
 use App\Services\SMSService;
 use Exception;

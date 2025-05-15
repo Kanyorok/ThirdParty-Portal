@@ -4,8 +4,8 @@ namespace App\Http\Controllers\CRM\ProductDev;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductDev\ProductDevelopmentFeatureRequest;
-use App\Models\ProductDevelopment;
-use App\Models\ProductDevelopmentFeature;
+use App\Models\CRM\ProductDevelopment;
+use App\Models\CRM\ProductDevelopmentFeature;
 use App\Services\ProductDevService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

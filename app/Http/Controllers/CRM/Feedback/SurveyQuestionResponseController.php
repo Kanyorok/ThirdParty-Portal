@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\CRM\Feedback;
 
 use App\Http\Controllers\Controller;
-use App\Models\SurveyQuestionResponse;
+use App\Models\CRM\SurveyQuestionResponse;
 use Illuminate\Http\Request;
 
 class SurveyQuestionResponseController extends Controller

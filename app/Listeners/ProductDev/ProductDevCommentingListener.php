@@ -4,8 +4,8 @@ namespace App\Listeners\ProductDev;
 
 use App\Enums\Core\PermissionEnum;
 use App\Events\ProductDev\ProductDevCommentingEvent;
-use App\Models\User;
-use App\Services\UserService;
+use App\Models\Auth\User;
+use App\Services\HRM\UserService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 

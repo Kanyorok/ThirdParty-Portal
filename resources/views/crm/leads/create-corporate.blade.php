@@ -1,8 +1,8 @@
-@php use App\Enums\LeadTypeEnum; @endphp
-<script src='{{ asset('assets/plugins/moment/moment-with-locales.js') }}'></script>
-<script src="{{asset('assets/plugins/jquery-form/jquery.form.min.js')}}"></script>
-<script src="{{ asset('assets/plugins/select2/js/select2.full.min.js') }}"></script>
-<link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
+@php use App\Enums\LeadTypeEnum;use App\Enums\LocalityTypeEnum;use App\Models\CRM\Contact; @endphp
+<script src='{{ asset('assets/libs/moment/moment-with-locales.js') }}'></script>
+<script src="{{asset('assets/libs/jquery-form/jquery.form.min.js')}}"></script>
+<script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
+<link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
 <style>
     .select2-container {
         width: 100% !important;
@@ -19,7 +19,8 @@
           enctype="multipart/form-data"> @csrf
         <input type="hidden" name="Type" class="d-none" value="{{ LeadTypeEnum::Company->value }}">
         <input type="hidden" name="conversation" class="d-none" value="{{ $conversation }}">
-        <input type="hidden" name="contact" class="d-none" value="{{ ($contact instanceof \App\Models\Contact)?$contact->ContactID:0 }}">
+        <input type="hidden" name="contact" class="d-none"
+               value="{{ ($contact instanceof Contact)?$contact->ContactID:0 }}">
         <div class="mb-3 text-center">
             <input type="file" name="image" class="d-none" accept="image/*"
                    style="display: none;" id="Upload_image">
@@ -33,7 +34,7 @@
             <label class="form-label" for="Name">Company Name <span
                     class="text-danger">*</span></label>
             <input type="text" class="form-control" id="Name" name="Name" required
-                   placeholder="Company Name" value="{{ ($contact instanceof \App\Models\Contact)?$contact->Label:'' }}">
+                   placeholder="Company Name" value="{{ ($contact instanceof Contact)?$contact->Label:'' }}">
             <p id="Name_error" class="invalid-feedback d-none error col-12"
                role="alert"></p>
         </div>
@@ -65,7 +66,7 @@
             <label class="form-label" for="Phone">Phone Number <span
                     class="text-danger">*</span></label>
             <input type="text" class="form-control" id="Phone" name="Phone"
-                   placeholder="Phone Number" required value="{{ ($contact instanceof \App\Models\Contact)?$contact->Phone:'' }}">
+                   placeholder="Phone Number" required value="{{ ($contact instanceof Contact)?$contact->Phone:'' }}">
             <p id="Phone_error" class="invalid-feedback d-none error col-12" role="alert"></p>
         </div>
         <div class="mb-3">
@@ -141,7 +142,7 @@
         </div>
     </form>
 </div>
-<script >
+<script>
     $(document).ready(function () {
         $('.relationship-manager').select2({
             placeholder: "Select assignee", minimumInputLength: 2,
@@ -168,7 +169,7 @@
             placeholder: "Select a Town/City", minimumInputLength: 2,
             dropdownParent: $("#offcanvasMain"),
             ajax: {
-                url: "{{ route('locality.select2') }}?type={{  \App\Enums\LocalityTypeEnum::City->value }}",
+                url: "{{ route('locality.select2') }}?type={{  LocalityTypeEnum::City->value }}",
                 dataType: 'json',
                 delay: 250,
                 data: function (params) {
@@ -225,7 +226,7 @@
                         emailPageRefresh();
                     }
                     saveBtn.prop('disable', false).removeClass('disabled').prop('type', 'submit').html(btnContent);
-                    @if($contact instanceof \App\Models\Contact)
+                    @if($contact instanceof Contact)
                     setTimeout(() => {
                         window.location.replace(data.route);
                     }, 1000);

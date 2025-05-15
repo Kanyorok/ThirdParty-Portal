@@ -19,21 +19,21 @@
                 @if($won)
                     <h6 class="text-center mt-2">{{ $lead->Status->description() }}</h6>
                 @else
-                <form class="card-body" id="leadStatusForm" action="{{ route('leads.status',[$lead->LeadID]) }}">
-                    @csrf
-                    <div class="m-0 p-0 row">@method('put')
-                        <div class="col-12">
-                            <p class="d-none" id="StatusMsg"></p>
-                            <select class="form-control text-center" name="Status" id="Status" required>
-                                @foreach(App\Enums\LeadStatusEnum::cases() as $status)
-                                    <option
-                                        value="{{ $status->value }}" {{ ($status->value===$lead->Status->value)?'selected':'' }}>{{ $status->description() }}</option>
-                                @endforeach
-                            </select>
-                            <p id="Status_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                    <form class="card-body" id="leadStatusForm" action="{{ route('leads.status',[$lead->LeadID]) }}">
+                        @csrf
+                        <div class="m-0 p-0 row">@method('put')
+                            <div class="col-12">
+                                <p class="d-none" id="StatusMsg"></p>
+                                <select class="form-control text-center" name="Status" id="Status" required>
+                                    @foreach(App\Enums\LeadStatusEnum::cases() as $status)
+                                        <option
+                                            value="{{ $status->value }}" {{ ($status->value===$lead->Status->value)?'selected':'' }}>{{ $status->description() }}</option>
+                                    @endforeach
+                                </select>
+                                <p id="Status_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                            </div>
                         </div>
-                    </div>
-                </form>
+                    </form>
                 @endif
                 <hr class="my-0">
                 <div class="card-body mx-1 mb-0 mt-1">
@@ -145,12 +145,13 @@
                                             <i class="fas fa-calendar-plus"></i> <br> others
                                         </button>
                                         <ul class="dropdown-menu">
-                                            <li><a class="dropdown-item add-party-scheduled-call-btn" href="javascript:void(0)"
+                                            <li><a class="dropdown-item add-party-scheduled-call-btn"
+                                                   href="javascript:void(0)"
                                                    data-action="{{ route('lead-schedule.call',[$lead->LeadID]) }}"> <i
                                                         class="align-middle" data-feather="phone-forwarded"></i>
                                                     schedule a
                                                     call</a></li>
-                                            <li><a class="dropdown-item create-new-task "href="javascript:void(0)"
+                                            <li><a class="dropdown-item create-new-task " href="javascript:void(0)"
                                                    data-action="{{ route('lead-tasks.store',[$lead->LeadID]) }}"> <i
                                                         class="fa-solid fa-list-check"></i> create a task</a></li>
                                             {{--  <li><a class="dropdown-item text-muted disabled text-decoration-line-through"
@@ -180,7 +181,7 @@
                     </div>
                 @endif
 
-                    <div class="col-md-6 col-12">
+                <div class="col-md-6 col-12">
                     <div class="card">
                         <div class="card-header m-0 p-1 border-bottom border-1">Relationship Officer
                             @if(!$won)
@@ -190,10 +191,10 @@
                             @endif
                         </div>
                         <div class="card-body align-items-start py-1 px-3 row">
-                            @if($lead->RelationshipManager instanceof  \App\Models\User && ($lead->RelationshipManager->UserID !== \App\Helpers\SystemHelper::ID) && (!$lead->RelationshipManager->trashed()))
+                            @if($lead->RelationshipManager instanceof  \App\Models\Auth\User && ($lead->RelationshipManager->UserID !== \App\Helpers\SystemHelper::ID) && (!$lead->RelationshipManager->trashed()))
                                 <div class="col-4">
                                     {!! $lead->RelationshipManager->getImage('width="42" height="42" class="rounded-circle me-2" alt=".."') !!}
-                            </div>
+                                </div>
                                 <div class="col-8">
                                     <p class="mb-1">{{ $lead->RelationshipManager->Name }}</p>
                                     <p class="mb-1 fw-bold">{{ $lead->RelationshipManager->UserID }}</p>
@@ -206,7 +207,7 @@
                         </div>
                     </div>
                 </div>
-                @if($call instanceof \App\Models\Call)
+                    @if($call instanceof \App\Models\Communication\Call)
                     <div class="col-12">
                         <div class="card">
                             <div class="card-body row ">
@@ -219,7 +220,7 @@
                                 <div class="col-md-4 col-12 text-center">
                                     Plan End <br> <b>{{ $call->EndOn->diffInMinutes($call->StartOn,true) }} min</b>
                                 </div>
-                                @if($schedule instanceof \App\Models\Schedule)
+                                @if($schedule instanceof \App\Models\CRM\Schedule)
                                     <div class="col-12"><b>Notes</b> <br>{{ $schedule->Notes }}</div>
                                 @endif
                                 <div class="col-12">
@@ -235,7 +236,7 @@
                                                     class="text-danger">*</span> </label>
                                             <textarea name="call_discussion" id="call_discussion" class="form-control"
                                                       rows="5" maxlength="5000" minlength="5">
-                                               {{($call->discussion instanceof \App\Models\Discussion)?$call->discussion->Discussion:''}}
+                                               {{($call->discussion instanceof \App\Models\CRM\Discussion)?$call->discussion->Discussion:''}}
                                            </textarea>
                                             <p id="call_discussion_error" class="invalid-feedback d-none error col-12"
                                                role="alert"></p>
@@ -271,7 +272,7 @@
                             </div>
                         </div>
                     </div>
-                @elseif($meeting instanceof \App\Models\Meeting)
+                    @elseif($meeting instanceof \App\Models\CRM\Meeting)
                     <div class="col-12">
                         <div class="card">
                             <div class="card-header border border-bottom pb-0">
@@ -338,7 +339,7 @@
                                                     class="text-danger">*</span> </label>
                                             <textarea name="ongoing_meeting_discussion" id="ongoing_meeting_discussion"
                                                       class="form-control" rows="5" maxlength="5000" minlength="5"
-                                            >{{($meeting->discussion instanceof \App\Models\Discussion)?$meeting->discussion->Discussion:''}}</textarea>
+                                            >{{($meeting->discussion instanceof \App\Models\CRM\Discussion)?$meeting->discussion->Discussion:''}}</textarea>
                                             <p id="ongoing_meeting_discussion_error"
                                                class="invalid-feedback d-none error col-12"
                                                role="alert"></p>
@@ -365,10 +366,10 @@
                             </div>
                         </div>
                     </div>
-                @elseif($schedule instanceof \App\Models\Schedule)
+                    @elseif($schedule instanceof \App\Models\CRM\Schedule)
                     <div class="col-12">
                         <div class="card">
-                            @if($schedule->ScheduledType === \App\Models\Call::getPrimaryKey())
+                            @if($schedule->ScheduledType === \App\Models\Communication\Call::getPrimaryKey())
                                 <div class="card-header border border-bottom pb-0">
                                     <h3 class="card-title">Scheduled Call </h3>
                                 </div>
@@ -404,7 +405,7 @@
                                         </button>
                                     </div>
                                 </div>
-                            @elseif($schedule->scheduled instanceof \App\Models\Meeting)
+                            @elseif($schedule->scheduled instanceof \App\Models\CRM\Meeting)
                                 <div class="card-header border border-bottom pb-0">
                                     <h3 class="card-title">Scheduled Meeting : {{ $schedule->scheduled->Title }} </h3>
                                 </div>
@@ -577,7 +578,8 @@
                     <div class="tab-pane m-2" id="tab-8" role="tabpanel">
                         <div class="float-end">
                             <button class="btn btn-primary click-summary-data" type="button"
-                                    data-click_url="{{ route('lead-contacts.create',[$lead->LeadID]) }}" data-summary_title="Add Contact">
+                                    data-click_url="{{ route('lead-contacts.create',[$lead->LeadID]) }}"
+                                    data-summary_title="Add Contact">
                                 <i class="fas fa-plus-circle"></i> add contact
                             </button>
                         </div>
@@ -831,7 +833,7 @@
                                             <label for="Gender" class="form-label">Gender <span
                                                     class="text-danger">*</span></label>
                                             <select class="form-control" name="Gender" id="Gender" required>
-                                                @foreach(App\Enums\GenderEnum::getAll() as $gender)
+                                                @foreach(App\Enums\Employee\GenderEnum::getAll() as $gender)
                                                     <option value="{{ $gender->value }}">{{ $gender->name }}</option>
                                                 @endforeach
                                             </select>
@@ -905,7 +907,7 @@
                                 </div>
                             </form>
                         </div>
-                        @if($schedule instanceof \App\Models\Schedule)
+                        @if($schedule instanceof \App\Models\CRM\Schedule)
                             <div class="onboarding-content with-gradient d-none modal-item" id="CallUnreachableModal">
                                 <form action="{{ route('call.unreachable',[$schedule->ScheduleID]) }}" method="post"
                                       id="CallUnreachableForm">
@@ -1017,7 +1019,7 @@
                                        role="alert"></p>
                                 </div>
                                 <input type="hidden" class="d-none" id="schedule" name="schedule" readonly
-                                       value="{{ ($schedule instanceof \App\Models\Schedule)?$schedule->ScheduleID:\App\Http\Requests\Call\StartCallRequest::NoSchedule }}">
+                                       value="{{ ($schedule instanceof \App\Models\CRM\Schedule)?$schedule->ScheduleID:\App\Http\Requests\Call\StartCallRequest::NoSchedule }}">
                                 <p id="schedule_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                                 <hr>
                                 <div class="mt-4">
@@ -1041,7 +1043,7 @@
                                     <input type="text" class="form-control" id="`meeting_initiated_title`"
                                            name="meeting_initiated_title"
                                            placeholder="Title"
-                                           value="{{ ($schedule instanceof \App\Models\Schedule)?$schedule->Title:'' }}">
+                                           value="{{ ($schedule instanceof \App\Models\CRM\Schedule)?$schedule->Title:'' }}">
                                     <p id="meeting_initiated_title" class="invalid-feedback d-none error col-12"
                                        role="alert"></p>
                                 </div>
@@ -1051,7 +1053,7 @@
                                     <input type="text" class="form-control" id="meeting_initiated_location"
                                            name="meeting_initiated_location"
                                            placeholder="Location"
-                                           value="{{ ($schedule instanceof \App\Models\Schedule && $schedule->scheduled instanceof \App\Models\Meeting)?$schedule->scheduled->Location:'' }}">
+                                           value="{{ ($schedule instanceof \App\Models\CRM\Schedule && $schedule->scheduled instanceof \App\Models\CRM\Meeting)?$schedule->scheduled->Location:'' }}">
                                     <p id="meeting_location_error" class="invalid-feedback d-none error col-12"
                                        role="alert"></p>
                                 </div>
@@ -1066,7 +1068,7 @@
                                 </div>
                                 <input type="hidden" class="d-none" id="meeting_schedule" name="meeting_schedule"
                                        readonly
-                                       value="{{ ($schedule instanceof \App\Models\Schedule)?$schedule->ScheduleID:\App\Http\Requests\Call\StartMeetingRequest::NoSchedule }}">
+                                       value="{{ ($schedule instanceof \App\Models\CRM\Schedule)?$schedule->ScheduleID:\App\Http\Requests\Call\StartMeetingRequest::NoSchedule }}">
                                 <p id="meeting_schedule_error" class="invalid-feedback d-none error col-12"
                                    role="alert"></p>
                                 <hr>
@@ -1081,7 +1083,8 @@
                                 </div>
                             </form>
                         </div>
-                        <div class="onboarding-content text-center with-gradient d-none modal-item" id="trashLeadWatcherModal">
+                        <div class="onboarding-content text-center with-gradient d-none modal-item"
+                             id="trashLeadWatcherModal">
                             <h3 class="h3 text-danger">Remove Watcher <b id="trashLeadWatcher"></b>
                                 from L{{ $lead->LeadID }}
                             </h3>
@@ -1421,7 +1424,7 @@
             });
 
             //Initiated
-            @if($call instanceof \App\Models\Call)
+            @if($call instanceof \App\Models\Communication\Call)
             durationTimer(document.getElementById("callTimer"), '{{ $call->StartOn->toDateTimeString() }}')
 
             $('form#OngoingCallForm').submit(async function (e) {
@@ -1429,7 +1432,7 @@
                 await saveForm($(this), $('#OngoingCallBtn'), true, false, true);
             });
 
-            @elseif($meeting instanceof \App\Models\Meeting)
+            @elseif($meeting instanceof \App\Models\CRM\Meeting)
             durationTimer(document.getElementById("meetingTimer"), '{{ $meeting->StartOn->toDateTimeString() }}')
 
             $('form#OngoingMeetingForm').submit(async function (e) {
@@ -1461,7 +1464,7 @@
             @foreach($meeting?->users as $attendee)
             $("#ongoing_meeting_users option[value='{{ $attendee->UserID }}']").prop("selected", true).trigger("change")
             @endforeach
-            @elseif($schedule instanceof \App\Models\Schedule)
+            @elseif($schedule instanceof \App\Models\CRM\Schedule)
             $(document).on('click', '#triggerUnreachableBtn', function () {
                 if (unreachable_start !== null) {
                     unreachable_start.destroy();

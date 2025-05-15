@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Settings\Users;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Models\Auth\User;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

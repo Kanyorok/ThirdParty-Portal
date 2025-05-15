@@ -2,34 +2,35 @@
 
 namespace App\Enums\Core;
 
-use App\Models\APICredential;
-use App\Models\Board;
+use App\Models\Auth\Team;
+use App\Models\Auth\User;
 use App\Models\BR\Client;
 use App\Models\BR\DebtProduct;
-use App\Models\BulkNotification;
-use App\Models\Call;
-use App\Models\Campaign;
-use App\Models\CodeDetail;
-use App\Models\Competitor;
-use App\Models\CrmBranch;
-use App\Models\Department;
-use App\Models\EmailConversation;
-use App\Models\Lead;
-use App\Models\MarketingList;
-use App\Models\MarketingPlanner;
-use App\Models\MeetingRoom;
+use App\Models\Communication\BulkNotification;
+use App\Models\Communication\Call;
+use App\Models\Communication\EmailConversation;
+use App\Models\Core\Branch;
+use App\Models\Core\CodeDetail;
+use App\Models\Core\Task;
+use App\Models\CRM\Campaign;
+use App\Models\CRM\Lead;
+use App\Models\CRM\MarketingList;
+use App\Models\CRM\MarketingPlanner;
+use App\Models\CRM\MeetingRoom;
+use App\Models\CRM\Review;
+use App\Models\CRM\Schedule;
+use App\Models\CRM\Social;
+use App\Models\CRM\Survey;
+use App\Models\CRM\Ticket;
+use App\Models\HRM\Department;
+use App\Models\HRM\Employee;
 use App\Models\Procurement\Order;
 use App\Models\Procurement\RequisitionLines;
 use App\Models\Procurement\Requisitions;
 use App\Models\Procurement\RFQ;
-use App\Models\Review;
-use App\Models\Schedule;
-use App\Models\Social;
-use App\Models\Survey;
-use App\Models\Task;
-use App\Models\Team;
-use App\Models\Ticket;
-use App\Models\User;
+use App\Models\Settings\APICredential;
+use App\Models\ThirdParies\Board;
+use App\Models\ThirdParies\Competitor;
 use App\Traits\UsefulEnumTrait;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -196,6 +197,13 @@ enum PermissionEnum: string
 
     case MasterListView = 'masterList-view';
 
+    case EmployeesView = 'employee-read';
+    case EmployeesCreate = 'employee-create';
+    case EmployeesUpdate = 'employee-update';
+    case EmployeesDelete = 'employee-delete';
+
+
+
     public static function display(): Collection
     {
         return collect([
@@ -225,8 +233,8 @@ enum PermissionEnum: string
             [self::Integrations],
             [self::Roles],
 
-            [self::Departments]
 
+            [self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete, self::Departments],
         ]);
     }
 
@@ -255,7 +263,7 @@ enum PermissionEnum: string
             self::SurveyRead, self::SurveyWrite, self::SurveyDelete, self::SurveyApproval => Survey::getPrimaryKey(),
             self::Competitor, self::CompetitorLLM => Competitor::getPrimaryKey(),
             self::Teams => Team::getPrimaryKey(),
-            self::Branches => CrmBranch::getPrimaryKey(),
+            self::Branches => Branch::getPrimaryKey(),
             self::Users, self::UsersMeeting, self::UsersMessaging, self::UsersSessions => User::getPrimaryKey(),
             self::Members => Client::getPrimaryKey(),
             self::BoardManage, self::BoardMeeting => Board::getPrimaryKey(),
@@ -273,6 +281,8 @@ enum PermissionEnum: string
             self::RfqRead, self::RfqWrite, self::RfqUpdate, self::RfqApproval => RFQ::getPrimaryKey(),
 
             self::Departments => Department::getPrimaryKey(),
+            self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete => Employee::getPrimaryKey(),
+
         };
     }
 
@@ -306,7 +316,7 @@ enum PermissionEnum: string
             self::Roles => 'Roles',
             self::ListsView, self::ListsUpdate => 'System Codes',
 
-            self::Departments => 'Departments',
+            self::Departments, self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete => 'Employees',
         };
     }
 }

@@ -3,7 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\BR\Client;
-use App\Models\Schedule;
+use App\Models\CRM\Schedule;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\Factory;

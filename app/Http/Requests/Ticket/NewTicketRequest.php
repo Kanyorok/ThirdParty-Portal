@@ -4,9 +4,9 @@ namespace App\Http\Requests\Ticket;
 
 use App\Enums\TicketPriorityEnum;
 use App\Enums\TicketSourceEnum;
-use App\Models\CodeDetail;
-use App\Models\Team;
-use App\Models\User;
+use App\Models\Auth\Team;
+use App\Models\Auth\User;
+use App\Models\Core\CodeDetail;
 use App\Services\StaticListsService;
 use Carbon\Carbon;
 use Illuminate\Contracts\Validation\ValidationRule;

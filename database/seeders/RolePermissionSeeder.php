@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use App\Enums\Core\PermissionEnum;
 use App\Helpers\SystemHelper;
-use App\Models\User;
+use App\Models\Auth\User;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;

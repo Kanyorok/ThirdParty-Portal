@@ -2,6 +2,7 @@
 
 namespace App\Models\Procurement;
 
+use App\Models\ThirdParies\Supplier;
 use Illuminate\Database\Eloquent\Model;
 
 class RFQResponse extends Model
@@ -16,6 +17,7 @@ class RFQResponse extends Model
         'RFQId',
         'RFQResponseNumber',
         'RFQNumber',
+        'SupplierId',
         'SupplierName',
         'TotalPayable',
         'Currency',

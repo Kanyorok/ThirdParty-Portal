@@ -3,8 +3,8 @@
 namespace App\Policies;
 
 use App\Enums\Core\PermissionEnum;
-use App\Models\Competitor;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\ThirdParies\Competitor;
 
 class CompetitorPolicy
 {

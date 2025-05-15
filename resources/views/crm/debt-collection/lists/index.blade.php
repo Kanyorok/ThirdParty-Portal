@@ -16,7 +16,7 @@
         </div>
         <div class="col-12 col-md-9 ">
             <div class="float-end">
-                @can('debt',\App\Models\MarketingList::class)
+                @can('debt',\App\Models\CRM\MarketingList::class)
                     <button class="btn btn-secondary  ms-2 modal-create-loans-list" type="button">
                         <i class="fas fa-plus-circle"></i> Add a Loans List
                     </button>

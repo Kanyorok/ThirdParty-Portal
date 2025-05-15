@@ -11,24 +11,25 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('t_Items', function (Blueprint $table) {
-            $table->id();
-            $table->string('Name')->unique()->comment('Item name');
-            $table->string('Description')->nullable()->comment('Item description');
-            $table->enum('Type', ['good', 'service'])->default('good')->comment('Item type');
+        Schema::create('t_Items', static function (Blueprint $table) {
+            $table->id('Id');
+            $table->string('ItemCode')->unique();
+            $table->string('BarCode');
+            $table->string('ItemName');
+            $table->string('ItemType');//to system  codes
+            $table->foreignId('Category')->constrained('t_ItemCategories', 'id');
+            $table->string('UOM');//syetem codes
+            $table->string('InventoryType'); // system codes
+            $table->foreignId('ImageId')->nullable()->constrained('t_Images', 'ImageID');
+            $table->string('ItemDescription')->nullable();
+            $table->string('DocumentUpload')->nullable();
 
-            //Fields for goods
-            $table->unsignedInteger('CategoryId')->nullable()->comment('Category ID');
-            $table->string('UOM')->nullable()->comment('Unit of measure');
-            $table->decimal('UnitPrice', 10, 2)->default(0)->comment('Unit price');
-
-            //Fields for services
-            $table->text('ServiceScope')->nullable()->comment('Service scope');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('ModifiedOn');
             $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
-            //Common fields
-            $table->timestamps();
+            $table->softDeletes('DeletedOn');
         });
     }
 

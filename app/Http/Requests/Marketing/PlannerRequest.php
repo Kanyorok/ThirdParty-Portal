@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests\Marketing;
 
-use App\Models\CodeDetail;
-use App\Models\CrmBranch;
+use App\Models\Core\Branch;
+use App\Models\Core\CodeDetail;
 use App\Services\StaticListsService;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -55,12 +55,12 @@ class PlannerRequest extends FormRequest
     /**
      * @throws ValidationException
      */
-    public function getBranch(): CrmBranch
+    public function getBranch(): Branch
     {
         $branch = $this->validated('Branch');
 
-        $branch = CrmBranch::query()->where('BranchID', $branch)->latest()->first();
-        if ($branch instanceof CrmBranch) {
+        $branch = Branch::query()->where('BranchID', $branch)->latest()->first();
+        if ($branch instanceof Branch) {
             return $branch;
         }
 

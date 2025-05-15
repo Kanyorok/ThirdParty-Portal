@@ -4,10 +4,10 @@ namespace App\Services\DebtCollection;
 
 use App\Enums\Core\PermissionEnum;
 use App\Exceptions\ErroredException;
+use App\Models\Auth\User;
 use App\Models\BR\DebtProduct;
-use App\Models\DebtRecovery\LoanAssignment;
-use App\Models\User;
-use App\Services\UserService;
+use App\Models\CRM\DebtRecovery\LoanAssignment;
+use App\Services\HRM\UserService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 

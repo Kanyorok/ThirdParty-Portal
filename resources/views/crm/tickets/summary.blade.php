@@ -12,7 +12,7 @@
                 class="float-end">{{ $ticket->StartDate?->format('M d, Y h:ia') }}</span></li>
         <li class="list-group-item">EndDate: <span
                 class="float-end">{{ $ticket->EndDate?->format('M d, Y h:ia') }}</span></li>
-        @if($ticket->assignee instanceof \App\Models\User)
+        @if($ticket->assignee instanceof \App\Models\Auth\User)
             @if(\App\Helpers\SystemHelper::isSystem($ticket->assignee))
                 <li class="list-group-item">Assignee: <span class="float-end">None - Unassigned</span></li>
             @else
@@ -23,7 +23,7 @@
                     </details>
                 </li>
             @endif
-        @elseif($ticket->assignee instanceof \App\Models\Team)
+        @elseif($ticket->assignee instanceof \App\Models\Auth\Team)
             <li class="list-group-item">Assignee: <span class="float-end">{{ $ticket->assignee->Name }} (Team)</span>
             </li>
         @else
@@ -34,9 +34,9 @@
     <hr class="mt-0 mb-3">
     @if($party instanceof \App\Models\BR\Client)
         @include('snippets.client_summary', ['client'=>$party])
-    @elseif($party instanceof \App\Models\Lead)
+    @elseif($party instanceof \App\Models\CRM\Lead)
         @include('snippets.lead_summary', ['lead'=>$party])
-    @elseif($party instanceof \App\Models\User)
+    @elseif($party instanceof \App\Models\Auth\User)
         @include('snippets.user_summary', ['user'=>$party])
     @else
         <h3>Unknown party</h3>

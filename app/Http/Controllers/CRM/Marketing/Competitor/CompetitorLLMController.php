@@ -4,7 +4,7 @@ namespace App\Http\Controllers\CRM\Marketing\Competitor;
 
 use App\Events\Marketing\CompetitorRoachEvent;
 use App\Http\Controllers\Controller;
-use App\Models\Competitor;
+use App\Models\ThirdParies\Competitor;
 use App\Services\ThirdParty\AIService;
 use Exception;
 use Illuminate\Http\JsonResponse;

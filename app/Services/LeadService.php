@@ -3,18 +3,19 @@
 namespace App\Services;
 
 use App\Enums\Core\RoleEnum;
-use App\Enums\GenderEnum;
+use App\Enums\Employee\GenderEnum;
 use App\Enums\LeadStatusEnum;
 use App\Enums\LeadTypeEnum;
 use App\Exceptions\ErroredException;
 use App\Helpers\SystemHelper;
-use App\Models\BulkNotification;
-use App\Models\CodeDetail;
-use App\Models\Lead;
-use App\Models\LeadUser;
-use App\Models\Locality;
-use App\Models\Team;
-use App\Models\User;
+use App\Models\Auth\Team;
+use App\Models\Auth\User;
+use App\Models\Communication\BulkNotification;
+use App\Models\Core\CodeDetail;
+use App\Models\Core\Locality;
+use App\Models\CRM\Lead;
+use App\Models\CRM\LeadUser;
+use App\Services\HRM\UserService;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;

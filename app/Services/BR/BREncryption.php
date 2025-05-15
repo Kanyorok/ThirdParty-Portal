@@ -2,8 +2,8 @@
 
 namespace App\Services\BR;
 
+use App\Models\Auth\User;
 use App\Models\BR\BRUser;
-use App\Models\User;
 
 class BREncryption
 {

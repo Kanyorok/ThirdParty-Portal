@@ -3,20 +3,20 @@
 namespace App\Services;
 
 use App\Enums\EmailTypeEnum;
-use App\Models\Activity;
+use App\Models\Auth\User;
 use App\Models\BR\Client;
 use App\Models\BR\DebtProduct;
-use App\Models\Call;
-use App\Models\Campaign;
-use App\Models\CrmEmail;
-use App\Models\CrmSMS;
-use App\Models\Discussion;
-use App\Models\Lead;
-use App\Models\Meeting;
-use App\Models\Notes;
-use App\Models\Schedule;
-use App\Models\Task;
-use App\Models\User;
+use App\Models\Communication\Call;
+use App\Models\Communication\Email;
+use App\Models\Communication\SMS;
+use App\Models\Core\Activity;
+use App\Models\Core\Task;
+use App\Models\CRM\Campaign;
+use App\Models\CRM\Discussion;
+use App\Models\CRM\Lead;
+use App\Models\CRM\Meeting;
+use App\Models\CRM\Notes;
+use App\Models\CRM\Schedule;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -118,19 +118,19 @@ class ActivityService
         return self::rendering(self::_save($task->PartyID, $task->Party, Task::getPrimaryKey(), $task->TaskID, $description, $actor, ($task->CreatedOn) ?? now()));
     }
 
-    public static function email(CrmEmail $email, Carbon $dated, string $description = null): array
+    public static function email(Email $email, Carbon $dated, string $description = null): array
     {
         $description = ($description) ?? Str::of($email->Subject)->lower()->limit(30)->toString();
         $description = ($email->Type->value === EmailTypeEnum::Incoming->value) ? 'Email received : ' . $description : 'Email sent : ' . $description;
-        return self::rendering(self::_save($email->PartyID, $email->Party, CrmEmail::getPrimaryKey(), $email->EmailID, $description, $email->creator, $dated));
+        return self::rendering(self::_save($email->PartyID, $email->Party, Email::getPrimaryKey(), $email->EmailID, $description, $email->creator, $dated));
     }
 
-    public static function sms(CrmSMS $sms, Carbon $dated, string $description = null): array
+    public static function sms(SMS $sms, Carbon $dated, string $description = null): array
     {
         $description = ($description) ?? Str::limit($sms->Content, 30);
 
         $description = ($sms->Type->value === EmailTypeEnum::Incoming->value) ? 'SMS received : ' . $description : 'SMS sent : ' . $description;
-        return self::rendering(self::_save($sms->PartyID, $sms->Party, CrmSMS::getPrimaryKey(), $sms->Id, $description, $sms->creator, $dated));
+        return self::rendering(self::_save($sms->PartyID, $sms->Party, SMS::getPrimaryKey(), $sms->Id, $description, $sms->creator, $dated));
     }
 
     public static function debt(DebtProduct $product, string $Type, int $TypeID, string $description, User $actor, Carbon $dated): array

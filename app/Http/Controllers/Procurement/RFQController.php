@@ -3,12 +3,11 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Procurement\RFQ;
-use App\Models\Procurement\Supplier;
 use App\Models\Procurement\ItemCategory;
+use App\Models\Procurement\RFQ;
+use App\Models\ThirdParies\Supplier;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 
 class RFQController extends Controller
 {
@@ -55,7 +54,7 @@ class RFQController extends Controller
         }
 
         // Format items for JSON storage
-         
+
 
         $prefix = 'RFQ-';
         $lastRFQ = RFQ::where('RFQNumber', 'like', $prefix . '%')->orderBy('Id', 'desc')->first();
@@ -104,13 +103,10 @@ class RFQController extends Controller
         $rfq->suppliers()->syncWithPivotValues($request->suppliers, ['Status' => 'Approved']);
 
         // Notify selected suppliers
-        $suppliers = Supplier::whereIn('Id', $request->suppliers)->get(['SupplierName', 'ContactEmail']);
-        foreach ($suppliers as $supplier) {
-            Mail::raw("You have a new RFQ for tender.", function ($message) use ($supplier) {
-                $message->to($supplier->ContactEmail)
-                        ->subject('RFQ Invitation');
-            });
-        }
+        // $suppliers = Supplier::whereIn('Id', $request->suppliers)->get(['SupplierName', 'ContactEmail']);
+        // foreach ($suppliers as $supplier) {
+             //todo @mureithi send email to supplier
+        // }
 
         return redirect()->back()->with('success', 'RFQ has been approved and emails sent to selected suppliers.');
     }

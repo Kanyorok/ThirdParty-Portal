@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Settings;
 
 use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
-use App\Models\Team;
-use App\Models\TeamUser;
-use App\Models\User;
-use App\Services\UserService;
+use App\Models\Auth\Team;
+use App\Models\Auth\TeamUser;
+use App\Models\Auth\User;
+use App\Services\HRM\UserService;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;

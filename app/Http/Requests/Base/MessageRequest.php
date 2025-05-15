@@ -2,10 +2,10 @@
 
 namespace App\Http\Requests\Base;
 
-use App\Models\Board;
+use App\Models\Auth\User;
 use App\Models\BR\Client;
-use App\Models\Lead;
-use App\Models\User;
+use App\Models\CRM\Lead;
+use App\Models\ThirdParies\Board;
 use App\Services\BR\ClientService;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;

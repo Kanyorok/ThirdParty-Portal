@@ -12,8 +12,8 @@ return new class extends Migration {
     {
         Schema::create('t_EmailImage', static function (Blueprint $table) {
             $table->id('Id');
-            $table->foreignId('EmailId')->constrained('t_CRMEmails', 'EmailID');
-            $table->foreignId('ImageId')->constrained('t_CRMImages', 'ImageID');
+            $table->foreignId('EmailId')->constrained('t_Emails', 'EmailID');
+            $table->foreignId('ImageId')->constrained('t_Images', 'ImageID');
             $table->dateTime('CreatedOn');
             $table->dateTime('ModifiedOn');
         });

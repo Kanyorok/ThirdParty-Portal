@@ -3,9 +3,9 @@
 namespace App\Http\Requests\Settings;
 
 use App\Helpers\SystemHelper;
-use App\Models\MeetingRoom;
-use App\Models\User;
-use App\Services\UserService;
+use App\Models\Auth\User;
+use App\Models\CRM\MeetingRoom;
+use App\Services\HRM\UserService;
 use Carbon\Carbon;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;

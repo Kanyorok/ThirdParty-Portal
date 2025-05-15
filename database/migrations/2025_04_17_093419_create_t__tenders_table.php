@@ -11,19 +11,27 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('t_Tenders', function (Blueprint $table) {
+        Schema::create('t_Tenders', static function (Blueprint $table) {
             $table->id('Id');
-            $table->string('TenderNumber')->unique()->comment('Unique identifier for the tender');
-            $table->string('Title')->comment('Title of the tender');
-            $table->text('Description')->comment('Detailed description of the tender');
-            $table->foreignId('ProcurementModeId')->constrained('t_ProcurementModes')->onDelete('cascade')->comment('Foreign key to procurement modes');
-            $table->date('StartDate')->comment('Start date of the tender');
-            $table->enum('Status', ['open', 'closed', 'awarded', 'cancelled'])->default('open')->comment('Current status of the tender');
-            $table->decimal('EstimatedValue', 15, 2)->comment('Estimated value of the tender');
-            $table->string('Currency', 10)->comment('Currency of the estimated value');
-            $table->foreignId('CreatedBy')->constrained('t_Users', 'Id')->comment('User who created the tender');
-            $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id')->comment('User who last modified the tender');
-            $table->timestamps();
+            $table->string('TenderNo', 50)->unique()->comment('Auto-generated tender number');
+            $table->string('Title', 255);
+            $table->string('TenderType', 20)->comment('Enum: Open, Restricted');
+            $table->string('TenderCategory', 20)->comment('Enum: Goods, Services, Works');
+            $table->text('ScopeOfWork')->nullable();
+            $table->text('Instructions')->nullable();
+            $table->date('SubmissionDeadline');
+            $table->date('OpeningDate');
+            $table->string('Status', 20)->default('draft')->comment('Enum: Draft, Published, Closed');
+            $table->foreignId('ProcurementModeId')->nullable()->comment('Linked procurement mode')->constrained('t_ProcurementModes', 'Id');
+            $table->decimal('EstimatedValue', 18, 2)->nullable();
+
+            $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('CreatedOn');
+            $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('ModifiedOn');
+            $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
+            $table->softDeletes('DeletedOn');
+
         });
     }
 

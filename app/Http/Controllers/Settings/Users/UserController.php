@@ -5,9 +5,10 @@ namespace App\Http\Controllers\Settings\Users;
 use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\UserRequest;
-use App\Models\CrmBranch;
-use App\Models\User;
-use App\Services\UserService;
+use App\Models\Auth\User;
+use App\Models\Core\Branch;
+use App\Models\HRM\Employee;
+use App\Services\HRM\UserService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,6 +17,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Spatie\Permission\Models\Role;
+use Throwable;
 
 class UserController extends Controller
 {
@@ -32,7 +34,7 @@ class UserController extends Controller
     {
         if ($request->ajax()) {
             try {
-                return UserService::dt(User::query(), ['photo', 'branch']);
+                return UserService::dt(User::query(), ['photo']);
             } catch (Exception $e) {
             }
             return $this->errored('unexpected error, try again later');
@@ -46,38 +48,46 @@ class UserController extends Controller
      * Store a newly created resource in storage.
      * @throws ValidationException
      */
-    public function store(UserRequest $request): JsonResponse
+    public function store(Request $request): JsonResponse
     {
-        $gender = $request->getGender();
-        $email = $request->getUserEmail();
-        $phone = $request->getUserPhone();
-        $userID = $request->getUserID();
-        $role = $request->getRole();
-        $branch = $request->getBranch();
+        $validated = $request->validate([
+            'Role' => ['required', 'string', 'max:20'],
+            'Employee' => ['required', 'string', 'max:20']
+        ]);
 
+        $role = Role::query()->where('id', $validated['Role'])->first();
+        if (!$role instanceof Role) {
+            throw ValidationException::withMessages(['Role' => 'invalid role defined']);
+        }
+
+        $employee = Employee::query()->doesntHave('user')->where('EmployeeID', $validated['Employee'])->first();
+        if (!$employee instanceof Employee) {
+            throw ValidationException::withMessages(['Employee' => 'employee not found.']);
+        }
+
+        $actor = $request->user();
         try {
-            DB::transaction(static function () use ($role, $branch, $userID, $email, $gender, $request, $phone) {
-                UserService::create($branch, $userID, $request->validated('Name'), $email, $phone, $gender, $request->user(), ($request->validated('Notes')) ?? '')
-                    ->setRole($role)->welcomeEmail();
-                /* if ($request->sync()) {
-                     $service->syncBR();
-                 }*/
+            return DB::transaction(function () use ($actor, $role, $employee) {
+                UserService::create($employee, $actor)
+                    ->setRole($role, $actor)
+                    ->welcomeEmail();
+                return $this->succeeded('user added successfully');
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (\Throwable|Exception $e) {
+        } catch (Throwable|Exception $e) {
             Log::error('Error create user ' . $e->getMessage());
-            return $this->errored('unexpected error, try again later');
+            Log::error($e);
         }
 
-        return $this->succeeded('user added successfully');
+        return $this->errored('unexpected error, try again later');
     }
 
     public function create(): View
     {
         return view('settings.users.create')
-            ->with('Roles', Role::all())
-            ->with('branches', CrmBranch::all());
+            ->with('employees', Employee::doesntHave('user')->get(['EmployeeID', 'FirstName', 'LastName']))
+            ->with('Roles', Role::all());
     }
 
     /**
@@ -97,7 +107,7 @@ class UserController extends Controller
     {
         return view('settings.users.edit')
             ->with('user', $user)
-            ->with('branches', CrmBranch::all());
+            ->with('branches', Branch::all());
     }
 
     /**

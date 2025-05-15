@@ -70,7 +70,7 @@ class UpdateProductDevelopmentRequest extends FormRequest
                 'StageId'        => [
                                      'sometimes',
                                      'required',
-                                     Rule::exists('t_CRMCodeDetails', 'ID')->where(function (Builder $query) {
+                    Rule::exists('t_CodeDetails', 'ID')->where(function (Builder $query) {
                                                         return $query->where('CodeID', StaticListsService::ProductDevelopmentStages);
                                      }),
                                     ],

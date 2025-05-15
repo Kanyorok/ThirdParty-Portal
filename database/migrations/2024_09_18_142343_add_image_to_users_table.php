@@ -11,7 +11,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('t_Users', static function (Blueprint $table) {
-            $table->foreignId('ImageId')->nullable()->after('Phone')->constrained('t_CRMImages', 'ImageID');
+            $table->foreignId('ImageId')->nullable()->after('Phone')->constrained('t_Images', 'ImageID');
         });
     }
 

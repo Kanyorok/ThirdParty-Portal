@@ -24,4 +24,5 @@ class ItemCategory extends Model
     {
         return $this->hasMany(RequisitionLines::class, 'CategoryId', 'Id');
     }
+
 }

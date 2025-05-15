@@ -4,8 +4,8 @@ namespace App\Traits\Controller;
 
 use App\Models\BR\Branch;
 use App\Models\BR\Client;
-use App\Models\Lead;
-use App\Models\Review;
+use App\Models\CRM\Lead;
+use App\Models\CRM\Review;
 use App\Services\Feedback\ReviewService;
 use App\Services\PartyService;
 use Exception;

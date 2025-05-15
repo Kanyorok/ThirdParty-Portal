@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands;
 
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Services\HRM\UserService;
 use App\Services\PartyService;
-use App\Services\UserService;
 use Illuminate\Console\Command;
 
 class TaskDueReminderCommand extends Command

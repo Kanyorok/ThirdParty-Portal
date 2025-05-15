@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\CRM\Leads;
 
 use App\Http\Controllers\Controller;
-use App\Models\Lead;
+use App\Models\CRM\Lead;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 

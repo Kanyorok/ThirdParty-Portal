@@ -2,12 +2,9 @@
 
 namespace App\Models\Procurement;
 
+use App\Models\ThirdParies\Supplier;
 use App\Traits\Model\UserActorTrait;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Procurement\Tender;
-use App\Models\Procurement\ItemCategory;
-use App\Models\Procurement\Supplier;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class RFQ extends Model
