@@ -5,81 +5,90 @@ namespace App\Http\Controllers\Inventory;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Inventory\ItemCategories;
+use Yajra\DataTables\DataTables;
+use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class ItemCategoryController extends Controller
 {
-   
-    public function index()
+    public function index(Request $request)
     {
-        $items = ItemCategories::all();
-        return view('inventory.itemmaster.itemcategory.index', compact('items'));
+        if ($request->ajax()) {
+            return Datatables::of(ItemCategories::whereNull('ParentId')->with('parent')->select('t_ItemCategory.*'))
+                ->addColumn('Action', function (ItemCategories $item) {
+                    return '
+                        <a href="' . route('itemcategory.show', ['id' => $item->Id]) . '" class="btn btn-sm btn-primary">View</a>
+                        <a href="' . route('itemcategory.edit', ['id' => $item->Id]) . '" class="btn btn-sm btn-warning">Edit</a>
+                        <a href="#" onclick="confirmDelete(' . $item->Id . ')" class="btn btn-sm btn-danger">Delete</a>';
+                })
+                ->rawColumns(['Action'])
+                ->make(true);
+        }
+
+        return view('inventory.itemmaster.itemcategory.index');
     }
 
-  
     public function create()
     {
-        return view('inventory.itemmaster.itemcategory.create');
+        $categories = ItemCategories::whereNull('ParentId')->get(); // Only top-level
+        return view('inventory.itemmaster.itemcategory.create', compact('categories'));
     }
 
-   
- public function store(Request $request)
-{
-    // Validate input fields
-    $validatedData = $request->validate([
-        'CategoryCode' => 'required|string|max:50',
-        'Name'         => 'required|string|max:255',
-        'Description'  => 'nullable|string|max:500',
-        'Status'       => 'nullable|boolean',
-        'CreatedBy'    => 'exists:t_Users,Id',
-        'ModifiedBy'   => 'exists:t_Users,Id',
-        'DeletedBy'    => 'exists:t_Users,Id',
-]);
-
-
-    ItemCategories::create($validatedData);
-
-    return redirect()->route('itemcategory.index')->with('success', '✅ Item added successfully!');
-}
-
-
-    public function show($id)
+    public function store(Request $request)
     {
-        $item = ItemCategories::findOrFail($id);
+        $request->validate([
+            'CategoryName' => 'required|string|max:255',
+            'Description' => 'nullable|string',
+            'ParentId' => 'nullable|exists:t_ItemCategory,Id',
+        ]);
+
+        $item = new ItemCategories();
+        $item->fill($request->all());
+        $item->CreatedBy = Auth::id();
+        $item->CreatedOn = Carbon::now();
+        $item->save();
+
+        return redirect()->route('itemcategory.index')->with('success', 'Category created successfully.');
+    }
+
+    public function edit($Id)
+    {
+        $item = ItemCategories::findOrFail($Id);
+        $categories = ItemCategories::whereNull('ParentId')->where('Id', '!=', $Id)->get(); // Avoid self-parenting
+        return view('inventory.itemmaster.itemcategory.edit', compact('item', 'categories'));
+    }
+
+    public function update(Request $request, $Id)
+    {
+        $request->validate([
+            'CategoryName' => 'required|string|max:255',
+            'Description' => 'nullable|string',
+            'ParentId' => 'nullable|exists:t_ItemCategory,Id',
+        ]);
+
+        $item = ItemCategories::findOrFail($Id);
+        $item->fill($request->all());
+        $item->ModifiedBy = Auth::id();
+        $item->ModifiedOn = Carbon::now();
+        $item->save();
+
+        return redirect()->route('itemcategory.index')->with('success', 'Category updated successfully.');
+    }
+
+    public function show($Id)
+    {
+        $item = ItemCategories::with('parent', 'children')->findOrFail($Id);
         return view('inventory.itemmaster.itemcategory.show', compact('item'));
     }
 
-    public function edit($id)
-{
-    $item = ItemCategories::where('id', $id)->firstOrFail();
-    return view('inventory.itemmaster.itemcategory.edit', compact('item'));
-}
-
-public function update(Request $request, $id)
-{
-    $item = ItemCategories::where('id', $id)->firstOrFail();
-
-    $validatedData = $request->validate([
-            'CategoryCode' => 'required|string|max:50',
-            'Name'         => 'required|string|max:255',
-            'Description'  => 'nullable|string|max:500',
-            'Status'       => 'required|boolean',
-            'CreatedBy'    => 'exists:t_Users,Id',
-            'ModifiedBy'   => 'exists:t_Users,Id',
-            'DeletedBy'    => 'exists:t_Users,Id',
-
-    ]);
-
-    $item->update($validatedData);
-
-    return redirect()->route('itemcategory.index')->with('success', '✅ Changes saved successfully!');
-}
-
-  
-    public function destroy($id)
+    public function destroy($Id)
     {
-        $item = ItemCategories::findOrFail($id);
+        $item = ItemCategories::findOrFail($Id);
+        $item->DeletedBy = Auth::id();
+        $item->DeletedOn = Carbon::now();
+        $item->save();
         $item->delete();
 
-        return redirect()->route('itemcategory.index')->with('success', 'Item deleted successfully!');
+        return response()->json(['success' => 'Category deleted successfully.']);
     }
 }

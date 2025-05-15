@@ -7,7 +7,7 @@
 <div class="container bg-white shadow-sm rounded p-4">
     <h4 class="mb-4">📦 Item Master Form</h4>
 
-    <form action="{{ route('itemmasterlist.store') }}" method="POST"  id="itemMasterListForm">
+    <form action="{{ route('itemmasterlist.store') }}" method="POST" id="itemMasterListForm">
         @csrf
 
         <div class="row mb-3">
@@ -40,22 +40,20 @@
             <div class="col-md-4">
                 <label for="category" class="form-label">Category</label>
                 <select name="Category" id="category" class="form-select" required>
-                <option value="">-- Select Category --</option>
-                  @foreach($categories as $category)
-                   <option value="{{ $category->id }}">{{ $category->Name }}</option>
-                  @endforeach
+                    <option value="">-- Select Category --</option>
+                    @foreach($categories as $category)
+                        <option value="{{ $category->Id }}">{{ $category->CategoryName }}</option>
+                    @endforeach
                 </select>
             </div>
             <div class="col-md-4">
                 <label for="subcategory" class="form-label">Subcategory</label>
                 <select name="SubCategory" id="subcategory" class="form-select" required>
-                <option value="">-- Select SubCategory --</option>
-                  @foreach($subcategories as $subcategory)
-                   <option value="{{ $subcategory->Id }}">{{ $subcategory->SubCategoryName }}</option>
-                  @endforeach
+                    <option value="">-- Select SubCategory --</option>
                 </select>
             </div>
-     </div>
+        </div>
+
         <div class="row mb-3">
             <div class="col-md-4">
                 <label for="uom" class="form-label">Unit of Measure (UOM)</label>
@@ -75,10 +73,6 @@
                     <option>Perishable</option>
                 </select>
             </div>
-{{--            <div class="col-md-4">--}}
-{{--                <label for="imageUpload" class="form-label">Item Image</label>--}}
-{{--                <input type="file" name="ImageUpload" id="imageUpload" class="form-control" accept="image/*">--}}
-{{--            </div>--}}
         </div>
 
         <div class="mb-3">
@@ -86,23 +80,44 @@
             <textarea name="ItemDescription" id="description" class="form-control" rows="3"></textarea>
         </div>
 
-{{--        <div class="mb-3">--}}
-{{--            <label for="DocumentUpload" class="form-label">Upload Documentation</label>--}}
-{{--            <input type="file" name="DocumentUpload" id="documentUpload" class="form-control" accept=".pdf,.doc,.docx">--}}
-{{--        </div>--}}
-
         <button type="submit" class="btn btn-primary" id="itemMasterListBtn">✅ Save Item</button>
     </form>
 </div>
+
 @endsection
+
 @section('scripts')
-    <script>
-        $(function () {
-            $('form#itemMasterListForm').submit(async function (e) {
-                e.preventDefault();
-                console.log($(this).attr('action'))
-                await saveForm($(this), $('#itemMasterListBtn'), true, true, true);
+<script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
+
+<script>
+    $(document).ready(function () {
+        // Dynamic Subcategory Loading
+        $('#category').change(function () {
+            let categoryId = $(this).val();
+            $('#subcategory').html('<option value="">Loading...</option>');
+
+            $.ajax({
+                url: "{{ route('get.subcategories') }}",
+                type: 'GET',
+                data: { category_id: categoryId },
+                success: function (data) {
+                    $('#subcategory').html('<option value="">-- Select SubCategory --</option>');
+                    $.each(data, function (key, value) {
+                        $('#subcategory').append(`<option value="${value.Id}">${value.CategoryName}</option>`);
+                    });
+                },
+                error: function () {
+                    $('#subcategory').html('<option value="">No subcategories found</option>');
+                }
             });
         });
-    </script>
+
+        // Form Submit Handler
+        $('form#itemMasterListForm').submit(async function (e) {
+            e.preventDefault();
+            console.log($(this).attr('action'));
+            await saveForm($(this), $('#itemMasterListBtn'), true, true, true);
+        });
+    });
+</script>
 @endsection

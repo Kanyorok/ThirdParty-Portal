@@ -37,6 +37,8 @@ Route::namespace('Inventory')->group(function () {
     Route::get('/itemmasterlist/{Id}/edit', [ItemMasterListController::class, 'edit'])->name('itemmasterlist.edit');
     Route::put('/itemmasterlist/{Id}', [ItemMasterListController::class, 'update'])->name('itemmasterlist.update');
     Route::delete('/itemmasterlist/{Id}', [ItemMasterListController::class, 'destroy'])->name('itemmasterlist.destroy');
+    Route::get('/itemmasterlist/subcategories', [ItemMasterListController::class, 'getSubcategories'])->name('get.subcategories');
+
     Route::resource('sku', SKUController::class);
 
 
@@ -45,7 +47,7 @@ Route::namespace('Inventory')->group(function () {
     Route::get('/itemcategory/create', [ItemCategoryController::class, 'create'])->name('itemcategory.create');
     Route::post('/itemcategory', [ItemCategoryController::class, 'store'])->name('itemcategory.store');
     Route::get('/itemcategory/{id}', [ItemCategoryController::class, 'show'])->name('itemcategory.show');
-    Route::get('/itemcategory/{id}/edit', [ItemCategoryController::class, 'edit'])->name('itemcategory.edit');
+    Route::get('/itemcategory/edit/{id}', [ItemCategoryController::class, 'edit'])->name('itemcategory.edit');
     Route::put('/itemcategory/{id}', [ItemCategoryController::class, 'update'])->name('itemcategory.update');
     Route::delete('/itemcategory/{id}', [ItemCategoryController::class, 'destroy'])->name('itemcategory.destroy');
     Route::resource('sku', SKUController::class);

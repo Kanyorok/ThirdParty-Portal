@@ -1,72 +1,58 @@
 @extends('layouts.app')
 
-@section('title', 'Category Details')
-
 @section('content')
+<div class="container">
+    <h2>Category Details</h2>
 
-<div class="container mt-5">
-  <div class="card shadow rounded-4">
-    <div class="card-header bg-secondary text-white rounded-top-4">
-      <h4 class="mb-0">📂 Category Details: {{ $item->Name }}</h4>
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">{{ $item->CategoryName }}</h5>
+            <p class="card-text"><strong>Category Code:</strong> {{ $item->CategoryCode }}</p>
+            <p class="card-text"><strong>Description:</strong> {{ $item->Description }}</p>
+
+            <p class="card-text">
+                <strong>Parent Category:</strong> 
+                {{ $item->parent ? $item->parent->CategoryName : 'None (Top-Level Category)' }}
+            </p>
+
+            <p class="card-text"><strong>Status:</strong> {{ $item->Status ? 'Active' : 'Inactive' }}</p>
+            
+            <a href="{{ route('itemcategory.edit', $item->Id) }}" class="btn btn-warning">Edit</a>
+            <a href="{{ route('itemcategory.destroy', $item->Id) }}" class="btn btn-danger">Delete</a>
+            <a href="{{ route('itemcategory.index') }}" class="btn btn-secondary">Back to List</a>
+        </div>
     </div>
-    <div class="card-body">
-      <div class="row mb-3">
-        <div class="col-md-6">
-          <strong>Category Code:</strong>
-          <p>{{ $item->CategoryCode }}</p>
-        </div>
-        <div class="col-md-6">
-          <strong>Category Name:</strong>
-          <p>{{ $item->Name }}</p>
-        </div>
-      </div>
-      <div class="row mb-3">
-        <div class="col-md-6">
-          <strong>Description:</strong>
-          <p>{{ $item->Description }}</p>
-        </div>
-        <div class="col-md-6">
-          <strong>Status:</strong>
-          <span class="badge {{ $item->Status ? 'bg-success' : 'bg-warning' }}">
-            {{ $item->Status ? 'Active' : 'Inactive' }}
-          </span>
-        </div>
-      </div>
-      <div class="row mb-3">
-        <div class="col-md-6">
-          <strong>Created By:</strong>
-          <p>{{ optional($item->creator)->name ?? 'Unknown' }}</p>
-        </div>
-        <div class="col-md-6">
-          <strong>Modified By:</strong>
-          <p>{{ optional($item->modifier)->name ?? 'Unknown' }}</p>
-        </div>
-      </div>
 
-<div class="d-flex justify-content-start gap-3 mt-4">
-    <a href="{{ route('itemcategory.index') }}" class="btn btn-secondary">🔙 Back</a>
-    <a href="{{ route('itemcategory.edit', $item->id) }}" class="btn btn-warning">✏️ Edit Category</a>
-    
-    <form action="{{ route('itemcategory.destroy', $item->id) }}" method="POST" style="display:inline;">
-        @csrf
-        @method('DELETE')
-        <button type="submit" class="btn btn-danger delete-button">🗑️ Delete Category</button>
-    </form>
+    @if($item->children->count() > 0)
+        <h3 class="mt-4">Subcategories</h3>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Subcategory Code</th>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($item->children as $subcategory)
+                    <tr>
+                        <td>{{ $loop->iteration }}</td>
+                        <td>{{ $subcategory->CategoryCode }}</td>
+                        <td>{{ $subcategory->CategoryName }}</td>
+                        <td>{{ $subcategory->Description ?? 'No description available' }}</td>
+                        <td>
+                            <a href="{{ route('itemcategory.show', $subcategory->Id) }}" class="btn btn-sm btn-primary">View</a>
+                            <a href="{{ route('itemcategory.edit', $subcategory->Id) }}" class="btn btn-sm btn-warning">Edit</a>
+                            <a href="{{ route('itemcategory.destroy', $subcategory->Id) }}" class="btn btn-sm btn-danger">Delete</a>
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    @else
+        <p class="mt-3 text-muted">No subcategories available.</p>
+    @endif
 </div>
-
-
-    </div>
-  </div>
-</div>
-
-<script>
-document.querySelectorAll('.delete-button').forEach(button => {
-    button.addEventListener('click', function(event) {
-        if (!confirm('⚠️ Are you sure you want to delete this category?')) {
-            event.preventDefault();
-        }
-    });
-});
-</script>
-
 @endsection

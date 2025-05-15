@@ -15,20 +15,20 @@
 
 @section('content')
 <div class="container bg-white shadow-sm rounded p-4">
-    <h4>✏️ Edit Category: {{ $item->Name }}</h4>
+    <h4>✏️ Edit Category: {{ $item->CategoryName }}</h4>
 
-    <form action="{{ route('itemcategory.update', $item->id) }}" method="POST">
+    <form action="{{ route('itemcategory.update', $item->Id) }}" method="POST">
         @csrf
         @method('PUT')
 
         <div class="row mb-3">
             <div class="col-md-4">
-                <label for="CategoryCode" class="form-label">Item Code</label>
+                <label for="CategoryCode" class="form-label">Category Code</label>
                 <input type="text" name="CategoryCode" value="{{ $item->CategoryCode }}" class="form-control" readonly>
             </div>
             <div class="col-md-4">
                 <label for="Name" class="form-label">Category Name</label>
-                <input type="text" name="Name" value="{{ $item->Name }}" class="form-control" required>
+                <input type="text" name="Name" value="{{ $item->CategoryName }}" class="form-control" required>
             </div>
         </div>
 
@@ -37,14 +37,15 @@
                 <label for="Description" class="form-label">Description</label>
                 <input type="text" name="Description" value="{{ $item->Description }}" class="form-control" required>
             </div>
+
             <div class="col-md-4">
-                <label for="Status" class="form-label">Status</label>
-                <div class="form-check">
-                    <input type="hidden" name="Status" value="0"> <!-- Fix checkbox issue -->
-                    <input class="form-check-input" type="checkbox" name="Status" id="Status" value="1" {{ $item->Status ? 'checked' : '' }}>
-                    <label class="form-check-label" for="Status">Active</label>
-                </div>
-            </div>
+            <label for="ParentId" class="form-label">Parent Category:</label>
+            <select class="form-control" name="ParentId">
+                <option value="">None (Top-Level Category)</option>
+                @foreach($categories as $category)
+                    <option value="{{ $category->Id }}">{{ $category->CategoryName }}</option>
+                @endforeach
+            </select>
         </div>
 
         <!-- Auto-assign ModifiedBy -->

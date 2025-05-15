@@ -30,6 +30,8 @@
             <th>Bar Code</th>
             <th>Item Name</th>
             <th>Item Type</th>
+            <th>Item Category</th>
+            <th>Item SubCategory</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -101,6 +103,7 @@
                         {data: 'BarCode', name: 'BarCode'},
                         {data: 'ItemName', name: 'ItemName'},
                         {data: 'ItemType', name: 'ItemType'},
+                        {data: 'Category', name: 'category.Name'},         
                         {data: 'Action', name: 'Action', orderable: false, searchable: false},
                     ], "oLanguage": {
                         "sEmptyTable": "no items found here"
