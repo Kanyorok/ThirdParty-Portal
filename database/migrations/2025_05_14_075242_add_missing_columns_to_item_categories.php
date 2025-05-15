@@ -12,7 +12,7 @@ return new class extends Migration
 public function up(): void
     {
         Schema::table('t_ItemCategories', function (Blueprint $table) {
-            $table->string('CategoryCode')->nullable(false);
+            $table->string('CategoryCode')->nullable();
             $table->boolean('Status')->default(true)->comment('Category status: Active or Inactive');
         });
     }
