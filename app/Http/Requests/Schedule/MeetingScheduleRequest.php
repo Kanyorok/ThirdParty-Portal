@@ -4,8 +4,8 @@ namespace App\Http\Requests\Schedule;
 
 use App\Enums\Core\PermissionEnum;
 use App\Helpers\SystemHelper;
-use App\Models\MeetingRoom;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\CRM\MeetingRoom;
 use Carbon\Carbon;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Database\Eloquent\Collection;

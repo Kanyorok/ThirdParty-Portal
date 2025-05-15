@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\CRM\Marketing\Planner;
 
 use App\Http\Controllers\Controller;
-use App\Models\MarketingPlanner;
+use App\Models\CRM\MarketingPlanner;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;

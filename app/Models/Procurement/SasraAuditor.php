@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class SasraAuditor extends Model
 {
-    protected $table = 't_SasraAuditors';
+    protected $table = 't_Auditors';
 
     protected $fillable = [
         'FirmName',
@@ -19,6 +19,6 @@ class SasraAuditor extends Model
 
     public function engagements()
     {
-        return $this->hasMany(EngagedAuditor::class, 'SasraAuditorId');
+        return $this->hasMany(EngagedAuditor::class, 'AuditorId');
     }
 }

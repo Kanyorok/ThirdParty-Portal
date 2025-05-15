@@ -3,10 +3,10 @@
 namespace App\Traits\Controller;
 
 use App\Exceptions\ErroredException;
+use App\Models\Auth\User;
 use App\Models\BR\Client;
-use App\Models\Lead;
-use App\Models\Task;
-use App\Models\User;
+use App\Models\Core\Task;
+use App\Models\CRM\Lead;
 use App\Services\ActivityService;
 use App\Services\TaskService;
 use Carbon\Carbon;

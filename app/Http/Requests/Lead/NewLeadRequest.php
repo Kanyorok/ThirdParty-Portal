@@ -7,10 +7,10 @@ use App\Enums\Employee\GenderEnum;
 use App\Enums\LeadTypeEnum;
 use App\Enums\LocalityTypeEnum;
 use App\Helpers\SystemHelper;
-use App\Models\CodeDetail;
-use App\Models\Lead;
-use App\Models\Locality;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\Core\CodeDetail;
+use App\Models\Core\Locality;
+use App\Models\CRM\Lead;
 use App\Services\StaticListsService;
 use Carbon\Carbon;
 use Exception;
@@ -59,19 +59,19 @@ class NewLeadRequest extends FormRequest
                                          ],
                 'Industry'            => [
                                           'required',
-                                          Rule::exists('t_CRMCodeDetails', 'ID')->where(function (Builder $query) {
+                    Rule::exists('t_CodeDetails', 'ID')->where(function (Builder $query) {
                                             return $query->where('CodeID', StaticListsService::Industries);
                                           }),
                                          ],
                 'CustomerType'        => [
                                           'required',
-                                          Rule::exists('t_CRMCodeDetails', 'ID')->where(function (Builder $query) {
+                    Rule::exists('t_CodeDetails', 'ID')->where(function (Builder $query) {
                                             return $query->where('CodeID', StaticListsService::CustomerType);
                                           }),
                                          ],
                 'Source'              => [
                                           'required',
-                                          Rule::exists('t_CRMCodeDetails', 'ID')->where(function (Builder $query) {
+                    Rule::exists('t_CodeDetails', 'ID')->where(function (Builder $query) {
                                             return $query->where('CodeID', StaticListsService::MarketingModes);
                                           }),
                                          ],

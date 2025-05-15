@@ -21,7 +21,8 @@
                     <div class="text center">
                         @if(!empty($contact->Phone))
                             <div class="btn-group">
-                                <button type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                <button type="button" data-bs-toggle="dropdown" aria-haspopup="true"
+                                        aria-expanded="false"
                                         class="btn btn-link dropdown-toggle">
                                     {{ $contact->Phone }}
                                 </button>
@@ -39,42 +40,48 @@
                         @endif
                     </div>
                 </div>
-                @if(!$call instanceof \App\Models\Call)
-                <div class="card-body mx-1 mb-0 mt-1">
-                    <div class="mt-1 border-top border-1 py-3">
-                        <div class="row">
-                            <div class="col-6">
-                                <div class="btn-group w-100">
-                                    <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        Lead
-                                    </button>
-                                    <div class="dropdown-menu" style="">
-                                        <a class="dropdown-item  click-summary-data" href="javascript:void(0)"
-                                           data-click_url="{{ route('leads.create',['type'=>\App\Enums\LeadTypeEnum::Individual->name,'contact'=>$contact->ContactID]) }}"
-                                           data-summary_title="Add Individual Lead"
-                                        ><i class="fas fa-plus-circle"></i> New Individual Lead</a>
-                                        <a class="dropdown-item  click-summary-data" href="javascript:void(0)"
-                                           data-click_url="{{ route('leads.create',['type'=>\App\Enums\LeadTypeEnum::Company->name, 'contact'=>$contact->ContactID]) }}"
-                                           data-summary_title="Add Corporate Lead"
-                                        ><i class="fas fa-plus-circle"></i> New Corporate Lead</a>
-                                        <div class="dropdown-divider"></div>
-                                        <a class="dropdown-item" href="javascript:void(0)" id="triggerLeadContactBtn"><i class="fas fa-address-card"></i> Attach to Lead</a>
+                @if(!$call instanceof \App\Models\Communication\Call)
+                    <div class="card-body mx-1 mb-0 mt-1">
+                        <div class="mt-1 border-top border-1 py-3">
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="btn-group w-100">
+                                        <button type="button" class="btn btn-secondary dropdown-toggle"
+                                                data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            Lead
+                                        </button>
+                                        <div class="dropdown-menu" style="">
+                                            <a class="dropdown-item  click-summary-data" href="javascript:void(0)"
+                                               data-click_url="{{ route('leads.create',['type'=>\App\Enums\LeadTypeEnum::Individual->name,'contact'=>$contact->ContactID]) }}"
+                                               data-summary_title="Add Individual Lead"
+                                            ><i class="fas fa-plus-circle"></i> New Individual Lead</a>
+                                            <a class="dropdown-item  click-summary-data" href="javascript:void(0)"
+                                               data-click_url="{{ route('leads.create',['type'=>\App\Enums\LeadTypeEnum::Company->name, 'contact'=>$contact->ContactID]) }}"
+                                               data-summary_title="Add Corporate Lead"
+                                            ><i class="fas fa-plus-circle"></i> New Corporate Lead</a>
+                                            <div class="dropdown-divider"></div>
+                                            <a class="dropdown-item" href="javascript:void(0)"
+                                               id="triggerLeadContactBtn"><i class="fas fa-address-card"></i> Attach to
+                                                Lead</a>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="btn-group w-100">
-                                    <button type="button" class="btn btn-info dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        Member
-                                    </button>
-                                    <div class="dropdown-menu" style="">
-                                        <a class="dropdown-item" href="javascript:void(0)" id="triggerClientContactBtn"><i class="fas fa-address-card"></i> Attach to Member</a>
+                                <div class="col-6">
+                                    <div class="btn-group w-100">
+                                        <button type="button" class="btn btn-info dropdown-toggle"
+                                                data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            Member
+                                        </button>
+                                        <div class="dropdown-menu" style="">
+                                            <a class="dropdown-item" href="javascript:void(0)"
+                                               id="triggerClientContactBtn"><i class="fas fa-address-card"></i> Attach
+                                                to Member</a>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
                 @endif
                 <div class="card-body mx-1 mb-0 mt-1">
                     @include('snippets.behind_scenes',['model'=>$contact])
@@ -83,7 +90,7 @@
         </div>
         <div class="col-md-8 col-xxl-9">
             <div class="row">
-                @if($call instanceof \App\Models\Call)
+                @if($call instanceof \App\Models\Communication\Call)
                     <div class="col-12">
                         <div class="card">
                             <div class="card-body row ">
@@ -108,7 +115,8 @@
                                             <label class="form-label" for="call_discussion">Discussion <span
                                                     class="text-danger">*</span> </label>
                                             <textarea name="call_discussion" id="call_discussion" class="form-control"
-                                                      rows="5" maxlength="5000" minlength="5">{{($call->discussion instanceof \App\Models\Discussion)?$call->discussion->Discussion:''}}</textarea>
+                                                      rows="5" maxlength="5000"
+                                                      minlength="5">{{($call->discussion instanceof \App\Models\CRM\Discussion)?$call->discussion->Discussion:''}}</textarea>
                                             <p id="call_discussion_error" class="invalid-feedback d-none error col-12"
                                                role="alert"></p>
                                         </div>
@@ -139,7 +147,7 @@
 
             <div class="tab">
                 <ul class="nav nav-tabs" role="tablist">
-                   <li class="nav-item"><a class="nav-link active" href="#tab-0" data-bs-toggle="tab" role="tab"
+                    <li class="nav-item"><a class="nav-link active" href="#tab-0" data-bs-toggle="tab" role="tab"
                                             aria-selected="false" onclick="fetchCallsTable()">Calls</a></li>
                     <li class="nav-item"><a class="nav-link" href="#tab-1" data-bs-toggle="tab" role="tab"
                                             aria-selected="false" onclick="fetchMailsTable()">Emails</a></li>
@@ -190,7 +198,8 @@
                 </div>
                 <div class="modal-body">
                     <div class="onboarding-content with-gradient d-none modal-item" id="addClientContactModal">
-                        <form action="{{ route('contacts.attach.client',[$contact->ContactID]) }}" method="post" id="addClientContactForm" class="row">
+                        <form action="{{ route('contacts.attach.client',[$contact->ContactID]) }}" method="post"
+                              id="addClientContactForm" class="row">
                             @csrf
                             <div class="mb-3">@method('PUT')
                                 <label for="client" class="form-label">Member <span class="text-danger">*</span></label>
@@ -210,7 +219,8 @@
                         </form>
                     </div>
                     <div class="onboarding-content with-gradient d-none modal-item" id="addLeadContactModal">
-                        <form action="{{ route('contacts.attach.lead',[$contact->ContactID]) }}" method="post" id="addLeadContactForm" class="row">
+                        <form action="{{ route('contacts.attach.lead',[$contact->ContactID]) }}" method="post"
+                              id="addLeadContactForm" class="row">
                             @csrf
                             <div class="mb-3">@method('PUT')
                                 <label for="lead" class="form-label">Lead <span class="text-danger">*</span></label>
@@ -242,13 +252,13 @@
             $.fn.dataTable.ext.errMode = 'none';
             fetchCallsTable();
 
-            @if($call instanceof \App\Models\Call)
-                durationTimer(document.getElementById("callTimer"), '{{ $call->StartOn->toDateTimeString() }}')
+            @if($call instanceof \App\Models\Communication\Call)
+            durationTimer(document.getElementById("callTimer"), '{{ $call->StartOn->toDateTimeString() }}')
 
-                $('form#OngoingCallForm').submit(async function (e) {
-                    e.preventDefault();
-                    await saveForm($(this), $('#OngoingCallBtn'), true, false, true);
-                });
+            $('form#OngoingCallForm').submit(async function (e) {
+                e.preventDefault();
+                await saveForm($(this), $('#OngoingCallBtn'), true, false, true);
+            });
             @else
             $('#client').select2({
                 placeholder: "Choose a client...", minimumInputLength: 2,

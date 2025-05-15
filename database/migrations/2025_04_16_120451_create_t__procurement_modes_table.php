@@ -11,10 +11,13 @@ return new class extends Migration {
             $table->id();
             $table->string('Name')->unique();
             $table->text('Description')->nullable();
-            $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
-            $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
             $table->string('UniqueCode', 50)->comment('Unique code for the procurement mode');
-            $table->timestamps();
+            $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('CreatedOn');
+            $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('ModifiedOn');
+            $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
+            $table->softDeletes('DeletedOn');
         });
     }
 

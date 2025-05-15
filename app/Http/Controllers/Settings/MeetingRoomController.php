@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Settings;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\MeetingRoomRequest;
 use App\Models\BR\Branch;
-use App\Models\MeetingRoom;
+use App\Models\CRM\MeetingRoom;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

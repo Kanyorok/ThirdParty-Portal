@@ -1,4 +1,4 @@
-@php use App\Models\User; @endphp
+@php use App\Models\Auth\User; @endphp
 @extends('layouts.app')
 
 @section('title')

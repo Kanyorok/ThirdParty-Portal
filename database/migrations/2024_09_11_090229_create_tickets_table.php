@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->id('Id');
             $table->string('TicketID', 100)->unique();
             $table->string('Title');
-            $table->foreignId('CategoryID')->nullable()->comment('TicketCategories')->constrained('t_CRMCodeDetails', 'ID');
+            $table->foreignId('CategoryID')->nullable()->comment('TicketCategories')->constrained('t_CodeDetails', 'ID');
             $table->longText('Notes')->nullable();
             $table->string("Party");
             $table->string("PartyID", 100);

@@ -4,7 +4,7 @@ namespace App\Http\Controllers\CRM\Marketing\Competitor;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Marketing\CompetitorRequest;
-use App\Models\Competitor;
+use App\Models\ThirdParies\Competitor;
 use App\Services\LocalityService;
 use Exception;
 use Illuminate\Http\JsonResponse;

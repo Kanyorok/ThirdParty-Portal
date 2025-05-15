@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('CommitteeID', 100)->unique();
             $table->string('Name', 200);
             $table->longText('Notes')->nullable();
+            $table->string('Type', 50);
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');

@@ -9,17 +9,17 @@ use App\Enums\WorkflowStatus;
 use App\Events\Ticket\ReopenTicketEvent;
 use App\Exceptions\ErroredException;
 use App\Helpers\SystemHelper;
+use App\Models\Auth\Team;
+use App\Models\Auth\User;
 use App\Models\BR\Client;
-use App\Models\CodeDetail;
-use App\Models\Comment;
-use App\Models\CrmEmail;
-use App\Models\CRMImage;
-use App\Models\Lead;
-use App\Models\Team;
-use App\Models\Ticket;
-use App\Models\TicketUsers;
-use App\Models\User;
-use App\Models\Workflow;
+use App\Models\Communication\Comment;
+use App\Models\Communication\Email;
+use App\Models\Core\CodeDetail;
+use App\Models\Core\Workflow;
+use App\Models\CRM\Lead;
+use App\Models\CRM\Ticket;
+use App\Models\CRM\TicketUsers;
+use App\Models\DMS\Image;
 use App\Services\BR\ClientService;
 use App\Services\HRM\UserService;
 use Carbon\Carbon;
@@ -273,7 +273,7 @@ class TicketService
         }
 
         $source = $this->ticket->source;
-        if ($source instanceof CrmEmail) {
+        if ($source instanceof Email) {
             return 'Email : <a href="javascript:void(0)" data-click_url="' . route('emails.summary', [$source->EmailID]) . '" data-summary_title="email details" class="click-summary-data">' . $source->EmailID . '</a>';
         }
 
@@ -533,14 +533,14 @@ class TicketService
         return $user->teamUser()->where('t_TeamUser.TeamId', $this->ticket->OwnerID)->exists();
     }
 
-    public function document(UploadedFile $file, User $actor): CRMImage
+    public function document(UploadedFile $file, User $actor): Image
     {
         $document = ImageService::createUpload($file, Ticket::getPrimaryKey(), $this->ticket->Id, $actor)->image;
         activity()->causedBy($actor)->performedOn($this->ticket)->event('document')->log('added a document  ' . $document->Name . ' to ticket ' . Str::upper($this->ticket->TicketID));
         return $document;
     }
 
-    public function documentContent(string $content, string $MimeType, string $Name, User $actor): CRMImage
+    public function documentContent(string $content, string $MimeType, string $Name, User $actor): Image
     {
         $document = ImageService::create(Ticket::getPrimaryKey(), $this->ticket->Id, $content, $MimeType, $Name, $actor)->image;
         activity()->causedBy($actor)->performedOn($this->ticket)->event('document')->log('added a document  ' . $document->Name . ' to ticket ' . Str::upper($this->ticket->TicketID));

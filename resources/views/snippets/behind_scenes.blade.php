@@ -5,7 +5,7 @@
         <tr class="border-bottom ">
             <th>Creation</th>
             <td class="float-end">{{ $model->CreatedOn?->format('d M, Y H:i') }} <br>
-                @if($model->creator instanceof \App\Models\User)
+                @if($model->creator instanceof \App\Models\Auth\User)
                     <details>
                         <summary>{{ $model->creator->UserID }}</summary>
                         <p>{{ $model->creator->Name }}</p>
@@ -17,7 +17,7 @@
         <tr>
             <th>Modified</th>
             <td class="float-end">{{ $model->ModifiedOn?->format('d M, Y H:i') }} <br>
-                @if($model->modified instanceof \App\Models\User)
+                @if($model->modified instanceof \App\Models\Auth\User)
                     <details>
                         <summary>{{ $model->modified->UserID }}</summary>
                         <p>{{ $model->modified->Name }}</p>

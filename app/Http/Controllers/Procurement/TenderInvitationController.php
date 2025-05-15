@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Procurement;
 
-use Illuminate\Http\Request;
-use App\Models\TenderInvitation;
 use App\Http\Controllers\Controller;
+use App\Models\Procurement\TenderInvitation;
+use Illuminate\Http\Request;
 
 
 class TenderInvitationController extends Controller

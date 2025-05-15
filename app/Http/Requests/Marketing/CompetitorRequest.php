@@ -3,8 +3,8 @@
 namespace App\Http\Requests\Marketing;
 
 use App\Enums\LocalityTypeEnum;
-use App\Models\Competitor;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\ThirdParies\Competitor;
 use App\Rules\isDomain;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Database\Query\Builder;

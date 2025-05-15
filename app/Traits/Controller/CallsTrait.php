@@ -3,15 +3,9 @@
 namespace App\Traits\Controller;
 
 use App\Enums\CallStatusEnum;
-use App\Enums\CallTypeEnum;
-use App\Enums\ScheduleStatusEnum;
-use App\Models\Call;
-use App\Models\Discussion;
-use App\Models\DiscussionUser;
-use App\Models\Notes;
-use App\Models\Schedule;
-use App\Models\User;
-use App\Services\ActivityService;
+use App\Models\Auth\User;
+use App\Models\Communication\Call;
+use App\Models\CRM\Schedule;
 use App\Services\Call\CallService;
 use Carbon\Carbon;
 use Exception;

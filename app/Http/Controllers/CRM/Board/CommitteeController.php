@@ -4,8 +4,8 @@ namespace App\Http\Controllers\CRM\Board;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Board\CommitteeRequest;
-use App\Models\Board;
-use App\Models\Committee;
+use App\Models\HRM\Committee;
+use App\Models\ThirdParies\Board;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

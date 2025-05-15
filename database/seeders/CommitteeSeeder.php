@@ -3,8 +3,7 @@
 namespace Database\Seeders;
 
 use App\Helpers\SystemHelper;
-use App\Models\Committee;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\ThirdParies\Board;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -19,24 +18,26 @@ class CommitteeSeeder extends Seeder
         $user = SystemHelper::user();
 
         DB::table('t_Committees')->insert([
-                                           [
-                                            "CommitteeID" => "Comm-001",
-                                            "Name"        => "Full Board",
-                                            'Notes'       => "All Board Members",
-                                            'CreatedOn'   => $date,
-                                            'CreatedBy'   => $user->Id,
-                                            'ModifiedOn'  => $date,
-                                            'ModifiedBy'  => $user->Id,
-                                           ],
-                                           [
-                                            "CommitteeID" => "Comm-002",
-                                            "Name"        => "Credit Committee",
-                                            'Notes'       => "",
-                                            'CreatedOn'   => $date,
-                                            'CreatedBy'   => $user->Id,
-                                            'ModifiedOn'  => $date,
-                                            'ModifiedBy'  => $user->Id,
-                                           ],
-                                          ]);
+            [
+                "CommitteeID" => "Comm-001",
+                "Name" => "Full Board",
+                'Notes' => "All Board Members",
+                "Type" => Board::getPrimaryKey(),
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+            [
+                "CommitteeID" => "Comm-002",
+                "Name" => "Credit Committee",
+                'Notes' => "",
+                "Type" => Board::getPrimaryKey(),
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+        ]);
     }
 }

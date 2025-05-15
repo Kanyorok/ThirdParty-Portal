@@ -2,8 +2,8 @@
 
 namespace App\Policies\Procurement;
 
+use App\Models\Auth\User;
 use App\Models\Procurement\Order;
-use App\Models\User;
 
 class OrderPolicy
 {

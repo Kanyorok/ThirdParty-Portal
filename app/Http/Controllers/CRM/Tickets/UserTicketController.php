@@ -5,7 +5,7 @@ namespace App\Http\Controllers\CRM\Tickets;
 use App\Enums\TicketPriorityEnum;
 use App\Enums\TicketStatusEnum;
 use App\Http\Controllers\Controller;
-use App\Models\Ticket;
+use App\Models\CRM\Ticket;
 use App\Traits\Controller\TicketsTrait;
 use Exception;
 use Illuminate\Http\JsonResponse;

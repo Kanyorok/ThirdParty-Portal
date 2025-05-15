@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Settings;
 
 use App\Enums\Core\IntegrationsEnum;
 use App\Http\Controllers\Controller;
-use App\Models\APICredential;
-use App\Models\CodeDetail;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\Core\CodeDetail;
+use App\Models\Settings\APICredential;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\View\View;
 

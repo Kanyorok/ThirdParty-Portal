@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Enums\EmailStatusEnum;
-use App\Models\CrmEmail;
+use App\Models\Communication\Email;
 use App\Services\CRMEmailService;
 use Illuminate\Console\Command;
 
@@ -28,7 +28,7 @@ class ProcessQueuedEmailCommand extends Command
      */
     public function handle(): void
     {
-        $emails = CrmEmail::query()->where('Status', EmailStatusEnum::Queued)->get();
+        $emails = Email::query()->where('Status', EmailStatusEnum::Queued)->get();
         foreach ($emails as $email) {
             (new CRMEmailService($email))->send(true);
         }

@@ -1,14 +1,14 @@
 <div class="d-flex flex-column" style="height: 80%">
     @if($party instanceof \App\Models\BR\Client)
         @include('snippets.client_summary', ['client'=>$party])
-    @elseif($party instanceof \App\Models\Lead)
+    @elseif($party instanceof \App\Models\CRM\Lead)
         @include('snippets.lead_summary', ['lead'=>$party])
     @endif
 
     @switch($schedule->ScheduleStatusID->value)
         @case(\App\Enums\ScheduleStatusEnum::Success->value)
         @case(\App\Enums\ScheduleStatusEnum::PartialSuccess->value)
-            @if(($call instanceof \App\Models\Call))
+            @if(($call instanceof \App\Models\Communication\Call))
                 <h4 class="mt-1 mb-0" style="color:{{$service->colour()}};"><b>call</b> details</h4>
                 <hr class="mt-0">
                 <ul class="list-group list-group-flush">
@@ -107,7 +107,7 @@
                     @if($service->actionable())
                         @if($party instanceof \App\Models\BR\Client)
                             onclick="callRedirect('{{ $service->actionLink($party->ClientID) }}')"
-                    @elseif($party instanceof \App\Models\Lead)
+                    @elseif($party instanceof \App\Models\CRM\Lead)
                         onclick="callRedirect('{{ $service->actionLink($party->LeadID) }}')"
                     @endif
                     @else
@@ -141,7 +141,7 @@
                     <form id="deleteCallScheduleForm"
                           @if($party instanceof \App\Models\BR\Client)
                               action="{{ $service->cancelLink($party->ClientID) }}"
-                          @elseif($party instanceof \App\Models\Lead)
+                          @elseif($party instanceof \App\Models\CRM\Lead)
                               action="{{ $service->cancelLink($party->LeadID) }}"
                           @else
                               class="d-none"

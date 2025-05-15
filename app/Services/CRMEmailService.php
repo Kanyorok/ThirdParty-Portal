@@ -13,18 +13,18 @@ use App\Helpers\StringHelper;
 use App\Helpers\SystemHelper;
 use App\Mail\DefaultEmail;
 use App\Mail\TestMail;
-use App\Models\APICredential;
-use App\Models\Board;
+use App\Models\Auth\Team;
+use App\Models\Auth\User;
 use App\Models\BR\Client;
-use App\Models\Campaign;
-use App\Models\CampaignParty;
-use App\Models\Contact;
-use App\Models\CrmEmail;
-use App\Models\CRMImage;
-use App\Models\EmailConversation;
-use App\Models\Lead;
-use App\Models\Team;
-use App\Models\User;
+use App\Models\Communication\Email;
+use App\Models\Communication\EmailConversation;
+use App\Models\CRM\Campaign;
+use App\Models\CRM\CampaignParty;
+use App\Models\CRM\Contact;
+use App\Models\CRM\Lead;
+use App\Models\DMS\Image;
+use App\Models\Settings\APICredential;
+use App\Models\ThirdParies\Board;
 use App\Services\Marketing\CampaignService;
 use Carbon\Carbon;
 use Exception;
@@ -41,7 +41,7 @@ use Yajra\DataTables\DataTables;
 
 class CRMEmailService
 {
-    public function __construct(public CrmEmail $crmEmail)
+    public function __construct(public Email $crmEmail)
     {
     }
 
@@ -81,12 +81,12 @@ class CRMEmailService
         return $emails;
     }
 
-    public static function createClient(Client $client, string $to, string $subject, string $body, User $actor, array $cc = [], EmailPriorityEnum $priorityEnum = null, CrmEmail $replyTo = null): CRMEmailService
+    public static function createClient(Client $client, string $to, string $subject, string $body, User $actor, array $cc = [], EmailPriorityEnum $priorityEnum = null, Email $replyTo = null): CRMEmailService
     {
         return self::create($actor, $subject, $body, ($priorityEnum) ?? EmailPriorityEnum::Normal, [[$client->Name => $to]], Client::getPrimaryKey(), $client->ClientID, $cc, replyTo: $replyTo);
     }
 
-    public static function createContact(Contact $contact, string $to, string $subject, string $body, User $actor, array $cc = [], EmailPriorityEnum $priorityEnum = null, CrmEmail $replyTo = null): CRMEmailService
+    public static function createContact(Contact $contact, string $to, string $subject, string $body, User $actor, array $cc = [], EmailPriorityEnum $priorityEnum = null, Email $replyTo = null): CRMEmailService
     {
         return self::create($actor, $subject, $body, ($priorityEnum) ?? EmailPriorityEnum::Normal, [[$contact->Name => $to]], Contact::getPrimaryKey(), $contact->ContactID, $cc, replyTo: $replyTo);
     }
@@ -96,12 +96,12 @@ class CRMEmailService
         return self::create($actor, $subject, $body, EmailPriorityEnum::Normal, [[$team->Name => $team->Email]], Team::getPrimaryKey(), $team->TeamID, $cc);
     }
 
-    public static function createLead(Lead $lead, string $to, string $subject, string $body, User $actor, array $cc = [], CrmEmail $replyTo = null): CRMEmailService
+    public static function createLead(Lead $lead, string $to, string $subject, string $body, User $actor, array $cc = [], Email $replyTo = null): CRMEmailService
     {
         return self::create($actor, $subject, $body, EmailPriorityEnum::Normal, [[$lead->Name => $to]], Lead::getPrimaryKey(), $lead->LeadID, $cc, replyTo: $replyTo);
     }
 
-    public static function createUser(User $user, string $subject, string $body, User $actor, array $cc = [], EmailPriorityEnum $priorityEnum = EmailPriorityEnum::Normal, CrmEmail $replyTo = null): CRMEmailService
+    public static function createUser(User $user, string $subject, string $body, User $actor, array $cc = [], EmailPriorityEnum $priorityEnum = EmailPriorityEnum::Normal, Email $replyTo = null): CRMEmailService
     {
         return self::create($actor, $subject, $body, $priorityEnum, [[$user->Name => $user->Email]], User::getPrimaryKey(), $user->Id, $cc, replyTo: $replyTo);
     }
@@ -126,38 +126,38 @@ class CRMEmailService
             $query->with($with);
         }
         return Datatables::of($query->select('*'))->addIndexColumn()
-            ->addColumn('action', function (CrmEmail $email) {
+            ->addColumn('action', function (Email $email) {
                 return '...';
-            })->editColumn('party', function (CrmEmail $email) use ($with) {
+            })->editColumn('party', function (Email $email) use ($with) {
                 if (in_array('party', $with, true)) {
                     return (new PartyService($email->party))->simplified(true, true);
                 }
                 return '';
-            })->editColumn('Type', function (CrmEmail $email) {
+            })->editColumn('Type', function (Email $email) {
                 return $email->Type->name;
-            })->editColumn('ModifiedOn', function (CrmEmail $email) {
+            })->editColumn('ModifiedOn', function (Email $email) {
                 return $email->ModifiedOn?->format('M d, Y H:i');
-            })->editColumn('Status', function (CrmEmail $email) {
+            })->editColumn('Status', function (Email $email) {
                 return $email->Status->badge();
-            })->editColumn('CreatedOn', function (CrmEmail $email) {
+            })->editColumn('CreatedOn', function (Email $email) {
                 return $email->CreatedOn?->format('F d, Y h:i A');
-            })->editColumn('Dated', function (CrmEmail $email) {
+            })->editColumn('Dated', function (Email $email) {
                 if ($email->Dated instanceof Carbon) {
                     return $email->Dated->format('F d, Y h:i A');
                 }
                 return $email->CreatedOn?->format('F d, Y h:i A');
             })->setRowClass('mouse_pointer user-select-none click-email-details')->setRowData([
-                                                                                               'click_url'     => function (CrmEmail $email) {
+                'click_url' => function (Email $email) {
                                                                                                 if (is_null($email->EmailConversationId)) {
                                                                                                     return route('emails.show', [$email->EmailID]);
                                                                                                 }
                                                                                                 return route('email-conversations.summary', [$email->EmailConversationId]);
                                                                                                },
                                                                                                'summary_title' => 'email summary',
-                /*  'click_url' => function (CrmEmail $email) {
+                /*  'click_url' => function (Email $email) {
                       return route('emails.show', $email->EmailID);
                   },
-                  'dbl_click_url' => function (CrmEmail $email) {
+                  'dbl_click_url' => function (Email $email) {
                       return route('emails.summary', [$email->EmailID]);
                   }, 'summary_title' => 'email summary'*/
                                                                                               ])->rawColumns(['action', 'party', 'Status'])->make();
@@ -192,21 +192,21 @@ class CRMEmailService
 
     public function addAttachmentContent(string $Content, string $MimeType, string $Name, User $actor): static
     {
-        return $this->addAttachment(ImageService::create(CrmEmail::getPrimaryKey(), $this->crmEmail->EmailID, $Content, $MimeType, $Name, $actor)->image);
+        return $this->addAttachment(ImageService::create(Email::getPrimaryKey(), $this->crmEmail->EmailID, $Content, $MimeType, $Name, $actor)->image);
     }
 
-    public function addAttachment(CRMImage $image): self
+    public function addAttachment(Image $image): self
     {
         $this->crmEmail->attachments()->attach($image->ImageID, [], false);
         return $this;
     }
 
-    private static function create(User $actor, string $subject, string $body, EmailPriorityEnum $priority, array $to, string $Party, string $PartyID, array $cc = [], array $bcc = [], CrmEmail $replyTo = null): CRMEmailService
+    private static function create(User $actor, string $subject, string $body, EmailPriorityEnum $priority, array $to, string $Party, string $PartyID, array $cc = [], array $bcc = [], Email $replyTo = null): CRMEmailService
     {
-        if (!$replyTo instanceof CrmEmail && !Str::contains($subject, ['RE:', config('org.name')])) {
+        if (!$replyTo instanceof Email && !Str::contains($subject, ['RE:', config('org.name')])) {
             $subject .= ' - ' . config('org.name');
         }
-        $crmEmail = new CrmEmail();
+        $crmEmail = new Email();
         $crmEmail->fill([
                          'Type'                => EmailTypeEnum::Outgoing->value,
                          'Status'              => EmailStatusEnum::Draft->value,
@@ -247,10 +247,10 @@ class CRMEmailService
 
         //check if it has ref and auto attach to that conversation && party there off.
         if (!is_null($this->crmEmail->ReferenceId)) {
-            $related = CrmEmail::query()->whereNotNull('EmailConversationId')->where(function (Builder $query) {
+            $related = Email::query()->whereNotNull('EmailConversationId')->where(function (Builder $query) {
                 $query->where('MailID', $this->crmEmail->ReferenceId)->orWhere('ReferenceId', $this->crmEmail->ReferenceId);
             })->with('conversation')->first();
-            if ($related instanceof CrmEmail) {
+            if ($related instanceof Email) {
                 //check if there is a conversation with this email if non create first.
                 $conversation = ($related->conversation instanceof EmailConversation)
                     ? $related->conversation
@@ -387,7 +387,7 @@ class CRMEmailService
             if ($source instanceof CampaignParty) {//update status
                 $source->update([
                                  'Status'    => EmailStatusEnum::Sent->value,
-                                 'Channel'   => CrmEmail::getPrimaryKey(),
+                    'Channel' => Email::getPrimaryKey(),
                                  'ChannelID' => $this->crmEmail->EmailID,
                                 ]);
                 if ($source->campaign instanceof Campaign) {
@@ -444,7 +444,7 @@ class CRMEmailService
         if ($source instanceof CampaignParty) {//update status
             $source->update([
                              'Status'    => EmailStatusEnum::Failed->value,
-                             'Channel'   => CrmEmail::getPrimaryKey(),
+                'Channel' => Email::getPrimaryKey(),
                              'ChannelID' => $this->crmEmail->EmailID,
                             ]);
             if ($source->campaign instanceof Campaign) {

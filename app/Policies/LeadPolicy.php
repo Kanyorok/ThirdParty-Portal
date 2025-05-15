@@ -5,8 +5,8 @@ namespace App\Policies;
 use App\Enums\Core\PermissionEnum;
 use App\Enums\Core\RoleEnum;
 use App\Enums\LeadStatusEnum;
-use App\Models\Lead;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\CRM\Lead;
 
 class LeadPolicy
 {

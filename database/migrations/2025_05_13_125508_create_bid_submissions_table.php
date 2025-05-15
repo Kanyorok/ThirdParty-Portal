@@ -12,12 +12,15 @@ return new class extends Migration
             $table->id('Id'); // Custom primary key as specified in the model
             $table->string('TenderRef'); // e.g., 'TND/PROC/2025/001'
             $table->string('SupplierName'); // e.g., 'Tech Supplies Ltd'
-            $table->enum('SubmissionMode', ['Hand delivered', 'Courier', 'Email', 'Other']); // Submission mode options
+            $table->foreignId('SubmissionMode')->constrained('t_CodeDetails', 'ID');
             $table->dateTime('ReceivedAt'); // e.g., '2025-05-10 14:30:00'
-            $table->string('RecordedBy'); // e.g., 'John Doe'
             $table->text('Remarks')->nullable(); // Optional remarks
-            $table->text('Documents')->nullable(); // Optional list of documents (e.g., JSON or comma-separated)
-            $table->timestamps(); // created_at and updated_at columns
+            $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('CreatedOn');
+            $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('ModifiedOn');
+            $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
+            $table->softDeletes('DeletedOn');
         });
     }
 

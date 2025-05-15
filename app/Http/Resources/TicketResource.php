@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use App\Enums\TicketStatusEnum;
 use App\Helpers\StringHelper;
 use App\Models\BR\Client;
-use App\Models\Lead;
+use App\Models\CRM\Lead;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Str;

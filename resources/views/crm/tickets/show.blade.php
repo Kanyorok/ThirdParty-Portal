@@ -1,4 +1,4 @@
-@php use App\Enums\TicketSourceEnum;use App\Enums\TicketStatusEnum;use App\Models\BR\Client;use App\Models\Lead; @endphp
+@php use App\Enums\TicketSourceEnum;use App\Enums\TicketStatusEnum;use App\Models\BR\Client;use App\Models\CRM\Lead; @endphp
 @php @endphp
 @php @endphp
 @php @endphp
@@ -179,7 +179,7 @@
                         @include('snippets.client_summary', ['client'=>$party,'show_summary'=>true])
                     @elseif($party instanceof Lead)
                         @include('snippets.lead_summary', ['lead'=>$party, 'show_summary'=>true])
-                    @elseif($party instanceof \App\Models\User)
+                    @elseif($party instanceof \App\Models\Auth\User)
                         @include('snippets.user_summary', ['user'=>$party, 'show_summary'=>true])
                     @else
                         <h3>Unknown party</h3>
@@ -208,7 +208,7 @@
                                 @csrf
                                 <span class="d-none" id="ticketAssigneeMsg"></span>@method('put')
                                 <select class="form-control " name="ticket_user" id="ticket_user" required>
-                                    @if($ticket->assignee instanceof \App\Models\User)
+                                    @if($ticket->assignee instanceof \App\Models\Auth\User)
                                         @if(\App\Helpers\SystemHelper::isSystem($ticket->assignee))
                                             <option value="{{ $ticket->assignee->UserID }}" selected
                                                     id="ticketAssignee">None - Unassigned
@@ -219,7 +219,7 @@
                                                 {{ $ticket->assignee->Name }} - {{ $ticket->assignee->UserID }} (user)
                                             </option>
                                         @endif
-                                    @elseif($ticket->assignee instanceof \App\Models\Team)
+                                    @elseif($ticket->assignee instanceof \App\Models\Auth\Team)
                                         <option value="t#{{ $ticket->assignee->TeamID }}" selected
                                                 id="ticketAssignee">{{ $ticket->assignee->Name }} (team)
                                         </option>
@@ -229,7 +229,9 @@
                                    class="invalid-feedback d-none error col-12" role="alert"></p>
                             </form>
                         </li>
-                        <li class="list-group-item">Source: <b class="float-end">{!! (new \App\Services\TicketService($ticket))->source() !!}</b></li>
+                        <li class="list-group-item">Source: <b
+                                class="float-end">{!! (new \App\Services\TicketService($ticket))->source() !!}</b>
+                        </li>
                         <li class="list-group-item">Start: <span
                                 class="float-end">{{ $ticket->StartDate?->format('M d, Y') }}</span></li>
                         <li class="list-group-item">EndDate: <span
@@ -493,7 +495,7 @@
                             </div>
                             @break
                     @endswitch
-                        <div class="onboarding-content with-gradient d-none modal-item" id="previewDocumentModal"></div>
+                    <div class="onboarding-content with-gradient d-none modal-item" id="previewDocumentModal"></div>
                 </div>
             </div>
         </div>
@@ -833,6 +835,7 @@
                 $('#ticketWatchersTable').DataTable().ajax.reload();
             }
         }
+
         function fetchActivitiesTable() {
             if (!$.fn.DataTable.isDataTable('#ticketActivitiesTable')) {
                 $('#ticketActivitiesTable').DataTable({

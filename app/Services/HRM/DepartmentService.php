@@ -2,8 +2,8 @@
 
 namespace App\Services\HRM;
 
-use App\Models\Department;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\HRM\Department;
 use Illuminate\Support\Str;
 
 class DepartmentService

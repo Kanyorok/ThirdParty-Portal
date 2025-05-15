@@ -15,7 +15,10 @@ return new class extends Migration
             $table->id('Id');
             $table->foreignId('SupplierId')->constrained('t_Suppliers')->onDelete('cascade');
             $table->foreignId('ProcurementPeriodId')->constrained('t_ProcurementPeriods')->onDelete('cascade');
-            $table->timestamps();
+            $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('CreatedOn');
+            $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('ModifiedOn');
         });
     }
 

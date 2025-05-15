@@ -3,8 +3,8 @@
 namespace App\Http\Requests\Schedule;
 
 use App\Helpers\SystemHelper;
-use App\Models\Task;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\Core\Task;
 use Carbon\Carbon;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;

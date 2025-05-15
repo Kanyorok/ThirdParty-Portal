@@ -3,9 +3,9 @@
 namespace App\Console\Commands;
 
 use App\Helpers\SystemHelper;
-use App\Models\Competitor;
-use App\Models\MarketingList;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\CRM\MarketingList;
+use App\Models\ThirdParies\Competitor;
 use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;

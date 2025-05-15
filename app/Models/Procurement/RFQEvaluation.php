@@ -2,10 +2,9 @@
 
 namespace App\Models\Procurement;
 
-use Illuminate\Database\Eloquent\Model;
-use App\Models\Procurement\RFQ;
-use App\Models\Procurement\SupplierResponseEvaluation;
+use App\Models\ThirdParies\Supplier;
 use App\Traits\Model\UserActorTrait;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class RFQEvaluation extends Model
@@ -15,7 +14,7 @@ class RFQEvaluation extends Model
 
     protected $table = 't_RFQEvaluations';
     protected $primaryKey = 'Id';
-    
+
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';

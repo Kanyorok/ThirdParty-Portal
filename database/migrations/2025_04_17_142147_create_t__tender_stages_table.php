@@ -11,17 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('t_TenderStages', function (Blueprint $table) {
+        Schema::create('t_TenderStages', static function (Blueprint $table) {
             $table->id('Id');
-            $table->unsignedBigInteger('TenderId');
+            $table->foreignId('TenderId')->constrained('t_Tenders', 'Id');
             $table->string('Stage');
             $table->integer('DurationDays');
             $table->date('StartDate');
             $table->date('EndDate');
-            $table->timestamps();
-        
-            $table->foreign('TenderId')->references('Id')->on('t_Tenders')->onDelete('cascade');
-        });        
+            $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('CreatedOn');
+            $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('ModifiedOn');
+            $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
+            $table->softDeletes('DeletedOn');
+        });
     }
 
     /**

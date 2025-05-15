@@ -4,7 +4,7 @@ namespace App\Http\Controllers\CRM\Leads;
 
 use App\Enums\LeadStatusEnum;
 use App\Http\Controllers\Controller;
-use App\Models\Lead;
+use App\Models\CRM\Lead;
 use App\Services\LeadService;
 use App\Services\StaticListsService;
 use Carbon\Carbon;
@@ -128,7 +128,7 @@ class LeadActionController extends Controller
                                             ],
                             'LossReason' => [
                                              'required_if:Status,' . LeadStatusEnum::Cold->value,
-                                             Rule::exists('t_CRMCodeDetails', 'ID')->where(function (Builder $query) {
+                                Rule::exists('t_CodeDetails', 'ID')->where(function (Builder $query) {
                                                                             return $query->where('CodeID', StaticListsService::LeadLossReason);
                                              }),
                                             ],

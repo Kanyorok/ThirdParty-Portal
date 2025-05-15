@@ -2,7 +2,7 @@
 
 namespace App\Events\ProductDev;
 
-use App\Models\ProductDevelopment;
+use App\Models\CRM\ProductDevelopment;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;

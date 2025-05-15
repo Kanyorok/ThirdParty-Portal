@@ -5,7 +5,7 @@ namespace App\Http\Controllers\CRM\Client;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Schedule\PartyTaskRequest;
 use App\Models\BR\Client;
-use App\Models\Task;
+use App\Models\Core\Task;
 use App\Traits\Controller\TasksTrait;
 use Exception;
 use Illuminate\Http\JsonResponse;
