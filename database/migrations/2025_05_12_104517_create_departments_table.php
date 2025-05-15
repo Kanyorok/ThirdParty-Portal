@@ -16,8 +16,6 @@ return new class extends Migration
             $table->string('Name');
             $table->string('DepartmentID')->unique();
             $table->string('Description')->nullable();
-           /* $table->foreignId('HeadId')->nullable()->constrained('t_Users', 'Id');
-            $table->foreignId('DeputyHeadId')->nullable()->constrained('t_Users', 'Id');*/
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');

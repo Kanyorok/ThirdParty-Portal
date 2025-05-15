@@ -202,3 +202,7 @@ function updateFields(fields)
         $('.set-' + key).html(value);
     });
 }
+
+function isNullOrEmpty(value) {
+    return value === null || (typeof value === "string" && value.trim().length === 0);
+}

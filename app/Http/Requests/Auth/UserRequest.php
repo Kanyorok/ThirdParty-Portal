@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
-use App\Enums\GenderEnum;
+use App\Enums\Employee\GenderEnum;
 use App\Exceptions\ErroredException;
 use App\Models\CrmBranch;
 use App\Models\User;

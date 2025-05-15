@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('t_goods_receipt', function (Blueprint $table) {
+        Schema::create('t_GoodsReceipts', function (Blueprint $table) {
             $table->id();
             $table->string('GRNID')->default(0);
             $table->string('POID')->default(0);
-            $table->foreignId('SupplierID')->constrained('t_Suppliers', 'Id');
+            $table->foreignId('SupplierId')->constrained('t_Suppliers', 'Id');
             $table->dateTime('ReceivedDate');
             $table->string('StoreID')->nullable();
             $table->string('ReceivedBy')->nullable();
@@ -25,10 +25,11 @@ return new class extends Migration
             $table->decimal('POQTY')->nullable();
             $table->decimal('ReceivedQTY')->nullable();
             $table->string('TransferTo')->nullable();
+            $table->boolean('TagRequired')->nullable();
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
-            $table->dateTime('CreatedOn');
+            $table->timestamp('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
-            $table->dateTime('ModifiedOn');
+            $table->timestamp('ModifiedOn');
         });
     }
 
@@ -37,6 +38,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('t_goods_receipt');
+        Schema::dropIfExists('t_GoodsReceipts');
     }
 };

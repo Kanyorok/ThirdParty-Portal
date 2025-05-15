@@ -3,7 +3,7 @@
 namespace App\Services\BR;
 
 use App\Enums\Core\IntegrationsEnum;
-use App\Enums\GenderEnum;
+use App\Enums\Employee\GenderEnum;
 use App\Exceptions\ErroredException;
 use App\Models\APICredential;
 use App\Models\BR\Branch;

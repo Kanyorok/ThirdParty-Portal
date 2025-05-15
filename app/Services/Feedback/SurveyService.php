@@ -10,7 +10,7 @@ use App\Helpers\SystemHelper;
 use App\Models\Survey;
 use App\Models\SurveyQuestion;
 use App\Models\User;
-use App\Services\UserService;
+use App\Services\HRM\UserService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;

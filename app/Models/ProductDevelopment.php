@@ -25,9 +25,9 @@ class ProductDevelopment extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-                           'ProductID',
-                           'Name',
-                           'TargetGroup',
+        'ProductID',
+        'Name',
+        'TargetGroup',
                            'User_ID',
                            'Income',
                            'Revenue',
@@ -101,5 +101,10 @@ class ProductDevelopment extends Model
     public function pendingWorkflows(): MorphMany
     {
         return $this->morphMany(PendingWorkflow::class, __FUNCTION__, 'Source', 'SourceID', 'Id');
+    }
+
+    protected function getImageName(): string
+    {
+        return $this->Name;
     }
 }

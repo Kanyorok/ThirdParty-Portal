@@ -19,21 +19,21 @@
                 @if($won)
                     <h6 class="text-center mt-2">{{ $lead->Status->description() }}</h6>
                 @else
-                <form class="card-body" id="leadStatusForm" action="{{ route('leads.status',[$lead->LeadID]) }}">
-                    @csrf
-                    <div class="m-0 p-0 row">@method('put')
-                        <div class="col-12">
-                            <p class="d-none" id="StatusMsg"></p>
-                            <select class="form-control text-center" name="Status" id="Status" required>
-                                @foreach(App\Enums\LeadStatusEnum::cases() as $status)
-                                    <option
-                                        value="{{ $status->value }}" {{ ($status->value===$lead->Status->value)?'selected':'' }}>{{ $status->description() }}</option>
-                                @endforeach
-                            </select>
-                            <p id="Status_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                    <form class="card-body" id="leadStatusForm" action="{{ route('leads.status',[$lead->LeadID]) }}">
+                        @csrf
+                        <div class="m-0 p-0 row">@method('put')
+                            <div class="col-12">
+                                <p class="d-none" id="StatusMsg"></p>
+                                <select class="form-control text-center" name="Status" id="Status" required>
+                                    @foreach(App\Enums\LeadStatusEnum::cases() as $status)
+                                        <option
+                                            value="{{ $status->value }}" {{ ($status->value===$lead->Status->value)?'selected':'' }}>{{ $status->description() }}</option>
+                                    @endforeach
+                                </select>
+                                <p id="Status_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                            </div>
                         </div>
-                    </div>
-                </form>
+                    </form>
                 @endif
                 <hr class="my-0">
                 <div class="card-body mx-1 mb-0 mt-1">
@@ -145,12 +145,13 @@
                                             <i class="fas fa-calendar-plus"></i> <br> others
                                         </button>
                                         <ul class="dropdown-menu">
-                                            <li><a class="dropdown-item add-party-scheduled-call-btn" href="javascript:void(0)"
+                                            <li><a class="dropdown-item add-party-scheduled-call-btn"
+                                                   href="javascript:void(0)"
                                                    data-action="{{ route('lead-schedule.call',[$lead->LeadID]) }}"> <i
                                                         class="align-middle" data-feather="phone-forwarded"></i>
                                                     schedule a
                                                     call</a></li>
-                                            <li><a class="dropdown-item create-new-task "href="javascript:void(0)"
+                                            <li><a class="dropdown-item create-new-task " href="javascript:void(0)"
                                                    data-action="{{ route('lead-tasks.store',[$lead->LeadID]) }}"> <i
                                                         class="fa-solid fa-list-check"></i> create a task</a></li>
                                             {{--  <li><a class="dropdown-item text-muted disabled text-decoration-line-through"
@@ -180,7 +181,7 @@
                     </div>
                 @endif
 
-                    <div class="col-md-6 col-12">
+                <div class="col-md-6 col-12">
                     <div class="card">
                         <div class="card-header m-0 p-1 border-bottom border-1">Relationship Officer
                             @if(!$won)
@@ -193,7 +194,7 @@
                             @if($lead->RelationshipManager instanceof  \App\Models\User && ($lead->RelationshipManager->UserID !== \App\Helpers\SystemHelper::ID) && (!$lead->RelationshipManager->trashed()))
                                 <div class="col-4">
                                     {!! $lead->RelationshipManager->getImage('width="42" height="42" class="rounded-circle me-2" alt=".."') !!}
-                            </div>
+                                </div>
                                 <div class="col-8">
                                     <p class="mb-1">{{ $lead->RelationshipManager->Name }}</p>
                                     <p class="mb-1 fw-bold">{{ $lead->RelationshipManager->UserID }}</p>
@@ -577,7 +578,8 @@
                     <div class="tab-pane m-2" id="tab-8" role="tabpanel">
                         <div class="float-end">
                             <button class="btn btn-primary click-summary-data" type="button"
-                                    data-click_url="{{ route('lead-contacts.create',[$lead->LeadID]) }}" data-summary_title="Add Contact">
+                                    data-click_url="{{ route('lead-contacts.create',[$lead->LeadID]) }}"
+                                    data-summary_title="Add Contact">
                                 <i class="fas fa-plus-circle"></i> add contact
                             </button>
                         </div>
@@ -831,7 +833,7 @@
                                             <label for="Gender" class="form-label">Gender <span
                                                     class="text-danger">*</span></label>
                                             <select class="form-control" name="Gender" id="Gender" required>
-                                                @foreach(App\Enums\GenderEnum::getAll() as $gender)
+                                                @foreach(App\Enums\Employee\GenderEnum::getAll() as $gender)
                                                     <option value="{{ $gender->value }}">{{ $gender->name }}</option>
                                                 @endforeach
                                             </select>
@@ -1081,7 +1083,8 @@
                                 </div>
                             </form>
                         </div>
-                        <div class="onboarding-content text-center with-gradient d-none modal-item" id="trashLeadWatcherModal">
+                        <div class="onboarding-content text-center with-gradient d-none modal-item"
+                             id="trashLeadWatcherModal">
                             <h3 class="h3 text-danger">Remove Watcher <b id="trashLeadWatcher"></b>
                                 from L{{ $lead->LeadID }}
                             </h3>
