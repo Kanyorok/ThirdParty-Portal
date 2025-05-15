@@ -42,7 +42,7 @@
                         </td>
                         <td>
                             @if ($clarification->Answer)
-                                <a href="{{ route('tenderclarification.edit', $clarification->ClarificationID) }}" class="btn btn-sm btn-outline-success">Edit</a>
+                                <a href="{{ route('tenderclarification.create', $clarification->ClarificationID) }}" class="btn btn-sm btn-outline-success">Edit</a>
                             @else
                                 <a href="{{ route('tenderclarification.create', $clarification->ClarificationID) }}" class="btn btn-sm btn-outline-primary">Respond</a>
                             @endif
