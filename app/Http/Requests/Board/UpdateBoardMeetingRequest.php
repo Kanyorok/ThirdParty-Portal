@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\Board;
 
-use App\Models\MeetingRoom;
+use App\Models\CRM\MeetingRoom;
 use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;

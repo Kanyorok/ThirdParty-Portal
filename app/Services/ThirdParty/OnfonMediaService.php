@@ -3,7 +3,7 @@
 namespace App\Services\ThirdParty;
 
 use App\Exceptions\ErroredException;
-use App\Models\CrmSMS;
+use App\Models\Communication\SMS;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
@@ -89,7 +89,7 @@ class OnfonMediaService
     }
 
 
-    public function sendMessage(CrmSMS $sms): bool
+    public function sendMessage(SMS $sms): bool
     {
         try {
             $response = $this->client->post('SendBulkSMS', [

@@ -4,9 +4,9 @@ namespace App\Traits\Controller;
 
 use App\Enums\CampaignStatusEnum;
 use App\Enums\Core\PermissionEnum;
-use App\Models\Campaign;
-use App\Models\MarketingList;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\CRM\Campaign;
+use App\Models\CRM\MarketingList;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Str;

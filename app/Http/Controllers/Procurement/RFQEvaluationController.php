@@ -3,13 +3,11 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Procurement\SupplierResponseEvaluation;
-use App\Models\Core\Currency;
+use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQEvaluation;
 use App\Models\Procurement\RFQResponse;
-use App\Models\Procurement\Supplier;
-use App\Models\Procurement\RFQ;
+use App\Models\Procurement\SupplierResponseEvaluation;
+use Illuminate\Http\Request;
 
 class RFQEvaluationController extends Controller
 {
@@ -26,8 +24,8 @@ class RFQEvaluationController extends Controller
     {
         // Fetch RFQs
         $rfqs = RFQ::whereHas('rfqResponses')->get();
-        
-        $currencies = config('app.currencies'); 
+
+        $currencies = config('app.currencies');
 
         $rfqresponses = RFQResponse::all();
 

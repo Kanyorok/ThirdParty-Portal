@@ -5,12 +5,10 @@ namespace App\Http\Controllers\Settings;
 use App\Events\DebtCollection\BulkNotificationEvent;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\UserBulkNotificationRequest;
-use App\Models\BulkNotification;
-use App\Models\Team;
-use App\Models\User;
+use App\Models\Auth\Team;
+use App\Models\Auth\User;
+use App\Models\Communication\BulkNotification;
 use App\Services\TeamService;
-use App\Services\UserService;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 

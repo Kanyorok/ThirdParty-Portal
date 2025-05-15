@@ -4,8 +4,8 @@ namespace App\Services\ThirdParty;
 
 use App\Enums\Core\IntegrationsEnum;
 use App\Exceptions\ErroredException;
-use App\Models\APICredential;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\Settings\APICredential;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Facades\Log;
 use Infobip\Api\EmailApi;

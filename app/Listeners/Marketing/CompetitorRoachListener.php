@@ -5,7 +5,7 @@ namespace App\Listeners\Marketing;
 use App\Events\Marketing\CompetitorRoachEvent;
 use App\Helpers\StringHelper;
 use App\Helpers\SystemHelper;
-use App\Models\Competitor;
+use App\Models\ThirdParies\Competitor;
 use App\Services\ThirdParty\AIService;
 use App\Spiders\CompetitorSpider;
 use Illuminate\Contracts\Queue\ShouldQueue;

@@ -3,8 +3,8 @@
 namespace App\Policies;
 
 use App\Enums\Core\PermissionEnum;
-use App\Models\User;
-use App\Services\UserService;
+use App\Models\Auth\User;
+use App\Services\HRM\UserService;
 
 class UserPolicy
 {

@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Settings\Users;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use App\Services\UserService;
+use App\Models\Auth\User;
+use App\Services\HRM\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -27,18 +27,13 @@ class UserRoleController extends Controller
      */
     public function store(Request $request, User $user): JsonResponse
     {
-        $request->validate([
-                            'Role' => [
-                                       'required',
-                                       'string',
-                                      ],
-                           ]);
-        $role = Role::query()->where('t_Roles.id', $request->Role)->first();
+        $validated = $request->validate(['Role' => ['required', 'string',],]);
+        $role = Role::query()->where('t_Roles.id', $validated['Role'])->first();
         if (!$role instanceof Role) {
             throw ValidationException::withMessages(['Role' => 'invalid role defined']);
         }
 
-        (new UserService($user))->setRole($role);
+        (new UserService($user))->setRole($role, $request->user());
 
         return $this->succeeded('role updated successfully', route('users.show', [$user->UserID]));
     }

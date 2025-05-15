@@ -2,7 +2,7 @@
 
 namespace App\Traits\Controller;
 
-use App\Models\BulkNotification;
+use App\Models\Communication\BulkNotification;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Yajra\DataTables\DataTables;

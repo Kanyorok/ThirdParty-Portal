@@ -26,6 +26,10 @@ return new class extends Migration
             $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
             $table->softDeletes('DeletedOn');
         });
+
+        Schema::table('t_Tenders', static function (Blueprint $table) {
+            $table->foreignId('CurrencyId')->constrained('t_Currencies', 'Id');
+        });
     }
 
     /**
@@ -33,6 +37,9 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::table('t_Tenders', static function (Blueprint $table) {
+            $table->dropConstrainedForeignId('CurrencyId');
+        });
         Schema::dropIfExists('t_Currencies');
     }
 };

@@ -4,11 +4,6 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4>Clarification Requests</h4>
-        <select class="form-select w-auto" style="min-width: 250px;">
-            <option selected>Filter by Tender</option>
-            <option>TND/PROC/2025/001 - ICT Equipment</option>
-            <option>TND/PROC/2025/002 - Office Furniture</option>
-        </select>
     </div>
 
     <div class="table-responsive">
@@ -16,8 +11,8 @@
             <thead class="table-light">
                 <tr>
                     <th>#</th>
-                    <th>Tender Ref</th>
-                    <th>Supplier</th>
+                    <th>Tender ID</th>
+                    <th>Vendor ID</th>
                     <th>Question</th>
                     <th>Status</th>
                     <th>Submitted</th>
@@ -27,36 +22,37 @@
                 </tr>
             </thead>
             <tbody>
-                <!-- Sample Row -->
-                <tr>
-                    <td>1</td>
-                    <td>TND/PROC/2025/001</td>
-                    <td>Tech Supplies Ltd</td>
-                    <td>Should installation costs be included in the price?</td>
-                    <td><span class="badge bg-warning">Pending</span></td>
-                    <td>2025-05-08</td>
-                    <td>-</td>
-                    <td><span class="badge bg-secondary">No</span></td>
-                    <td>
-                        <a href="{{ route('tenderclarification.create') }}" class="btn btn-sm btn-outline-primary">Respond</a>
-                    </td>
-                </tr>
-
-                <tr>
-                    <td>2</td>
-                    <td>TND/PROC/2025/001</td>
-                    <td>Nova Systems</td>
-                    <td>Can we submit documents digitally only?</td>
-                    <td><span class="badge bg-success">Responded</span></td>
-                    <td>2025-05-07</td>
-                    <td>2025-05-08</td>
-                    <td><span class="badge bg-success">Yes</span></td>
-                    <td>
-                        <a href="/clarification/edit/2" class="btn btn-sm btn-outline-success">Edit</a>
-                    </td>
-                </tr>
-
-                <!-- More rows dynamically populated -->
+                @forelse ($clarifications as $index => $clarification)
+                    <tr>
+                        <td>{{ $index + 1 }}</td>
+                        <td>{{ $clarification->TenderID }}</td>
+                        <td>{{ $clarification->VendorID }}</td>
+                        <td>{{ $clarification->Question }}</td>
+                        <td>
+                            <span class="badge {{ $clarification->Answer ? 'bg-success' : 'bg-warning' }}">
+                                {{ $clarification->Answer ? 'Responded' : 'Pending' }}
+                            </span>
+                        </td>
+                        <td>{{ $clarification->QuestionDate->format('Y-m-d') }}</td>
+                        <td>{{ $clarification->AnswerDate ? $clarification->AnswerDate->format('Y-m-d') : '-' }}</td>
+                        <td>
+                            <span class="badge {{ $clarification->ISPUBLISHEDTOALL ? 'bg-success' : 'bg-secondary' }}">
+                                {{ $clarification->ISPUBLISHEDTOALL ? 'Yes' : 'No' }}
+                            </span>
+                        </td>
+                        <td>
+                            @if ($clarification->Answer)
+                                <a href="{{ route('tenderclarification.edit', $clarification->ClarificationID) }}" class="btn btn-sm btn-outline-success">Edit</a>
+                            @else
+                                <a href="{{ route('tenderclarification.create', $clarification->ClarificationID) }}" class="btn btn-sm btn-outline-primary">Respond</a>
+                            @endif
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="9" class="text-center">No clarifications found.</td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
     </div>

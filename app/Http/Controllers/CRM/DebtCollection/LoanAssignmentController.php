@@ -6,7 +6,7 @@ use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\DebtCollection\LoanAssignmentRequest;
 use App\Models\BR\DebtProduct;
-use App\Models\DebtRecovery\LoanAssignment;
+use App\Models\CRM\DebtRecovery\LoanAssignment;
 use App\Services\DebtCollection\LoanService;
 use App\Services\PartyService;
 use Carbon\Carbon;

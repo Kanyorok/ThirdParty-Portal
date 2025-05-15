@@ -11,12 +11,13 @@
     <form action="{{ route('leads.store') }}" method="post" id="createIndividualLeadForm"> @csrf
         <input type="hidden" name="Type" class="d-none" value="{{ LeadTypeEnum::Individual->value }}">
         <input type="hidden" name="conversation" class="d-none" value="{{ $conversation }}">
-        <input type="hidden" name="contact" class="d-none" value="{{ ($contact instanceof \App\Models\Contact)?$contact->ContactID:0 }}">
+        <input type="hidden" name="contact" class="d-none"
+               value="{{ ($contact instanceof \App\Models\CRM\Contact)?$contact->ContactID:0 }}">
         <div class="mb-3">
             <label class="form-label" for="Name">First Name <span
                     class="text-danger">*</span></label>
             <input type="text" class="form-control" id="Name" name="Name" required
-                   placeholder="Name" value="{{ ($contact instanceof \App\Models\Contact)?$contact->Label:'' }}">
+                   placeholder="Name" value="{{ ($contact instanceof \App\Models\CRM\Contact)?$contact->Label:'' }}">
             <p id="Name_error" class="invalid-feedback d-none error col-12" role="alert"></p>
         </div>
         <div class="mb-3">
@@ -38,7 +39,7 @@
             <label for="Gender" class="form-label">Gender <span
                     class="text-danger">*</span></label>
             <select class="form-control" name="Gender" id="Gender" required>
-                @foreach(App\Enums\GenderEnum::getAll() as $gender)
+                @foreach(App\Enums\Employee\GenderEnum::getAll() as $gender)
                     <option value="{{ $gender->value }}">{{ $gender->name }}</option>
                 @endforeach
             </select>
@@ -98,7 +99,8 @@
             <label class="form-label" for="Phone">Phone Number <span
                     class="text-danger">*</span></label>
             <input type="text" class="form-control" id="Phone" name="Phone"
-                   placeholder="Phone Number" required value="{{ ($contact instanceof \App\Models\Contact)?$contact->Phone:'' }}">
+                   placeholder="Phone Number" required
+                   value="{{ ($contact instanceof \App\Models\CRM\Contact)?$contact->Phone:'' }}">
             <p id="Phone_error" class="invalid-feedback d-none error col-12" role="alert"></p>
         </div>
         <div class="mb-3">
@@ -136,7 +138,7 @@
         </div>
     </form>
 </div>
-<script >
+<script>
     $(document).ready(function () {
         $('.relationship-manager').select2({
             placeholder: "Select assignee", minimumInputLength: 2,
@@ -161,7 +163,7 @@
 
         $('.locations').select2({
             placeholder: "Select a Town/City", minimumInputLength: 2,
-           dropdownParent: $("#offcanvasMain"),
+            dropdownParent: $("#offcanvasMain"),
             ajax: {
                 url: "{{ route('locality.select2') }}?type={{  \App\Enums\LocalityTypeEnum::City->value }}",
                 dataType: 'json',
@@ -193,7 +195,7 @@
             const response = await saveForm($(this), $('#createIndividualLeadBtn'), false, true, true);
             if (response) {
                 window.bsOffcanvas.hide();
-                @if($contact instanceof \App\Models\Contact)
+                @if($contact instanceof \App\Models\CRM\Contact)
                 setTimeout(() => {
                     window.location.replace(response.route);
                 }, 3000);

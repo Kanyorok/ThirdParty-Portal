@@ -7,7 +7,7 @@ use App\Helpers\SystemHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Feedback\SurveyQuestionsCollection;
 use App\Models\BR\Client;
-use App\Models\SurveyQuestionAnswer;
+use App\Models\CRM\SurveyQuestionAnswer;
 use App\Services\Feedback\SurveyService;
 use Exception;
 use Illuminate\Http\JsonResponse;

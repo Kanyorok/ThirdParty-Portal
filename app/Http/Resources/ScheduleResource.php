@@ -2,8 +2,8 @@
 
 namespace App\Http\Resources;
 
-use App\Models\Call;
-use App\Models\Schedule;
+use App\Models\Communication\Call;
+use App\Models\CRM\Schedule;
 use App\Services\ScheduleService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;

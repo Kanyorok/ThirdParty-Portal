@@ -50,7 +50,7 @@
                 </div>
                 <div class="card-body p-1">
                     <div class="accordion accordion-flush" id="MailConversation">
-                        @foreach($conversation->emails()->latest('t_CRMEmails.Dated')->get() as $email)
+                        @foreach($conversation->emails()->latest('t_Emails.Dated')->get() as $email)
                             <div class="accordion-item m-1">
                                 <div class="accordion-header" id="{{ $email->EmailID }}">
                                     <div class="accordion-button {{-- (!$loop->first)?'collapsed':'' --}}" type="button"
@@ -110,7 +110,7 @@
                                             <button
                                                 class="btn btn-sm btn-outline-primary btn-pill float-end mx-2 reply-mail-to-action"
                                                 data-info="{{ route('email.reply-draft', [$email->EmailID]) }}"
-                                                    type="button"><i class="fas fa-reply"></i> reply
+                                                type="button"><i class="fas fa-reply"></i> reply
                                             </button>
                                         @elseif($email->Status->value === \App\Enums\EmailStatusEnum::Draft->value)
                                             <button
@@ -126,7 +126,7 @@
                                         {!! $email->Body !!}
                                     </div>
                                     <div class="border-top p-2">
-                                        @foreach($email->attachments()->get(['t_CRMImages.ImageID','MIMEType','Name']) as $document)
+                                        @foreach($email->attachments()->get(['t_Images.ImageID','MIMEType','Name']) as $document)
                                             <span class="btn btn-outline-info modal-preview-document"
                                                   title="{{ $document->Name }}"
                                                   data-url="{{ route('documents.show',[$document->ImageID]) }}"
@@ -181,11 +181,15 @@
                     @if($party instanceof \App\Models\BR\Client)
                         @include('snippets.client_summary', ['client'=>$party,'show_summary'=>true])
                         @php
-                            $ticket = $party->tickets()->where('Source', \App\Models\CrmEmail::getPrimaryKey())->whereIn('SourceID',$conversation->emails()->select('t_CRMEmails.EmailID'))->first()
+                            $ticket = $party->tickets()->where('Source', \App\Models\Communication\Email::getPrimaryKey())->whereIn('SourceID',$conversation->emails()->select('t_Emails.EmailID'))->first()
                         @endphp
-                        @if($ticket instanceof \App\Models\Ticket)
+                        @if($ticket instanceof \App\Models\CRM\Ticket)
                             <hr>
-                            <h4 class="text-center">Ticket  : <a href="javascript:void(0)" data-click_url="{{ route('tickets.edit',[$ticket->TicketID]) }}" data-summary_title="Ticket {{ $ticket->TicketID }} summary" class="click-summary-data"> {{ $ticket->TicketID }}</a></h4>
+                            <h4 class="text-center">Ticket : <a href="javascript:void(0)"
+                                                                data-click_url="{{ route('tickets.edit',[$ticket->TicketID]) }}"
+                                                                data-summary_title="Ticket {{ $ticket->TicketID }} summary"
+                                                                class="click-summary-data"> {{ $ticket->TicketID }}</a>
+                            </h4>
                         @else
                             <div class="mt-1 border-top border-1 py-3">
                                 <div class="row">
@@ -197,29 +201,33 @@
                                     </div>
                                 </div>
                             </div>
-                    @endif
+                        @endif
 
-                    @elseif($party instanceof \App\Models\Lead)
+                    @elseif($party instanceof \App\Models\CRM\Lead)
                         @include('snippets.lead_summary', ['lead'=>$party, 'show_summary'=>true])
                         @php
-                            $ticket = $party->tickets()->where('Source', \App\Models\CrmEmail::getPrimaryKey())->whereIn('SourceID',$conversation->emails()->select('t_CRMEmails.EmailID'))->first()
+                            $ticket = $party->tickets()->where('Source', \App\Models\Communication\Email::getPrimaryKey())->whereIn('SourceID',$conversation->emails()->select('t_Emails.EmailID'))->first()
                         @endphp
-                        @if($ticket instanceof \App\Models\Ticket)
+                        @if($ticket instanceof \App\Models\CRM\Ticket)
                             <hr>
-                            <h4 class="text-center">Ticket  : <a href="javascript:void(0)" data-click_url="{{ route('tickets.edit',[$ticket->TicketID]) }}" data-summary_title="Ticket {{ $ticket->TicketID }} summary" class="click-summary-data"> {{ $ticket->TicketID }}</a></h4>
+                            <h4 class="text-center">Ticket : <a href="javascript:void(0)"
+                                                                data-click_url="{{ route('tickets.edit',[$ticket->TicketID]) }}"
+                                                                data-summary_title="Ticket {{ $ticket->TicketID }} summary"
+                                                                class="click-summary-data"> {{ $ticket->TicketID }}</a>
+                            </h4>
                         @else
-                        <div class="mt-1 border-top border-1 py-3">
-                            <div class="row">
-                                <div class="col-12">
-                                    <button class="btn btn-primary add-party-ticket-btn w-100" type="button"
-                                            data-action="{{ route('lead-tickets.store',[$party->LeadID]) }}">
-                                        <i class="align-middle" data-feather="check-square"></i> add a ticket
-                                    </button>
+                            <div class="mt-1 border-top border-1 py-3">
+                                <div class="row">
+                                    <div class="col-12">
+                                        <button class="btn btn-primary add-party-ticket-btn w-100" type="button"
+                                                data-action="{{ route('lead-tickets.store',[$party->LeadID]) }}">
+                                            <i class="align-middle" data-feather="check-square"></i> add a ticket
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
                         @endif
-                    @elseif($party instanceof \App\Models\User)
+                    @elseif($party instanceof \App\Models\Auth\User)
                         @include('snippets.user_summary', ['user'=>$party, 'show_summary'=>true])
                     @else
                         <h3>{{ (new \App\Services\CRMEmailService($conversation->email))->getParty() }}</h3>
@@ -228,30 +236,36 @@
                             <div class="row">
                                 <div class="col-6">
                                     <div class="btn-group w-100">
-                                        <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <button type="button" class="btn btn-secondary dropdown-toggle"
+                                                data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                             Lead
                                         </button>
                                         <div class="dropdown-menu" style="">
                                             <a class="dropdown-item  click-summary-data" href="javascript:void(0)"
                                                data-click_url="{{ route('leads.create',['type'=>\App\Enums\LeadTypeEnum::Individual->name,'conversation'=>$conversation->Id]) }}"
                                                data-summary_title="Add Individual Lead"
-                                                 ><i class="fas fa-plus-circle"></i> New Individual Lead</a>
+                                            ><i class="fas fa-plus-circle"></i> New Individual Lead</a>
                                             <a class="dropdown-item  click-summary-data" href="javascript:void(0)"
                                                data-click_url="{{ route('leads.create',['type'=>\App\Enums\LeadTypeEnum::Company->name, 'conversation'=>$conversation->Id]) }}"
                                                data-summary_title="Add Corporate Lead"
-                                                ><i class="fas fa-plus-circle"></i> New Corporate Lead</a>
+                                            ><i class="fas fa-plus-circle"></i> New Corporate Lead</a>
                                             <div class="dropdown-divider"></div>
-                                            <a class="dropdown-item" href="javascript:void(0)" id="triggerLeadContactBtn"><i class="fas fa-address-card"></i> Lead Contact</a>
+                                            <a class="dropdown-item" href="javascript:void(0)"
+                                               id="triggerLeadContactBtn"><i class="fas fa-address-card"></i> Lead
+                                                Contact</a>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-6">
                                     <div class="btn-group w-100">
-                                        <button type="button" class="btn btn-info dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <button type="button" class="btn btn-info dropdown-toggle"
+                                                data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                             Member
                                         </button>
                                         <div class="dropdown-menu" style="">
-                                            <a class="dropdown-item" href="javascript:void(0)" id="triggerClientContactBtn"><i class="fas fa-address-card"></i> Member Contact</a>
+                                            <a class="dropdown-item" href="javascript:void(0)"
+                                               id="triggerClientContactBtn"><i class="fas fa-address-card"></i> Member
+                                                Contact</a>
                                         </div>
                                     </div>
                                 </div>
@@ -283,16 +297,20 @@
                                 <p id="client_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label" for="contact_label">Label <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="contact_label" name="contact_label" required placeholder="Email 2">
+                                <label class="form-label" for="contact_label">Label <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="contact_label" name="contact_label" required
+                                       placeholder="Email 2">
                                 <p id="contact_label_error" class="invalid-feedback d-none error col-12"
                                    role="alert"></p>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label" for="contact_email">Email </label>
                                 <input type="text" class="form-control" id="contact_email" name="contact_email"
-                                       placeholder="contact email" readonly value="{{ (new \App\Services\CRMEmailService($conversation->email))->getParty() }}">
-                                <p id="contact_email_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                                       placeholder="contact email" readonly
+                                       value="{{ (new \App\Services\CRMEmailService($conversation->email))->getParty() }}">
+                                <p id="contact_email_error" class="invalid-feedback d-none error col-12"
+                                   role="alert"></p>
                             </div>
                             <hr>
                             <div class="mt-4">
@@ -300,7 +318,8 @@
                                         data-bs-dismiss="modal">
                                     cancel
                                 </button>
-                                <button class="btn btn-primary float-end disabled" id="addClientContactBtn" type="submit">
+                                <button class="btn btn-primary float-end disabled" id="addClientContactBtn"
+                                        type="submit">
                                     <i class="fas fa-save"></i> add contact to member
                                 </button>
                             </div>
@@ -316,16 +335,20 @@
                                 <p id="lead_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label" for="contact_label">Label <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="contact_label" name="contact_label" required placeholder="Email 2">
+                                <label class="form-label" for="contact_label">Label <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="contact_label" name="contact_label" required
+                                       placeholder="Email 2">
                                 <p id="contact_label_error" class="invalid-feedback d-none error col-12"
                                    role="alert"></p>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label" for="contact_email">Email </label>
                                 <input type="text" class="form-control" id="contact_email" name="contact_email"
-                                       placeholder="contact email" readonly value="{{ (new \App\Services\CRMEmailService($conversation->email))->getParty() }}">
-                                <p id="contact_email_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                                       placeholder="contact email" readonly
+                                       value="{{ (new \App\Services\CRMEmailService($conversation->email))->getParty() }}">
+                                <p id="contact_email_error" class="invalid-feedback d-none error col-12"
+                                   role="alert"></p>
                             </div>
                             <hr>
                             <div class="mt-4">
@@ -339,7 +362,8 @@
                             </div>
                         </form>
                     </div>
-                    <div class="onboarding-content text-center with-gradient d-none modal-item" id="trashConversationWatcherModal">
+                    <div class="onboarding-content text-center with-gradient d-none modal-item"
+                         id="trashConversationWatcherModal">
                         <h3 class="h3 text-danger">Remove <b id="trashConversationWatcher"></b>
                             from Conversation
                         </h3>
@@ -452,7 +476,7 @@
                 $("#trashConversationWatcherForm").attr('action', $(this).data('click_url'));
                 $('#trashConversationWatcher').html(name);
                 $('#trashConversationWatcherModal').removeClass('d-none');
-                $('.modal-title').html('<b>Remove</b> user :' + name+' from conversation');
+                $('.modal-title').html('<b>Remove</b> user :' + name + ' from conversation');
                 $Modal.children().first().removeClass('modal-lg');
                 $Modal.modal('show');
             });
@@ -551,10 +575,10 @@
                 }
             }).on('select2:select', function (e) {
                 const client_id = e.params.data.id;
-                if (typeof client_id === 'string'){
-                    $("#addClientContactForm").attr('action', '{{route('clients.index')}}/'+client_id+'/client-contacts');
+                if (typeof client_id === 'string') {
+                    $("#addClientContactForm").attr('action', '{{route('clients.index')}}/' + client_id + '/client-contacts');
                     $("#addClientContactBtn").removeClass('disabled');
-                }else{
+                } else {
                     $("#addClientContactBtn").addClass('disabled');
                 }
             });
@@ -595,10 +619,10 @@
                 }
             }).on('select2:select', function (e) {
                 const lead_id = e.params.data.id;
-                if (Number.isInteger(lead_id)){
-                    $("#addLeadContactForm").attr('action', '{{route('leads.index')}}/'+lead_id+'/lead-contacts');
+                if (Number.isInteger(lead_id)) {
+                    $("#addLeadContactForm").attr('action', '{{route('leads.index')}}/' + lead_id + '/lead-contacts');
                     $("#addLeadContactBtn").removeClass('disabled');
-                }else{
+                } else {
                     $("#addLeadContactBtn").addClass('disabled');
                 }
             });
@@ -646,6 +670,7 @@
                 window.location.reload();
             }, 3000);
         }
+
         function markEmailAsRead(emailId) {
             $.ajax({
                 url: "{{ route('emails.index') }}/" + emailId,

@@ -4,7 +4,7 @@ namespace App\Http\Requests\Schedule;
 
 use App\Enums\Core\PermissionEnum;
 use App\Helpers\SystemHelper;
-use App\Models\User;
+use App\Models\Auth\User;
 use Carbon\Carbon;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;

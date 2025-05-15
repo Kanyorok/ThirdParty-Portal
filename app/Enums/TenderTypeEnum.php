@@ -4,17 +4,25 @@ namespace App\Enums;
 
 use App\Traits\UsefulEnumTrait;
 
-enum TenderTypeEnum: string{
+enum TenderTypeEnum: string {
     use UsefulEnumTrait;
 
-    case Open = 'Open';
-    case Restricted = 'Restricted';
+    case Open = 'op';
+    case Restricted = 'rs';
 
-    public static function values(): array{
-        return array_column(self::cases(), 'values');
+    public function displayName(): string
+    {
+        return match($this) {
+            self::Open => 'Open Tender',
+            self::Restricted => 'Restricted Tender',
+        };
     }
 
-    public function requiresVendorApproval(): bool {
-        return $this === self.Restricted;
+    public function codePrefix(): string
+    {
+        return match($this) {
+            self::Open => 'OPT-',
+            self::Restricted => 'RST-',
+        };
     }
 }

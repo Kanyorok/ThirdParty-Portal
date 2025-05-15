@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\CRM\Base;
 
 use App\Http\Controllers\Controller;
-use App\Models\CRMImage;
+use App\Models\DMS\Image;
 use App\Services\ImageService;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -24,7 +24,7 @@ class DocumentController extends Controller
      * Appendable Html Content for Content
      * @throws AuthorizationException
      */
-    public function show(CRMImage $image): View
+    public function show(Image $image): View
     {
         //   $this->authorize('view', $image->source); todo fix for emails here
         return view('crm.base.documents.show', compact('image'))
@@ -35,7 +35,7 @@ class DocumentController extends Controller
      * Download Content
      * @throws AuthorizationException
      */
-    public function edit(Request $request, CRMImage $image)
+    public function edit(Request $request, Image $image)
     {
         $this->authorize('view', $image->source);
 
@@ -50,7 +50,7 @@ class DocumentController extends Controller
      * Remove the specified resource from storage.
      * @throws AuthorizationException
      */
-    public function destroy(Request $request, CRMImage $image): JsonResponse
+    public function destroy(Request $request, Image $image): JsonResponse
     {
         $this->authorize('delete', $image->source);
 

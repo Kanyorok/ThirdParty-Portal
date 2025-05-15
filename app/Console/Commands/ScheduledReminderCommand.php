@@ -3,10 +3,10 @@
 namespace App\Console\Commands;
 
 use App\Enums\EmailPriorityEnum;
-use App\Models\Schedule;
-use App\Models\ScheduleUser;
+use App\Models\CRM\Schedule;
+use App\Models\CRM\ScheduleUser;
+use App\Services\HRM\UserService;
 use App\Services\ScheduleService;
-use App\Services\UserService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 

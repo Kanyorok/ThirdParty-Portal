@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Settings\Users;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Base\MessageRequest;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Services\HRM\UserService;
 use App\Services\SMSService;
-use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;

@@ -3,7 +3,7 @@
 namespace App\Http\Requests\Email;
 
 use App\Helpers\SystemHelper;
-use App\Models\User;
+use App\Models\Auth\User;
 use Illuminate\Foundation\Http\FormRequest;
 
 class SendDraftMailRequest extends FormRequest

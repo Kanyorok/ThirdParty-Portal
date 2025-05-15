@@ -8,18 +8,18 @@ use App\Enums\EmailPriorityEnum;
 use App\Enums\EmailStatusEnum;
 use App\Events\Marketing\CampaignRunEvent;
 use App\Helpers\StringHelper;
+use App\Models\Auth\User;
 use App\Models\BR\Client;
 use App\Models\BR\DebtProduct;
-use App\Models\Campaign;
-use App\Models\CampaignParty;
-use App\Models\CrmSMS;
-use App\Models\Lead;
-use App\Models\User;
+use App\Models\Communication\SMS;
+use App\Models\CRM\Campaign;
+use App\Models\CRM\CampaignParty;
+use App\Models\CRM\Lead;
 use App\Services\ActivityService;
 use App\Services\BR\ClientService;
 use App\Services\BR\LoanService;
+use App\Services\HRM\UserService;
 use App\Services\ThirdParty\InfobipService;
-use App\Services\UserService;
 use Carbon\Carbon;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Collection;
@@ -107,7 +107,7 @@ class CampaignRunListener implements ShouldQueue
 
                 //2100/12
                 if ($data->count() > 170) {
-                    DB::table('t_CRMEmails')->insert($data->toArray());
+                    DB::table('t_Emails')->insert($data->toArray());
                     CampaignParty::query()->whereIn('t_CampaignParties.Id', $campaign_sending->flatten()->toArray())->update([
                         'Status' => CampaignStatusEnum::Sending->value,
                     ]);
@@ -257,7 +257,7 @@ class CampaignRunListener implements ShouldQueue
                 $campaign_failed->add($contact->Id);
             }
             if ($data->count() > 0) {
-                DB::table('t_CRMEmails')->lock('WITH(NOLOCK)')->insert($data->toArray());
+                DB::table('t_Emails')->lock('WITH(NOLOCK)')->insert($data->toArray());
                 CampaignParty::query()->whereIn('t_CampaignParties.Id', $campaign_sending->flatten()->toArray())->update([
                                                                                                                           'Status' => CampaignStatusEnum::Sent->value,
                                                                                                                          ]);
@@ -418,7 +418,7 @@ class CampaignRunListener implements ShouldQueue
                 DB::table('t_SMS')->lock('WITH(NOLOCK)')->insert($data->toArray());
                 CampaignParty::query()->lock('WITH(NOLOCK)')->whereIn('t_CampaignParties.Id', $campaign_sending->flatten()->toArray())->update([
                                                                                                                                                 'Status'  => CampaignStatusEnum::Sending->value,
-                                                                                                                                                'Channel' => CrmSMS::getPrimaryKey(),
+                    'Channel' => SMS::getPrimaryKey(),
                                                                                                                                                ]);
             }
             $this->activitiesAndFailed($campaign_failed, $leadId_Sent, $description, $campaign, $actor, $clientID_sent, $LoansActivity);

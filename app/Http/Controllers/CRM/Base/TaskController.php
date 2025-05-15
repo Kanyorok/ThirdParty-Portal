@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\CRM\Base;
 
 use App\Http\Controllers\Controller;
-use App\Models\Task;
+use App\Models\Core\Task;
 use App\Services\TaskService;
 use App\Traits\Controller\TasksTrait;
 use Carbon\Carbon;

@@ -2,25 +2,21 @@
 
 namespace App\Models\Procurement;
 
+use App\Enums\TenderCategoryEnum;
 use App\Enums\TenderStatusEnum;
 use App\Enums\TenderTypeEnum;
-use App\Enums\TenderCategoryEnum;
+use App\Models\ThirdParies\Supplier;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\{
-    BelongsTo,
-    HasMany,
-    BelongsToMany
-};
-use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use InvalidArgumentException;
 
-class Tender extends Model 
+class Tender extends Model
 {
-    use SoftDeletes;
-
     protected $table = 't_Tenders';
-    protected $primaryKey = 'TenderID';
+    protected $primaryKey = 'Id';
     protected $keyType = 'integer';
-    public $incrementing = true;
 
     protected $fillable = [
         'TenderNo',
@@ -37,7 +33,6 @@ class Tender extends Model
         'DateCreated',
         'CreatedBy',
         'ModifiedBy',
-        // 'DateUpdated' TODO: consider adding this field
     ];
 
     protected $casts = [
@@ -50,13 +45,17 @@ class Tender extends Model
     ];
 
     // Relationships
-    public function invitations(): HasMany {
+
+    public function acceptedInvitations(): HasMany
+    {
+        return $this->invitations()->accepted;
+    }
+
+    public function invitations(): HasMany
+    {
         return $this->hasMany(TenderInvitation::class, 'TenderID');
     }
 
-    public function acceptedInvitations(): HasMany {
-        return $this->invitations()->accepted;
-    }
     public function suppliers(): BelongsToMany
     {
         return $this->belongsToMany(Supplier::class, 't_TenderVendors', 'TenderID', 'Id')
@@ -67,11 +66,6 @@ class Tender extends Model
     public function documents(): HasMany
     {
         return $this->hasMany(TenderDocument::class, 'TenderID');
-    }
-
-    public function submissions(): HasMany
-    {
-        return $this->hasMany(TenderSubmission::class, 'TenderID');
     }
 
     public function clarifications(): HasMany
@@ -89,12 +83,13 @@ class Tender extends Model
         return $this->belongsTo(User::class, 'ModifiedBy');
     }
 
-    // Scopes
     public function scopeActive($query)
     {
         return $query->where('Status', TenderStatusEnum::Published->value)
             ->where('SubmissionDeadline', '>=', now()->toDateString());
     }
+
+    // Scopes
 
     public function scopeClosed($query)
     {
@@ -103,9 +98,9 @@ class Tender extends Model
 
     public function scopeForVendor($query, $Id)
     {
-        return $query->where(function($q) use ($Id) {
+        return $query->where(function ($q) use ($Id) {
             $q->where('TenderType', TenderTypeEnum::Open->value)
-              ->orWhereHas('vendors', fn($q) => $q->where('Id', $Id));
+                ->orWhereHas('vendors', fn($q) => $q->where('Id', $Id));
         }); //TODO; Work on the vendor model
     }
 
@@ -116,20 +111,26 @@ class Tender extends Model
 
     public function canAcceptSubmissions(): bool
     {
-        return $this->Status === TenderStatusEnum::Published && 
-               now()->lessThan($this->SubmissionDeadline);
+        return $this->Status === TenderStatusEnum::Published &&
+            now()->lessThan($this->SubmissionDeadline);
     }
 
-    public function acceptedSubmissions(): HasMany {
-        return $this -> submissions()->where(
+    public function acceptedSubmissions(): HasMany
+    {
+        return $this->submissions()->where(
             'Status', SubmissionStatusEnum::Submitted
         );
+    }
+
+    public function submissions(): HasMany
+    {
+        return $this->hasMany(TenderSubmission::class, 'TenderID');
     }
 
     public function publish(): void
     {
         if (!$this->Status->canTransitionTo(TenderStatusEnum::Published)) {
-            throw new \InvalidArgumentException('Tender cannot be published from current status');
+            throw new InvalidArgumentException('Tender cannot be published from current status');
         }
 
         $this->update(['Status' => TenderStatusEnum::Published]);

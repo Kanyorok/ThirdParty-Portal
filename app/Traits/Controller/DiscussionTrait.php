@@ -2,9 +2,9 @@
 
 namespace App\Traits\Controller;
 
-use App\Models\Call;
-use App\Models\Discussion;
-use App\Models\Meeting;
+use App\Models\Communication\Call;
+use App\Models\CRM\Discussion;
+use App\Models\CRM\Meeting;
 use Exception;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Query\Builder;

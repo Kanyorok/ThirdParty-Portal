@@ -6,7 +6,7 @@ use App\Enums\CampaignTypeEnum;
 use App\Enums\EmailStatusEnum;
 use App\Exceptions\ErroredException;
 use App\Models\BR\DebtProduct;
-use App\Models\MarketingList;
+use App\Models\CRM\MarketingList;
 use App\Services\Marketing\ListService;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;

@@ -5,7 +5,7 @@ namespace App\Http\Controllers\CRM\Marketing\Campaign;
 use App\Enums\CampaignStatusEnum;
 use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
-use App\Models\Campaign;
+use App\Models\CRM\Campaign;
 use App\Services\Marketing\CampaignService;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;

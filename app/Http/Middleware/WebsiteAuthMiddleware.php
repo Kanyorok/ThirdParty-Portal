@@ -5,7 +5,7 @@ namespace App\Http\Middleware;
 use App\Enums\Core\IntegrationsEnum;
 use App\Enums\Core\SystemIntegrationEnum;
 use App\Helpers\SystemHelper;
-use App\Models\APICredential;
+use App\Models\Settings\APICredential;
 use Closure;
 use Exception;
 use Illuminate\Http\JsonResponse;

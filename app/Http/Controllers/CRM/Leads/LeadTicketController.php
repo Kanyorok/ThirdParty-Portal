@@ -8,13 +8,13 @@ use App\Exceptions\ErroredException;
 use App\Helpers\SystemHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Ticket\NewTicketRequest;
-use App\Models\CrmEmail;
-use App\Models\CRMImage;
-use App\Models\EmailConversation;
-use App\Models\Lead;
-use App\Models\Team;
-use App\Models\Ticket;
-use App\Models\User;
+use App\Models\Auth\Team;
+use App\Models\Auth\User;
+use App\Models\Communication\Email;
+use App\Models\Communication\EmailConversation;
+use App\Models\CRM\Lead;
+use App\Models\CRM\Ticket;
+use App\Models\DMS\Image;
 use App\Traits\Controller\TicketsTrait;
 use Carbon\Carbon;
 use Exception;
@@ -67,7 +67,7 @@ class LeadTicketController extends Controller
         try {
             $service = DB::transaction(function () use ($lead, $owner, $request, $category, $source, $priority, $start, $end, $assignee, $watchers, $emailConversation) {
                 $service = ($emailConversation instanceof EmailConversation)
-                    ? $this->save($lead, $category, $request->validated('ticket_title'), $request->validated('ticket_description'), $owner, CrmEmail::getPrimaryKey(), $priority, $start, $end, SourceID: $emailConversation->email->EmailID)
+                    ? $this->save($lead, $category, $request->validated('ticket_title'), $request->validated('ticket_description'), $owner, Email::getPrimaryKey(), $priority, $start, $end, SourceID: $emailConversation->email->EmailID)
                     : $this->save($lead, $category, $request->validated('ticket_title'), $request->validated('ticket_description'), $owner, $source, $priority, $start, $end);
 
                    $service->assign($assignee);
@@ -85,7 +85,7 @@ class LeadTicketController extends Controller
 
                 if (($emailConversation instanceof EmailConversation)) {//attach documents in email to ticket
                     foreach ($emailConversation->email->attachments as $attachment) {
-                        if ($attachment instanceof CRMImage) {
+                        if ($attachment instanceof Image) {
                             $service->documentContent($attachment->Image, $attachment->MIMEType, $attachment->Name, SystemHelper::user());
                         }
                     }

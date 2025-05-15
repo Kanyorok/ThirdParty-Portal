@@ -21,7 +21,7 @@ return new class extends Migration {
             $table->longText('Risks')->nullable();
             $table->longText('RiskStrategies')->nullable();
             $table->longText('Summary')->nullable();
-            $table->foreignId('StageId')->constrained('t_CRMCodeDetails', 'ID')->cascadeOnDelete();
+            $table->foreignId('StageId')->constrained('t_CodeDetails', 'ID')->cascadeOnDelete();
             $table->foreignId('ArchivedBy')->nullable()->constrained('t_Users', 'Id');
             $table->dateTime('ArchivedOn')->nullable();
             $table->dateTime('CommentStart')->nullable();
@@ -37,7 +37,7 @@ return new class extends Migration {
         Schema::create('t_ProductDevelopmentImages', static function (Blueprint $table) {
             $table->id('Id');
             $table->foreignId('ProductDevelopmentId')->constrained('t_ProductDevelopment', 'Id');
-            $table->foreignId('ImageId')->constrained('t_CRMImages', 'ImageID');
+            $table->foreignId('ImageId')->constrained('t_Images', 'ImageID');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');

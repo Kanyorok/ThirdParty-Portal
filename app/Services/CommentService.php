@@ -4,11 +4,11 @@ namespace App\Services;
 
 use App\Enums\Core\IntegrationsEnum;
 use App\Helpers\SystemHelper;
-use App\Models\Comment;
-use App\Models\ProductDevelopment;
-use App\Models\Social;
-use App\Models\Ticket;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\Communication\Comment;
+use App\Models\CRM\ProductDevelopment;
+use App\Models\CRM\Social;
+use App\Models\CRM\Ticket;
 use Carbon\Carbon;
 use Illuminate\Support\Number;
 

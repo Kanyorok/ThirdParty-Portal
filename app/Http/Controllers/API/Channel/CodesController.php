@@ -4,7 +4,7 @@ namespace App\Http\Controllers\API\Channel;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CodeDetailCollection;
-use App\Models\Locality;
+use App\Models\Core\Locality;
 use App\Services\StaticListsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

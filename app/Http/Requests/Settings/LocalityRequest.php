@@ -3,7 +3,7 @@
 namespace App\Http\Requests\Settings;
 
 use App\Enums\LocalityTypeEnum;
-use App\Models\Locality;
+use App\Models\Core\Locality;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\ValidationException;

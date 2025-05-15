@@ -4,11 +4,11 @@ namespace App\Listeners\Marketing;
 
 use App\Enums\Core\ExtensionsEnum;
 use App\Events\Marketing\MarketingListUploadedEvent;
+use App\Models\Auth\User;
 use App\Models\BR\Client;
-use App\Models\MarketingList;
-use App\Models\User;
+use App\Models\CRM\MarketingList;
+use App\Services\HRM\UserService;
 use App\Services\Marketing\ListService;
-use App\Services\UserService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Str;

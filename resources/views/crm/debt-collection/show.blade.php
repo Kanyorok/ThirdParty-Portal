@@ -1,5 +1,5 @@
-@php use App\Models\BR\Client; @endphp
-@php use App\Services\BR\ClientService; @endphp
+@php use App\Models\Auth\User;use App\Models\BR\Client;use App\Models\CRM\DebtRecovery\LoanAssignment;use App\Services\BR\ClientService; @endphp
+@php @endphp
 @extends('layouts.app')
 
 @section('title')
@@ -66,7 +66,7 @@
                     </p>
                     <div class="clearfix"></div>
                     <hr class="my-0">
-                    @if($assignment instanceof  \App\Models\DebtRecovery\LoanAssignment && $assignment->user instanceof \App\Models\User)
+                    @if($assignment instanceof  LoanAssignment && $assignment->user instanceof User)
                         @include('snippets.user_summary', ['user'=>$assignment->user])
                     @else
                         <h4 class="mt-2 text-center">Unassigned</h4>
@@ -121,160 +121,163 @@
                     </div>
                 </div>
                 <div class="col-12 tab">
-                <ul class="nav nav-tabs" role="tablist">
-                    <li class="nav-item"><a class="nav-link active" href="#tab-0" data-bs-toggle="tab" role="tab"
-                                            aria-selected="false">Activities</a></li>
-                    @if($loan->guarantors_count>0)
-                        <li class="nav-item"><a class="nav-link" href="#tab-1" data-bs-toggle="tab" role="tab"
-                                                aria-selected="false" onclick="fetchGuarantorsTable()">Guarantors</a>
-                        </li>
-                    @elseif($loan->collaterals_count>0)
-                        <li class="nav-item"><a class="nav-link" href="#tab-1" data-bs-toggle="tab" role="tab"
-                                                aria-selected="false" onclick="fetchCollateralsTable()">Collaterals</a>
-                        </li>
-                    @else
-                        <li class="nav-item"><a class="nav-link" href="#tab-1" data-bs-toggle="tab" role="tab"
-                                                aria-selected="false">Guarantorship</a></li>
-                    @endif
-                    <li class="nav-item"><a class="nav-link" href="#tab-2" data-bs-toggle="tab" role="tab"
-                                            aria-selected="false" onclick="fetchSMSTable()">Messages</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#tab-3" data-bs-toggle="tab" role="tab"
-                                            aria-selected="false" onclick="fetchTasksTable()">Tasks</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#tab-4" data-bs-toggle="tab" role="tab"
-                                            aria-selected="false" onclick="fetchScheduleTable()">Schedule</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#tab-5" data-bs-toggle="tab" role="tab"
-                                            aria-selected="false" onclick="fetchAssignmentsTable()">Assignment
-                            History</a></li>
-                </ul>
-                <div class="tab-content">
-                    <div class="tab-pane active m-2" id="tab-0" role="tabpanel">
-                        <div id="activitiesMain" class="px-2 pt-0 w-100 activities" style="max-height: 100vh"
-                             data-url="{{  route('debt-collection.activities',[$loan->AccountID]) }}"></div>
-                        <div class="d-grid text-center" id="activitiesMessage"></div>
-                    </div>
-                    <div class="tab-pane m-2" id="tab-1" role="tabpanel">
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li class="nav-item"><a class="nav-link active" href="#tab-0" data-bs-toggle="tab" role="tab"
+                                                aria-selected="false">Activities</a></li>
                         @if($loan->guarantors_count>0)
-                            <div class="row">
-                                <div class="col-sm-6 col-12">
-                                    List of Guarantors
-                                </div>
-                                <div class="col-sm-6 col-12">
-                                    <div class="card-actions float-end">
-                                        <button class="btn btn-sm btn-primary mx-2" id="triggerSMSGuarantorsBtn"
-                                                title="send sms to all"><i class="fas fa-message"></i></button>
-                                        <button class="btn btn-sm btn-primary mx-2" disabled title="send email to all">
-                                            <i
-                                                class="fas fa-envelope"></i></button>
-                                    </div>
-                                    <div class="clearfix"></div>
-                                </div>
-                                <div class="col-12">
-                                    <table id="guarantorsTable"
-                                           class="table table-striped no-footer dtr-inline w-100 table-responsive">
-                                        <thead>
-                                        <tr>
-                                            <th>No.</th>
-                                            <th>Party</th>
-                                            <th>Amount</th>
-                                            <th>Dated</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody></tbody>
-                                    </table>
-                                </div>
-                            </div>
+                            <li class="nav-item"><a class="nav-link" href="#tab-1" data-bs-toggle="tab" role="tab"
+                                                    aria-selected="false"
+                                                    onclick="fetchGuarantorsTable()">Guarantors</a>
+                            </li>
                         @elseif($loan->collaterals_count>0)
-                            <div class="row">
-                                <div class="col-12"><h3>Collaterals</h3></div>
-                                <div class="col-12">
-                                    <table id="collateralsTable"
-                                           class="table table-striped no-footer dtr-inline w-100 table-responsive">
-                                        <thead>
-                                        <tr>
-                                            <th>No.</th>
-                                            <th>Name</th>
-                                            <th>Value</th>
-                                            <th>Dated</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody></tbody>
-                                    </table>
-                                </div>
-                            </div>
+                            <li class="nav-item"><a class="nav-link" href="#tab-1" data-bs-toggle="tab" role="tab"
+                                                    aria-selected="false"
+                                                    onclick="fetchCollateralsTable()">Collaterals</a>
+                            </li>
                         @else
-                            <div class="my-2">
-                                <div class="alert alert-primary m-0" role="alert">
-                                    <div class="alert-icon">
-                                        <i class="far fa-fw fa-bell"></i>
+                            <li class="nav-item"><a class="nav-link" href="#tab-1" data-bs-toggle="tab" role="tab"
+                                                    aria-selected="false">Guarantorship</a></li>
+                        @endif
+                        <li class="nav-item"><a class="nav-link" href="#tab-2" data-bs-toggle="tab" role="tab"
+                                                aria-selected="false" onclick="fetchSMSTable()">Messages</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#tab-3" data-bs-toggle="tab" role="tab"
+                                                aria-selected="false" onclick="fetchTasksTable()">Tasks</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#tab-4" data-bs-toggle="tab" role="tab"
+                                                aria-selected="false" onclick="fetchScheduleTable()">Schedule</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#tab-5" data-bs-toggle="tab" role="tab"
+                                                aria-selected="false" onclick="fetchAssignmentsTable()">Assignment
+                                History</a></li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane active m-2" id="tab-0" role="tabpanel">
+                            <div id="activitiesMain" class="px-2 pt-0 w-100 activities" style="max-height: 100vh"
+                                 data-url="{{  route('debt-collection.activities',[$loan->AccountID]) }}"></div>
+                            <div class="d-grid text-center" id="activitiesMessage"></div>
+                        </div>
+                        <div class="tab-pane m-2" id="tab-1" role="tabpanel">
+                            @if($loan->guarantors_count>0)
+                                <div class="row">
+                                    <div class="col-sm-6 col-12">
+                                        List of Guarantors
                                     </div>
-                                    <div class="alert-message">
-                                        <strong>Self Guarantor</strong> This loan is self Guaranteed by the member.
+                                    <div class="col-sm-6 col-12">
+                                        <div class="card-actions float-end">
+                                            <button class="btn btn-sm btn-primary mx-2" id="triggerSMSGuarantorsBtn"
+                                                    title="send sms to all"><i class="fas fa-message"></i></button>
+                                            <button class="btn btn-sm btn-primary mx-2" disabled
+                                                    title="send email to all">
+                                                <i
+                                                    class="fas fa-envelope"></i></button>
+                                        </div>
+                                        <div class="clearfix"></div>
+                                    </div>
+                                    <div class="col-12">
+                                        <table id="guarantorsTable"
+                                               class="table table-striped no-footer dtr-inline w-100 table-responsive">
+                                            <thead>
+                                            <tr>
+                                                <th>No.</th>
+                                                <th>Party</th>
+                                                <th>Amount</th>
+                                                <th>Dated</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody></tbody>
+                                        </table>
                                     </div>
                                 </div>
-                            </div>
-                        @endif
-                    </div>
-                    <div class="tab-pane m-2" id="tab-2" role="tabpanel">
-                        <table id="MessagesTable"
-                               class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                            <thead>
-                            <tr>
-                                <th>SMS ID</th>
-                                <th>Party</th>
-                                <th>Dated</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                    <div class="tab-pane m-2" id="tab-3" role="tabpanel">
-                        <table id="tasksTable"
-                               class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                            <thead>
-                            <tr>
-                                <th>#</th>
-                                <th class="w-50">Task</th>
-                                <th>Due On</th>
-                                <th>actions</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                    <div class="tab-pane m-2" id="tab-4" role="tabpanel">
-                        <table id="scheduleTable"
-                               class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                            <thead>
-                            <tr>
-                                <th>No.</th>
-                                <th>Type</th>
-                                <th>Start</th>
-                                <th>End</th>
-                                <th>actions</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                    <div class="tab-pane m-2" id="tab-5" role="tabpanel">
-                        <table id="assignmentsTable"
-                               class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                            <thead>
-                            <tr>
-                                <th>No.</th>
-                                <th>User</th>
-                                <th>Start</th>
-                                <th>End</th>
-                                <th>Notes</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+                            @elseif($loan->collaterals_count>0)
+                                <div class="row">
+                                    <div class="col-12"><h3>Collaterals</h3></div>
+                                    <div class="col-12">
+                                        <table id="collateralsTable"
+                                               class="table table-striped no-footer dtr-inline w-100 table-responsive">
+                                            <thead>
+                                            <tr>
+                                                <th>No.</th>
+                                                <th>Name</th>
+                                                <th>Value</th>
+                                                <th>Dated</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @else
+                                <div class="my-2">
+                                    <div class="alert alert-primary m-0" role="alert">
+                                        <div class="alert-icon">
+                                            <i class="far fa-fw fa-bell"></i>
+                                        </div>
+                                        <div class="alert-message">
+                                            <strong>Self Guarantor</strong> This loan is self Guaranteed by the member.
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                        <div class="tab-pane m-2" id="tab-2" role="tabpanel">
+                            <table id="MessagesTable"
+                                   class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                <thead>
+                                <tr>
+                                    <th>SMS ID</th>
+                                    <th>Party</th>
+                                    <th>Dated</th>
+                                </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                        <div class="tab-pane m-2" id="tab-3" role="tabpanel">
+                            <table id="tasksTable"
+                                   class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th class="w-50">Task</th>
+                                    <th>Due On</th>
+                                    <th>actions</th>
+                                </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                        <div class="tab-pane m-2" id="tab-4" role="tabpanel">
+                            <table id="scheduleTable"
+                                   class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                <thead>
+                                <tr>
+                                    <th>No.</th>
+                                    <th>Type</th>
+                                    <th>Start</th>
+                                    <th>End</th>
+                                    <th>actions</th>
+                                </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                        <div class="tab-pane m-2" id="tab-5" role="tabpanel">
+                            <table id="assignmentsTable"
+                                   class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                <thead>
+                                <tr>
+                                    <th>No.</th>
+                                    <th>User</th>
+                                    <th>Start</th>
+                                    <th>End</th>
+                                    <th>Notes</th>
+                                </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
         </div>
     </div>
     <div class="modal fade" id="debtCollectionActionsModel" tabindex="-1" role="dialog" aria-hidden="true"
@@ -317,7 +320,8 @@
                                                     replaced by Name of Loanee <code>{{ $loan->AccountName }}</code>
                                                     while sending.
                                                 </li>
-                                                <li class="guarantor-group-item">You can use <code> #product</code> to be
+                                                <li class="guarantor-group-item">You can use <code> #product</code> to
+                                                    be
                                                     replaced by Product Name <code>{{ $loan->ProductName }}</code>
                                                     while sending.
                                                 </li>
@@ -341,8 +345,9 @@
                                 @csrf
                                 <div class="mb-3 col-12">
                                     <label class="form-label" for="guarantor_message_content">Content <span
-                                            class="text-danger">*</span></label> &nbsp; <b class="float-end text-info"
-                                                                                           id="guarantorMsgCounter"></b>
+                                            class="text-danger">*</span></label> &nbsp; <b
+                                        class="float-end text-info"
+                                        id="guarantorMsgCounter"></b>
                                     <textarea name="guarantor_message_content" id="guarantor_message_content"
                                               class="form-control" rows="4"
                                               maxlength="5000" minlength="2"></textarea>
@@ -363,28 +368,28 @@
                             </form>
                         </div>
                     @endif
-                        <div class="onboarding-content with-gradient d-none modal-item" id="reassignLoanModal">
-                            <form action="{{ route('loan-assignment.store',[$loan->AccountID]) }}" method="post"
-                                  id="reassignLoanForm">
-                                @csrf
-                                <div class="mb-3">
-                                    <label for="Assignee" class="form-label">User </label>
-                                    <select class="form-control" name="Assignee" id="Assignee" required></select>
-                                    <p id="Assignee_error" class="invalid-feedback d-none error col-12"
-                                       role="alert"></p>
-                                </div>
-                                <hr>
-                                <div class="mt-4">
-                                    <button type="button" class="btn btn-secondary float-start"
-                                            data-bs-dismiss="modal">
-                                        cancel
-                                    </button>
-                                    <button class="btn btn-primary float-end" id="reassignLoanBtn" type="submit"><i
-                                            class="fas fa-shuffle"></i> reassign
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
+                    <div class="onboarding-content with-gradient d-none modal-item" id="reassignLoanModal">
+                        <form action="{{ route('loan-assignment.store',[$loan->AccountID]) }}" method="post"
+                              id="reassignLoanForm">
+                            @csrf
+                            <div class="mb-3">
+                                <label for="Assignee" class="form-label">User </label>
+                                <select class="form-control" name="Assignee" id="Assignee" required></select>
+                                <p id="Assignee_error" class="invalid-feedback d-none error col-12"
+                                   role="alert"></p>
+                            </div>
+                            <hr>
+                            <div class="mt-4">
+                                <button type="button" class="btn btn-secondary float-start"
+                                        data-bs-dismiss="modal">
+                                    cancel
+                                </button>
+                                <button class="btn btn-primary float-end" id="reassignLoanBtn" type="submit"><i
+                                        class="fas fa-shuffle"></i> reassign
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>

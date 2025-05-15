@@ -2,7 +2,7 @@
 
 namespace App\Mail;
 
-use App\Models\CrmEmail;
+use App\Models\Communication\Email;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Attachment;
@@ -22,7 +22,7 @@ class DefaultEmail extends Mailable
     /**
      * Create a new message instance.
      */
-    public function __construct(public CrmEmail $crmEmail)
+    public function __construct(public Email $crmEmail)
     {
         $this->priority($this->crmEmail->Priority->intPriority());
     }

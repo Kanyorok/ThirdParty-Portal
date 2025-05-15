@@ -2,7 +2,7 @@
 
 namespace App\Http\Resources\Marketing;
 
-use App\Models\MarketingPlannerActivity;
+use App\Models\CRM\MarketingPlannerActivity;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
