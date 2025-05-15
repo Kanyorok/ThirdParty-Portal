@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Inventory\ReceiptController;
+//use App\Http\Controllers\Inventory\ReceiptController;
 use App\Http\Controllers\Inventory\TransactionReceiptsController;
 use App\Http\Controllers\Inventory\TransactionTransfersController;
 use App\Http\Controllers\Inventory\TransactionAdjustmentController;
@@ -17,14 +17,14 @@ use App\Http\Controllers\Inventory\UOMConversionController;
 use App\Http\Controllers\Inventory\BinTrackingController;
 use App\Http\Controllers\Inventory\StockValuationHistoryController;
 use App\Http\Controllers\Inventory\InterBranchRequisitionController;
-use App\Http\Controllers\Inventory\ReportsController; 
+use App\Http\Controllers\Inventory\ReportsController;
 use App\Http\Controllers\Inventory\InterBranchRequisitionApprovalController;
 use App\Http\Controllers\Inventory\PropertyReceiptPrintController;
 
 
 
 Route::namespace('Inventory')->group(function () {
-    Route::resource('receipts', ReceiptController::class);
+//    Route::resource('receipts', ReceiptController::class);
     Route::resource('transactionsreceipts', TransactionReceiptsController::class);
     Route::resource('transactionstransfers', TransactionTransfersController::class);
     Route::resource('transactionsadjustment', TransactionAdjustmentController::class);

@@ -18,7 +18,7 @@ class PurchaseOrderController extends Controller
     {
 
         $this->middleware('ajax')->except(['index', 'create']);
-        $this->authorizeResource(Order::class);
+//        $this->authorizeResource(Order::class);
     }
 
     public function getItemDetails($item): JsonResponse
@@ -56,14 +56,22 @@ class PurchaseOrderController extends Controller
     }
 
     public function getSuppliers(): JsonResponse
+
     {
+
+        \Log::info('getSuppliers() was triggered.');
+
+
         try{
-            $details = $this->supplierService->getSuppliers();
+            $suppliers = $this->supplierService->getSuppliers();
+            \Log::info('Suppliers data:', $suppliers->toArray());
             return response()->json([
                 'success' => true,
-                'data' => $details,
+                'data' => $suppliers,
             ]);}
         catch(\Exception $e){
+            \Log::error('Error fetching suppliers: ' . $e->getMessage());
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch items.',

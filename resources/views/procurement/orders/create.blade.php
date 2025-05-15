@@ -25,157 +25,220 @@
             </div>
             <button class="btn btn-success">Place Order</button>
         </div>
+        <form action="{{ route('purchaseOrder.store') }}" method="post" id="purchaseOrdersForm" >
+            @csrf
+            <!-- Supplier & Details -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <label>Supplier</label>
+                    <select class="form-control supplier" id="supplier" name="supplier">
+                        <option selected disabled>Select supplier</option>
+                        <option value="01">Supplier 1</option>
+                        <option value="02">Supplier 2</option>
+                        {{--                     @foreach ($Details as $vendor) --}}
+                        {{--                <option value="{{ $vendor->Id }}">{{ $vendor->Name }}</option> --}}
+                        {{--                    @endforeach --}}
 
-        <!-- Supplier & Details -->
-        <div class="row mb-4">
-            <div class="col-md-6">
-                <label>Supplier</label>
-                <select class="form-control supplier">
-                    <option selected disabled>Select supplier</option>
-{{--                     @foreach ($Details as $vendor)--}}
-{{--                <option value="{{ $vendor->Id }}">{{ $vendor->Name }}</option>--}}
-{{--                    @endforeach--}}
-
-                    <!-- Loop suppliers here -->
-                </select>
-            </div>
-            <div class="col-md-6">
-                <label>Address</label>
-                <input type="text" class="form-control" placeholder="Supplier address" />
-            </div>
-        </div>
-
-        <!-- LPO Details -->
-        <div class="row mb-4">
-            <div class="col-md-4">
-                <label>LPO Number</label>
-                <input type="text" class="form-control" value="{{ uniqid('LPO-') }}" readonly />
-            </div>
-            <div class="col-md-4">
-                <label>Date</label>
-                <input type="date" class="form-control poDate" />
-            </div>
-            <div class="col-md-4">
-                <label>Reference Number</label>
-                <input type="text" class="form-control rfqNo" placeholder="RFQ Number" />
-            </div>
-            <div class="col-md-4 mt-2">
-                <label>Priority</label>
-                <select class="form-control priority">
-                    <option>High</option>
-                    <option>Medium</option>
-                    <option>Low</option>
-                </select>
-            </div>
-            <div class="col-md-4 mt-2">
-                <label>Payment Terms</label>
-                <input type="text" class="form-control terms" placeholder="e.g., Net 30, 50%" />
-            </div>
-        </div>
-
-        <div class="d-flex justify-content-end mb-3">
-            <button type="button" class="btn btn-outline-primary" id="add-row">
-                + Add Item
-            </button>
-        </div>
-
-
-
-        <!-- Line Items Table -->
-        <div class="table-responsive mb-4">
-            <table class="table table-bordered table-sm">
-                <thead class="table-light">
-                    <tr>
-                        <th style="width:5%;">#</th>
-                        <th style="width:10%;">Item Type</th>
-                        <th style="width:15%;">Item Code</th>
-                        <th style="width:15%;">Item Description</th>
-                        <th style="width:10%;">Quantity</th>
-                        <th style="width:10%;">Unit Price</th>
-                        <th style="width:10%;">Tax</th>
-                        <th style="width:10%;">Discount</th>
-                        <th style="width:20%;">Line Total</th>
-                    </tr>
-                </thead>
-                <tbody id="po-items">
-                    <tr>
-                        <td class="line-no">1.</td>
-                        <td class="text-start">
-                            <select class="form-select form-select-sm type" name="type[]" id="Type">
-                                <option disabled selected>Select Type</option>
-                                <option value="good">Goods</option>
-                                <option value="service">Services</option>
-                            </select>
-                        </td>
-                        <td class="text-start">
-                            <select class="form-select form-select-sm itemCode" name="itemCode[]" id="Item">
-                                <option disabled selected>Select Item Code</option>
-                                {{--                            <option value="good">Goods</option> --}}
-                                {{--                            <option value="services">Services</option> --}}
-                            </select>
-                        </td>
-                        {{--                    <td><input type="text" class="form-control" name="itemCode[]"></td> --}}
-                        <td class="text-start">
-                            <textarea class="form-control form-control-sm itemDescription" name="itemDescription[]" id="Description" cols="30" rows="5" readonly></textarea>
-{{--                            <input type="text" class="form-control form-control-sm itemDescription"--}}
-{{--                                name="itemDescription[]" id="Description" readonly>--}}
-                        </td>
-                        <td class="text-start"><input type="number" class="form-control form-control-sm qty quantity"
-                                name="quantity[]" id="Quantity"></td>
-                        <td class="text-start"><input type="number" class="form-control form-control-sm unit-price "
-                                name="unitPrice[]" id ="Price"></td>
-                        <td class="text-start"><input type="number" class="form-control form-control-sm tax" name="tax[]"
-                                id="Tax"></td>
-                        <td class="text-start"><input type="number" class="form-control form-control-sm discount"
-                                name="discount[]" id="Discount"></td>
-                        <td class="text-start"><input type="number" class="form-control form-control-sm line-total"
-                                name="lineTotal[]" id="lineTotal"></td>
-                    </tr>
-                </tbody>
-            </table>
-
-        </div>
-
-        <!-- Optional Note -->
-        <div class="mb-4">
-            <label>Line Note</label>
-            <textarea class="form-control" rows="3" placeholder="Optional message to supplier"></textarea>
-        </div>
-
-        <!-- Totals -->
-        <div class="row mb-4">
-            <div class="col-md-4 offset-md-8">
-                <div class="mb-2">
-                    <label>Exclusive Total</label>
-                    <input type="text" class="form-control" readonly />
+                        <!-- Loop suppliers here -->
+                    </select>
                 </div>
-                <div class="mb-2">
-                    <label>Tax Amount</label>
-                    <input type="text" class="form-control" readonly />
-                </div>
-                <div>
-                    <label>Inclusive Total</label>
-                    <input type="text" class="form-control" readonly />
+                <div class="col-md-6">
+                    <label>Address</label>
+                    <input type="text" class="form-control" name="address" placeholder="Supplier address" />
                 </div>
             </div>
-        </div>
 
-        <!-- Action Buttons -->
-        <div class="d-flex justify-content-end">
-            <button class="btn btn-primary me-2">Save</button>
-            <button class="btn btn-warning me-2">Edit</button>
-            <button class="btn btn-danger">Delete</button>
-        </div>
+            <!-- LPO Details -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <label>LPO Number</label>
+                    <input type="text" name="LPONo" class="form-control" value="{{ uniqid('LPO-') }}" readonly />
+                </div>
+                <div class="col-md-4">
+                    <label>Date</label>
+                    <input type="date" class="form-control poDate" name="pODate"/>
+                </div>
+                <div class="col-md-4">
+                    <label>Reference Number</label>
+                    <input type="text" class="form-control rfqNo" name="RefNo" placeholder="RFQ Number" />
+                </div>
+                <div class="col-md-4 mt-2">
+                    <label>Priority</label>
+                    <select class="form-control priority" name="priority">
+                        <option>High</option>
+                        <option>Medium</option>
+                        <option>Low</option>
+                    </select>
+                </div>
+                <div class="col-md-4 mt-2">
+                    <label>Payment Terms</label>
+                    <input type="text" name="terms" class="form-control terms" placeholder="e.g., Net 30, 50%" />
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end mb-3">
+                <button type="button" class="btn btn-outline-primary" id="add-row">
+                    + Add Item
+                </button>
+            </div>
+
+
+
+            <!-- Line Items Table -->
+            <div class="table-responsive mb-4">
+                <table class="table table-bordered table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:5%;">#</th>
+                            <th style="width:10%;">Item Type</th>
+                            <th style="width:15%;">Item Code</th>
+                            <th style="width:15%;">Item Description</th>
+                            <th style="width:10%;">Quantity</th>
+                            <th style="width:10%;">Unit Price</th>
+                            <th style="width:10%;">Tax</th>
+                            <th style="width:10%;">Discount</th>
+                            <th style="width:20%;">Line Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="po-items">
+                        <tr>
+                            <td class="line-no">1.</td>
+                            <td class="text-start">
+                                <select class="form-select form-select-sm type" name="type[]" id="Type">
+                                    <option disabled selected>Select Type</option>
+                                    <option value="good">Goods</option>
+                                    <option value="service">Services</option>
+                                </select>
+                            </td>
+                            <td class="text-start">
+                                <select class="form-select form-select-sm itemCode" name="itemCode[]" id="Item">
+                                    <option disabled selected>Select Item Code</option>
+                                    {{--                            <option value="good">Goods</option> --}}
+                                    {{--                            <option value="services">Services</option> --}}
+                                </select>
+                            </td>
+                            {{--                    <td><input type="text" class="form-control" name="itemCode[]"></td> --}}
+                            <td class="text-start">
+                                <textarea class="form-control form-control-sm itemDescription" name="itemDescription[]" id="Description" cols="30"
+                                    rows="5" readonly></textarea>
+                                {{--                            <input type="text" class="form-control form-control-sm itemDescription" --}}
+                                {{--                                name="itemDescription[]" id="Description" readonly> --}}
+                            </td>
+                            <td class="text-start"><input type="number" class="form-control form-control-sm qty quantity"
+                                    name="quantity[]" id="Quantity"></td>
+                            <td class="text-start"><input type="number" class="form-control form-control-sm unit-price "
+                                    name="unitPrice[]" id ="Price"></td>
+                            <td class="text-start"><input type="number" class="form-control form-control-sm tax"
+                                    name="tax[]" id="Tax"></td>
+                            <td class="text-start"><input type="number" class="form-control form-control-sm discount"
+                                    name="discount[]" id="Discount"></td>
+                            <td class="text-start"><input type="number" class="form-control form-control-sm line-total"
+                                    name="lineTotal[]" id="lineTotal"></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+            </div>
+
+            <!-- Optional Note -->
+            <div class="mb-4">
+                <label>Line Note</label>
+                <textarea class="form-control" rows="3" placeholder="Optional message to supplier"></textarea>
+            </div>
+
+            <!-- Totals -->
+            <div class="row mb-4">
+                <div class="col-md-4 offset-md-8">
+                    <div class="mb-2">
+                        <label>Exclusive Total</label>
+                        <input type="text" class="form-control" readonly />
+                    </div>
+                    <div class="mb-2">
+                        <label>Tax Amount</label>
+                        <input type="text" class="form-control" readonly />
+                    </div>
+                    <div>
+                        <label>Inclusive Total</label>
+                        <input type="text" class="form-control" readonly />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex justify-content-end">
+                <button class="btn btn-primary me-2" id="saveOrder">Save</button>
+                {{--            <button class="btn btn-warning me-2">Edit</button> --}}
+                {{--            <button class="btn btn-danger">Delete</button> --}}
+            </div>
+        </form>
     </div>
+
 
 
 
 @endsection
 @section('scripts')
     <script>
-        $(function () {
+        function fetchSuppliers() {
+            const supplierUrl = "{{ route('purchaseOrder.getSuppliers') }}"
+
+
+            console.log(supplierUrl);
+
+            $.ajax({
+                url: supplierUrl,
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    console.log('AJAX Response:', response);
+
+
+                    if (!response || !response.data || response.data.length === 0) {
+                        console.warn('No suppliers found');
+                        $('#supplier').html('<option selected disabled>No suppliers available</option>');
+                        return;
+                    }
+
+                    let supplierSelect = $('#supplier');
+                    if (supplierSelect.children().length <= 1) {
+                        supplierSelect.empty().append('<option selected disabled>Select supplier</option>');
+
+                        $.each(response.data, function(key, item) {
+                            supplierSelect.append(
+                                `<option value="${item.id}">${item.name}</option>`
+                            );
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX error: ', status, error);
+                    console.error('Raw response:', xhr.responseText); // This is key!
+                    $('#supplier').html('<option selected disabled>Error loading suppliers</option>');
+                }
+            });
+        }
+
+        // $(document).on('change','#supplier',function () {
+        //     fetchSuppliers();
+        //
+        //
+        //     // alert('eric');
+        // });
+
+        $(function() {
             // Handle item type change using event delegation
-            $(document).on('change', '.type', function () {
+
+            $('form#purchaseOrdersForm').submit(async function(e) {
+                // alert($('#RequisitionID').val());
+                e.preventDefault();
+                if (await saveForm($(this), $('#saveOrder'), true, true, true)) {
+                    $Modal.modal('hide');
+                }
+
+            });
+
+
+            $(document).on('change', '.type', function() {
                 let row = $(this).closest('tr');
                 let type = $(this).val();
 
@@ -183,17 +246,18 @@
                     $.ajax({
                         url: `/requisitionItem/getItem/${type}`,
                         type: 'GET',
-                        success: function (response) {
+                        success: function(response) {
                             let itemCodeSelect = row.find('.itemCode');
-                            itemCodeSelect.empty().append('<option value="">Select Item</option>');
+                            itemCodeSelect.empty().append(
+                                '<option value="">Select Item</option>');
 
-                            $.each(response.data, function (key, item) {
+                            $.each(response.data, function(key, item) {
                                 itemCodeSelect.append(
                                     `<option value="${item.id}">${item.name}</option>`
                                 );
                             });
                         },
-                        error: function (response) {
+                        error: function(response) {
                             alert('Failed to load items');
                             console.log(response);
                         }
@@ -203,8 +267,11 @@
                 }
             });
 
+            ////fetching suppliers
+
+
             // Handle item code change using event delegation
-            $(document).on('change', '.itemCode', function () {
+            $(document).on('change', '.itemCode', function() {
                 let row = $(this).closest('tr');
                 let itemId = $(this).val();
 
@@ -212,15 +279,16 @@
                     $.ajax({
                         url: `/requisitionItem/getItemDetails/${itemId}`,
                         type: 'GET',
-                        success: function (response) {
+                        success: function(response) {
                             if (response.data && response.data.length > 0) {
-                                $.each(response.data, function (key, item) {
-                                    row.find('.itemDescription').val(item.Description || '');
+                                $.each(response.data, function(key, item) {
+                                    row.find('.itemDescription').val(item.Description ||
+                                        '');
                                     row.find('.unit-price').val(item.UnitPrice || '');
                                 });
                             }
                         },
-                        error: function (response) {
+                        error: function(response) {
                             alert('Failed to load item details');
                             console.log(response);
                         }
@@ -232,7 +300,7 @@
             });
 
             // Handle quantity or price change and calculate line total
-            $(document).on('change', '.quantity, .unit-price, .tax, .discount', function () {
+            $(document).on('change', '.quantity, .unit-price, .tax, .discount', function() {
                 let row = $(this).closest('tr');
                 let qty = parseFloat(row.find('.quantity').val()) || 0;
                 let price = parseFloat(row.find('.unit-price').val()) || 0;
@@ -254,7 +322,7 @@
     </script>
 
     <script>
-        let rowCount = 1;
+        let rowCount = 0;
 
         document.getElementById('add-row').addEventListener('click', function() {
             rowCount++;
