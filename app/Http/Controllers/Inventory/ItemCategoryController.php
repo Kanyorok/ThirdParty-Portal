@@ -46,6 +46,7 @@ class ItemCategoryController extends Controller
         $item = new ItemCategories();
         $item->fill($request->all());
         $item->CreatedBy = Auth::id();
+        $item->ModifiedBy = Auth::id();
         $item->CreatedOn = Carbon::now();
         $item->save();
 
