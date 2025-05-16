@@ -62,6 +62,7 @@
                 </div>
                 <div class="card-body">
                     <div class="row">
+                        <!-- Mode of Submission -->
                         <div class="col-md-4 mb-3">
                             <label for="submissionMode" class="form-label">Mode of Submission</label>
                             <select class="form-select @error('submission_mode') is-invalid @enderror" id="submissionMode" name="submission_mode" required>
@@ -74,8 +75,8 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                    </div>
-                </div>
+
+                        <!-- Date & Time Received -->
                         <div class="col-md-4 mb-3">
                             <label for="receivedDate" class="form-label">Date & Time Received</label>
                             <input type="datetime-local" class="form-control @error('received_at') is-invalid @enderror" id="receivedDate" name="received_at" required>
@@ -83,6 +84,8 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
+
+                        <!-- Received By -->
                         <div class="col-md-4 mb-3">
                             <label for="receivedBy" class="form-label">Received By</label>
                             <input type="text" class="form-control @error('recorded_by') is-invalid @enderror" id="receivedBy" name="recorded_by" placeholder="e.g., Procurement Officer" required>
@@ -92,15 +95,19 @@
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="remarks" class="form-label">Remarks</label>
-                        <textarea class="form-control @error('remarks') is-invalid @enderror" id="remarks" name="remarks" rows="2" placeholder="e.g., Documents sealed, received via courier..."></textarea>
-                        @error('remarks')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                    <!-- Remarks -->
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="remarks" class="form-label">Remarks</label>
+                            <textarea class="form-control @error('remarks') is-invalid @enderror" id="remarks" name="remarks" rows="2" placeholder="e.g., Documents sealed, received via courier..."></textarea>
+                            @error('remarks')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
                     </div>
                 </div>
             </div>
+
 
             <!-- Document Upload -->
             <div class="card mb-4 shadow-sm">
