@@ -22,10 +22,6 @@ class RFQ extends Model
         'RFQNumber', 'Comments', 'Status', 'SubmissionDeadline',  'CreatedBy', 'ModifiedBy'
     ];
 
-    protected $casts = [
-        'RequisitionItems' => 'array',
-    ];
-
     public static function getPrimaryKey(): string
     {
         return 'RFQId';

@@ -9,58 +9,65 @@ use Illuminate\Auth\Access\Response;
 class RFQPolicy
 {
     /**
-     * Determine whether the user can view any models.
+     * Can view list of RFQs
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return $user->can(PermissionEnum::RFQRead->value);
     }
 
     /**
-     * Determine whether the user can view the model.
+     * Can view a single RFQ
      */
-    public function view(User $user, RFQ $rFQ): bool
+    public function view(User $user, RFQ $rfq): bool
     {
-        return false;
+        // Only owner or users with permission
+        return $this->isOwner($user, $rfq) || $user->can(PermissionEnum::RFQRead->value);
     }
 
     /**
-     * Determine whether the user can create models.
+     * Can create a new RFQ
      */
     public function create(User $user): bool
     {
-        return false;
+        return $user->can(PermissionEnum::RFQCreate->value);
     }
 
     /**
-     * Determine whether the user can update the model.
+     * Can update an RFQ
      */
-    public function update(User $user, RFQ $rFQ): bool
+    public function update(User $user, RFQ $rfq): bool
     {
-        return false;
+        // Only allow updates if the user is the owner and it's still in draft
+        if ($this->isDraft($rfq)) {
+            return $this->isOwner($user, $rfq);
+        }
+
+        return $user->can(PermissionEnum::RFQUpdate->value);
     }
 
     /**
-     * Determine whether the user can delete the model.
+     * Can delete an RFQ
      */
-    public function delete(User $user, RFQ $rFQ): bool
+    public function delete(User $user, RFQ $rfq): bool
     {
-        return false;
+        // Only the owner can delete if it's still draft
+        return $this->isOwner($user, $rfq) && $this->isDraft($rfq);
     }
 
     /**
-     * Determine whether the user can restore the model.
+     * Internal helper — check if user owns the RFQ
      */
-    public function restore(User $user, RFQ $rFQ): bool
+    protected function isOwner(User $user, RFQ $rfq): bool
     {
-        return false;
+        return $user->Id === $rfq->CreatedBy;
     }
 
     /**
-     * Determine whether the user can permanently delete the model.
+     * Internal helper — check if RFQ is in draft status
      */
-    public function forceDelete(User $user, RFQ $rFQ): bool
+    protected function isDraft(RFQ $rfq): bool
     {
-        return false;
+        return $rfq->Status === 'Draft';
     }
 }
