@@ -18,9 +18,9 @@ class VendorClarificationsSeeder extends Seeder
                 'VendorId' => 2, // Assumes supplier ID 1 exists in t_Suppliers
                 'Question' => 'What is the warranty period for the laptops?',
                 'QuestionDate' => Carbon::today()->subDays(5), // 2025-05-11
-                'Answer' => 'The laptops come with a 2-year warranty.',
-                'AnswerDate' => Carbon::today()->subDays(3), // 2025-05-13
-                'ISPUBLISHEDTOALL' => true,
+                'Answer' => null,
+                'AnswerDate' => null,
+                'ISPUBLISHEDTOALL' => false,
                 'CreatedBy' => 1, // Assumes user ID 1 exists in t_Users
                 'CreatedOn' => $now,
                 'ModifiedBy' => 1,
@@ -52,9 +52,9 @@ class VendorClarificationsSeeder extends Seeder
                 'VendorId' => 4, // Assumes supplier ID 3 exists in t_Suppliers
                 'Question' => 'What is the expected timeline for the IT system upgrade consultancy?',
                 'QuestionDate' => Carbon::today()->subDays(2), // 2025-05-14
-                'Answer' => 'The consultancy is expected to take 3 months.',
-                'AnswerDate' => Carbon::today()->subDays(1), // 2025-05-15
-                'ISPUBLISHEDTOALL' => true,
+                'Answer' => null,
+                'AnswerDate' => null,
+                'ISPUBLISHEDTOALL' => false,
                 'CreatedBy' => 1,
                 'CreatedOn' => $now,
                 'ModifiedBy' => 1,
