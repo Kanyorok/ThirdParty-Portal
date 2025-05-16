@@ -38,15 +38,15 @@ class RequisitionItemService
     }
 
 
-    public static function addRequisitionLines($RequisitionId,$Item,$Quantity,$NeededBy,$Urgency,User $actor): array
+    public static function addRequisitionLines($RequisitionId,$Item,$Quantity,$Urgency,User $actor): array
     {
 
         try {
             // Start transaction and execute the stored procedure
-            DB::transaction(function () use ($RequisitionId,$Item,$Quantity,$NeededBy,$Urgency,$actor) {
+            DB::transaction(function () use ($RequisitionId,$Item,$Quantity,$Urgency,$actor) {
 
-                DB::statement('EXEC p_AddRequisitionLines ?, ?, ?, ?, ?,?', [
-                    $RequisitionId,$Item,$Quantity,$NeededBy,$Urgency,
+                DB::statement('EXEC p_AddRequisitionLines ?, ?, ?, ?, ?', [
+                    $RequisitionId,$Item,$Quantity,$Urgency,
                     $actor->Id // Pass the User ID, not the entire User model
                 ]);
             });
