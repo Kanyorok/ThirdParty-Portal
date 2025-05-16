@@ -19,7 +19,7 @@ class RFQ extends Model
     const string DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
-        'RFQNumber', 'ItemCategoryId', 'Comments', 'RequisitionItems', 'Status', 'SubmissionDeadline',  'CreatedBy', 'ModifiedBy', 'Suppliers'
+        'RFQNumber', 'Comments', 'Status', 'SubmissionDeadline',  'CreatedBy', 'ModifiedBy'
     ];
 
     protected $casts = [
