@@ -16,15 +16,14 @@ class ItemCategories extends Model
     const DELETED_AT = 'DeletedOn';
 
     protected $connection = 'sqlsrv';
-    protected $table = 't_ItemCategory';
+    protected $table = 't_ItemCategories';
     protected $primaryKey = 'Id';
 
     protected $fillable = [
         'CategoryCode',
-        'CategoryName',
+        'Name',
         'Description',
         'ParentId',
-        'Status',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy',
@@ -34,10 +33,9 @@ class ItemCategories extends Model
 
     protected $casts = [
         'CategoryCode'  => 'string',
-        'CategoryName'  => 'string',
+        'Name'  => 'string',
         'Description'   => 'string',
         'ParentId'      => 'integer',
-        'Status'        => 'boolean',
         'CreatedBy'     => 'integer',
         'ModifiedBy'    => 'integer',
         'DeletedBy'     => 'integer',

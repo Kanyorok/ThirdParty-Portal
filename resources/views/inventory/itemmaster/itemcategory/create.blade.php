@@ -19,8 +19,8 @@
         @csrf
         
         <div class="mb-3">
-            <label for="CategoryName" class="form-label">Category Name:</label>
-            <input type="text" class="form-control" name="CategoryName" required>
+            <label for="Name" class="form-label">Category Name:</label>
+            <input type="text" class="form-control" name="Name" required>
         </div>
 
         <div class="mb-3">
@@ -33,7 +33,7 @@
             <select class="form-control" name="ParentId">
                 <option value="">None (Top-Level Category)</option>
                 @foreach($categories as $category)
-                    <option value="{{ $category->Id }}">{{ $category->CategoryName }}</option>
+                    <option value="{{ $category->Id }}">{{ $category->Name }}</option>
                 @endforeach
             </select>
         </div>

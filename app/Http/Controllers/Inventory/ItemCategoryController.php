@@ -14,12 +14,13 @@ class ItemCategoryController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            return Datatables::of(ItemCategories::whereNull('ParentId')->with('parent')->select('t_ItemCategory.*'))
+            return Datatables::of(ItemCategories::whereNull('ParentId')->with('parent')->select('t_ItemCategories.*'))
+            ->addIndexColumn()
                 ->addColumn('Action', function (ItemCategories $item) {
                     return '
                         <a href="' . route('itemcategory.show', ['id' => $item->Id]) . '" class="btn btn-sm btn-primary">View</a>
                         <a href="' . route('itemcategory.edit', ['id' => $item->Id]) . '" class="btn btn-sm btn-warning">Edit</a>
-                        <a href="#" onclick="confirmDelete(' . $item->Id . ')" class="btn btn-sm btn-danger">Delete</a>';
+                        <button class="btn btn-sm btn-danger delete-category" data-id="' . $item->Id . '">Delete</button>';
                 })
                 ->rawColumns(['Action'])
                 ->make(true);
@@ -37,9 +38,9 @@ class ItemCategoryController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'CategoryName' => 'required|string|max:255',
+            'Name' => 'required|string|max:255',
             'Description' => 'nullable|string',
-            'ParentId' => 'nullable|exists:t_ItemCategory,Id',
+            'ParentId' => 'nullable|exists:t_ItemCategories,Id',
         ]);
 
         $item = new ItemCategories();
@@ -51,19 +52,23 @@ class ItemCategoryController extends Controller
         return redirect()->route('itemcategory.index')->with('success', 'Category created successfully.');
     }
 
-    public function edit($Id)
-    {
-        $item = ItemCategories::findOrFail($Id);
-        $categories = ItemCategories::whereNull('ParentId')->where('Id', '!=', $Id)->get(); // Avoid self-parenting
-        return view('inventory.itemmaster.itemcategory.edit', compact('item', 'categories'));
-    }
+public function edit($id)
+{
+    // You're working directly with categories
+    $item = ItemCategories::with('parent')->findOrFail($id);
+    $categories = ItemCategories::whereNull('ParentId')->where('Id', '!=', $id)->get(); // Avoid self-parenting
+
+    return view('inventory.itemmaster.itemcategory.edit', compact('item', 'categories'));
+}
+
+
 
     public function update(Request $request, $Id)
     {
         $request->validate([
-            'CategoryName' => 'required|string|max:255',
+            'Name' => 'required|string|max:255',
             'Description' => 'nullable|string',
-            'ParentId' => 'nullable|exists:t_ItemCategory,Id',
+            'ParentId' => 'nullable|exists:t_ItemCategories,Id',
         ]);
 
         $item = ItemCategories::findOrFail($Id);

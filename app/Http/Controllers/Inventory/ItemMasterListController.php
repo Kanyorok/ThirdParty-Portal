@@ -6,23 +6,30 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\ItemCategories;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\ValidationException;
-use Illuminate\View\View;
 use Yajra\DataTables\DataTables;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class ItemMasterListController extends Controller
 {
-    public function index(Request $request): View|JsonResponse
+    public function index(Request $request)
     {
         if ($request->ajax()) {
-            return Datatables::of(ItemMasterList::with('category', 'subcategory')->select('t_ItemMasterList.*'))->addIndexColumn()
-                ->addColumn('Action', function (ItemMasterList $item) {
+            return Datatables::of(ItemMasterList::with('category.parent'))
+                ->addIndexColumn()
+                ->addColumn('Category', function ($item) {
+                    // Safely access parent name
+                    return optional($item->parent)->Name ?? '—';
+                })
+                ->addColumn('SubCategory', function ($item) {
+                    return optional($item->category)->Name ?? '—';
+                })
+                ->addColumn('Action', function ($item) {
                     return '
-                        <a href="' . route('itemmasterlist.show', ['id' => $item->Id]) . '" class="btn btn-sm btn-primary">View</a>
-                        <a href="' . route('itemmasterlist.edit', ['id' => $item->Id]) . '" class="btn btn-sm btn-warning">Edit</a>
-                        <a href="#" onclick="confirmDelete(' . $item->Id . ')" class="btn btn-sm btn-danger">Delete</a>';
+                        <a href="' . route('itemmasterlist.show', ['Id' => $item->Id]) . '" class="btn btn-sm btn-primary">View</a>
+                        <a href="' . route('itemmasterlist.edit', ['Id' => $item->Id]) . '" class="btn btn-sm btn-warning">Edit</a>
+                        <a href="#" onclick="confirmDelete(' . $item->getKey() . ')" class="btn btn-sm btn-danger">Delete</a>';
                 })
                 ->rawColumns(['Action'])
                 ->make(true);
@@ -33,104 +40,109 @@ class ItemMasterListController extends Controller
 
     public function create()
     {
-        $categories = ItemCategories::whereNull('ParentId')->get(); // Fetch only top-level categories
+        $categories = ItemCategories::whereNull('ParentId')->get(); // Main categories
         return view('inventory.itemmaster.itemmasterlist.create', compact('categories'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'ItemCode'      => 'required|string|max:255',
-            'BarCode'       => 'required|string|max:255',
-            'ItemName'      => 'required|string|max:255',
-            'ItemType'      => 'required|string|max:255',
-            'Category'      => 'required|exists:t_ItemCategory,Id',
-            'SubCategory'   => 'nullable|exists:t_ItemCategory,Id', // Stores fetched subcategory
-            'UOM'           => 'required|string|max:255',
-            'InventoryType' => 'required|string|max:255',
-            'ImageUpload'   => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'BarCode'         => 'required|string|max:255',
+            'ItemName'        => 'required|string|max:255',
+            'ItemType'        => 'required|string|max:255',
+            'Category'        => 'required|exists:t_ItemCategories,Id',
+            'UOM'             => 'required|string|max:255',
+            'InventoryType'   => 'required|string|max:255',
+            'ImageUpload'     => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'ItemDescription' => 'nullable|string',
-            'DocumentUpload' => 'nullable'
         ]);
 
         DB::transaction(function () use ($request) {
-            $item = ItemMasterList::create([
-                'ItemCode' => $request->ItemCode,
-                'BarCode' => $request->BarCode,
-                'ItemName' => $request->ItemName,
-                'ItemType' => $request->ItemType,
-                'Category' => $request->Category,
-                'SubCategory' => $request->SubCategory, // Stores subcategory in item master list
-                'UOM' => $request->UOM,
-                'InventoryType' => $request->InventoryType,
-                'ItemDescription' => $request->ItemDescription,
-                'CreatedBy' => Auth::id(),
-                'UpdatedBy' => Auth::id(),
-            ]);
+            $item = new ItemMasterList();
+            $item->fill($request->except('ImageUpload'));
+
+            $item->CreatedBy = Auth::id();
+            $item->CreatedOn = Carbon::now();
+            $item->ModifiedBy = Auth::id();
+            $item->ModifiedOn = Carbon::now();
 
             if ($request->hasFile('ImageUpload')) {
                 $path = $request->file('ImageUpload')->store('items', 'public');
                 $item->ImageUpload = $path;
-                $item->save();
             }
+
+            $item->Category = $request->Category;
+            $item->save();
         });
 
-        return redirect()->route('itemmaster.index')->with('success', 'Item Master List created successfully!');
-    }
-
-    public function show($Id)
-    {
-        $item = ItemMasterList::with('category.parent')->findOrFail($Id); // Eager load category & parent
-        return view('inventory.itemmaster.itemmasterlist.show', compact('item'));
+        return redirect()->route('itemmaster.index')->with('success', 'Item created successfully.');
     }
 
     public function edit($Id)
     {
-        $item = ItemMasterList::with('category')->findOrFail($Id);
-        $categories = ItemCategories::whereNull('ParentId')->get(); // Fetch only top-level categories
-        return view('inventory.itemmaster.itemmasterlist.edit', compact('item', 'categories'));
+        $item = ItemMasterList::findOrFail($Id);
+        $categories = ItemCategories::whereNull('ParentId')->get(); // For parent dropdown
+        $subcategories = ItemCategories::where('ParentId', $item->category?->ParentId ?? $item->Category)->get();
+        return view('inventory.itemmaster.itemmasterlist.edit', compact('item', 'categories', 'subcategories'));
     }
 
     public function update(Request $request, $Id)
     {
-        $item = ItemMasterList::findOrFail($Id);
-
-        $validatedData = $request->validate([
-            'ItemCode'      => 'required',
-            'BarCode'       => 'required',
-            'ItemName'      => 'required',
-            'ItemType'      => 'required',
-            'Category'      => 'required|exists:t_ItemCategory,Id',
-            'SubCategory'   => 'nullable|exists:t_ItemCategory,Id', 
-            'UOM'           => 'required',
-            'InventoryType' => 'required',
-            'ImageUpload'   => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'ItemDescription' => 'nullable',
-            'DocumentUpload' => 'nullable'
+        $request->validate([
+            'BarCode'         => 'required|string|max:255',
+            'ItemName'        => 'required|string|max:255',
+            'ItemType'        => 'required|string|max:255',
+            'Category'        => 'required|exists:t_ItemCategories,Id',
+            'UOM'             => 'required|string|max:255',
+            'InventoryType'   => 'required|string|max:255',
+            'ImageUpload'     => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'ItemDescription' => 'nullable|string',
         ]);
+
+        $item = ItemMasterList::findOrFail($Id);
+        $item->fill($request->except('ImageUpload'));
+
+        $item->Category = $request->Category;
+        $item->ModifiedBy = Auth::id();
+        $item->ModifiedOn = Carbon::now();
 
         if ($request->hasFile('ImageUpload')) {
             $path = $request->file('ImageUpload')->store('items', 'public');
             $item->ImageUpload = $path;
         }
 
-        $item->update($validatedData);
+        $item->save();
 
-        return redirect()->route('itemmaster.index')->with('success', '✅ Changes saved successfully!');
+        return redirect()->route('itemmaster.index')->with('success', 'Item updated successfully.');
+    }
+
+    public function show($Id)
+    {
+        $item = ItemMasterList::with('category.parent')->findOrFail($Id);
+        return view('inventory.itemmaster.itemmasterlist.show', compact('item'));
     }
 
     public function destroy($Id)
     {
         $item = ItemMasterList::findOrFail($Id);
+        $item->DeletedBy = Auth::id();
+        $item->DeletedOn = Carbon::now();
+        $item->save();
         $item->delete();
 
-        return redirect()->route('itemmaster.index')->with('success', 'Item deleted successfully!');
+        return response()->json(['success' => 'Item deleted successfully.']);
     }
 
-    // **Fetch Subcategories Dynamically**
     public function getSubcategories(Request $request)
     {
-        $subcategories = ItemCategories::where('ParentId', $request->category_Id)->get(); // Fetch subcategories using ParentId
+        $categoryId = $request->get('category_id');
+
+        if (!$categoryId) {
+            return response()->json([], 400);
+        }
+
+        $subcategories = ItemCategories::where('ParentId', $categoryId)->get(['Id', 'Name']);
+
         return response()->json($subcategories);
     }
 }

@@ -22,23 +22,21 @@ use App\Http\Controllers\Inventory\ReportsController;
 use App\Http\Controllers\Inventory\InterBranchRequisitionApprovalController;
 use App\Http\Controllers\Inventory\PropertyReceiptPrintController;
 
+Route::get('/itemmaster', [ItemMasterListController::class, 'index'])->name('itemmaster.index');
 
-
-Route::namespace('Inventory')->group(function () {
+Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::resource('receipts', ReceiptController::class);
     Route::resource('transactionsreceipts', TransactionReceiptsController::class);
     Route::resource('transactionstransfers', TransactionTransfersController::class);
     Route::resource('transactionsadjustment', TransactionAdjustmentController::class);
     //Route::resource('itemmaster', ItemMasterController::class);
-    Route::get('/itemmaster', [ItemMasterListController::class, 'index'])->name('itemmaster.index');
     Route::get('/itemmasterlist/create', [ItemMasterListController::class, 'create'])->name('itemmasterlist.create');
     Route::post('/itemmasterlist', [ItemMasterListController::class, 'store'])->name('itemmasterlist.store');
     Route::get('/itemmasterlist/{Id}', [ItemMasterListController::class, 'show'])->name('itemmasterlist.show');
     Route::get('/itemmasterlist/{Id}/edit', [ItemMasterListController::class, 'edit'])->name('itemmasterlist.edit');
     Route::put('/itemmasterlist/{Id}', [ItemMasterListController::class, 'update'])->name('itemmasterlist.update');
     Route::delete('/itemmasterlist/{Id}', [ItemMasterListController::class, 'destroy'])->name('itemmasterlist.destroy');
-    Route::get('/itemmasterlist/subcategories', [ItemMasterListController::class, 'getSubcategories'])->name('get.subcategories');
-
+    Route::get('/get-subcategories', [ItemMasterListController::class, 'getSubcategories'])->name('get.subcategories');
     Route::resource('sku', SKUController::class);
 
 

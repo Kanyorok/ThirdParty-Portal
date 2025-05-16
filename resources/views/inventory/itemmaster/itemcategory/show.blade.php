@@ -1,18 +1,27 @@
 @extends('layouts.app')
 
 @section('content')
+@if($errors->any())
+    <div class="alert alert-danger">
+        <ul>
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
 <div class="container">
     <h2>Category Details</h2>
 
     <div class="card">
         <div class="card-body">
-            <h5 class="card-title">{{ $item->CategoryName }}</h5>
+            <h5 class="card-title">{{ $item->Name }}</h5>
             <p class="card-text"><strong>Category Code:</strong> {{ $item->CategoryCode }}</p>
             <p class="card-text"><strong>Description:</strong> {{ $item->Description }}</p>
 
             <p class="card-text">
                 <strong>Parent Category:</strong> 
-                {{ $item->parent ? $item->parent->CategoryName : 'None (Top-Level Category)' }}
+                {{ $item->parent ? $item->parent->Name : 'None (Top-Level Category)' }}
             </p>
 
             <p class="card-text"><strong>Status:</strong> {{ $item->Status ? 'Active' : 'Inactive' }}</p>
@@ -40,7 +49,7 @@
                     <tr>
                         <td>{{ $loop->iteration }}</td>
                         <td>{{ $subcategory->CategoryCode }}</td>
-                        <td>{{ $subcategory->CategoryName }}</td>
+                        <td>{{ $subcategory->Name }}</td>
                         <td>{{ $subcategory->Description ?? 'No description available' }}</td>
                         <td>
                             <a href="{{ route('itemcategory.show', $subcategory->Id) }}" class="btn btn-sm btn-primary">View</a>

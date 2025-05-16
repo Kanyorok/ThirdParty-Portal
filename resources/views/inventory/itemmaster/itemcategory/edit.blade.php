@@ -15,7 +15,7 @@
 
 @section('content')
 <div class="container bg-white shadow-sm rounded p-4">
-    <h4>✏️ Edit Category: {{ $item->CategoryName }}</h4>
+    <h4>✏️ Edit Category: {{ $item->Name }}</h4>
 
     <form action="{{ route('itemcategory.update', $item->Id) }}" method="POST">
         @csrf
@@ -28,7 +28,7 @@
             </div>
             <div class="col-md-4">
                 <label for="Name" class="form-label">Category Name</label>
-                <input type="text" name="Name" value="{{ $item->CategoryName }}" class="form-control" required>
+                <input type="text" name="Name" value="{{ $item->Name }}" class="form-control" required>
             </div>
         </div>
 
@@ -43,7 +43,7 @@
             <select class="form-control" name="ParentId">
                 <option value="">None (Top-Level Category)</option>
                 @foreach($categories as $category)
-                    <option value="{{ $category->Id }}">{{ $category->CategoryName }}</option>
+                    <option value="{{ $category->Id }}">{{ $category->Name }}</option>
                 @endforeach
             </select>
         </div>

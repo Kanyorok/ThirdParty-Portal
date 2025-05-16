@@ -1,102 +1,108 @@
 @extends('layouts.app')
 
-@section('content')
-<div class="container">
-    <h2>Categories</h2>
-    <a href="{{ route('itemcategory.create') }}" class="btn btn-primary mb-3">Add New Category</a>
+@section('title', 'Item Categories')
 
-    <table class="table table-bordered" id="categoryTable">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Category Code</th>
-                <th>Name</th>
-                <th>Parent Category</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        </tbody>
-    </table>
+@section('content')
+<div class="container bg-white shadow-sm rounded p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4>🗂️ Item Categories</h4>
+        <a href="{{ route('itemcategory.create') }}" class="btn btn-success">➕ Add Category</a>
+    </div>
+
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
+    <div class="mb-3">
+        <input type="text" class="form-control" placeholder="🔍 Search by Category Code or Name">
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle" id="itemCategoryTbl">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Category Code</th>
+                    <th>Category Name</th>
+                    <th>Description</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{-- Loaded via DataTables --}}
+            </tbody>
+        </table>
+    </div>
 </div>
 @endsection
 
 @section('scripts')
-<script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
-
 <script>
-    let categoryTable = null;
-    $(document).ready(function () {
+    let itemCategoryTbl = null;
+
+    $(function () {
         $.fn.dataTable.ext.errMode = 'none';
-        fetchCategoryTable();
+        loadItemCategoryTable();
     });
 
-    function fetchCategoryTable() {
-        if (categoryTable === null) {
-            categoryTable = $('#categoryTable').DataTable({
+    function loadItemCategoryTable() {
+        if (itemCategoryTbl === null) {
+            itemCategoryTbl = $('#itemCategoryTbl').DataTable({
                 processing: true,
                 serverSide: true,
                 responsive: true,
                 ajax: {
                     url: "{{ route('itemcategory.index') }}",
                     error: function (jqXHR) {
-                        console.error("Error loading categories: ", jqXHR.status);
+                        console.warn("DataTable error", jqXHR);
                     }
                 },
                 columns: [
-                    { data: "DT_RowIndex", name: 'DT_RowIndex', orderable: false, searchable: false },
+                    { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
                     { data: 'CategoryCode', name: 'CategoryCode' },
-                    { data: 'CategoryName', name: 'CategoryName' },
-                    { 
-                        data: 'parent.CategoryName', 
-                        name: 'ParentId', 
-                        render: function (data) {
-                            return data ? data : 'None (Top-Level)';
-                        }
-                    },
-                    { 
-                        data: 'Action', 
-                        name: 'Action', 
-                        orderable: false, 
-                        searchable: false, 
-                        render: function (data, type, row) {
-                            return `
-                                <a href="{{ route('itemcategory.show', '') }}/${row.Id}" class="btn btn-sm btn-primary">View</a>
-                                <a href="{{ route('itemcategory.edit', '') }}/${row.Id}" class="btn btn-sm btn-warning">Edit</a>
-                                <a href="#" onclick="confirmDelete(${row.Id})" class="btn btn-sm btn-danger">Delete</a>
-                            `;
-                        }
-                    }
+                    { data: 'Name', name: 'Name' },
+                    { data: 'Description', name: 'Description' },
+                    { data: 'Action', name: 'Action', orderable: false, searchable: false },
                 ],
                 language: {
                     emptyTable: "No categories found."
                 }
             });
-
-            categoryTable.on('error', function (error) {
-                console.warn("Issue loading categories.");
-                console.log(error);
-            });
         } else {
-            categoryTable.ajax.reload();
-        }
-    }
-
-    function confirmDelete(id) {
-        if (confirm("Are you sure you want to delete this category?")) {
-            $.ajax({
-                url: "{{ route('itemcategory.destroy', '') }}/" + id,
-                type: 'DELETE',
-                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                success: function(response) {
-                    alert('Category deleted successfully.');
-                    categoryTable.ajax.reload();
-                },
-                error: function(error) {
-                    alert('Error deleting category.');
-                }
-            });
+            itemCategoryTbl.ajax.reload();
         }
     }
 </script>
+<script>
+    // CSRF setup for all AJAX
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        }
+    });
+
+    // Delete handler
+    $(document).on('click', '.delete-category', function () {
+        const id = $(this).data('Id');
+
+        if (!confirm('Are you sure you want to delete this category?')) return;
+
+        $.ajax({
+            url: '/itemcategory/' + Id,
+            type: 'DELETE',
+            success: function (response) {
+                alert(response.success);
+                $('#itemCategoryTbl').DataTable().ajax.reload();
+            },
+            error: function (xhr) {
+                console.error(xhr.responseText);
+                alert('Error deleting category.');
+            }
+        });
+    });
+</script>
+
 @endsection
