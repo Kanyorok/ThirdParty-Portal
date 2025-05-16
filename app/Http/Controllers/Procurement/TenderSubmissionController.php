@@ -7,6 +7,8 @@ use App\Models\Procurement\BidSubmission;
 use Illuminate\Http\Request;
 use App\Models\Procurement\Tender;
 use App\Models\ThirdParies\Supplier;
+use Illuminate\Support\Facades\DB;
+
 
 class TenderSubmissionController extends Controller
 {
@@ -20,7 +22,10 @@ class TenderSubmissionController extends Controller
     {
         $tenders = Tender::select('TenderNo')->get();
         $suppliers = Supplier::select('SupplierName')->get();
-        return view('procurement.tendering.suppliermanagement.bidsubmission.create', compact('tenders', 'suppliers'));
+        $submissionModes = DB::table('t_CodeDetails')
+            ->where('CodeID', 'SubmissionMode')
+            ->get(['ID', 'Description']);
+        return view('procurement.tendering.suppliermanagement.bidsubmission.create', compact('tenders', 'suppliers', 'submissionModes'));
     }
     public function view($Id)
 {
@@ -39,7 +44,7 @@ public function store(Request $request)
         $request->validate([
             'tender_ref' => 'required|string|max:255',
             'supplier_name' => 'required|string|max:255',
-            'submission_mode' => 'required|in:Hand delivered,Courier,Email,Other',
+            'submission_mode' => 'required|string|max:255',
             'received_at' => 'required|date',
             'recorded_by' => 'required|string|max:255',
             'remarks' => 'nullable|string',
@@ -53,16 +58,27 @@ public function store(Request $request)
             $fileName = time() . '_' . $file->getClientOriginalName();
             $filePath = $file->storeAs('bid_documents', $fileName, 'public'); // Store in storage/app/public/bid_documents
         }
+// Map submission_mode to t_CodeDetails ID
+    $submissionModeId = DB::table('t_CodeDetails')
+        ->where('CodeID', 'SubmissionMode')
+        ->where('Description', $request->submission_mode)
+        ->value('ID');
+
+    if (!$submissionModeId) {
+        return redirect()->back()->withErrors(['submission_mode' => 'Invalid submission mode selected.']);
+    }
 
         // Save to database
         BidSubmission::create([
             'TenderRef' => $request->tender_ref,
             'SupplierName' => $request->supplier_name,
-            'SubmissionMode' => $request->submission_mode,
+            'SubmissionMode' => $submissionModeId,
             'ReceivedAt' => $request->received_at,
             'RecordedBy' => $request->recorded_by,
             'Remarks' => $request->remarks,
             'Documents' => $filePath,
+            'CreatedBy' => $request->user()->Id,
+            'ModifiedBy' => $request->user()->Id,
         ]);
 
         return redirect()->route('tendersubmission.index')->with('success', 'Submission recorded successfully.');

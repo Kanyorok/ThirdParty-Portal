@@ -3,75 +3,80 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\Procurement\Tender;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class TenderSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     *
-     * @return void
-     */
-    public function run()
+    public function run(): void
     {
-        // Truncate the table to clear any existing data
+        $now = Carbon::now();
+        $currencyId = DB::table('t_Currencies')->select('Id')->first()->Id; // Fetch the first available CurrencyId
 
-
-        // Raw data for tenders with provided enum values
-        $tenders = [
+        DB::table('t_Tenders')->insert([
             [
-                'TenderNo' => 'TND/PROC/2025/001',
-                'Title' => 'Supply of ICT Equipment',
-                'TenderType' => 'op', // As provided (assumed to match TenderTypeEnum)
-                'TenderCategory' => 'Goods', // As provided (assumed to match TenderCategoryEnum)
-                'ScopeOfWork' => 'Procurement and delivery of laptops and desktops.',
-                'Instructions' => 'Submit bids in sealed envelopes by the deadline.',
-                'SubmissionDeadline' => '2025-06-01',
-                'OpeningDate' => '2025-06-02',
-                'Status' => 'pb', // As provided (assumed to match TenderStatusEnum)
-                'RelatedPRID' => 'PR-1001',
-                'ProcurementModeId' => (int) 1, // Explicitly cast to integer
-                'DateCreated' => '2025-05-01 10:00:00',
-                'CreatedBy' => 'John Doe',
-                'ModifiedBy' => 'Jane Smith',
+                'TenderNo' => 'TND-2025-001',
+                'Title' => 'Supply of Office Laptops',
+                'TenderType' => 'Open',
+                'TenderCategory' => 'Goods',
+                'ScopeOfWork' => 'Supply of 50 high-performance laptops for office use, including installation and configuration.',
+                'Instructions' => 'Submit bids electronically via the procurement portal. Include warranty details and delivery timeline.',
+                'SubmissionDeadline' => Carbon::today()->addDays(30),
+                'OpeningDate' => Carbon::today()->addDays(31),
+                'Status' => 'Published',
+                'ProcurementModeId' => 1, // Assumes 'Open Tender' (Id = 1) exists in t_ProcurementModes
+                'EstimatedValue' => 5000000.00,
+                'CurrencyId' => $currencyId,
+                'RelatedPRID' => 1, // Assumes a valid PR ID (e.g., 1) exists in t_PurchaseRequisitions
+                'CreatedBy' => 1, // Assumes user ID 1 exists in t_Users
+                'CreatedOn' => $now,
+                'ModifiedBy' => 1,
+                'ModifiedOn' => $now,
+                'DeletedBy' => null,
+                'DeletedOn' => null,
             ],
             [
-                'TenderNo' => 'TND/PROC/2025/002',
-                'Title' => 'Supply of Office Furniture',
-                'TenderType' => 'rs', // As provided (assumed to match TenderTypeEnum)
-                'TenderCategory' => 'Goods', // As provided (assumed to match TenderCategoryEnum)
-                'ScopeOfWork' => 'Procurement of chairs and desks for office use.',
-                'Instructions' => 'Bids to be submitted via email.',
-                'SubmissionDeadline' => '2025-06-10',
-                'OpeningDate' => '2025-06-11',
-                'Status' => 'dr', // As provided (assumed to match TenderStatusEnum)
-                'RelatedPRID' => 'PR-1002',
-                'ProcurementModeId' => (int) 2, // Explicitly cast to integer
-                'DateCreated' => '2025-05-02 14:30:00',
-                'CreatedBy' => 'Alice Johnson',
-                'ModifiedBy' => 'Bob Wilson',
+                'TenderNo' => 'TND-2025-002',
+                'Title' => 'Construction of Staff Quarters',
+                'TenderType' => 'Restricted',
+                'TenderCategory' => 'Works',
+                'ScopeOfWork' => 'Construction of 20 staff housing units, including plumbing and electrical installations.',
+                'Instructions' => 'Only prequalified contractors may submit bids. Provide detailed project timelines and safety plans.',
+                'SubmissionDeadline' => Carbon::today()->addDays(45),
+                'OpeningDate' => Carbon::today()->addDays(46),
+                'Status' => 'Draft',
+                'ProcurementModeId' => 2, // Assumes 'Restricted Tender' (Id = 2) exists in t_ProcurementModes
+                'EstimatedValue' => 25000000.00,
+                'CurrencyId' => $currencyId,
+                'RelatedPRID' => 1, // Assumes a valid PR ID (e.g., 1) exists in t_PurchaseRequisitions
+                'CreatedBy' => 1,
+                'CreatedOn' => $now,
+                'ModifiedBy' => 1,
+                'ModifiedOn' => $now,
+                'DeletedBy' => null,
+                'DeletedOn' => null,
             ],
             [
-                'TenderNo' => 'TND/PROC/2025/003',
-                'Title' => 'Construction Services',
-                'TenderType' => 'rs', // As provided (assumed to match TenderTypeEnum)
-                'TenderCategory' => 'Works', // As provided (assumed to match TenderCategoryEnum)
-                'ScopeOfWork' => 'Construction of a new office building.',
-                'Instructions' => 'Submit detailed proposals with blueprints.',
-                'SubmissionDeadline' => '2025-06-15',
-                'OpeningDate' => '2025-06-16',
-                'Status' => 'pb', // As provided (assumed to match TenderStatusEnum)
-                'RelatedPRID' => 'PR-1003',
-                'ProcurementModeId' => (int) 3, // Explicitly cast to integer
-                'DateCreated' => '2025-05-03 09:15:00',
-                'CreatedBy' => 'Mike Brown',
-                'ModifiedBy' => 'Sarah Davis',
+                'TenderNo' => 'TND-2025-003',
+                'Title' => 'Consultancy for IT System Upgrade',
+                'TenderType' => 'Open',
+                'TenderCategory' => 'Services',
+                'ScopeOfWork' => 'Provide consultancy services for upgrading the organization’s IT infrastructure.',
+                'Instructions' => 'Submit technical and financial proposals. Include CVs of key personnel.',
+                'SubmissionDeadline' => Carbon::today()->addDays(20),
+                'OpeningDate' => Carbon::today()->addDays(21),
+                'Status' => 'Published',
+                'ProcurementModeId' => 1, // Assumes 'Open Tender' (Id = 1) exists in t_ProcurementModes
+                'EstimatedValue' => 3000000.00,
+                'CurrencyId' => $currencyId,
+                'RelatedPRID' => 1, // Assumes a valid PR ID (e.g., 1) exists in t_PurchaseRequisitions
+                'CreatedBy' => 1,
+                'CreatedOn' => $now,
+                'ModifiedBy' => 1,
+                'ModifiedOn' => $now,
+                'DeletedBy' => null,
+                'DeletedOn' => null,
             ],
-        ];
-
-        // Insert raw data into the t_Tenders table
-        foreach ($tenders as $tender) {
-            Tender::create($tender);
-        }
+        ]);
     }
 }

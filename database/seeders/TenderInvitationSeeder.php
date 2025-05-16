@@ -2,52 +2,62 @@
 
 namespace Database\Seeders;
 
-use App\Models\Procurement\TenderInvitation;
 use Illuminate\Database\Seeder;
-use Faker\Factory as Faker;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class TenderInvitationSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     * @return void
-     */
-    public function run()
+    public function run(): void
     {
-        $faker = Faker::create();
+        $now = Carbon::now();
 
-        // Generate 50 random supplier names mapped to IDs
-        $suppliers = [];
-        for ($i = 1; $i <= 50; $i++) {
-            $suppliers[$i] = $faker->unique()->company; // Unique company names
-        }
-
-        // Create 20 sample tender invitations
-        for ($i = 0; $i < 20; $i++) {
-            $supplierId = $faker->numberBetween(1, 50); // Select random SupplierID
-            $userId = $faker->numberBetween(1, 10); // Assuming 10 users exist
-            $hasModification = $faker->boolean(50); // 50% chance of modification
-
-            TenderInvitation::create([
-                'TenderID' => $faker->numberBetween(1, 10), // Assuming 10 tenders exist
-                'SupplierID' => $supplierId,
-                'InvitationDate' => $faker->dateTimeBetween('-1 year', 'now'),
-                'ResponseStatus' => $faker->randomElement([
-                    TenderInvitation::STATUS_PENDING,
-                    TenderInvitation::STATUS_ACCEPTED,
-                    TenderInvitation::STATUS_DECLINED
-                ]),
-                'ResponseDate' => $faker->optional(0.7)->dateTimeBetween('-6 months', 'now'), // 70% chance of response
-                'DeclineReason' => $faker->optional(0.3)->sentence(), // 30% chance of decline reason
-                'ConfirmationAttachment' => $faker->optional(0.5)->filePath(), // 50% chance of attachment
-                'CreatedBy' => $userId,
-                'CreatedOn' => now(),
-                'ModifiedBy' => $hasModification ? $faker->numberBetween(1, 10) : $userId, // Use CreatedBy if no modification
-                'ModifiedOn' => $hasModification ? $faker->dateTimeBetween('-6 months', 'now') : null,
-            ]);
-        }
-
-        // Log supplier ID-to-name mapping for reference
-        \Log::info('Supplier ID to Random Name Mapping:', $suppliers);
+        DB::table('t_TenderInvitations')->insert([
+            [
+                'TenderId' => 10, // Assumes tender ID 1 exists in t_Tenders
+                'SupplierId' => 2, // Assumes supplier ID 1 exists in t_Suppliers
+                'InvitationDate' => Carbon::today()->subDays(5),
+                'ResponseStatus' => 'Accepted',
+                'ResponseDate' => Carbon::today()->subDays(3),
+                'DeclineReason' => null,
+                'ConfirmationAttachment' => 'attachment_001.pdf',
+                'CreatedBy' => 1, // Assumes user ID 1 exists in t_Users
+                'CreatedOn' => $now,
+                'ModifiedBy' => 1,
+                'ModifiedOn' => $now,
+                'DeletedBy' => null,
+                'DeletedOn' => null,
+            ],
+            [
+                'TenderId' => 11, // Assumes tender ID 2 exists in t_Tenders
+                'SupplierId' => 3, // Assumes supplier ID 2 exists in t_Suppliers
+                'InvitationDate' => Carbon::today()->subDays(7),
+                'ResponseStatus' => 'Declined',
+                'ResponseDate' => Carbon::today()->subDays(4),
+                'DeclineReason' => 'Unable to meet project timeline',
+                'ConfirmationAttachment' => null,
+                'CreatedBy' => 1,
+                'CreatedOn' => $now,
+                'ModifiedBy' => 1,
+                'ModifiedOn' => $now,
+                'DeletedBy' => null,
+                'DeletedOn' => null,
+            ],
+            [
+                'TenderId' => 12, // Assumes tender ID 3 exists in t_Tenders
+                'SupplierId' => 4, // Assumes supplier ID 3 exists in t_Suppliers
+                'InvitationDate' => Carbon::today()->subDays(2),
+                'ResponseStatus' => 'Pending',
+                'ResponseDate' => null,
+                'DeclineReason' => null,
+                'ConfirmationAttachment' => null,
+                'CreatedBy' => 1,
+                'CreatedOn' => $now,
+                'ModifiedBy' => 1,
+                'ModifiedOn' => $now,
+                'DeletedBy' => null,
+                'DeletedOn' => null,
+            ],
+        ]);
     }
 }

@@ -22,8 +22,8 @@
     @forelse ($invitations as $index => $invitation)
         <tr>
             <td>{{ $index + 1 }}</td>
-            <td>{{ $invitation->TenderID }}</td>
-            <td>{{ $invitation->SupplierID  }}</td>
+            <td>{{ $invitation->TenderId }}</td>
+            <td>{{ $invitation->SupplierId  }}</td>
             <td>{{ \Carbon\Carbon::parse($invitation->InvitationDate)->format('Y-m-d') }}</td>
             <td>
                 @if($invitation->ResponseStatus === 'Accepted')

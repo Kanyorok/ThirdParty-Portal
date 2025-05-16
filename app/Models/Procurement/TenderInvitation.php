@@ -11,16 +11,18 @@ class TenderInvitation extends Model
 {
     use SoftDeletes, UserActorTrait;
 
-    const string CREATED_AT = 'CreatedOn';
-    const string UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    const CREATED_AT = 'CreatedOn';
+    const UPDATED_AT = 'ModifiedOn';
+    const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_TenderInvitations';
+    protected $primaryKey = 'InvitationID';
+
 
     // Mass assignable attributes
     protected $fillable = [
-        'TenderID',
-        'SupplierID',
+        'TenderId',
+        'SupplierId',
         'InvitationDate',
         'ResponseStatus',
         'ResponseDate',
@@ -45,13 +47,13 @@ class TenderInvitation extends Model
     public const STATUS_DECLINED = 'Declined';
 
     //Relationships
-    public function tenderID()
+    public function tender()
     {
-        return $this->belongsTo(Tender::class, 'TenderID', 'Id');
+        return $this->belongsTo(Tender::class, 'TenderId', 'Id');
     }
-    public function supplierID()
+    public function supplier()
     {
-        return $this->belongsTo(Supplier::class, 'SupplierID', 'Id');
+        return $this->belongsTo(Supplier::class, 'SupplierId', 'Id');
     }
 
 

@@ -40,6 +40,6 @@ class TenderclarificationController extends Controller
             'ModifiedBy' => $request->user()->Id,
         ]);
 
-        return redirect()->back()->with('success', 'Clarification updated successfully.');
+        return redirect()->route('tenderclarification.index')->with('success', 'Clarification updated successfully.');
     }
 }

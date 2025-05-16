@@ -1,9 +1,9 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Clarification Requests')
 @section('content')
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4>Clarification Requests</h4>
+
     </div>
 
     <div class="table-responsive">
