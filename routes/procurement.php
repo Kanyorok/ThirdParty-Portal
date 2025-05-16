@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Procurement\PurchaseOrderController;
 use App\Http\Controllers\Procurement\RequisitionItemsController;
 use App\Http\Controllers\Procurement\RequisitionsController;
 use Illuminate\Support\Facades\Route;
@@ -72,7 +73,7 @@ Route::namespace('Procurement')->group(function () {
 
     //Purchase Order
     Route::resource('purchaseOrder', 'PurchaseOrderController');
-//    Route::get('requisitionItem/getItem', 'PurchaseOrderController@getSuppliers')->name('purchaseOrder.getSuppliers');
+   Route::get('purchaseOrder/getSuppliers', [PurchaseOrderController::class, 'getSuppliers'])->name('purchaseOrder.getSuppliers');
 //    Route::get('requisitionItem/getItem/{supplier}', 'PurchaseOrderController@getSupplierDetails')->name('purchaseOrder.getSupplierDetails');
 
     //Sales Order
@@ -167,6 +168,10 @@ Route::namespace('Procurement')->group(function () {
     Route::resource('tendercategory', TenderCategoryController::class);
     Route::resource('tendertype', TenderTypeController::class);
     Route::resource('initiateapprove', TenderInitiationApproveController::class);
+    Route::resource('tenderresponse', TenderResponseController::class);
+    Route::resource('tenderclarification', TenderclarificationController::class);
+    Route::resource('tendersubmission', TenderSubmissionController::class);
+    Route::resource('tenderopening', TenderOpeningController::class);
     //Route::resource('tenderresponse', TenderResponseController::class);
     //Route::resource('tenderclarification', TenderclarificationController::class);
     Route::resource('tendersubmission', TenderSubmissionController::class);
@@ -177,6 +182,9 @@ Route::namespace('Procurement')->group(function () {
     Route::resource('assignrole', TenderAssignRoleController::class);
     Route::resource('evaluationcriteria', EvaluationCriteriaController::class);
     Route::resource('bidevaluation', BidEvaluationController::class);
+    Route::resource('evaluationdashboard', EvaluatorDashboardController::class);
+    Route::resource('bidscores', BidScoreConsolidationController::class);
+    Route::resource('procurementreports', ProcurementReportsController::class);
     Route::resource('evaluationdashboard', EvaluatorDashboardController::class);  
     Route::resource('bidscores', BidScoreConsolidationController::class); 
     Route::resource('procurementreports', ProcurementReportsController::class); 

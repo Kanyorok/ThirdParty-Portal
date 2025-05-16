@@ -11,7 +11,7 @@ class PurchaseOrderRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,16 @@ class PurchaseOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+
+            'Supplier'      => ['required'],
+            'SupplierDate'  => ['required'],
+            'Priority'      => ['nullable'],
+            'RFQNumber'     => ['nullable'],
+            'Terms'         => ['nullable'],
+
+//            'ItemId' =>    ['required','array'],
+//            'ItemId.*' =>    ['required','exists:items,id'],
+
         ];
     }
 }
