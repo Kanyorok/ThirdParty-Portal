@@ -21,7 +21,7 @@ class RFQ extends Model
     protected $fillable = [
         'RFQNumber', 'Comments', 'Status', 'SubmissionDeadline',  'CreatedBy', 'ModifiedBy'
     ];
-
+    
     public static function getPrimaryKey(): string
     {
         return 'RFQId';
