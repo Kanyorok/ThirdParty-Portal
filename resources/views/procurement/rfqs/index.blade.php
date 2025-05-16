@@ -4,8 +4,6 @@
 
 @section('content')
 <div class="container">
-    <h3>All RFQs</h3>
-
     @if (session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
@@ -60,26 +58,10 @@
         </div>
 
         <div class="modal-body">
-            <!-- RFQ Number -->
-            <div class="mb-3">
-                <label for="RFQNumber" class="form-label">RFQ Number</label>
-                <input type="text" name="RFQNumber" id="RFQNumber" class="form-control" required>
-            </div>
-
             <!-- Comments -->
             <div class="mb-3">
                 <label for="Comments" class="form-label">Comments</label>
                 <textarea name="Comments" id="Comments" rows="3" class="form-control"></textarea>
-            </div>
-
-            <!-- Status -->
-            <div class="mb-3">
-                <label for="Status" class="form-label">Status</label>
-                <select name="Status" id="Status" class="form-select" required>
-                    <option value="draft">Draft</option>
-                    <option value="submitted">Submitted</option>
-                    <option value="approved">Approved</option>
-                </select>
             </div>
 
             <!-- Submission Deadline -->

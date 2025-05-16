@@ -36,22 +36,21 @@ class RFQController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'ItemCategoryId' => 'required|exists:t_ItemCategories,id',
             'Comments' => 'nullable|string|max:255',
             'SubmissionDeadline' => 'required|date|after:today',
         ]);
 
         // Fetch items + quantities for this category
-        $items = DB::table('t_RequisitionLines as rl')
-            ->join('t_Items as i', 'rl.Item', '=', 'i.id')
-            ->where('rl.CategoryId', $request->ItemCategoryId)
-            ->select('i.Name as name', 'rl.Quantity as quantity', 'i.UOM as uom', 'rl.Description as description')
-            ->get();
+        // $items = DB::table('t_RequisitionLines as rl')
+        //     ->join('t_Items as i', 'rl.Item', '=', 'i.id')
+        //     ->where('rl.CategoryId', $request->ItemCategoryId)
+        //     ->select('i.Name as name', 'rl.Quantity as quantity', 'i.UOM as uom', 'rl.Description as description')
+        //     ->get();
 
         // Check if no items are found
-        if ($items->isEmpty()) {
-            return redirect()->back()->with('warning', 'No items requisitioned with the chosen category.');
-        }
+        // if ($items->isEmpty()) {
+        //     return redirect()->back()->with('warning', 'No items requisitioned with the chosen category.');
+        // }
 
         // Format items for JSON storage
 
@@ -60,21 +59,10 @@ class RFQController extends Controller
         $lastRFQ = RFQ::where('RFQNumber', 'like', $prefix . '%')->orderBy('Id', 'desc')->first();
         $lastNumber = $lastRFQ ? intval(substr($lastRFQ->RFQNumber, strlen($prefix))) : 0;
         $newRFQNumber = $prefix . str_pad($lastNumber + 1, 5, '0', STR_PAD_LEFT);
-        $requisitionItems = $items->map(function ($item) {
-            return [
-                'name' => $item->name,
-                'quantity' => $item->quantity,
-                'unit' => $item->uom,
-                'description' => $item->description,
-            ];
-        });
 
         // Create the RFQ
         $rfq = RFQ::create([
             'RFQNumber' => $newRFQNumber,
-            'ItemCategoryId' => $request->ItemCategoryId,
-            'RequisitionItems' => $requisitionItems,
-            'Comments' => $request->Comments,
             'SubmissionDeadline' => $request->SubmissionDeadline,
             'CreatedBy' => auth()->user()->Id,
             'ModifiedBy' => auth()->user()->Id,
