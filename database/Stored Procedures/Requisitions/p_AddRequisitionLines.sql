@@ -11,12 +11,12 @@ BEGIN
 
     DECLARE @Description varchar(max), @Type varchar(10), @UOM varchar(10), @CategoryID int, @ExpectedPrice decimal;;
 
-    SELECT @Description=t.Description,@Type=t.Type, @UOM=t.UOM, @CategoryID=c.id,@ExpectedPrice=t.UnitPrice FROM t_Items t (NOLOCK )
-    LEFT JOIN t_ItemCategories c ON t.CategoryId=c.id  WHERE t.id=@Item
+    SELECT @Description=t.ItemDescription,@Type=t.ItemType, @UOM=t.UOM,@ExpectedPrice=0 FROM t_Items t (NOLOCK )
+    LEFT JOIN t_ItemCategories c ON t.Id=c.ParentId  WHERE t.id=@Item
 
     -- Insert new requisition
-    INSERT INTO t_RequisitionLines (RequisitionId, Item, Quantity, NeededBy, Urgency, CreatedBy,CreatedOn, ModifiedBy,ModifiedOn,Type,Status,Description,UOM,CategoryId,ExpectedPrice)
-    VALUES (@RequisitionId, @Item, @Quantity, @NeededBy, @Urgency, @User, getdate(),@User,getdate(),@Type,'p',@Description,@UOM,@CategoryID,@ExpectedPrice*@Quantity)
+    INSERT INTO t_RequisitionLines (RequisitionId, Item, Quantity,  UrgencyID, CreatedBy,CreatedOn, ModifiedBy,ModifiedOn,Type,StatusID,Description,UOM,ExpectedPrice)
+    VALUES (@RequisitionId, @Item, @Quantity, @Urgency, @User, getdate(),@User,getdate(),@Type,'p',@Description,@UOM,@ExpectedPrice*@Quantity)
 
 --
 --     -- Generate RequisitionNo

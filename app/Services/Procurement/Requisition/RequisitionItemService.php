@@ -120,9 +120,9 @@ class RequisitionItemService
                 t_Requisitions.Category,
                 t_Requisitions.Id,
                 FORMAT(t_RequisitionLines.NeededBy, 'dd-MM-yyyy') as NeededBy,
-                case when t_RequisitionLines.Status = 'p' then 'Pending' when t_RequisitionLines.Status = 'a'
-                then 'Approved' when t_RequisitionLines.Status = 'r' then 'Rejected'
-                when t_RequisitionLines.Status = 'd' then 'Deferred'
+                case when t_RequisitionLines.StatusID = 'p' then 'Pending' when t_RequisitionLines.StatusID = 'a'
+                then 'Approved' when t_RequisitionLines.StatusID = 'r' then 'Rejected'
+                when t_RequisitionLines.StatusID = 'd' then 'Deferred'
                 else  'Unknown' end as Status,
                 t_RequisitionLines.ExpectedPrice,
                 t_RequisitionLines.Quantity"),
@@ -133,33 +133,21 @@ class RequisitionItemService
     public static function getRequisitionRelatedItems($RequsitionId){
 
         return DB::table(DB::raw('t_RequisitionLines WITH (NOLOCK)'))
-            ->leftJoin(DB::raw('t_Items WITH (NOLOCK)'), 't_Items.Id', '=', 't_RequisitionLines.Item')
-            ->leftJoin(DB::raw('t_Users WITH (NOLOCK)'), 't_Users.Id', '=', 't_RequisitionLines.CreatedBy')
-            ->leftJoin(DB::raw('t_ItemCategories WITH (NOLOCK)'), 't_Items.CategoryId', '=', 't_ItemCategories.id')
+            ->leftJoin(DB::raw('t_Items WITH (NOLOCK)'), 't_RequisitionLines.Item', '=', 't_Items.Id')
+            ->leftJoin(DB::raw('t_Users WITH (NOLOCK)'), 't_RequisitionLines.CreatedBy', '=', 't_Users.Id')
+            ->leftJoin(DB::raw('t_ItemCategories WITH (NOLOCK)'), 't_Items.Id', '=', 't_ItemCategories.ParentId')
             ->where('t_RequisitionLines.RequisitionId',$RequsitionId)
             ->select(
                 't_RequisitionLines.*',
-                't_Items.Name as ItemName',
+                't_Items.ItemName as ItemName',
                 't_Users.Name as UserName',
                 't_Items.UOM as UOMx',
                 't_ItemCategories.Name as Category',
                 DB::raw('t_RequisitionLines.ExpectedPrice * t_RequisitionLines.Quantity as ExpectedPrice'),
-                DB::raw('t_Items.UnitPrice * t_RequisitionLines.Quantity as ActualPrice'),
-                DB::raw("CASE
-            WHEN t_RequisitionLines.Status = 'p' THEN 'Pending'
-            WHEN t_RequisitionLines.Status = 'a' THEN 'Approved'
-            WHEN t_RequisitionLines.Status = 'r' THEN 'Rejected'
-            ELSE 'Unknown'
-        END as Status"),
-                DB::raw("CASE
-            WHEN t_RequisitionLines.Urgency = 1 THEN 'Very High'
-            WHEN t_RequisitionLines.Urgency = 2 THEN 'High'
-            WHEN t_RequisitionLines.Urgency = 3 THEN 'Medium'
-            WHEN t_RequisitionLines.Urgency = 4 THEN 'Low'
-            ELSE 'Unknown'
-        END as Urgency"),
-                DB::raw("FORMAT(t_RequisitionLines.CreatedOn, 'dd-MM-yyyy HH:mm') as CreatedOn"),
-                DB::raw("FORMAT(t_RequisitionLines.NeededBy, 'dd-MM-yyyy') as NeededBy")
+                DB::raw('0 * t_RequisitionLines.Quantity as ActualPrice'),
+                'StatusID as Status',
+                'UrgencyID as Urgency',
+                DB::raw("FORMAT(t_RequisitionLines.CreatedOn, 'dd-MM-yyyy HH:mm') as CreatedOn")
             )
             ->get();
     }

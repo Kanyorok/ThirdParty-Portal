@@ -104,6 +104,8 @@ class PurchaseOrderController extends Controller
     public function store(PurchaseOrderRequest $request):JsonResponse
     {
         //
+
+//        dd($request->user());
         try {
             $validatedData = $request->validated();
 
@@ -113,31 +115,31 @@ class PurchaseOrderController extends Controller
             }
 
             $POAdd = $this->orderService->addPO(
-                $actor,
                 $validatedData['supplier'],
-                $validatedData['poDate'],
-                $validatedData['rfqNo'],
+                $validatedData['pODate'],
+                $validatedData['refNo'],
                 $validatedData['priority'],
-                $validatedData['terms']
+                $validatedData['terms'],
+                $actor
             );
 
-
+            foreach ($validatedData['itemCode'] as $index => $itemCode) {
             $POLinesAdd = $this->orderService->addPOLines(
-                $actor,
-                $validatedData['itemCode'],
-                $validatedData['quantity'],
-                $validatedData['unitPrice'],
-                $validatedData['tax'],
-                $validatedData['discount'],
-                $validatedData['lineTotal']
-
+//                $validatedData['itemCode'],
+                $itemCode,
+                $validatedData['quantity'][$index],
+                $validatedData['unitPrice'][$index],
+                $validatedData['tax'][$index],
+                $validatedData['discount'][$index],
+                $validatedData['lineTotal'][$index],
+                $actor
             );
-
+            }
 
             if ($POAdd['status'] === 'success' || $POLinesAdd['status'] === 'success') {
                 return response()->json([
                     'message' => $POAdd['message'],
-                    'route' =>route('order.create')
+                    'route' =>route('purchaseOrder.create')
                 ], 200);
             }
 
