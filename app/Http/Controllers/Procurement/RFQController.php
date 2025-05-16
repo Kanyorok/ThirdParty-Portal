@@ -16,6 +16,7 @@ class RFQController extends Controller
      */
     public function index()
     {
+        
         $rfqs = RFQ::with(['category', 'suppliers'])->get();
         return view('procurement.rfqs.index', compact('rfqs'));
     }
