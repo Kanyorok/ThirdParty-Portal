@@ -37,8 +37,8 @@ return new class extends Migration
             $table->integer('iLineDiscountReasonID')->nullable();
             $table->integer('iReturnReasonID')->nullable();
             $table->float('fTaxRate')->nullable();
-            $table->boolean('bIsSerialItem');
-            $table->boolean('bIsWhseItem');
+            $table->boolean('bIsSerialItem')->nullable();
+            $table->boolean('bIsWhseItem')->nullable();
             $table->float('fAddCost')->nullable();
             $table->string('cTradeinItem', 20)->nullable();
             $table->integer('iStockCodeID')->nullable();
@@ -49,12 +49,12 @@ return new class extends Migration
             $table->integer('iLineRepID')->nullable();
             $table->integer('iLineProjectID')->nullable();
             $table->integer('iLedgerAccountID')->nullable();
-            $table->integer('iModule');
-            $table->boolean('bChargeCom');
-            $table->boolean('bIsLotItem');
+            $table->integer('iModule')->nullable();
+            $table->boolean('bChargeCom')->nullable();
+            $table->boolean('bIsLotItem')->nullable();
             $table->integer('iMFPID')->nullable();
-            $table->integer('iLineID');
-            $table->bigInteger('iLinkedLineID');
+            $table->integer('iLineID')->nullable();
+            $table->bigInteger('iLinkedLineID')->nullable();
             $table->float('fQtyLinkedUsed')->nullable();
             $table->float('fUnitPriceInclOrig')->nullable();
             $table->float('fUnitPriceExclOrig')->nullable();
