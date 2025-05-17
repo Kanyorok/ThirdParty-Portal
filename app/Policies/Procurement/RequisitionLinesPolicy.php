@@ -3,7 +3,7 @@
 namespace App\Policies\Procurement;
 
 use App\Models\Auth\User;
-use App\Models\Procurement\RequisitionLines;
+use App\Models\Procurement\RequisitionLine;
 
 class RequisitionLinesPolicy
 {
@@ -19,7 +19,7 @@ class RequisitionLinesPolicy
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, RequisitionLines $requisitionLines): bool
+    public function view(User $user, RequisitionLine $requisitionLines): bool
     {
 //        return $user->can(PermissionEnum::RequisitionItemsRead->value);
 
@@ -38,7 +38,7 @@ class RequisitionLinesPolicy
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, RequisitionLines $requisitionLines): bool
+    public function update(User $user, RequisitionLine $requisitionLines): bool
     {
 //        return $user->can(PermissionEnum::RequisitionItemsUpdate->value);
         return true;
@@ -47,7 +47,7 @@ class RequisitionLinesPolicy
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, RequisitionLines $requisitionLines): bool
+    public function delete(User $user, RequisitionLine $requisitionLines): bool
     {
         return true;
     }
@@ -55,7 +55,7 @@ class RequisitionLinesPolicy
     /**
      * Determine whether the user can restore the model.
      */
-    public function restore(User $user, RequisitionLines $requisitionLines): bool
+    public function restore(User $user, RequisitionLine $requisitionLines): bool
     {
         return true;
     }
@@ -63,7 +63,7 @@ class RequisitionLinesPolicy
     /**
      * Determine whether the user can permanently delete the model.
      */
-    public function forceDelete(User $user, RequisitionLines $requisitionLines): bool
+    public function forceDelete(User $user, RequisitionLine $requisitionLines): bool
     {
         return true;
     }

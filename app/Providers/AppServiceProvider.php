@@ -29,7 +29,7 @@ use App\Models\CRM\Ticket;
 use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
 use App\Models\Procurement\Order;
-use App\Models\Procurement\RequisitionLines;
+use App\Models\Procurement\RequisitionLine;
 use App\Models\Procurement\Requisitions;
 use App\Models\Procurement\RFQ;
 use App\Models\Settings\APICredential;
@@ -93,14 +93,14 @@ class AppServiceProvider extends ServiceProvider
             Ticket::getPrimaryKey() => Ticket::class,
             User::getPrimaryKey() => User::class,
             Requisitions::getPrimaryKey() => Requisitions::class,
-            RequisitionLines::getPrimaryKey() => RequisitionLines::class,
+            RequisitionLine::getPrimaryKey() => RequisitionLine::class,
             Order::getPrimaryKey() => Order::class,
         ]);
 
         Gate::policy(Role::class, RolePolicy::class);
         Gate::policy(Branch::class, CrmBranchPolicy::class);
         Gate::policy(Requisitions::class, RequisitionPolicy::class);
-        Gate::policy(RequisitionLines::class, RequisitionLinesPolicy::class);
+        Gate::policy(RequisitionLine::class, RequisitionLinesPolicy::class);
         Gate::policy(ProductDevelopment::class, ProductDevelopmentPolicy::class);
         Gate::policy(Order::class, OrderPolicy::class);
 

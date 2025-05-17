@@ -25,7 +25,7 @@ use App\Models\CRM\Ticket;
 use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
 use App\Models\Procurement\Order;
-use App\Models\Procurement\RequisitionLines;
+use App\Models\Procurement\RequisitionLine;
 use App\Models\Procurement\Requisitions;
 use App\Models\Procurement\RFQ;
 use App\Models\Settings\APICredential;
@@ -275,7 +275,7 @@ enum PermissionEnum: string
             self::ListsView, self::ListsUpdate => CodeDetail::getPrimaryKey(),
             //Requisition
             self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval => Requisitions::getPrimaryKey(),
-            self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval => RequisitionLines::getPrimaryKey(),
+            self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval => RequisitionLine::getPrimaryKey(),
 
             //PurchaseOrder
             self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval => Order::getPrimaryKey(),

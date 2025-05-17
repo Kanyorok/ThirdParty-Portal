@@ -132,6 +132,7 @@ Route::namespace('Procurement')->group(function () {
 
     // RFQLines Routes
     Route::get('/rfqlines/create', [RFQLinesController::class, 'create'])->name('rfqlines.create');
+    Route::get('/requisition/{id}/categories', [RFQLinesController::class, 'getCategories']);
 
 
     // RFQ Response routes
