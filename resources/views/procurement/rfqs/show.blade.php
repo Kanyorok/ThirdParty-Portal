@@ -2,22 +2,15 @@
 @section('title', 'RFQ Details')
 @section('content')
 <div class="container">
-    <h3>RFQ Details</h3>
+    <button type="button" class="btn btn-primary mb-3">
+        + New RFQ Line
+    </button>
 
     <div class="card mb-3">
         <div class="card-body">
             <p><strong>RFQ Number:</strong> {{ $rfq->RFQNumber }}</p>
             <p><strong>RFQ Comments:</strong> {{ $rfq->Comments }}</p>
-            <p><strong>Item Category:</strong> {{ $rfq->category->Name }}</p>
-            @if ($rfq->Suppliers)
-                <ul>
-                    @foreach (json_decode($rfq->Suppliers) as $supplier)
-                        <li>{{ $supplier->SupplierName }} — {{ $supplier->ContactEmail }}</li>
-                    @endforeach
-                </ul>
-            @else
-                <p>No suppliers selected.</p>
-            @endif
+            
         </div>
     </div>
 
@@ -35,17 +28,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach ($rfq->RequisitionItems as $item)
-                <tr>
-                    <td>{{ $loop->iteration }}</td>
-                    <td>{{ $item['name'] }}</td>
-                    <td>{{ $item['quantity'] }}</td>
-                    <td>{{ $item['unit'] }}</td>
-                    <td>{{ \Carbon\Carbon::parse($rfq->SubmissionDeadline)->format('d M Y') }}</td>
-                    <td>{{ $item['description'] }}</td>
-                    <td>{{ $rfq->Status}}</td>
-                </tr>
-            @endforeach
+            
         </tbody>
         <tfoot>
             <tr>
@@ -111,11 +94,7 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label for="suppliers" class="form-label">Suppliers</label>
-                            <select name="suppliers[]" id="suppliers" class="form-control" multiple>
-                                @foreach ($suppliers as $supplier)
-                                    <option value="{{ $supplier->Id }}">{{ $supplier->SupplierName }}</option>
-                                @endforeach
-                            </select>
+                            
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -127,12 +106,5 @@
         </div>
     </div>
 </div>
-<script>
-    $(document).ready(function() {
-        $('#suppliers').select2({
-            placeholder: "Select suppliers",
-            allowClear: true
-        });
-    });
-</script>
+
 @endsection

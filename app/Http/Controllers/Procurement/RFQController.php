@@ -64,6 +64,7 @@ class RFQController extends Controller
         // Create the RFQ
         $rfq = RFQ::create([
             'RFQNumber' => $newRFQNumber,
+            'Comments' => $request->Comments,
             'SubmissionDeadline' => $request->SubmissionDeadline,
             'CreatedBy' => auth()->user()->Id,
             'ModifiedBy' => auth()->user()->Id,

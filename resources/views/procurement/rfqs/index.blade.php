@@ -20,7 +20,6 @@
                     <th>#</th>
                     <th>Quotation Number</th>
                     <th>Quotation Status</th>
-                    <th>RFQ Category</th>
                     <th>Submission Deadline</th>
                     <th>Created On</th>
                     <th>Actions</th>
@@ -32,7 +31,6 @@
                         <td>{{ $loop->iteration }}</td>
                         <td>{{ $rfq->RFQNumber ?? '-' }}</td>
                         <td>{{ $rfq->Status ?? '-' }}</td>
-                        <td>{{ $rfq->category->Name ?? '-' }}</td>
                         <td>{{ $rfq->SubmissionDeadline ? \Carbon\Carbon::parse($rfq->SubmissionDeadline)->format('d M Y') : '-' }}</td>
                         <td>{{ $rfq->CreatedOn ? \Carbon\Carbon::parse($rfq->CreatedAt)->format('d M Y') : '-' }}</td>
                         <td>
@@ -67,7 +65,7 @@
             <!-- Submission Deadline -->
             <div class="mb-3">
                 <label for="SubmissionDeadline" class="form-label">Submission Deadline</label>
-                <input type="datetime-local" name="SubmissionDeadline" id="SubmissionDeadline" class="form-control">
+                <input type="date" name="SubmissionDeadline" id="SubmissionDeadline" class="form-control">
             </div>
         </div>
 
