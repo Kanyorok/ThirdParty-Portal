@@ -7,16 +7,17 @@ use App\Http\Requests\Procurement\Requisition\RequisitionRequest;
 use App\Models\Procurement\Requisitions;
 use App\Services\Procurement\Requisition\RequisitionItemService;
 use App\Services\Procurement\Requisition\RequisitionService;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class RequisitionsController extends Controller
 {
-    public function __construct(protected RequisitionService $service,protected RequisitionItemService $itemService)
+    public function __construct(protected RequisitionService $service,protected RequisitionItemService $requisitionItemService)
     {
         $this->middleware('ajax')->except(['index', 'show', 'create']);
-         $this->authorizeResource(Requisitions::class); // Uncomment if using authorization
+//         $this->authorizeResource(Requisitions::class); // Uncomment if using authorization
     }
 
     /**
@@ -143,10 +144,13 @@ class RequisitionsController extends Controller
      */
     public function show(string $id)
     {
-        $this->authorize('view', Requisitions::query()->findOrFail($id));
+//        dd (Requisitions::query()->findOrFail($id));
+
+            $this->authorize('view', Requisitions::query()->findOrFail($id));
+
         try {
 
-            $details = $this->itemService->getRequisitionRelatedItems($id);
+            $details = $this->requisitionItemService->getRequisitionRelatedItems($id);
             return view('procurement.requisitions.show', compact('details'));
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Failed to fetch items: ' . $e->getMessage());

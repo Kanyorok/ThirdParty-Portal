@@ -28,7 +28,6 @@
                                 <th>Requisition Date</th>
                                 <th>Branch</th>
                                 <th>Department</th>
-                                <th>Category</th>
                                 <th>Remarks</th>
                                 <th>Total Items</th>
                                 <th>Total Cost</th>
@@ -46,7 +45,6 @@
                                 <td>{{ \Carbon\Carbon::parse($item->CreatedOn)->format('d-m-Y') }}</td>
                                 <td>{{ $item->BranchID }}</td>
                                 <td>{{ $item->DepartmentID }}</td>
-                                <td>{{ $item->Category }}</td>
                                 <td>{{ $item->Remarks }}</td>
                                 <td>{{ $item->itemcount }}</td>
                                 <td>{{ number_format($item->ExpectedPrice, 2) }}</td>
