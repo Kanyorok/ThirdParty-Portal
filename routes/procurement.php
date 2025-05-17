@@ -14,6 +14,7 @@ use App\Http\Controllers\Procurement\SupplierController;
 use App\Http\Controllers\Procurement\ProcurementPeriodController;
 use App\Http\Controllers\Procurement\ProcurementPlanController;
 use App\Http\Controllers\Procurement\RFQController;
+use App\Http\Controllers\Procurement\RFQLinesController;
 use App\Http\Controllers\Procurement\RFQResponseController;
 use App\Http\Controllers\Procurement\RFQEvaluationController;
 use App\Http\Controllers\Procurement\GoodsReceiptController;
@@ -128,6 +129,9 @@ Route::namespace('Procurement')->group(function () {
     Route::get('/rfqs', [RFQController::class, 'index'])->name('rfqs.index');
     Route::post('/rfqs/{rfq}/approve', [RFQController::class, 'approve'])->name('rfqs.approve');
     Route::post('/rfqs/{rfq}/reject', [RFQController::class, 'reject'])->name('rfqs.reject');
+
+    // RFQLines Routes
+    Route::get('/rfqlines/create', [RFQLinesController::class, 'create'])->name('rfqlines.create');
 
 
     // RFQ Response routes

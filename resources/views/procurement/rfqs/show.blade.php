@@ -2,9 +2,7 @@
 @section('title', 'RFQ Details')
 @section('content')
 <div class="container">
-    <button type="button" class="btn btn-primary mb-3">
-        + New RFQ Line
-    </button>
+    <a href="{{ route('rfqlines.create') }}" class="btn btn-primary mb-3">+ New RFQ Line</a>
 
     <div class="card mb-3">
         <div class="card-body">
