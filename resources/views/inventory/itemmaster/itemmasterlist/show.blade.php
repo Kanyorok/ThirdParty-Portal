@@ -37,7 +37,7 @@
 
     <div class="row mb-3">
         <div class="col-md-6">
-            <p><strong>Subcategory:</strong> {{ $item->subcategory?->Name ?? 'N/A' }}</p>
+            <p><strong>Parent Category:</strong> {{ $item->category->parent?->Name ?? 'N/A' }}</p>
         </div>
         <div class="col-md-6">
             <p><strong>Unit of Measure (UOM):</strong> {{ $item->UOM }}</p>

@@ -42,7 +42,7 @@
                 </select>
             </div>
             <div class="col-md-4">
-                <label for="Category" class="form-label">Category</label>
+                <label for="Category" class="form-label">Parent Category</label>
                 <select name="Category" id="category" class="form-select" required>
                     <option value="">-- Select Category --</option>
                     @foreach($categories as $category)
@@ -51,7 +51,7 @@
                 </select>
             </div>
             <div class="col-md-4">
-                <label for="SubCategory" class="form-label">Subcategory</label>
+                <label for="SubCategory" class="form-label">Category</label>
                 <select name="SubCategory" id="subcategory" class="form-select">
                     <option value="">-- Select SubCategory --</option>
                 </select>
