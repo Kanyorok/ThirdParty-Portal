@@ -12,6 +12,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Illuminate\Validation\Rule;
+
+use App\Models\Procurement\ModeTimeline;
+use App\Models\Procurement\TenderStage;
 
 class TenderController extends Controller
 {
@@ -20,8 +24,9 @@ class TenderController extends Controller
      */
     public function index()
     {
-        $tenders = Tender::with('procurementMode')->get();
-        return view('procurement.tenders.index', compact('tenders'));
+        // Eager load procurementMode relationship
+        $tenders = Tender::with('procurementMode')->latest()->paginate(10);
+        return view('procurement.tendering.tendersetup.tenderinitiation.index', compact('tenders'));
     }
 
     /**
@@ -35,7 +40,7 @@ class TenderController extends Controller
         $tenderCategories = TenderCategoryEnum::cases();
         $statuses = TenderStatusEnum::cases();
 
-        return view('procurement.tenders.create', compact(
+        return view('procurement.tendering.tendersetup.tenderinitiation.create', compact(
             'procurementModes',
             'currencies',
             'tenderTypes',
@@ -51,13 +56,13 @@ class TenderController extends Controller
     {
         $validated = $request->validate([
             'Title' => 'required|string|max:255',
-            'TenderType' => ['required', 'in:'.implode(',', TenderTypeEnum::values())],
-            'TenderCategory' => 'required|in:Goods,Services,Works',
+            'TenderType' => ['required', Rule::in(TenderTypeEnum::values())],
+            'TenderCategory' => ['required', Rule::in(TenderCategoryEnum::values())],
             'ScopeOfWork' => 'nullable|string',
             'Instructions' => 'nullable|string',
             'SubmissionDeadline' => 'required|date|after:today',
             'OpeningDate' => 'required|date|after:SubmissionDeadline',
-            'Status' => 'required|in:Draft,Published,Closed',
+            'Status' => ['required', Rule::in(TenderStatusEnum::values())],
             'RelatedPRID' => 'nullable|integer',
             'ProcurementModeId' => 'required|exists:t_ProcurementModes,id',
             'EstimatedValue' => 'required|numeric|min:0',
@@ -67,14 +72,16 @@ class TenderController extends Controller
 
         $tender = new Tender();
         $tender->TenderNo = 'TNDR-' . Str::upper(Str::random(8));
-        $tender->Title = $request->Title;
+        $tender->Title = $request->Title; // or also  $validated['Title']
         $tender->TenderType = TenderTypeEnum::from($request->TenderType);
+
         $tender->TenderCategory = $request->TenderCategory;
+        $tender->Status = $request->Status;
+
         $tender->ScopeOfWork = $request->ScopeOfWork;
         $tender->Instructions = $request->Instructions;
         $tender->SubmissionDeadline = $request->SubmissionDeadline;
         $tender->OpeningDate = $request->OpeningDate;
-        $tender->Status = $request->Status;
         $tender->RelatedPRID = $request->RelatedPRID;
         $tender->ProcurementModeId = $request->ProcurementModeId;
         $tender->EstimatedValue = $request->EstimatedValue;
@@ -83,25 +90,24 @@ class TenderController extends Controller
         $tender->CreatedBy = Auth::id();
         $tender->save();
 
-        // Auto-generate stage deadlines if needed
-        $timelineStages = \App\Models\Procurement\ModeTimeline::where('ProcurementModeId', $request->ProcurementModeId)->get();
-        $startDate = Carbon::parse($request->StartDate);
+        $timelineStages = ModeTimeline::where('ProcurementModeId', $request->ProcurementModeId)->get();
+        $currentStageStartDate = Carbon::parse($request->StartDate);
 
         foreach ($timelineStages as $stage) {
-            $endDate = (clone $startDate)->addDays($stage->DurationDays - 1);
+            $endDate = (clone $currentStageStartDate)->addDays($stage->DurationDays - 1);
 
-            \App\Models\Procurement\TenderStage::create([
-                'TenderId' => $tender->TenderID,
+            TenderStage::create([
+                'TenderId' => $tender->Id,
                 'Stage' => $stage->Stage,
                 'DurationDays' => $stage->DurationDays,
-                'StartDate' => $startDate,
+                'StartDate' => $currentStageStartDate,
                 'EndDate' => $endDate,
             ]);
 
-            $startDate = $endDate->copy()->addDay();
+            $currentStageStartDate = $endDate->copy()->addDay();
         }
 
-        return redirect()->route('tenders.index')->with('success', 'Tender created successfully.');
+        return redirect()->route('procurement.tendering.tendersetup.tenderinitiation.index')->with('success', 'Tender created successfully.');
     }
 
     /**
@@ -110,7 +116,7 @@ class TenderController extends Controller
     public function show(string $id)
     {
         $tender = Tender::with(['stages', 'procurementMode'])->findOrFail($id);
-        return view('procurement.tenders.show', compact('tender'));
+        return view('procurement.tendering.tendersetup.tenderinitiation.view', compact('tender'));
     }
 
     /**
@@ -122,10 +128,10 @@ class TenderController extends Controller
         $procurementModes = ProcurementMode::all();
         $currencies = config('app.currencies');
         $tenderTypes = TenderTypeEnum::cases();
-        $tenderCategories = ['Goods', 'Services', 'Works'];
-        $statuses = ['Draft', 'Published', 'Closed'];
+        $tenderCategories = TenderCategoryEnum::cases();
+        $statuses = TenderStatusEnum::cases();
 
-        return view('procurement.tenders.edit', compact(
+        return view('procurement.tendering.tendersetup.tenderinitiation.edit', compact(
             'tender',
             'procurementModes',
             'currencies',
@@ -142,13 +148,13 @@ class TenderController extends Controller
     {
         $validated = $request->validate([
             'Title' => 'required|string|max:255',
-            'TenderType' => ['required', 'in:'.implode(',', TenderTypeEnum::values())],
-            'TenderCategory' => 'required|in:Goods,Services,Works',
+            'TenderType' => ['required', Rule::in(TenderTypeEnum::values())],
+            'TenderCategory' => [' required ', Rule::enum(TenderCategoryEnum::class)],
             'ScopeOfWork' => 'nullable|string',
             'Instructions' => 'nullable|string',
             'SubmissionDeadline' => 'required|date',
             'OpeningDate' => 'required|date|after:SubmissionDeadline',
-            'Status' => 'required|in:Draft,Published,Closed',
+            'Status' => ['required', Rule::in(TenderStatusEnum::values())],
             'RelatedPRID' => 'nullable|integer',
             'ProcurementModeId' => 'required|exists:t_ProcurementModes,id',
             'EstimatedValue' => 'required|numeric|min:0',
@@ -157,24 +163,18 @@ class TenderController extends Controller
         ]);
 
         $tender = Tender::findOrFail($id);
-        $tender->update([
-            'Title' => $request->Title,
-            'TenderType' => TenderTypeEnum::from($request->TenderType),
-            'TenderCategory' => $request->TenderCategory,
-            'ScopeOfWork' => $request->ScopeOfWork,
-            'Instructions' => $request->Instructions,
-            'SubmissionDeadline' => $request->SubmissionDeadline,
-            'OpeningDate' => $request->OpeningDate,
-            'Status' => $request->Status,
-            'RelatedPRID' => $request->RelatedPRID,
-            'ProcurementModeId' => $request->ProcurementModeId,
-            'EstimatedValue' => $request->EstimatedValue,
-            'Currency' => $request->Currency,
-            'StartDate' => $request->StartDate,
-            'ModifiedBy' => Auth::id(),
-        ]);
 
-        return redirect()->route('tenders.index')->with('success', 'Tender updated successfully.');
+        $updateData = $validated;
+
+        $updateData['TenderType'] = TenderTypeEnum::from($validated['TenderType']);
+        $updateData['TenderCategory'] = TenderCategoryEnum::from($validated['TenderCategory']);
+        $updateData['Status'] = TenderStatusEnum::from($validated['Status']);
+
+        $updateData['ModifiedBy'] = Auth::id();
+
+        $tender->update($updateData);
+
+        return redirect()->route('initiatetender.index')->with('success', 'Tender updated successfully.');
     }
 
     /**
@@ -182,9 +182,9 @@ class TenderController extends Controller
      */
     public function destroy(string $id)
     {
-        $tender = Tender::findOrFail($id); 
+        $tender = Tender::findOrFail($id);
         $tender->delete();
 
-        return redirect()->route('tenders.index')->with('success', 'Tender deleted successfully.');
+        return redirect()->route('procurement.tendering.tendersetup.tenderinitiation.index')->with('success', 'Tender deleted successfully.');
     }
 }
