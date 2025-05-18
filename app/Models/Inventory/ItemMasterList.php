@@ -69,6 +69,7 @@ public function parentCategory()
 }
 
 
+
 protected static function booted()
 {
    static::creating(function ($item) {

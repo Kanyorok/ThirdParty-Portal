@@ -28,7 +28,7 @@
                     <th>Bar Code</th>
                     <th>Item Name</th>
                     <th>Category</th>
-                    <th>SubCategory</th>
+                    <th>Parent Category</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -51,22 +51,9 @@ $(document).ready(function () {
             { data: 'ItemCode', name: 'ItemCode' },
             { data: 'BarCode', name: 'BarCode' },
             { data: 'ItemName', name: 'ItemName' },
-            { 
-                data: 'category.parent.Name', 
-                name: 'category.parent.Name', 
-                defaultContent: '—', 
-                render: function(data, type, row) {
-                    return row.category?.parent?.Name ?? '—';
-                } 
-            },
-            { 
-                data: 'category.Name', 
-                name: 'category.Name', 
-                defaultContent: '—',
-                render: function(data, type, row) {
-                    return row.category?.Name ?? '—';
-                }
-            },
+            { data: 'Category', name: 'Category' },
+            { data: 'ParentCategory', name: 'ParentCategory' },
+
             {
                 data: 'Action',
                 name: 'Action',

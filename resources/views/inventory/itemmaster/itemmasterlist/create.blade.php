@@ -98,6 +98,10 @@
 @section('scripts')
 <script>
     $(document).ready(function () {
+        $("#subcategory").change(function () {
+        console.log('changed')
+        console.log($(this).val())
+    });
         $('#category').change(function () {
             let categoryId = $(this).val();
             $('#subcategory').html('<option value="">Loading...</option>');

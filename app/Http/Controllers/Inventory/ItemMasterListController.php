@@ -19,11 +19,10 @@ class ItemMasterListController extends Controller
             return Datatables::of(ItemMasterList::with('category.parent'))
                 ->addIndexColumn()
                 ->addColumn('Category', function ($item) {
-                    // Safely access parent name
-                    return optional($item->parent)->Name ?? '—';
-                })
-                ->addColumn('SubCategory', function ($item) {
                     return optional($item->category)->Name ?? '—';
+                })
+                ->addColumn('ParentCategory', function ($item) {
+                    return optional($item->category->parent)->Name ?? '—';
                 })
                 ->addColumn('Action', function ($item) {
                     return '
@@ -57,6 +56,8 @@ class ItemMasterListController extends Controller
             'ItemDescription' => 'nullable|string',
         ]);
 
+
+    
         DB::transaction(function () use ($request) {
             $item = new ItemMasterList();
             $item->fill($request->except('ImageUpload'));
@@ -71,7 +72,7 @@ class ItemMasterListController extends Controller
                 $item->ImageUpload = $path;
             }
 
-            $item->Category = $request->Category;
+            $item->Category = $request->SubCategory ?: $request->Category;
             $item->save();
         });
 
