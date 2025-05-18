@@ -122,6 +122,11 @@ Route::namespace('Procurement')->group(function () {
     Route::get('/procurement-periods/{period}/plans/create', [ProcurementPlanController::class, 'create'])->name('procurement-periods.plans.create');
     Route::post('/procurement-periods/{period}/plans', [ProcurementPlanController::class, 'store'])->name('procurement-periods.plans.store');
 
+    // RFQLines Routes
+    Route::post('/rfqlines', [RFQLinesController::class, 'store'])->name('linecategories.store');
+    Route::get('/rfqlines/create', [RFQLinesController::class, 'create'])->name('rfqlines.create');
+    Route::get('/requisitionlines/categories', [RFQLinesController::class, 'getCategories']);
+
     // RFQ routes
     Route::get('/rfqs/create', [RFQController::class, 'create'])->name('rfqs.create');
     Route::post('/rfqs', [RFQController::class, 'store'])->name('rfqs.store');
@@ -129,11 +134,6 @@ Route::namespace('Procurement')->group(function () {
     Route::get('/rfqs', [RFQController::class, 'index'])->name('rfqs.index');
     Route::post('/rfqs/{rfq}/approve', [RFQController::class, 'approve'])->name('rfqs.approve');
     Route::post('/rfqs/{rfq}/reject', [RFQController::class, 'reject'])->name('rfqs.reject');
-
-    // RFQLines Routes
-    Route::get('/rfqlines/create', [RFQLinesController::class, 'create'])->name('rfqlines.create');
-    Route::get('/requisition/{id}/categories', [RFQLinesController::class, 'getCategories']);
-
 
     // RFQ Response routes
     Route::get('/rfqresponses', [RFQResponseController::class, 'index'])->name('rfqresponses.index');

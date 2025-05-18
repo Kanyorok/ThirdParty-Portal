@@ -3,31 +3,88 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
+use App\Models\Procurement\RequisitionLine;
 use App\Models\Procurement\Requisitions;
-use App\Models\Procurement\RFQLines;
+use App\Models\Procurement\RFQLine;
 use Illuminate\Http\Request;
 
 class RFQLinesController extends Controller
 {
     public function create()
     {
-        // Logic to create RFQ lines
-        $requisitions = Requisitions::all(); // Fetch all requisitions for selection
-
-        return view('procurement.rfqlines.create', compact('requisitions'));
+        return view('procurement.rfqlines.create');
     }
 
-    public function getCategories($id)
+    public function store(Request $request)
     {
-        $requisition = Requisitions::with('requisitionLines.item.category')->findOrFail($id);
+        
+        // Step 1: Validate request
+        $validatedData = $request->validate([
+            'ItemCategoryId' => 'required|exists:t_ItemCategories,Id',
+        ]);
 
-        // Get unique item categories from items in requisition lines
-        $categories = $requisition->requisitionLines
-            ->map(fn($line) => $line->item->category)
-            ->unique('Id')
+        
+
+        // Step 2: Load requisition with lines + related items + item categories
+        $requisitionlines = RequisitionLine::with('item.category')
+            ->get();
+
+        
+        // Step 3: Filter requisition lines where item belongs to the selected category
+        $filteredItems = $requisitionlines
+            ->filter(function ($line) use ($request) {
+                return $line->item
+                    && $line->item->category
+                    && $line->item->category->Id == $request->ItemCategoryId;
+            });
+
+        // Step 4: If no matching items, redirect with warning
+        if ($filteredItems->isEmpty()) {
+            return redirect()->back()->with('warning', 'No items requisitioned with the chosen category.');
+        }
+
+        $prefix = 'RFQL-';
+        $lastRFQ = RFQLine::where('RFQLineNo', 'like', $prefix . '%')->orderBy('Id', 'desc')->first();
+        $lastNumber = $lastRFQ ? intval(substr($lastRFQ->RFQLineNo, strlen($prefix))) : 0;
+
+        // Step 5: Create RFQ lines for each filtered item
+        $counter = $lastNumber;
+        foreach ($filteredItems as $line) {
+             $counter++;
+             $rfqLineNumber = $prefix . str_pad($counter, 5, '0', STR_PAD_LEFT);
+
+            RFQLine::create([
+                'RFQLineNo' => $rfqLineNumber,
+                'RequisitionID' => $line->item->RequisitionID,
+                'ItemCategoryId' => $request->ItemCategoryId,
+                'ItemID' => $line->item->item,
+                'ItemName' => $line->item->ItemName,
+                'Quantity' => $line->Quantity,
+                'UOM' => $line->item->UOM ?? '',
+                'Description' => $line->Description,
+                'CreatedBy' => auth()->user()->Id,
+                'ModifiedBy' => auth()->user()->Id,
+                // Add any other required RFQLine fields here
+            ]);
+        }
+
+        return redirect()->route('rfqlines.index')->with('success', 'RFQ line(s) created successfully.');
+    }
+
+    public function getCategories()
+    {
+        // Get all requisition lines with item and its category
+        $lines = RequisitionLine::with('item.category')->get();
+
+        // Extract categories from items, avoiding nulls
+        $categories = $lines
+            ->map(fn($line) => $line->item?->category)
+            ->filter() // remove nulls
+            ->unique('Id') // or 'id', based on your DB
             ->values();
 
         return response()->json($categories);
     }
+
 
 }

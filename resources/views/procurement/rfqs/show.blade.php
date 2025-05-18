@@ -2,7 +2,9 @@
 @section('title', 'RFQ Details')
 @section('content')
 <div class="container">
-    <a href="{{ route('rfqlines.create') }}" class="btn btn-primary mb-3">+ New RFQ Line</a>
+    <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#createRFQModal">
+        + New RFQ Line
+    </button>
 
     <div class="card mb-3">
         <div class="card-body">
@@ -104,5 +106,54 @@
         </div>
     </div>
 </div>
+
+<!-- Modal -->
+<div class="modal fade" id="createRFQModal" tabindex="-1" aria-labelledby="createRFQModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="POST" action="{{ route('linecategories.store') }}" class="modal-content">
+        @csrf
+        <div class="modal-header">
+            <h5 class="modal-title" id="createRFQModalLabel">Create RFQ Line</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+            <!-- Comments -->
+            <div class="mb-3">
+                <label>Item Category</label>
+                <select name="ItemCategoryId" id="categoryDropdown" class="form-control" required>
+                    <option value="">-- Select Category --</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save RFQ Line</button>
+        </div>
+    </form>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const categoryDropdown = document.getElementById('categoryDropdown');
+    // Clear existing options except the placeholder
+    categoryDropdown.length = 1;
+    fetch(`/requisitionlines/categories`)
+        .then(response => response.json())
+        .then(data => {
+            data.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat.Id;
+                option.textContent = cat.Name;
+                categoryDropdown.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching categories:', error);
+        });
+});
+</script>
 
 @endsection

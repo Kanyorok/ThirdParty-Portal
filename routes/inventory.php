@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-//use App\Http\Controllers\Inventory\ReceiptController;
 use App\Http\Controllers\Inventory\TransactionReceiptsController;
 use App\Http\Controllers\Inventory\TransactionTransfersController;
 use App\Http\Controllers\Inventory\TransactionAdjustmentController;
@@ -25,7 +24,6 @@ use App\Http\Controllers\Inventory\PropertyReceiptPrintController;
 Route::get('/itemmaster', [ItemMasterListController::class, 'index'])->name('itemmaster.index');
 
 Route::namespace('Inventory')->prefix('inventory')->group(function () {
-    Route::resource('receipts', ReceiptController::class);
     Route::resource('transactionsreceipts', TransactionReceiptsController::class);
     Route::resource('transactionstransfers', TransactionTransfersController::class);
     Route::resource('transactionsadjustment', TransactionAdjustmentController::class);
@@ -71,6 +69,4 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::resource('interbranchrequisition', InterBranchRequisitionController::class);
     Route::resource('interbranchrequisitionapproval', InterBranchRequisitionApprovalController::class);
     Route::resource('inventoryreports', ReportsController::class);
-    Route::resource('rentdashboard', RentDashboardController::class);
-    Route::resource('receiptprint', PropertyReceiptPrintController::class);
 });

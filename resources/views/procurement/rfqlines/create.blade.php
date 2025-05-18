@@ -6,7 +6,7 @@
     <h3>Create RFQ</h3>
 
     <div class="container mt-3">
-        <form method="POST" action="{{ route('rfqs.store') }}">
+        <form method="POST" action="{{ route('rfqlines.store') }}">
             @csrf
 
             <div class="card mb-3">
@@ -15,7 +15,7 @@
                     {{-- Requisition Dropdown --}}
                     <div class="mb-3">
                         <label>Requisition</label>
-                        <select id="requisitionDropdown" class="form-control" required>
+                        <select id="requisitionDropdown" name="RequisitionID" class="form-control" required>
                             <option value="">-- Select Requisition --</option>
                             @foreach($requisitions as $req)
                                 <option value="{{ $req->Id }}">{{ 'Requisition #' . $req->RequisitionNo }}</option>
@@ -30,16 +30,6 @@
                             <option value="">-- Select Category --</option>
                         </select>
                     </div>
-
-                    <div class="form-group mb-3">
-                        <label for="Comments">Comments<span class="text-danger">*</span></label>
-                        <textarea name="Comments" class="form-control" required></textarea>
-                    </div>
-
-                    <div class="form-group mb-3">
-                        <label for="SubmissionDeadline">Submission Deadline <span class="text-danger">*</span></label>
-                        <input type="date" name="SubmissionDeadline" class="form-control" required min="{{ date('Y-m-d') }}">
-                    </div> 
                 </div>
             </div>
             <button class="btn btn-success" type="submit">Save</button>
@@ -63,7 +53,7 @@
                 .then(data => {
                     data.forEach(cat => {
                         const option = document.createElement('option');
-                        option.value = cat.id;
+                        option.value = cat.Id;
                         option.textContent = cat.Name;
                         categoryDropdown.appendChild(option);
                     });
