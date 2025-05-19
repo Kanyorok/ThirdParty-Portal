@@ -2,16 +2,23 @@
 
 namespace App\Models\Procurement;
 
+use App\Models\ThirdParies\Supplier;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\Model\UserActorTrait;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class VendorClarifications extends Model
 {
-    // Define the table name (Laravel assumes table names are lowercase and plural by default)
+    use SoftDeletes, UserActorTrait;
+
+    const string CREATED_AT = 'CreatedOn';
+    const string UPDATED_AT = 'ModifiedOn';
+    const string DELETED_AT = 'DeletedOn';
+
     protected $table = 't_VendorClarifications';
     protected $primaryKey = 'ClarificationID';
     public $incrementing = true;
 
-    // Define the fillable fields for mass assignment
     protected $fillable = [
         'ClarificationID',
         'TenderID',
@@ -20,7 +27,12 @@ class VendorClarifications extends Model
         'QuestionDate',
         'Answer',
         'AnswerDate',
-        'ISPUBLISHEDTOALL'
+        'ISPUBLISHEDTOALL',
+        'CreatedBy',
+        'CreatedOn',
+        'ModifiedBy',
+        'ModifiedOn',
+        'DeletedBy',
     ];
 
     // Define the data types for specific columns (optional, if you need to cast them)
@@ -32,4 +44,14 @@ class VendorClarifications extends Model
 
     // Disable timestamps if your table doesn't have created_at and updated_at columns
     public $timestamps = false;
+
+    // Relationships
+    public function tenderID()
+    {
+        return $this->belongsTo(Tender::class, 'TenderID', 'Id');
+    }
+    public function vendorID()
+    {
+        return $this->belongsTo(Supplier::class, 'VendorID', 'Id');
+    }
 }

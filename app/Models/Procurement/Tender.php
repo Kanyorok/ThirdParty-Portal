@@ -10,13 +10,22 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use InvalidArgumentException;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Auth\User;
+use App\Models\Core\Currency;
+use App\Models\Procurement\ProcurementMode;
+use App\Models\Procurement\ProcurementPlan;
 
 class Tender extends Model
 {
+    use SoftDeletes;
+
+    const CREATED_AT = 'CreatedOn';
+    const UPDATED_AT = 'ModifiedOn';
+    const DELETED_AT = 'DeletedOn';
+
     protected $table = 't_Tenders';
     protected $primaryKey = 'Id';
-    protected $keyType = 'integer';
 
     protected $fillable = [
         'TenderNo',
@@ -30,47 +39,83 @@ class Tender extends Model
         'Status',
         'RelatedPRID',
         'ProcurementModeId',
-        'DateCreated',
         'CreatedBy',
         'ModifiedBy',
+        'DeletedBy',
+        'StartDate',
+        'Currency',
     ];
 
     protected $casts = [
         'TenderType' => TenderTypeEnum::class,
         'Status' => TenderStatusEnum::class,
         'TenderCategory' => TenderCategoryEnum::class,
-        'SubmissionDeadline' => 'date:Y-m-d',
-        'OpeningDate' => 'date:Y-m-d',
-        'DateCreated' => 'datetime',
+        'SubmissionDeadline' => 'datetime',
+        'OpeningDate' => 'datetime',
+        'ModifiedOn' => 'datetime',
+        'DeletedOn' => 'datetime',
+        'CreatedOn' => 'datetime',
+        'StartDate' => 'datetime',
     ];
 
     // Relationships
-
-    public function acceptedInvitations(): HasMany
+    public function procurementMode(): BelongsTo
     {
-        return $this->invitations()->accepted;
+        return $this->belongsTo(ProcurementMode::class, 'ProcurementModeId');
     }
+
+    public function suppliers(): BelongsToMany
+    {
+        return $this->belongsToMany(Supplier::class, 't_TenderVendors', 'TenderID', 'SupplierID')
+            ->using(TenderVendor::class)
+            ->withPivot('InvitationStatus', 'CreatedOn', 'ModifiedOn', 'DeletedOn');
+    }
+
+    //TODO: with tenderinvitations 
+    // public function suppliers(): BelongsToMany
+    // {
+    //     return $this->belongsToMany(Supplier::class, 't_TenderVendors', 'TenderID', 'SupplierID')
+    //         ->using(TenderVendor::class)
+    //         ->withPivot('InvitationStatus', 'InvitationDate', 'ResponseDate')
+    //         ->withTimestamps('CreatedOn', 'ModifiedOn', 'DeletedOn');
+    // }
 
     public function invitations(): HasMany
     {
         return $this->hasMany(TenderInvitation::class, 'TenderID');
     }
 
-    public function suppliers(): BelongsToMany
+    public function invitedSuppliers(): BelongsToMany
     {
-        return $this->belongsToMany(Supplier::class, 't_TenderVendors', 'TenderID', 'Id')
-            ->using(TenderVendor::class)
-            ->withPivot('InvitationStatus', 'InvitationDate', 'ResponseDate');
+        return $this->belongsToMany(Supplier::class, 't_TenderInvitations', 'TenderID', 'SupplierID')
+            ->using(TenderInvitation::class)
+            ->withPivot([
+                'InvitationID',
+                'InvitationDate',
+                'ResponseStatus',
+                'ResponseDate',
+                'DeclineReason',
+                'ConfirmationAttachmentPath'
+            ]);
+    }
+    public function currency(): BelongsTo
+    {
+        return $this->belongsTo(Currency::class, 'CurrencyId', 'Id');
+    }
+
+    public function stages(): HasMany
+    {
+        return $this->hasMany(TenderStage::class, 'TenderID');
+    }
+
+    public function procurementPlan(): BelongsTo
+    {
+        return $this->belongsTo(ProcurementPlan::class, 'RelatedPRID');
     }
 
     public function documents(): HasMany
     {
-        return $this->hasMany(TenderDocument::class, 'TenderID');
-    }
-
-    public function clarifications(): HasMany
-    {
-        return $this->hasMany(VendorClarification::class, 'TenderID');
+        return $this->hasMany(TenderDocument::class, 'TenderID', 'Id');
     }
 
     public function creator(): BelongsTo
@@ -83,15 +128,14 @@ class Tender extends Model
         return $this->belongsTo(User::class, 'ModifiedBy');
     }
 
-    public function scopeActive($query)
+    // Scopes
+    public function scopeActiveTenders($query)
     {
         return $query->where('Status', TenderStatusEnum::Published->value)
             ->where('SubmissionDeadline', '>=', now()->toDateString());
     }
 
-    // Scopes
-
-    public function scopeClosed($query)
+    public function scopeClosedTenders($query)
     {
         return $query->where('Status', TenderStatusEnum::Closed->value);
     }
@@ -100,8 +144,8 @@ class Tender extends Model
     {
         return $query->where(function ($q) use ($Id) {
             $q->where('TenderType', TenderTypeEnum::Open->value)
-                ->orWhereHas('vendors', fn($q) => $q->where('Id', $Id));
-        }); //TODO; Work on the vendor model
+                ->orWhereHas('suppliers', fn($q) => $q->where('Id', $Id));
+        });
     }
 
     public function isOpen(): bool
@@ -115,30 +159,24 @@ class Tender extends Model
             now()->lessThan($this->SubmissionDeadline);
     }
 
-    public function acceptedSubmissions(): HasMany
+    // New helper methods
+    public function isRestricted(): bool
     {
-        return $this->submissions()->where(
-            'Status', SubmissionStatusEnum::Submitted
-        );
+        return $this->TenderType === TenderTypeEnum::Restricted;
     }
 
-    public function submissions(): HasMany
+    public function isPublished(): bool
     {
-        return $this->hasMany(TenderSubmission::class, 'TenderID');
+        return $this->Status === TenderStatusEnum::Published;
     }
 
-    public function publish(): void
+    public function isClosed(): bool
     {
-        if (!$this->Status->canTransitionTo(TenderStatusEnum::Published)) {
-            throw new InvalidArgumentException('Tender cannot be published from current status');
-        }
+        return $this->Status === TenderStatusEnum::Closed;
+    }
 
-        $this->update(['Status' => TenderStatusEnum::Published]);
-
-        if ($this->TenderType === TenderTypeEnum::Restricted) {
-            event(new RestrictedTenderPublished($this));
-        } else {
-            event(new OpenTenderPublished($this));
-        }
+    public function hasSupplier(Supplier $supplier): bool
+    {
+        return $this->suppliers()->where('Id', $supplier->Id)->exists();
     }
 }

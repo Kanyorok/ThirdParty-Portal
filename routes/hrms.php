@@ -15,4 +15,12 @@ Route::namespace('HRM')->prefix('hrm')->group(function () {
     Route::resource('payrolldashboard', PayrollDashboardController::class);
     Route::resource('generatepayslip', GeneratePaySlipController::class);
     Route::resource('payrollsettings', PayRollSettingsController::class);*/
+
+});
+
+    // Committees with both 'hrm' URL prefix and 'hrms.' name prefix
+    Route::namespace('HRM')->prefix('hrm')->name('hrms.')->group(function () {
+
+        Route::resource('committees', \App\Http\Controllers\HRM\CommitteeController::class);
+
 });

@@ -848,6 +848,10 @@
                             <a class="pc-link {{ request()->is('hrm/departments*')?'active pc-trigger':'' }}"
                                href="{{ route('departments.index') }}">Departments</a>
                         </li>
+                        <li class="pc-item">
+                            <a class="pc-link {{ request()->is('hrm/committees*')?'active pc-trigger':'' }}"
+                               href="{{ route('hrms.committees.index') }}">Committees</a>
+                        </li>
 
                     </ul>
                 </li>
