@@ -1,209 +1,173 @@
 @extends('layouts.app')
 
-@section('title', 'Tenders Management')
-
-@section('content')
-<div class="container py-4">
-    <!-- Header Section -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0">
-            <i class="fas fa-gavel text-primary me-2"></i>Tenders List
-        </h1>
-        <a href="{{ route('initiatetender.create') }}" class="btn btn-primary">
-            <i class="fas fa-plus me-2"></i>New Tender
-        </a>
-    </div>
-
-    <!-- Status Messages -->
-    @if (session('success'))
-    <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
-        <i class="fas fa-check-circle me-2"></i>
-        {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-    @endif
-    @if (session('error'))
-    <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
-        <i class="fas fa-exclamation-circle me-2"></i>
-        {{ session('error') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-    @endif
-
-    <!-- Filters Section -->
-    <div class="card mb-4">
-        <div class="card-header bg-light">
-            <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filters</h5>
-        </div>
-        <div class="card-body">
-            <form id="tender-filters" method="GET" action="{{ route('initiatetender.index') }}">
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label class="form-label">Status</label>
-                        <select class="form-select" name="status">
-                            <option value="">All Statuses</option>
-                            @foreach(\App\Enums\TenderStatusEnum::cases() as $status)
-                            <option value="{{ $status->value }}" @selected(request('status')==$status->value)>
-                                {{ $status->displayName() }}
-                            </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Type</label>
-                        <select class="form-select" name="type">
-                            <option value="">All Types</option>
-                            @foreach(\App\Enums\TenderTypeEnum::cases() as $type)
-                            <option value="{{ $type->value }}" @selected(request('type')==$type->value)>
-                                {{ $type->displayName() }}
-                            </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Category</label>
-                        <select class="form-select" name="category">
-                            <option value="">All Categories</option>
-                            @foreach(\App\Enums\TenderCategoryEnum::cases() as $category)
-                            <option value="{{ $category->value }}" @selected(request('category')==$category->value)>
-                                {{ $category->displayName() }}
-                            </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-12">
-                        <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-search me-1"></i> Apply
-                            </button>
-                            <a href="{{ route('initiatetender.index') }}" class="btn btn-outline-secondary">
-                                <i class="fas fa-undo me-1"></i> Reset
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Tenders Table -->
-    <div class="card">
-        <div class="card-header bg-light d-flex justify-content-between align-items-center">
-            <h5 class="mb-0"><i class="fas fa-list-alt me-2"></i>Tenders</h5>
-            <div class="text-muted small">
-                {{ $tenders->total() }} records found
-            </div>
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th width="5%">#</th>
-                            <th>Tender Title</th>
-                            <th>Type</th>
-                            <th>Category</th>
-                            <th>Status</th>
-                            <th class="text-end">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($tenders as $tender)
-                        <tr>
-                            <td>{{ $loop->iteration }}</td>
-                            <td>
-                                <a href="{{ route('initiatetender.show', $tender->Id) }}" class="text-dark">
-                                    {{ Str::limit($tender->Title, 40) }}
-                                </a>
-                                @if($tender->Status === \App\Enums\TenderStatusEnum::Draft)
-                                <span class="badge bg-info ms-2">Draft</span>
-                                @endif
-                            </td>
-                            <td>
-                                <span class="badge bg-primary">
-                                    {{ $tender->TenderType->displayName() }}
-                                </span>
-                            </td>
-                            <td>{{ $tender->TenderCategory->displayName() }}</td>
-                            <td>
-                                <span class="badge bg-{{ $tender->Status->colorClass() }}">
-                                    {{ $tender->Status->displayName() }}
-                                </span>
-                            </td>
-                            <td class="text-end">
-                                <div class="d-inline-flex gap-2">
-                                    <a href="{{ route('initiatetender.show', $tender->Id) }}"
-                                        class="btn btn-sm btn-outline-primary"
-                                        title="View">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    @if($tender->Status === \App\Enums\TenderStatusEnum::Draft)
-                                    <a href="{{ route('initiatetender.edit', $tender->Id) }}"
-                                        class="btn btn-sm btn-outline-success"
-                                        title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <form action="{{ route('initiatetender.destroy', $tender->Id) }}" method="POST">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger"
-                                            onclick="return confirm('Delete this tender?')"
-                                            title="Delete">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
-                                    @endif
-                                </div>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="6" class="text-center py-5">
-                                <div class="empty-state">
-                                    <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
-                                    <h5>No Tenders Found</h5>
-                                    <p class="text-muted">
-                                        @if(request()->except('page'))
-                                        No matching tenders. Try adjusting filters.
-                                        @else
-                                        No tenders initiated yet.
-                                        @endif
-                                    </p>
-                                    <a href="{{ route('initiatetender.create') }}" class="btn btn-primary">
-                                        <i class="fas fa-plus me-2"></i>Create Tender
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        @if($tenders->hasPages())
-        <div class="card-footer">
-            {{ $tenders->withQueryString()->links() }}
-        </div>
-        @endif
-    </div>
-</div>
-@endsection
+@section('title', 'Initiated Tenders')
 
 @push('styles')
-<style>
-    .empty-state {
-        max-width: 400px;
-        margin: 0 auto;
-    }
-
-    .table th {
-        white-space: nowrap;
-    }
-
-    @media (max-width: 768px) {
-        .table-responsive {
-            overflow-x: auto;
+    <style>
+        .table th, .table td {
+            vertical-align: middle;
         }
-    }
-</style>
+        .badge {
+            font-size: 0.85em;
+            padding: 0.4em 0.7em;
+        }
+        .action-buttons .btn {
+            margin-right: 0.3rem;
+        }
+        .action-buttons form {
+            margin-bottom: 0;
+        }
+    </style>
+@endpush
+
+@section('content')
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="mb-0 text-primary"><i class="fas fa-list-alt me-2"></i>Initiated Tenders</h3>
+            <a href="{{ route('initiatetender.create') }}" class="btn btn-success">
+                <i class="fas fa-plus me-1"></i> New Tender
+            </a>
+        </div>
+
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered" id="tendersTable">
+                        <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Tender No.</th>
+                            <th>Title</th>
+                            <th>Type</th>
+                            <th>Category</th>
+                            <th>Est. Value</th>
+                            <th>Currency</th>
+                            <th>PR No.</th>
+                            <th>Deadline</th>
+                            <th>Opening Date</th>
+                            <th>Status</th>
+                            <th style="min-width: 180px;">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @forelse($tenders as $tender)
+                            <tr>
+                                <td>{{ $loop->iteration }}</td>
+                                <td>{{ $tender->TenderNo }}</td>
+                                <td>
+                                    <a href="{{ route('initiatetender.show', $tender->Id) }}" title="View {{ $tender->Title }}">
+                                        {{ Str::limit($tender->Title, 40) }}
+                                    </a>
+                                </td>
+                                <td>
+                                    @if($tender->TenderType)
+                                        <span class="badge
+                                    @if($tender->TenderType == \App\Enums\TenderTypeEnum::Restricted) bg-warning text-dark
+                                    @elseif($tender->TenderType == \App\Enums\TenderTypeEnum::Open) bg-success
+                                    @else bg-info text-dark
+                                    @endif">
+                                    {{ $tender->TenderType->displayName() }}
+                                </span>
+                                    @else
+                                        N/A
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($tender->TenderCategory)
+                                        {{ $tender->TenderCategory->displayName() }}
+                                    @else
+                                        N/A
+                                    @endif
+                                </td>
+                                <td>{{ $tender->EstimatedValue ? number_format($tender->EstimatedValue, 2) : 'N/A' }}</td>
+                                <td>
+                                    {{ $tender->currency ? $tender->currency->Code : 'N/A' }}
+                                </td>
+                                <td>{{ $tender->RelatedPRID ? 'PR/' . $tender->RelatedPRID : 'N/A' }}</td>
+                                <td>{{ $tender->SubmissionDeadline ? $tender->SubmissionDeadline->format('M d, Y H:i') : 'N/A' }}</td>
+                                <td>{{ $tender->OpeningDate ? $tender->OpeningDate->format('M d, Y H:i') : 'N/A' }}</td>
+                                <td>
+                                    @if($tender->Status)
+                                        <span class="badge rounded-pill
+                                    @switch($tender->Status)
+                                        @case(\App\Enums\TenderStatusEnum::Draft) bg-secondary @break
+                                        @case(\App\Enums\TenderStatusEnum::Published) bg-success @break
+                                        @case(\App\Enums\TenderStatusEnum::Closed) bg-dark @break
+                                        @default bg-light text-dark @break
+                                    @endswitch">
+                                    {{ $tender->Status->displayName() }}
+                                </span>
+                                    @else
+                                        N/A
+                                    @endif
+                                </td>
+                                <td class="action-buttons">
+                                    <a href="{{ route('initiatetender.show', $tender->Id) }}" class="btn btn-sm btn-outline-info" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ route('initiatetender.edit', $tender->Id) }}" class="btn btn-sm btn-outline-primary" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form action="{{ route('initiatetender.destroy', $tender->Id) }}" method="POST" style="display: inline;">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"
+                                                onclick="return confirm('Are you sure you want to delete tender \'{{ $tender->TenderNo }}\'? This action cannot be undone.')">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="12" class="text-center py-4">
+                                    <i class="fas fa-folder-open fa-2x text-muted mb-2"></i><br>
+                                    No initiated tenders found. <a href="{{ route('initiatetender.create') }}">Create a new one?</a>
+                                </td>
+                            </tr>
+                        @endforelse
+                        </tbody>
+                    </table>
+{{--                </div>--}}
+{{--                @if($tenders->hasPages())--}}
+{{--                    <div class="mt-3 d-flex justify-content-center">--}}
+{{--                        {{ $tenders->links() }}--}}
+{{--                    </div>--}}
+{{--                @endif--}}
+            </div>
+        </div>
+    </div>
+@endsection
+
+@push('scripts')
+     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#tendersTable').DataTable({
+                "pageLength": 10,
+                "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]]
+            });
+        });
+
+        // Dismiss alerts automatically after some time
+        window.setTimeout(function() {
+            $(".alert").fadeTo(500, 0).slideUp(500, function(){
+                $(this).remove();
+            });
+        }, 5000); // 5 seconds
+    </script>
 @endpush

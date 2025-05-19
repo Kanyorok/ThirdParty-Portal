@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Procurement;
 
 use App\Models\Procurement\Tender;
 use App\Models\Procurement\ProcurementMode;
+use App\Models\Core\Currency;
 use App\Enums\TenderTypeEnum;
 use App\Http\Controllers\Controller;
 use App\Enums\TenderCategoryEnum;
@@ -12,121 +13,114 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
-use Illuminate\Validation\Rule;
-
-use App\Models\Procurement\ModeTimeline;
-use App\Models\Procurement\TenderStage;
+use Illuminate\Validation\Rules\Enum;
 
 class TenderController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        // Eager load procurementMode relationship
-        $tenders = Tender::with('procurementMode')->latest()->paginate(10);
+        $tenders = Tender::with(['procurementMode', 'currency'])->get();
         return view('procurement.tendering.tendersetup.tenderinitiation.index', compact('tenders'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         $procurementModes = ProcurementMode::all();
-        $currencies = config('app.currencies');
+        $currencies = Currency::all();
         $tenderTypes = TenderTypeEnum::cases();
         $tenderCategories = TenderCategoryEnum::cases();
         $statuses = TenderStatusEnum::cases();
+        $suppliers = collect();
 
         return view('procurement.tendering.tendersetup.tenderinitiation.create', compact(
             'procurementModes',
             'currencies',
             'tenderTypes',
             'tenderCategories',
-            'statuses'
+            'statuses',
+            'suppliers'
         ));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
             'Title' => 'required|string|max:255',
-            'TenderType' => ['required', Rule::in(TenderTypeEnum::values())],
-            'TenderCategory' => ['required', Rule::in(TenderCategoryEnum::values())],
+            'TenderType' => ['required', new Enum(TenderTypeEnum::class)],
+            'TenderCategory' => ['required', new Enum(TenderCategoryEnum::class)],
             'ScopeOfWork' => 'nullable|string',
             'Instructions' => 'nullable|string',
             'SubmissionDeadline' => 'required|date|after:today',
             'OpeningDate' => 'required|date|after:SubmissionDeadline',
-            'Status' => ['required', Rule::in(TenderStatusEnum::values())],
+            'Status' => ['required', new Enum(TenderStatusEnum::class)],
             'RelatedPRID' => 'nullable|integer',
-            'ProcurementModeId' => 'required|exists:t_ProcurementModes,id',
-            'EstimatedValue' => 'required|numeric|min:0',
-            'Currency' => 'required|string|max:3',
+            'ProcurementModeId' => 'required|integer|exists:t_ProcurementModes,id',
+            'Currency' => 'required|exists:t_Currencies,Id',
+            'EstimatedValue' => 'nullable|numeric|min:0',
             'StartDate' => 'required|date|after_or_equal:today',
         ]);
 
         $tender = new Tender();
         $tender->TenderNo = 'TNDR-' . Str::upper(Str::random(8));
-        $tender->Title = $request->Title; // or also  $validated['Title']
+        $tender->fill($request->only([
+            'Title',
+            'ScopeOfWork',
+            'Instructions',
+            'SubmissionDeadline',
+            'OpeningDate',
+            'RelatedPRID',
+            'ProcurementModeId',
+            'EstimatedValue',
+            'StartDate'
+        ]));
+        $fillData['CurrencyId'] = $request->Currency;
+        $tender->fill($fillData);
         $tender->TenderType = TenderTypeEnum::from($request->TenderType);
-
-        $tender->TenderCategory = $request->TenderCategory;
-        $tender->Status = $request->Status;
-
-        $tender->ScopeOfWork = $request->ScopeOfWork;
-        $tender->Instructions = $request->Instructions;
-        $tender->SubmissionDeadline = $request->SubmissionDeadline;
-        $tender->OpeningDate = $request->OpeningDate;
-        $tender->RelatedPRID = $request->RelatedPRID;
-        $tender->ProcurementModeId = $request->ProcurementModeId;
-        $tender->EstimatedValue = $request->EstimatedValue;
-        $tender->Currency = $request->Currency;
-        $tender->StartDate = $request->StartDate;
+        $tender->TenderCategory = TenderCategoryEnum::from($request->TenderCategory);
+        $tender->Status = TenderStatusEnum::from($request->Status);
         $tender->CreatedBy = Auth::id();
         $tender->save();
 
-        $timelineStages = ModeTimeline::where('ProcurementModeId', $request->ProcurementModeId)->get();
-        $currentStageStartDate = Carbon::parse($request->StartDate);
-
-        foreach ($timelineStages as $stage) {
-            $endDate = (clone $currentStageStartDate)->addDays($stage->DurationDays - 1);
-
-            TenderStage::create([
-                'TenderId' => $tender->Id,
-                'Stage' => $stage->Stage,
-                'DurationDays' => $stage->DurationDays,
-                'StartDate' => $currentStageStartDate,
-                'EndDate' => $endDate,
-            ]);
-
-            $currentStageStartDate = $endDate->copy()->addDay();
+        // Handle restricted tender suppliers
+        if ($request->TenderType === TenderTypeEnum::Restricted->value && $request->has('suppliers')) {
+            $tender->suppliers()->attach($request->suppliers);
         }
 
-        return redirect()->route('procurement.tendering.tendersetup.tenderinitiation.index')->with('success', 'Tender created successfully.');
+        // Handle document uploads
+        if ($request->hasFile('documents')) {
+            foreach ($request->file('documents') as $file) {
+                $path = $file->store('tender_documents');
+                $tender->documents()->create([
+                    'FilePath' => $path,
+                    'FileName' => $file->getClientOriginalName(),
+                ]);
+            }
+        }
+
+        // Auto-generate stage deadlines
+        $this->generateTenderStages($tender, $request->ProcurementModeId, $request->StartDate);
+
+        return redirect()->route('initiatetender.index')->with('success', 'Tender created successfully.');
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
-        $tender = Tender::with(['stages', 'procurementMode'])->findOrFail($id);
-        return view('procurement.tendering.tendersetup.tenderinitiation.view', compact('tender'));
+        $tender = Tender::with([
+            'stages',
+            'procurementMode',
+            'currency',
+            'suppliers',
+            'documents'
+        ])->findOrFail($id);
+
+        return view('procurement.tendering.tendersetup.tenderinitiation.show', compact('tender'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(string $id)
     {
-        $tender = Tender::findOrFail($id);
+        $tender = Tender::with(['suppliers'])->findOrFail($id);
         $procurementModes = ProcurementMode::all();
-        $currencies = config('app.currencies');
+        $currencies = Currency::all();
         $tenderTypes = TenderTypeEnum::cases();
         $tenderCategories = TenderCategoryEnum::cases();
         $statuses = TenderStatusEnum::cases();
@@ -141,50 +135,83 @@ class TenderController extends Controller
         ));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
             'Title' => 'required|string|max:255',
-            'TenderType' => ['required', Rule::in(TenderTypeEnum::values())],
-            'TenderCategory' => [' required ', Rule::enum(TenderCategoryEnum::class)],
+            'TenderType' => ['required', new Enum(TenderTypeEnum::class)],
+            'TenderCategory' => ['required', new Enum(TenderCategoryEnum::class)],
             'ScopeOfWork' => 'nullable|string',
             'Instructions' => 'nullable|string',
-            'SubmissionDeadline' => 'required|date',
+            'SubmissionDeadline' => 'required|date|after_or_equal:StartDate',
             'OpeningDate' => 'required|date|after:SubmissionDeadline',
-            'Status' => ['required', Rule::in(TenderStatusEnum::values())],
+            'Status' => ['required', new Enum(TenderStatusEnum::class)],
             'RelatedPRID' => 'nullable|integer',
-            'ProcurementModeId' => 'required|exists:t_ProcurementModes,id',
-            'EstimatedValue' => 'required|numeric|min:0',
-            'Currency' => 'required|string|max:3',
+            'ProcurementModeId' => 'required|integer|exists:t_ProcurementModes,id',
+            'Currency' => 'required|exists:t_Currencies,Id',
+            'EstimatedValue' => 'nullable|numeric|min:0',
             'StartDate' => 'required|date',
         ]);
 
         $tender = Tender::findOrFail($id);
+        $tender->fill($request->only([
+            'Title',
+            'ScopeOfWork',
+            'Instructions',
+            'SubmissionDeadline',
+            'OpeningDate',
+            'RelatedPRID',
+            'ProcurementModeId',
+            'EstimatedValue',
+            'StartDate'
+        ]));
 
-        $updateData = $validated;
+        $fillData['CurrencyId'] = $request->Currency;
+        $tender->fill($fillData);
 
-        $updateData['TenderType'] = TenderTypeEnum::from($validated['TenderType']);
-        $updateData['TenderCategory'] = TenderCategoryEnum::from($validated['TenderCategory']);
-        $updateData['Status'] = TenderStatusEnum::from($validated['Status']);
+        $tender->TenderType = TenderTypeEnum::from($request->TenderType);
+        $tender->TenderCategory = TenderCategoryEnum::from($request->TenderCategory);
+        $tender->Status = TenderStatusEnum::from($request->Status);
+        $tender->ModifiedBy = Auth::id();
+        $tender->save();
 
-        $updateData['ModifiedBy'] = Auth::id();
-
-        $tender->update($updateData);
+        // Handle restricted tender suppliers
+        if ($request->TenderType === TenderTypeEnum::Restricted->value) {
+            $tender->suppliers()->sync($request->suppliers ?? []);
+        } else {
+            $tender->suppliers()->detach();
+        }
 
         return redirect()->route('initiatetender.index')->with('success', 'Tender updated successfully.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
         $tender = Tender::findOrFail($id);
         $tender->delete();
+        return redirect()->route('initiatetender.index')->with('success', 'Tender deleted successfully.');
+    }
 
-        return redirect()->route('procurement.tendering.tendersetup.tenderinitiation.index')->with('success', 'Tender deleted successfully.');
+    /**
+     * Generate tender stages based on procurement mode timeline
+     */
+    protected function generateTenderStages(Tender $tender, $procurementModeId, $startDate)
+    {
+        $timelineStages = \App\Models\Procurement\ModeTimeline::where('ProcurementModeId', $procurementModeId)->get();
+        $startDate = Carbon::parse($startDate);
+
+        foreach ($timelineStages as $stage) {
+            $endDate = (clone $startDate)->addDays($stage->DurationDays - 1);
+
+            \App\Models\Procurement\TenderStage::create([
+                'TenderId' => $tender->Id,
+                'Stage' => $stage->Stage,
+                'DurationDays' => $stage->DurationDays,
+                'StartDate' => $startDate,
+                'EndDate' => $endDate,
+            ]);
+
+            $startDate = $endDate->copy()->addDay();
+        }
     }
 }
