@@ -17,7 +17,7 @@ class RFQLinesController extends Controller
 
     public function store(Request $request)
     {
-        
+        dd($request->all());
         // Step 1: Validate request
         $validatedData = $request->validate([
             'ItemCategoryId' => 'required|exists:t_ItemCategories,Id',
@@ -37,7 +37,7 @@ class RFQLinesController extends Controller
                     && $line->item->category
                     && $line->item->category->Id == $request->ItemCategoryId;
             });
-
+            dd($filteredItems);
         // Step 4: If no matching items, redirect with warning
         if ($filteredItems->isEmpty()) {
             return redirect()->back()->with('warning', 'No items requisitioned with the chosen category.');
