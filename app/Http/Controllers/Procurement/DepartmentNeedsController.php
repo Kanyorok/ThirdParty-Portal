@@ -9,8 +9,7 @@ use App\Services\Procurement\ProcurementPlan\DepartmentNeedsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Yajra\DataTables\Facades\DataTables;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
 use Throwable;
 
 class DepartmentNeedsController extends Controller
@@ -47,40 +46,66 @@ class DepartmentNeedsController extends Controller
 
     public function index(Request $request)
     {
-        // if ($request->ajax()) {
-        //     try {
-        //         // ✅ Test data comes through
-        //         $data = DepartmentNeeds::with('item.category')->get();
-        //         \Log::info('DepartmentNeeds AJAX data:', $data->toArray());
-
-        //         // ✅ Pass eager-loaded data to DataTables
-        //         return DataTables::of(DepartmentNeeds::with(['item.category']))
-        //             ->addIndexColumn()
-        //             ->addColumn('item_name', fn($row) => $row->item->ItemName ?? 'N/A')
-        //             ->addColumn('category', fn($row) => $row->item->category->Name ?? 'N/A')
-        //             ->addColumn('quantity', fn($row) => $row->RequestedQty)
-        //             ->addColumn('estimated_cost', fn($row) => number_format($row->EstimatedUnitCost, 2))
-        //             ->addColumn('status', fn($row) => '<span class="badge bg-warning">'.Str::title($row->Status).'</span>')
-        //             ->addColumn('required_by', fn($row) => '-') // Replace with actual date if available
-        //             ->addColumn('action', function ($row) {
-        //                 return '<a href="' . route('procurementdepartmentalplan.show', $row->Id) . '" class="btn btn-sm btn-outline-info">View</a>
-        //                         <a href="' . route('procurementdepartmentalplan.edit', $row->Id) . '" class="btn btn-sm btn-outline-primary">Edit</a>';
-        //             })
-        //             ->rawColumns(['status', 'action'])
-        //             ->make(true);
-
-        //     } catch (\Exception $e) {
-        //         \Log::error('DepartmentNeeds fetch error: ' . $e->getMessage());
-        //         return response()->json(['error' => 'Could not fetch records.'], 500);
-        //     }
-        // }
-
         $departmentneedviews = DepartmentNeeds::all();
         $departmentneedviews = DepartmentNeeds::with('creator')->get();
         return view('procurement.procurementplan.departmentneeds.raiseneed.index', compact('departmentneedviews'));
         // return view('procurement.procurementplan.departmentneeds.raiseneed.index');
     }
+    
+    public function fetchLinesByDPlan($NeedID)
+    {
+        $lines = DepartmentNeeds::with('item')
+            ->where('NeedID', $NeedID)
+            ->get()
+            ->map(function ($line) {
+                return [
+                    'id' => $line->id, // Add this
+                    'NeedID' => $line->NeedID, // Optional: include if needed
+                    'ItemID' => $line->ItemID,
+                    'ItemName' => $line->item->ItemName ?? 'Unknown',
+                    'RequestedQty' => $line->RequestedQty,
+                    'EstimatedUnitCost' => $line->EstimatedUnitCost,
+                    'Status' => $line->Status,
+                    'FiscalYear' => $line->FiscalYear,
+                ];
+            });
 
+        return response()->json($lines);
+    }
+
+    public function update(Request $request)
+    {
+        foreach ($request->Needs as $needData) {
+            $need = DepartmentNeeds::where('NeedID', $needData['NeedID'])->firstOrFail();
+
+            $need->update([
+                'RequestedQty' => $needData['RequestedQty'],
+                'EstimatedUnitCost' => $needData['EstimatedUnitCost'],
+                'FiscalYear' => $needData['FiscalYear'],
+                'ModifiedOn' => now(),
+                'ModifiedBy' => auth()->id(),
+            ]);
+        }
+
+        return redirect()->route('procurementdepartmentalplan.index')->with('success', 'Needs updated successfully.');
+    }
+
+
+    public function destroy($NeedID)
+    {
+        try {
+            $needs = DepartmentNeeds::where('NeedID', $NeedID)->get();
+
+            foreach ($needs as $need) {
+                $need->delete(); // soft delete
+            }
+
+            return redirect()->route('procurementdepartmentalplan.index')->with('success', 'Department need deleted.');
+        } catch (Throwable $e) {
+            Log::error("--- DELETE DEPARTMENT NEED ERROR --- " . $e->getMessage());
+            return redirect()->route('procurementdepartmentalplan.index')->withErrors(['error' => 'Failed to delete department need.']);
+        }
+    }
 
 
 }

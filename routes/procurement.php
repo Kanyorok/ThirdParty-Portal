@@ -199,8 +199,10 @@ Route::namespace('Procurement')->group(function () {
     Route::get('/procurementdepartmentalplan/create', [DepartmentNeedsController::class,'create'])->name('procurementdepartmentalplan.create');
     Route::post('/procurementdepartmentalplan', [DepartmentNeedsController::class,'store'])->name('procurementdepartmentalplan.store');
     Route::get('/procurementdepartmentalplan/lines/{NeedID}', [DepartmentNeedsController::class, 'fetchLinesByDPlan'])->name('procurementdepartmentalplan.view');
-    Route::put('/procurementdepartmentalplan/update-line', [DepartmentNeedsController::class, 'updateLine'])->name('procurementdepartmentalplan.updateLine');
+    Route::put('/procurementdepartmentalplan/update-line', [DepartmentNeedsController::class, 'update'])->name('procurementdepartmentalplan.updateLine');
     Route::delete('/procurementdepartmentalplan/delete/{NeedID}', [DepartmentNeedsController::class, 'destroy'])->name('procurementdepartmentalplan.destroy');
+    Route::get('/procurementdepartmentalplan/data', [DepartmentNeedsController::class, 'getDepartmentNeeds'])->name('procurementdepartmentalplan.data');
+
     
     //Procurement Plan, Plan Consolidation
     Route::resource('consolidated', ConsolidatedDashboardController::class); 
