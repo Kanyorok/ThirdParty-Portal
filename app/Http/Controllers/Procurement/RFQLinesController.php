@@ -54,7 +54,7 @@ class RFQLinesController extends Controller
 
             RFQLine::create([
                 'RFQLineNo' => $rfqLineNumber,
-                'RequisitionId' => $line->item->RequisitionID,
+                'RequisitionId' => $line->RequisitionID,
                 'ItemCategoryId' => $request->ItemCategoryId,
                 'RFQId' => $request->RFQId,
                 'ItemId' => $line->Item,
