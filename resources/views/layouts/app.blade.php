@@ -193,15 +193,15 @@
                             </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
                             <ul class="pc-submenu">
 
-                            <li class="pc-item pc-hasmenu"> 
+                            <li class="pc-item pc-hasmenu">
                             <a class="pc-link" href="#!"> <span data-i18n="Auditors">Tender Setup</span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
                             <ul class="pc-submenu">
                             <li class="pc-item"> <a class="pc-link" href="{{ route('initiatetender.index') }}" data-i18n="Create Tender">Tender Initiation</a></li>
-                            <li class="pc-item"> <a class="pc-link" href="{{ route('initiateapprove.index') }}" data-i18n="Create Tender">Initiation Approval</a></li> 
+                            <li class="pc-item"> <a class="pc-link" href="{{ route('initiateapprove.index') }}" data-i18n="Create Tender">Initiation Approval</a></li>
                             <li class="pc-item"> <a class="pc-link" href="{{ route('tendercategory.index') }}" data-i18n="Tender List">Tender Category</a></li>
-                            <li class="pc-item"> <a class="pc-link" href="{{ route('tendertype.index') }}" data-i18n="Tender List">Tender Type</a></li> 
-                            <li class="pc-item"> <a class="pc-link" href="{{ route('evaluationcriteria.index') }}" data-i18n="Tender List">Criteria Setup</a></li> 
-                            
+                            <li class="pc-item"> <a class="pc-link" href="{{ route('tendertype.index') }}" data-i18n="Tender List">Tender Type</a></li>
+                            <li class="pc-item"> <a class="pc-link" href="{{ route('evaluationcriteria.index') }}" data-i18n="Tender List">Criteria Setup</a></li>
+
                             </ul>
                         </li>
 
@@ -209,29 +209,29 @@
                             <a class="pc-link" href="#!"> <span data-i18n="Auditors">Suppliers</span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
                             <ul class="pc-submenu">
                             <li class="pc-item"> <a class="pc-link" href="{{ route('tenderresponse.index') }}" data-i18n="Create Tender">Response Tracking</a></li>
-                            <li class="pc-item"> <a class="pc-link" href="{{ route('tenderclarification.index') }}" data-i18n="Create Tender">Clarifications</a></li> 
+                            <li class="pc-item"> <a class="pc-link" href="{{ route('tenderclarification.index') }}" data-i18n="Create Tender">Clarifications</a></li>
                             <li class="pc-item"> <a class="pc-link" href="{{ route('tendersubmission.index') }}" data-i18n="Tender List">Submission</a></li>
-                            
+
                             </ul>
-                        </li> 
-                        
+                        </li>
+
                                 <li class="pc-item pc-hasmenu">
                             <a class="pc-link" href="#!"> <span data-i18n="Auditors">Opening</span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
                             <ul class="pc-submenu">
                             <li class="pc-item"> <a class="pc-link" href="{{ route('tenderopening.index') }}" data-i18n="Create Tender">Opening</a></li>
                             </ul>
-                        </li>  
-                        
+                        </li>
+
                                     <li class="pc-item pc-hasmenu">
                             <a class="pc-link" href="#!"> <span data-i18n="Auditors">Evaluation</span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
-                            <ul class="pc-submenu"> 
+                            <ul class="pc-submenu">
                             <li class="pc-item"> <a class="pc-link" href="{{ route('tendercommittee.index') }}" data-i18n="Create Tender">Appoint Committee</a></li>
                             <li class="pc-item"> <a class="pc-link" href="{{ route('memberresponse.index') }}" data-i18n="Create Tender">Member Response</a></li>
                             <li class="pc-item"> <a class="pc-link" href="{{ route('assignrole.index') }}" data-i18n="Create Tender">Assign Roles</a></li>
                             <li class="pc-item"> <a class="pc-link" href="{{ route('evaluationdashboard.index') }}" data-i18n="Create Tender">Evaluators Dashboard</a></li>
-                            <li class="pc-item"> <a class="pc-link" href="{{ route('bidscores.index') }}" data-i18n="Create Tender">Consolidated Scores</a></li>    
+                            <li class="pc-item"> <a class="pc-link" href="{{ route('bidscores.index') }}" data-i18n="Create Tender">Consolidated Scores</a></li>
                         </ul>
-                        </li> 
+                        </li>
 
                     <li class="pc-item pc-hasmenu">
                     <a class="pc-link" href="#!"> <span data-i18n="Auditors">Auditors</span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
@@ -656,11 +656,11 @@
                                     <li class="pc-item"><a class="pc-link" href="{{ route('contractapproval.index') }}"
                                             data-i18n="Contract Approval">Contract Approval</a></li>
                                     <li class="pc-item"><a class="pc-link"href="{{ route('contractdrafting.index') }}"
-                                            data-i18n="Contract Drafting">Contract Drafting</a></li>              
+                                            data-i18n="Contract Drafting">Contract Drafting</a></li>
                                     <li class="pc-item"><a class="pc-link"href="{{ route('contractrepository.index') }}"
-                                            data-i18n="Contract Repository">Contract Repository</a></li>         
+                                            data-i18n="Contract Repository">Contract Repository</a></li>
                                     <li class="pc-item"><a class="pc-link"href="{{ route('obligationtracker.index') }}"
-                                            data-i18n="Obligation Tracker">Obligation Tracker</a></li>  
+                                            data-i18n="Obligation Tracker">Obligation Tracker</a></li>
                                     <li class="pc-item"><a class="pc-link"href="{{ route('renewals.index') }}"
                                             data-i18n="Expiry Alerts & Renewals">Expiry Alerts & Renewals</a></li>
 
@@ -673,11 +673,11 @@
                                     <li class="pc-item"><a class="pc-link" href="{{ route('regulatorychecklist.index') }}"
                                             data-i18n="Regulatory Checklist">Regulatory Checklist</a></li>
                                     <li class="pc-item"><a class="pc-link"href="{{ route('compliancecalendar.index') }}"
-                                            data-i18n="Compliance calendar">Compliance calendar</a></li>              
+                                            data-i18n="Compliance calendar">Compliance calendar</a></li>
                                     <li class="pc-item"><a class="pc-link"href="{{ route('fillingtracker.index') }}"
-                                            data-i18n="Filling Tracker">Filing Tracker</a></li>         
+                                            data-i18n="Filling Tracker">Filing Tracker</a></li>
                                     <li class="pc-item"><a class="pc-link"href="{{ route('noncomplianceregister.index') }}"
-                                            data-i18n="Non-compliance Register">Non-compliance Register</a></li>  
+                                            data-i18n="Non-compliance Register">Non-compliance Register</a></li>
 
                                 </ul>
                             </li>
@@ -688,10 +688,10 @@
                                     <li class="pc-item"><a class="pc-link" href="{{ route('casessummary.index') }}"
                                             data-i18n="Cases  Summary">Open vs Closed Cases Summary</a></li>
                                     <li class="pc-item"><a class="pc-link"href="{{ route('legalexpenses.index') }}"
-                                            data-i18n="Legal Expenses">Legal Expenses by Case or Department</a></li>              
+                                            data-i18n="Legal Expenses">Legal Expenses by Case or Department</a></li>
                                     <li class="pc-item"><a class="pc-link"href="{{ route('hearings.index') }}"
-                                            data-i18n="hearings">Upcoming Hearings Calendar</a></li>         
-                                    
+                                            data-i18n="hearings">Upcoming Hearings Calendar</a></li>
+
                                 </ul>
                             </li>
                             <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
@@ -732,7 +732,7 @@
 
                         </ul>
 
-                
+
                 </li>
                 <li class="pc-item pc-hasmenu">
                     <a href="javascript:void(0)" class="pc-link">
@@ -1032,6 +1032,8 @@
     </div>
 </footer>
 @include('layouts._partials._scripts')
+
+{{--@yield('scripts')--}}
 </body>
 
 </html>

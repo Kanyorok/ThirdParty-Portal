@@ -47,6 +47,14 @@ class RequisitionItemsController extends Controller
     public function getItemDetails($item): JsonResponse
     {
         try{
+
+            if (empty($item)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Item parameter is required',
+                ], 400);
+            }
+
             $details = $this->itemService->getItemDetails($item);
             return response()->json([
                 'success' => true,
@@ -129,7 +137,7 @@ class RequisitionItemsController extends Controller
                 $validatedData['RequisitionID'],
                 $validatedData['Item'],
                 $validatedData['Quantity'],
-                $validatedData['NeededBy'],
+//                $validatedData['NeededBy'],
                 $validatedData['Urgency'],
                 $actor
             );

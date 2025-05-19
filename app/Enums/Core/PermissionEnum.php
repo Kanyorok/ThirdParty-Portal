@@ -201,6 +201,8 @@ enum PermissionEnum: string
      */
     case Departments = 'department';
 
+    case MasterListView = 'masterList-view';
+
     case EmployeesView = 'employee-read';
     case EmployeesCreate = 'employee-create';
     case EmployeesUpdate = 'employee-update';

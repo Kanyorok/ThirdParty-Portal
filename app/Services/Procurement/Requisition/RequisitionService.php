@@ -70,13 +70,13 @@ class RequisitionService {
     {
         return DB::table(DB::raw('t_Requisitions WITH (NOLOCK)'))
             ->leftJoin(DB::raw('t_RequisitionLines WITH (NOLOCK)'), 't_Requisitions.id', '=', 't_RequisitionLines.RequisitionId')
+            ->leftJoin(DB::raw('t_CodeDetails WITH (NOLOCK)'), 't_Requisitions.StatusID', '=', 't_CodeDetails.ID')
             ->select(DB::raw('
                 t_Requisitions.RequisitionNo,
                 t_Requisitions.BranchID,
                 t_Requisitions.DepartmentID,
                 t_Requisitions.Remarks,
-                t_Requisitions.Status,
-                t_Requisitions.Category,
+                t_CodeDetails.Description as Status,
                 t_Requisitions.CreatedOn,
                 t_Requisitions.Id,
                 SUM(isnull(t_RequisitionLines.ExpectedPrice,0)) as ExpectedPrice,
@@ -88,8 +88,7 @@ class RequisitionService {
                 't_Requisitions.BranchID',
                 't_Requisitions.DepartmentID',
                 't_Requisitions.Remarks',
-                't_Requisitions.Status',
-                't_Requisitions.Category',
+                't_CodeDetails.Description',
                 't_Requisitions.CreatedOn'
             )
             ->get();

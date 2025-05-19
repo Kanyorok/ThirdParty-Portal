@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Create New Inventory')
+@section('title', 'Edit Inventory Item')
 
 @section('content')
 
@@ -15,30 +15,31 @@
 @endif
 
 <div class="container bg-white shadow-sm rounded p-4">
-    <h4 class="mb-4">📦 Item Master Form</h4>
+    <h4 class="mb-4">✏️ Edit Item Master</h4>
 
-    <form action="{{ route('itemmasterlist.store') }}" method="POST" enctype="multipart/form-data" id="itemMasterListForm">
+    <form action="{{ route('itemmasterlist.update', $item->Id) }}" method="POST" enctype="multipart/form-data" id="itemMasterListForm">
         @csrf
+        @method('PUT')
 
         <div class="row mb-3">
             <div class="col-md-4">
                 <label for="BarCode" class="form-label">Bar Code</label>
-                <input type="text" name="BarCode" id="BarCode" class="form-control" value="{{ old('BarCode') }}" required>
+                <input type="text" name="BarCode" class="form-control" value="{{ old('BarCode', $item->BarCode) }}" required>
             </div>
             <div class="col-md-4">
                 <label for="ItemName" class="form-label">Item Name</label>
-                <input type="text" name="ItemName" id="ItemName" class="form-control" value="{{ old('ItemName') }}" required>
+                <input type="text" name="ItemName" class="form-control" value="{{ old('ItemName', $item->ItemName) }}" required>
             </div>
         </div>
 
         <div class="row mb-3">
             <div class="col-md-4">
                 <label for="ItemType" class="form-label">Item Type</label>
-                <select name="ItemType" id="ItemType" class="form-select" required>
-                    <option selected disabled>Select Type</option>
-                    <option value="Stock">Stock</option>
-                    <option value="Asset">Asset</option>
-                    <option value="Non-Stock">Non-Stock</option>
+                <select name="ItemType" class="form-select" required>
+                    <option disabled>Select Type</option>
+                    <option value="Stock" {{ old('ItemType', $item->ItemType) == 'Stock' ? 'selected' : '' }}>Stock</option>
+                    <option value="Asset" {{ old('ItemType', $item->ItemType) == 'Asset' ? 'selected' : '' }}>Asset</option>
+                    <option value="Non-Stock" {{ old('ItemType', $item->ItemType) == 'Non-Stock' ? 'selected' : '' }}>Non-Stock</option>
                 </select>
             </div>
             <div class="col-md-4">
@@ -46,7 +47,9 @@
                 <select name="Category" id="category" class="form-select" required>
                     <option value="">-- Select Category --</option>
                     @foreach($categories as $category)
-                        <option value="{{ $category->Id }}">{{ $category->Name }}</option>
+                        <option value="{{ $category->Id }}" {{ optional($item->category->parent)->Id == $category->Id ? 'selected' : '' }}>
+                            {{ $category->Name }}
+                        </option>
                     @endforeach
                 </select>
             </div>
@@ -54,6 +57,11 @@
                 <label for="SubCategory" class="form-label">Subcategory</label>
                 <select name="SubCategory" id="subcategory" class="form-select">
                     <option value="">-- Select SubCategory --</option>
+                    @foreach($subcategories as $subcategory)
+                        <option value="{{ $subcategory->Id }}" {{ $item->Category == $subcategory->Id ? 'selected' : '' }}>
+                            {{ $subcategory->Name }}
+                        </option>
+                    @endforeach
                 </select>
             </div>
         </div>
@@ -61,35 +69,38 @@
         <div class="row mb-3">
             <div class="col-md-4">
                 <label for="UOM" class="form-label">Unit of Measure (UOM)</label>
-                <select name="UOM" id="UOM" class="form-select" required>
-                    <option selected disabled>Select UOM</option>
-                    <option value="pcs">pcs</option>
-                    <option value="kg">kg</option>
-                    <option value="litres">litres</option>
+                <select name="UOM" class="form-select" required>
+                    <option disabled>Select UOM</option>
+                    <option value="pcs" {{ old('UOM', $item->UOM) == 'pcs' ? 'selected' : '' }}>pcs</option>
+                    <option value="kg" {{ old('UOM', $item->UOM) == 'kg' ? 'selected' : '' }}>kg</option>
+                    <option value="litres" {{ old('UOM', $item->UOM) == 'litres' ? 'selected' : '' }}>litres</option>
                 </select>
             </div>
             <div class="col-md-4">
                 <label for="InventoryType" class="form-label">Inventory Type</label>
-                <select name="InventoryType" id="InventoryType" class="form-select" required>
-                    <option selected disabled>Select Inventory Type</option>
-                    <option value="Consumable">Consumable</option>
-                    <option value="Durable">Durable</option>
-                    <option value="Perishable">Perishable</option>
+                <select name="InventoryType" class="form-select" required>
+                    <option disabled>Select Inventory Type</option>
+                    <option value="Consumable" {{ old('InventoryType', $item->InventoryType) == 'Consumable' ? 'selected' : '' }}>Consumable</option>
+                    <option value="Durable" {{ old('InventoryType', $item->InventoryType) == 'Durable' ? 'selected' : '' }}>Durable</option>
+                    <option value="Perishable" {{ old('InventoryType', $item->InventoryType) == 'Perishable' ? 'selected' : '' }}>Perishable</option>
                 </select>
             </div>
         </div>
 
         <div class="mb-3">
             <label for="ItemDescription" class="form-label">Item Description</label>
-            <textarea name="ItemDescription" id="ItemDescription" class="form-control" rows="3">{{ old('ItemDescription') }}</textarea>
+            <textarea name="ItemDescription" class="form-control" rows="3">{{ old('ItemDescription', $item->ItemDescription) }}</textarea>
         </div>
 
         <div class="mb-3">
             <label for="ImageUpload" class="form-label">Item Image</label>
-            <input type="file" name="ImageUpload" id="ImageUpload" class="form-control">
+            <input type="file" name="ImageUpload" class="form-control">
+            @if($item->ImageUpload)
+                <img src="{{ asset('storage/' . $item->ImageUpload) }}" class="img-thumbnail mt-2" style="max-height: 100px;">
+            @endif
         </div>
 
-        <button type="submit" class="btn btn-primary">✅ Save Item</button>
+        <button type="submit" class="btn btn-success">💾 Update Item</button>
     </form>
 </div>
 

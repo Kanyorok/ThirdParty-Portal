@@ -26,20 +26,15 @@
                         <tr>
                             <th>ID</th>
                             <th>Type</th>
-                            <th>Category</th>
                             <th>Item</th>
                             <th>Description</th>
                             <th>UOM</th>
                             <th>Quantity</th>
                             <th>Estimated Cost</th>
-                            {{--                                <th>Actual Price</th>--}}
-                            <th>Needed By</th>
                             <th>Urgency</th>
                             <th>Status</th>
                             <th>Created By</th>
                             <th>Created On</th>
-                            {{--                                <th>Modified By</th> --}}
-                            {{--                                <th>Modified On</th> --}}
                         </tr>
 
                         </thead>
@@ -50,13 +45,13 @@
                                 {{--                                <td>{{ $item->RequisitionID }}</td> --}}
                                 {{--                                    <td>{{ $item->Module }}</td>--}}
                                 <td>{{ $item->Type }}</td>
-                                <td>{{ $item->Category }}</td>
+{{--                                <td>{{ $item->Category }}</td>--}}
                                 <td>{{ $item->ItemName }}</td>
                                 <td>{{ $item->Description }}</td>
                                 <td>{{ $item->UOMx }}</td>
                                 <td>{{ $item->Quantity }}</td>
                                 <td>{{ number_format($item->ExpectedPrice, 2) }}</td>
-                                <td>{{ $item->NeededBy }}</td>
+{{--                                <td>{{ $item->NeededBy }}</td>--}}
                                 <td>{{ $item->Urgency }}</td>
                                 <td>{{ $item->Status }}</td>
                                 <td>{{ $item->UserName }}</td>
@@ -88,23 +83,24 @@
                             @csrf
                             <input type="hidden" name="RequisitionID" id="RequisitionID" value="">
 
-                            <input type="hidden" name="CategoryId" id="CategoryId">
-                            <div class="mb-3">
-                                <label class="form-label" for="RequisitionNo">Requisition No </label>
+{{--                            <input type="hidden" name="CategoryId" id="CategoryId">--}}
+{{--                            <div class="mb-3">--}}
+{{--                                <label class="form-label" for="RequisitionNo">Requisition No </label>--}}
 
-                                <input type="text" class="form-control" id="RequisitionNo" name="RequisitionNo" required
-                                       placeholder="Requisition No" Readonly>
+{{--                                <input type="text" class="form-control" id="RequisitionNo" name="RequisitionNo" required--}}
+{{--                                       placeholder="Requisition No" Readonly>--}}
 
-                                <p id="RequisitionNo_error" class="invalid-feedback d-none error col-12" role="alert"></p>
-                            </div>
+{{--                                <p id="RequisitionNo_error" class="invalid-feedback d-none error col-12" role="alert"></p>--}}
+{{--                            </div>--}}
 
                             <div class="mb-3">
                                 <label class="form-labe1l" for="Type">Item Type <span
                                         class="text-danger">*</span></label>
                                 <select class="form-control" name="Type" id="Type" required>
                                     <option selected disabled>Select type</option>
-                                    <option value="good">Good</option>
-                                    <option value="service">Service</option>
+                                    <option value="Stock">Stock</option>
+                                    <option value="Asset">Asset</option>
+                                    <option value="Non-Stock">Non-Stock</option>
                                     {{-- @foreach ($MarketingLists as $MarketingList)
                                         <option value="{{ $MarketingList->slug }}">{{ $MarketingList->Label }}</option>
                                     @endforeach --}}
@@ -148,25 +144,25 @@
                                 <p id="UOM_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
 
-                            <div class="mb-3">
-                                <label class="form-label" for="EstimatedPrice">Estimated Price </label>
+{{--                            <div class="mb-3">--}}
+{{--                                <label class="form-label" for="EstimatedPrice">Estimated Price </label>--}}
 
-                                <input type="number" class="form-control" id="EstimatedPrice" name="EstimatedPrice"
-                                       readonly required>
+{{--                                <input type="number" class="form-control" id="EstimatedPrice" name="EstimatedPrice"--}}
+{{--                                       readonly required>--}}
 
-                                <p id="EstimatedPrice_error" class="invalid-feedback d-none error col-12" role="alert">
-                                </p>
-                            </div>
+{{--                                <p id="EstimatedPrice_error" class="invalid-feedback d-none error col-12" role="alert">--}}
+{{--                                </p>--}}
+{{--                            </div>--}}
 
-                            <div class="mb-3">
-                                <label class="form-label" for="NeededBy">Needed By </label>
+{{--                            <div class="mb-3">--}}
+{{--                                <label class="form-label" for="NeededBy">Needed By </label>--}}
 
-                                <input type="date" class="form-control" id="NeededBy" name="NeededBy"
-                                       required>
+{{--                                <input type="date" class="form-control" id="NeededBy" name="NeededBy"--}}
+{{--                                       required>--}}
 
-                                <p id="NeededBy_error" class="invalid-feedback d-none error col-12" role="alert">
-                                </p>
-                            </div>
+{{--                                <p id="NeededBy_error" class="invalid-feedback d-none error col-12" role="alert">--}}
+{{--                                </p>--}}
+{{--                            </div>--}}
 
                             <div class="mb-3">
                                 <label class="form-label" for="Urgency">Urgency </label>
@@ -250,7 +246,7 @@
                             $('#Item').empty().append('<option value="">Select Item</option>');
                             $.each(response.data, function(key, item) {
                                 $('#Item').append(
-                                    `<option value="${item.id}">${item.name}</option>`
+                                    `<option value="${item.Id}">${item.ItemName}</option>`
                                 );
 
                             });
@@ -284,10 +280,10 @@
                                     );
 
                                     // $('#Description').val(item.Description || '');
-                                    $('#EstimatedPrice').val(item.UnitPrice || '');
-                                    $('#CategoryId').val(item.CategoryId ||
-                                        ''); // Populate the hidden CategoryId field
-                                    console.log('CategoryId:', item);
+                                    // $('#EstimatedPrice').val(item.UnitPrice || '');
+                                    // $('#CategoryId').val(item.CategoryId ||
+                                    //     ''); // Populate the hidden CategoryId field
+                                    // console.log('CategoryId:', item);
                                 });
                             }
                         },
