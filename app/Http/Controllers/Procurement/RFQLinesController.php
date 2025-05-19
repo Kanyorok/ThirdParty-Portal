@@ -17,7 +17,6 @@ class RFQLinesController extends Controller
 
     public function store(Request $request)
     {
-        dd($request->all());
         // Step 1: Validate request
         $validatedData = $request->validate([
             'ItemCategoryId' => 'required|exists:t_ItemCategories,Id',
@@ -57,11 +56,10 @@ class RFQLinesController extends Controller
                 'RFQLineNo' => $rfqLineNumber,
                 'RequisitionID' => $line->item->RequisitionID,
                 'ItemCategoryId' => $request->ItemCategoryId,
-                'ItemID' => $line->item->item,
+                'ItemId' => $line->item->item,
                 'ItemName' => $line->item->ItemName,
                 'Quantity' => $line->Quantity,
                 'UOM' => $line->item->UOM ?? '',
-                'Description' => $line->Description,
                 'CreatedBy' => auth()->user()->Id,
                 'ModifiedBy' => auth()->user()->Id,
                 // Add any other required RFQLine fields here

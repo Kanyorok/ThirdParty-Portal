@@ -10,7 +10,7 @@ class RFQLine extends Model
 {
     use UserActorTrait, SoftDeletes;
 
-    protected $table = 't_RFQLine';
+    protected $table = 't_RFQLines';
     protected $primaryKey = 'Id';
 
     public const CREATED_AT = 'CreatedOn';
@@ -18,7 +18,7 @@ class RFQLine extends Model
     const string DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
-        'RFQId', 'ItemId', 'Quantity', 'UOM', 'Description', 'CreatedBy', 'ModifiedBy'
+        'RFQLineNo', 'RequisitionId', 'RFQId', 'ItemId', 'UOM', 'Quantity', 'ItemName', 'ItemCategoryId', 'CreatedOn', 'ModifiedOn', 'CreatedBy', 'ModifiedBy'
     ];
 
     public static function getPrimaryKey(): string

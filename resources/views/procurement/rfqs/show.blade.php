@@ -126,7 +126,7 @@
                 </select>
             </div>
         </div>
-        <input type="hidden" name="RFQId" id="rfq-number" value="{{ $rfq->RFQNumber }}">
+        <input type="hidden" name="RFQId" id="rfq-number" value="{{ $rfq->Id }}">
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
             <button type="submit" class="btn btn-primary">Save RFQ Line</button>
