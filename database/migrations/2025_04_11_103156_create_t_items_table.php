@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('BarCode');
             $table->string('ItemName');
             $table->string('ItemType');//to system  codes
-            $table->foreignId('Category')->constrained('t_ItemCategories', 'id');
+            $table->foreignId('Category')->constrained('t_ItemCategories', 'Id');
             $table->string('UOM');//syetem codes
             $table->string('InventoryType'); // system codes
             $table->foreignId('ImageId')->nullable()->constrained('t_Images', 'ImageID');
