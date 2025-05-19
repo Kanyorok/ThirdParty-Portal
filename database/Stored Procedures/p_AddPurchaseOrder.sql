@@ -1,11 +1,12 @@
 alter PROCEDURE p_AddPurchaseOrder
+    @Supplier int,
     @RfqNo bigint,
     @OrderDate date,
     @Terms varchar(255),
-    @Priority date,
-    @BranchId int,
+    @Priority varchar(20),
     @User int,
-    @Supplier int
+    @BranchId int =0
+
 AS
 BEGIN
     SET NOCOUNT ON
@@ -31,3 +32,6 @@ BEGIN
 
     SET NOCOUNT OFF
 END
+
+
+
