@@ -1,5 +1,8 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', '')
+@section('styles')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+@endsection
 @section('content')
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -8,7 +11,7 @@
     </div>
 
     <div class="table-responsive">
-        <table class="table table-striped table-bordered align-middle">
+        <table id="bidsubmissionTable" class="table table-bordered table-striped align-middle">
             <thead class="table-light">
                 <tr>
                     <th>#</th>
@@ -40,8 +43,8 @@
                             @endif
                         </td>
                         <td>
-                            <a href="{{ route('tendersubmission.view', $submission->id) }}" class="btn btn-sm btn-outline-info">View</a>
-                            <a href="{{ route('tendersubmission.edit', $submission->id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                            <a href="{{ route('tendersubmission.view', $submission->Id) }}" class="btn btn-sm btn-outline-info">View</a>
+                            <a href="{{ route('tendersubmission.edit', $submission->Id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
                         </td>
                     </tr>
                 @empty
@@ -53,4 +56,17 @@
         </table>
     </div>
 </div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        $('#bidsubmissionTable').DataTable({
+            pageLength: 10,
+            ordering: true,
+            searching: true,
+            lengthChange: true
+        });
+    });
+</script>
 @endsection

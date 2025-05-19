@@ -1,8 +1,8 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Clarification Review')
 @section('content')
 <div class="container mt-4">
-    <h4 class="mb-3">Clarification Review</h4>
+
     @if (session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
