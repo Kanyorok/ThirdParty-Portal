@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('ParentId')->nullable()->constrained('t_ItemCategories', 'Id');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
-            $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
+            $table->foreignId('ModifiedBy')->nullable()->constrained('t_Users', 'Id');
             $table->dateTime('ModifiedOn');
             $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
             $table->softDeletes('DeletedOn');
