@@ -36,16 +36,16 @@ class RFQLinesController extends Controller
                     && $line->item->category
                     && $line->item->category->Id == $request->ItemCategoryId;
             });
-            dd($filteredItems);
+
         // Step 4: If no matching items, redirect with warning
         if ($filteredItems->isEmpty()) {
             return redirect()->back()->with('warning', 'No items requisitioned with the chosen category.');
         }
-
+       
         $prefix = 'RFQL-';
         $lastRFQ = RFQLine::where('RFQLineNo', 'like', $prefix . '%')->orderBy('Id', 'desc')->first();
         $lastNumber = $lastRFQ ? intval(substr($lastRFQ->RFQLineNo, strlen($prefix))) : 0;
-
+        
         // Step 5: Create RFQ lines for each filtered item
         $counter = $lastNumber;
         foreach ($filteredItems as $line) {
@@ -54,11 +54,12 @@ class RFQLinesController extends Controller
 
             RFQLine::create([
                 'RFQLineNo' => $rfqLineNumber,
-                'RequisitionID' => $line->item->RequisitionID,
+                'RequisitionId' => $line->item->RequisitionID,
                 'ItemCategoryId' => $request->ItemCategoryId,
-                'ItemId' => $line->item->item,
+                'RFQId' => $request->RFQId,
+                'ItemId' => $line->Item,
                 'ItemName' => $line->item->ItemName,
-                'Quantity' => $line->Quantity,
+                'Quantity' => intval($line->Quantity),
                 'UOM' => $line->item->UOM ?? '',
                 'CreatedBy' => auth()->user()->Id,
                 'ModifiedBy' => auth()->user()->Id,
