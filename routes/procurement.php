@@ -221,7 +221,7 @@ Route::namespace('Procurement')->group(function () {
     //Bid Submission
     Route::get('/bid-submissions', [TenderSubmissionController::class, 'index'])->name('tendersubmission.index');
     Route::get('/bid-submissions/create', [TenderSubmissionController::class, 'create'])->name('tendersubmission.create');
-    Route::get('/bid-submission/manual/view', [TenderSubmissionController::class, 'view'])->name('tendersubmission.view');
-    Route::get('/bid-submission/manual/edit', [TenderSubmissionController::class, 'edit'])->name('tendersubmission.edit');
+    Route::get('/bid-submission/manual/{Id}/view', [TenderSubmissionController::class, 'view'])->name('tendersubmission.view');
+    Route::get('/bid-submission/manual/{Id}/edit', [TenderSubmissionController::class, 'edit'])->name('tendersubmission.edit');
     Route::post('/bid-submissions', [TenderSubmissionController::class, 'store'])->name('tendersubmission.store');
 });
