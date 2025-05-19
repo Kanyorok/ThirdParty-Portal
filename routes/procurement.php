@@ -36,7 +36,7 @@ use App\Http\Controllers\Procurement\ProcurementReportsController;
 
 use App\Http\Controllers\Procurement\ProcurementPlanMaintainController;
 use App\Http\Controllers\Procurement\ProcurementApprovalController; 
-use App\Http\Controllers\Procurement\RaiseNeedsController;
+use App\Http\Controllers\Procurement\DepartmentNeedsController;
 use App\Http\Controllers\Procurement\NeedApprovalController; 
 use App\Http\Controllers\Procurement\ConsolidatedDashboardController; 
 use App\Http\Controllers\Procurement\ProcurementPlanDetailController;
@@ -184,7 +184,17 @@ Route::namespace('Procurement')->group(function () {
     //Procurementplan
     Route::resource('procurementplanmaintain', ProcurementPlanMaintainController::class); 
     Route::resource('procurementplanapproval', ProcurementApprovalController::class); 
-    Route::resource('procurementdepartmentalplan', RaiseNeedsController::class); 
+
+    //Procurement Plan Department Needs
+    //Route::resource('procurementdepartmentalplan', DepartmentNeedsController::class);
+    Route::get('/procurementdepartmentalplan', [DepartmentNeedsController::class,'index'])->name('procurementdepartmentalplan.index'); 
+    Route::get('/procurementdepartmentalplan/create', [DepartmentNeedsController::class,'create'])->name('procurementdepartmentalplan.create');
+    Route::post('/procurementdepartmentalplan', [DepartmentNeedsController::class,'store'])->name('procurementdepartmentalplan.store');
+    Route::get('/procurementdepartmentalplan/lines/{NeedID}', [DepartmentNeedsController::class, 'fetchLinesByDPlan'])->name('procurementdepartmentalplan.view');
+    Route::put('/procurementdepartmentalplan/update-line', [DepartmentNeedsController::class, 'updateLine'])->name('procurementdepartmentalplan.updateLine');
+    Route::delete('/procurementdepartmentalplan/delete/{NeedID}', [DepartmentNeedsController::class, 'destroy'])->name('procurementdepartmentalplan.destroy');
+    
+    //Procurement Plan, Plan Consolidation
     Route::resource('consolidated', ConsolidatedDashboardController::class); 
     Route::resource('procurementplandetails', ProcurementPlanDetailController::class); 
     Route::resource('procurementplanquaterly', ProcurementquaterlyController::class); 

@@ -22,6 +22,7 @@ use App\Models\CRM\Schedule;
 use App\Models\CRM\Social;
 use App\Models\CRM\Survey;
 use App\Models\CRM\Ticket;
+use App\Models\Procurement\DepartmentNeeds;
 use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
 use App\Models\Procurement\Order;
@@ -188,7 +189,12 @@ enum PermissionEnum: string
     case PurchaseOrderDelete = 'purchaseOrder-delete';
     case PurchaseOrderApproval = 'purchaseOrder-approval';
 
-
+    //ProcurementPlan Department Needs
+    case DepartmentNeedsRead = 'departmentneeds-read';
+    case DepartmentNeedsWrite = 'departmentneeds-create';
+    case DepartmentNeedsUpdate = 'departmentneeds-update';
+    case DepartmentNeedsDelete = 'departmentneeds-delete';
+    case DepartmentNeedsApproval = 'departmentneeds-approval';
     /*
      *
      * ========================================  Human Resource management  ========================================
@@ -275,6 +281,9 @@ enum PermissionEnum: string
 
             //PurchaseOrder
             self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval => Order::getPrimaryKey(),
+
+            //DepartmentNeeds
+            self::DepartmentNeedsRead, self::DepartmentNeedsWrite, self::DepartmentNeedsUpdate, self::DepartmentNeedsDelete, self::DepartmentNeedsApproval => DepartmentNeeds::getPrimaryKey(),
 
             self::RfqRead, self::RfqWrite, self::RfqUpdate, self::RfqApproval => RFQ::getPrimaryKey(),
 
