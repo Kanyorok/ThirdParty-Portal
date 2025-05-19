@@ -10,6 +10,11 @@ class ProcurementMode extends Model
     use HasFactory;
 
     protected $table = 't_ProcurementModes';
+    protected $primaryKey = 'Id';
+
+    const CREATED_AT = 'CreatedOn';
+    const UPDATED_AT = 'ModifiedOn';
+    const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
         'Name',
@@ -17,6 +22,12 @@ class ProcurementMode extends Model
         'CreatedBy',
         'ModifiedBy',
         'UniqueCode',
+    ];
+
+    protected $casts = [
+        'CreatedOn' => 'datetime',
+        'DeletedOn' => 'datetime',
+        'ModifiedOn' => 'datetime',
     ];
 
     public function timelines()

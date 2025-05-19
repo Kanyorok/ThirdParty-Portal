@@ -16,8 +16,8 @@ return new class extends Migration
             $table->unsignedBigInteger('ClarificationID')->autoIncrement();
 
             // Foreign keys
-            $table->unsignedBigInteger('TenderID');
-            $table->unsignedBigInteger('VendorID');
+            $table->foreignId('TenderID')->constrained('t_Tenders', 'Id');
+            $table->foreignId('VendorID')->constrained('t_Suppliers', 'Id');
 
             // Other columns
             $table->text('Question');
@@ -25,12 +25,7 @@ return new class extends Migration
             $table->text('Answer')->nullable(); // Nullable since an answer might not be provided immediately
             $table->dateTime('AnswerDate')->nullable(); // Nullable for the same reason
             $table->boolean('ISPUBLISHEDTOALL')->default(false); // Boolean with a default value
-
-            // Define foreign key constraints
-           // $table->foreign('TenderID')->references('id')->on('tenders')->onDelete('cascade');
-            //$table->foreign('VendorID')->references('id')->on('vendors')->onDelete('cascade');
-
-            // Timestamps (optional, since your table doesn't explicitly list created_at/updated_at)
+            
             $table->timestamps();
         });
     }

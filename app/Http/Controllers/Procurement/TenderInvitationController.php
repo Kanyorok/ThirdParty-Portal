@@ -16,9 +16,10 @@ class TenderInvitationController extends Controller
 
     public function storeResponse(Request $request)
     {
+
         $validated = $request->validate([
-            'TenderID' => 'required|integer',
-            'SupplierID' => 'required|integer',
+            'TenderId' => 'required|integer',
+            'SupplierId' => 'required|integer',
             'ResponseStatus' => 'required|in:Pending,Accepted,Declined',
             'DeclineReason' => 'nullable|string',
             'ConfirmationAttachment' => 'nullable|file|max:2048',
@@ -30,15 +31,16 @@ class TenderInvitationController extends Controller
         }
 
         TenderInvitation::create([
-            'TenderID' => $validated['TenderID'],
-            'SupplierID' => $validated['SupplierID'],
+            'TenderId' => $validated['TenderId'],
+            'SupplierId' => $validated['SupplierId'],
             'InvitationDate' => now(),
             'ResponseStatus' => $validated['ResponseStatus'],
             'ResponseDate' => now(),
             'DeclineReason' => $validated['DeclineReason'] ?? null,
             'ConfirmationAttachment' => $path,
+            'CreatedBy' => $request->user()->Id,
+            'ModifiedBy' => $request->user()->Id,
         ]);
-
         return redirect()->back()->with('success', 'Your response has been recorded.');
     }
 }

@@ -28,6 +28,7 @@ class CommitteeRequest extends FormRequest
                                      'string',
                                      'max:2000',
                                     ],
+                'CommitteeType'  => 'required|string|max:50',
                ];
     }
 
