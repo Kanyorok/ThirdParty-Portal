@@ -127,7 +127,13 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 205000, 'Name' => 'Tendering', 'Icon' => null, 'ParentID' => 200000, 'Route' => null],
             ['ModuleID' => 205100, 'Name' => 'Tender Setup', 'Icon' => null, 'ParentID' => 205000, 'Route' => null],
             ['ModuleID' => 205110, 'Name' => 'Tender Initiation', 'Icon' => null, 'ParentID' => 205100, 'Route' => 'initiatetender.index'],
-            ['ModuleID' => 205120, 'Name' => 'Initiation Approval', 'Icon' => null, 'ParentID' => 205100, 'Route' => 'initiateapprove.index']
+            ['ModuleID' => 205120, 'Name' => 'Initiation Approval', 'Icon' => null, 'ParentID' => 205100, 'Route' => 'initiateapprove.index'],
+
+            ['ModuleID' => 206000, 'Name' => 'RFQS', 'Icon' => null, 'ParentID' => 200000, 'Route' => null],
+            ['ModuleID' => 206100, 'Name' => 'View RFQs', 'Icon' => null, 'ParentID' => 206000, 'Route' => 'rfqs.index'],
+            ['ModuleID' => 206200, 'Name' => 'RFQ Responses', 'Icon' => null, 'ParentID' => 206000, 'Route' => 'rfqresponses.index'],
+            ['ModuleID' => 206300, 'Name' => 'RFQ Evaluation', 'Icon' => null, 'ParentID' => 206000, 'Route' => 'evaluations.index'],
+
         ]);
     }
 
