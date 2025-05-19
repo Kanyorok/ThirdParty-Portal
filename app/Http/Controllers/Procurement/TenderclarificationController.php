@@ -36,8 +36,10 @@ class TenderclarificationController extends Controller
             'Answer' => $request->answer,
             'AnswerDate' => now(),
             'ISPUBLISHEDTOALL' => $request->is_published_to_all ?? false,
+            'CreatedBy' => $request->user()->Id,
+            'ModifiedBy' => $request->user()->Id,
         ]);
 
-        return redirect()->back()->with('success', 'Clarification updated successfully.');
+        return redirect()->route('tenderclarification.index')->with('success', 'Clarification updated successfully.');
     }
 }

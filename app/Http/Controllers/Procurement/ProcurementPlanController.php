@@ -8,6 +8,7 @@ use App\Models\Procurement\ProcurementPeriod;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Procurement\Item;
 use Illuminate\Http\Request;
+use App\enums\ProcurementPlanStatusEnum;
 
 class ProcurementPlanController extends Controller
 {
@@ -17,34 +18,44 @@ class ProcurementPlanController extends Controller
     //     return view('procurement.procurement_plans.index', compact('procurementPlans'));
     // }
 
-    public function create($procurementPeriodId)
+    public function create(ProcurementPeriod $procurementPeriod)
     {
-        $period = ProcurementPeriod::findOrFail($procurementPeriodId);
-        $items = Item::all();
-        return view('procurement.procurement_plans.create', compact('items', 'period'));
+        $items = Item::orderBy('ItemName')->get();
+        return view('procurement.procurement_plans.create', [
+            'availableItems' => $items,
+            'period' =>  $procurementPeriod,
+        ]);
     }
 
-    public function store(Request $request, $period)
+    public function store(Request $request, ProcurementPeriod $procurementPeriod) // Route Model Binding
     {
         $validated = $request->validate([
             'ItemId' => 'required|exists:t_Items,Id',
-            'Quantity' => 'required|integer|min:1',
+            'Quantity' => 'required|numeric|min:0.01',
+            'Category' => 'nullable|string|max:100',
+            'UOM' => 'nullable|string|max:50',
+            'PlannedQuarter' => 'nullable|string|max:10',
+            'ExpectedDeliveryDate' => 'nullable|date',
         ]);
 
         $item = Item::findOrFail($validated['ItemId']);
-    
-        $totalCost = $item->UnitPrice * $validated['Quantity'];
+
+        $totalCost = ($item->UnitPrice ?? 0) * $validated['Quantity'];
 
         ProcurementPlan::create([
-            'ProcurementPeriodId' => $period,
+            'ProcurementPeriodId' => $procurementPeriod->Id,
             'ItemId' => $validated['ItemId'],
             'Quantity' => $validated['Quantity'],
+            'Category' => $validated['Category'] ?? $item->Category ?? null,
+            'UOM' => $validated['UOM'] ?? $item->UOM ?? null,
+            'PlannedQuarter' => $validated['PlannedQuarter'],
+            'ExpectedDeliveryDate' => $validated['ExpectedDeliveryDate'],
+            'Status' => ProcurementPlanStatusEnum::Draft,
             'TotalCost' => $totalCost,
             'CreatedBy' => Auth::id(),
             'ModifiedBy' => Auth::id(),
         ]);
-    
-        return redirect()->route('procurement-periods.show', $period)
-            ->with('success', 'Procurement Plan Added');
+        return redirect()->route('procurement-periods.show', $procurementPeriod->Id)
+            ->with('success', 'Procurement plan item added successfully.');
     }
 }
