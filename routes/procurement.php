@@ -64,17 +64,17 @@ Route::namespace('Procurement')->group(function () {
     Route::get('items/download', [ItemController::class, 'download'])->name('items.download');
     Route::get('requisitionItem/getItem/{type}', 'RequisitionItemsController@getItems')->name('requisitionItem.getItems');
     Route::get('requisitionItem/getItemDetails/{item}', 'RequisitionItemsController@getItemDetails')->name('requisitionItem.getItemDetails');
-//    Route::get('requisitionItem/{id}', 'RequisitionItemsController@getRelatedRequisitionLines')->name('requisitionItem.list');
+    //    Route::get('requisitionItem/{id}', 'RequisitionItemsController@getRelatedRequisitionLines')->name('requisitionItem.list');
     Route::get('requisitionItem/{id}', [RequisitionItemsController::class, 'show'])->name('requisitionItem.show');
     Route::get('requisition/{id}', [RequisitionsController::class, 'show'])->name('requisition.show');
     Route::get('requisitionItem/create/{id}', [RequisitionItemsController::class, 'create'])->name('requisitionItems.create');
-//    Route::get('requisitionItem/create/{id}', [RequisitionsController::class, 'create'])->name('requisition.show');
-    Route::get('requisition/approval', [RequisitionsController::class,'approvalList'])->name('requisition.approval');
+    //    Route::get('requisitionItem/create/{id}', [RequisitionsController::class, 'create'])->name('requisition.show');
+    Route::get('requisition/approval', [RequisitionsController::class, 'approvalList'])->name('requisition.approval');
 
     //Purchase Order
     Route::resource('purchaseOrder', 'PurchaseOrderController');
-   Route::get('purchaseOrder/getSuppliers', [PurchaseOrderController::class, 'getSuppliers'])->name('purchaseOrder.getSuppliers');
-//    Route::get('requisitionItem/getItem/{supplier}', 'PurchaseOrderController@getSupplierDetails')->name('purchaseOrder.getSupplierDetails');
+    Route::get('purchaseOrder/getSuppliers', [PurchaseOrderController::class, 'getSuppliers'])->name('purchaseOrder.getSuppliers');
+    //    Route::get('requisitionItem/getItem/{supplier}', 'PurchaseOrderController@getSupplierDetails')->name('purchaseOrder.getSupplierDetails');
 
     //Sales Order
     Route::resource('salesOrder', 'SalesOrderController');
@@ -95,7 +95,7 @@ Route::namespace('Procurement')->group(function () {
     Route::put('timelines/{id}', [ModeTimelineController::class, 'update'])->name('timelines.update');
 
     // Tendering Process
-    Route::resource('tendering-process', TenderController::class);
+    // Route::resource('tendering-process', TenderController::class);
 
     //Auditor Routes
     Route::get('/sasra-auditors', [SasraAuditorController::class, 'index'])->name('sasra-auditors.index');
@@ -149,22 +149,17 @@ Route::namespace('Procurement')->group(function () {
 
     //GoodsReceipts
     //Route::resource('procurementreceipts', GoodsReceiptController::class);
-    Route::get('/procurementreceipts', [GoodsReceiptController::class,'index'])->name('procurementreceipts.index');
+    Route::get('/procurementreceipts', [GoodsReceiptController::class, 'index'])->name('procurementreceipts.index');
     Route::get('/procurementreceipts/create', [GoodsReceiptController::class, 'create'])->name('procurementreceipts.create');
     Route::post('/procurementreceipts', [GoodsReceiptController::class, 'store'])->name('procurementreceipts.store');
     Route::get('/procurementreceipts/lines/{grnId}/{poId}', [GoodsReceiptController::class, 'fetchLinesByGRN']);
     Route::put('/procurementreceipts/update-line', [GoodsReceiptController::class, 'updateLine'])->name('procurementreceipts.updateLine');
     Route::delete('/procurementreceipts/delete/{grnId}/{poId}', [GoodsReceiptController::class, 'destroy'])->name('procurementreceipts.destroy');
 
-
-
-
-
-
     Route::resource('procurementreceipts', GoodsReceiptController::class);
 
     //Tenders
-    Route::resource('initiatetender', TenderInitiationController::class);
+    Route::resource('initiatetender', TenderController::class);
     Route::resource('tendercategory', TenderCategoryController::class);
     Route::resource('tendertype', TenderTypeController::class);
     Route::resource('initiateapprove', TenderInitiationApproveController::class);
@@ -236,7 +231,7 @@ Route::namespace('Procurement')->group(function () {
     Route::get('/tenderresponse/create', [TenderResponseController::class, 'create'])->name('tenderresponse.create');
     Route::post('/tenderresponse', [TenderResponseController::class, 'storeResponse'])->name('tenderresponse.storeResponse');
 
-   // Route::resource('tenderclarification', TenderclarificationController::class);
+    // Route::resource('tenderclarification', TenderclarificationController::class);
     Route::get('/tenderclarification', [TenderclarificationController::class, 'index'])->name('tenderclarification.index');
     //Route::get('/tenderclarification/create', [TenderclarificationController::class, 'create'])->name('tenderclarification.create');
     Route::patch('/tenderclarification/update', [TenderclarificationController::class, 'update'])->name('tenderclarification.update');
@@ -244,10 +239,9 @@ Route::namespace('Procurement')->group(function () {
     Route::get('/tenderclarifications/{clarification_id}/create', [TenderclarificationController::class, 'create'])->name('tenderclarification.create');
 
     //Bid Submission
-Route::get('/bid-submissions', [TenderSubmissionController::class, 'index'])->name('tendersubmission.index');
-Route::get('/bid-submissions/create', [TenderSubmissionController::class, 'create'])->name('tendersubmission.create');
-Route::get('/bid-submission/manual/view', [TenderSubmissionController::class, 'view'])->name('tendersubmission.view');
-Route::get('/bid-submission/manual/edit', [TenderSubmissionController::class, 'edit'])->name('tendersubmission.edit');
-Route::post('/bid-submissions', [TenderSubmissionController::class, 'store'])->name('tendersubmission.store');
-
+    Route::get('/bid-submissions', [TenderSubmissionController::class, 'index'])->name('tendersubmission.index');
+    Route::get('/bid-submissions/create', [TenderSubmissionController::class, 'create'])->name('tendersubmission.create');
+    Route::get('/bid-submission/manual/{Id}/view', [TenderSubmissionController::class, 'view'])->name('tendersubmission.view');
+    Route::get('/bid-submission/manual/{Id}/edit', [TenderSubmissionController::class, 'edit'])->name('tendersubmission.edit');
+    Route::post('/bid-submissions', [TenderSubmissionController::class, 'store'])->name('tendersubmission.store');
 });

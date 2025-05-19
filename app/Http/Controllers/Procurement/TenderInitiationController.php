@@ -13,7 +13,8 @@ class TenderInitiationController extends Controller
         return view('procurement.tendering.tendersetup.tenderinitiation.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('procurement.tendering.tendersetup.tenderinitiation.create');
     }
 }

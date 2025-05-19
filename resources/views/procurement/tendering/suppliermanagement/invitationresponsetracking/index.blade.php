@@ -1,11 +1,15 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Invitation Response Tracker')
+@section('styles')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
+@endsection
 @section('content')
 <div class="container mt-4">
 <a href="{{ route('tenderresponse.create') }}" class="btn btn-success">➕ Add Response</a>
-    <h4>Invitation Response Tracker</h4>
+    <h4></h4>
     <div class="table-responsive">
-        <table class="table table-bordered table-striped mt-3">
+        <table id="responsetrackingTable" class="table table-bordered table-striped align-middle">
             <thead class="table-light">
                 <tr>
                     <th>#</th>
@@ -22,8 +26,8 @@
     @forelse ($invitations as $index => $invitation)
         <tr>
             <td>{{ $index + 1 }}</td>
-            <td>{{ $invitation->TenderID }}</td>
-            <td>{{ $invitation->SupplierID  }}</td>
+            <td>{{ $invitation->TenderId }}</td>
+            <td>{{ $invitation->SupplierId  }}</td>
             <td>{{ \Carbon\Carbon::parse($invitation->InvitationDate)->format('Y-m-d') }}</td>
             <td>
                 @if($invitation->ResponseStatus === 'Accepted')
@@ -43,10 +47,21 @@
         </tr>
     @endforelse
 </tbody>
-
-           
-
         </table>
     </div>
 </div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        $('#responsetrackingTable').DataTable({
+            pageLength: 10,
+            ordering: true,
+            searching: true,
+            lengthChange: true
+        });
+    });
+</script>
 @endsection
+
