@@ -25,14 +25,7 @@ return new class extends Migration
             $table->text('Answer')->nullable(); // Nullable since an answer might not be provided immediately
             $table->dateTime('AnswerDate')->nullable(); // Nullable for the same reason
             $table->boolean('ISPUBLISHEDTOALL')->default(false); // Boolean with a default value
-            $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
-            $table->dateTime('CreatedOn');
-            $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
-            $table->dateTime('ModifiedOn');
-            $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
-            $table->softDeletes('DeletedOn');
-
-
+            
             $table->timestamps();
         });
     }

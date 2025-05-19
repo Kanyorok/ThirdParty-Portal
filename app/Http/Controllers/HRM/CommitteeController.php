@@ -4,11 +4,13 @@ namespace App\Http\Controllers\HRM;
 
 use App\Http\Controllers\Controller;
 use App\Models\HRM\Committee;
+use App\Models\HRM\Board;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Http\Requests\Board\CommitteeRequest;
 use Exception;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class CommitteeController extends Controller
 {
@@ -23,28 +25,49 @@ class CommitteeController extends Controller
         return view('hrms.committees.create');
     }
 
-    public function store(CommitteeRequest $request): JsonResponse
+    public function store(Request $request): JsonResponse
     {
-        $this->authorize('viewAny', Board::class);
+        // $this->authorize('viewAny', Committee::class);
         $actor = $request->user();
-        try {
-            DB::transaction(function () use ($actor, $request) {
-                $committee = Committee::create([
-                                                "CommitteeID" => $request->generateID(),
-                                                "Name"        => $request->validated('CommitteeName'),
-                                                'Notes'       => $request->validated('CommitteeNotes'),
-                                                'CreatedBy'   => $actor->Id,
-                                                'ModifiedBy'  => $actor->Id,
-                                               ]);
 
-                activity()->causedBy($actor)->performedOn($committee)->event('create')->log('created board committee ' . $committee->CommitteeID . '.');
-            });
+        $validated = $request->validate([
+            'CommitteeName'  => 'required|string|max:200|unique:t_Committees,Name',
+            'CommitteeNotes' => 'nullable|string|max:2000',
+            'CommitteeType'  => 'required|string|max:50',
+        ]);
+
+        try {
+            // Generate custom CommitteeID (e.g., COMM-001)
+            $count = Committee::withTrashed()->count();
+            do {
+                $count++;
+                $generatedID = strtoupper('COMM-' . str_pad($count, 3, '0', STR_PAD_LEFT));
+            } while (Committee::withTrashed()->where('CommitteeID', $generatedID)->exists());
+
+            // Create committee using Eloquent model
+            $committee = Committee::create([
+                'CommitteeID' => $generatedID,
+                'Name'        => $validated['CommitteeName'],
+                'Notes'       => $validated['CommitteeNotes'] ?? null,
+                'Type'        => $validated['CommitteeType'],
+                'CreatedBy'   => $actor->Id,
+                'ModifiedBy'  => $actor->Id,
+                'CreatedOn'   => Carbon::now(),
+                'ModifiedOn'  => Carbon::now(),
+            ]);
+
+            // Log activity
+            activity()
+                ->causedBy($actor)
+                ->performedOn($committee)
+                ->event('create')
+                ->log('Created board committee ' . $committee->CommitteeID . '.');
         } catch (Exception | \Throwable $e) {
-            Log::error('creating committee.');
-            Log::error($e);
-            return $this->errored('an unexpected error occurred');
+            Log::error('Error creating committee: ' . $e->getMessage(), ['exception' => $e]);
+            return $this->errored('An unexpected error occurred: ' . $e->getMessage());
         }
-        return $this->succeeded('committee added successfully');
+
+        return $this->succeeded('Committee added successfully.');
     }
 
     public function show(Committee $committee)
@@ -64,7 +87,6 @@ class CommitteeController extends Controller
             'Notes' => 'nullable|string',
         ]);
 
-        // Auto-fill ModifiedBy (from session or fallback)
         $validated['ModifiedBy'] = auth()->user()->name ?? 'system';
 
         $committee->update($validated);
