@@ -26,7 +26,7 @@ class RequisitionItemRequest extends FormRequest
             'RequisitionID' => ['nullable'],
             'Type' => ['required'],
             'Item' =>   ['required'],
-            'NeededBy' =>    ['nullable'],
+//            'NeededBy' =>    ['nullable'],
             'Quantity' =>   ['required'],
             'Urgency' =>    ['required'],
             'UOM' =>    ['nullable'],

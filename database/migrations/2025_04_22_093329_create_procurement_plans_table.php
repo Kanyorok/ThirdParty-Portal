@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use App\Enums\ProcurementPlanStatusEnum;
 
 return new class extends Migration
 {
@@ -15,12 +16,26 @@ return new class extends Migration
             $table->id('Id');
             $table->foreignId('ProcurementPeriodId')->constrained('t_ProcurementPeriods')->onDelete('cascade');
             $table->foreignId('ItemId')->constrained('t_Items');
-            $table->integer('Quantity');
+
+            $table->string('Category', 100)->nullable();
+            $table->string('UOM', 50)->nullable();
+
+            $table->decimal('Quantity', 12, 2)->nullable();
+
+            $table->string('PlannedQuarter', 10)->nullable();
+            $table->date('ExpectedDeliveryDate')->nullable();
+
             $table->decimal('TotalCost', 12, 2)->nullable();
+
+            $defaultStatus = ProcurementPlanStatusEnum::Draft->value;
+            $table->string('Status', 50)->default($defaultStatus);
+
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
-            $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
+
+            $table->foreignId('ModifiedBy')->nullable()->constrained('t_Users', 'Id');
             $table->dateTime('ModifiedOn');
+
             $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
             $table->softDeletes('DeletedOn');
         });

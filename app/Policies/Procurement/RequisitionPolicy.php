@@ -22,6 +22,7 @@ class RequisitionPolicy
      */
     public function view(User $user, Requisitions $requisition): bool
     {
+        //dd($requisition);
 //        return $user->can(PermissionEnum::RequisitionRead->value);
 
         return true;

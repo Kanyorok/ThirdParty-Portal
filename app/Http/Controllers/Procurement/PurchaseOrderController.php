@@ -101,9 +101,10 @@ class PurchaseOrderController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(PurchaseOrderRequest $request):JsonResponse
+    public function store(PurchaseOrderRequest $request): JsonResponse
     {
-        //
+
+//        dd($request->user());
         try {
             $validatedData = $request->validated();
 
@@ -113,47 +114,72 @@ class PurchaseOrderController extends Controller
             }
 
             $POAdd = $this->orderService->addPO(
-                $actor,
                 $validatedData['supplier'],
-                $validatedData['poDate'],
-                $validatedData['rfqNo'],
+                $validatedData['pODate'],
+                $validatedData['refNo'],
                 $validatedData['priority'],
-                $validatedData['terms']
+                $validatedData['terms'],
+                $actor
             );
 
+            if ($POAdd['status'] !== 'success') {
+                \Log::error('Failed to create PO.', [
+                    'input' => $validatedData,
+                    'user_id' => $actor->id ?? null,
+                    'service_response' => $POAdd,
+                ]);
 
-            $POLinesAdd = $this->orderService->addPOLines(
-                $actor,
-                $validatedData['itemCode'],
-                $validatedData['quantity'],
-                $validatedData['unitPrice'],
-                $validatedData['tax'],
-                $validatedData['discount'],
-                $validatedData['lineTotal']
-
-            );
-
-
-            if ($POAdd['status'] === 'success' || $POLinesAdd['status'] === 'success') {
                 return response()->json([
-                    'message' => $POAdd['message'],
-                    'route' =>route('order.create')
-                ], 200);
+                    'message' => $POAdd['message'] ?? 'Failed to create purchase order',
+                    'error' => $POAdd['error'] ?? 'Unknown error'
+                ], 500);
             }
 
-            // Log failure with details
-            \Log::error('Failed to create order.', [
-                'input' => $validatedData,
-                'user_id' => $actor->id ?? null,
-                'service_response' => $POAdd,
-            ]);
+            $poId = $POAdd['po_id'] ?? null;
 
+            if (!$poId) {
+                \Log::error('PO created but no ID returned.', [
+                    'response' => $POAdd
+                ]);
+
+                return response()->json([
+                    'message' => 'Purchase order created but no ID returned.',
+                    'error' => 'Missing PO ID'
+                ], 500);
+            }
+
+            // Process each PO line
+            foreach ($validatedData['itemCode'] as $index => $itemCode) {
+                $POLinesAdd = $this->orderService->addPOLines(
+                    $itemCode,
+                    $validatedData['quantity'][$index],
+                    $validatedData['unitPrice'][$index],
+                    $validatedData['tax'][$index],
+                    $validatedData['discount'][$index],
+                    $validatedData['lineTotal'][$index],
+                    $actor,
+                    $poId
+                );
+
+                if ($POLinesAdd['status'] !== 'success') {
+                    \Log::error('Failed to add PO line.', [
+                        'index' => $index,
+                        'item' => $itemCode,
+                        'response' => $POLinesAdd,
+                    ]);
+
+                    return response()->json([
+                        'message' => 'Failed to add PO line',
+                        'error' => $POLinesAdd['error'] ?? 'Line creation error'
+                    ], 500);
+                }
+            }
+
+            // Everything succeeded
             return response()->json([
-                'message' => $POAdd['message'],
-                'error' => $POAdd['error'] ?? 'Unknown error'
-            ], 500);
-
-
+                'message' => $POAdd['message'] ?? 'Order created successfully',
+                'route' => route('purchaseOrder.create')
+            ], 200);
 
         } catch (\Throwable $e) {
             \Log::error('Exception occurred while creating order.', [

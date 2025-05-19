@@ -24,5 +24,6 @@ class DatabaseSeeder extends Seeder
         $this->call(CommitteeSeeder::class);
         $this->call(DepartmentSeeder::class);
         $this->call(EmployeeSeeder::class);
+        $this->call(ProcurementPlanSeeder::class);
     }
 }
