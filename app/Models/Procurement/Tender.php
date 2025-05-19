@@ -39,7 +39,6 @@ class Tender extends Model
         'Status',
         'RelatedPRID',
         'ProcurementModeId',
-        'EstimatedValue',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy',
@@ -51,8 +50,11 @@ class Tender extends Model
         'TenderType' => TenderTypeEnum::class,
         'Status' => TenderStatusEnum::class,
         'TenderCategory' => TenderCategoryEnum::class,
-        'SubmissionDeadline' => 'date:Y-m-d',
-        'OpeningDate' => 'date:Y-m-d',
+        'SubmissionDeadline' => 'datetime',
+        'OpeningDate' => 'datetime',
+        'ModifiedOn' => 'datetime',
+        'DeletedOn' => 'datetime',
+        'CreatedOn' => 'datetime',
         'StartDate' => 'datetime',
     ];
 
@@ -69,7 +71,7 @@ class Tender extends Model
             ->withPivot('InvitationStatus', 'CreatedOn', 'ModifiedOn', 'DeletedOn');
     }
 
-    //TODO: with tenderinvitations
+    //TODO: with tenderinvitations 
     // public function suppliers(): BelongsToMany
     // {
     //     return $this->belongsToMany(Supplier::class, 't_TenderVendors', 'TenderID', 'SupplierID')
@@ -98,7 +100,7 @@ class Tender extends Model
     }
     public function currency(): BelongsTo
     {
-        return $this->belongsTo(Currency::class, 'Currency', 'Id');
+        return $this->belongsTo(Currency::class, 'CurrencyId', 'Id');
     }
 
     public function stages(): HasMany

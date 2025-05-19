@@ -73,7 +73,7 @@ class TenderController extends Controller
             'EstimatedValue',
             'StartDate'
         ]));
-        $fillData['CurrencyId'] = $request->Currency;
+        $fillData['Currency'] = $request->Currency;
         $tender->fill($fillData);
         $tender->TenderType = TenderTypeEnum::from($request->TenderType);
         $tender->TenderCategory = TenderCategoryEnum::from($request->TenderCategory);
