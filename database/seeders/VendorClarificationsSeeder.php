@@ -27,8 +27,7 @@ class VendorClarificationsSeeder extends Seeder
                 'ModifiedOn' => $now,
                 'DeletedBy' => null,
                 'DeletedOn' => null,
-                'created_at' => $now,
-                'updated_at' => $now,
+            
             ],
             [
                 'TenderId' => 11, // Assumes tender ID 2 exists in t_Tenders
@@ -44,8 +43,6 @@ class VendorClarificationsSeeder extends Seeder
                 'ModifiedOn' => $now,
                 'DeletedBy' => null,
                 'DeletedOn' => null,
-                'created_at' => $now,
-                'updated_at' => $now,
             ],
             [
                 'TenderId' => 12, // Assumes tender ID 3 exists in t_Tenders
@@ -61,8 +58,6 @@ class VendorClarificationsSeeder extends Seeder
                 'ModifiedOn' => $now,
                 'DeletedBy' => null,
                 'DeletedOn' => null,
-                'created_at' => $now,
-                'updated_at' => $now,
             ],
         ]);
     }
