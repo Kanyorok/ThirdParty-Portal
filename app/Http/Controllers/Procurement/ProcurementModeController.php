@@ -10,7 +10,7 @@ class ProcurementModeController extends Controller
 {
     public function index()
     {
-        $modes = ProcurementMode::latest()->get();
+        $modes = ProcurementMode::orderBy('CreatedOn', 'desc')->get();
         return view('procurement.procurement_modes.index', compact('modes'));
     }
 
@@ -22,19 +22,18 @@ class ProcurementModeController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|unique:t_ProcurementModes,name',
+            'name' => 'required|unique:t_ProcurementModes,Name',
             'description' => 'nullable|string',
         ]);
 
         // Generate UniqueCode
         $prefix = 'PM'; // Prefix for Procurement Modes
-        $lastMode = ProcurementMode::where('UniqueCode', 'like', "$prefix%")->orderBy('id', 'desc')->first();
+        $lastMode = ProcurementMode::where('UniqueCode', 'like', "$prefix%")
+            ->orderBy('Id', 'desc')
+            ->first();
 
-        // Determine the next sequential number
         $lastCode = $lastMode ? intval(substr($lastMode->UniqueCode, strlen($prefix))) : 0;
         $nextCode = str_pad($lastCode + 1, 3, '0', STR_PAD_LEFT);
-
-        // Assign the generated UniqueCode
         $uniqueCode = $prefix . $nextCode;
 
         ProcurementMode::create([
@@ -43,6 +42,8 @@ class ProcurementModeController extends Controller
             'UniqueCode' => $uniqueCode,
             'CreatedBy' => auth()->user()->Id,
             'ModifiedBy' => auth()->user()->Id,
+            'CreatedOn' => now(),
+            'ModifiedOn' => now(),
         ]);
 
         return redirect()->route('procurement-modes.index')->with('success', 'Procurement mode created successfully.');
@@ -63,7 +64,7 @@ class ProcurementModeController extends Controller
     public function update(Request $request, ProcurementMode $procurement_mode)
     {
         $request->validate([
-            'name' => 'required|unique:t_ProcurementModes,name,' . $procurement_mode->id,
+            'name' => 'required|unique:t_ProcurementModes,Name,' . $procurement_mode->Id . ',Id',
             'description' => 'nullable|string',
         ]);
 
@@ -71,6 +72,7 @@ class ProcurementModeController extends Controller
             'Name' => $request->name,
             'Description' => $request->description,
             'ModifiedBy' => auth()->user()->Id,
+            'ModifiedOn' => now(),
         ]);
 
         return redirect()->route('procurement-modes.index')->with('success', 'Procurement mode updated successfully.');
