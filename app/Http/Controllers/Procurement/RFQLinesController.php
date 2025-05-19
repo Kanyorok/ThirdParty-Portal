@@ -17,6 +17,7 @@ class RFQLinesController extends Controller
 
     public function store(Request $request)
     {
+       
         // Step 1: Validate request
         $validatedData = $request->validate([
             'ItemCategoryId' => 'required|exists:t_ItemCategories,Id',
@@ -67,7 +68,7 @@ class RFQLinesController extends Controller
             ]);
         }
 
-        return redirect()->route('rfqlines.index')->with('success', 'RFQ line(s) created successfully.');
+        return redirect()->route('rfqs.show', $request->RFQId)->with('success', 'RFQ line(s) created successfully.');
     }
 
     public function getCategories()
