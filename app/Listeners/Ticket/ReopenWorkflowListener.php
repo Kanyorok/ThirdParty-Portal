@@ -54,9 +54,6 @@ class ReopenWorkflowListener implements ShouldQueue
 
     protected function _sendMail(User $user, Ticket $ticket, string $reason): void
     {
-        if ($user->email !== 'mureithi.maina@craftsilicon.com') {
-            return;
-        }
         (new UserService($user))->sendEmail(
             subject: 'Request for Ticket Reopening',
             body: '<p>Hello ' . $user->UserID . '</p><p>A request for the reopening of ticket <b>#' . $ticket->TicketID . '</b> has been submitted for your review. Click the link below to review</p>

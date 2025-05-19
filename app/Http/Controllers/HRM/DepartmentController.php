@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\HRM\DepartmentRequest;
 use App\Models\HRM\Department;
 use App\Services\HRM\DepartmentService;
+use App\Services\ThirdParty\SSRSService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -24,11 +25,49 @@ class DepartmentController extends Controller
         $this->authorizeResource(Department::class);
     }
 
+
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request): JsonResponse|View
+    public function index(Request $request)//: JsonResponse|View
     {
+
+        $ssrsService = new SSRSService();
+
+
+        //dd($ssrsService->getReportByPath('/BRERP/Admin/Users'));;
+        // Get report data in JSON format
+        /*$reportData = $ssrsService->fetchReport('/BRERP/Admin/Users', [
+            'StartDate' => '2024-01-01',
+            'EndDate' => '2024-12-31'
+        ]);*/
+
+
+        // Or execute the report with parameters
+        /*$executedReport = $ssrsService->executeReport('/BRERP/Admin/Users', [
+             'StartDate' => '2024-01-01',
+             'EndDate' => '2024-12-31'
+         ]);
+
+        dd($executedReport);*/
+        // Get available parameters for a report
+
+
+        // return $ssrsService->exportReport('/BRERP/Admin/Users');
+
+
+        //$parameters = $ssrsService->getReportParameters('/BRERP/Admin/Users');
+
+        /*dd($parameters);;*/
+
+
+        //   $parameters = $request->get('parameters', []);
+//dd(SSRSService::fetch());;
+
+
+//return (new SSRSService())->downloadPdf('/BRERP/Admin/Users');
+        //dd((new SSRSService())->getReportByPath('/BRERP/Admin/Users'));
+        // $ssrs = new \SSRS\Report('http://server/reportserver/', array('username' => 'thomas', 'password' => 'secureme'));
         if ($request->ajax()) {
             try {
                 return Datatables::of(Department::query()->select('*'))->addIndexColumn()
@@ -45,7 +84,7 @@ class DepartmentController extends Controller
             }
             return $this->errored('cannot retrieve department list.');
         }
-        return view('hrms.department.index');
+        return view('hrms.department.index')->with('data', null/* $ssrsService->exportReport('/BRERP/Admin/Users','embed=true')*/);
     }
 
     /**
