@@ -73,8 +73,15 @@ Route::namespace('Procurement')->group(function () {
 
     //Purchase Order
     Route::resource('purchaseOrder', 'PurchaseOrderController');
-   Route::get('purchaseOrder/getSuppliers', [PurchaseOrderController::class, 'getSuppliers'])->name('purchaseOrder.getSuppliers');
+    Route::get('purchaseOrder/getSuppliers', [PurchaseOrderController::class, 'getSuppliers'])->name('purchaseOrder.getSuppliers');
 //    Route::get('requisitionItem/getItem/{supplier}', 'PurchaseOrderController@getSupplierDetails')->name('purchaseOrder.getSupplierDetails');
+    Route::get('purchaseOrder/{id}', [PurchaseOrderController::class, 'show'])->name('purchaseOrder.show');
+
+//    Route::get('purchaseOrder/related/{id}', [PurchaseOrderController::class, 'show'])->name('purchaseOrder.related');
+//    Route::get('purchaseOrder/{id}', function ($id) {
+//        return "Route hit with ID: $id";
+//    })->name('purchaseOrder.show');
+
 
     //Sales Order
     Route::resource('salesOrder', 'SalesOrderController');
