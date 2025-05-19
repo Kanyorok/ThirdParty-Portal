@@ -5,7 +5,7 @@
   <h4 class="mb-4">📆 Expiry Dashboard</h4>
 
   <div class="mb-4">
-    <a href="{{ route('renewalmanagement.create') }}"" class="btn btn-primary">⏰ Add Document with Expiry</a>
+      <a href="{{ route('renewalmanagement.create') }}" class="btn btn-primary">⏰ Add Document with Expiry</a>
   </div>
 
   <!-- Upcoming Expiries -->

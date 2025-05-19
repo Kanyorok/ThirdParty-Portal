@@ -1,9 +1,8 @@
 <?php
 
-namespace App\Http\Controllers\fleetmanagement;
+namespace App\Http\Controllers\FleetManagement;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 
 class ServiceTrackingController extends Controller
 {
