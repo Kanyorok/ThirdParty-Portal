@@ -186,7 +186,15 @@ Route::namespace('Procurement')->group(function () {
 
     //Procurementplan
     Route::resource('procurementplanmaintain', ProcurementPlanMaintainController::class); 
-    Route::resource('procurementplanapproval', ProcurementApprovalController::class); 
+    
+    //Procurement plan Approval
+    //Route::resource('procurementplanapproval', ProcurementApprovalController::class); 
+    Route::get('/NeedApproval', [NeedApprovalController::class,'index'])->name('NeedApproval.index'); 
+    Route::get('/NeedApproval/{Id}', [NeedApprovalController::class, 'show'])->name('NeedApproval.show');
+
+;
+
+
 
     //Procurement Plan Department Needs
     //Route::resource('procurementdepartmentalplan', DepartmentNeedsController::class);

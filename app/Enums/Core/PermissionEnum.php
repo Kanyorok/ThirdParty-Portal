@@ -239,6 +239,7 @@ enum PermissionEnum: string
             [self::Integrations],
             [self::Roles],
 
+            [self::DepartmentNeedsRead, self::DepartmentNeedsWrite, self::DepartmentNeedsUpdate, self::DepartmentNeedsDelete, self::DepartmentNeedsApproval,],
 
             [self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete, self::Departments],
         ]);
@@ -324,7 +325,7 @@ enum PermissionEnum: string
             self::Members => 'Members',
             self::Roles => 'Roles',
             self::ListsView, self::ListsUpdate => 'System Codes',
-
+            self::DepartmentNeedsRead, self::DepartmentNeedsWrite, self::DepartmentNeedsUpdate, self::DepartmentNeedsDelete, self::DepartmentNeedsApproval => 'Department Needs',
             self::Departments, self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete => 'Employees',
         };
     }
