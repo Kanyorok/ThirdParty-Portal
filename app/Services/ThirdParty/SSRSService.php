@@ -2,10 +2,18 @@
 
 namespace App\Services\ThirdParty;
 
+use App\Enums\Core\IntegrationsEnum;
+use App\Exceptions\ErroredException;
+use App\Models\Settings\APICredential;
+use Exception;
 use Http;
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Str;
+use SensitiveParameter;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SSRSService
@@ -14,14 +22,44 @@ class SSRSService
 
     protected string $_reportServerUrl;
 
+    /**
+     * @throws ErroredException
+     */
     public function __construct()
     {
-        $this->_reportServerUrl = "http://172.16.2.13:7092/reports/api/v2.0/";
-        $username = "Mureithi.Maina";
-        $password = "!1920@GrandMA%";
+        $ssrs = APICredential::query()->where('Integration', IntegrationsEnum::ReportService->value)->latest('Id')->first();
+        if (!$ssrs instanceof APICredential) {
+            throw new ErroredException('there are no report service configuration');
+        }
+
+        $ssrsConfig = $ssrs?->Configuration;
+        if (!is_string($ssrsConfig?->password)) {
+            throw new ErroredException('invalid report service configuration');
+        }
+
+        try {
+            $password = Crypt::decryptString($ssrsConfig?->password);
+        } catch (DecryptException) {
+            throw new ErroredException('invalid report service configuration');
+        }
+        $username = $ssrsConfig?->username;
+        $this->_reportServerUrl = $ssrsConfig?->host . "/reports/api/v2.0/";
 
         $this->_query = Http::withBasicAuth($username, $password)->withOptions(['auth' => [$username, $password, 'ntlm']]);
+    }
 
+    public static function testConfig(string $Host, string $username, #[SensitiveParameter] string $password): ?string
+    {
+        try {
+            $query = Http::withBasicAuth($username, $password)->withOptions(['auth' => [$username, $password, 'ntlm']])
+                ->get(Str::of($Host)->trim()->rtrim('/') . "/reports/api/v2.0/ME");
+        } catch (ConnectionException|Exception) {
+            return null;
+        }
+        if ($query->successful() && array_key_exists('DisplayName', $query->json())) {
+            return $query->json()['DisplayName'];
+        }
+        return null;
     }
 
     public function exportReportWithCustomSettings(string $path, array $parameters = []): StreamedResponse

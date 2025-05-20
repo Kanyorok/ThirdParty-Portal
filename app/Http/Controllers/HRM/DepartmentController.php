@@ -32,6 +32,7 @@ class DepartmentController extends Controller
     public function index(Request $request)//: JsonResponse|View
     {
 
+
         $ssrsService = new SSRSService();
 
 
