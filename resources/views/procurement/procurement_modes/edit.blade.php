@@ -1,22 +1,24 @@
 @extends('layouts.app')
+
 @section('title','Edit Procurement Mode')
+
 @section('content')
 <div class="container mt-4">
     <h3 class="mb-4">Edit Procurement Mode</h3>
 
     @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
+    <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
     @if($errors->any())
-        <div class="alert alert-danger">
-            <strong>There were some problems with your input:</strong>
-            <ul class="mb-0 mt-2">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
+    <div class="alert alert-danger">
+        <strong>There were some problems with your input:</strong>
+        <ul class="mb-0 mt-2">
+            @foreach ($errors->all() as $error)
+            <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
     @endif
 
     <form action="{{ route('procurement-modes.update', $procurement_mode->id) }}" method="POST">

@@ -3,8 +3,8 @@
 @section('title', 'Item Categories')
 
 @section('content')
-<div class="container bg-white shadow-sm rounded p-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
+<div class="container-fluid bg-white shadow-sm rounded p-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
         <h4>🗂️ Item Categories</h4>
         <a href="{{ route('itemcategory.create') }}" class="btn btn-success">➕ Add Category</a>
     </div>
