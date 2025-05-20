@@ -37,13 +37,13 @@
                 </table>
 
                 <div class="mt-4">
-                    <a href="{{ route('committees.index') }}" class="btn btn-secondary">
+                    <a href="{{ route('hrms.committees.index') }}" class="btn btn-secondary">
                         ← Back to List
                     </a>
-                    <a href="{{ route('committees.edit', $committee->CommitteeID) }}" class="btn btn-primary">
+                    <a href="{{ route('hrms.committees.edit', $committee->CommitteeID) }}" class="btn btn-primary">
                         ✏️ Edit
                     </a>
-                    <form action="{{ route('committees.destroy', $committee->CommitteeID) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this committee?');">
+                    <form action="{{ route('hrms.committees.destroy', $committee->CommitteeID) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this committee?');">
                         @csrf
                         @method('DELETE')
                         <button class="btn btn-danger">🗑️ Delete</button>

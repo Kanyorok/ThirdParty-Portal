@@ -65,12 +65,17 @@
 
 <script>
     $(document).ready(function () {
+        @if(!$clarifications->isEmpty())
         $('#clarificationsTable').DataTable({
             pageLength: 10,
             ordering: true,
             searching: true,
-            lengthChange: true
+            lengthChange: true,
+            language: {
+                emptyTable: ""
+            }
         });
+        @endif
     });
 </script>
 
