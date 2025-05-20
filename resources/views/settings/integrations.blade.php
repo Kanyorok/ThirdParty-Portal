@@ -1,6 +1,14 @@
+@php use Carbon\Carbon; @endphp
+@php use App\Enums\Core\IntegrationsEnum; @endphp
+@php use EchoLabs\Prism\Enums\Provider; @endphp
 @extends('layouts.app')
 
-@section('title','Integrations Configuration')
+@section('title','Integrations Settings')
+
+@section('breadcrumbs')
+    <li class="breadcrumb-item"><a href="javascript:void(0);">Settings</a></li>
+@endsection
+
 @section('styles')
 
 @endsection
@@ -12,7 +20,7 @@
                     <h5 class="card-title mb-0">@yield('title')</h5>
                 </div>
                 <div class="list-group list-group-flush" role="tablist">
-                    @foreach(\App\Enums\Core\IntegrationsEnum::getAll() as $integration)
+                    @foreach(IntegrationsEnum::getAll() as $integration)
                         <a class="list-group-item list-group-item-action {{ ($loop->first)?'active':'' }}"
                            data-bs-toggle="list" href="#{{ $integration->value }}"
                            role="tab">
@@ -24,23 +32,24 @@
         </div>
         <div class="col-md-9 col-xl-10">
             <div class="tab-content">
-                @foreach(\App\Enums\Core\IntegrationsEnum::getAll() as $integration)
+                @foreach(IntegrationsEnum::getAll() as $integration)
                     <div class="tab-pane fade {{ ($loop->first)?'show active':'' }}" id="{{ $integration->value }}"
                          role="tabpanel">
                         <div class="card">
                             <div class="card-header">
                                 <h5 class="card-title mb-0">{{ $integration->description() }}
-                                    @if($integration->value === \App\Enums\Core\IntegrationsEnum::Facebook->value)
-                                    <span class="text-muted float-end text-decoration-underline text-primary click-summary-data"
-                                        data-click_url="{{ route('help') }}?help=integration_fb"
-                                        data-summary_title="Facebook Integration Help ?"
-                                        style="cursor: pointer;">Help ?</span>
+                                    @if($integration->value === IntegrationsEnum::Facebook->value)
+                                        <span
+                                            class="text-muted float-end text-decoration-underline text-primary click-summary-data"
+                                            data-click_url="{{ route('help') }}?help=integration_fb"
+                                            data-summary_title="Facebook Integration Help ?"
+                                            style="cursor: pointer;">Help ?</span>
                                     @endif
-                                 </h5>
+                                </h5>
                             </div>
                             <div class="card-body">
                                 @switch($integration->value)
-                                    @case(\App\Enums\Core\IntegrationsEnum::Email->value)
+                                    @case(IntegrationsEnum::Email->value)
                                         <form id="emailConfigurationForm" method="post"
                                               action="{{ route('settings.integrations') }}" class="row"> @csrf
                                             <input type="hidden" name="Integration" value="{{ $integration->value }}"
@@ -186,7 +195,7 @@
                                             </div>
                                         </form>
                                         @break
-                                    @case(\App\Enums\Core\IntegrationsEnum::SMS->value)
+                                    @case(IntegrationsEnum::SMS->value)
                                         <form id="smsConfigurationForm" method="post"
                                               action="{{ route('settings.integrations') }}" class="row"> @csrf
                                             <input type="hidden" name="Integration" value="{{ $integration->value }}"
@@ -256,7 +265,7 @@
                                             </div>
                                         </form>
                                         @break
-                                    @case(\App\Enums\Core\IntegrationsEnum::InfoBip->value)
+                                    @case(IntegrationsEnum::InfoBip->value)
                                         <form id="infoBipConfigurationForm" method="post"
                                               action="{{ route('settings.integrations') }}" class="row"> @csrf
                                             <input type="hidden" name="Integration" value="{{ $integration->value }}"
@@ -315,7 +324,7 @@
                                             </div>
                                         </form>
                                         @break
-                                    @case(\App\Enums\Core\IntegrationsEnum::PBX->value)
+                                    @case(IntegrationsEnum::PBX->value)
                                         <form id="3cxConfigurationForm" method="post"
                                               action="{{ route('settings.integrations') }}" class="row m-3"> @csrf
                                             <input type="hidden" name="Integration" value="{{ $integration->value }}"
@@ -355,7 +364,7 @@
                                             </div>
                                         </form>
                                         @break
-                                    @case(\App\Enums\Core\IntegrationsEnum::CoreBanking->value)
+                                    @case(IntegrationsEnum::CoreBanking->value)
                                         <form id="cbsConfigurationForm" method="post"
                                               action="{{ route('settings.integrations') }}" class="row m-3"> @csrf
                                             <input type="hidden" name="Integration" value="{{ $integration->value }}"
@@ -413,7 +422,7 @@
                                             </div>
                                         </form>
                                         @break
-                                    @case(\App\Enums\Core\IntegrationsEnum::Channels->value)
+                                    @case(IntegrationsEnum::Channels->value)
                                         <form id="channelConfigurationForm" method="post"
                                               action="{{ route('settings.integrations') }}" class="row m-3"> @csrf
                                             <input type="hidden" name="Integration" value="{{ $integration->value }}"
@@ -470,7 +479,7 @@
                                             </div>
                                         </form>
                                         @break
-                                    @case(\App\Enums\Core\IntegrationsEnum::Facebook->value)
+                                    @case(IntegrationsEnum::Facebook->value)
                                         <form id="facebookConfigurationForm" method="post"
                                               action="{{ route('settings.integrations') }}" class="row m-3"> @csrf
                                             <input type="hidden" name="Integration" value="{{ $integration->value }}"
@@ -519,7 +528,7 @@
                                                        name="FB_Page_Token">
                                                 @if(is_numeric($facebookConfig?->page_token_expires_at))
                                                     <p class="error text-info">Expires
-                                                        on: {{ \Carbon\Carbon::createFromFormat('U',$facebookConfig?->page_token_expires_at)->format('M d, Y H:i T') }} </p>
+                                                        on: {{ Carbon::createFromFormat('U',$facebookConfig?->page_token_expires_at)->format('M d, Y H:i T') }} </p>
                                                 @endif
                                                 <span id="FB_Page_Token_error" class="invalid-feedback d-none error"
                                                       role="alert"></span>
@@ -546,7 +555,7 @@
                                             </div>
                                         </form>
                                         @break
-                                    @case(\App\Enums\Core\IntegrationsEnum::Twitter->value)
+                                    @case(IntegrationsEnum::Twitter->value)
                                         <form id="twitterConfigurationForm" method="post"
                                               action="{{ route('settings.integrations') }}" class="row m-3"> @csrf
                                             <input type="hidden" name="Integration" value="{{ $integration->value }}"
@@ -639,7 +648,7 @@
                                             </div>
                                         </form>
                                         @break
-                                    @case(\App\Enums\Core\IntegrationsEnum::Website->value)
+                                    @case(IntegrationsEnum::Website->value)
                                         <form id="websiteConfigurationForm" method="post"
                                               action="{{ route('settings.integrations') }}" class="row m-3"> @csrf
                                             <input type="hidden" name="Integration" value="{{ $integration->value }}"
@@ -679,7 +688,7 @@
                                             </div>
                                         </form>
                                         @break
-                                    @case(\App\Enums\Core\IntegrationsEnum::LLM->value)
+                                    @case(IntegrationsEnum::LLM->value)
                                         <form id="llmConfigurationForm" method="post"
                                               action="{{ route('settings.integrations') }}" class="row m-3"> @csrf
                                             <input type="hidden" name="Integration" value="{{ $integration->value }}"
@@ -689,7 +698,7 @@
                                                         class="text-danger">*</span></label>
                                                 <select class="form-control  config-llm-form" name="LLM_Provider"
                                                         disabled id="LLM_Provider" required>
-                                                    @foreach(\EchoLabs\Prism\Enums\Provider::cases() as $case)
+                                                    @foreach(Provider::cases() as $case)
                                                         <option
                                                             value="{{ $case->value }}" {{ ($case->value===$llmConfig?->Provider)?'selected' :''}}>{{ $case->name }}</option>
                                                     @endforeach
