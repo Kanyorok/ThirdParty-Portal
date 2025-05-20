@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('t_Tenders', function (Blueprint $table) {
-            $table->decimal('EstimatedValue', 15, 2)->nullable();
+        Schema::table('t_Tenders', static function (Blueprint $table) {
+            $table->decimal('EstimatedValue', 15, 2)->nullable()->change();
         });
     }
 

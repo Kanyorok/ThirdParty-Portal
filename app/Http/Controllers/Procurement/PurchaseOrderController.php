@@ -6,18 +6,20 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Orders\PurchaseOrderRequest;
 use App\Models\Procurement\Order;
 use App\Models\Procurement\RequisitionLines;
+use App\Models\Procurement\Requisitions;
 use App\Services\Orders\OrderService;
 use App\Services\Procurement\Items\ItemService;
 use App\Services\ThirdParty\SupplierService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class PurchaseOrderController extends Controller
 {
     public function __construct(protected ItemService $itemService, protected SupplierService $supplierService, protected OrderService $orderService)
     {
 
-        $this->middleware('ajax')->except(['index', 'create']);
+        $this->middleware('ajax')->except(['index', 'create','show']);
 //        $this->authorizeResource(Order::class);
     }
 
@@ -84,9 +86,21 @@ class PurchaseOrderController extends Controller
      * Display a listing of the resource.
      */
     public function index()
+
     {
-        //
-        return view("procurement.orders.index");
+
+        try {
+            $details = $this->orderService->fetchOrders();
+            // if ($details ) {
+            return view('procurement.orders.index', compact('details'));
+            // /}
+            // else{  return view('procurement.requisitions.create', ['details' => []]);
+            // }
+        } catch (\Exception $e) {
+            Log::error('Create page failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to fetch items: ' . $e->getMessage());
+        }
+//        return view("procurement.orders.index");
     }
 
     /**
@@ -199,7 +213,39 @@ class PurchaseOrderController extends Controller
      */
     public function show(string $id)
     {
-        //
+//        $this->authorize('view', Order::query()->findOrFail($id));
+//        return view('procurement.orders.show');
+
+//        dd($id);
+
+        try {
+            $order = Order::findOrFail($id); // This will throw 404 if not found
+            $this->authorize('view', $order); // Authorize the order object itself
+
+            $orderInfo = $this->orderService->fetchOrderDetails($id);
+            $lineInfo = $this->orderService->fetchOrderLineDetails($id);
+
+            return view('procurement.orders.show', compact('orderInfo', 'lineInfo'));
+
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            Log::warning("Unauthorized access attempt to view Order ID: {$id} by user ID: " . auth()->id());
+            return redirect()->back()->with('error', 'Unauthorized access.');
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::error("Order ID {$id} not found. Exception: " . $e->getMessage());
+            return redirect()->back()->with('error', 'Order not found.');
+        } catch (\Exception $e) {
+            Log::error("Failed to fetch order ID {$id}. Exception: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return redirect()->back()->with('error', 'Failed to fetch order.');
+        }
+
+    }
+
+    public function relatedPO()
+    {
+//        $this->authorize('view', Order::query()->findOrFail($id));
+//        dd($id);
+        return view('procurement.orders.index');
+
     }
 
     /**
