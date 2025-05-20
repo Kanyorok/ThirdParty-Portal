@@ -147,6 +147,11 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 306200, 'Name' => 'RFQ Responses', 'Icon' => null, 'ParentID' => 306000, 'Route' => 'rfqresponses.index'],
             ['ModuleID' => 306300, 'Name' => 'RFQ Evaluation', 'Icon' => null, 'ParentID' => 306000, 'Route' => 'evaluations.index'],
 
+            ['ModuleID' => 307000, 'Name' => 'Purchase Order', 'Icon' => null, 'ParentID' => 300000, 'Route' => null],
+            ['ModuleID' => 307100, 'Name' => 'View Purchase Orders', 'Icon' => null, 'ParentID' => 307000, 'Route' => 'purchaseOrder.index'],
+            ['ModuleID' => 307200, 'Name' => 'Create Purchase Orders', 'Icon' => null, 'ParentID' => 307000, 'Route' => 'purchaseOrder.create'],
+//            ['ModuleID' => 307300, 'Name' => 'RFQ Evaluation', 'Icon' => null, 'ParentID' => 307000, 'Route' => 'evaluations.index'],
+
             ['ModuleID' => 399000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'ParentID' => 300000, 'Route' => null],
         ]);
 
