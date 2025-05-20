@@ -88,6 +88,10 @@
             <label for="ImageUpload" class="form-label">Item Image</label>
             <input type="file" name="ImageUpload" id="ImageUpload" class="form-control">
         </div>
+        <div class="mb-3">
+            <label for="DocumentUpload" class="form-label">Upload Document (PDF, DOCX, XLSX, etc.)</label>
+            <input type="file" name="DocumentUpload" id="DocumentUpload" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx">
+        </div>
 
         <button type="submit" class="btn btn-primary">✅ Save Item</button>
     </form>

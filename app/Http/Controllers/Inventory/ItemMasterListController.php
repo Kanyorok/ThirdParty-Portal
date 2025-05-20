@@ -54,6 +54,7 @@ class ItemMasterListController extends Controller
             'InventoryType'   => 'required|string|max:255',
             'ImageUpload'     => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'ItemDescription' => 'nullable|string',
+            'DocumentUpload'  => 'nullable|file|mimes:pdf,doc,docx,xlsx,xls|max:5120',
         ]);
 
 
@@ -72,11 +73,16 @@ class ItemMasterListController extends Controller
                 $item->ImageUpload = $path;
             }
 
+            if ($request->hasFile('DocumentUpload')) {
+                $docPath = $request->file('DocumentUpload')->store('items/documents', 'public');
+                $item->DocumentUpload = $docPath;
+    }
+
             $item->Category = $request->SubCategory ?: $request->Category;
             $item->save();
         });
 
-        return redirect()->route('itemmaster.index')->with('success', 'Item created successfully.');
+        return redirect()->route('itemmasterlist.index')->with('success', 'Item created successfully.');
     }
 
     public function edit($Id)
@@ -97,6 +103,7 @@ class ItemMasterListController extends Controller
             'UOM'             => 'required|string|max:255',
             'InventoryType'   => 'required|string|max:255',
             'ImageUpload'     => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'DocumentUpload'  => 'nullable|file|mimes:pdf,doc,docx,xlsx,xls|max:5120',
             'ItemDescription' => 'nullable|string',
         ]);
 
@@ -111,10 +118,14 @@ class ItemMasterListController extends Controller
             $path = $request->file('ImageUpload')->store('items', 'public');
             $item->ImageUpload = $path;
         }
+        if ($request->hasFile('DocumentUpload')) {
+            $docPath = $request->file('DocumentUpload')->store('items/documents', 'public');
+            $item->DocumentUpload = $docPath;
+}
 
         $item->save();
 
-        return redirect()->route('itemmaster.index')->with('success', 'Item updated successfully.');
+        return redirect()->route('itemmasterlist.index')->with('success', 'Item updated successfully.');
     }
 
     public function show($Id)

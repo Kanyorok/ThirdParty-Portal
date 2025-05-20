@@ -100,6 +100,16 @@
             @endif
         </div>
 
+        <div class="mb-3">
+            <label for="DocumentUpload" class="form-label">Attached Document</label>
+            @if($item->DocumentUpload)
+                <div class="mb-2">
+                    <a href="{{ asset('storage/' . $item->DocumentUpload) }}" target="_blank">View Existing Document</a>
+                </div>
+            @endif
+            <input type="file" name="DocumentUpload" id="DocumentUpload" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx">
+        </div>
+
         <button type="submit" class="btn btn-success">💾 Update Item</button>
     </form>
 </div>
