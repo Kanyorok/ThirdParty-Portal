@@ -158,15 +158,17 @@ enum PermissionEnum: string
     case PurchaseOrderDelete = 'purchaseOrder-delete';
     case PurchaseOrderApproval = 'purchaseOrder-approval';
 
+    /*
+    *
+    * ========================================  Inventory  ========================================
+    */
+    case MasterListView = 'masterList-view';
 
     /*
      *
      * ========================================  Human Resource management  ========================================
      */
     case Departments = 'department';
-
-    case MasterListView = 'masterList-view';
-
     case EmployeesView = 'employee-read';
     case EmployeesCreate = 'employee-create';
     case EmployeesUpdate = 'employee-update';
@@ -251,8 +253,6 @@ enum PermissionEnum: string
 
 
             self::MasterListView => ModulesEnum::Inventory,
-
-
         };
     }
 

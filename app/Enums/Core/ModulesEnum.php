@@ -8,16 +8,36 @@ enum ModulesEnum: int
 {
     use UsefulEnumTrait;
 
-    case Inventory = 100000;
-    case Procurement = 200000;
-    case DMS = 300000;
-    case FleetManagement = 400000;
-    case PropertyManagement = 500000;
-    case Insurance = 600000;
-    case Legal = 700000;
-    case Finance = 800000;
-    case HRM = 900000;
-    case CRM = 1000000;
+    case ThirdParty = 100000;
+    case CRM = 200000;
+    case Procurement = 300000;
+    case Inventory = 400000;
+    case Property = 500000;
+    case Fleet = 600000;
+    case DMS = 700000;
+    case Legal = 800000;
+    case Insurance = 900000;
+    case HRM = 1000000;
+    case Finance = 1100000;
+    case Settings = 9800000;
+    case MyAccount = 9900000;
 
-    case Settings = 9000000;
+    public function description(): string
+    {
+        return match ($this) {
+            self::ThirdParty => 'Third Party',
+            self::CRM => 'CRM',
+            self::Procurement => 'Procurement',
+            self::Inventory => 'Inventory',
+            self::Property => 'Property Management',
+            self::Fleet => 'Fleet Management',
+            self::DMS => 'DMS',
+            self::Legal => 'Legal',
+            self::Insurance => 'Insurance',
+            self::HRM => 'HRM - Human Resource',
+            self::Finance => 'Finance',
+            self::Settings => 'Settings',
+            self::MyAccount => 'My Account',
+        };
+    }
 }
