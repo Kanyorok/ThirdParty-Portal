@@ -32,47 +32,38 @@
                 <div class="col-md-6">
                     <label>Supplier</label>
                     <select class="form-control supplier" id="supplier" name="supplier">
-                        <option selected disabled>Select supplier</option>
-                        <option value="01">Supplier 1</option>
-                        <option value="02">Supplier 2</option>
-                        {{--                     @foreach ($Details as $vendor) --}}
-                        {{--                <option value="{{ $vendor->Id }}">{{ $vendor->Name }}</option> --}}
-                        {{--                    @endforeach --}}
-
-                        <!-- Loop suppliers here -->
+                        <option selected>{{$orderInfo->AccountID ?? 'N/A'}}</option>
                     </select>
                 </div>
-                <div class="col-md-6">
-                    <label>Address</label>
-                    <input type="text" class="form-control" name="address" placeholder="Supplier address"/>
-                </div>
+{{--                <div class="col-md-6">--}}
+{{--                    <label>Address</label>--}}
+{{--                    <input type="text" class="form-control" name="address" placeholder="Supplier address"/>--}}
+{{--                </div>--}}
             </div>
 
             <!-- LPO Details -->
             <div class="row mb-4">
                 <div class="col-md-4">
                     <label>LPO Number</label>
-                    <input type="text" name="LPONo" class="form-control" value="{{ uniqid('LPO-') }}" readonly/>
+                    <input type="text" name="LPONo" class="form-control" value="{{$orderInfo->OrderNo ?? 'N/A'}}" readonly/>
                 </div>
                 <div class="col-md-4">
                     <label>Date</label>
-                    <input type="date" class="form-control poDate" name="pODate"/>
+                    <input type="date" class="form-control poDate" name="pODate" value="{{$orderInfo->OrderDate ?? 'N/A'}}"/>
                 </div>
                 <div class="col-md-4">
                     <label>Reference Number</label>
-                    <input type="text" class="form-control refNo" name="refNo" placeholder="RFQ Number"/>
+                    <input type="text" class="form-control refNo" name="refNo" placeholder="RFQ Number" value="{{$orderInfo->ExtOrdNum ?? 'N/A'}}"/>
                 </div>
                 <div class="col-md-4 mt-2">
                     <label>Priority</label>
                     <select class="form-control priority" name="priority">
-                        <option>High</option>
-                        <option>Medium</option>
-                        <option>Low</option>
+                        <option selected>{{$orderInfo->Priority ?? 'N/A'}}</option>
                     </select>
                 </div>
                 <div class="col-md-4 mt-2">
                     <label>Payment Terms</label>
-                    <input type="text" name="terms" class="form-control terms" placeholder="e.g., Net 30, 50%"/>
+                    <input type="text" name="terms" class="form-control terms" placeholder="e.g., Net 30, 50%" value="{{$orderInfo->Terms ?? 'N/A'}}"/>
                 </div>
             </div>
 
@@ -90,7 +81,7 @@
                     <tr>
                         <th style="width:5%;">#</th>
                         <th style="width:10%;">Item Type</th>
-                        <th style="width:15%;">Item Code</th>
+                        <th style="width:15%;">Item Name</th>
                         <th style="width:15%;">Item Description</th>
                         <th style="width:10%;">Quantity</th>
                         <th style="width:10%;">Unit Price</th>
@@ -100,43 +91,42 @@
                     </tr>
                     </thead>
                     <tbody id="po-items">
+
+                    @foreach($lineInfo as $line)
+
                     <tr>
                         <td class="line-no">1.</td>
                         <td class="text-start">
                             <select class="form-select form-select-sm type" name="type[]" id="Type">
-                                <option disabled selected>Select Type</option>
-                                <option value="Stock">Stock</option>
-                                <option value="Asset">Asset</option>
-                                <option value="Non-Stock">Non-Stock</option>
+                                <option  selected>{{$line ->ItemType}}</option>
+
                             </select>
                         </td>
                         <td class="text-start">
                             <select class="form-select form-select-sm itemCode" name="itemCode[]" id="Item">
-                                <option disabled selected>Select Item Code</option>
-
-                                {{--                                                                <option value="1">Item1</option>--}}
-                                {{--                                                                <option value="2">Item2</option>--}}
+                                <option  selected>{{$line ->ItemName}}</option>
                             </select>
                         </td>
                         {{--                    <td><input type="text" class="form-control" name="itemCode[]"></td> --}}
                         <td class="text-start">
                                 <textarea class="form-control form-control-sm itemDescription" name="itemDescription[]"
                                           id="Description" cols="30"
-                                          rows="5" readonly></textarea>
+                                          rows="5" readonly>{{$line ->Description}}</textarea>
                             {{--                            <input type="text" class="form-control form-control-sm itemDescription" --}}
                             {{--                                name="itemDescription[]" id="Description" readonly> --}}
                         </td>
                         <td class="text-start"><input type="number" class="form-control form-control-sm qty quantity"
-                                                      name="quantity[]" id="Quantity"></td>
+                                                      name="quantity[]" id="Quantity" value="{{$line ->fQuantity}}"></td>
                         <td class="text-start"><input type="number" class="form-control form-control-sm unit-price "
-                                                      name="unitPrice[]" id="Price"></td>
+                                                      name="unitPrice[]" id="Price" value="{{$line ->fUnitPriceExcl}}"></td>
                         <td class="text-start"><input type="number" class="form-control form-control-sm tax"
-                                                      name="tax[]" id="Tax"></td>
+                                                      name="tax[]" id="Tax" value="{{$line ->fTaxRate}}"></td>
                         <td class="text-start"><input type="number" class="form-control form-control-sm discount"
-                                                      name="discount[]" id="Discount"></td>
+                                                      name="discount[]" id="Discount" value="{{$line ->fLineDiscount}}"></td>
                         <td class="text-start"><input type="number" class="form-control form-control-sm line-total"
-                                                      name="lineTotal[]" id="lineTotal" step=""></td>
+                                                      name="lineTotal[]" id="lineTotal" step="" value="0"></td>
                     </tr>
+                    @endforeach
                     </tbody>
                 </table>
 

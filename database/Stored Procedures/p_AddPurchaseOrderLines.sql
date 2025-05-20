@@ -19,8 +19,8 @@ BEGIN
     set @PriceIncl = isnull(@Price,0) * isnull(@Tax,0)
 
     -- Insert new purchase order lines
-    INSERT INTO t_OrderLines (iOrderID, fQuantity, fUnitPriceExcl, fUnitPriceIncl, flineDiscount, fTaxRate, CreatedBy,CreatedOn, ModifiedBy,ModifiedOn,BranchID)
-    VALUES( @OrderId,@Quantity,@Price,@PriceIncl,@Discount,@Tax,@User, getdate(),@User,getdate(), @BranchId)
+    INSERT INTO t_OrderLines (iOrderID, fQuantity, fUnitPriceExcl, fUnitPriceIncl, flineDiscount, fTaxRate, CreatedBy,CreatedOn, ModifiedBy,ModifiedOn,BranchID,iStockCodeID)
+    VALUES( @OrderId,@Quantity,@Price,@PriceIncl,@Discount,@Tax,@User, getdate(),@User,getdate(), @BranchId, @Item)
 
 
 

@@ -129,4 +129,95 @@ class OrderService
         }
     }
 
+
+    public static function fetchOrders()
+    {
+        return DB::table(DB::raw('t_Orders WITH (NOLOCK)'))
+            ->leftJoin(DB::raw('t_OrderLines WITH (NOLOCK)'), 't_Orders.Id', '=', 't_OrderLines.iOrderID')
+            ->leftJoin(DB::raw('t_Users WITH (NOLOCK)'), 't_Orders.CreatedBy', '=', 't_Users.Id')
+            ->select(DB::raw('
+                t_Orders.Id,
+                t_Orders.OrderDate,
+                t_Orders.OrderNo,
+                t_Orders.ExtOrdNum,
+                t_Orders.Priority,
+                t_Orders.CreatedOn,
+                t_Users.Name as CreatedBy,
+                t_Orders.BranchID,
+                SUM(isnull(t_OrderLines.fUnitPriceExcl,0)) as UnitPrice,
+                COUNT(t_OrderLines.Id) as ordercount
+            '))
+            ->groupBy(
+                't_Orders.Id',
+                't_Orders.OrderDate',
+                't_Orders.OrderNo',
+                't_Orders.ExtOrdNum',
+                't_Orders.Priority',
+                't_Orders.CreatedOn',
+                't_Users.Name',
+                't_Orders.BranchID',
+            )
+            ->get();
+    }
+
+
+    public static function fetchOrderDetails($id)
+    {
+        return DB::table(DB::raw('t_Orders WITH (NOLOCK)'))
+            ->leftJoin(DB::raw('t_OrderLines WITH (NOLOCK)'), 't_Orders.Id', '=', 't_OrderLines.iOrderID')
+            ->leftJoin(DB::raw('t_Users WITH (NOLOCK)'), 't_Orders.CreatedBy', '=', 't_Users.Id')
+            ->where('t_Orders.Id', '=', $id)
+            ->select(DB::raw('
+                t_Orders.Id,
+                t_Orders.OrderDate,
+                t_Orders.OrderNo,
+                t_Orders.ExtOrdNum,
+                t_Orders.Priority,
+                t_Orders.CreatedOn,
+                t_Users.Name as CreatedBy,
+                t_Orders.BranchID,
+                SUM(isnull(t_OrderLines.fUnitPriceExcl,0)) as UnitPrice,
+                COUNT(t_OrderLines.Id) as ordercount,
+                t_Orders.AccountID
+            '))
+            ->groupBy(
+                't_Orders.Id',
+                't_Orders.OrderDate',
+                't_Orders.OrderNo',
+                't_Orders.ExtOrdNum',
+                't_Orders.Priority',
+                't_Orders.CreatedOn',
+                't_Users.Name',
+                't_Orders.BranchID',
+                't_Orders.AccountID'
+            )
+            ->first();
+    }
+
+
+    public static function fetchOrderLineDetails($id)
+    {
+        return DB::table(DB::raw('t_OrderLines WITH (NOLOCK)'))
+            ->leftJoin(DB::raw('t_Orders WITH (NOLOCK)'), 't_OrderLines.iOrderID', '=', 't_Orders.Id')
+            ->leftJoin(DB::raw('t_Users WITH (NOLOCK)'), 't_Orders.CreatedBy', '=', 't_Users.Id')
+            ->leftJoin(DB::raw('t_Items WITH (NOLOCK)'), 't_OrderLines.iStockCodeID', '=', 't_Items.Id')
+            ->leftJoin(DB::raw('t_ItemCategories WITH (NOLOCK)'), 't_Items.Category', '=', 't_ItemCategories.Id')
+            ->where('t_OrderLines.iOrderID', '=', $id)
+            ->select(DB::raw('
+                t_OrderLines.Id,
+                t_OrderLines.iOrderID,
+                t_OrderLines.fQuantity,
+                t_OrderLines.fLineDiscount,
+                t_OrderLines.fUnitPriceExcl,
+                t_OrderLines.CreatedOn,
+                t_Users.Name as CreatedBy,
+                t_OrderLines.fTaxRate,
+                t_Items.Id as ItemID,
+                t_Items.ItemName,
+                t_Items.ItemType,
+                t_Items.ItemDescription as Description
+            '))
+            ->get();
+    }
+
 }
