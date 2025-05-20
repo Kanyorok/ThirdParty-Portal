@@ -50,13 +50,13 @@ class SettingsController extends Controller
         $InfoBip = $all->where('Integration', IntegrationsEnum::InfoBip->value)->first();
 
         return view('settings.integrations')
-            ->with('twitterConfig', ($x instanceof APICredential) ? $x->Configuration : null)
-            ->with('facebookConfig', ($fb instanceof APICredential) ? $fb->Configuration : null)
-            ->with('smsConfig', ($sms instanceof APICredential) ? $sms->Configuration : null)
-            ->with('cbsConfig', ($cbs instanceof APICredential) ? $cbs->Configuration : null)
-            ->with('emailConfig', ($email instanceof APICredential) ? $email->Configuration : null)
-            ->with('channelsConfig', ($channel instanceof APICredential) ? $channel->Configuration : null)
-            ->with('llmConfig', ($ai instanceof APICredential) ? $ai->Configuration : null)
-            ->with('infoBipConfig', ($InfoBip instanceof APICredential) ? $InfoBip->Configuration : null);
+            ->with('twitterConfig', ($x instanceof APICredential) ? $x->Configuration : new APICredential)
+            ->with('facebookConfig', ($fb instanceof APICredential) ? $fb->Configuration : new APICredential)
+            ->with('smsConfig', ($sms instanceof APICredential) ? $sms->Configuration : new APICredential)
+            ->with('cbsConfig', ($cbs instanceof APICredential) ? $cbs->Configuration : new APICredential)
+            ->with('emailConfig', ($email instanceof APICredential) ? $email->Configuration : new APICredential)
+            ->with('channelsConfig', ($channel instanceof APICredential) ? $channel->Configuration : new APICredential)
+            ->with('llmConfig', ($ai instanceof APICredential) ? $ai->Configuration : new APICredential)
+            ->with('infoBipConfig', ($InfoBip instanceof APICredential) ? $InfoBip->Configuration : new APICredential);
     }
 }
