@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Procurement\GoodsReceipt;
-use App\Models\Procurement\Requisitions;
+use Illuminate\Support\Facades\DB;
 use App\Models\Procurement\GoodsReceivedHeaderView;
 use Illuminate\Support\Facades\Log;
 
@@ -20,12 +20,40 @@ class GoodsReceiptController extends Controller
         //return view('procurement.goodreceipts.index');
     }
 
-    public function create(){
-        $Orders = Requisitions::select('Id', 'RequisitionNo', 'Remarks')->get();
-        //$requisitionLines = RequisitionLines::all();
-        $Orders = Requisitions::with('requisitionLines.category')->get();
+    public function create()
+    {
+        // Fetch all orders
+        $Orders = DB::connection('sqlsrv')->table('t_Orders')
+            ->select('Id', 'OrderNo', 'Description','AccountID')
+            ->get();
+
+        // Fetch order lines with item details using a JOIN
+        $OrderLines = DB::connection('sqlsrv')->table('t_OrderLines as ol')
+            ->join('t_items as i', 'ol.iStockCodeID', '=', 'i.Id')
+            ->select(
+                'ol.Id',
+                'ol.iOrderID',
+                'ol.iStockCodeID',
+                'ol.fQuantity',
+                'i.InventoryType', // assuming you have this field
+                'i.ItemName',
+                'i.ItemDescription',
+                'i.Category',
+                'i.UOM'
+            )
+            ->get();
+
+        // Group lines by Order ID
+        $linesGrouped = $OrderLines->groupBy('iOrderID');
+
+        // Attach lines to each order
+        foreach ($Orders as $order) {
+            $order->OrderLines = $linesGrouped[$order->Id] ?? collect();
+        }
+
         return view('procurement.goodreceipts.create', compact('Orders'));
     }
+
 
     public function store(Request $request)
     {
@@ -37,6 +65,7 @@ class GoodsReceiptController extends Controller
             'GRNID' => 'required|string',
             'POID' => 'required|string',
             'items' => 'required|array',
+            'SupplierID' => 'required',
         ]);
 // dd($request->items);
         foreach ($request->items as $item) {
@@ -46,7 +75,7 @@ class GoodsReceiptController extends Controller
                 'ReceivedDate'     => now(),
                 'ReceivedBy'       => $authUser->name,
                 'POID'             => $request->POID,
-                'SupplierId'       => Auth::id(),
+                'SupplierId'       => $request->SupplierID,
                 'ItemNo'           => $item['ItemNo'],
                 'StoreID'          => 'STORE-001',
                 'TransferTo'       => $item['TransferTo'],

@@ -109,6 +109,7 @@
                                     <option value="Stock">Stock</option>
                                     <option value="Asset">Asset</option>
                                     <option value="Non-Stock">Non-Stock</option>
+                                    <option value="Electronics">Electronics</option>
                                 </select>
                             </td>
                             <td class="text-start">
