@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Procurement;
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\ItemCategory;
 use App\Models\Procurement\RFQ;
+use App\Models\Procurement\RFQLine;
 use App\Models\ThirdParies\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -124,10 +125,13 @@ class RFQController extends Controller
      */
     public function show($id)
     {
-        $rfq = RFQ::with(['category'])->findOrFail($id);
+        // Get the RFQ and its associated RFQLines
+        $rfq = RFQ::with('rfqLines')->findOrFail($id);
+        // Get unique itemCategoryIds from the RFQLines
+        $itemCategoryIds = $rfq->rfqLines->pluck('ItemCategoryId')->unique();
 
-        // Get suppliers based on the RFQ's category
-        $suppliers = Supplier::where('CategoryId', $rfq->ItemCategoryId)->get();
+        // Fetch suppliers whose CategoryId matches any of the itemCategoryIds
+        $suppliers = Supplier::whereIn('CategoryId', $itemCategoryIds)->get();
 
         return view('procurement.rfqs.show', compact('rfq', 'suppliers'));
     }

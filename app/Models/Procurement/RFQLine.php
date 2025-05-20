@@ -3,6 +3,8 @@
 namespace App\Models\Procurement;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Inventory\ItemCategories;
+use App\Models\ThirdParies\Supplier;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Model\UserActorTrait;
 
@@ -24,5 +26,22 @@ class RFQLine extends Model
     public static function getPrimaryKey(): string
     {
         return 'RFQLineId';
+    }
+
+    public function rfq()
+    {
+        return $this->belongsTo(RFQ::class, 'RFQId');
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(ItemCategories::class, 'ItemCategoryId');
+    }
+
+    public function suppliers()
+    {
+        return $this->belongsToMany(Supplier::class, 't_RFQ_Supplier', 'RFQId', 'SupplierId')
+                    ->withPivot('Status')
+                    ->withTimestamps();
     }
 }

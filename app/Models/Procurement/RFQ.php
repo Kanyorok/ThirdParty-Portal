@@ -27,6 +27,12 @@ class RFQ extends Model
         return 'RFQId';
     }
 
+    public function rfqLines()
+    {
+        return $this->hasMany(RFQLine::class, 'RFQId');
+    }
+
+
     public function category()
     {
         return $this->belongsTo(ItemCategory::class, 'ItemCategoryId');
