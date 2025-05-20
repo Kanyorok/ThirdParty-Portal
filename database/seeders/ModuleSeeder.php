@@ -33,7 +33,7 @@ class ModuleSeeder extends Seeder
         $this->_seed($this->_insurance($fresh));
         $this->_seed($this->_hrm($fresh));
         $this->_seed($this->_finance($fresh));
-        $this->_seed($this->_settingsManagement($fresh));
+        $this->_seed($this->_settings($fresh));
         $this->_seed($this->_myAccount($fresh));
     }
 
@@ -529,7 +529,7 @@ class ModuleSeeder extends Seeder
     }
 
 
-    protected function _settingsManagement(bool $fresh): Collection
+    protected function _settings(bool $fresh): Collection
     {
         $values = collect([
             ['ModuleID' => 9800000, 'Name' => ModulesEnum::Settings->description(), 'Icon' => '<i class="fas fa-cogs"></i>', 'ParentID' => null, 'Route' => null],
@@ -537,7 +537,8 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 9800100, 'Name' => 'Users', 'Icon' => '<i class="fas fa-user"></i>', 'ParentID' => 9800000, 'Route' => 'users.index'],
             ['ModuleID' => 9800200, 'Name' => 'Roles', 'Icon' => '<i class="fas fa-user-tag"></i>', 'ParentID' => 9800000, 'Route' => 'roles.index'],
             ['ModuleID' => 9800300, 'Name' => 'Branches', 'Icon' => '<i class="fas fa-code-branch"></i>', 'ParentID' => 9800000, 'Route' => 'branches.index'],
-            ['ModuleID' => 98004000, 'Name' => 'Code Details', 'Icon' => '<i data-feather="settings"', 'ParentID' => 9800000, 'Route' => 'settings.lists'],
+            ['ModuleID' => 98004000, 'Name' => 'Code Details', 'Icon' => null, 'ParentID' => 9800000, 'Route' => 'settings.lists'],
+            ['ModuleID' => 98005000, 'Name' => 'Integrations', 'Icon' => null, 'ParentID' => 9800000, 'Route' => 'settings.integrations'],
         ]);
         if ($fresh) {
             $data = $values;
