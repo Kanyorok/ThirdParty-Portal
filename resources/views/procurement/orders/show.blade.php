@@ -32,7 +32,7 @@
                 <div class="col-md-6">
                     <label>Supplier</label>
                     <select class="form-control supplier" id="supplier" name="supplier">
-{{--                        <option selected>{{$orderInfo->AccountID ?? 'N/A'}}</option>--}}
+                        <option selected>{{$orderInfo->AccountID ?? 'N/A'}}</option>
                     </select>
                 </div>
 {{--                <div class="col-md-6">--}}

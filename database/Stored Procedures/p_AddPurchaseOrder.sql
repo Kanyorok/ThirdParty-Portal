@@ -1,11 +1,12 @@
 alter PROCEDURE p_AddPurchaseOrder
-    @Supplier int,
-    @RfqNo bigint,
+    @Supplier bigint,
     @OrderDate date,
-    @Terms varchar(255),
+    @RfqNo bigint,
     @Priority varchar(20),
-    @User int,
-    @BranchId int =0
+    @Terms varchar(255),
+    @User bigint,
+    @BranchId int = 0
+
 
 AS
 BEGIN
@@ -29,6 +30,8 @@ BEGIN
 --
 
     UPDATE t set t.OrderNo = @OrderNo from t_Orders t where t.id=@OrderId
+
+    SELECT @OrderId AS POID, @OrderNo AS OrderNo;
 
     SET NOCOUNT OFF
 END
