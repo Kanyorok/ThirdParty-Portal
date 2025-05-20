@@ -209,7 +209,7 @@ Route::namespace('Procurement')->group(function () {
     Route::resource('submitplan', SubmitForApprovalController::class);
     Route::resource('editplan', PlanEditController::class); 
     Route::resource('approvalinbox', PlanApprovalInboxController::class); 
-    Route::resource('exectiondashboard', PlanExectionDashboardController::class); 
+    Route::resource('executiondashboard', PlanExectionDashboardController::class); 
   
     //Tendering
     Route::get('/tenderresponse', [TenderResponseController::class, 'index'])->name('tenderresponse.index');

@@ -37,7 +37,15 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::put('/itemmasterlist/{Id}', [ItemMasterListController::class, 'update'])->name('itemmasterlist.update');
     Route::delete('/itemmasterlist/{Id}', [ItemMasterListController::class, 'destroy'])->name('itemmasterlist.destroy');
     Route::get('/get-subcategories', [ItemMasterListController::class, 'getSubcategories'])->name('get.subcategories');
-    Route::resource('sku', SKUController::class);
+    
+    //Route::resource('sku', SKUController::class);
+    Route::get('/sku', [SKUController::class, 'index'])->name('sku.index');
+    Route::get('/sku/create', [SKUController::class, 'create'])->name('sku.create');
+    Route::post('/sku', [SKUController::class, 'store'])->name('sku.store');
+    Route::get('/sku/{Id}', [SKUController::class, 'show'])->name('sku.show');
+    Route::get('/sku/{Id}/edit', [SKUController::class, 'edit'])->name('sku.edit');
+    Route::put('/sku/{Id}', [SKUController::class, 'update'])->name('sku.update');
+    Route::delete('/sku/{Id}', [SKUController::class, 'destroy'])->name('sku.destroy');
 
 
     //Route::resource('itemcategory', ItemCategoryController::class);
@@ -48,7 +56,7 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/itemcategory/edit/{id}', [ItemCategoryController::class, 'edit'])->name('itemcategory.edit');
     Route::put('/itemcategory/{id}', [ItemCategoryController::class, 'update'])->name('itemcategory.update');
     Route::delete('/itemcategory/{id}', [ItemCategoryController::class, 'destroy'])->name('itemcategory.destroy');
-    Route::resource('sku', SKUController::class);
+
 
     //Route::resource('itemsubcategory', ItemSubCategoryController::class);
     Route::get('/itemsubcategory', [ItemSubCategoryController::class, 'index'])->name('itemsubcategory.index');
@@ -58,7 +66,7 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/itemsubcategory/{Id}/edit', [ItemSubCategoryController::class, 'edit'])->name('itemsubcategory.edit');
     Route::put('/itemsubcategory/{Id}', [ItemSubCategoryController::class, 'update'])->name('itemsubcategory.update');
     Route::delete('/itemsubcategory/{Id}', [ItemSubCategoryController::class, 'destroy'])->name('itemsubcategory.destroy');
-    Route::resource('sku', SKUController::class);
+
 
     Route::resource('inventorydashboard', InventoryDashboardController::class);
     Route::resource('movementdashboard', MovementDashboardController::class);
