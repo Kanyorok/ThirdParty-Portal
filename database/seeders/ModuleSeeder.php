@@ -15,7 +15,9 @@ class ModuleSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('t_Modules')->truncate();
+        DB::table(config('permission.table_names.role_has_permissions'))->delete();
+        DB::table(config('permission.table_names.permissions'))->delete();
+        DB::table('t_Modules')->delete();
         $this->_seed($this->_inventory());
         $this->_seed($this->_procurement());
         $this->_seed($this->_documentManagement());
@@ -25,6 +27,7 @@ class ModuleSeeder extends Seeder
         $this->_seed($this->_legal());
         $this->_seed($this->_finance());
         $this->_seed($this->_hrm());
+        $this->_seed($this->_crm());
         $this->_seed($this->_settingsManagement());
     }
 
@@ -44,15 +47,6 @@ class ModuleSeeder extends Seeder
 
         // dd($modules->toArray());
         DB::table('t_Modules')->insert($modules->toArray());
-
-
-        /* DB::table('t_Modules')->insert($modules->map(function ($module) use ($actor, $dated) {
-             $module['CreatedOn'] = $dated;
-             $module['ModifiedOn'] = $dated;
-             $module['CreatedBy'] = $actor->Id;
-             $module['ModifiedBy'] = $actor->Id;
-             return $module;
-         })->toArray());*/
     }
 
     protected function _inventory(): Collection
@@ -367,17 +361,23 @@ class ModuleSeeder extends Seeder
         ]);
     }
 
+    protected function _crm(): Collection
+    {
+        return collect([
+            ['ModuleID' => 1000000, 'Name' => 'CRM', 'Icon' => '<i class="fas fa-code-merge"></i>', 'ParentID' => null, 'Route' => null],
+        ]);
+    }
     protected function _settingsManagement(): Collection
     {
         return collect([
             // Main module - Users and Roles (1000000)
-            ['ModuleID' => 1000000, 'Name' => 'Settings', 'Icon' => '<i class="fas fa-cogs"></i>', 'ParentID' => null, 'Route' => null],
+            ['ModuleID' => 9000000, 'Name' => 'Settings', 'Icon' => '<i class="fas fa-cogs"></i>', 'ParentID' => null, 'Route' => null],
 
             // First level children
-            ['ModuleID' => 1001000, 'Name' => 'Users', 'Icon' => '<i class="fas fa-user"></i>', 'ParentID' => 1000000, 'Route' => 'users.index'],
-            ['ModuleID' => 1002000, 'Name' => 'Roles', 'Icon' => '<i class="fas fa-user-tag"></i>', 'ParentID' => 1000000, 'Route' => 'roles.index'],
-            ['ModuleID' => 1003000, 'Name' => 'Branches', 'Icon' => '<i class="fas fa-code-branch"></i>', 'ParentID' => 1000000, 'Route' => 'branches.index'],
-            ['ModuleID' => 1004000, 'Name' => 'Code Details', 'Icon' => '<i data-feather="settings"', 'ParentID' => 1000000, 'Route' => 'settings.lists'],
+            ['ModuleID' => 9001000, 'Name' => 'Users', 'Icon' => '<i class="fas fa-user"></i>', 'ParentID' => 9000000, 'Route' => 'users.index'],
+            ['ModuleID' => 9002000, 'Name' => 'Roles', 'Icon' => '<i class="fas fa-user-tag"></i>', 'ParentID' => 9000000, 'Route' => 'roles.index'],
+            ['ModuleID' => 9003000, 'Name' => 'Branches', 'Icon' => '<i class="fas fa-code-branch"></i>', 'ParentID' => 9000000, 'Route' => 'branches.index'],
+            ['ModuleID' => 9004000, 'Name' => 'Code Details', 'Icon' => '<i data-feather="settings"', 'ParentID' => 9000000, 'Route' => 'settings.lists'],
         ]);
     }
 }
