@@ -24,6 +24,7 @@ class Committee extends Model
                            "CommitteeID",
                            "Name",
                            'Notes',
+                           'Type',
                            'CreatedBy',
                            'ModifiedBy',
                           ];
