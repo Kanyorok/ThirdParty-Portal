@@ -2,7 +2,9 @@
 @section('title', 'RFQ Details')
 @section('content')
 <div class="container">
-    <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#createRFQModal">
+    <button type="button" class="btn btn-primary mb-3"
+        data-bs-toggle="modal" data-bs-target="#createRFQModal"
+        @if($rfq->rfqLines->where('RFQId', $rfq->Id)->count()) disabled @endif>
         + New RFQ Line
     </button>
 
@@ -19,21 +21,29 @@
         <thead>
             <tr>
                 <th>#</th>
+                <th>RFQ Line No</th>
                 <th>Item Name</th>
                 <th>Quantity</th>
                 <th>UOM</th>
                 <th>Submission Deadline</th>
-                <th>Description</th>
-                <th>Status</th>
             </tr>
         </thead>
         <tbody>
-            
+            @foreach ($rfq->rfqLines as $item)
+                <tr>
+                    <td>{{ $loop->iteration }}</td>
+                    <td>{{ $item->RFQLineNo }}</td>
+                    <td>{{ $item->ItemName}}</td>
+                    <td>{{ $item->Quantity }}</td>
+                    <td>{{ $item->UOM}}</td>
+                    <td>{{ \Carbon\Carbon::parse($rfq->SubmissionDeadline)->format('d M Y') }}</td>
+                </tr>
+            @endforeach
         </tbody>
         <tfoot>
             <tr>
             @if ($rfq->Status === 'Approved')
-                <td colspan="4" class="text-center">
+                <td colspan="3" class="text-center">
                     <button type="button" class="btn btn-primary btn-sm">Save</button>
                 </td>
                 <td colspan="3" class="text-center">
