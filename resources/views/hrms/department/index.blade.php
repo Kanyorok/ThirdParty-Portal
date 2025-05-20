@@ -10,7 +10,6 @@
     </style>
 @endsection
 @section('content')
-
     <div class="row">
         <div class="col-12">
             <div class="card">
@@ -25,13 +24,6 @@
                     <h5 class="card-title mb-0">@yield('title')</h5>
                 </div>
                 <div class="card-body">
-                    {{-- autologin when you visit reports urls.
-                     <iframe frameborder="0" seamless="seamless" class="viewer" title="Report Viewer" src="http://172.16.2.13:7092/ReportServer/Pages/ReportViewer.aspx?%2FBRERP%2FAdmin%2FUsers&amp;rc:showbackbutton=true"></iframe>
-                    --}}
-                    <iframe id="reportIframe" width="100%" height="600px" frameborder="0"
-                            src="http://172.16.2.13:7092/reports/report/BRERP/Admin/Permissions?rs:embed=true"></iframe>
-
-                    {{--
                     <table id="departmentsTable"
                            class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
                         <thead>
@@ -44,26 +36,13 @@
                         </tr>
                         </thead>
                         <tbody></tbody>
-                    </table>--}}
+                    </table>
                 </div>
             </div>
         </div>
     </div>
-
 @endsection
 @section('scripts')
-    <script>
-        /* $(function () {
-
-             window.onload = loadReport;
-         });
-         function loadReport() {
-             document.getElementById("reportIframe").src = "&StartDate=2025-01-01&EndDate=2025-01-31";
-         }*/
-
-    </script>
-@endsection
-@section('scriptss')
     <script> const $Modal = $('#departmentsActionsModal');
         let departmentsTable = null;
         $(function () {

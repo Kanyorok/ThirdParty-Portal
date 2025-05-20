@@ -11,6 +11,7 @@ use App\Models\Communication\Call;
 use App\Models\Communication\Comment;
 use App\Models\Communication\Email;
 use App\Models\Core\Branch;
+use App\Models\Core\Report;
 use App\Models\Core\Task;
 use App\Models\CRM\Campaign;
 use App\Models\CRM\CampaignParty;
@@ -83,6 +84,7 @@ class AppServiceProvider extends ServiceProvider
             Meeting::getPrimaryKey() => Meeting::class,
             Notes::getPrimaryKey() => Notes::class,
             ProductDevelopment::getPrimaryKey() => ProductDevelopment::class,
+            Report::getPrimaryKey() => Report::class,
             RFQ::getPrimaryKey() => RFQ::class,
             Review::getPrimaryKey() => Review::class,
             Schedule::getPrimaryKey() => Schedule::class,

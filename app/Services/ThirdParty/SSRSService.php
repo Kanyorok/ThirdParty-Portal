@@ -20,7 +20,8 @@ class SSRSService
 {
     protected PendingRequest $_query;
 
-    protected string $_reportServerUrl;
+    protected string $_serverAPIUrl;
+    protected string $_serverBase;
 
     /**
      * @throws ErroredException
@@ -43,7 +44,8 @@ class SSRSService
             throw new ErroredException('invalid report service configuration');
         }
         $username = $ssrsConfig?->username;
-        $this->_reportServerUrl = $ssrsConfig?->host . "/reports/api/v2.0/";
+        $this->_serverBase = $ssrsConfig?->host;
+        $this->_serverAPIUrl = $this->_serverBase . "/reports/api/v2.0/";
 
         $this->_query = Http::withBasicAuth($username, $password)->withOptions(['auth' => [$username, $password, 'ntlm']]);
     }
@@ -170,7 +172,7 @@ class SSRSService
         }
 
         $response = $this->_query
-            ->get($this->_reportServerUrl . "Reports(Path='$path')/Model.Export", [
+            ->get($this->_serverAPIUrl . "Reports(Path='$path')/Model.Export", [
                 'format' => $format,
                 'parameters' => $paramString
             ]);
@@ -194,7 +196,7 @@ class SSRSService
     public function getReportParameters(string $path): array
     {
         $response = $this->_query
-            ->get($this->_reportServerUrl . "Reports(Path='$path')/Parameters");
+            ->get($this->_serverAPIUrl . "Reports(Path='$path')/Parameters");
 
         if (!$response->successful()) {
             throw new ConnectionException(
@@ -229,7 +231,7 @@ class SSRSService
         }
 
         $response = $this->_query
-            ->post($this->_reportServerUrl . "Reports(Path='$path')/Model.Execute", $payload);
+            ->post($this->_serverAPIUrl . "Reports(Path='$path')/Model.Execute", $payload);
 
         if (!$response->successful()) {
             throw new ConnectionException(
@@ -245,19 +247,36 @@ class SSRSService
      *
      * @param string $path
      * @return array
-     * @throws ConnectionException
+     * @throws ErroredException
      */
     public function getReportByPath(string $path): array
     {
-        $response = $this->_query->get($this->_reportServerUrl . "Reports(Path='{$path}')");
-
-        if (!$response->successful()) {
-            throw new ConnectionException(
-                "Failed to fetch report details. Status: {$response->status()}"
-            );
+        try {
+            $response = $this->_query->get($this->_serverAPIUrl . "/Reports(Path='{$path}')");
+        } catch (ConnectionException) {
+            throw new ErroredException("Could not reach to SSRS Server. Please check your connection.");
         }
 
-        return $response->json();
+        if (!$response->successful()) {
+            if ($response->notFound()) {
+                throw new ErroredException("Report not found");
+            }
+            if ($response->serverError()) {
+                throw new ErroredException("SSRS Server, Encountered an error");
+            }
+            if ($response->unauthorized()) {
+                throw new ErroredException("System Credentials are not valid");
+            }
+
+            throw new ErroredException("Unknown Error: " . $response->status() . ", Contact System Administrator");
+        }
+
+        return array_merge($response->json(), ['Route' => $this->_getRoute($path)]);
+    }
+
+    private function _getRoute(string $path): string
+    {//reports/report/BRERP/Admin/Permissions?rs:embed=true
+        return $this->_serverBase . "reports/report/" . Str::of($path)->trim()->ltrim('/')->rtrim('/') . '?rs:embed=true';
     }
 
     /**
@@ -281,7 +300,7 @@ class SSRSService
         }
 
         $response = $this->_query
-            ->get($this->_reportServerUrl . "Reports(Path='$path')/Export?format=PDF{$paramString}");
+            ->get($this->_serverAPIUrl . "Reports(Path='$path')/Export?format=PDF{$paramString}");
 
         if (!$response->successful()) {
             throw new ConnectionException(
@@ -305,7 +324,7 @@ class SSRSService
      */
     public function fetch(): Collection
     {
-        $response = $this->_query->get($this->_reportServerUrl . 'Me');
+        $response = $this->_query->get($this->_serverAPIUrl . 'Me');
 
         if (!$response->successful()) {
             throw new ConnectionException(
@@ -327,7 +346,7 @@ class SSRSService
     public function getReportsWithProperties(array $properties): Collection
     {
         $select = implode(',', $properties);
-        $response = $this->_query->get($this->_reportServerUrl . "Reports?\$select={$select}");
+        $response = $this->_query->get($this->_serverAPIUrl . "Reports?\$select={$select}");
 
         if (!$response->successful()) {
             throw new ConnectionException(
