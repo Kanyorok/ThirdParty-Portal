@@ -33,9 +33,16 @@ class RFQLinesController extends Controller
         // Step 3: Filter requisition lines where item belongs to the selected category
         $filteredItems = $requisitionlines
             ->filter(function ($line) use ($request) {
-                return $line->item
+                // Check if the item belongs to the selected category
+                $isInCategory = $line->item
                     && $line->item->category
                     && $line->item->category->Id == $request->ItemCategoryId;
+
+                // Check if the RequisitionId already exists in t_RFQLines
+                $existsInRFQLines = RFQLine::where('RequisitionId', $line->RequisitionID)->exists();
+
+                // Include the item only if it is in the selected category and not already in t_RFQLines
+                return $isInCategory && !$existsInRFQLines;
             });
 
         // Step 4: If no matching items, redirect with warning

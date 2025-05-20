@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\RFQ;
+use App\Models\Procurement\RFQLine;
 use App\Models\Procurement\RFQResponse;
 use App\Models\ThirdParies\Supplier;
 use Exception;
@@ -44,7 +45,6 @@ class RFQResponseController extends Controller
             'RequisitionItems.*.name' => 'required|string|max:255',
             'RequisitionItems.*.quantity' => 'required|integer|min:1',
             'RequisitionItems.*.quotedprice' => 'required|numeric|min:0',
-            'RequisitionItems.*.description' => 'required|string|max:255',
             'RequisitionItems.*.totalpayable' => 'required|numeric|min:0',
             'SupplierId' => 'required|exists:t_Suppliers,Id',
             'Currency' => 'required|string|max:3',
@@ -118,35 +118,16 @@ class RFQResponseController extends Controller
 
     public function getRequisitionItems($rfqId)
     {
-        $rfq = RFQ::find($rfqId);
-
-        if (!$rfq) {
-            return response()->json(['error' => 'RFQ not found'], 404);
+        // Fetch all RFQLines where RFQId matches the given $rfqId
+        $rfqLines = RFQLine::where('RFQId', $rfqId)->get();
+    
+        if ($rfqLines->isEmpty()) {
+            return response()->json(['error' => 'No RFQ lines found for the given RFQ ID'], 404);
         }
-
-        if (!$rfq->RequisitionItems) {
-            return response()->json(['error' => 'No requisition items found'], 404);
-        }
-
-        $requisitionItems = is_string($rfq->RequisitionItems)
-            ? json_decode($rfq->RequisitionItems, true)
-            : $rfq->RequisitionItems;
-
-        if (is_string($rfq->RequisitionItems) && json_last_error() !== JSON_ERROR_NONE) {
-            return response()->json(['error' => 'Invalid JSON in RequisitionItems'], 500);
-        }
-
-        $requisitionItems = collect($requisitionItems)->map(function ($item) {
-            return [
-                'name' => $item['name'],
-                'description' => $item['description'],
-                'quantity' => (int) $item['quantity'],
-                'unit' => $item['unit'] ?? null,
-            ];
-        });
-
+       
+        // Return the RFQLines directly as JSON
         return response()->json([
-            'requisitionItems' => $requisitionItems,
+            'requisitionItems' => $rfqLines,
         ]);
     }
 

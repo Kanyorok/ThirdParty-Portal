@@ -37,6 +37,7 @@ class RFQController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create', RFQ::class);
         $request->validate([
             'Comments' => 'nullable|string|max:255',
             'SubmissionDeadline' => 'required|date|after:today',

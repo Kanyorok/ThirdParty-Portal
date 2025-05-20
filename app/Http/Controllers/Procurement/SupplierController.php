@@ -28,7 +28,7 @@ class SupplierController extends Controller
     public function create()
     {
         // Return the view for creating a new supplier
-        $categories = ItemCategory::all();
+        $categories = ItemCategories::all();
         return view('procurement.suppliers.create', compact('categories'));
     }
 
