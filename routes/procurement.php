@@ -1,80 +1,79 @@
 <?php
 
-use App\Http\Controllers\Procurement\PurchaseOrderController;
-use App\Http\Controllers\Procurement\RequisitionItemsController;
-use App\Http\Controllers\Procurement\RequisitionsController;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Procurement\ItemController;
-use App\Http\Controllers\Procurement\ModeTimelineController;
-use App\Http\Controllers\Procurement\ProcurementModeController;
-use App\Http\Controllers\Procurement\TenderController;
-use App\Http\Controllers\Procurement\SasraAuditorController;
-use App\Http\Controllers\Procurement\EngagedAuditorController;
-use App\Http\Controllers\Procurement\SupplierController;
-use App\Http\Controllers\Procurement\ProcurementPeriodController;
-use App\Http\Controllers\Procurement\ProcurementPlanController;
-use App\Http\Controllers\Procurement\RFQController;
-use App\Http\Controllers\Procurement\RFQResponseController;
-use App\Http\Controllers\Procurement\RFQEvaluationController;
-use App\Http\Controllers\Procurement\GoodsReceiptController;
-use App\Http\Controllers\Procurement\TenderInitiationController;
-use App\Http\Controllers\Procurement\TenderCategoryController;
-use App\Http\Controllers\Procurement\TenderTypeController;
-use App\Http\Controllers\Procurement\TenderInitiationApproveController;
-use App\Http\Controllers\Procurement\TenderResponseController;
-use App\Http\Controllers\Procurement\TenderclarificationController;
-use App\Http\Controllers\Procurement\TenderSubmissionController;
-use App\Http\Controllers\Procurement\TenderOpeningController;
-use App\Http\Controllers\Procurement\TenderDecryptController;
-use App\Http\Controllers\Procurement\TenderCommitteeController;
-use App\Http\Controllers\Procurement\TenderAcceptController;
-use App\Http\Controllers\Procurement\TenderAssignRoleController;
-use App\Http\Controllers\Procurement\EvaluationCriteriaController;
 use App\Http\Controllers\Procurement\BidEvaluationController;
 use App\Http\Controllers\Procurement\BidScoreConsolidationController;
-use App\Http\Controllers\Procurement\EvaluatorDashboardController;
-use App\Http\Controllers\Procurement\ProcurementReportsController;
-
-use App\Http\Controllers\Procurement\ProcurementPlanMaintainController;
-use App\Http\Controllers\Procurement\ProcurementApprovalController; 
-use App\Http\Controllers\Procurement\RaiseNeedsController;
-use App\Http\Controllers\Procurement\NeedApprovalController; 
-use App\Http\Controllers\Procurement\ConsolidatedDashboardController; 
-use App\Http\Controllers\Procurement\ProcurementPlanDetailController;
-use App\Http\Controllers\Procurement\ProcurementquaterlyController;
-use App\Http\Controllers\Procurement\ProcurementPlanDashboardController;
-use App\Http\Controllers\Procurement\ProcurementAssignMethodController; 
-use App\Http\Controllers\Procurement\MapToBudgetController; 
-use App\Http\Controllers\Procurement\TimelineController;
 use App\Http\Controllers\Procurement\CalenderBasedController;
-use App\Http\Controllers\Procurement\DelayedItemsController; 
-use App\Http\Controllers\Procurement\PlanvsActualController; 
-use App\Http\Controllers\Procurement\PlanFromNeedsController; 
-use App\Http\Controllers\Procurement\PlanManualInputController;
-use App\Http\Controllers\Procurement\SubmitForApprovalController;
-use App\Http\Controllers\Procurement\PlanEditController; 
+use App\Http\Controllers\Procurement\ConsolidatedDashboardController;
+use App\Http\Controllers\Procurement\DelayedItemsController;
+use App\Http\Controllers\Procurement\EngagedAuditorController;
+use App\Http\Controllers\Procurement\EvaluationCriteriaController;
+use App\Http\Controllers\Procurement\EvaluatorDashboardController;
+use App\Http\Controllers\Procurement\GoodsReceiptController;
+use App\Http\Controllers\Procurement\ItemController;
+use App\Http\Controllers\Procurement\MapToBudgetController;
+use App\Http\Controllers\Procurement\ModeTimelineController;
+use App\Http\Controllers\Procurement\NeedApprovalController;
 use App\Http\Controllers\Procurement\PlanApprovalInboxController;
+use App\Http\Controllers\Procurement\PlanEditController;
 use App\Http\Controllers\Procurement\PlanExectionDashboardController;
+use App\Http\Controllers\Procurement\PlanFromNeedsController;
+use App\Http\Controllers\Procurement\PlanManualInputController;
+use App\Http\Controllers\Procurement\PlanvsActualController;
+use App\Http\Controllers\Procurement\ProcurementApprovalController;
+use App\Http\Controllers\Procurement\ProcurementAssignMethodController;
+use App\Http\Controllers\Procurement\ProcurementModeController;
+use App\Http\Controllers\Procurement\ProcurementPeriodController;
+use App\Http\Controllers\Procurement\ProcurementPlanController;
+use App\Http\Controllers\Procurement\ProcurementPlanDetailController;
+use App\Http\Controllers\Procurement\ProcurementPlanMaintainController;
+use App\Http\Controllers\Procurement\ProcurementquaterlyController;
+use App\Http\Controllers\Procurement\ProcurementReportsController;
+use App\Http\Controllers\Procurement\PurchaseOrderController;
+use App\Http\Controllers\Procurement\RaiseNeedsController;
+use App\Http\Controllers\Procurement\RequisitionItemsController;
+use App\Http\Controllers\Procurement\RequisitionsController;
+use App\Http\Controllers\Procurement\RFQController;
+use App\Http\Controllers\Procurement\RFQEvaluationController;
+use App\Http\Controllers\Procurement\RFQResponseController;
+use App\Http\Controllers\Procurement\SasraAuditorController;
+use App\Http\Controllers\Procurement\SubmitForApprovalController;
+use App\Http\Controllers\Procurement\SupplierController;
+use App\Http\Controllers\Procurement\TenderAcceptController;
+use App\Http\Controllers\Procurement\TenderAssignRoleController;
+use App\Http\Controllers\Procurement\TenderCategoryController;
+use App\Http\Controllers\Procurement\TenderclarificationController;
+use App\Http\Controllers\Procurement\TenderCommitteeController;
+use App\Http\Controllers\Procurement\TenderController;
+use App\Http\Controllers\Procurement\TenderDecryptController;
+use App\Http\Controllers\Procurement\TenderInitiationApproveController;
+use App\Http\Controllers\Procurement\TenderInitiationController;
+use App\Http\Controllers\Procurement\TenderOpeningController;
+use App\Http\Controllers\Procurement\TenderResponseController;
+use App\Http\Controllers\Procurement\TenderSubmissionController;
+use App\Http\Controllers\Procurement\TenderTypeController;
+use App\Http\Controllers\Procurement\TimelineController;
+use Illuminate\Support\Facades\Route;
 
-Route::namespace('Procurement')->group(function () {
+Route::namespace('Procurement')->prefix('procurement')->group(function () {
 
     //Requisitions
     Route::resource('requisition', 'RequisitionsController');
     Route::resource('requisitionItem', 'RequisitionItemsController');
     Route::get('items/download', [ItemController::class, 'download'])->name('items.download');
-    //Route::get('requisitionItem/getItem/{type}', 'RequisitionItemsController@getItems')->name('requisitionItem.getItems');
-    //Route::get('requisitionItem/getItemDetails/{item}', 'RequisitionItemsController@getItemDetails')->name('requisitionItem.getItemDetails');
-//    Route::get('requisitionItem/{id}', 'RequisitionItemsController@getRelatedRequisitionLines')->name('requisitionItem.list');
+    Route::get('requisitionItem/getItem/{type}', 'RequisitionItemsController@getItems')->name('requisitionItem.getItems');
+    Route::get('requisitionItem/getItemDetails/{item}', 'RequisitionItemsController@getItemDetails')->name('requisitionItem.getItemDetails');
+    //    Route::get('requisitionItem/{id}', 'RequisitionItemsController@getRelatedRequisitionLines')->name('requisitionItem.list');
     Route::get('requisitionItem/{id}', [RequisitionItemsController::class, 'show'])->name('requisitionItem.show');
     Route::get('requisition/{id}', [RequisitionsController::class, 'show'])->name('requisition.show');
     Route::get('requisitionItem/create/{id}', [RequisitionItemsController::class, 'create'])->name('requisitionItems.create');
-//    Route::get('requisitionItem/create/{id}', [RequisitionsController::class, 'create'])->name('requisition.show');
-    Route::get('requisition/approval', [RequisitionsController::class,'approvalList'])->name('requisition.approval');
+    //    Route::get('requisitionItem/create/{id}', [RequisitionsController::class, 'create'])->name('requisition.show');
+    Route::get('requisition/approval', [RequisitionsController::class, 'approvalList'])->name('requisition.approval');
 
     //Purchase Order
     Route::resource('purchaseOrder', 'PurchaseOrderController');
-   Route::get('purchaseOrder/getSuppliers', [PurchaseOrderController::class, 'getSuppliers'])->name('purchaseOrder.getSuppliers');
-//    Route::get('requisitionItem/getItem/{supplier}', 'PurchaseOrderController@getSupplierDetails')->name('purchaseOrder.getSupplierDetails');
+    Route::get('purchaseOrder/getSuppliers', [PurchaseOrderController::class, 'getSuppliers'])->name('purchaseOrder.getSuppliers');
+    //    Route::get('requisitionItem/getItem/{supplier}', 'PurchaseOrderController@getSupplierDetails')->name('purchaseOrder.getSupplierDetails');
+
 
     //Sales Order
     Route::resource('salesOrder', 'SalesOrderController');
@@ -95,7 +94,7 @@ Route::namespace('Procurement')->group(function () {
     Route::put('timelines/{id}', [ModeTimelineController::class, 'update'])->name('timelines.update');
 
     // Tendering Process
-    Route::resource('tendering-process', TenderController::class);
+    // Route::resource('tendering-process', TenderController::class);
 
     //Auditor Routes
     Route::get('/sasra-auditors', [SasraAuditorController::class, 'index'])->name('sasra-auditors.index');
@@ -149,22 +148,17 @@ Route::namespace('Procurement')->group(function () {
 
     //GoodsReceipts
     //Route::resource('procurementreceipts', GoodsReceiptController::class);
-    Route::get('/procurementreceipts', [GoodsReceiptController::class,'index'])->name('procurementreceipts.index');
+    Route::get('/procurementreceipts', [GoodsReceiptController::class, 'index'])->name('procurementreceipts.index');
     Route::get('/procurementreceipts/create', [GoodsReceiptController::class, 'create'])->name('procurementreceipts.create');
     Route::post('/procurementreceipts', [GoodsReceiptController::class, 'store'])->name('procurementreceipts.store');
     Route::get('/procurementreceipts/lines/{grnId}/{poId}', [GoodsReceiptController::class, 'fetchLinesByGRN']);
     Route::put('/procurementreceipts/update-line', [GoodsReceiptController::class, 'updateLine'])->name('procurementreceipts.updateLine');
     Route::delete('/procurementreceipts/delete/{grnId}/{poId}', [GoodsReceiptController::class, 'destroy'])->name('procurementreceipts.destroy');
 
-
-
-
-
-
     Route::resource('procurementreceipts', GoodsReceiptController::class);
 
     //Tenders
-    Route::resource('initiatetender', TenderInitiationController::class);
+    Route::resource('initiatetender', TenderController::class);
     Route::resource('tendercategory', TenderCategoryController::class);
     Route::resource('tendertype', TenderTypeController::class);
     Route::resource('initiateapprove', TenderInitiationApproveController::class);
@@ -173,9 +167,9 @@ Route::namespace('Procurement')->group(function () {
     Route::resource('tendersubmission', TenderSubmissionController::class);
     Route::resource('tenderopening', TenderOpeningController::class);
     //Route::resource('tenderresponse', TenderResponseController::class);
-    //Route::resource('tenderclarification', TenderclarificationController::class); 
-    Route::resource('tendersubmission', TenderSubmissionController::class);  
-    Route::resource('tenderopening', TenderOpeningController::class); 
+    //Route::resource('tenderclarification', TenderclarificationController::class);
+    Route::resource('tendersubmission', TenderSubmissionController::class);
+    Route::resource('tenderopening', TenderOpeningController::class);
     Route::resource('tenderdecrypt', TenderDecryptController::class);
     Route::resource('tendercommittee', TenderCommitteeController::class);
     Route::resource('memberresponse', TenderAcceptController::class);
@@ -185,38 +179,38 @@ Route::namespace('Procurement')->group(function () {
     Route::resource('evaluationdashboard', EvaluatorDashboardController::class);
     Route::resource('bidscores', BidScoreConsolidationController::class);
     Route::resource('procurementreports', ProcurementReportsController::class);
-    Route::resource('evaluationdashboard', EvaluatorDashboardController::class);  
-    Route::resource('bidscores', BidScoreConsolidationController::class); 
-    Route::resource('procurementreports', ProcurementReportsController::class); 
+    Route::resource('evaluationdashboard', EvaluatorDashboardController::class);
+    Route::resource('bidscores', BidScoreConsolidationController::class);
+    Route::resource('procurementreports', ProcurementReportsController::class);
 
     //Procurementplan
-    Route::resource('procurementplanmaintain', ProcurementPlanMaintainController::class); 
-    Route::resource('procurementplanapproval', ProcurementApprovalController::class); 
-    Route::resource('procurementdepartmentalplan', RaiseNeedsController::class); 
-    Route::resource('consolidated', ConsolidatedDashboardController::class); 
-    Route::resource('procurementplandetails', ProcurementPlanDetailController::class); 
-    Route::resource('procurementplanquaterly', ProcurementquaterlyController::class); 
-    Route::resource('procurementitemsdashboard', ConsolidatedDashboardController::class); 
-    Route::resource('procurementassignitem', ProcurementAssignMethodController::class); 
+    Route::resource('procurementplanmaintain', ProcurementPlanMaintainController::class);
+    Route::resource('procurementplanapproval', ProcurementApprovalController::class);
+    Route::resource('procurementdepartmentalplan', RaiseNeedsController::class);
+    Route::resource('consolidated', ConsolidatedDashboardController::class);
+    Route::resource('procurementplandetails', ProcurementPlanDetailController::class);
+    Route::resource('procurementplanquaterly', ProcurementquaterlyController::class);
+    Route::resource('procurementitemsdashboard', ConsolidatedDashboardController::class);
+    Route::resource('procurementassignitem', ProcurementAssignMethodController::class);
     Route::resource('maptobudget', MapToBudgetController::class);
-    Route::resource('plantimeline', TimelineController::class); 
+    Route::resource('plantimeline', TimelineController::class);
     Route::resource('calenderbased', CalenderBasedController::class);
-    Route::resource('delayeditems', DelayedItemsController::class); 
-    Route::resource('planvsactual', PlanvsActualController::class); 
+    Route::resource('delayeditems', DelayedItemsController::class);
+    Route::resource('planvsactual', PlanvsActualController::class);
     Route::resource('needsapproval', NeedApprovalController::class);
-    Route::resource('planfromneeds', PlanFromNeedsController::class);  
+    Route::resource('planfromneeds', PlanFromNeedsController::class);
     Route::resource('planmanualinput', PlanManualInputController::class);
     Route::resource('submitplan', SubmitForApprovalController::class);
-    Route::resource('editplan', PlanEditController::class); 
-    Route::resource('approvalinbox', PlanApprovalInboxController::class); 
-    Route::resource('exectiondashboard', PlanExectionDashboardController::class); 
-  
+    Route::resource('editplan', PlanEditController::class);
+    Route::resource('approvalinbox', PlanApprovalInboxController::class);
+    Route::resource('exectiondashboard', PlanExectionDashboardController::class);
+
     //Tendering
     Route::get('/tenderresponse', [TenderResponseController::class, 'index'])->name('tenderresponse.index');
     Route::get('/tenderresponse/create', [TenderResponseController::class, 'create'])->name('tenderresponse.create');
     Route::post('/tenderresponse', [TenderResponseController::class, 'storeResponse'])->name('tenderresponse.storeResponse');
 
-   // Route::resource('tenderclarification', TenderclarificationController::class);
+    // Route::resource('tenderclarification', TenderclarificationController::class);
     Route::get('/tenderclarification', [TenderclarificationController::class, 'index'])->name('tenderclarification.index');
     //Route::get('/tenderclarification/create', [TenderclarificationController::class, 'create'])->name('tenderclarification.create');
     Route::patch('/tenderclarification/update', [TenderclarificationController::class, 'update'])->name('tenderclarification.update');
@@ -224,10 +218,30 @@ Route::namespace('Procurement')->group(function () {
     Route::get('/tenderclarifications/{clarification_id}/create', [TenderclarificationController::class, 'create'])->name('tenderclarification.create');
 
     //Bid Submission
-Route::get('/bid-submissions', [TenderSubmissionController::class, 'index'])->name('tendersubmission.index');
-Route::get('/bid-submissions/create', [TenderSubmissionController::class, 'create'])->name('tendersubmission.create');
-Route::get('/bid-submission/manual/view', [TenderSubmissionController::class, 'view'])->name('tendersubmission.view');
-Route::get('/bid-submission/manual/edit', [TenderSubmissionController::class, 'edit'])->name('tendersubmission.edit');
-Route::post('/bid-submissions', [TenderSubmissionController::class, 'store'])->name('tendersubmission.store');
+    Route::get('/bid-submissions', [TenderSubmissionController::class, 'index'])->name('tendersubmission.index');
+    Route::get('/bid-submissions/create', [TenderSubmissionController::class, 'create'])->name('tendersubmission.create');
+    Route::get('/bid-submission/manual/{Id}/view', [TenderSubmissionController::class, 'view'])->name('tendersubmission.view');
+    Route::get('/bid-submission/manual/{Id}/edit', [TenderSubmissionController::class, 'edit'])->name('tendersubmission.edit');
+    Route::post('/bid-submissions', [TenderSubmissionController::class, 'store'])->name('tendersubmission.store');
+ 
+    Route::resource('tender-types', TenderTypeController::class)
+        ->names([
+            'index' => 'tender-types.index',
+            'create' => 'tender-types.create',
+            'store' => 'tender-types.store',
+            'edit' => 'tender-types.edit',
+            'update' => 'tender-types.update',
+            'destroy' => 'tender-types.destroy'
+        ]);
+
+    // Tender categories
+    Route::resource('tender-categories', TenderCategoryController::class)
+        ->names([
+            'index' => 'tender-categories.index',
+            'create' => 'tender-categories.create',
+            'store' => 'tender-categories.store',
+            'edit' => 'tender-categories.edit',
+            'destroy' => 'tender-categories.destroy'
+        ]);
 
 });

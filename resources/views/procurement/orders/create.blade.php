@@ -60,7 +60,7 @@
                 </div>
                 <div class="col-md-4">
                     <label>Reference Number</label>
-                    <input type="text" class="form-control rfqNo" name="RefNo" placeholder="RFQ Number" />
+                    <input type="text" class="form-control refNo" name="refNo" placeholder="RFQ Number" />
                 </div>
                 <div class="col-md-4 mt-2">
                     <label>Priority</label>
@@ -106,15 +106,17 @@
                             <td class="text-start">
                                 <select class="form-select form-select-sm type" name="type[]" id="Type">
                                     <option disabled selected>Select Type</option>
-                                    <option value="good">Goods</option>
-                                    <option value="service">Services</option>
+                                    <option value="Stock">Stock</option>
+                                    <option value="Asset">Asset</option>
+                                    <option value="Non-Stock">Non-Stock</option>
                                 </select>
                             </td>
                             <td class="text-start">
                                 <select class="form-select form-select-sm itemCode" name="itemCode[]" id="Item">
                                     <option disabled selected>Select Item Code</option>
-                                    {{--                            <option value="good">Goods</option> --}}
-                                    {{--                            <option value="services">Services</option> --}}
+
+{{--                                                                <option value="1">Item1</option>--}}
+{{--                                                                <option value="2">Item2</option>--}}
                                 </select>
                             </td>
                             {{--                    <td><input type="text" class="form-control" name="itemCode[]"></td> --}}
@@ -133,7 +135,7 @@
                             <td class="text-start"><input type="number" class="form-control form-control-sm discount"
                                     name="discount[]" id="Discount"></td>
                             <td class="text-start"><input type="number" class="form-control form-control-sm line-total"
-                                    name="lineTotal[]" id="lineTotal"></td>
+                                    name="lineTotal[]" id="lineTotal" step=""></td>
                         </tr>
                     </tbody>
                 </table>
@@ -247,13 +249,15 @@
                         url: `/requisitionItem/getItem/${type}`,
                         type: 'GET',
                         success: function(response) {
+
+                            console.log(response)
                             let itemCodeSelect = row.find('.itemCode');
                             itemCodeSelect.empty().append(
                                 '<option value="">Select Item</option>');
 
                             $.each(response.data, function(key, item) {
                                 itemCodeSelect.append(
-                                    `<option value="${item.id}">${item.name}</option>`
+                                    `<option value="${item.Id}">${item.ItemName}</option>`
                                 );
                             });
                         },

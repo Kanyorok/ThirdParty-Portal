@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\Core\ModulesEnum;
 use Illuminate\Database\Seeder;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -20,6 +21,8 @@ class DatabaseSeeder extends Seeder
         $this->call(LocalitySeeder::class);
         $this->call(SysFilterSeeder::class);
         $this->call(SysFilterSeeder::class);
+        $this->call(CurrencySeeder::class);
+        $this->call(ModulesEnum::class);
         $this->call(RolePermissionSeeder::class);
         $this->call(CommitteeSeeder::class);
         $this->call(DepartmentSeeder::class);
