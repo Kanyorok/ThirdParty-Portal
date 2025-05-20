@@ -217,12 +217,12 @@
             });
         }
 
-        // $(document).on('change','#supplier',function () {
-        //     fetchSuppliers();
-        //
-        //
-        //     // alert('eric');
-        // });
+        $(document).on('change','#supplier',function () {
+            fetchSuppliers();
+
+
+            alert('eric');
+        });
 
         $(function () {
             // Handle item type change using event delegation
@@ -283,7 +283,7 @@
                         success: function (response) {
                             if (response.data && response.data.length > 0) {
                                 $.each(response.data, function (key, item) {
-                                    row.find('.itemDescription').val(item.Description ||
+                                    row.find('.itemDescription').val(item.ItemDescription ||
                                         '');
                                     row.find('.unit-price').val(item.UnitPrice || '');
                                 });
