@@ -1,5 +1,6 @@
 @extends('layouts.app')
 @section('title', 'Goods Receipt')
+@section('styles')    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">@endsection
 @section('content')
 @if(session('success'))
   <div class="alert alert-success">{{ session('success') }}</div>
@@ -16,7 +17,7 @@
     </a>
   </div>
   <div class="table-responsive">
-    <table class="table table-striped table-bordered">
+    <table id="goodsreceipt" class="table table-bordered table-striped align-middle">
       <thead class="table-light">
         <tr>
           <th>#</th>
@@ -137,5 +138,17 @@ function openEditModal(grnId, poId) {
     });
 }
 </script>
-
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+ 
+<script>
+    $(document).ready(function () {
+        $('#raisedneeds').DataTable({
+            pageLength: 10,
+            ordering: true,
+            searching: true,
+            lengthChange: true
+        });
+    });
+</script>
 @endsection
