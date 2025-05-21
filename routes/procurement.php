@@ -185,6 +185,8 @@ Route::namespace('Procurement')->group(function () {
     Route::resource('bidscores', BidScoreConsolidationController::class);
     Route::resource('procurementreports', ProcurementReportsController::class);
     Route::resource('appointcommittee', AppointCommitteeController::class);
+    Route::delete('/appointcommittee/remove', [AppointCommitteeController::class, 'remove'])->name('appointcommittee.remove');
+
 
     //Procurementplan
     Route::resource('procurementplanmaintain', ProcurementPlanMaintainController::class);

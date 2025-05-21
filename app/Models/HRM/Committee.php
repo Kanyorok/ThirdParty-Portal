@@ -47,4 +47,10 @@ class Committee extends Model
         return $this->belongsToMany(Board::class, 't_BoardCommittee', 'CommitteeId', 'BoardId', 'Id', 'Id')
             ->withTimestamps('CreatedOn', 'ModifiedOn')->withPivot(['CreatedBy', 'ModifiedBy'])->using(BoardCommittee::class);
     }
+
+    public function employees()
+    {
+        return $this->belongsToMany(Employee::class, 't_Committee_Employee', 'CommitteeId', 'EmployeeId')
+            ->withPivot(['CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn', 'DeletedBy', 'DeletedOn']);
+    }
 }
