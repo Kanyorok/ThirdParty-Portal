@@ -241,6 +241,7 @@
                     <li class="pc-item"> <a class="pc-link" href="{{ route('engaged-auditors.index') }}" data-i18n="Engaged">Engaged Auditors</a></li>
                  </ul>
                 </li>
+                <li class="pc-item"> <a class="pc-link" href="{{ route('appointcommittee.index') }}" data-i18n="Appoint Committee">Appoint Committee</a></li>
             </ul>
     </li>
 

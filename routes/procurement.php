@@ -55,6 +55,7 @@ use App\Http\Controllers\Procurement\SubmitForApprovalController;
 use App\Http\Controllers\Procurement\PlanEditController;
 use App\Http\Controllers\Procurement\PlanApprovalInboxController;
 use App\Http\Controllers\Procurement\PlanExectionDashboardController;
+use App\Http\Controllers\Procurement\AppointCommitteeController;
 
 Route::namespace('Procurement')->group(function () {
 
@@ -183,6 +184,7 @@ Route::namespace('Procurement')->group(function () {
     Route::resource('evaluationdashboard', EvaluatorDashboardController::class);
     Route::resource('bidscores', BidScoreConsolidationController::class);
     Route::resource('procurementreports', ProcurementReportsController::class);
+    Route::resource('appointcommittee', AppointCommitteeController::class);
 
     //Procurementplan
     Route::resource('procurementplanmaintain', ProcurementPlanMaintainController::class);
