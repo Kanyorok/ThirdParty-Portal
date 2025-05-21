@@ -6,6 +6,7 @@
         .select2-container {
             width: 100% !important;
         }
+
     </style>
 @endsection
 @section('content')
@@ -88,15 +89,15 @@
                 <table class="table table-bordered table-sm">
                     <thead class="table-light">
                     <tr>
-                        <th style="width:5%;">#</th>
-                        <th style="width:10%;">Item Type</th>
-                        <th style="width:15%;">Item Code</th>
-                        <th style="width:15%;">Item Description</th>
-                        <th style="width:10%;">Quantity</th>
-                        <th style="width:10%;">Unit Price</th>
-                        <th style="width:10%;">Tax</th>
-                        <th style="width:10%;">Discount</th>
-                        <th style="width:20%;">Line Total</th>
+                        <th style="width: 3%; min-width: 30px;">#</th>
+                        <th style="width: 10%; min-width: 100px;">Item Type</th>
+                        <th style="width: 15%; min-width: 150px;">Item Name</th>
+                        <th style="width: 20%; min-width: 200px;">Item Description</th>
+                        <th style="width: 5%; min-width: 80px;">Quantity</th>
+                        <th style="width: 10%; min-width: 100px;">Unit Price</th>
+                        <th style="width: 5%; min-width: 80px;">Tax</th>
+                        <th style="width: 5%; min-width: 80px;">Discount</th>
+                        <th style="width: 15%; min-width: 150px;">Line Total</th>
                     </tr>
                     </thead>
                     <tbody id="po-items">
@@ -153,15 +154,15 @@
                 <div class="col-md-4 offset-md-8">
                     <div class="mb-2">
                         <label>Exclusive Total</label>
-                        <input type="text" class="form-control" readonly/>
+                        <input type="text" class="form-control exclusiveTotal" name="exclusiveTotal" readonly/>
                     </div>
                     <div class="mb-2">
                         <label>Tax Amount</label>
-                        <input type="text" class="form-control" readonly/>
+                        <input type="text" class="form-control taxAmount" name="taxAmount" readonly/>
                     </div>
                     <div>
                         <label>Inclusive Total</label>
-                        <input type="text" class="form-control" readonly/>
+                        <input type="text" class="form-control inclusiveTotal" name="inclusiveTotal" readonly/>
                     </div>
                 </div>
             </div>
@@ -318,6 +319,50 @@
                 }
 
                 row.find('.line-total').val(total.toFixed(2));
+                calculateSummaryTotals();
+            });
+
+
+            function calculateSummaryTotals() {
+                let exclusiveTotal = 0;
+                let totalTax = 0;
+
+                // Loop through each row to calculate totals
+                $('#po-items tr').each(function() {
+                    let row = $(this);
+                    let qty = parseFloat(row.find('.quantity').val()) || 0;
+                    let price = parseFloat(row.find('.unit-price').val()) || 0;
+                    let tax = parseFloat(row.find('.tax').val()) || 0;
+                    let discount = parseFloat(row.find('.discount').val()) || 0;
+
+                    // Calculate line total before tax and discount
+                    let lineTotalBeforeTax = qty * price;
+
+                    // Apply discount
+                    if (discount > 0) {
+                        lineTotalBeforeTax -= lineTotalBeforeTax * (discount / 100);
+                    }
+
+                    // Calculate tax for this line
+                    let lineTax = lineTotalBeforeTax * (tax / 100);
+
+                    // Add to totals
+                    exclusiveTotal += lineTotalBeforeTax;
+                    totalTax += lineTax;
+                });
+
+                // Calculate inclusive total
+                let inclusiveTotal = exclusiveTotal + totalTax;
+
+                // Update the summary fields
+                $('input[name="exclusiveTotal"]').val(exclusiveTotal.toFixed(2));
+                $('input[name="taxAmount"]').val(totalTax.toFixed(2));
+                $('input[name="inclusiveTotal"]').val(inclusiveTotal.toFixed(2));
+            }
+
+
+            $(document).ready(function() {
+                calculateSummaryTotals();
             });
         });
     </script>
