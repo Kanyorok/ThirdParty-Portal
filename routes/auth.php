@@ -1,8 +1,11 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\DashboardController;
 use App\Http\Controllers\Auth\NewPasswordController;
+use App\Http\Controllers\Auth\PendingWorkflowController;
 use App\Http\Controllers\Auth\ProfileController;
+use App\Http\Controllers\Auth\SSRSProxyController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
@@ -14,7 +17,7 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-    Route::get('/', \App\Http\Controllers\Auth\DashboardController::class)->name('home');
+    Route::get('/', DashboardController::class)->name('home');
 
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
     Route::post('timeout', [AuthenticatedSessionController::class, 'timeout'])->name('timeout');
@@ -24,5 +27,12 @@ Route::middleware('auth')->group(function () {
     Route::post('user', [ProfileController::class, 'updateCred'])->name('profile.cred');
     Route::post('user/avatar', [ProfileController::class, 'avatar'])->name('profile.avatar');
 
-    Route::get('pending-workflows', \App\Http\Controllers\Auth\PendingWorkflowController::class)->name('pending-workflows');
+    Route::get('pending-workflows', PendingWorkflowController::class)->name('pending-workflows');
+
+    Route::get('core/auth/report/{report}/ssrs-report-proxy', SSRSProxyController::class)->name('auth.ssrs.proxy');
+    Route::any('report/{any}', [SSRSProxyController::class, 'report'])->where('any', '.*')->name('ssrs.proxy.report');
+    Route::any('ReportServer/{any?}', [SSRSProxyController::class, 'preview'])->where('any', '.*');
+    Route::any('reports/{any}', [SSRSProxyController::class, 'assets'])->where('any', '.*');
+    Route::get('core/auth/report/assets/{asset?}', [SSRSProxyController::class, 'assets'])->name('auth.ssrs.proxy.assets');
+
 });

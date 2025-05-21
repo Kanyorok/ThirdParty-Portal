@@ -14,6 +14,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Str;
 use SensitiveParameter;
+use stdClass;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SSRSService
@@ -21,7 +22,10 @@ class SSRSService
     protected PendingRequest $_query;
 
     protected string $_serverAPIUrl;
-    protected string $_serverBase;
+    public string $serverURL;
+
+    protected string $_username;
+    protected string $_password;
 
     /**
      * @throws ErroredException
@@ -34,20 +38,31 @@ class SSRSService
         }
 
         $ssrsConfig = $ssrs?->Configuration;
-        if (!is_string($ssrsConfig?->password)) {
+        if (!$ssrsConfig instanceof stdClass) {
+            throw new ErroredException('invalid report service configuration');
+        }
+
+        if (!property_exists($ssrsConfig, 'password') || !property_exists($ssrsConfig, 'username') || !property_exists($ssrsConfig, 'host')) {
             throw new ErroredException('invalid report service configuration');
         }
 
         try {
-            $password = Crypt::decryptString($ssrsConfig?->password);
+            $password = Crypt::decryptString($ssrsConfig->password);
         } catch (DecryptException) {
             throw new ErroredException('invalid report service configuration');
         }
-        $username = $ssrsConfig?->username;
-        $this->_serverBase = $ssrsConfig?->host;
-        $this->_serverAPIUrl = $this->_serverBase . "/reports/api/v2.0/";
+        $username = $ssrsConfig->username;
+        $this->_username = $username;
+        $this->_password = $password;
+        $this->serverURL = $ssrsConfig->host;
+        $this->_serverAPIUrl = $this->serverURL . "/reports/api/v2.0/";
 
         $this->_query = Http::withBasicAuth($username, $password)->withOptions(['auth' => [$username, $password, 'ntlm']]);
+    }
+
+    public function getQuery(): PendingRequest
+    {
+        return $this->_query;
     }
 
     public static function testConfig(string $Host, string $username, #[SensitiveParameter] string $password): ?string
@@ -62,21 +77,6 @@ class SSRSService
             return $query->json()['DisplayName'];
         }
         return null;
-    }
-
-    public function exportReportWithCustomSettings(string $path, array $parameters = []): StreamedResponse
-    {
-        $deviceInfo = "<DeviceInfo>
-            <OutputFormat>PDF</OutputFormat>
-            <PageWidth>8.5in</PageWidth>
-            <PageHeight>11in</PageHeight>
-            <MarginTop>0.25in</MarginTop>
-            <MarginLeft>0.25in</MarginLeft>
-            <MarginRight>0.25in</MarginRight>
-            <MarginBottom>0.25in</MarginBottom>
-        </DeviceInfo>";
-
-        return $this->exportReport($path, $parameters, 'PDF', $deviceInfo);
     }
 
     /**
@@ -276,7 +276,7 @@ class SSRSService
 
     private function _getRoute(string $path): string
     {//reports/report/BRERP/Admin/Permissions?rs:embed=true
-        return $this->_serverBase . "reports/report/" . Str::of($path)->trim()->ltrim('/')->rtrim('/') . '?rs:embed=true';
+        return $this->serverURL . "reports/report/" . Str::of($path)->trim()->ltrim('/')->rtrim('/') . '?rs:embed=true';
     }
 
     /**

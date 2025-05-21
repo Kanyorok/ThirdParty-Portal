@@ -3,9 +3,7 @@
 namespace App\Traits\Controller;
 
 use App\Enums\Core\ModulesEnum;
-use App\Exceptions\ErroredException;
 use App\Models\Core\Report;
-use App\Services\ThirdParty\SSRSService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -33,14 +31,7 @@ trait ReportsTrait
 
     public function show(Report $report): RedirectResponse|View
     {
-        try {
-            $metadata = (new SSRSService())->getReportByPath($report->Path);
-            if ($metadata['Type'] !== "Report") {
-                throw new ErroredException('invalid report type.');
-            }
-        } catch (ErroredException $e) {
-            return redirect()->back()->with('fail', $e->getMessage());
-        }
-        return view('reports.show')->with('report', $report)->with('metadata', $metadata);
+
+        return view('reports.show')->with('report', $report);
     }
 }
