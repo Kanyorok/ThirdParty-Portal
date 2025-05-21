@@ -1,17 +1,17 @@
 <?php
 
-namespace App\Http\Controllers\Procurement;
+namespace App\Http\Controllers\HRM;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\HRM\Employee;
 use App\Models\Auth\User;
 use App\Models\HRM\Committee;
-use App\Models\Procurement\AppointCommittee;
+use App\Models\HRM\EmployeeInternalCommittee;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
-class AppointCommitteeController extends Controller
+class EmployeeInternalCommitteeController extends Controller
 {
     public function index()
     {

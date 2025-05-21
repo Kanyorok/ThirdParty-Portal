@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Models\Procurement;
+namespace App\Models\HRM;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\HRM\Employee;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Model\UserActorTrait;
 
-class AppointCommittee extends Model
+class EmployeeInternalCommittee extends Model
 {
 
     use SoftDeletes;

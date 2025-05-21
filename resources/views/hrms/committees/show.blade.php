@@ -53,7 +53,7 @@
 
                     <div class="card-actions float-end">
                         <button class="btn btn-primary ms-2 click-summary-data" type="button"
-                                data-click_url="{{ route('appointcommittee.create') }}"
+                                data-click_url="{{ route('employeescommittee.create') }}"
                                 data-summary_title="Add a User">
                             <i class="fas fa-plus-circle"></i> Appoint a Member
                         </button>
@@ -91,7 +91,7 @@
                                 : '—' }}
                         </td>
                         <td>
-                            <form action="{{ route('appointcommittee.remove') }}" method="POST">
+                            <form action="{{ route('employeescommittee.remove') }}" method="POST">
                                 @csrf
                                 @method('DELETE')
                                 <input type="hidden" name="committee_id" value="{{ $committee->Id }}">

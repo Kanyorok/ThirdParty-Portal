@@ -1,5 +1,5 @@
 <div>
-    <form action="{{ route('appointcommittee.store') }}" method="post" id="createUserForm"> @csrf
+    <form action="{{ route('employeescommittee.store') }}" method="post" id="createUserForm"> @csrf
         
     <div class="mb-3">
             <label for="Employee" class="form-label">Employee <span class="text-danger">*</span></label>
