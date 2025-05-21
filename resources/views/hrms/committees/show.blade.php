@@ -55,7 +55,7 @@
                         <button class="btn btn-primary ms-2 click-summary-data" type="button"
                                 data-click_url="{{ route('appointcommittee.create') }}"
                                 data-summary_title="Add a User">
-                            <i class="fas fa-plus-circle"></i> Add a User
+                            <i class="fas fa-plus-circle"></i> Appoint a Member
                         </button>
                     </div>
                 </div>
