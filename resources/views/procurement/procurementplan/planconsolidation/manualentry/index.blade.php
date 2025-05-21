@@ -13,50 +13,61 @@
   <!-- Plan Filter -->
   <div class="row mb-3">
     <div class="col-md-6">
-      <label class="form-label">Select Procurement Plan</label>
-      <select class="form-select">
-        <option selected disabled>Select Plan</option>
-        <option value="1">Annual Procurement Plan - 2025</option>
-        <option value="2">Mid-Year Supplementary - 2025</option>
-        <!-- Loaded dynamically -->
-      </select>
-    </div>
-  </div>
+  <label class="form-label">Select Procurement Plan</label>
+  <form method="GET" action="{{ route('planmanualinput.index') }}">
+    <select name="plan_id" class="form-select" onchange="this.form.submit()">
+      <option disabled {{ empty($planId) ? 'selected' : '' }}>Select Plan</option>
+      @foreach ($plans as $plan)
+        <option value="{{ $plan->PlanID }}" {{ (isset($planId) && $planId == $plan->PlanID) ? 'selected' : '' }}>
+          {{ $plan->Title }}
+        </option>
+      @endforeach
+    </select>
+  </form>
+</div>
 
-  <!-- Items Table -->
-  <table class="table table-bordered table-striped mt-3">
-    <thead class="table-light">
+<table class="table table-bordered table-striped mt-3">
+  <thead class="table-light">
+    <tr>
+      <th>#</th>
+      <th>Item</th>
+      <th>Category</th>
+      <th>Qty</th>
+      <th>UOM</th>
+      <th>Est. Cost</th>
+      <th>Planned Quarter</th>
+      <th>Expected Delivery</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    @forelse ($lineItems as $index => $item)
       <tr>
-        <th>#</th>
-        <th>Item</th>
-        <th>Category</th>
-        <th>Qty</th>
-        <th>UOM</th>
-        <th>Est. Cost</th>
-        <th>Planned Quarter</th>
-        <th>Expected Delivery</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody>
-      <!-- Sample Row -->
-      <tr>
-        <td>1</td>
-        <td>Desktop Computers</td>
-        <td>IT Equipment</td>
-        <td>5</td>
-        <td>Pcs</td>
-        <td>150,000</td>
-        <td>Q2</td>
-        <td>2025-06-10</td>
+        <td>{{ $index + 1 }}</td>
+        <td>{{ $item->item->ItemName ?? 'N/A' }}</td>
+        <td>{{ $item->item->Category->Name ?? 'N/A' }}</td> 
+        <td>{{ $item->MergedQty }}</td>
+        <td>{{ $item->item->UOM ?? 'N/A' }}</td>  
+        <td>{{ number_format($item->EstimatedUnitCost, 2) }}</td>
+        <td>{{ $item->SchedulePeriod ?? 'N/A' }}</td>
+        <td>{{ \Carbon\Carbon::parse($item->ExpectedDeliveryDate)->format('Y-m-d') ?? 'N/A' }}</td> 
         <td>
-          <a href="/planning/manual-entry/edit/101" class="btn btn-sm btn-outline-primary">Edit</a>
-          <button class="btn btn-sm btn-outline-danger">Delete</button>
+          <a href="{{ route('planmanualinput.edit', $item->LineItemID) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+          <form method="POST" action="{{ route('planmanualinput.destroy', $item->LineItemID) }}" style="display:inline;">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure?')">Delete</button>
+          </form>
         </td>
       </tr>
-      <!-- Load other rows dynamically -->
-    </tbody>
-  </table>
+    @empty
+      <tr>
+        <td colspan="9" class="text-center">No plan items found.</td>
+      </tr>
+    @endforelse
+  </tbody>
+</table>
+
 </div>
 
 @endsection
