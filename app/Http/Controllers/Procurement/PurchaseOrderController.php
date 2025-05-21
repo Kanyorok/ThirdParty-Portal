@@ -221,7 +221,7 @@ class PurchaseOrderController extends Controller
             // Everything succeeded
             return response()->json([
                 'message' => $POAdd['message'] ?? 'Order created successfully',
-                'route' => route('purchaseOrder.create')
+                'route' => route('purchaseOrder.index')
             ], 200);
 
         } catch (\Throwable $e) {
