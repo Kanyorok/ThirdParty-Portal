@@ -1,14 +1,17 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Clarification Requests')
+@section('styles')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+@endsection
 @section('content')
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4>Clarification Requests</h4>
+
     </div>
 
     <div class="table-responsive">
-        <table class="table table-bordered table-striped align-middle">
-            <thead class="table-light">
+        <table id="clarificationsTable" class="table table-bordered table-striped align-middle">
+        <thead class="table-light">
                 <tr>
                     <th>#</th>
                     <th>Tender ID</th>
@@ -42,7 +45,7 @@
                         </td>
                         <td>
                             @if ($clarification->Answer)
-                                <a href="{{ route('tenderclarification.edit', $clarification->ClarificationID) }}" class="btn btn-sm btn-outline-success">Edit</a>
+                                <a href="{{ route('tenderclarification.create', $clarification->ClarificationID) }}" class="btn btn-sm btn-outline-success">Edit</a>
                             @else
                                 <a href="{{ route('tenderclarification.create', $clarification->ClarificationID) }}" class="btn btn-sm btn-outline-primary">Respond</a>
                             @endif
@@ -57,4 +60,18 @@
         </table>
     </div>
 </div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        $('#clarificationsTable').DataTable({
+            pageLength: 10,
+            ordering: true,
+            searching: true,
+            lengthChange: true
+        });
+    });
+</script>
+
 @endsection

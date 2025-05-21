@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Enums\Core\PermissionEnum;
 use App\Helpers\SystemHelper;
 use App\Models\Auth\User;
-use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Guard;
@@ -43,10 +42,11 @@ class RolePermissionSeeder extends Seeder
 
         $permissions = collect([]);
         // Create permission
-        foreach (PermissionEnum::values() as $permission) {
-            if (!Permission::query()->where('name', $permission)->exists()) {
+        foreach (PermissionEnum::cases() as $permission) {
+            if (!Permission::query()->where('name', $permission->value)->exists()) {
                 $permissions->add([
-                    'name' => $permission,
+                    'name' => $permission->value,
+                    'ModuleId' => $permission->module()->value,
                     'guard_name' => $guard,
                     'created_at' => $date,
                     'updated_at' => $date,
@@ -75,23 +75,6 @@ class RolePermissionSeeder extends Seeder
                     $user->assignRole('admin');
                 }
             }
-        }
-    }
-
-    protected function _add(PermissionEnum $add, string $guard, Carbon $date, User $user): void
-    {
-        $adminRole = Role::query()->where('name', 'admin')->first();
-
-        if (!Permission::query()->where('name', $add)->exists()) {
-            $permission = Permission::create([
-                'name' => $add,
-                'guard_name' => $guard,
-                'created_at' => $date,
-                'updated_at' => $date,
-            ]);
-
-            $adminRole->permissions()->attach($permission->id, ['CreatedBy' => $user->Id, 'ModifiedBy' => $user->Id], false);
-            // $adminRole->givePermissionTo($add);
         }
     }
 }

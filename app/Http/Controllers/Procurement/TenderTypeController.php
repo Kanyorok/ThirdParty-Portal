@@ -16,6 +16,7 @@ class TenderTypeController extends Controller {
         return view('procurement.tendering.tendersetup.tendertype.index', compact('tenderTypes'));
     }
 
+    
     /**
      * Show the form for creating a new resource.
      */

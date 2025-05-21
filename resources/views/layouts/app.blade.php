@@ -36,7 +36,7 @@
                             alt="user-image"') !!}
                         </div>
                         <div class="flex-grow-1 ms-3 me-2">
-                            <h6 class="mb-0" data-i18n="Jonh Smith">{{ auth()->user()->UserID }}</h6>
+                            <h6 class="mb-0">{{ auth()->user()->UserID }}</h6>
                             <small data-i18n="Administrator">{{ auth()->user()->role()?->name }}</small>
                         </div>
                         <a class="btn btn-icon btn-link-secondary avtar collapsed" data-bs-toggle="collapse"
@@ -48,8 +48,7 @@
                     </div>
                     <div class="pc-user-links collapse" id="pc_sidebar_userlink">
                         <div class="pt-3">
-                            <a href="{{ route('profile') }}"><i class="ti ti-user"></i> <span
-                                    data-i18n="My Account">My Account</span>
+                            <a href="{{ route('profile') }}"><i class="ti ti-user"></i> <span>My Account</span>
                             </a>
                             <a href="{{ route('logout') }}"
                                onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
@@ -63,6 +62,9 @@
                     </div>
                 </div>
             </div>
+            @include('layouts._partials._navbar')
+
+            {{--
             <ul class="pc-navbar">
                 <li class="pc-item {{ request()->is('/')?'active':'' }}">
                     <a href="{{ route('home') }}" class="pc-link">
@@ -84,7 +86,7 @@
                                     Department Needs
                                     </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
                                       <ul class="pc-submenu">
-                                      <li class="pc-item"><a class="pc-link" href="{{ route('procurementdepartmentalplan.index') }}" data-i18n="Procurement List">Raise Needs</a></li> 
+                                      <li class="pc-item"><a class="pc-link" href="{{ route('procurementdepartmentalplan.index') }}" data-i18n="Procurement List">Raise Needs</a></li>
                                       <li class="pc-item"><a class="pc-link" href="{{ route('needsapproval.index') }}" data-i18n="Procurement List">Approve Needs</a></li>
                               </ul>
                                         </li>
@@ -92,16 +94,16 @@
                                     Plan Consolidation
                                     </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
                                       <ul class="pc-submenu">
-                                      <li class="pc-item"><a class="pc-link" href="{{ route('consolidated.index') }}" data-i18n="Procurement List">Consolidated Needs</a></li> 
+                                      <li class="pc-item"><a class="pc-link" href="{{ route('consolidated.index') }}" data-i18n="Procurement List">Consolidated Needs</a></li>
                                       <li class="pc-item"><a class="pc-link" href="{{ route('procurementplanmaintain.index') }}" data-i18n="Procurement List">New Plan</a></li>
                                       <li class="pc-item"><a class="pc-link" href="{{ route('editplan.index') }}" data-i18n="Procurement List">Ammend Plan</a></li>
                                       <li class="pc-item"><a class="pc-link" href="{{ route('maptobudget.index') }}" data-i18n="Procurement List">Link Budget Lines</a></li>
-                                      <li class="pc-item"><a class="pc-link" href="{{ route('procurementassignitem.index') }}" data-i18n="Procurement List">Set Method</a></li>                    
-                                      <li class="pc-item"><a class="pc-link" href="{{ route('procurementplanquaterly.index') }}" data-i18n="Procurement List">Schedule Plan</a></li> 
-                                     
+                                      <li class="pc-item"><a class="pc-link" href="{{ route('procurementassignitem.index') }}" data-i18n="Procurement List">Set Method</a></li>
+                                      <li class="pc-item"><a class="pc-link" href="{{ route('procurementplanquaterly.index') }}" data-i18n="Procurement List">Schedule Plan</a></li>
+
                                     </ul>
-                                        </li>        
-                    
+                                        </li>
+
                                 <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
                                     Dashboard
                                     </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
@@ -109,11 +111,11 @@
                                        <li class="pc-item"><a class="pc-link" href="{{ route('procurementplandetails.index') }}" data-i18n="Procurement List">Plan View</a></li>
                                       <li class="pc-item"><a class="pc-link" href="{{ route('plantimeline.index') }}" data-i18n="Procurement List">Timeline</a></li>
                                       <li class="pc-item"><a class="pc-link" href="{{ route('calenderbased.index') }}" data-i18n="Procurement List">Calender Based</a></li>
-                                     <li class="pc-item"><a class="pc-link" href="{{ route('delayeditems.index') }}" data-i18n="Procurement List">Flagged Items</a></li>    
-                                     <li class="pc-item"><a class="pc-link" href="{{ route('planvsactual.index') }}" data-i18n="Procurement List">Plan vs Actual</a></li> 
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('delayeditems.index') }}" data-i18n="Procurement List">Flagged Items</a></li>
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('planvsactual.index') }}" data-i18n="Procurement List">Plan vs Actual</a></li>
                                     </ul>
                                         </li>
-                    
+
                                 <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
                                     Approval
                                     </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
@@ -122,8 +124,8 @@
                                      <li class="pc-item"><a class="pc-link" href="{{ route('approvalinbox.index') }}" data-i18n="Procurement List">Approval Inbox</a></li>
                                     <li class="pc-item"><a class="pc-link" href="{{ route('procurementplanapproval.index') }}" data-i18n="Procurement List">Approve Plan</a></li>
                                     </ul>
-                                        </li>    
-                    
+                                        </li>
+
                                 <li class="pc-item pc-hasmenu"><a class="pc-link" href="#!"><span data-i18n="Supplier">
                                     Plan Execution
                                     </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
@@ -846,6 +848,10 @@
                             <a class="pc-link {{ request()->is('hrm/departments*')?'active pc-trigger':'' }}"
                                href="{{ route('departments.index') }}">Departments</a>
                         </li>
+                        <li class="pc-item">
+                            <a class="pc-link {{ request()->is('hrm/committees*')?'active pc-trigger':'' }}"
+                               href="{{ route('hrms.committees.index') }}">Committees</a>
+                        </li>
 
                     </ul>
                 </li>
@@ -879,6 +885,8 @@
                             </span><span class="pc-mtext" data-i18n="Data">Code Details</span></a>
                 </li>
             </ul>
+
+             --}}
         </div>
     </div>
 </nav>

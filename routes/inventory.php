@@ -1,32 +1,40 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Inventory\BinTrackingController;
+use App\Http\Controllers\Inventory\ExpiryBatchTrackingController;
+use App\Http\Controllers\Inventory\InterBranchRequisitionApprovalController;
+use App\Http\Controllers\Inventory\InterBranchRequisitionController;
+use App\Http\Controllers\Inventory\InventoryDashboardController;
+use App\Http\Controllers\Inventory\ItemCategoryController;
+use App\Http\Controllers\Inventory\ItemMasterListController;
+use App\Http\Controllers\Inventory\ItemSubCategoryController;
+use App\Http\Controllers\Inventory\MovementDashboardController;
+use App\Http\Controllers\Inventory\OpeningStockController;
+use App\Http\Controllers\Inventory\ReportsController;
+use App\Http\Controllers\Inventory\SKUController;
+use App\Http\Controllers\Inventory\StockTakeController;
+use App\Http\Controllers\Inventory\StockValuationHistoryController;
+use App\Http\Controllers\Inventory\TransactionAdjustmentController;
 use App\Http\Controllers\Inventory\TransactionReceiptsController;
 use App\Http\Controllers\Inventory\TransactionTransfersController;
-use App\Http\Controllers\Inventory\TransactionAdjustmentController;
-use App\Http\Controllers\Inventory\ItemMasterController;
-use App\Http\Controllers\Inventory\ItemMasterListController;
-use App\Http\Controllers\Inventory\SKUController;
-use App\Http\Controllers\Inventory\ItemCategoryController;
-use App\Http\Controllers\Inventory\ItemSubCategoryController;
-use App\Http\Controllers\Inventory\InventoryDashboardController;
-use App\Http\Controllers\Inventory\MovementDashboardController;
-use App\Http\Controllers\Inventory\StockTakeController;
-use App\Http\Controllers\Inventory\OpeningStockController;
 use App\Http\Controllers\Inventory\UOMConversionController;
-use App\Http\Controllers\Inventory\BinTrackingController;
-use App\Http\Controllers\Inventory\StockValuationHistoryController;
-use App\Http\Controllers\Inventory\InterBranchRequisitionController;
-use App\Http\Controllers\Inventory\ReportsController;
-use App\Http\Controllers\Inventory\InterBranchRequisitionApprovalController;
-use App\Http\Controllers\Inventory\PropertyReceiptPrintController;
+use App\Http\Controllers\Property\PropertyReceiptPrintController;
+use Illuminate\Support\Facades\Route;
 
-Route::get('/itemmaster', [ItemMasterListController::class, 'index'])->name('itemmaster.index');
+//use App\Http\Controllers\Inventory\ReceiptController;
+
+//use App\Http\Controllers\Inventory\PropertyReceiptPrintController;
+
 
 Route::namespace('Inventory')->prefix('inventory')->group(function () {
+    // Route::resource('receipts', ReceiptController::class);
+
+    Route::get('/itemmaster', [ItemMasterListController::class, 'index'])->name('itemmaster.index');
+
     Route::resource('transactionsreceipts', TransactionReceiptsController::class);
     Route::resource('transactionstransfers', TransactionTransfersController::class);
     Route::resource('transactionsadjustment', TransactionAdjustmentController::class);
+
     //Route::resource('itemmaster', ItemMasterController::class);
     Route::get('/itemmasterlist/create', [ItemMasterListController::class, 'create'])->name('itemmasterlist.create');
     Route::post('/itemmasterlist', [ItemMasterListController::class, 'store'])->name('itemmasterlist.store');
@@ -69,4 +77,6 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::resource('interbranchrequisition', InterBranchRequisitionController::class);
     Route::resource('interbranchrequisitionapproval', InterBranchRequisitionApprovalController::class);
     Route::resource('inventoryreports', ReportsController::class);
+    //Route::resource('rentdashboard', RentDashboardController::class);
+    Route::resource('receiptprint', PropertyReceiptPrintController::class);
 });

@@ -22,6 +22,7 @@ use App\Models\CRM\Schedule;
 use App\Models\CRM\Social;
 use App\Models\CRM\Survey;
 use App\Models\CRM\Ticket;
+use App\Models\Procurement\DepartmentNeeds;
 use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
 use App\Models\Procurement\Order;
@@ -34,7 +35,6 @@ use App\Models\ThirdParies\Competitor;
 use App\Traits\UsefulEnumTrait;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
-use Spatie\Permission\Models\Role;
 
 enum PermissionEnum: string
 {
@@ -188,15 +188,23 @@ enum PermissionEnum: string
     case PurchaseOrderDelete = 'purchaseOrder-delete';
     case PurchaseOrderApproval = 'purchaseOrder-approval';
 
+    //ProcurementPlan Department Needs
+    case DepartmentNeedsRead = 'departmentneeds-read';
+    case DepartmentNeedsWrite = 'departmentneeds-create';
+    case DepartmentNeedsUpdate = 'departmentneeds-update';
+    case DepartmentNeedsDelete = 'departmentneeds-delete';
+    case DepartmentNeedsApproval = 'departmentneeds-approval';
+    /*
+    *
+    * ========================================  Inventory  ========================================
+    */
+    case MasterListView = 'masterList-view';
 
     /*
      *
      * ========================================  Human Resource management  ========================================
      */
     case Departments = 'department';
-
-    case MasterListView = 'masterList-view';
-
     case EmployeesView = 'employee-read';
     case EmployeesCreate = 'employee-create';
     case EmployeesUpdate = 'employee-update';
@@ -234,57 +242,64 @@ enum PermissionEnum: string
             [self::Integrations],
             [self::Roles],
 
+            [self::DepartmentNeedsRead, self::DepartmentNeedsWrite, self::DepartmentNeedsUpdate, self::DepartmentNeedsDelete, self::DepartmentNeedsApproval,],
 
             [self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete, self::Departments],
+            [self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval, self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval],
+            [self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval]
+
+
         ]);
     }
 
     public static function approvals(): Collection
     {
-        return collect([self::MarketingPlannerApproval, /* self::MarketingListApproval,*/ self::TicketApproval, self::CampaignApproval, self::SurveyApproval, self::Ceo, self::MarketingManager]);
+        return collect([self::MarketingPlannerApproval, /* self::MarketingListApproval,*/ self::TicketApproval, self::CampaignApproval, self::SurveyApproval, self::Ceo, self::MarketingManager,
+            self::PurchaseOrderApproval, self::RequisitionApproval,self::RequisitionItemsApproval]);
     }
 
-    public function module(): string
+
+    public function module(): ModulesEnum
     {
         return match ($this) {
-            self::MarketingPlannerRead, self::MarketingPlannerWrite, self::MarketingPlannerUpdate, self::MarketingPlannerDelete, self::MarketingPlannerApproval => MarketingPlanner::getPrimaryKey(),
-            self::MarketingListRead, self::MarketingListWrite, self::MarketingListUpdate, self::MarketingListDelete, self::DebtCollectionLists/*, self::MarketingListApproval*/ => MarketingList::getPrimaryKey(),
-            self::ProductDevelopmentRead, self::ProductDevelopmentWrite, self::ProductDevelopmentUpdate, self::ProductDevelopmentDelete => '',
-            self::EmailRead, self::EmailAssign, self::EmailDelete => EmailConversation::getPrimaryKey(),
-            self::ScheduleRead, self::ScheduleWrite, self::ScheduleDelete => Schedule::getPrimaryKey(),
-            self::CallRead, self::CallWrite, self::CallUpdate, self::CallDelete => Call::getPrimaryKey(),
-            self::CampaignRead, self::CampaignWrite, self::CampaignUpdate, self::CampaignDelete, self::CampaignApproval => Campaign::getPrimaryKey(),
-            self::RfqRead, self::RfqWrite, self::RfqUpdate, self::RfqDelete, self::RfqApproval => RFQ::getPrimaryKey(),
-            self::TicketRead, self::TicketWrite, self::TicketUpdate, self::TicketDelete, self::TicketApproval => Ticket::getPrimaryKey(),
-            self::TaskCreate, self::TaskDelegate => Task::getPrimaryKey(),
-            self::LeadRead, self::LeadWrite, self::LeadDelegate, self::LeadUpdate, self::LeadDelete, self::LeadViewAll, self::LeadsManager => Lead::getPrimaryKey(),
-            self::SocialRead, self::SocialWrite, self::SocialDelete => Social::getPrimaryKey(),
-            self::ReviewsView => Review::getPrimaryKey(),
-            self::DebtCollectionView, self::DebtCollectionAssignment, self::DebtCollectionAdmin => DebtProduct::getPrimaryKey(),
-            self::DebtNotificationView, self::DebtNotificationSend => BulkNotification::getPrimaryKey(),
-            self::SurveyRead, self::SurveyWrite, self::SurveyDelete, self::SurveyApproval => Survey::getPrimaryKey(),
-            self::Competitor, self::CompetitorLLM => Competitor::getPrimaryKey(),
-            self::Teams => Team::getPrimaryKey(),
-            self::Branches => Branch::getPrimaryKey(),
-            self::Users, self::UsersMeeting, self::UsersMessaging, self::UsersSessions => User::getPrimaryKey(),
-            self::Members => Client::getPrimaryKey(),
-            self::BoardManage, self::BoardMeeting => Board::getPrimaryKey(),
-            self::Integrations => APICredential::getPrimaryKey(),
-            self::MeetingRooms => MeetingRoom::getPrimaryKey(),
-            self::Roles, self::Ceo, self::Managers, self::MarketingManager => Role::class,
-            self::ListsView, self::ListsUpdate => CodeDetail::getPrimaryKey(),
-            //Requisition
-            self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval => Requisitions::getPrimaryKey(),
-            self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval => RequisitionLine::getPrimaryKey(),
+            self::MarketingPlannerRead, self::MarketingPlannerWrite, self::MarketingPlannerUpdate, self::MarketingPlannerDelete, self::MarketingPlannerApproval,
+            self::MarketingListRead, self::MarketingListWrite, self::MarketingListUpdate, self::MarketingListDelete, self::DebtCollectionLists/*, self::MarketingListApproval*/,
+            self::ProductDevelopmentRead, self::ProductDevelopmentWrite, self::ProductDevelopmentUpdate, self::ProductDevelopmentDelete,
+            self::EmailRead, self::EmailAssign, self::EmailDelete,
+            self::ScheduleRead, self::ScheduleWrite, self::ScheduleDelete,
+            self::CallRead, self::CallWrite, self::CallUpdate, self::CallDelete,
+            self::CampaignRead, self::CampaignWrite, self::CampaignUpdate, self::CampaignDelete, self::CampaignApproval,
+            self::TicketRead, self::TicketWrite, self::TicketUpdate, self::TicketDelete, self::TicketApproval,
+            self::TaskCreate, self::TaskDelegate,
+            self::LeadRead, self::LeadWrite, self::LeadDelegate, self::LeadUpdate, self::LeadDelete, self::LeadViewAll, self::LeadsManager,
+            self::SocialRead, self::SocialWrite, self::SocialDelete,
+            self::ReviewsView,
+            self::DebtCollectionView, self::DebtCollectionAssignment, self::DebtCollectionAdmin,
+            self::DebtNotificationView, self::DebtNotificationSend,
+            self::SurveyRead, self::SurveyWrite, self::SurveyDelete, self::SurveyApproval,
+            self::Competitor, self::CompetitorLLM, self::Members, self::BoardManage, self::BoardMeeting => ModulesEnum::CRM,
 
-            //PurchaseOrder
-            self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval => Order::getPrimaryKey(),
+
+            self::Teams, self::Branches, self::Users, self::UsersMeeting, self::UsersMessaging, self::UsersSessions, self::Integrations,
+            self::MeetingRooms, self::Roles, self::Ceo, self::Managers, self::MarketingManager, self::ListsView, self::ListsUpdate
+            => ModulesEnum::Settings,
+
+            //Requisition
+            self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval,
+            self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval,
+            self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval,
+            self::RfqRead, self::RfqWrite, self::RfqUpdate, self::RfqApproval, self::RfqDelete
+            => ModulesEnum::Procurement,
+
+
+            //DepartmentNeeds
+            self::DepartmentNeedsRead, self::DepartmentNeedsWrite, self::DepartmentNeedsUpdate, self::DepartmentNeedsDelete, self::DepartmentNeedsApproval => DepartmentNeeds::getPrimaryKey(),
 
             self::RfqRead, self::RfqWrite, self::RfqUpdate, self::RfqApproval => RFQ::getPrimaryKey(),
+            self::Departments, self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete => ModulesEnum::HRM,
 
-            self::Departments => Department::getPrimaryKey(),
-            self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete => Employee::getPrimaryKey(),
 
+            self::MasterListView => ModulesEnum::Inventory,
         };
     }
 
@@ -318,8 +333,15 @@ enum PermissionEnum: string
             self::Members => 'Members',
             self::Roles => 'Roles',
             self::ListsView, self::ListsUpdate => 'System Codes',
-
+            self::DepartmentNeedsRead, self::DepartmentNeedsWrite, self::DepartmentNeedsUpdate, self::DepartmentNeedsDelete, self::DepartmentNeedsApproval => 'Department Needs',
             self::Departments, self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete => 'Employees',
+
+            //Requisition
+            self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval, self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval =>'Requisitions',
+
+
+            //PurchaseOrder
+            self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval => 'Purchase Order',
         };
     }
 }

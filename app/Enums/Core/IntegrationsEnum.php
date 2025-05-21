@@ -9,7 +9,7 @@ enum IntegrationsEnum: string
     use UsefulEnumTrait;
 
     //3 char
-
+    case ReportService = 'srs';
     case Email = 'ema';
     case SMS = 'sms';
     case InfoBip = 'ibp';
@@ -34,6 +34,7 @@ enum IntegrationsEnum: string
             self::Website => 'Website Credentials',
             self::Channels => 'Internet & Mobile Banking',
             self::LLM => 'LLM (ai) Configuration',
+            self::ReportService => "SQL Server Reporting Service",
         };
     }
 

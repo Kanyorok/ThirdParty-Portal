@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\BranchRequest;
+//use App\Models\BR\Branch;
 use App\Models\Core\Branch;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -12,7 +13,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Throwable;
 use Yajra\DataTables\DataTables;
+
+#use App\Models\BR\Branch;
 
 class CrmBranchController extends Controller
 {
@@ -78,7 +82,7 @@ class CrmBranchController extends Controller
                 activity()->causedBy($actor)->performedOn($crmBranch->refresh())->event('create')->log('created a branch ' . $crmBranch->BranchID);
 
             });
-        } catch (\Throwable|Exception $e) {
+        } catch (Throwable|Exception $e) {
             Log::error('Error creating branch failed: ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }
@@ -108,7 +112,7 @@ class CrmBranchController extends Controller
                 activity()->causedBy($actor)->performedOn($crmBranch)->event('update')->log('updated branch ' . $crmBranch->BranchID);
 
             });
-        } catch (\Throwable|Exception $e) {
+        } catch (Throwable|Exception $e) {
             Log::error('Error updating branch failed: ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }
@@ -125,7 +129,7 @@ class CrmBranchController extends Controller
                     'DeletedBy' => $request->user()->Id,
                 ])->save();
             });
-        } catch (\Throwable|Exception $e) {
+        } catch (Throwable|Exception $e) {
             Log::error('Error trashing branch failed: ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }

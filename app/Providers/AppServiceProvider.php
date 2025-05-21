@@ -28,6 +28,7 @@ use App\Models\CRM\Survey;
 use App\Models\CRM\Ticket;
 use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
+use App\Models\Procurement\DepartmentNeeds;
 use App\Models\Procurement\Order;
 use App\Models\Procurement\RequisitionLine;
 use App\Models\Procurement\Requisitions;
@@ -97,6 +98,7 @@ class AppServiceProvider extends ServiceProvider
             Requisitions::getPrimaryKey() => Requisitions::class,
             RequisitionLine::getPrimaryKey() => RequisitionLine::class,
             Order::getPrimaryKey() => Order::class,
+            DepartmentNeeds::getPrimaryKey() => DepartmentNeeds::class,
         ]);
 
         Gate::policy(Role::class, RolePolicy::class);
