@@ -38,19 +38,36 @@ class CommitteeController extends Controller
 
     public function store(Request $request)
     {
-       // dd($request->all());
         $validated = $request->validate([
             'Name' => 'required|string|max:255',
             'Notes' => 'nullable|string',
             'Type' => 'nullable|string',
-            'CommitteeID' => 'required|string|unique:t_Committees,CommitteeID',
         ]);
+
+        // Generate the CommitteeID
+        $prefix = 'Comm-';
+        $lastCommittee = Committee::where('CommitteeID', 'like', $prefix . '%')->orderBy('CommitteeID', 'desc')->first();
+
+        if ($lastCommittee) {
+            // Extract the numeric part of the last CommitteeID and increment it
+            $lastNumber = intval(substr($lastCommittee->CommitteeID, strlen($prefix)));
+            $newNumber = $lastNumber + 1;
+        } else {
+            // Start from 1 if no CommitteeID exists
+            $newNumber = 1;
+        }
+
+        // Format the new CommitteeID with leading zeros (e.g., Comm-001, Comm-002)
+        $validated['CommitteeID'] = $prefix . str_pad($newNumber, 3, '0', STR_PAD_LEFT);
+
+        // Add CreatedBy and ModifiedBy fields
         $validated['CreatedBy'] = Auth::id();
         $validated['ModifiedBy'] = Auth::id();
 
-            Committee::create($validated);
+        // Create the new committee
+        Committee::create($validated);
 
-            return redirect()->route('hrms.committees.index')->with('success', 'Committee created successfully.');
+        return redirect()->route('hrms.committees.index')->with('success', 'Committee created successfully.');
     }
 
     public function update(Request $request, Committee $committee)
