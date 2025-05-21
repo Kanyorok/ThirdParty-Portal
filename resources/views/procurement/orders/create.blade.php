@@ -33,11 +33,11 @@
                     <label>Supplier</label>
                     <select class="form-control supplier" id="supplier" name="supplier">
                         <option selected disabled>Select supplier</option>
-                        <option value="01">Supplier 1</option>
-                        <option value="02">Supplier 2</option>
-                        {{--                     @foreach ($Details as $vendor) --}}
-                        {{--                <option value="{{ $vendor->Id }}">{{ $vendor->Name }}</option> --}}
-                        {{--                    @endforeach --}}
+{{--                        <option value="01">Supplier 1</option>--}}
+{{--                        <option value="02">Supplier 2</option>--}}
+                                             @foreach ($suppliers as $vendor)
+                                        <option value="{{ $vendor->Id }}">{{ $vendor->Name }}</option>
+                                            @endforeach
 
                         <!-- Loop suppliers here -->
                     </select>
@@ -217,12 +217,12 @@
             });
         }
 
-        $(document).on('change','#supplier',function () {
-            fetchSuppliers();
-
-
-            alert('eric');
-        });
+        // $(document).on('change','#supplier',function () {
+        //     fetchSuppliers();
+        //
+        //
+        //     alert('eric');
+        // });
 
         $(function () {
             // Handle item type change using event delegation
