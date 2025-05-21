@@ -234,7 +234,8 @@ class OrderService
                 t_Items.Id as ItemID,
                 t_Items.ItemName,
                 t_Items.ItemType,
-                t_Items.ItemDescription as Description
+                t_Items.ItemDescription as Description,
+                t_OrderLines.LineTotal
             '))
             ->get();
     }

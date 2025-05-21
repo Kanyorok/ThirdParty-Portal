@@ -7,6 +7,14 @@
             width: 100% !important;
         }
 
+        /*input,*/
+        /*textarea {*/
+        /*    background: transparent;*/
+        /*    !*border: none; !* optional: removes border too *!*!*/
+        /*    outline: none; !* optional: removes outline on focus *!*/
+        /*    box-shadow: none; !* optional: removes inner shadows *!*/
+        /*}*/
+
     </style>
 @endsection
 @section('content')
@@ -123,7 +131,7 @@
                         <td class="text-start">
                                 <textarea class="form-control form-control-sm itemDescription" name="itemDescription[]"
                                           id="Description" cols="30"
-                                          rows="5" readonly></textarea>
+                                          rows="5" readonly   style="display: flex; align-items: center; justify-content: center; text-align: center; padding: 0; resize: none;"></textarea>
                             {{--                            <input type="text" class="form-control form-control-sm itemDescription" --}}
                             {{--                                name="itemDescription[]" id="Description" readonly> --}}
                         </td>

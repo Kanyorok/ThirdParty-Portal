@@ -149,7 +149,7 @@
                         <td class="text-start">
                                 <textarea class="form-control form-control-sm itemDescription" name="itemDescription[]"
                                           id="Description" cols="30"
-                                          rows="5" readonly>{{$line ->Description}}</textarea>
+                                          rows="5" readonly style="display: flex; align-items: center; justify-content: center; text-align: center; padding: 0; resize: none;">{{$line ->Description}}</textarea>
                             {{--                            <input type="text" class="form-control form-control-sm itemDescription" --}}
                             {{--                                name="itemDescription[]" id="Description" readonly> --}}
                         </td>
@@ -162,7 +162,7 @@
                         <td class="text-start"><input type="number" class="form-control form-control-sm discount"
                                                       name="discount[]" id="Discount" value="{{$line ->fLineDiscount}}"></td>
                         <td class="text-start"><input type="number" class="form-control form-control-sm line-total"
-                                                      name="lineTotal[]" id="lineTotal" step="" value="0"></td>
+                                                      name="lineTotal[]" id="lineTotal" step="" value="{{$line ->LineTotal}}"></td>
                     </tr>
                     @endforeach
                     </tbody>
