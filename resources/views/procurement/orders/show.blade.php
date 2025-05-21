@@ -49,7 +49,7 @@
                 </div>
                 <div class="col-md-4">
                     <label>Date</label>
-                    <input type="date" class="form-control poDate" name="pODate" value="{{$orderInfo->OrderDate ?? 'N/A'}}"/>
+                    <input type="date" class="form-control poDate" name="pODate" value="{{ isset($orderInfo->OrderDate) ? \Carbon\Carbon::parse($orderInfo->OrderDate)->format('Y-m-d') : '' }}"/>
                 </div>
                 <div class="col-md-4">
                     <label>Reference Number</label>
@@ -143,15 +143,15 @@
                 <div class="col-md-4 offset-md-8">
                     <div class="mb-2">
                         <label>Exclusive Total</label>
-                        <input type="text" class="form-control" readonly/>
+                        <input type="text" class="form-control" value="{{$orderInfo->OrdTotExcl ?? 'N/A'}}" readonly/>
                     </div>
                     <div class="mb-2">
                         <label>Tax Amount</label>
-                        <input type="text" class="form-control" readonly/>
+                        <input type="text" class="form-control" value="{{$orderInfo->OrdTotTax ?? 'N/A'}}" readonly/>
                     </div>
                     <div>
                         <label>Inclusive Total</label>
-                        <input type="text" class="form-control" readonly/>
+                        <input type="text" class="form-control" value="{{$orderInfo->OrdTotExcl ?? 'N/A'}}" readonly/>
                     </div>
                 </div>
             </div>

@@ -187,7 +187,25 @@ class PurchaseOrderController extends Controller
                         'error' => $POLinesAdd['error'] ?? 'Line creation error'
                     ], 500);
                 }
+
             }
+
+            $POSum = $this->orderService->AddPurchaseOrderSum(
+                $poId
+            );
+            if ($POSum['status'] !== 'success') {
+                \Log::error('Failed to calculate POs sum.', [
+                    'po_id' => $poId,
+                    'response' => $POSum,
+                ]);
+
+                return response()->json([
+                    'message' => 'Failed to calculate PO sum',
+                    'error' => $POSum['error'] ?? 'Sum calculation error'
+                ], 500);
+            }
+
+
 
             // Everything succeeded
             return response()->json([
