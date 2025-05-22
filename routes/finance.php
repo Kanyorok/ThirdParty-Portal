@@ -1,33 +1,34 @@
 <?php
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Finance\JournalBatchController;
-use App\Http\Controllers\Finance\LedgerAccountsController;
-use App\Http\Controllers\Finance\TransactionTypesController;
-use App\Http\Controllers\Finance\BankReconciliationController;
-use App\Http\Controllers\Finance\PeriodManagementController;
-use App\Http\Controllers\Finance\VendorMasterController;
-use App\Http\Controllers\Finance\InvoiceEntryController;
-use App\Http\Controllers\Finance\CustomerMasterController;
-use App\Http\Controllers\Finance\InvoiceGenerationController;
-use App\Http\Controllers\Finance\CreditNoteController;
-use App\Http\Controllers\Finance\PaymentProcessingController;
-use App\Http\Controllers\Finance\AgingReportController;
-use App\Http\Controllers\Finance\ReceiptsPostingController;
-use App\Http\Controllers\Finance\CreditManagementController;
+
 use App\Http\Controllers\Finance\AgingReportARController;
-use App\Http\Controllers\Finance\CustomerStatementController;
-use App\Http\Controllers\Finance\PaymentVoucherController;
+use App\Http\Controllers\Finance\AgingReportController;
+use App\Http\Controllers\Finance\BalanceSheetController;
 use App\Http\Controllers\Finance\BankAccountSetupController;
+use App\Http\Controllers\Finance\BankReconciliationController;
 use App\Http\Controllers\Finance\CashBookController;
 use App\Http\Controllers\Finance\CashManagementController;
 use App\Http\Controllers\Finance\ChequeManagementController;
-use App\Http\Controllers\Finance\PaymentAndReceiptsController;
-use App\Http\Controllers\Finance\BalanceSheetController;
 use App\Http\Controllers\Finance\ConsolidationReportsController;
+use App\Http\Controllers\Finance\CreditManagementController;
+use App\Http\Controllers\Finance\CreditNoteController;
+use App\Http\Controllers\Finance\CustomerMasterController;
+use App\Http\Controllers\Finance\CustomerStatementController;
 use App\Http\Controllers\Finance\IncomeStatementController;
+use App\Http\Controllers\Finance\InvoiceEntryController;
+use App\Http\Controllers\Finance\InvoiceGenerationController;
+use App\Http\Controllers\Finance\JournalBatchController;
+use App\Http\Controllers\Finance\LedgerAccountsController;
+use App\Http\Controllers\Finance\PaymentAndReceiptsController;
+use App\Http\Controllers\Finance\PaymentProcessingController;
+use App\Http\Controllers\Finance\PaymentVoucherController;
+use App\Http\Controllers\Finance\PeriodManagementController;
+use App\Http\Controllers\Finance\ReceiptsPostingController;
+use App\Http\Controllers\Finance\TransactionTypesController;
+use App\Http\Controllers\Finance\VendorMasterController;
+use Illuminate\Support\Facades\Route;
 
 
-Route::namespace('Finance')->group(function () {
+Route::namespace('Finance')->prefix('finance')->group(function () {
     Route::resource('journalbatch', JournalBatchController::class);
     Route::resource('ledgeraccounts', LedgerAccountsController::class);
     Route::resource('transactiontypes', TransactionTypesController::class);

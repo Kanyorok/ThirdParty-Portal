@@ -68,4 +68,10 @@ class Employee extends Model
     {
         return $this->full_name;
     }
+
+    public function committees()
+    {
+        return $this->belongsToMany(Committee::class, 't_Committee_Employee', 'EmployeeId', 'CommitteeId')
+            ->withPivot(['CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn', 'DeletedBy', 'DeletedOn']);
+    }
 }

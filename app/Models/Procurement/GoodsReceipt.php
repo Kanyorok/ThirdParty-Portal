@@ -16,6 +16,7 @@ class GoodsReceipt extends Model
     const DELETED_AT = 'DeletedOn';
     
     protected $table = 't_GoodsReceipts';
+    protected $primaryKey = 'id';
     protected $fillable = [
                            'GRNID',
                            'POID',
@@ -35,4 +36,7 @@ class GoodsReceipt extends Model
                            'DeletedBy',
                            'DeletedOn',
                           ];
+        public static function getPrimaryKey(): string{
+        return 'id';
+    }
 }

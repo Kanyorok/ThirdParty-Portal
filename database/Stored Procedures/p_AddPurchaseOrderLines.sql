@@ -14,13 +14,17 @@ BEGIN
     SET NOCOUNT ON
 
 
-    DECLARE @PriceIncl float;
+    DECLARE @PriceIncl float, @LineTotal float;
 
     set @PriceIncl = isnull(@Price,0) * isnull(@Tax,0)
 
+--     set @LineTotal = ((@Quantity * @Price) - @Discount ) * (1 + (y.fTaxRate / 100.0))
+
+
+
     -- Insert new purchase order lines
-    INSERT INTO t_OrderLines (iOrderID, fQuantity, fUnitPriceExcl, fUnitPriceIncl, flineDiscount, fTaxRate, CreatedBy,CreatedOn, ModifiedBy,ModifiedOn,BranchID)
-    VALUES( @OrderId,@Quantity,@Price,@PriceIncl,@Discount,@Tax,@User, getdate(),@User,getdate(), @BranchId)
+    INSERT INTO t_OrderLines (iOrderID, fQuantity, fUnitPriceExcl, fUnitPriceIncl, flineDiscount, fTaxRate, CreatedBy,CreatedOn, ModifiedBy,ModifiedOn,BranchID,iStockCodeID, LineTotal)
+    VALUES( @OrderId,@Quantity,@Price,@PriceIncl,@Discount,@Tax,@User, getdate(),@User,getdate(), @BranchId, @Item, @LineTotal)
 
 
 

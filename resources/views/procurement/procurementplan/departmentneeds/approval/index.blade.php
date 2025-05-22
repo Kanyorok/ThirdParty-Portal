@@ -20,21 +20,29 @@
     </thead>
     <tbody>
       <!-- Sample Row -->
+      @forelse ($NeedsApprovalviews as $index => $NeedsApprovalview)
       <tr>
-        <td>1</td>
-        <td>Office Chairs</td>
-        <td>Furniture</td>
-        <td>10</td>
-        <td>100,000</td>
-        <td>Jane Mwangi</td>
-        <td>2025-05-10</td>
-        <td>2025-06-15</td>
+        <td>{{ $index + 1 }}</td>
+        <td>{{ $NeedsApprovalview->item->ItemName ?? 'N/A' }}</td>
+        <td>{{ $NeedsApprovalview->item->category->Name ?? 'N/A' }}</td>
+        <td>{{ $NeedsApprovalview->RequestedQty }}</td>
+        <td>{{ $NeedsApprovalview->EstimatedUnitCost }}</td>
+        <td>{{ $NeedsApprovalview->creator->Name }}</td>
+        <td>{{ \Carbon\Carbon::parse($NeedsApprovalview->CreatedOn)->format('d M Y') }}</td>
+        <td>{{ \Carbon\Carbon::parse($NeedsApprovalview->RequestedDate)->format('d M Y') }}</td>
         <td>
-          <a href="{{ route('needsapproval.create') }}"  class="btn btn-sm btn-info">View</a>
-          <button class="btn btn-sm btn-success">Approve</button>
-          <button class="btn btn-sm btn-danger">Reject</button>
+        
+        <a class="btn btn-sm btn-primary" href="{{ route('NeedApproval.show', $NeedsApprovalview->Id) }}">View</a>
+        <button class="btn btn-sm btn-success">Approve</button>
+        <button class="btn btn-sm btn-danger">Reject</button>
+        </form>
         </td>
       </tr>
+      @empty
+      <tr>
+        <td colspan="9" class="text-center">No submissions found.</td>
+      </tr>
+      @endforelse
       <!-- Loop rows dynamically -->
     </tbody>
   </table>
