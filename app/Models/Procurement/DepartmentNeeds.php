@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Core\PendingWorkflow;
 use App\Models\Core\Workflow;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use App\Models\HRM\Department;
+use App\Models\Core\Branch;
 
 class DepartmentNeeds extends Model
 {
@@ -45,6 +47,14 @@ class DepartmentNeeds extends Model
     public function pendingWorkflows(): MorphMany
     {
         return $this->morphMany(PendingWorkflow::class, __FUNCTION__, 'Source', 'SourceID', 'Id');
+    }
+    public function department()
+{
+    return $this->belongsTo(Department::class, 'DepartmentID');
+}
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class, 'BranchID');
     }
 
 }
