@@ -34,7 +34,7 @@ class DepartmentNeeds extends Model
     }
     public function item()
     {
-        return $this->belongsTo(Item::class, 'ItemID');
+        return $this->belongsTo(Item::class, 'ItemID','Id');
     }
 
     public function workflows(): MorphMany

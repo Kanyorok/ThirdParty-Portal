@@ -34,7 +34,7 @@ class DepartmentNeedsPolicy
     public function approve(User $user, DepartmentNeeds $departmentNeeds): bool
     {
         //dd($departmentNeeds);
-        if ($departmentNeeds->Status->value === DepartmentNeedsEnum::Approval->value) {
+        if ($departmentNeeds->Status->value === DepartmentNeedsEnum::Approved->value) {
             return false;
         }
 

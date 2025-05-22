@@ -20,7 +20,7 @@ class DepartmentNeedApprovalController extends Controller
     //
     public function index()
     {
-        $NeedsApprovalviews = DepartmentNeeds::with('creator')->get();
+        $NeedsApprovalviews = DepartmentNeeds::with('creator')->where('Status', 'p')->get();
         return view('procurement.procurementplan.departmentneeds.approval.index', compact('NeedsApprovalviews'));
     }
 

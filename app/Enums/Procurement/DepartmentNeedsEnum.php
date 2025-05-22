@@ -7,8 +7,15 @@ use App\Traits\UsefulEnumTrait;
 enum DepartmentNeedsEnum:string
 {
     use UsefulEnumTrait;
-    case Approval = 'a';
+    case Approved = 'a';
 
-    case Draft = 'd';
+    case Pending = 'p';
 
+    public function label(): string
+    {
+        return match($this) {
+            self::Pending => 'Pending',
+            self::Approved => 'Approved',
+        };
+    }
 }

@@ -29,10 +29,10 @@
       <tr>
         <td>{{ $index + 1 }}</td>
         <td>{{ $departmentneedview->item->ItemName ?? 'N/A' }}</td>
-        <td>{{ $departmentneedview->item->category->Name ?? 'N/A' }}</td>
+        <td>{{ $departmentneedview->item->Category->Name ?? 'N/A' }}</td>
         <td>{{ $departmentneedview->RequestedQty }}</td>
         <td>{{ $departmentneedview->EstimatedUnitCost }}</td>
-        <td>{{ $departmentneedview->Status }}</td>
+        <td>{{ $departmentneedview->Status->label() }}</td>
         <td>{{ $departmentneedview->creator->Name }}</td>
         <td>
         <button onclick="openEditModal('{{ $departmentneedview->NeedID }}')" class="btn btn-sm btn-outline-primary">Edit</button>

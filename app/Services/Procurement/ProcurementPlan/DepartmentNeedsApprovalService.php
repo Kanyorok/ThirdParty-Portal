@@ -15,20 +15,23 @@ class DepartmentNeedsApprovalService
     }
     public function workflowApprove(User $actor): static
     {
-        $this->departmentNeeds->pendingWorkflows()->where('Stage', DepartmentNeedsEnum::Approval)->update([
+        $this->departmentNeeds->pendingWorkflows()->where('Stage', DepartmentNeedsEnum::Approved)->update([
                                                                                                    'DeletedOn' => now(),
                                                                                                    'DeletedBy' => $actor->Id,
                                                                                                   ]);
 
+    $this->departmentNeeds->forceFill([
+    'Status' => DepartmentNeedsEnum::Approved->value,])->save(['timestamps' => false]);
+
         $this->departmentNeeds->workflows()->create([
-                                              'Stage'      => DepartmentNeedsEnum::Approval->name,
+                                              'Stage'      => DepartmentNeedsEnum::Approved->name,
                                               'Status'     => WorkflowStatus::Accepted->value,
                                               'Notes'      => 'Department Need Approval',
                                               'CreatedBy'  => $actor->Id,
                                               'ModifiedBy' => $actor->Id,
                                              ]);
 
-        activity()->causedBy($actor)->performedOn($this->departmentNeeds)->event('approve')->log('Approved Department Needs ' . $this->departmentNeeds->NeedID);
+        activity()->causedBy($actor)->performedOn($this->departmentNeeds)->event('approved')->log('Approved Department Needs ' . $this->departmentNeeds->NeedID);
 
         return $this;
     }
@@ -36,17 +39,17 @@ class DepartmentNeedsApprovalService
     public function workflowReject(User $actor, string $reason): static
     {
         $this->departmentNeeds->forceFill([
-                                    'Status' => DepartmentNeedsEnum::Draft,
+                                    'Status' => DepartmentNeedsEnum::Pending,
                                    ])->save(['timestamps' => false]);
 
 
-        $this->departmentNeeds->pendingWorkflows()->where('Stage', DepartmentNeedsEnum::Approval)->update([
+        $this->departmentNeeds->pendingWorkflows()->where('Stage', DepartmentNeedsEnum::Approved)->update([
                                                                                                    'DeletedOn' => now(),
                                                                                                    'DeletedBy' => $actor->Id,
                                                                                                   ]);
 
         $this->departmentNeeds->workflows()->create([
-                                              'Stage'      => DepartmentNeedsEnum::Approval->name,
+                                              'Stage'      => DepartmentNeedsEnum::Approved->name,
                                               'Status'     => WorkflowStatus::RejectReturn->value,
                                               'Notes'      => $reason,
                                               'CreatedBy'  => $actor->Id,
@@ -60,12 +63,12 @@ class DepartmentNeedsApprovalService
     public function submit(User $actor): static
     {
         $this->departmentNeeds->forceFill([
-                                    'Status' => DepartmentNeedsEnum::Approval->value,
+                                    'Status' => DepartmentNeedsEnum::Approved->value,
                                    ])->save(['timestamps' => false]);
 
         //add workflow
         $this->departmentNeeds->workflows()->create([
-                                              'Stage'      => DepartmentNeedsEnum::Draft->name,
+                                              'Stage'      => DepartmentNeedsEnum::Pending->name,
                                               'Status'     => WorkflowStatus::Submitted->value,
                                               'Notes'      => 'User Submitted',
                                               'CreatedBy'  => $actor->Id,
