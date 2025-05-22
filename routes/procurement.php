@@ -263,4 +263,16 @@ Route::namespace('Procurement')->group(function () {
     Route::get('/bid-submission/manual/{Id}/view', [TenderSubmissionController::class, 'view'])->name('tendersubmission.view');
     Route::get('/bid-submission/manual/{Id}/edit', [TenderSubmissionController::class, 'edit'])->name('tendersubmission.edit');
     Route::post('/bid-submissions', [TenderSubmissionController::class, 'store'])->name('tendersubmission.store');
+
+    //procurement Consolidation
+    Route::get('/dashboard', [ConsolidatedDashboardController::class, 'index'])->name('dashboard.index');
+    Route::get('/dashboard/show/{id}', [ConsolidatedDashboardController::class, 'show'])->name('dashboard.show');
+
+    Route::post('/procurement-plans', [ProcurementPlanMaintainController::class, 'store'])->name('procurementplanmaintain.store');
+
+    Route::prefix('procurement')->group(function () {
+    Route::get('plan-manual-input/create', [PlanManualInputController::class, 'create'])->name('plan.manual-input.create');
+    Route::post('plan-manual-input', [PlanManualInputController::class, 'store'])->name('plan.manual-input.store');
+});
+
 });
