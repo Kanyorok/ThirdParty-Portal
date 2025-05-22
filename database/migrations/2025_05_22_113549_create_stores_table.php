@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('StoreName');
             $table->foreignId('BranchID')->constrained('t_Branches', 'Id');
             $table->string('Status');
-            $table->foreignId('ModifiedBy')->nullable()->constrained('t_Users', 'Id');
+            $table->foreignId('CreatedBy')->nullable()->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->nullable()->constrained('t_Users', 'Id');
             $table->dateTime('ModifiedOn');

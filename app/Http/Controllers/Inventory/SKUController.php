@@ -10,22 +10,18 @@ use Carbon\Carbon;
 
 class SKUController extends Controller
 {
-    // Fetch all stock items
+    
     public function index()
     {
         $items = StockItem::all(); 
         return view('inventory.itemmaster.sku.index', compact('items'));
     }
 
-    // Show the form to create a new stock item
+
     public function create()
     {
         return view('inventory.itemmaster.sku.create');
     }
-
-    // Store a new stock item
-
-
 
     public function store(Request $request)
 {

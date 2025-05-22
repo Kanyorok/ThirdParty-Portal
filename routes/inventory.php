@@ -37,6 +37,9 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::put('/itemmasterlist/{Id}', [ItemMasterListController::class, 'update'])->name('itemmasterlist.update');
     Route::delete('/itemmasterlist/{Id}', [ItemMasterListController::class, 'destroy'])->name('itemmasterlist.destroy');
     Route::get('/get-subcategories', [ItemMasterListController::class, 'getSubcategories'])->name('get.subcategories');
+
+    Route::get('/store', [StoreController::class, 'index'])->name('stores.index');
+    Route::get('/store/create', [StoreController::class, 'create'])->name('stores.create');
     
     //Route::resource('sku', SKUController::class);
     Route::get('/sku', [SKUController::class, 'index'])->name('sku.index');
