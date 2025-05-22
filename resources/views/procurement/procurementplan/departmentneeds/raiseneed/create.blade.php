@@ -7,7 +7,7 @@
   <form action="{{ route('procurementdepartmentalplan.store') }}" method="POST" enctype="multipart/form-data">
     @csrf
 
-      <input type="hidden" name="Status" value="Pending">
+      <input type="hidden" name="Status" value="p">
       <input type="hidden" name="PriorityLevel" value="Normal">
       <input type="hidden" name="IsEmergency" value="0">
       <input type="hidden" name="FiscalYear" value="{{ now()->year }}">
@@ -17,12 +17,14 @@
         <label for="ItemID" class="form-label">Item Name</label>
         <select name="ItemID" id="itemDropdown" class="form-select @error('ItemID') is-invalid @enderror" required>
           <option disabled selected>Select an item</option>
-          @foreach ($items as $item)
-            <option value="{{ $item->Id }}" data-category="{{ $item->category ? $item->category->Name : '' }}" data-uom="{{ $item->UOM }}"
-              {{ old('ItemID') == $item->Id ? 'selected' : '' }}>
-              {{ $item->Name }}
-            </option>
-          @endforeach
+            @foreach ($items as $item)
+              <option value="{{ $item->Id }}" 
+                data-category="{{ $item->category ? $item->category->Name : '' }}" 
+                data-uom="{{ $item->UOM }}"
+                {{ old('ItemID') == $item->Id ? 'selected' : '' }}>
+                {{ $item->ItemName }}
+              </option>
+            @endforeach
         </select>
         @error('ItemID')
           <div class="invalid-feedback">{{ $message }}</div>

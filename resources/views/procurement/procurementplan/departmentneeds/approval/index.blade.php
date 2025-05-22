@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Department Needs Approval')
 @section('content')
 <div class="card p-4 shadow rounded-4">
   <h4 class="mb-4">✅ Departmental/Branch Needs - Approval Queue</h4>
