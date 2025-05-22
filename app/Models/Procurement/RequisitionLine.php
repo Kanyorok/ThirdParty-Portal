@@ -43,4 +43,7 @@ class RequisitionLine extends Model
     {
         return $this->belongsTo(ItemMasterList::class, 'Item', 'Id');
     }
+
+    
+
 }

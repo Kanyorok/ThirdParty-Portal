@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
-use App\Models\Procurement\ItemCategory;
+use App\Models\Inventory\ItemCategories;
 use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQLine;
 use App\Models\ThirdParies\Supplier;
@@ -27,7 +27,7 @@ class RFQController extends Controller
      */
     public function create()
     {
-        $categories = ItemCategory::all();
+        $categories = ItemCategories::all();
         $suppliers = Supplier::all(); // Fetch all suppliers for selection
         return view('procurement.rfqs.create', compact('categories', 'suppliers'));
     }
@@ -37,7 +37,6 @@ class RFQController extends Controller
      */
     public function store(Request $request)
     {
-        $this->authorize('create', RFQ::class);
         $request->validate([
             'Comments' => 'nullable|string|max:255',
             'SubmissionDeadline' => 'required|date|after:today',

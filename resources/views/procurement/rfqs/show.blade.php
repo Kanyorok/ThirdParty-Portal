@@ -154,7 +154,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const categoryDropdown = document.getElementById('categoryDropdown');
     // Clear existing options except the placeholder
     categoryDropdown.length = 1;
-    fetch(`/requisitionlines/categories`)
+    fetch('{{ url("/requisitionlines/categories") }}') // if in a Blade file
         .then(response => response.json())
         .then(data => {
             data.forEach(cat => {

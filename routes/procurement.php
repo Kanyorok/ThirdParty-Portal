@@ -54,6 +54,7 @@ use App\Http\Controllers\Procurement\DepartmentNeedsController;
 use App\Http\Controllers\Procurement\ProcurementPlanDashboardController;
 use App\Http\Controllers\Procurement\TenderTypeController;
 use App\Http\Controllers\Procurement\TimelineController;
+use App\Http\Controllers\Procurement\RFQLinesController;
 use Illuminate\Support\Facades\Route;
 
 Route::namespace('Procurement')->prefix('procurement')->group(function () {
