@@ -132,8 +132,7 @@
                                 <textarea class="form-control form-control-sm itemDescription" name="itemDescription[]"
                                           id="Description" cols="30"
                                           rows="5" readonly   style="display: flex; align-items: center; justify-content: center; text-align: center; padding: 0; resize: none;"></textarea>
-                            {{--                            <input type="text" class="form-control form-control-sm itemDescription" --}}
-                            {{--                                name="itemDescription[]" id="Description" readonly> --}}
+
                         </td>
                         <td class="text-start"><input type="number" class="form-control form-control-sm qty quantity"
                                                       name="quantity[]" id="Quantity"></td>
@@ -372,14 +371,22 @@
             $(document).ready(function() {
                 calculateSummaryTotals();
             });
-        });
-    </script>
 
-    <script>
+            function updateLineNumbers() {
+                $('#po-items tr').each(function (index) {
+                    $(this).find('.line-no').text((index + 1) + '.');
+                });
+            }
+        });
+
         let rowCount = 0;
 
         document.getElementById('add-row').addEventListener('click', function () {
             rowCount++;
+
+
+
+
             const row = `
         <tr>
             <td class="line-no">${rowCount}.</td>
@@ -396,7 +403,12 @@
                     <option disabled selected>Select Item Code</option>
                 </select>
             </td>
-            <td><input type="text" class="form-control form-control-sm itemDescription" name="item_description[]" id="Description" readonly></td>
+
+            <td>
+                <textarea class="form-control form-control-sm itemDescription" name="itemDescription[]"
+                                          id="Description" cols="30"
+                                          rows="5" readonly   style="display: flex; align-items: center; justify-content: center; text-align: center; padding: 0; resize: none;"></textarea>
+            </td>
             <td><input type="number" class="form-control form-control-sm qty quantity" name="quantity[]" id="Quantity" ></td>
             <td><input type="number" class="form-control form-control-sm unit-price" name="unit_price[]" id="Price" ></td>
             <td><input type="number" class="form-control form-control-sm tax" name="tax[]" id="Tax" ></td>
@@ -404,6 +416,7 @@
             <td><input type="number" class="form-control form-control-sm line-total" name="line_total[]"  id="lineTotal" readonly></td>
         </tr>`;
             document.getElementById('po-items').insertAdjacentHTML('beforeend', row);
+            updateLineNumbers()
         });
     </script>
 
