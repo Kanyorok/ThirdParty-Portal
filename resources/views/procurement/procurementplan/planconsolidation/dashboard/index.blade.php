@@ -76,8 +76,6 @@
                             data-bs-target="#needModal">
                             View
                         </button>
-
-                        <button class="btn btn-sm btn-outline-primary">Include in Plan</button>
                     </td>
                 </tr>
             @empty
