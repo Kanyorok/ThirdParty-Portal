@@ -59,7 +59,7 @@
         @stack('scripts')
         <tbody>
             @forelse ($needs as $index => $need)
-                <tr>
+                <tr>    
                     <td>{{ $index + 1 }}</td>
                     <td>{{ $need->item->ItemName ?? 'N/A' }}</td>
                     <td>{{ $need->branch->Name ?? 'N/A' }}</td>
@@ -118,7 +118,7 @@ document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll('.view-need-btn').forEach(button => {
         button.addEventListener('click', function () {
             const needId = this.getAttribute('data-id');
-            console.log('Fetching details for needId:', needId); // Debug: Log the ID
+            console.log('Fetching details for needId:', needId);
             needDetails.innerHTML = '<p class="text-muted"><i class="spinner-border spinner-border-sm"></i> Loading details...</p>';
 
             fetch(`/dashboard/show/${needId}`)
@@ -129,7 +129,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     return res.json();
                 })
                 .then(data => {
-                    console.log('Response data:', data); // Debug: Log the response
+                    console.log('Response data:', data);
                     needDetails.innerHTML = `
                         <ul class="list-group list-group-flush">
                             <li class="list-group-item"><strong>Item Name:</strong> ${data.ItemName}</li>

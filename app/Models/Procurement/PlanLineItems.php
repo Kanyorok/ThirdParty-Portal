@@ -5,6 +5,7 @@ namespace App\Models\Procurement;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Procurement\PlanLineItems;
 
 class PlanLineItems extends Model
 {
@@ -41,15 +42,7 @@ class PlanLineItems extends Model
    public function consolidatedProcurementPlan()
     {
         return $this->belongsTo(ConsolidatedProcurementPlan::class, 'PlanID');
-    }
- public function category()
-{
-    return $this->belongsTo(ItemCategory::class, 'CategoryID', 'Id');
-}
-
-
-
-    
+    }    
     public function branch()
     {
         return $this->belongsTo(Branch::class, 'BranchID');

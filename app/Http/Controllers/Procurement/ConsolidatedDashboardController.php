@@ -50,7 +50,7 @@ public function show($id)
     $need = DepartmentNeeds::with(['branch', 'department', 'item'])->findOrFail($id);
 
     return response()->json([
-        'ItemName' => $need->item->Name ?? 'N/A',
+        'ItemName' => $need->item->ItemName ?? 'N/A',
         'BranchName' => $need->branch->Name ?? 'N/A',
         'DepartmentName' => $need->department->Name ?? 'N/A',
         'RequestedQty' => $need->RequestedQty,
