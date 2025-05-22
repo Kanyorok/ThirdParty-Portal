@@ -67,7 +67,7 @@
                     <td>{{ $need->RequestedQty }}</td>
                     <td>{{ number_format($need->RequestedQty * $need->EstimatedUnitCost, 2) }}</td>
                     <td>{{ \Carbon\Carbon::parse($need->CreatedOn)->format('Y-m-d') }}</td>
-                    <td><span class="badge bg-info">{{ $need->Status ?? 'Pending' }}</span></td>
+                    <td><span class="badge bg-info">{{ $need->Status->label() }}</span></td>
                     <td>
                         <button 
                             class="btn btn-sm btn-outline-info view-need-btn" 

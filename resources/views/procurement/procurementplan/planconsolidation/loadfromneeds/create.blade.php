@@ -27,7 +27,13 @@
     </div>
 
     <!-- Filter Options (Optional) -->
-    <div class="row mb-3">
+    
+    <!-- Approved Needs Table -->
+    <form method="POST" action="{{ route('plan-from-needs.store') }}">
+        @csrf
+        <input type="hidden" name="plan_id" id="plan_id_input">
+
+        <div class="row mb-3">
         <div class="col-md-3">
             <label class="form-label">Branch</label>
             <select class="form-select" name="branch_filter">
@@ -50,21 +56,17 @@
         </div>
         <div class="col-md-3">
             <label class="form-label">Category</label>
-            <select class="form-select">
-                <option>All</option>
-                <option>IT Equipment</option>
-                <option>Stationery</option>
-            </select>
+            <select class="form-select" name="category_id" required>
+        <option value="" disabled selected>Select Category</option>
+        @foreach($categories as $category)
+            <option value="{{ $category->Id }}">{{ $category->Name }}</option>
+        @endforeach
+    </select>
         </div>
         <div class="col-md-3 d-flex align-items-end">
             <button class="btn btn-outline-primary w-100">Apply Filters</button>
         </div>
     </div>
-
-    <!-- Approved Needs Table -->
-    <form method="POST" action="{{ route('plan-from-needs.store') }}">
-        @csrf
-        <input type="hidden" name="plan_id" id="plan_id_input">
 
         <table class="table table-bordered table-hover">
             <thead class="table-light">
@@ -84,7 +86,7 @@
                 @foreach($approvedNeeds as $need)
                 <tr>
                     <td><input type="checkbox" class="need-checkbox" name="selected_needs[]" value="{{ $need->Id }}"></td>
-                    <td>{{ $need->item->Name ?? 'N/A' }}</td>
+                    <td>{{ $need->item->ItemName ?? 'N/A' }}</td>
                     <td>{{ $need->branch->Name ?? 'N/A' }}</td>
                     <td>{{ $need->department->Name ?? 'N/A' }}</td>
                     <td>{{ $need->RequestedQty }}</td>
