@@ -89,7 +89,7 @@
     <a href="{{ url('/planning/reject/' . $need->Id) }}" class="btn btn-danger">
       Reject
     </a>
-    <a href="{{ route('NeedApproval.index') }}" class="btn btn-secondary">
+    <a href="{{ route('department-need-approval.index') }}" class="btn btn-secondary">
       Back to List
     </a>
   </div>
