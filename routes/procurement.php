@@ -252,7 +252,7 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::get('/tenderresponse/create', [TenderResponseController::class, 'create'])->name('tenderresponse.create');
     Route::post('/tenderresponse', [TenderResponseController::class, 'storeResponse'])->name('tenderresponse.storeResponse');
 
-    // Route::resource('tenderclarification', TenderclarificationController::class);
+    // Route::resource('tenderclarification', TenderclarificationController::class)
     Route::get('/tenderclarification', [TenderclarificationController::class, 'index'])->name('tenderclarification.index');
     //Route::get('/tenderclarification/create', [TenderclarificationController::class, 'create'])->name('tenderclarification.create');
     Route::patch('/tenderclarification/update', [TenderclarificationController::class, 'update'])->name('tenderclarification.update');
