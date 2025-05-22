@@ -2,10 +2,13 @@
 
 namespace App\Models\Procurement;
 
-use App\Models\Auth\User;
+use App\Enums\Procurement\DepartmentNeedsEnum;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Core\PendingWorkflow;
+use App\Models\Core\Workflow;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use App\Models\HRM\Department;
 use App\Models\Core\Branch;
 
@@ -25,12 +28,25 @@ class DepartmentNeeds extends Model
            'CreatedBy','ModifiedBy','DeletedBy'
     ] ;
 
+    protected $casts = [
+    'Status' => DepartmentNeedsEnum::class,];
+
     public static function getPrimaryKey(): string{
         return 'DepartmentNeedID';
     }
     public function item()
     {
-        return $this->belongsTo(Item::class, 'ItemID');
+        return $this->belongsTo(Item::class, 'ItemID','Id');
+    }
+
+    public function workflows(): MorphMany
+    {
+        return $this->morphMany(Workflow::class, __FUNCTION__, 'Source', 'SourceID', 'Id');
+    }
+
+    public function pendingWorkflows(): MorphMany
+    {
+        return $this->morphMany(PendingWorkflow::class, __FUNCTION__, 'Source', 'SourceID', 'Id');
     }
     public function department()
 {
