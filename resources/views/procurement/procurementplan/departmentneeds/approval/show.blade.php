@@ -83,13 +83,15 @@
   </div>
 
   <div class="d-flex justify-content-end gap-2 mt-4">
-    <a href="{{ url('/planning/approve/' . $need->Id) }}" class="btn btn-success">
-      Approve
-    </a>
+  <form action="{{ route('department-need-approval.update', $need->Id) }}" method="POST" class="d-inline">
+    @csrf
+    @method('PUT')
+    <button type="submit" class="btn btn-success">Approve</button>
+  </form>
     <a href="{{ url('/planning/reject/' . $need->Id) }}" class="btn btn-danger">
       Reject
     </a>
-    <a href="{{ route('NeedApproval.index') }}" class="btn btn-secondary">
+    <a href="{{ route('department-need-approval.index') }}" class="btn btn-secondary">
       Back to List
     </a>
   </div>

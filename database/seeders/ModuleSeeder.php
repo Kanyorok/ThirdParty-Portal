@@ -106,7 +106,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 301000, 'Name' => 'Procurement Plan', 'Icon' => null, 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 301100, 'Name' => 'Department Needs', 'Icon' => null, 'ParentID' => 301000, 'Route' => null],
             ['ModuleID' => 301110, 'Name' => 'Raise Needs', 'Icon' => null, 'ParentID' => 301100, 'Route' => 'procurementdepartmentalplan.index'],
-            ['ModuleID' => 301120, 'Name' => 'Approve Needs', 'Icon' => null, 'ParentID' => 301100, 'Route' => 'needsapproval.index'],
+            ['ModuleID' => 301120, 'Name' => 'Approve Needs', 'Icon' => null, 'ParentID' => 301100, 'Route' => 'department-need-approval.index'],
             ['ModuleID' => 301200, 'Name' => 'Plan Consolidation', 'Icon' => null, 'ParentID' => 301000, 'Route' => null],
             ['ModuleID' => 301210, 'Name' => 'Consolidated Needs', 'Icon' => null, 'ParentID' => 301200, 'Route' => 'consolidated.index'],
             ['ModuleID' => 301220, 'Name' => 'New Plan', 'Icon' => null, 'ParentID' => 301200, 'Route' => 'procurementplanmaintain.index'],
@@ -151,6 +151,10 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 307100, 'Name' => 'View Purchase Orders', 'Icon' => null, 'ParentID' => 307000, 'Route' => 'purchaseOrder.index'],
             ['ModuleID' => 307200, 'Name' => 'Create Purchase Orders', 'Icon' => null, 'ParentID' => 307000, 'Route' => 'purchaseOrder.create'],
 //            ['ModuleID' => 307300, 'Name' => 'RFQ Evaluation', 'Icon' => null, 'ParentID' => 307000, 'Route' => 'evaluations.index'],
+
+            ['ModuleID' => 308000, 'Name' => 'Good Receipt', 'Icon' => null, 'ParentID' => 300000, 'Route' => null],
+            ['ModuleID' => 308100, 'Name' => 'View Good Receipt', 'Icon' => null, 'ParentID' => 308000, 'Route' => 'procurementreceipts.index'],
+            ['ModuleID' => 308200, 'Name' => 'Create Good Receipt', 'Icon' => null, 'ParentID' => 308000, 'Route' => 'procurementreceipts.create'],
 
             ['ModuleID' => 399000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'ParentID' => 300000, 'Route' => null],
         ]);

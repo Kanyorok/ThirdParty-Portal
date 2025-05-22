@@ -29,7 +29,7 @@ class DepartmentNeedsController extends Controller
 
     public function store(Request $request, DepartmentNeedsService $service)
     {
-        //dd($request->user()->employee);
+        //dd($request->all());
 
         try {
             DB::transaction(function () use ($request, $service) {

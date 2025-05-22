@@ -7,7 +7,7 @@
   <form action="{{ route('procurementdepartmentalplan.store') }}" method="POST" enctype="multipart/form-data">
     @csrf
 
-      <input type="hidden" name="Status" value="Pending">
+      <input type="hidden" name="Status" value="d">
       <input type="hidden" name="PriorityLevel" value="Normal">
       <input type="hidden" name="IsEmergency" value="0">
       <input type="hidden" name="FiscalYear" value="{{ now()->year }}">
