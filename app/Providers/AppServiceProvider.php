@@ -37,7 +37,7 @@ use App\Models\Settings\APICredential;
 use App\Models\ThirdParies\Board;
 use App\Models\ThirdParies\Competitor;
 use App\Policies\CrmBranchPolicy;
-use App\Policies\procurement\DepartmentNeedsPolicy;
+use App\Policies\Procurement\DepartmentNeedsPolicy;
 use App\Policies\Procurement\OrderPolicy;
 use App\Policies\Procurement\RequisitionLinesPolicy;
 use App\Policies\Procurement\RequisitionPolicy;

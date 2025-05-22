@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Policies\procurement;
+namespace App\Policies\Procurement;
 
 use App\Enums\Core\PermissionEnum;
 use App\Enums\Procurement\DepartmentNeedsEnum;
