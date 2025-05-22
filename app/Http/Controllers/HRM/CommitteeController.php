@@ -7,6 +7,7 @@ use App\Models\HRM\Committee;
 use App\Models\HRM\Board;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\Board\CommitteeRequest;
 use Exception;
 use Illuminate\Support\Facades\Log;
@@ -25,51 +26,6 @@ class CommitteeController extends Controller
         return view('hrms.committees.create');
     }
 
-    public function store(Request $request): JsonResponse
-    {
-        // $this->authorize('viewAny', Committee::class);
-        $actor = $request->user();
-
-        $validated = $request->validate([
-            'CommitteeName'  => 'required|string|max:200|unique:t_Committees,Name',
-            'CommitteeNotes' => 'nullable|string|max:2000',
-            'CommitteeType'  => 'required|string|max:50',
-        ]);
-
-        try {
-            // Generate custom CommitteeID (e.g., COMM-001)
-            $count = Committee::withTrashed()->count();
-            do {
-                $count++;
-                $generatedID = strtoupper('COMM-' . str_pad($count, 3, '0', STR_PAD_LEFT));
-            } while (Committee::withTrashed()->where('CommitteeID', $generatedID)->exists());
-
-            // Create committee using Eloquent model
-            $committee = Committee::create([
-                'CommitteeID' => $generatedID,
-                'Name'        => $validated['CommitteeName'],
-                'Notes'       => $validated['CommitteeNotes'] ?? null,
-                'Type'        => $validated['CommitteeType'],
-                'CreatedBy'   => $actor->Id,
-                'ModifiedBy'  => $actor->Id,
-                'CreatedOn'   => Carbon::now(),
-                'ModifiedOn'  => Carbon::now(),
-            ]);
-
-            // Log activity
-            activity()
-                ->causedBy($actor)
-                ->performedOn($committee)
-                ->event('create')
-                ->log('Created board committee ' . $committee->CommitteeID . '.');
-        } catch (Exception | \Throwable $e) {
-            Log::error('Error creating committee: ' . $e->getMessage(), ['exception' => $e]);
-            return $this->errored('An unexpected error occurred: ' . $e->getMessage());
-        }
-
-        return $this->succeeded('Committee added successfully.');
-    }
-
     public function show(Committee $committee)
     {
         return view('hrms.committees.show', compact('committee'));
@@ -77,7 +33,41 @@ class CommitteeController extends Controller
 
     public function edit(Committee $committee)
     {
-        return view('hrms.committees.edit', compact('committee'));
+        return view('hrms.committees.show', compact('committee'));
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'Name' => 'required|string|max:255',
+            'Notes' => 'nullable|string',
+            'Type' => 'nullable|string',
+        ]);
+
+        // Generate the CommitteeID
+        $prefix = 'Comm-';
+        $lastCommittee = Committee::where('CommitteeID', 'like', $prefix . '%')->orderBy('CommitteeID', 'desc')->first();
+
+        if ($lastCommittee) {
+            // Extract the numeric part of the last CommitteeID and increment it
+            $lastNumber = intval(substr($lastCommittee->CommitteeID, strlen($prefix)));
+            $newNumber = $lastNumber + 1;
+        } else {
+            // Start from 1 if no CommitteeID exists
+            $newNumber = 1;
+        }
+
+        // Format the new CommitteeID with leading zeros (e.g., Comm-001, Comm-002)
+        $validated['CommitteeID'] = $prefix . str_pad($newNumber, 3, '0', STR_PAD_LEFT);
+
+        // Add CreatedBy and ModifiedBy fields
+        $validated['CreatedBy'] = Auth::id();
+        $validated['ModifiedBy'] = Auth::id();
+
+        // Create the new committee
+        Committee::create($validated);
+
+        return redirect()->route('hrms.committees.index')->with('success', 'Committee created successfully.');
     }
 
     public function update(Request $request, Committee $committee)

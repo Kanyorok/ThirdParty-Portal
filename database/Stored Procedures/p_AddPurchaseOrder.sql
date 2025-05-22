@@ -24,7 +24,7 @@ BEGIN
     SET @OrderId = SCOPE_IDENTITY();
 
     SET @OrderNo = (
-        SELECT 'PO-' + RIGHT(REPLICATE('0', 4) + CAST(isnull(MAX(@OrderId),0) AS VARCHAR), 4)
+        SELECT 'PO-' + RIGHT(REPLICATE('0', 4) + CAST(isnull(@OrderId,0) AS VARCHAR), 4)
 
     )
 --

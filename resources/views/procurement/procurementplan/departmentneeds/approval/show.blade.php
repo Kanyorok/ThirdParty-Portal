@@ -9,13 +9,13 @@
     <div class="col-md-6">
       <label class="form-label fw-semibold">Item Name</label>
       <div class="form-control-plaintext border rounded bg-light px-3 py-2">
-        {{ $NeedsApprovalviews->item->ItemName ?? 'N/A' }}
+        {{ $need->item->ItemName ?? 'N/A' }}
       </div>
     </div>
     <div class="col-md-6">
       <label class="form-label fw-semibold">Category</label>
       <div class="form-control-plaintext border rounded bg-light px-3 py-2">
-        {{ $NeedsApprovalviews->item->category->Name ?? 'N/A' }}
+        {{ $need->item->category->Name ?? 'N/A' }}
       </div>
     </div>
 
@@ -62,9 +62,9 @@
       <label class="form-label fw-semibold">Submitted By</label>
       <div class="form-control-plaintext border rounded bg-light px-3 py-2">
         {{ $need->creator->Name ?? 'N/A' }} 
-        <small class="text-muted">
-          ({{ $need->creator->department->Name ?? 'Unknown Department' }})
-        </small>
+        {{-- <small class="text-muted">
+          ({{ $need->creator->Department ?? 'Unknown Department' }})
+        </small> --}}
       </div>
     </div>
 
@@ -83,13 +83,15 @@
   </div>
 
   <div class="d-flex justify-content-end gap-2 mt-4">
-    <a href="{{ url('/planning/approve/' . $need->Id) }}" class="btn btn-success">
-      Approve
-    </a>
+  <form action="{{ route('department-need-approval.update', $need->Id) }}" method="POST" class="d-inline">
+    @csrf
+    @method('PUT')
+    <button type="submit" class="btn btn-success">Approve</button>
+  </form>
     <a href="{{ url('/planning/reject/' . $need->Id) }}" class="btn btn-danger">
       Reject
     </a>
-    <a href="{{ route('NeedApproval.index') }}" class="btn btn-secondary">
+    <a href="{{ route('department-need-approval.index') }}" class="btn btn-secondary">
       Back to List
     </a>
   </div>

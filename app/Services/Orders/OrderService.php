@@ -145,7 +145,11 @@ class OrderService
                 t_Users.Name as CreatedBy,
                 t_Orders.BranchID,
                 SUM(isnull(t_OrderLines.fUnitPriceExcl,0)) as UnitPrice,
-                COUNT(t_OrderLines.Id) as ordercount
+                COUNT(t_OrderLines.Id) as ordercount,
+                t_Orders.OrdTotExcl,
+                t_Orders.OrdTotIncl,
+                t_Orders.OrdTotTax,
+                t_Orders.OrdDiscAmnt
             '))
             ->groupBy(
                 't_Orders.Id',
@@ -156,6 +160,10 @@ class OrderService
                 't_Orders.CreatedOn',
                 't_Users.Name',
                 't_Orders.BranchID',
+                't_Orders.OrdTotExcl',
+                't_Orders.OrdTotIncl',
+                't_Orders.OrdTotTax',
+                't_Orders.OrdDiscAmnt'
             )
             ->get();
     }
@@ -166,6 +174,7 @@ class OrderService
         return DB::table(DB::raw('t_Orders WITH (NOLOCK)'))
             ->leftJoin(DB::raw('t_OrderLines WITH (NOLOCK)'), 't_Orders.Id', '=', 't_OrderLines.iOrderID')
             ->leftJoin(DB::raw('t_Users WITH (NOLOCK)'), 't_Orders.CreatedBy', '=', 't_Users.Id')
+            ->leftJoin(DB::raw('t_Suppliers WITH (NOLOCK)'), 't_Orders.AccountID', '=', 't_Suppliers.Id')
             ->where('t_Orders.Id', '=', $id)
             ->select(DB::raw('
                 t_Orders.Id,
@@ -178,7 +187,12 @@ class OrderService
                 t_Orders.BranchID,
                 SUM(isnull(t_OrderLines.fUnitPriceExcl,0)) as UnitPrice,
                 COUNT(t_OrderLines.Id) as ordercount,
-                t_Orders.AccountID
+                t_Orders.AccountID,
+                  t_Orders.OrdTotExcl,
+                t_Orders.OrdTotIncl,
+                t_Orders.OrdTotTax,
+                t_Orders.OrdDiscAmnt,
+                t_Suppliers.SupplierName
             '))
             ->groupBy(
                 't_Orders.Id',
@@ -189,7 +203,12 @@ class OrderService
                 't_Orders.CreatedOn',
                 't_Users.Name',
                 't_Orders.BranchID',
-                't_Orders.AccountID'
+                't_Orders.AccountID',
+                't_Orders.OrdTotExcl',
+                't_Orders.OrdTotIncl',
+                't_Orders.OrdTotTax',
+                't_Orders.OrdDiscAmnt',
+                't_Suppliers.SupplierName'
             )
             ->first();
     }
@@ -215,9 +234,56 @@ class OrderService
                 t_Items.Id as ItemID,
                 t_Items.ItemName,
                 t_Items.ItemType,
-                t_Items.ItemDescription as Description
+                t_Items.ItemDescription as Description,
+                t_OrderLines.LineTotal
             '))
             ->get();
     }
+
+    public static function AddPurchaseOrderSum( $orderId)
+    {
+        try {
+            // Start transaction and execute the stored procedure
+            DB::transaction(function () use ($orderId) {
+
+                DB::statement('EXEC p_AddPurchaseOrderSum ?', [
+                    $orderId
+                ]);
+            });
+
+            return [
+                'status' => 'success',
+                'message' => 'Order successfully updated.'
+            ];
+
+        } catch (QueryException $e) {
+            // Log the SQL error
+            Log::error('SQL Error executing p_AddPurchaseOrderSum', [
+                'message' => $e->getMessage(),
+                'exception' => $e
+            ]);
+
+            // Return the error message back to the controller
+            return [
+                'status' => 'error',
+                'message' => 'SQL error executing order update',
+                'error' => $e->getMessage()
+            ];
+        } catch (Throwable $e) {
+            // Log the exception for debugging
+            Log::error('Error executing p_AddPurchaseOrderSum', [
+                'message' => $e->getMessage(),
+                'exception' => $e
+            ]);
+
+            // Return a custom error message or handle as needed
+            return[
+                'status' => 'error',
+                'message' => 'Error executing order update',
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
 
 }

@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Department Needs Approval')
 @section('content')
 <div class="card p-4 shadow rounded-4">
   <h4 class="mb-4">✅ Departmental/Branch Needs - Approval Queue</h4>
@@ -32,7 +32,7 @@
         <td>{{ \Carbon\Carbon::parse($NeedsApprovalview->RequestedDate)->format('d M Y') }}</td>
         <td>
         
-        <a class="btn btn-sm btn-primary" href="{{ route('NeedApproval.show', $NeedsApprovalview->Id) }}">View</a>
+        <a class="btn btn-sm btn-primary" href="{{ route('department-need-approval.show', $NeedsApprovalview->Id) }}">View</a>
         <button class="btn btn-sm btn-success">Approve</button>
         <button class="btn btn-sm btn-danger">Reject</button>
         </form>
