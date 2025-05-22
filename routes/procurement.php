@@ -197,6 +197,7 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::resource('bidscores', BidScoreConsolidationController::class);
     Route::resource('procurementreports', ProcurementReportsController::class);
 
+
     //Procurementplan
     Route::resource('procurementplanmaintain', ProcurementPlanMaintainController::class); 
     
