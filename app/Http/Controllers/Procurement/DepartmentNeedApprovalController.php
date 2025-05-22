@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use Exception;
 use App\Models\Procurement\DepartmentNeeds;
 use App\Services\Procurement\ProcurementPlan\DepartmentNeedsApprovalService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
@@ -29,32 +30,42 @@ class DepartmentNeedApprovalController extends Controller
         return view('procurement.procurementplan.departmentneeds.approval.show', compact('need'));
     }
 
-    public function update(Request $request, $departmentNeed_ID): JsonResponse
+public function update(Request $request, $departmentNeed_ID):RedirectResponse
     {
         $departmentNeeds = DepartmentNeeds::query()->findOrFail($departmentNeed_ID);
-        
+
         $this->authorize('approve', $departmentNeeds);
 
         $lock = Cache::lock('approve-DepartmentNeeds-' . $departmentNeeds->NeedID, 5);
         if (!$lock->get()) {
-            return $this->errored('Department Needs has been approved, or another user is working on it');
+            return redirect()
+                ->back()
+                ->with('error', 'Department Needs has been approved, or another user is working on it.');
         }
 
         $actor = $request->user();
 
         try {
             DB::transaction(static function () use ($departmentNeeds, $actor) {
-                (new DepartmentNeedsApprovalService($departmentNeeds))->workflowApprove($actor);
+                (new DepartmentNeedsApprovalService($departmentNeeds))
+                    ->workflowApprove($actor);
             });
         } catch (ErroredException $e) {
-            return $e->toJson();
+            return redirect()
+                ->back()
+                ->with('error', $e->getMessage());
         } catch (\Throwable | Exception $e) {
-            Log::error('Error approve department needs failed: ' . $e->getMessage());
-            return $this->errored('unexpected error, try again later');
+            \Log::error('Error approve department needs failed: ' . $e->getMessage());
+            return redirect()
+                ->back()
+                ->with('error', 'Unexpected error, try again later.');
         }
 
-        return $this->succeeded('Department needs approved successfully.', route('department-need-approval.index'));
+        return redirect()
+            ->route('department-need-approval.index')
+            ->with('success', 'Department needs approved successfully.');
     }
+
 
     public function destroy(Request $request, DepartmentNeeds $departmentNeeds): JsonResponse
     {

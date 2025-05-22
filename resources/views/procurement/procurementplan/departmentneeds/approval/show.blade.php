@@ -9,7 +9,7 @@
     <div class="col-md-6">
       <label class="form-label fw-semibold">Item Name</label>
       <div class="form-control-plaintext border rounded bg-light px-3 py-2">
-        {{ $NeedsApprovalviews->item->ItemName ?? 'N/A' }}
+        {{ $NeedsApprovalviews->ItemID ?? 'N/A' }}
       </div>
     </div>
     <div class="col-md-6">
