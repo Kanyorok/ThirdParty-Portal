@@ -200,8 +200,8 @@ Route::namespace('Procurement')->group(function () {
     
     //Procurement plan Approval
     //Route::resource('procurementplanapproval', ProcurementApprovalController::class); 
-    Route::get('/NeedApproval', [NeedApprovalController::class,'index'])->name('NeedApproval.index'); 
-    Route::get('/NeedApproval/{Id}', [NeedApprovalController::class, 'show'])->name('NeedApproval.show');
+    Route::get('/NeedApproval', [NeedApprovalController::class,'index'])->name('department-need-approval.index'); 
+    Route::get('/NeedApproval/{Id}', [NeedApprovalController::class, 'show'])->name('department-need-approval.show');
 
 ;
 
