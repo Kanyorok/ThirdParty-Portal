@@ -43,14 +43,14 @@
   <tbody>
     @forelse ($lineItems as $index => $item)
       <tr>
-        <td>{{ $index + 1 }}</td>
-        <td>{{ $item->item->ItemName ?? 'N/A' }}</td>
-        <td>{{ $item->item->Category->Name ?? 'N/A' }}</td> 
-        <td>{{ $item->MergedQty }}</td>
-        <td>{{ $item->item->UOM ?? 'N/A' }}</td>  
-        <td>{{ number_format($item->EstimatedUnitCost, 2) }}</td>
-        <td>{{ $item->SchedulePeriod ?? 'N/A' }}</td>
-        <td>{{ \Carbon\Carbon::parse($item->ExpectedDeliveryDate)->format('Y-m-d') ?? 'N/A' }}</td> 
+        <td>1</td>git 
+        <td>Desktop Computers</td>
+        <td>IT Equipment</td>
+        <td>5</td>
+        <td>Pcs</td>
+        <td>150,000</td>
+        <td>Q2</td>
+        <td>2025-06-10</td>
         <td>
           <a href="{{ route('planmanualinput.edit', $item->LineItemID) }}" class="btn btn-sm btn-outline-primary">Edit</a>
           <form method="POST" action="{{ route('planmanualinput.destroy', $item->LineItemID) }}" style="display:inline;">
