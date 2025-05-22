@@ -27,8 +27,8 @@ return new class extends Migration
 
             $table->decimal('TotalCost', 12, 2)->nullable();
 
-            $defaultStatus = ProcurementPlanStatusEnum::Draft->value;
-            $table->string('Status', 50)->default($defaultStatus);
+            //$defaultStatus = ProcurementPlanStatusEnum::Draft->value;
+            //$table->string('Status', 50)->default($defaultStatus);
 
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
