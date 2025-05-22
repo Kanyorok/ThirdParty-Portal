@@ -28,6 +28,7 @@ use App\Models\CRM\Survey;
 use App\Models\CRM\Ticket;
 use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
+use App\Models\Procurement\DepartmentNeeds;
 use App\Models\Procurement\Order;
 use App\Models\Procurement\RequisitionLines;
 use App\Models\Procurement\Requisitions;
@@ -36,6 +37,7 @@ use App\Models\Settings\APICredential;
 use App\Models\ThirdParies\Board;
 use App\Models\ThirdParies\Competitor;
 use App\Policies\CrmBranchPolicy;
+use App\Policies\Procurement\DepartmentNeedsPolicy;
 use App\Policies\Procurement\OrderPolicy;
 use App\Policies\Procurement\RequisitionLinesPolicy;
 use App\Policies\Procurement\RequisitionPolicy;
@@ -95,6 +97,7 @@ class AppServiceProvider extends ServiceProvider
             Requisitions::getPrimaryKey() => Requisitions::class,
             RequisitionLines::getPrimaryKey() => RequisitionLines::class,
             Order::getPrimaryKey() => Order::class,
+            DepartmentNeeds::getPrimaryKey() => DepartmentNeeds::class,
         ]);
 
         Gate::policy(Role::class, RolePolicy::class);
@@ -103,6 +106,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(RequisitionLines::class, RequisitionLinesPolicy::class);
         Gate::policy(ProductDevelopment::class, ProductDevelopmentPolicy::class);
         Gate::policy(Order::class, OrderPolicy::class);
+        Gate::policy(DepartmentNeeds::class, DepartmentNeedsPolicy::class);
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);
          Event::listen(SMSSendEvent::class, SMSSendListener::class);
