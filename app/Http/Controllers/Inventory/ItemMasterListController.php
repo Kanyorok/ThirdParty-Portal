@@ -82,7 +82,7 @@ class ItemMasterListController extends Controller
             $item->save();
         });
 
-        return redirect()->route('itemmasterlist.index')->with('success', 'Item created successfully.');
+        return redirect()->route('itemmaster.index')->with('success', 'Item created successfully.');
     }
 
     public function edit($Id)
@@ -125,7 +125,7 @@ class ItemMasterListController extends Controller
 
         $item->save();
 
-        return redirect()->route('itemmasterlist.index')->with('success', 'Item updated successfully.');
+        return redirect()->route('itemmaster.index')->with('success', 'Item updated successfully.');
     }
 
     public function show($Id)

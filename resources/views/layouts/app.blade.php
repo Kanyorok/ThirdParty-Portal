@@ -340,7 +340,7 @@
                                         Item Master
                                     </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
                             <ul class="pc-submenu">
-                                <li class="pc-item"><a class="pc-link" href="{{ route('itemmasterlist.index') }}"
+                                <li class="pc-item"><a class="pc-link" href="{{ route('itemmaster.index') }}"
                                                        data-i18n="Procurement List">Item Master List</a></li>
                                 <li class="pc-item"><a class="pc-link" href="{{ route('sku.index') }}"
                                                        data-i18n="Procurement List">Stock Item</a></li>

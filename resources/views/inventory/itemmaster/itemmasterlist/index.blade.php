@@ -45,7 +45,7 @@ $(document).ready(function () {
     const table = $('#itemMasterListTbl').DataTable({
         processing: true,
         serverSide: true,
-        ajax: "{{ route('itemmasterlist.index') }}",
+        ajax: "{{ route('itemmaster.index') }}",
         columns: [
             { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, visible: true },
             { data: 'ItemCode', name: 'ItemCode' },
