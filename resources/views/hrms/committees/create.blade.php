@@ -14,15 +14,6 @@
                 @csrf
 
                 <div class="card-body row">
-                    <!-- Committee ID -->
-                    <div class="mb-3 col-md-4">
-                        <label for="CommitteeID" class="form-label">Committee ID <span class="text-danger">*</span></label>
-                        <input type="text" name="CommitteeID" id="CommitteeID" class="form-control @error('CommitteeID') is-invalid @enderror" value="{{ old('CommitteeID') }}" required>
-                        @error('CommitteeID')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
                     <!-- Committee Name -->
                     <div class="mb-3 col-md-4">
                         <label for="Name" class="form-label">Committee Name <span class="text-danger">*</span></label>

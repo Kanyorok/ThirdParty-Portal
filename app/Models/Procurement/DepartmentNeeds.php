@@ -6,6 +6,8 @@ use App\Models\Auth\User;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\HRM\Department;
+use App\Models\Core\Branch;
 
 class DepartmentNeeds extends Model
 {
@@ -29,6 +31,14 @@ class DepartmentNeeds extends Model
     public function item()
     {
         return $this->belongsTo(Item::class, 'ItemID');
+    }
+    public function department()
+{
+    return $this->belongsTo(Department::class, 'DepartmentID');
+}
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class, 'BranchID');
     }
 
 }

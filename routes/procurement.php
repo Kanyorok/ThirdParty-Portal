@@ -195,17 +195,14 @@ Route::namespace('Procurement')->group(function () {
     Route::resource('bidscores', BidScoreConsolidationController::class);
     Route::resource('procurementreports', ProcurementReportsController::class);
 
+
     //Procurementplan
     Route::resource('procurementplanmaintain', ProcurementPlanMaintainController::class);
 
     //Procurement plan Approval
-    //Route::resource('procurementplanapproval', ProcurementApprovalController::class);
-    Route::get('/NeedApproval', [NeedApprovalController::class,'index'])->name('NeedApproval.index');
-    Route::get('/NeedApproval/{Id}', [NeedApprovalController::class, 'show'])->name('NeedApproval.show');
-
-;
-
-
+    //Route::resource('procurementplanapproval', ProcurementApprovalController::class); 
+    Route::get('/NeedApproval', [NeedApprovalController::class,'index'])->name('department-need-approval.index'); 
+    Route::get('/NeedApproval/{Id}', [NeedApprovalController::class, 'show'])->name('department-need-approval.show');
 
     //Procurement Plan Department Needs
     //Route::resource('procurementdepartmentalplan', DepartmentNeedsController::class);
@@ -263,4 +260,16 @@ Route::namespace('Procurement')->group(function () {
     Route::get('/bid-submission/manual/{Id}/view', [TenderSubmissionController::class, 'view'])->name('tendersubmission.view');
     Route::get('/bid-submission/manual/{Id}/edit', [TenderSubmissionController::class, 'edit'])->name('tendersubmission.edit');
     Route::post('/bid-submissions', [TenderSubmissionController::class, 'store'])->name('tendersubmission.store');
+
+    //procurement Consolidation
+    Route::get('/dashboard', [ConsolidatedDashboardController::class, 'index'])->name('dashboard.index');
+    Route::get('/dashboard/show/{id}', [ConsolidatedDashboardController::class, 'show'])->name('dashboard.show');
+
+    Route::post('/procurement-plans', [ProcurementPlanMaintainController::class, 'store'])->name('procurementplanmaintain.store');
+
+    Route::prefix('procurement')->group(function () {
+    Route::get('plan-manual-input/create', [PlanManualInputController::class, 'create'])->name('plan.manual-input.create');
+    Route::post('plan-manual-input', [PlanManualInputController::class, 'store'])->name('plan.manual-input.store');
+});
+
 });

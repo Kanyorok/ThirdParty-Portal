@@ -106,7 +106,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 301000, 'Name' => 'Procurement Plan', 'Icon' => null, 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 301100, 'Name' => 'Department Needs', 'Icon' => null, 'ParentID' => 301000, 'Route' => null],
             ['ModuleID' => 301110, 'Name' => 'Raise Needs', 'Icon' => null, 'ParentID' => 301100, 'Route' => 'procurementdepartmentalplan.index'],
-            ['ModuleID' => 301120, 'Name' => 'Approve Needs', 'Icon' => null, 'ParentID' => 301100, 'Route' => 'needsapproval.index'],
+            ['ModuleID' => 301120, 'Name' => 'Approve Needs', 'Icon' => null, 'ParentID' => 301100, 'Route' => 'department-need-approval.index'],
             ['ModuleID' => 301200, 'Name' => 'Plan Consolidation', 'Icon' => null, 'ParentID' => 301000, 'Route' => null],
             ['ModuleID' => 301210, 'Name' => 'Consolidated Needs', 'Icon' => null, 'ParentID' => 301200, 'Route' => 'consolidated.index'],
             ['ModuleID' => 301220, 'Name' => 'New Plan', 'Icon' => null, 'ParentID' => 301200, 'Route' => 'procurementplanmaintain.index'],
@@ -517,7 +517,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 1001200, 'Name' => 'Employees List', 'Icon' => null, 'ParentID' => 1001000, 'Route' => 'employees.index'],
 
             ['ModuleID' => 1002000, 'Name' => 'Departments', 'Icon' => '<i class="fas fa-building"></i>', 'ParentID' => 1000000, 'Route' => 'departments.index'],
-
+            ['ModuleID' => 1003000, 'Name' => 'Committees', 'Icon' => '<i class="fas fa-building"></i>', 'ParentID' => 1000000, 'Route' => 'tendercommittee.index'],
             ['ModuleID' => 1099000, 'Name' => 'Financial Reports', 'Icon' => '<i class="fas fa-chart-pie"></i>', 'ParentID' => 1000000, 'Route' => null],
         ]);
         if ($fresh) {
