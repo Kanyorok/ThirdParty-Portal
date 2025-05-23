@@ -1,12 +1,11 @@
 @extends('layouts.app')
-@section('title', 'Create New Inventory')
+@section('title', 'Create New Store')
 @section('styles')    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">@endsection
 @section('content')
 <div class="container mt-5">
   <div class="card shadow rounded-4">
-    <div class="card-header bg-dark text-white rounded-top-4">
-      <h4 class="mb-0">Stores List</h4>
-      <a href="{{ route('store.create') }}" class="btn btn-success">Add New Store</a>
+    <div class="card-header text-dark rounded-top-4" style="background-color: #add8e6;">
+      <a href="{{ route('stores.create') }}" class="btn btn-success">➕ Add New Store</a>
     </div>
     <div class="card-body">
 
@@ -27,17 +26,17 @@
             <td>{{ $key + 1 }}</td>
             <td>{{ $store->StoreID }}</td>
             <td>{{ $store->StoreName }}</td>
-            <td>{{($store->BranchID)}}</td>
+            <td>{{($store->branch->Name)}}</td>
             <td>
               <span class="badge {{ $store->Status ? 'bg-success' : 'bg-warning' }}">
               {{ $store->Status ? 'Active' : 'Inactive' }}
               </span>
             <td>{{ $store->Actions }}
-              <a href="{{ route('store.show', $store->Id) }}">View</a> |
-              <a href="{{ route('store.edit', $store->Id) }}">Edit</a> |
+              <a href="{{ route('stores.show', $store->Id) }}">View</a> |
+              <a href="{{ route('stores.edit', $store->Id) }}">Edit</a> |
               <a href="#" onclick="confirmDelete('{{ $store->Id }}')">Delete</a>
             </td>
-              <form id="delete-form-{{ $store->Id }}" action="{{ route('store.destroy', $store->Id) }}" method="POST" style="display:none;">
+              <form id="delete-form-{{ $store->Id }}" action="{{ route('stores.destroy', $store->Id) }}" method="POST" style="display:none;">
                @csrf
                @method('DELETE')
               </form>

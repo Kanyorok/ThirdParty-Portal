@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\User;
+use App\Models\Core\Branch;
+use App\Models\Inventory\Store;
 
 class StockItem extends Model
 {
@@ -50,12 +52,12 @@ class StockItem extends Model
         'Perishable'    => 'boolean',
         'Saleable'      => 'boolean',
         'Purchasable'   => 'boolean',
-        'Store'         => 'string',
-        'Branch'        => 'string',
-        'CurrentQty'   => 'int',
-        'Min'           => 'int',
-        'Reorder'       => 'int',
-        'Max'           => 'int',
+        'Store'         => 'integer',
+        'Branch'        => 'integer',
+        'CurrentQty'   => 'integer',
+        'Min'           => 'integer',
+        'Reorder'       => 'integer',
+        'Max'           => 'integer',
         'LastReceived' => 'datetime',
         'Status'        => 'boolean',
         'CreatedBy'     => 'integer',
@@ -79,5 +81,15 @@ class StockItem extends Model
     {
         return $this->belongsTo(User::class, 'DeletedBy', 'Id');
     }
+    public function store()
+   {
+    return $this->belongsTo(\App\Models\Inventory\Store::class, 'Store', 'Id');
+   }
+   public function branch()
+{
+    return $this->belongsTo(\App\Models\Core\Branch::class, 'Branch', 'Id');
+}
+
+
 
 }

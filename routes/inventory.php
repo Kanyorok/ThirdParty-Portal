@@ -18,6 +18,7 @@ use App\Http\Controllers\Inventory\TransactionAdjustmentController;
 use App\Http\Controllers\Inventory\TransactionReceiptsController;
 use App\Http\Controllers\Inventory\TransactionTransfersController;
 use App\Http\Controllers\Inventory\UOMConversionController;
+use App\Http\Controllers\Inventory\StoreController;
 use App\Http\Controllers\Property\PropertyReceiptPrintController;
 use Illuminate\Support\Facades\Route;
 
@@ -45,8 +46,14 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::delete('/itemmasterlist/{Id}', [ItemMasterListController::class, 'destroy'])->name('itemmasterlist.destroy');
     Route::get('/get-subcategories', [ItemMasterListController::class, 'getSubcategories'])->name('get.subcategories');
 
-    Route::get('/store', [StoreController::class, 'index'])->name('stores.index');
-    Route::get('/store/create', [StoreController::class, 'create'])->name('stores.create');
+    Route::get('/stores', [StoreController::class, 'index'])->name('stores.index');
+    Route::get('/stores/create', [StoreController::class, 'create'])->name('stores.create');
+    Route::post('/stores', [StoreController::class, 'store'])->name('stores.store');
+    Route::get('/stores/{Id}', [StoreController::class, 'show'])->name('stores.show');
+    Route::get('/stores/{Id}/edit', [StoreController::class, 'edit'])->name('stores.edit');
+    Route::put('/stores/{Id}', [StoreController::class, 'update'])->name('stores.update');
+    Route::delete('/stores/{Id}', [StoreController::class, 'destroy'])->name('stores.destroy');
+    
     
     //Route::resource('sku', SKUController::class);
     Route::get('/sku', [SKUController::class, 'index'])->name('sku.index');
@@ -56,6 +63,7 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/sku/{Id}/edit', [SKUController::class, 'edit'])->name('sku.edit');
     Route::put('/sku/{Id}', [SKUController::class, 'update'])->name('sku.update');
     Route::delete('/sku/{Id}', [SKUController::class, 'destroy'])->name('sku.destroy');
+    Route::get('/get-stores', [SKUController::class, 'getStores'])->name('get.stores');
 
 
     //Route::resource('itemcategory', ItemCategoryController::class);

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('t_Stores', function (Blueprint $table) {
             $table->id('Id');
-            $table->string('StoreID')->unique();
+            $table->string('StoreID')->nullable()->unique();
             $table->string('StoreName');
             $table->foreignId('BranchID')->constrained('t_Branches', 'Id');
             $table->string('Status');

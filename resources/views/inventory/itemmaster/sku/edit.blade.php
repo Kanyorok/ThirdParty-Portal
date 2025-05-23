@@ -30,6 +30,31 @@
             </div>
         </div>
 
+        <div class="row mb-3">
+    <div class="col-md-6">
+        <label for="Branch" class="form-label">Branch</label>
+        <select name="Branch" id="Branch" class="form-select" required>
+            <option value="">-- Select Branch --</option>
+            @foreach($branches as $branch)
+                <option value="{{ $branch->Id }}" {{ old('Branch', $item->Branch) == $branch->Id ? 'selected' : '' }}>
+                    {{ $branch->Name }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+    <div class="col-md-6">
+        <label for="Store" class="form-label">Store</label>
+        <select name="Store" id="Store" class="form-select" required>
+            <option value="">-- Select Store --</option>
+            @foreach($stores as $store)
+                <option value="{{ $store->Id }}" {{ old('Store', $item->Store) == $store->Id ? 'selected' : '' }}>
+                    {{ $store->StoreName }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+</div>
+
         <div class="mb-3">
             @foreach(['Batch', 'Serial', 'Perishable', 'Saleable', 'Purchasable'] as $field)
             <div class="form-check form-check-inline">
@@ -40,28 +65,7 @@
             @endforeach
         </div>
 
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <label for="storeID" class="form-label">Store</label>
-                <select class="form-select" name="Store" id="storeID" required>
-                    <option value="">-- Select Store --</option>
-                    <option value="HeadStore" {{ $item->Store == 'HeadStore' ? 'selected' : '' }}>Head Store</option>
-                    <option value="Store" {{ $item->Store == 'Store1' ? 'selected' : '' }}>Store 1</option>
-                    <option value="Store2" {{ $item->Store == 'Store2' ? 'selected' : '' }}>Store 2</option>
-                    <option value="Store3" {{ $item->Store == 'Store3' ? 'selected' : '' }}>Store 3</option>
-                </select>
-            </div>
-            <div class="col-md-6">
-                <label for="branchID" class="form-label">Branch</label>
-                <select class="form-select" name="Branch" id="branchID" required>
-                    <option value="">-- Select Branch --</option>
-                    <option value="1" {{ $item->Branch == 'Branch1' ? 'selected' : '' }}>Branch 1</option>
-                    <option value="2" {{ $item->Branch == 'Branch2' ? 'selected' : '' }}>Branch 2</option>
-                    <option value="3" {{ $item->Branch == 'Branch3' ? 'selected' : '' }}>Branch 3</option>
-                </select>
-            </div>
-        </div>
-
+       
         <div class="row mb-3">
             <div class="col-md-4">
                 <label for="currentQty" class="form-label">Current Qty</label>
@@ -103,4 +107,46 @@
     </div>
   </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const branchSelect = document.getElementById('Branch');
+    const storeSelect = document.getElementById('Store');
+    const selectedStore = "{{ old('Store', $item->Store) }}";
+
+    function loadStores(branchId, selectedStoreId = null) {
+        storeSelect.innerHTML = '<option value="">-- Select Store --</option>';
+        if (branchId) {
+            fetch(`/inventory/get-stores?BranchID=${branchId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length === 0) {
+                        const option = document.createElement('option');
+                        option.value = "";
+                        option.text = "No stores found for this branch";
+                        storeSelect.appendChild(option);
+                    } else {
+                        data.forEach(store => {
+                            const option = document.createElement('option');
+                            option.value = store.Id;
+                            option.text = store.StoreName;
+                            if (store.Id == (selectedStoreId ?? selectedStore)) {
+                                option.selected = true;
+                            }
+                            storeSelect.appendChild(option);
+                        });
+                    }
+                });
+        }
+    }
+
+    branchSelect.addEventListener('change', function () {
+        loadStores(this.value);
+    });
+
+    // On page load, trigger loading if branch is already selected
+    if (branchSelect.value) {
+        loadStores(branchSelect.value, selectedStore);
+    }
+});
+</script>
 @endsection

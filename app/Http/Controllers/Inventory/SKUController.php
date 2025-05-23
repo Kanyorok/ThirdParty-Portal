@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Inventory\StockItem;
 use Illuminate\Support\Facades\Auth; 
 use Carbon\Carbon; 
+use App\Models\Inventory\Store;
+use App\Models\Core\Branch;
 
 class SKUController extends Controller
 {
@@ -19,9 +21,26 @@ class SKUController extends Controller
 
 
     public function create()
-    {
-        return view('inventory.itemmaster.sku.create');
+{
+    $branches = Branch::all();
+    // Stores will be loaded dynamically, so you can pass an empty array
+    $stores = [];
+    return view('inventory.itemmaster.sku.create', compact('branches', 'stores'));
+}
+
+public function getStores(Request $request)
+{
+    $Id = $request->get('BranchID');
+    if (!$Id) {
+        return response()->json([], 400);
     }
+
+    // Fetch stores based on the provided BranchID
+    $stores = Store::where('BranchID', $Id)->get(['Id', 'StoreName']);
+    return response()->json($stores);
+}
+
+
 
     public function store(Request $request)
 {
@@ -32,8 +51,8 @@ class SKUController extends Controller
         'Perishable'    => 'required|boolean',
         'Saleable'      => 'required|boolean',
         'Purchasable'   => 'required|boolean',
-        'Store'         => 'required|string|max:255',
-        'Branch'        => 'required|string|max:255',
+        'Store' => 'required|integer|exists:t_Stores,Id',
+        'Branch' => 'required|integer|exists:t_Branches,Id',
         'CurrentQty'    => 'required|integer|min:0',
         'Min'           => 'required|integer|min:0',
         'Reorder'       => 'required|integer|min:0',
@@ -80,12 +99,15 @@ class SKUController extends Controller
         return view('inventory.itemmaster.sku.show', compact('item'));
     }
 
-    // Show the edit form for a stock item
-    public function edit($Id)
-    {
-        $item = StockItem::findOrFail($Id);
-        return view('inventory.itemmaster.sku.edit', compact('item'));
-    }
+
+public function edit($Id)
+{
+    $item = StockItem::findOrFail($Id);
+    $branches = Branch::all();
+    $stores = Store::where('BranchID', $item->Branch)->get();
+    return view('inventory.itemmaster.sku.edit', compact('item', 'branches', 'stores'));
+}
+
 
     // Update stock item details
   public function update(Request $request, $Id)

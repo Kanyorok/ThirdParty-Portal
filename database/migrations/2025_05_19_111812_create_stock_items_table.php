@@ -13,15 +13,15 @@ return new class extends Migration
     {
         Schema::create('t_StockItems', static function (Blueprint $table) {
             $table->id('Id');
-            $table->string('SKUCode')->unique();
+            $table->string('SKUCode')->nullable()->unique();
             $table->string('ItemType');
             $table->boolean('Batch');
             $table->boolean('Serial');
             $table->boolean('Perishable');
             $table->boolean('Saleable');
             $table->boolean('Purchasable');
-            $table->string('Store');
-            $table->string('Branch'); 
+            $table->foreignId('Store')->constrained('t_Stores', 'Id');
+            $table->foreignId('Branch')->constrained('t_Branches', 'Id');
             $table->integer('CurrentQty');
             $table->string('Min');
             $table->integer('Reorder');

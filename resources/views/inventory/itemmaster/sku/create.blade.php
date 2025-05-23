@@ -57,31 +57,25 @@
     </div>
 </div>
 
+<div class="col-md-6">
+    <label for="Branch" class="form-label">Branch</label>
+    <select name="Branch" id="Branch" class="form-select" required>
+        <option value="">-- Select Branch --</option>
+        @foreach($branches as $branch)
+            <option value="{{ $branch->Id }}" {{ old('Branch') == $branch->Id ? 'selected' : '' }}>
+                {{ $branch->Name }}
+            </option>
+        @endforeach
+    </select>
+</div>
 
-        <div class="row mb-3">
-          <div class="col-md-6">
-            <label for="storeID" class="form-label">Store</label>
-            <select class="form-select" name= "Store" id="storeID" required>
-              <option value="">-- Select Store --</option>
-              <option value="HeadStore">Head Store</option>
-              <option value="Store1">Store 1</option>
-              <option value="Store2">Store 2</option>
-              <option value="Store3">Store 3</option>
-              <!-- Dynamically populated -->
-            </select>
-          </div>
-          <div class="col-md-6">
-            <label for="branchID" class="form-label">Branch</label>
-            <select class="form-select" name="Branch" id="branchID" required>
-              <option value="">-- Select Branch --</option>
-              <option value="Branch1">Branch 1</option>
-              <option value="Branch2">Branch 2</option>
-              <option value="Branch3">Branch 3</option>
-              <!-- Dynamically populated -->
-            </select>
-          </div>
-        </div>
-
+<div class="col-md-6">
+    <label for="Store" class="form-label">Store</label>
+    <select name="Store" id="Store" class="form-select" required>
+        <option value="">-- Select Store --</option>
+        {{-- Stores will be loaded dynamically --}}
+    </select>
+</div>
         <div class="row mb-3">
           <div class="col-md-4">
             <label for="currentQty" class="form-label">Current Qty</label>
@@ -125,4 +119,43 @@
     </div>
   </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const branchSelect = document.getElementById('Branch');
+    const storeSelect = document.getElementById('Store');
+    const selectedStore = "{{ old('Store') }}";
+
+    branchSelect.addEventListener('change', function () {
+        const branchId = this.value;
+        storeSelect.innerHTML = '<option value="">-- Select Store --</option>';
+        if (branchId) {
+            fetch(`/inventory/get-stores?BranchID=${branchId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length === 0) {
+                        const option = document.createElement('option');
+                        option.value = "";
+                        option.text = "No stores found for this branch";
+                        storeSelect.appendChild(option);
+                    } else {
+                        data.forEach(store => {
+                            const option = document.createElement('option');
+                            option.value = store.Id;
+                            option.text = store.StoreName;
+                            if (store.Id == selectedStore) {
+                                option.selected = true;
+                            }
+                            storeSelect.appendChild(option);
+                        });
+                    }
+                });
+        }
+    });
+
+    // If editing and branch is already selected, trigger change
+    if (branchSelect.value) {
+        branchSelect.dispatchEvent(new Event('change'));
+    }
+});
+</script>
 @endsection
