@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Add Payment Frequency')
 @section('content')
 <div class="container mt-4">
   <h4 class="fw-bold mb-3">➕ Add Payment Frequency</h4>
