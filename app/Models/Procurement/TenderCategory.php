@@ -26,9 +26,9 @@ class TenderCategory extends Model {
         'ModifiedBy',
     ];  
 
-    protected $casts = [
-        'TenderCategory' => TenderCategoryEnum::class,
-    ];
+    // protected $casts = [
+    //     'TenderCategory' => TenderCategoryEnum::class,
+    // ];
 
     public static function generateCatCode(string $categoryValue = null)
     {

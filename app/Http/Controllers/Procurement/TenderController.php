@@ -11,6 +11,7 @@ use App\Enums\TenderCategoryEnum;
 use App\Enums\TenderStatusEnum;
 use App\Models\Procurement\ItemCategory;
 use App\Models\Procurement\ProcurementPlan;
+use App\Models\Procurement\TenderCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
@@ -33,7 +34,7 @@ class TenderController extends Controller
         $tenderCategories = TenderCategoryEnum::cases();
         $statuses = TenderStatusEnum::cases();
         $suppliers = collect();
-        $tenderCategoryOptions = TenderCategoryEnum::cases();
+        return$tenderCategory = TenderCategory::select('Id', 'TenderCategory')->get();
         $itemsCategories = ItemCategory::select('Id', 'Name')->whereNull('ParentId')->get();
         $procurementPlan= ProcurementPlan::with(['items'])->get();
 

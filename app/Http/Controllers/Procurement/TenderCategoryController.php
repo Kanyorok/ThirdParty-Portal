@@ -31,7 +31,7 @@ class TenderCategoryController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'TenderCategory' => 'required|in:' . implode(',', array_column(TenderCategoryEnum::cases(), 'value')),
+            'TenderCategory' => 'required',
             'Description' => 'nullable|string',
         ]);
 
@@ -67,7 +67,7 @@ class TenderCategoryController extends Controller
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'TenderCategory' => 'required|in:' . implode(',', array_column(TenderCategoryEnum::cases(), 'value')),
+            'TenderCategory' => 'required',
             'Description' => 'nullable|string',
         ]);
         $tenderCategory = TenderCategory::findOrFail($id);

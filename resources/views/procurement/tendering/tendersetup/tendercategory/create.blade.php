@@ -19,20 +19,11 @@
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label for="TenderCategory" class="form-label">Category Type <span class="text-danger">*</span></label>
-                        <select class="form-select @error('TenderCategory') is-invalid @enderror" 
-                                id="TenderCategory" name="TenderCategory" required>
-                            <option value="" disabled selected>Select a category type</option>
-                            @foreach($tenderCatOptions as $category)
-                                <option value="{{ $category->value }}" 
-                                    @selected(old('TenderCategory', $defaultCategory) == $category->value)>
-                                    {{ $category->name }}
-                                </option>
-                            @endforeach
-                        </select>
+                        <input type="text" name="TenderCategory" id="TenderCategory" class="form-control bg-light" placeholder="Enter category type" 
+                               value="{{ old('TenderCategory') }}" required>
                         @error('TenderCategory')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
-                        <small class="text-muted">Select the category of tender</small>
                     </div>
                     
                     <div class="col-md-6">
