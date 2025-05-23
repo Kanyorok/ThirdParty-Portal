@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', '')
 @section('content')
 
 <div class="card p-4 shadow rounded-4">
