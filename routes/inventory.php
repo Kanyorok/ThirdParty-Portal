@@ -24,11 +24,6 @@ use App\Http\Controllers\Inventory\UOMController;
 use App\Http\Controllers\Inventory\ItemTypeController;
 use App\Http\Controllers\Inventory\InventoryTypeController;
 
-//use App\Http\Controllers\Inventory\ReceiptController;
-//use App\Http\Controllers\Property\PropertyReceiptPrintController;
-//use App\Http\Controllers\Inventory\PropertyReceiptPrintController;
-
-
 Route::namespace('Inventory')->prefix('inventory')->group(function () {
     // Route::resource('receipts', ReceiptController::class);
 
@@ -82,6 +77,7 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::resource('interbranchrequisitionapproval', InterBranchRequisitionApprovalController::class);
     Route::resource('inventoryreports', ReportsController::class);
     //Route::resource('rentdashboard', RentDashboardController::class);
+
    // Route::resource('receiptprint', PropertyReceiptPrintController::class);
 
     Route::resource('unitofmeasure', UOMController::class);

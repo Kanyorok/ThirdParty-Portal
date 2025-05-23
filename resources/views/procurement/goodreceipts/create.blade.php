@@ -22,7 +22,7 @@
         @foreach($Orders as $po)
           <option value="{{ $po->OrderNo }}" 
             data-OrderNo="{{ $po->OrderNo }}" 
-            data-remarks="{{ $po->Description }}" 
+            data-remarks="{{ $po->ExtOrdNum }}" 
             data-account-id="{{ $po->AccountID }}"
             data-lines='@json($po->OrderLines)'>
             {{ $po->OrderNo }}
@@ -31,7 +31,7 @@
       </select>
     </div>
     <div class="col-md-4 mb-2">
-      <label class="form-label">PO Description</label>
+      <label class="form-label">PO Reference No:</label>
       <div class="form-control form-control-lg bg-light" id="poDesc">--</div>
     </div>
   </div>
@@ -66,7 +66,6 @@
     <div class="mt-4">
       <button type="button" class="btn btn-secondary me-2" onclick="window.location='{{ route('procurementreceipts.index') }}'">Cancel</button>
       <button type="submit" class="btn btn-primary me-2">Save Receipt</button>
-      <button type="button" class="btn btn-success">Post and Transfer</button>
     </div>
   </form>
 </div>
