@@ -81,6 +81,9 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
 
     //Purchase Order
     Route::get('purchaseOrder/getSuppliers', [PurchaseOrderController::class, 'getSuppliers'])->name('purchaseOrder.getSuppliers');
+    Route::get('purchaseOrder/linkRFQ', [PurchaseOrderController::class, 'linkRFQ'])->name('purchaseOrder.linkRFQ');
+    
+    Route::get('purchaseOrder/fetchRFQ', [PurchaseOrderController::class, 'fetchRFQ'])->name('purchaseOrder.fetchRFQ');
     Route::resource('purchaseOrder', 'PurchaseOrderController');
 //    Route::get('purchaseOrder/getSupplier/{supplier}', [PurchaseOrderController::class, 'getSupplierDetails'])->name('purchaseOrder.getSupplierDetails');
 

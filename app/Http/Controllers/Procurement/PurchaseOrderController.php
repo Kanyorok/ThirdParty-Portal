@@ -300,4 +300,14 @@ class PurchaseOrderController extends Controller
     {
         //
     }
+
+    public function linkRFQ(){
+        Log::info('linkRFQ() was called');
+//        return view('procurement.orders.rfqLInk');
+    }
+
+
+    public function fetchRFQ(){
+        return view('procurement.orders.rfqLInk');
+    }
 }
