@@ -18,12 +18,9 @@ use App\Http\Controllers\Inventory\TransactionAdjustmentController;
 use App\Http\Controllers\Inventory\TransactionReceiptsController;
 use App\Http\Controllers\Inventory\TransactionTransfersController;
 use App\Http\Controllers\Inventory\UOMConversionController;
-use App\Http\Controllers\Property\PropertyReceiptPrintController;
 use Illuminate\Support\Facades\Route;
 
 //use App\Http\Controllers\Inventory\ReceiptController;
-
-//use App\Http\Controllers\Inventory\PropertyReceiptPrintController;
 
 
 Route::namespace('Inventory')->prefix('inventory')->group(function () {
@@ -78,5 +75,4 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::resource('interbranchrequisitionapproval', InterBranchRequisitionApprovalController::class);
     Route::resource('inventoryreports', ReportsController::class);
     //Route::resource('rentdashboard', RentDashboardController::class);
-    Route::resource('receiptprint', PropertyReceiptPrintController::class);
 });
