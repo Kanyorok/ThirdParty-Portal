@@ -81,17 +81,17 @@
     </div>
 
     <!-- Budget Line -->
-    <div class="mb-4">
+        <div class="mb-4">
       <label class="form-label">Link to Budget Line</label>
       <select name="budget_line_id" class="form-select" required>
         <option selected disabled>Select Budget Line</option>
-        <option value="101">Office Furniture - FY2025 (KES 500,000 Available)</option>
-        <option value="102">IT Equipment - FY2025 (KES 1,200,000 Available)</option>
-        <option value="103">Stationery - FY2025 (KES 300,000 Available)</option>
-        <!-- Dynamically loaded if needed -->
+        @foreach($budgetLines as $budgetLine)
+          <option value="{{ $budgetLine->BudgetLineID }}">
+            {{ $budgetLine->Description }}
+          </option>
+        @endforeach
       </select>
     </div>
-
     <!-- Notes -->
     <div class="mb-3">
       <label class="form-label">Notes / Justification</label>

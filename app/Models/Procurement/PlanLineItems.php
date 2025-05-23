@@ -7,6 +7,7 @@ use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Procurement\PlanLineItems;
 use App\Models\Core\Branch;
+use App\Models\HRM\Department;
 
 class PlanLineItems extends Model
 {
