@@ -169,8 +169,10 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::get('/procurementreceipts/lines/{grnId}/{poId}', [GoodsReceiptController::class, 'fetchLinesByGRN']);
     Route::put('/procurementreceipts/update-line', [GoodsReceiptController::class, 'updateLine'])->name('procurementreceipts.updateLine');
     Route::delete('/procurementreceipts/delete/{grnId}/{poId}', [GoodsReceiptController::class, 'destroy'])->name('procurementreceipts.destroy');
+    Route::post('/procurementreceipts/post', [GoodsReceiptController::class, 'postReceipt'])->name('procurementreceipts.post');
 
-    Route::resource('procurementreceipts', GoodsReceiptController::class);
+
+    //Route::resource('procurementreceipts', GoodsReceiptController::class);
 
     //Tenders
     Route::resource('initiatetender', TenderController::class);
