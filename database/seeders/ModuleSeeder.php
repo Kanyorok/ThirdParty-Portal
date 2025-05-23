@@ -150,7 +150,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 307000, 'Name' => 'Purchase Order', 'Icon' => null, 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 307100, 'Name' => 'View Purchase Orders', 'Icon' => null, 'ParentID' => 307000, 'Route' => 'purchaseOrder.index'],
             ['ModuleID' => 307200, 'Name' => 'Create Purchase Orders', 'Icon' => null, 'ParentID' => 307000, 'Route' => 'purchaseOrder.create'],
-//            ['ModuleID' => 307300, 'Name' => 'RFQ Evaluation', 'Icon' => null, 'ParentID' => 307000, 'Route' => 'evaluations.index'],
+            ['ModuleID' => 307300, 'Name' => 'Link RFQ to Purchase Order', 'Icon' => null, 'ParentID' => 307000, 'Route' => 'evaluations.index'],
 
             ['ModuleID' => 308000, 'Name' => 'Good Receipt', 'Icon' => null, 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 308100, 'Name' => 'View Good Receipt', 'Icon' => null, 'ParentID' => 308000, 'Route' => 'procurementreceipts.index'],
