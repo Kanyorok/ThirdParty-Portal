@@ -24,7 +24,6 @@
           <label for="subCategoryCode" class="form-label">Sub Category Code</label>
           <input type="text" name= "SubCategoryCode" class="form-control" id="subCategoryCode" placeholder="e.g., SUB-CAT-001" required>
         </div>
-        
 
         <div class="mb-3">
           <label for="subCategoryName" class="form-label">Sub Category Name</label>
