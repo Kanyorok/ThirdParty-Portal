@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Procurement\PlanLineItems;
+use App\Models\Core\Branch;
 
 class PlanLineItems extends Model
 {

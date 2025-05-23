@@ -280,5 +280,10 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::get('/select-approved-needs', [PlanFromNeedsController::class, 'create'])->name('create');
     Route::post('/store-from-needs', [PlanFromNeedsController::class, 'store'])->name('store');
         });
+    Route::get('/planning/edit-draft/{plan_id}', [PlanEditController::class, 'index']);
+    Route::post('/planning/update-draft-items', [PlanEditController::class, 'updateDraftItems'])->name('planning.updateDraftItems');
+    Route::delete('procurement/planning/delete-draft-item/{id}', [PlanEditController::class, 'deleteDraftItem'])->name('procurement.planning.deleteDraftItem');
+
+
 
 });
