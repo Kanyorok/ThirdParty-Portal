@@ -21,19 +21,24 @@ class PlanLineItems extends Model
     protected $fillable = [
         'PlanID',
         'ItemID',
+        'CategoryID',
         'BranchID',
         'DepartmentID',
         'MergedQty',
+        'UnitOfMeasure',
         'EstimatedUnitCost',
         'AdjustedCost',
         'ProcurementMethod',
         'SchedulePeriod',
         'ExecutionStatus',
+        'BudgetLineID',
         'ChangeRemarks',
         'IsDeleted',
         'CreatedBy',
         'ModifiedBy',
-        'DeletedBy'
+        'DeletedBy',
+        'ExpectedDeliveryDate',
+
     ];
     protected $dates = ['ExpectedDeliveryDate'];
 

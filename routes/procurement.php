@@ -278,6 +278,10 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::prefix('procurement')->group(function () {
     Route::get('plan-manual-input/create', [PlanManualInputController::class, 'create'])->name('plan.manual-input.create');
     Route::post('plan-manual-input', [PlanManualInputController::class, 'store'])->name('plan.manual-input.store');
-});
+        });
+    Route::prefix('procurement/plan')->name('plan-from-needs.')->group(function () {
+    Route::get('/select-approved-needs', [PlanFromNeedsController::class, 'create'])->name('create');
+    Route::post('/store-from-needs', [PlanFromNeedsController::class, 'store'])->name('store');
+        });
 
 });

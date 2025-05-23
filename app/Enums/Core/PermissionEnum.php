@@ -254,7 +254,7 @@ enum PermissionEnum: string
     public static function approvals(): Collection
     {
         return collect([self::MarketingPlannerApproval, /* self::MarketingListApproval,*/ self::TicketApproval, self::CampaignApproval, self::SurveyApproval, self::Ceo, self::MarketingManager,
-            self::PurchaseOrderApproval, self::RequisitionApproval,self::RequisitionItemsApproval,self::DepartmentNeedsApproval]);
+            self::PurchaseOrderApproval, self::RequisitionApproval,self::RequisitionItemsApproval]);
     }
 
 
