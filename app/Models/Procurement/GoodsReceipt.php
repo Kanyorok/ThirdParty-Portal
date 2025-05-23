@@ -2,12 +2,12 @@
 
 namespace App\Models\Procurement;
 
+use App\Enums\Core\PostingEnum;
 use App\Models\Auth\User;
 use App\Models\ThirdParies\Supplier;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Enums\Procurement\DepartmentNeedsEnum;
 
 class GoodsReceipt extends Model
 {
@@ -47,7 +47,7 @@ class GoodsReceipt extends Model
     }
     protected $casts = [
 
-    'InspectionStatus' => DepartmentNeedsEnum::class,
+    'InspectionStatus' => PostingEnum::class,
 
     ];
     public function supplier()

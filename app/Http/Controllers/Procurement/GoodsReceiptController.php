@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Procurement;
 
+use App\Enums\Core\PostingEnum;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Procurement\GoodsReceipt;
 use Illuminate\Support\Facades\DB;
-use App\Models\Procurement\GoodsReceivedHeaderView;
 use Illuminate\Support\Facades\Log;
 
 class GoodsReceiptController extends Controller
@@ -83,7 +83,7 @@ class GoodsReceiptController extends Controller
                 'POQTY'            => $item['POQTY'],
                 'ReceivedQTY'      => $item['ReceivedQTY'],
                 'TagRequired'      => isset($item['TagRequired']) ? 1 : 0,
-                'InspectionStatus' => 'Pending',
+                'InspectionStatus' => PostingEnum::Draft,
                 'CreatedBy'        => Auth::id(),
                 'ModifiedBy'       => Auth::id(),
             ]);
