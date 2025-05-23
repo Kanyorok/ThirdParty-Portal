@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Create New Inventory')
+@section('title', 'Create Sub Category')
 @section('content')
 <div class="container mt-5">
   <div class="card shadow rounded-4">

@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Tenant Payment Receipt')
 @section('content')
 <div class="container mt-4" id="receiptArea">
   <div class="border p-4 shadow-sm" style="max-width: 800px; margin: auto; background-color: #fff;">

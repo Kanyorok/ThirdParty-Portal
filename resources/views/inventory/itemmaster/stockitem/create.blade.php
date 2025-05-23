@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Create New Inventory')
+@section('title', 'Create New Inventory Item')
 @section('content')
 <body class="bg-light">
 
