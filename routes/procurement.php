@@ -68,8 +68,13 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::resource('requisition', 'RequisitionsController');
     Route::resource('requisitionItem', 'RequisitionItemsController');
     Route::get('items/download', [ItemController::class, 'download'])->name('items.download');
-    Route::get('requisitionItem/getItem/{type}', 'RequisitionItemsController@getItems')->name('requisitionItem.getItems');
+
+    //this route is static affecting orders\create.blade.php & requisitions\show
+    Route::get('requisitionItem/getItem/{type}', [RequisitionItemsController::class, 'getItems'])->name('requisitionItem.getItems');
+
+    // this route is static affecting orders\create.blade.php & requisitions\show
     Route::get('requisitionItem/getItemDetails/{item}', 'RequisitionItemsController@getItemDetails')->name('requisitionItem.getItemDetails');
+
     Route::get('requisitionItem/{id}', [RequisitionItemsController::class, 'show'])->name('requisitionItem.show');
     Route::get('requisitionItem/create/{id}', [RequisitionItemsController::class, 'create'])->name('requisitionItems.create');
     Route::get('requisition/approval', [RequisitionsController::class, 'approvalList'])->name('requisition.approval');
@@ -78,6 +83,9 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::get('purchaseOrder/getSuppliers', [PurchaseOrderController::class, 'getSuppliers'])->name('purchaseOrder.getSuppliers');
     Route::resource('purchaseOrder', 'PurchaseOrderController');
 //    Route::get('purchaseOrder/getSupplier/{supplier}', [PurchaseOrderController::class, 'getSupplierDetails'])->name('purchaseOrder.getSupplierDetails');
+
+
+//    Route::get('requisitionItem/getItem/{supplier}', 'PurchaseOrderController@getSupplierDetails')->name('purchaseOrder.getSupplierDetails');
 
 
 

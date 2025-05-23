@@ -251,7 +251,7 @@
 
                 if (type !== '') {
                     $.ajax({
-                        url: `/requisitionItem/getItem/${type}`,
+                        url: `/procurement/requisitionItem/getItem/${type}`,
                         type: 'GET',
                         success: function (response) {
 
@@ -286,7 +286,7 @@
 
                 if (itemId !== '') {
                     $.ajax({
-                        url: `/requisitionItem/getItemDetails/${itemId}`,
+                        url: `/procurement/requisitionItem/getItemDetails/${itemId}`,
                         type: 'GET',
                         success: function (response) {
                             if (response.data && response.data.length > 0) {
