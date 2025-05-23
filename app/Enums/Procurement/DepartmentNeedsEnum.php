@@ -18,4 +18,11 @@ enum DepartmentNeedsEnum:string
             self::Approved => 'Approved',
         };
     }
+    public function badgeColor(): string
+    {
+        return match($this) {
+            self::Pending => 'warning',
+            self::Approved => 'success',
+        };
+    }
 }

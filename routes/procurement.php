@@ -82,10 +82,6 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     //Purchase Order
     Route::get('purchaseOrder/getSuppliers', [PurchaseOrderController::class, 'getSuppliers'])->name('purchaseOrder.getSuppliers');
     Route::resource('purchaseOrder', 'PurchaseOrderController');
-//    Route::get('purchaseOrder/getSupplier/{supplier}', [PurchaseOrderController::class, 'getSupplierDetails'])->name('purchaseOrder.getSupplierDetails');
-
-
-//    Route::get('requisitionItem/getItem/{supplier}', 'PurchaseOrderController@getSupplierDetails')->name('purchaseOrder.getSupplierDetails');
 
 
 
@@ -168,8 +164,10 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::get('/procurementreceipts/lines/{grnId}/{poId}', [GoodsReceiptController::class, 'fetchLinesByGRN']);
     Route::put('/procurementreceipts/update-line', [GoodsReceiptController::class, 'updateLine'])->name('procurementreceipts.updateLine');
     Route::delete('/procurementreceipts/delete/{grnId}/{poId}', [GoodsReceiptController::class, 'destroy'])->name('procurementreceipts.destroy');
+    Route::post('/procurementreceipts/post', [GoodsReceiptController::class, 'postReceipt'])->name('procurementreceipts.post');
 
-    Route::resource('procurementreceipts', GoodsReceiptController::class);
+
+    //Route::resource('procurementreceipts', GoodsReceiptController::class);
 
     //Tenders
     Route::resource('initiatetender', TenderController::class);
