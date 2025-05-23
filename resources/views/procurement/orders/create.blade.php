@@ -6,6 +6,15 @@
         .select2-container {
             width: 100% !important;
         }
+
+        /*input,*/
+        /*textarea {*/
+        /*    background: transparent;*/
+        /*    !*border: none; !* optional: removes border too *!*!*/
+        /*    outline: none; !* optional: removes outline on focus *!*/
+        /*    box-shadow: none; !* optional: removes inner shadows *!*/
+        /*}*/
+
     </style>
 @endsection
 @section('content')
@@ -33,11 +42,11 @@
                     <label>Supplier</label>
                     <select class="form-control supplier" id="supplier" name="supplier">
                         <option selected disabled>Select supplier</option>
-                        <option value="01">Supplier 1</option>
-                        <option value="02">Supplier 2</option>
-                        {{--                     @foreach ($Details as $vendor) --}}
-                        {{--                <option value="{{ $vendor->Id }}">{{ $vendor->Name }}</option> --}}
-                        {{--                    @endforeach --}}
+{{--                        <option value="01">Supplier 1</option>--}}
+{{--                        <option value="02">Supplier 2</option>--}}
+                                             @foreach ($suppliers as $vendor)
+                                        <option value="{{ $vendor->Id }}">{{ $vendor->Name }}</option>
+                                            @endforeach
 
                         <!-- Loop suppliers here -->
                     </select>
@@ -88,15 +97,15 @@
                 <table class="table table-bordered table-sm">
                     <thead class="table-light">
                     <tr>
-                        <th style="width:5%;">#</th>
-                        <th style="width:10%;">Item Type</th>
-                        <th style="width:15%;">Item Code</th>
-                        <th style="width:15%;">Item Description</th>
-                        <th style="width:10%;">Quantity</th>
-                        <th style="width:10%;">Unit Price</th>
-                        <th style="width:10%;">Tax</th>
-                        <th style="width:10%;">Discount</th>
-                        <th style="width:20%;">Line Total</th>
+                        <th style="width: 3%; min-width: 30px;">#</th>
+                        <th style="width: 10%; min-width: 100px;">Item Type</th>
+                        <th style="width: 15%; min-width: 150px;">Item Name</th>
+                        <th style="width: 20%; min-width: 200px;">Item Description</th>
+                        <th style="width: 5%; min-width: 80px;">Quantity</th>
+                        <th style="width: 10%; min-width: 100px;">Unit Price</th>
+                        <th style="width: 5%; min-width: 80px;">Tax</th>
+                        <th style="width: 5%; min-width: 80px;">Discount</th>
+                        <th style="width: 15%; min-width: 150px;">Line Total</th>
                     </tr>
                     </thead>
                     <tbody id="po-items">
@@ -122,9 +131,8 @@
                         <td class="text-start">
                                 <textarea class="form-control form-control-sm itemDescription" name="itemDescription[]"
                                           id="Description" cols="30"
-                                          rows="5" readonly></textarea>
-                            {{--                            <input type="text" class="form-control form-control-sm itemDescription" --}}
-                            {{--                                name="itemDescription[]" id="Description" readonly> --}}
+                                          rows="5" readonly   style="display: flex; align-items: center; justify-content: center; text-align: center; padding: 0; resize: none;"></textarea>
+
                         </td>
                         <td class="text-start"><input type="number" class="form-control form-control-sm qty quantity"
                                                       name="quantity[]" id="Quantity"></td>
@@ -153,15 +161,15 @@
                 <div class="col-md-4 offset-md-8">
                     <div class="mb-2">
                         <label>Exclusive Total</label>
-                        <input type="text" class="form-control" readonly/>
+                        <input type="text" class="form-control exclusiveTotal" name="exclusiveTotal" readonly/>
                     </div>
                     <div class="mb-2">
                         <label>Tax Amount</label>
-                        <input type="text" class="form-control" readonly/>
+                        <input type="text" class="form-control taxAmount" name="taxAmount" readonly/>
                     </div>
                     <div>
                         <label>Inclusive Total</label>
-                        <input type="text" class="form-control" readonly/>
+                        <input type="text" class="form-control inclusiveTotal" name="inclusiveTotal" readonly/>
                     </div>
                 </div>
             </div>
@@ -217,12 +225,12 @@
             });
         }
 
-        $(document).on('change','#supplier',function () {
-            fetchSuppliers();
-
-
-            alert('eric');
-        });
+        // $(document).on('change','#supplier',function () {
+        //     fetchSuppliers();
+        //
+        //
+        //     alert('eric');
+        // });
 
         $(function () {
             // Handle item type change using event delegation
@@ -243,7 +251,7 @@
 
                 if (type !== '') {
                     $.ajax({
-                        url: `/requisitionItem/getItem/${type}`,
+                        url: `/procurement/requisitionItem/getItem/${type}`,
                         type: 'GET',
                         success: function (response) {
 
@@ -278,7 +286,7 @@
 
                 if (itemId !== '') {
                     $.ajax({
-                        url: `/requisitionItem/getItemDetails/${itemId}`,
+                        url: `/procurement/requisitionItem/getItemDetails/${itemId}`,
                         type: 'GET',
                         success: function (response) {
                             if (response.data && response.data.length > 0) {
@@ -318,15 +326,67 @@
                 }
 
                 row.find('.line-total').val(total.toFixed(2));
+                calculateSummaryTotals();
             });
-        });
-    </script>
 
-    <script>
-        let rowCount = 0;
+
+            function calculateSummaryTotals() {
+                let exclusiveTotal = 0;
+                let totalTax = 0;
+
+                // Loop through each row to calculate totals
+                $('#po-items tr').each(function() {
+                    let row = $(this);
+                    let qty = parseFloat(row.find('.quantity').val()) || 0;
+                    let price = parseFloat(row.find('.unit-price').val()) || 0;
+                    let tax = parseFloat(row.find('.tax').val()) || 0;
+                    let discount = parseFloat(row.find('.discount').val()) || 0;
+
+                    // Calculate line total before tax and discount
+                    let lineTotalBeforeTax = qty * price;
+
+                    // Apply discount
+                    if (discount > 0) {
+                        lineTotalBeforeTax -= lineTotalBeforeTax * (discount / 100);
+                    }
+
+                    // Calculate tax for this line
+                    let lineTax = lineTotalBeforeTax * (tax / 100);
+
+                    // Add to totals
+                    exclusiveTotal += lineTotalBeforeTax;
+                    totalTax += lineTax;
+                });
+
+                // Calculate inclusive total
+                let inclusiveTotal = exclusiveTotal + totalTax;
+
+                // Update the summary fields
+                $('input[name="exclusiveTotal"]').val(exclusiveTotal.toFixed(2));
+                $('input[name="taxAmount"]').val(totalTax.toFixed(2));
+                $('input[name="inclusiveTotal"]').val(inclusiveTotal.toFixed(2));
+            }
+
+
+            $(document).ready(function() {
+                calculateSummaryTotals();
+            });
+
+            function updateLineNumbers() {
+                $('#po-items tr').each(function (index) {
+                    $(this).find('.line-no').text((index + 1) + '.');
+                });
+            }
+        });
+
+        let rowCount = 1;
 
         document.getElementById('add-row').addEventListener('click', function () {
             rowCount++;
+
+
+
+
             const row = `
         <tr>
             <td class="line-no">${rowCount}.</td>
@@ -343,14 +403,20 @@
                     <option disabled selected>Select Item Code</option>
                 </select>
             </td>
-            <td><input type="text" class="form-control form-control-sm itemDescription" name="item_description[]" id="Description" readonly></td>
+
+            <td>
+                <textarea class="form-control form-control-sm itemDescription" name="itemDescription[]"
+                                          id="Description" cols="30"
+                                          rows="5" readonly   style="display: flex; align-items: center; justify-content: center; text-align: center; padding: 0; resize: none;"></textarea>
+            </td>
             <td><input type="number" class="form-control form-control-sm qty quantity" name="quantity[]" id="Quantity" ></td>
-            <td><input type="number" class="form-control form-control-sm unit-price" name="unit_price[]" id="Price" ></td>
+            <td><input type="number" class="form-control form-control-sm unit-price" name="unitPrice[]" id="Price" ></td>
             <td><input type="number" class="form-control form-control-sm tax" name="tax[]" id="Tax" ></td>
             <td><input type="number" class="form-control form-control-sm discount" name="discount[]" id="Discount" ></td>
-            <td><input type="number" class="form-control form-control-sm line-total" name="line_total[]"  id="lineTotal" readonly></td>
+            <td><input type="number" class="form-control form-control-sm line-total" name="lineTotal[]"  id="lineTotal" readonly></td>
         </tr>`;
             document.getElementById('po-items').insertAdjacentHTML('beforeend', row);
+            updateLineNumbers()
         });
     </script>
 
