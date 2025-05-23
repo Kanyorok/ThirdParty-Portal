@@ -18,11 +18,14 @@ use App\Http\Controllers\Inventory\TransactionAdjustmentController;
 use App\Http\Controllers\Inventory\TransactionReceiptsController;
 use App\Http\Controllers\Inventory\TransactionTransfersController;
 use App\Http\Controllers\Inventory\UOMConversionController;
-use App\Http\Controllers\Property\PropertyReceiptPrintController;
 use Illuminate\Support\Facades\Route;
 
-//use App\Http\Controllers\Inventory\ReceiptController;
+use App\Http\Controllers\Inventory\UOMController;
+use App\Http\Controllers\Inventory\ItemTypeController;
+use App\Http\Controllers\Inventory\InventoryTypeController;
 
+//use App\Http\Controllers\Inventory\ReceiptController;
+//use App\Http\Controllers\Property\PropertyReceiptPrintController;
 //use App\Http\Controllers\Inventory\PropertyReceiptPrintController;
 
 
@@ -44,6 +47,7 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::delete('/itemmasterlist/{Id}', [ItemMasterListController::class, 'destroy'])->name('itemmasterlist.destroy');
     Route::get('/get-subcategories', [ItemMasterListController::class, 'getSubcategories'])->name('get.subcategories');
     Route::resource('sku', SKUController::class);
+
 
 
     //Route::resource('itemcategory', ItemCategoryController::class);
@@ -78,5 +82,10 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::resource('interbranchrequisitionapproval', InterBranchRequisitionApprovalController::class);
     Route::resource('inventoryreports', ReportsController::class);
     //Route::resource('rentdashboard', RentDashboardController::class);
-    Route::resource('receiptprint', PropertyReceiptPrintController::class);
+   // Route::resource('receiptprint', PropertyReceiptPrintController::class);
+
+    Route::resource('unitofmeasure', UOMController::class);
+    Route::resource('itemtype', ItemTypeController::class);
+    Route::resource('inventorytype', InventoryTypeController::class);
+
 });
