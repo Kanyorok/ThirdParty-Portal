@@ -15,7 +15,7 @@ class GoodsReceiptController extends Controller
     //
     public function index()
     {
-        $goodsReceipts = GoodsReceivedHeaderView::all();
+        $goodsReceipts = GoodsReceipt::with('receiver','supplier')->get();
         return view('procurement.goodreceipts.index', compact('goodsReceipts'));
         //return view('procurement.goodreceipts.index');
     }

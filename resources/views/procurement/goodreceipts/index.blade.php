@@ -36,17 +36,17 @@
             <td>{{ $key + 1 }}</td>
             <td>{{ $receipt->GRNID }}</td>
             <td>{{ $receipt->POID }}</td>
-            <td>{{ $receipt->supplier->name ?? 'N/A' }}</td>
-            <td>{{($receipt->ReceivedDate)}}</td>
+            <td>{{ $receipt->supplier->SupplierName ?? 'N/A' }}</td>
+            <td>{{ \Carbon\Carbon::parse($receipt->ReceivedDate)->format('d M Y') }}</td>
             <td>
-              <span class="badge bg-{{ $receipt->InspectionStatus == 'Posted' ? 'success' : 'warning' }}">
-                {{ $receipt->InspectionStatus }}
+              <span class="badge bg-{{ $receipt->InspectionStatus->badgeColor() }}">
+                {{ $receipt->InspectionStatus->label() }}
               </span>
             </td>
-            <td>{{ $receipt->ReceivedBy }}</td>
+            <td>{{ $receipt->receiver->Name ?? 'N/A' }}</td>
             <td>
-              <a href="javascript:void(0);" onclick="openEditModal('{{ $receipt->GRNID }}', '{{ $receipt->POID }}')">Edit</a> |
-              <a href="javascript:void(0);" onclick="confirmDelete('{{ $receipt->GRNID }}', '{{ $receipt->POID }}')">Delete</a>
+              <a class="btn btn-sm btn-outline-primary" href="javascript:void(0);" onclick="openEditModal('{{ $receipt->GRNID }}', '{{ $receipt->POID }}')">Edit</a>
+              <a class="btn btn-sm btn-outline-danger" href="javascript:void(0);" onclick="confirmDelete('{{ $receipt->GRNID }}', '{{ $receipt->POID }}')">Delete</a>
             </td>
           </tr>
         @endforeach
