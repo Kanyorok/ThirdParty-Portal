@@ -17,7 +17,6 @@ use App\Http\Controllers\Property\PropertyNewLeaseController;
 use App\Http\Controllers\Property\PropertyNewTenantController;
 use App\Http\Controllers\Property\PropertyPaymentFrequencyController;
 use App\Http\Controllers\Property\PropertyReceiptController;
-use App\Http\Controllers\Property\PropertyReceiptPrintController;
 use App\Http\Controllers\Property\PropertyReportsController;
 use App\Http\Controllers\Property\PropertyReportsVisualController;
 use App\Http\Controllers\Property\PropertyTenantClearanceController;
@@ -45,7 +44,6 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::resource('rentinvoice', PropertyInvoiceController::class);
     Route::resource('rentreceipt', PropertyReceiptController::class);
     Route::resource('rentdashboard', RentDashboardController::class);
-    Route::resource('receiptprint', PropertyReceiptPrintController::class);
     Route::resource('tenantledger', TenantStatementController::class);
     Route::resource('tenantclearance', PropertyTenantClearanceController::class);
     Route::resource('maintenancerequest', PropertyMaintenanceRequestController::class);

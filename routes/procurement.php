@@ -45,7 +45,7 @@ use App\Http\Controllers\Procurement\ProcurementPlanDetailController;
 use App\Http\Controllers\Procurement\ProcurementquaterlyController;
 use App\Http\Controllers\Procurement\ProcurementAssignMethodController;
 use App\Http\Controllers\Procurement\MapToBudgetController;
-
+use App\Http\Controllers\Procurement\RFQLinesController;
 use App\Http\Controllers\Procurement\DepartmentNeedsController;
 use App\Http\Controllers\Procurement\ProcurementPlanDashboardController;
 use App\Http\Controllers\Procurement\TimelineController;

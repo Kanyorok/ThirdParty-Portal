@@ -20,7 +20,7 @@ class RFQLine extends Model
     const string DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
-        'RFQLineNo', 'RequisitionId', 'RFQId', 'ItemId', 'UOM', 'Quantity', 'ItemName', 'ItemCategoryId', 'CreatedOn', 'ModifiedOn', 'CreatedBy', 'ModifiedBy'
+        'RFQLineNo', 'RequisitionId', 'RequisitionLineId','RFQId', 'ItemId', 'UOM', 'Quantity', 'ItemName', 'ItemCategoryId', 'CreatedOn', 'ModifiedOn', 'CreatedBy', 'ModifiedBy'
     ];
 
     public static function getPrimaryKey(): string

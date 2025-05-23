@@ -4,10 +4,9 @@ namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\RequisitionLine;
-use App\Models\Procurement\Requisitions;
 use App\Models\Procurement\RFQLine;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class RFQLinesController extends Controller
 {
@@ -73,21 +72,26 @@ class RFQLinesController extends Controller
         return redirect()->route('rfqs.show', $request->RFQId)->with('success', 'RFQ line(s) created successfully.');
     }
 
-    public function getCategories()
+   public function getCategories()
     {
-        Log::info('getCategories() was called');
-        // Get all requisition lines with item and its category
-        $lines = RequisitionLine::with('item.category')->get();
+        // Step 1: Get IDs of RequisitionLines already used in RFQ lines
+        $excludedLineIds = DB::table('t_rfqlines')->pluck('requisitionlineid');
 
-        // Extract categories from items, avoiding nulls
+        // Step 2: Eager-load item and category, filter out already-used lines
+        $lines = RequisitionLine::with(['item.category'])
+            ->whereNotIn('id', $excludedLineIds)
+            ->whereHas('item.category') // Ensure category exists to skip nulls early
+            ->get();
+
+        // Step 3: Extract and deduplicate categories
         $categories = $lines
-            ->map(fn($line) => $line->item?->category)
-            ->filter() // remove nulls
-            ->unique('Id') // or 'id', based on your DB
+            ->pluck('item.category')
+            ->unique('id') // Ensure correct key here, 'id' is default for most models
             ->values();
 
         return response()->json($categories);
     }
+
 
 
 }
