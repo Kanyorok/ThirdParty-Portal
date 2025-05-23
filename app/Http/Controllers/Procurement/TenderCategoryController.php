@@ -44,10 +44,12 @@ class TenderCategoryController extends Controller
         TenderCategory::create([
             'CategoryCode' => $newCatCode,
             'TenderCategory' => $validated['TenderCategory'],
-            'Description' => $validated['Description']
+            'Description' => $validated['Description'],
+            'CreatedBy' => auth()->user()->Id,
+            'ModifiedBy' => auth()->user()->Id,
         ]);
 
-        return redirect()->route('tender-categories.index')
+        return redirect()->route('tendercategory.index')
             ->with('success', 'Tender Category Created Successfully!');
     }
 
@@ -68,11 +70,10 @@ class TenderCategoryController extends Controller
             'TenderCategory' => 'required|in:' . implode(',', array_column(TenderCategoryEnum::cases(), 'value')),
             'Description' => 'nullable|string',
         ]);
-
         $tenderCategory = TenderCategory::findOrFail($id);
         $tenderCategory->update($validated);
 
-        return redirect()->route('tender-categories.index')
+        return redirect()->route('tendercategory.index')
             ->with('success', 'Tender Category Updated Successfully!');
     }
 
@@ -81,7 +82,7 @@ class TenderCategoryController extends Controller
         $tenderCategory = TenderCategory::findOrFail($id);
         $tenderCategory->delete();
 
-        return redirect()->route('tender-categories.index')
+        return redirect()->route('tendercategory.index')
             ->with('success', 'Tender Category Deleted Successfully!');
     }
 }

@@ -138,9 +138,32 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 304100, 'Name' => 'List Modes', 'Icon' => null, 'ParentID' => 304000, 'Route' => 'procurement-modes.index'],
             ['ModuleID' => 304200, 'Name' => 'Add Mode', 'Icon' => null, 'ParentID' => 304000, 'Route' => 'procurement-modes.create'],
             ['ModuleID' => 305000, 'Name' => 'Tendering', 'Icon' => null, 'ParentID' => 300000, 'Route' => null],
+            
+            // Tender Setup
             ['ModuleID' => 305100, 'Name' => 'Tender Setup', 'Icon' => null, 'ParentID' => 305000, 'Route' => null],
             ['ModuleID' => 305110, 'Name' => 'Tender Initiation', 'Icon' => null, 'ParentID' => 305100, 'Route' => 'initiatetender.index'],
             ['ModuleID' => 305120, 'Name' => 'Initiation Approval', 'Icon' => null, 'ParentID' => 305100, 'Route' => 'initiateapprove.index'],
+            ['ModuleID' => 305130, 'Name' => 'Tender Category', 'Icon' => null, 'ParentID' => 305100, 'Route' => 'tendercategory.index'],
+            ['ModuleID' => 305140, 'Name' => 'Tender Type', 'Icon' => null, 'ParentID' => 305100, 'Route' => 'tendertype.index'],
+            ['ModuleID' => 305150, 'Name' => 'Criteria Setup', 'Icon' => null, 'ParentID' => 305100, 'Route' => 'evaluationcriteria.index'],
+
+            // Suppliers
+            ['ModuleID' => 305200, 'Name' => 'Suppliers', 'Icon' => null, 'ParentID' => 305000, 'Route' => null],
+            ['ModuleID' => 305210, 'Name' => 'Response Tracking', 'Icon' => null, 'ParentID' => 305200, 'Route' => 'tenderresponse.index'],
+            ['ModuleID' => 305220, 'Name' => 'Clarifications', 'Icon' => null, 'ParentID' => 305200, 'Route' => 'tenderclarification.index'],
+            ['ModuleID' => 305230, 'Name' => 'Submission', 'Icon' => null, 'ParentID' => 305200, 'Route' => 'tendersubmission.index'],
+
+            // Opening
+            ['ModuleID' => 305300, 'Name' => 'Opening', 'Icon' => null, 'ParentID' => 305000, 'Route' => null],
+            ['ModuleID' => 305310, 'Name' => 'Opening', 'Icon' => null, 'ParentID' => 305300, 'Route' => 'tenderopening.index'],
+
+            // Evaluation
+            ['ModuleID' => 305400, 'Name' => 'Evaluation', 'Icon' => null, 'ParentID' => 305000, 'Route' => null],
+            ['ModuleID' => 305410, 'Name' => 'Appoint Committee', 'Icon' => null, 'ParentID' => 305400, 'Route' => 'tendercommittee.index'],
+            ['ModuleID' => 305420, 'Name' => 'Member Response', 'Icon' => null, 'ParentID' => 305400, 'Route' => 'memberresponse.index'],
+            ['ModuleID' => 305430, 'Name' => 'Assign Roles', 'Icon' => null, 'ParentID' => 305400, 'Route' => 'assignrole.index'],
+            ['ModuleID' => 305440, 'Name' => 'Evaluators Dashboard', 'Icon' => null, 'ParentID' => 305400, 'Route' => 'evaluationdashboard.index'],
+            ['ModuleID' => 305450, 'Name' => 'Consolidated Scores', 'Icon' => null, 'ParentID' => 305400, 'Route' => 'bidscores.index'],
 
             ['ModuleID' => 306000, 'Name' => 'RFQS', 'Icon' => null, 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 306100, 'Name' => 'View RFQs', 'Icon' => null, 'ParentID' => 306000, 'Route' => 'rfqs.index'],

@@ -7,13 +7,13 @@
         <div class="card-header bg-white py-3 border-bottom">
             <div class="d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">+ New Tender Category</h5>
-                <a href="{{ route('tender-categories.index') }}" class="btn btn-sm btn-outline-secondary">
+                <a href="{{ route('tendercategory.index') }}" class="btn btn-sm btn-outline-secondary">
                     <i class="fas fa-arrow-left me-1"></i> Back
                 </a>
             </div>
         </div>
         <div class="card-body">
-            <form action="{{ route('tender-categories.store') }}" method="POST" id="tenderCategoryForm">
+            <form action="{{ route('tendercategory.store') }}" method="POST" id="tenderCategoryForm">
                 @csrf
                 
                 <div class="row g-3">
@@ -80,7 +80,7 @@
         
         // Update code when category changes
         categorySelect.addEventListener('change', function() {
-            fetch(`/tender-categories/generate-code?category=${this.value}`)
+            fetch(`/tendercategory/generate-code?category=${this.value}`)
                 .then(response => response.json())
                 .then(data => {
                     codeInput.value = data.code;

@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Item Sub Category')
+@section('title', 'Tender Category')
 @section('content')
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4>Tender Categories</h4>
-        <a href="{{ route('tender-categories.create') }}" class="btn btn-sm btn-success">+ New Category</a>
+        <a href="{{ route('tendercategory.create') }}" class="btn btn-sm btn-success">+ New Category</a>
     </div>
 
     <div class="table-responsive">
@@ -27,8 +27,8 @@
                     <td>{{ $type->TenderCategory }}</td>
                     <td>{{ $type->Description }}</td>
                     <td>
-                        <a href="{{ route('tender-categories.edit', $type->Id) }}" class="btn btn-sm btn-warning">Edit</a>
-                        <form action="{{ route('tender-categories.destroy', $type->Id) }}" method="POST" class="d-inline">
+                        <a href="{{ route('tendercategory.edit', $type->Id) }}" class="btn btn-sm btn-warning">Edit</a>
+                        <form action="{{ route('tendercategory.destroy', $type->Id) }}" method="POST" class="d-inline">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
