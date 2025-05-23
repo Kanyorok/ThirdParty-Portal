@@ -379,7 +379,7 @@
             }
         });
 
-        let rowCount = 0;
+        let rowCount = 1;
 
         document.getElementById('add-row').addEventListener('click', function () {
             rowCount++;
@@ -410,10 +410,10 @@
                                           rows="5" readonly   style="display: flex; align-items: center; justify-content: center; text-align: center; padding: 0; resize: none;"></textarea>
             </td>
             <td><input type="number" class="form-control form-control-sm qty quantity" name="quantity[]" id="Quantity" ></td>
-            <td><input type="number" class="form-control form-control-sm unit-price" name="unit_price[]" id="Price" ></td>
+            <td><input type="number" class="form-control form-control-sm unit-price" name="unitPrice[]" id="Price" ></td>
             <td><input type="number" class="form-control form-control-sm tax" name="tax[]" id="Tax" ></td>
             <td><input type="number" class="form-control form-control-sm discount" name="discount[]" id="Discount" ></td>
-            <td><input type="number" class="form-control form-control-sm line-total" name="line_total[]"  id="lineTotal" readonly></td>
+            <td><input type="number" class="form-control form-control-sm line-total" name="lineTotal[]"  id="lineTotal" readonly></td>
         </tr>`;
             document.getElementById('po-items').insertAdjacentHTML('beforeend', row);
             updateLineNumbers()

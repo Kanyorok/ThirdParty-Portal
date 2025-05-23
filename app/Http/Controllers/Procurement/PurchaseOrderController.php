@@ -129,7 +129,7 @@ class PurchaseOrderController extends Controller
     public function store(PurchaseOrderRequest $request): JsonResponse
     {
 
-//        dd($request->user());
+//       dd($request->all());
         try {
             $validatedData = $request->validated();
 
