@@ -64,8 +64,7 @@ class TenderTypeController extends Controller {
     public function edit($id)
     {
         $tenderType = TenderType::findOrFail($id);
-        $tenderTypeOptions = TenderTypeEnum::cases();
-        return view('procurement.tendering.tendersetup.tendertype.edit', compact('tenderType', 'tenderTypeOptions'));
+        return view('procurement.tendering.tendersetup.tendertype.edit', compact('tenderType'));
     }
 
     /**
@@ -74,8 +73,7 @@ class TenderTypeController extends Controller {
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'TypeCode' => 'required|string|max:20|unique:t_TenderTypes,TypeCode,' . $id . ',Id',
-            'TenderType' => 'required|in:' . implode(',', array_column(TenderTypeEnum::cases(), 'value')),
+            'TenderType' => 'required|string|max:255',
             'Description' => 'nullable|string',
         ]);
 
