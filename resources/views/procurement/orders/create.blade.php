@@ -132,7 +132,8 @@
                                 <textarea class="form-control form-control-sm itemDescription" name="itemDescription[]"
                                           id="Description" cols="30"
                                           rows="5" readonly   style="display: flex; align-items: center; justify-content: center; text-align: center; padding: 0; resize: none;"></textarea>
-
+                            {{--                            <input type="text" class="form-control form-control-sm itemDescription" --}}
+                            {{--                                name="itemDescription[]" id="Description" readonly> --}}
                         </td>
                         <td class="text-start"><input type="number" class="form-control form-control-sm qty quantity"
                                                       name="quantity[]" id="Quantity"></td>
@@ -251,7 +252,7 @@
 
                 if (type !== '') {
                     $.ajax({
-                        url: `/requisitionItem/getItem/${type}`,
+                        url: `/procurement/requisitionItem/getItem/${type}`,
                         type: 'GET',
                         success: function (response) {
 
@@ -286,7 +287,7 @@
 
                 if (itemId !== '') {
                     $.ajax({
-                        url: `/requisitionItem/getItemDetails/${itemId}`,
+                        url: `/procurement/requisitionItem/getItemDetails/${itemId}`,
                         type: 'GET',
                         success: function (response) {
                             if (response.data && response.data.length > 0) {
@@ -372,6 +373,49 @@
                 calculateSummaryTotals();
             });
 
+
+            function calculateSummaryTotals() {
+                let exclusiveTotal = 0;
+                let totalTax = 0;
+
+                // Loop through each row to calculate totals
+                $('#po-items tr').each(function() {
+                    let row = $(this);
+                    let qty = parseFloat(row.find('.quantity').val()) || 0;
+                    let price = parseFloat(row.find('.unit-price').val()) || 0;
+                    let tax = parseFloat(row.find('.tax').val()) || 0;
+                    let discount = parseFloat(row.find('.discount').val()) || 0;
+
+                    // Calculate line total before tax and discount
+                    let lineTotalBeforeTax = qty * price;
+
+                    // Apply discount
+                    if (discount > 0) {
+                        lineTotalBeforeTax -= lineTotalBeforeTax * (discount / 100);
+                    }
+
+                    // Calculate tax for this line
+                    let lineTax = lineTotalBeforeTax * (tax / 100);
+
+                    // Add to totals
+                    exclusiveTotal += lineTotalBeforeTax;
+                    totalTax += lineTax;
+                });
+
+                // Calculate inclusive total
+                let inclusiveTotal = exclusiveTotal + totalTax;
+
+                // Update the summary fields
+                $('input[name="exclusiveTotal"]').val(exclusiveTotal.toFixed(2));
+                $('input[name="taxAmount"]').val(totalTax.toFixed(2));
+                $('input[name="inclusiveTotal"]').val(inclusiveTotal.toFixed(2));
+            }
+
+
+            $(document).ready(function() {
+                calculateSummaryTotals();
+            });
+
             function updateLineNumbers() {
                 $('#po-items tr').each(function (index) {
                     $(this).find('.line-no').text((index + 1) + '.');
@@ -379,7 +423,7 @@
             }
         });
 
-        let rowCount = 0;
+        let rowCount = 1;
 
         document.getElementById('add-row').addEventListener('click', function () {
             rowCount++;
@@ -410,10 +454,10 @@
                                           rows="5" readonly   style="display: flex; align-items: center; justify-content: center; text-align: center; padding: 0; resize: none;"></textarea>
             </td>
             <td><input type="number" class="form-control form-control-sm qty quantity" name="quantity[]" id="Quantity" ></td>
-            <td><input type="number" class="form-control form-control-sm unit-price" name="unit_price[]" id="Price" ></td>
+            <td><input type="number" class="form-control form-control-sm unit-price" name="unitPrice[]" id="Price" ></td>
             <td><input type="number" class="form-control form-control-sm tax" name="tax[]" id="Tax" ></td>
             <td><input type="number" class="form-control form-control-sm discount" name="discount[]" id="Discount" ></td>
-            <td><input type="number" class="form-control form-control-sm line-total" name="line_total[]"  id="lineTotal" readonly></td>
+            <td><input type="number" class="form-control form-control-sm line-total" name="lineTotal[]"  id="lineTotal" readonly></td>
         </tr>`;
             document.getElementById('po-items').insertAdjacentHTML('beforeend', row);
             updateLineNumbers()
