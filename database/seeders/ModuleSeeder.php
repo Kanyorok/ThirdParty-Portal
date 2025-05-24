@@ -112,7 +112,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 301220, 'Name' => 'New Plan', 'Icon' => null, 'ParentID' => 301200, 'Route' => 'procurementplanmaintain.index'],
             ['ModuleID' => 301230, 'Name' => 'Amend Plan', 'Icon' => null, 'ParentID' => 301200, 'Route' => 'editplan.index'],
             ['ModuleID' => 301240, 'Name' => 'Link Budget Lines', 'Icon' => null, 'ParentID' => 301200, 'Route' => 'maptobudget.index'],
-            ['ModuleID' => 301250, 'Name' => 'Set Method', 'Icon' => null, 'ParentID' => 301200, 'Route' => 'procurementassignitem.index'],
+            ['ModuleID' => 301250, 'Name' => 'Set Method', 'Icon' => null, 'ParentID' => 301200, 'Route' => 'procurement-set-method.index'],
             ['ModuleID' => 301260, 'Name' => 'Schedule Plan', 'Icon' => null, 'ParentID' => 301200, 'Route' => 'procurementplanquaterly.index'],
             ['ModuleID' => 301300, 'Name' => 'Dashboard', 'Icon' => null, 'ParentID' => 301000, 'Route' => null],
             ['ModuleID' => 301310, 'Name' => 'Plan View', 'Icon' => null, 'ParentID' => 301300, 'Route' => 'procurementplandetails.index'],
