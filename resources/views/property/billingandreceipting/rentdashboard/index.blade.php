@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Rent Collection Dashboard')
 @section('content')
 <div class="container mt-4">
     <h4 class="mb-4">🏠 Rent Collection Dashboard</h4>

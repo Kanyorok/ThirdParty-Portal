@@ -58,19 +58,21 @@ use App\Http\Controllers\Procurement\DepartmentNeedApprovalController;
 
 Route::namespace('Procurement')->prefix('procurement')->group(function () {
 
-       
+
 
     //Requisitions
     Route::resource('requisition', 'RequisitionsController');
     Route::resource('requisitionItem', 'RequisitionItemsController');
     Route::get('items/download', [ItemController::class, 'download'])->name('items.download');
-    Route::get('requisitionItem/getItem/{type}', 'RequisitionItemsController@getItems')->name('requisitionItem.getItems');
+
+    //this route is static affecting orders\create.blade.php & requisitions\show
+    Route::get('requisitionItem/getItem/{type}', [RequisitionItemsController::class, 'getItems'])->name('requisitionItem.getItems');
+
+    // this route is static affecting orders\create.blade.php & requisitions\show
     Route::get('requisitionItem/getItemDetails/{item}', 'RequisitionItemsController@getItemDetails')->name('requisitionItem.getItemDetails');
-    //    Route::get('requisitionItem/{id}', 'RequisitionItemsController@getRelatedRequisitionLines')->name('requisitionItem.list');
+
     Route::get('requisitionItem/{id}', [RequisitionItemsController::class, 'show'])->name('requisitionItem.show');
-   // Route::get('requisition/{id}', [RequisitionsController::class, 'show'])->name('requisition.show');
     Route::get('requisitionItem/create/{id}', [RequisitionItemsController::class, 'create'])->name('requisitionItems.create');
-    //    Route::get('requisitionItem/create/{id}', [RequisitionsController::class, 'create'])->name('requisition.show');
     Route::get('requisition/approval', [RequisitionsController::class, 'approvalList'])->name('requisition.approval');
 
     //Purchase Order
@@ -78,18 +80,10 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::resource('purchaseOrder', 'PurchaseOrderController');
 
 
-    Route::get('requisitionItem/getItem/{supplier}', 'PurchaseOrderController@getSupplierDetails')->name('purchaseOrder.getSupplierDetails');
-    Route::get('purchaseOrder/{id}', [PurchaseOrderController::class, 'show'])->name('purchaseOrder.show');
-
-//    Route::get('purchaseOrder/related/{id}', [PurchaseOrderController::class, 'show'])->name('purchaseOrder.related');
-//    Route::get('purchaseOrder/{id}', function ($id) {
-//        return "Route hit with ID: $id";
-//    })->name('purchaseOrder.show');
 
     //Sales Order
     Route::resource('salesOrder', 'SalesOrderController');
 
-    //Route::get('requisitionItem/getItem/{type}', [RequisitionItemsController::class, 'getItems'])->name('requisitionItem.getItems');
 
     //Items
     Route::resource('items', 'ItemController');
@@ -121,6 +115,7 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
 
     // Suppliers
     Route::resource('suppliers', SupplierController::class);
+
 
     // Procurement Periods
     Route::resource('procurement-periods', ProcurementPeriodController::class);

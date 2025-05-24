@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Maintenance Completion Records')
 @section('content')
 <div class="container mt-4">
 <a href="{{ route('workcompletion.create') }}" class="btn btn-primary mb-3">Log Completion</a>
