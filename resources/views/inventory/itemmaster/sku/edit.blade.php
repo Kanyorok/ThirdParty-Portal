@@ -16,21 +16,49 @@
         <div class="mb-3 row">
             <div class="col-md-4">
                 <label for="skuCode" class="form-label">SKU Code</label>
-                <input type="text" name="SKUCode" class="form-control" id="skuCode" value="{{ $item->SKUCode }}" required>
+                <input type="text" name="SKUCode" class="form-control" id="skuCode" value="{{ $item->SKUCode }}" readonly>
             </div>
-            <div class="col-md-4">
-                <label for="itemType" class="form-label">Item Type</label>
-                <select class="form-select" name="ItemType" id="itemType">
-                    <option disabled>Select Item</option>
-                    <option value="Stapler" {{ $item->ItemType == 'Stapler' ? 'selected' : '' }}>Stapler</option>
-                    <option value="PrinterPaper" {{ $item->ItemType == 'PrinterPaper' ? 'selected' : '' }}>Printer Paper</option>
-                    <option value="GlueStick" {{ $item->ItemType == 'GlueStick' ? 'selected' : '' }}>Glue Stick</option>
-                    <option value="Envelopes" {{ $item->ItemType == 'Envelopes' ? 'selected' : '' }}>Envelopes</option>
-                </select>
-            </div>
-        </div>
 
-        <div class="row mb-3">
+<div class="row mb-3">
+    <div class="col-md-4">
+        <label for="Category" class="form-label">Category</label>
+        <select name="Category" id="Category" class="form-select" required>
+            <option value="">-- Select Category --</option>
+            @foreach($categories as $category)
+                <option value="{{ $category->Id }}"
+                    {{ old('Category', $item->item->category->parent ? $item->item->category->parent->Id : $item->item->category->Id) == $category->Id ? 'selected' : '' }}>
+                    {{ $category->Name }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+    <div class="col-md-4">
+        <label for="Subcategory" class="form-label">Subcategory</label>
+        <select name="Subcategory" id="Subcategory" class="form-select">
+            <option value="">-- Select Subcategory --</option>
+            @if($item->item->category->parent)
+                @foreach($item->item->category->parent->children as $subcat)
+                    <option value="{{ $subcat->Id }}"
+                        {{ old('Subcategory', $item->item->category->Id) == $subcat->Id ? 'selected' : '' }}>
+                        {{ $subcat->Name }}
+                    </option>
+                @endforeach
+            @endif
+        </select>
+    </div>
+<div class="col-md-4">
+    <label for="ItemID" class="form-label">Item</label>
+    <select name="ItemID" id="Item" class="form-select" required>
+        <option value="">-- Select Item --</option>
+        @foreach($items as $itm)
+            <option value="{{ $itm->Id }}" {{ old('ItemID', $item->ItemID) == $itm->Id ? 'selected' : '' }}>
+                {{ $itm->ItemName }}
+            </option>
+        @endforeach
+    </select>
+</div>
+
+    <div class="row mb-3">
     <div class="col-md-6">
         <label for="Branch" class="form-label">Branch</label>
         <select name="Branch" id="Branch" class="form-select" required>

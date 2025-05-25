@@ -22,10 +22,10 @@ class SKUController extends Controller
 
     public function create()
 {
+    $categories = \App\Models\Inventory\ItemCategories::whereNull('ParentId')->get();
     $branches = Branch::all();
-    // Stores will be loaded dynamically, so you can pass an empty array
     $stores = [];
-    return view('inventory.itemmaster.sku.create', compact('branches', 'stores'));
+    return view('inventory.itemmaster.sku.create', compact('branches', 'stores', 'categories'));
 }
 
 public function getStores(Request $request)
@@ -34,8 +34,6 @@ public function getStores(Request $request)
     if (!$Id) {
         return response()->json([], 400);
     }
-
-    // Fetch stores based on the provided BranchID
     $stores = Store::where('BranchID', $Id)->get(['Id', 'StoreName']);
     return response()->json($stores);
 }
@@ -46,7 +44,7 @@ public function getStores(Request $request)
 {
     $validatedData = $request->validate([
         'Batch'         => 'required|boolean',
-        'ItemType'      => 'required|string',
+        'ItemID'      => 'required|exists:t_Items,Id',
         'Serial'        => 'required|boolean',
         'Perishable'    => 'required|boolean',
         'Saleable'      => 'required|boolean',
@@ -100,12 +98,41 @@ public function getStores(Request $request)
     }
 
 
+
 public function edit($Id)
 {
     $item = StockItem::findOrFail($Id);
+    $categories = \App\Models\Inventory\ItemCategories::whereNull('ParentId')->get();
     $branches = Branch::all();
     $stores = Store::where('BranchID', $item->Branch)->get();
-    return view('inventory.itemmaster.sku.edit', compact('item', 'branches', 'stores'));
+
+    // Determine the relevant category or subcategory
+    $categoryId = $item->item->category->parent ? $item->item->category->parent->Id : $item->item->category->Id;
+    $subcategoryId = $item->item->category->parent ? $item->item->category->Id : null;
+
+    // Fetch items for the selected (sub)category
+    if ($subcategoryId) {
+        $items = \App\Models\Inventory\ItemMasterList::where('Category', $subcategoryId)->get();
+    } else {
+        $items = \App\Models\Inventory\ItemMasterList::where('Category', $categoryId)->get();
+    }
+
+    return view('inventory.itemmaster.sku.edit', compact('item', 'branches', 'stores', 'categories', 'items'));
+}
+
+public function getItemsByCategoryOrSubcategory(Request $request)
+{
+    $categoryId = $request->get('category_id');
+    $subcategoryId = $request->get('subcategory_id');
+
+    if ($subcategoryId) {
+        // Fetch items by subcategory
+        $items = \App\Models\Inventory\ItemMasterList::where('Category', $subcategoryId)->get(['Id', 'ItemName']);
+    } else {
+        // Fetch items directly under the category (no subcategory selected)
+        $items = \App\Models\Inventory\ItemMasterList::where('Category', $categoryId)->get(['Id', 'ItemName']);
+    }
+    return response()->json($items);
 }
 
 
@@ -115,7 +142,7 @@ public function edit($Id)
     $item = StockItem::findOrFail($Id);
 
     $validatedData = $request->validate([
-        'ItemType'     => 'required|string',
+        'ItemID'     => 'required|exists:t_Items,Id',
         'Batch'        => 'required|boolean',
         'Serial'       => 'required|boolean',
         'Perishable'   => 'required|boolean',
@@ -135,7 +162,7 @@ public function edit($Id)
 
     $item->update($validatedData);
 
-    return redirect()->route('sku.index')->with('success', 'Stock item updated successfully!');
+    return redirect()->route('sku.index')->with('Success', 'Stock item updated successfully!');
 }
 
     // Delete a stock item

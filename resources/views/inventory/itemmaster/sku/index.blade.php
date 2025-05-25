@@ -1,21 +1,24 @@
 @extends('layouts.app')
-@section('title', 'Create New Inventory')
+@section('title', 'Stock Items')
 @section('styles')    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">@endsection
 @section('content')
+
 <div class="container mt-5">
   <div class="card shadow rounded-4">
-    <div class="card-header bg-dark text-white rounded-top-4">
-      <h4 class="mb-0">SKU Master List</h4>
-      <a href="{{ route('sku.create') }}" class="btn btn-success">Add New Stock Item</a>
+    <div class="card-header text-dark rounded-top-4 d-flex justify-content-between align-items-center" style="background-color: #add8e6;">
+      <h4 class="mb-0">SKU Items List</h4>
+      <a href="{{ route('sku.create') }}" class="btn btn-success">➕ Add New Stock Item</a>
     </div>
     <div class="card-body">
+        <div class="table-responsive">
+    
 
       <table id="stockitemsTable" class="table table-bordered table-striped align-middle">
         <thead class="table-light">
           <tr>
             <th>#</th>
             <th>SKU Code</th>
-            <th>Item Type</th>
+            <th>Item</th>
             <th>Batch</th>
             <th>Serial</th>
             <th>Perishable</th>
@@ -37,14 +40,14 @@
           <tr>
             <td>{{ $key + 1 }}</td>
             <td>{{ $item->SKUCode }}</td>
-            <td>{{ $item->ItemType }}</td>
+            <td>{{ $item->item->ItemName }}</td>
             <td>{!! $item->Batch ? '<i class="fas fa-check-circle text-success"></i>' : '<i class="fas fa-times-circle text-danger"></i>' !!}</td>
             <td>{!! $item->Serial ? '<i class="fas fa-check-circle text-success"></i>' : '<i class="fas fa-times-circle text-danger"></i>' !!}</td>
             <td>{!! $item->Perishable ? '<i class="fas fa-check-circle text-success"></i>' : '<i class="fas fa-times-circle text-danger"></i>' !!}</td>
             <td>{!! $item->Saleable ? '<i class="fas fa-check-circle text-success"></i>' : '<i class="fas fa-times-circle text-danger"></i>' !!}</td>
             <td>{!! $item->Purchasable ? '<i class="fas fa-check-circle text-success"></i>' : '<i class="fas fa-times-circle text-danger"></i>' !!}</td>
-            <td>{{($item->Store)}}</td>
-            <td>{{($item->Branch)}}</td>
+            <td>{{($item->branch->Name)}}</td>
+            <td>{{($item->store->StoreName)}}</td>
             <td>{{($item->CurrentQty)}}</td>
             <td>{{($item->Min)}}</td>
             <td>{{($item->Reorder)}}</td>
@@ -55,9 +58,11 @@
               {{ $item->Status ? 'Active' : 'Inactive' }}
               </span>
             <td>{{ $item->Actions }}
-              <a href="{{ route('sku.show', $item->Id) }}">View</a> |
-              <a href="{{ route('sku.edit', $item->Id) }}">Edit</a> |
-              <a href="#" onclick="confirmDelete('{{ $item->Id }}')">Delete</a>
+              <a href="{{ route('sku.show', $item->Id) }}" class="btn btn-secondary btn-sm">View</a>
+              <a href="{{ route('sku.edit', $item->Id) }}" class="btn btn-warning btn-sm">Edit</a>
+              <a href="#" class="btn btn-danger btn-sm" onclick="confirmDelete('{{ $item->Id }}')">Delete</a>
+              <form id="delete-form-{{ $item->Id }}" action="{{ route('sku.destroy', $item->Id) }}" method="POST" style="display:none;">
+              
             </td>
               <form id="delete-form-{{ $item->Id }}" action="{{ route('sku.destroy', $item->Id) }}" method="POST" style="display:none;">
                @csrf

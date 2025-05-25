@@ -43,48 +43,63 @@ class ItemMasterListController extends Controller
         return view('inventory.itemmaster.itemmasterlist.create', compact('categories'));
     }
 
-    public function store(Request $request)
-    {
-        $request->validate([
-            'BarCode'         => 'required|string|max:255',
-            'ItemName'        => 'required|string|max:255',
-            'ItemType'        => 'required|string|max:255',
-            'Category'        => 'required|exists:t_ItemCategories,Id',
-            'UOM'             => 'required|string|max:255',
-            'InventoryType'   => 'required|string|max:255',
-            'ImageUpload'     => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'ItemDescription' => 'nullable|string',
-            'DocumentUpload'  => 'nullable|file|mimes:pdf,doc,docx,xlsx,xls|max:5120',
-        ]);
+public function store(Request $request)
+{
+    $request->validate([
+        'BarCode'         => 'required|string|max:255',
+        'ItemName'        => 'required|string|max:255',
+        'ItemType'        => 'required|string|max:255',
+        'Category'        => 'required|exists:t_ItemCategories,Id',
+        'UOM'             => 'required|string|max:255',
+        'InventoryType'   => 'required|string|max:255',
+        'ImageUpload'     => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        'ItemDescription' => 'nullable|string',
+        'DocumentUpload'  => 'nullable|file|mimes:pdf,doc,docx,xlsx,xls|max:5120',
+    ]);
+
+    DB::transaction(function () use ($request) {
+        $item = new ItemMasterList();
+        $item->fill($request->except('ImageUpload', 'DocumentUpload'));
+
+        $item->CreatedBy = Auth::id();
+        $item->CreatedOn = Carbon::now();
+        $item->ModifiedBy = Auth::id();
+        $item->ModifiedOn = Carbon::now();
 
 
-    
-        DB::transaction(function () use ($request) {
-            $item = new ItemMasterList();
-            $item->fill($request->except('ImageUpload'));
+if ($request->hasFile('ImageUpload')) {
+    $file = $request->file('ImageUpload');
+    $imageContent = base64_encode(file_get_contents($file->getRealPath()));
+    $image = \App\Models\DMS\Image::create([
+        'Name' => $file->getClientOriginalName(),
+        'Image' => $imageContent,
+        'MIMEType' => $file->getMimeType(),
+        'CreatedBy' => Auth::id(),
+        'CreatedOn' => now(),
+        'ModifiedBy' => Auth::id(),
+        'ModifiedOn' => now(),
+    ]);
+    $item->ImageId = $image->ImageID;
+}
 
-            $item->CreatedBy = Auth::id();
-            $item->CreatedOn = Carbon::now();
-            $item->ModifiedBy = Auth::id();
-            $item->ModifiedOn = Carbon::now();
+        if ($request->hasFile('DocumentUpload')) {
+            $docPath = $request->file('DocumentUpload')->store('items/documents', 'public');
+            $item->DocumentUpload = $docPath;
+        }
 
-            if ($request->hasFile('ImageUpload')) {
-                $path = $request->file('ImageUpload')->store('items', 'public');
-                $item->ImageUpload = $path;
-            }
+        // Set category or subcategory
+        $item->Category = $request->SubCategory ?: $request->Category;
 
-            if ($request->hasFile('DocumentUpload')) {
-                $docPath = $request->file('DocumentUpload')->store('items/documents', 'public');
-                $item->DocumentUpload = $docPath;
-    }
+        // Save first to get the auto-incremented Id
+        $item->save();
 
-            $item->Category = $request->SubCategory ?: $request->Category;
-            $item->save();
-        });
+        // Generate ItemCode using the Id and save again
+        $item->ItemCode = 'ITM-' . str_pad($item->Id, 5, '0', STR_PAD_LEFT);
+        $item->save();
+    });
 
-        return redirect()->route('itemmaster.index')->with('success', 'Item created successfully.');
-    }
-
+    return redirect()->route('itemmaster.index')->with('success', 'Item created successfully.');
+}
     public function edit($Id)
     {
         $item = ItemMasterList::findOrFail($Id);
@@ -115,8 +130,34 @@ class ItemMasterListController extends Controller
         $item->ModifiedOn = Carbon::now();
 
         if ($request->hasFile('ImageUpload')) {
-            $path = $request->file('ImageUpload')->store('items', 'public');
-            $item->ImageUpload = $path;
+            // Delete old image if exists
+            if ($item->ImageId) {
+                $oldImage = \App\Models\DMS\Image::find($item->ImageId);
+                if ($oldImage) {
+                    $oldImage->delete();
+                }
+            }
+
+            if ($request->input('remove_image') == '1' && $item->ImageId) {
+    $oldImage = \App\Models\DMS\Image::find($item->ImageId);
+    if ($oldImage) {
+        $oldImage->delete();
+    }
+    $item->ImageId = null;
+}
+
+            $file = $request->file('ImageUpload');
+            $imageContent = base64_encode(file_get_contents($file->getRealPath()));
+            $image = \App\Models\DMS\Image::create([
+                'Name' => $file->getClientOriginalName(),
+                'Image' => $imageContent,
+                'MIMEType' => $file->getMimeType(),
+                'CreatedBy' => Auth::id(),
+                'CreatedOn' => now(),
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
+            ]);
+            $item->ImageId = $image->ImageID;
         }
         if ($request->hasFile('DocumentUpload')) {
             $docPath = $request->file('DocumentUpload')->store('items/documents', 'public');

@@ -15,7 +15,7 @@
 @endif
   <div class="card shadow rounded-4">
     <div class="card-header text-dark rounded-top-4" style="background-color: #add8e6;">
-      <h4 class="mb-0">SKU Details</h4>
+      <h4 class="mb-0">Stock Item Details</h4>
     </div>
 
 <div class="container bg-white shadow-sm rounded p-4">
@@ -50,10 +50,10 @@
             <p><strong>Last Received Date:</strong> {{ $item->LastReceived }}</p>
         </div>
         <div class="col-md-4">
-            <p><strong>Store:</strong> {{ $item->Store }}</p>
+            <p><strong>Store:</strong> {{ $item->store->StoreName }}</p>
         </div>
         <div class="col-md-4">
-            <p><strong>Branch:</strong> {{ $item->Branch }}</p>
+            <p><strong>Branch:</strong> {{ $item->branch->Name }}</p>
         </div>
     </div>
 

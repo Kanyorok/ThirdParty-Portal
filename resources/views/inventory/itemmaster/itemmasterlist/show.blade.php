@@ -50,15 +50,15 @@
         </div>
         <div class="col-md-6">
             <p><strong>Item Image:</strong></p>
-            @if($item->ImageUpload)
-                <img src="{{ asset('storage/' . $item->ImageUpload) }}" class="img-thumbnail" width="150" alt="Item Image">
-            @else
-                <p>No image available</p>
-            @endif
+               @if($item->image)
+              <img src="data:{{ $item->image->MIMEType }};base64,{{ $item->image->Image }}" alt="Item Image" style="max-width:200px;">
+              @endif
+           
         </div>
     </div>
 
     <div class="row mb-3">
+        
         <div class="col-md-6">
             <p><strong>Item Description:</strong> {{ $item->ItemDescription ?? 'N/A' }}</p>
         </div>

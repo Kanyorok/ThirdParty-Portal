@@ -23,7 +23,7 @@ class StockItem extends Model
 
     protected $fillable = [
         'SKUCode',
-        'ItemType',
+        'ItemID',
         'Batch',
         'Serial',
         'Perishable',
@@ -46,7 +46,7 @@ class StockItem extends Model
 
     protected $casts = [
         'SKUCode'   => 'string',
-        'ItemType'   => 'string',
+        'ItemID'   => 'string',
         'Batch'         => 'boolean',
         'Serial'        => 'boolean',
         'Perishable'    => 'boolean',
@@ -88,6 +88,10 @@ class StockItem extends Model
    public function branch()
 {
     return $this->belongsTo(\App\Models\Core\Branch::class, 'Branch', 'Id');
+}
+public function item()
+{
+    return $this->belongsTo(\App\Models\Inventory\ItemMasterList::class, 'ItemID', 'Id');
 }
 
 

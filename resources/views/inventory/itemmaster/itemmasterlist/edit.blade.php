@@ -4,6 +4,7 @@
 
 @section('content')
 
+
 @if($errors->any())
     <div class="alert alert-danger">
         <ul>
@@ -95,10 +96,13 @@
         <div class="mb-3">
             <label for="ImageUpload" class="form-label">Item Image</label>
             <input type="file" name="ImageUpload" class="form-control">
-            @if($item->ImageUpload)
-                <img src="{{ asset('storage/' . $item->ImageUpload) }}" class="img-thumbnail mt-2" style="max-height: 100px;">
-            @endif
+             @if($item->image)
+        <div class="mt-2" id="current-image-section">
+            <img src="data:{{ $item->image->MIMEType }};base64,{{ $item->image->Image }}" alt="Item Image" style="max-width:200px;">
+            <button type="button" class="btn btn-danger btn-sm ms-2" id="remove-image-btn">Remove Image</button>
         </div>
+        <input type="hidden" name="remove_image" id="remove-image" value="0">
+    @endif
 
         <div class="mb-3">
             <label for="DocumentUpload" class="form-label">Attached Document</label>
@@ -116,7 +120,20 @@
 
 @endsection
 
+
+
 @section('scripts')
+
+<script>
+    $(document).ready(function () {
+        // ...existing category/subcategory code...
+
+        $('#remove-image-btn').on('click', function () {
+            $('#current-image-section').hide();
+            $('#remove-image').val('1');
+        });
+    });
+</script>
 <script>
     $(document).ready(function () {
         $('#category').change(function () {

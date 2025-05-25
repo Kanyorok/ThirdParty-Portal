@@ -1,35 +1,45 @@
 @extends('layouts.app')
-@section('title', 'Create New Inventory')
+@section('title', 'Create New Stock Item')
 @section('content')
 <body class="bg-light">
 
 <div class="container mt-5">
   <div class="card shadow rounded-4">
-    <div class="card-header bg-primary text-white rounded-top-4">
-      <h4 class="mb-0">➕ Add SKU Master</h4>
+    <div class="card-header text-dark rounded-top-4" style="background-color: #add8e6;">
+      <h4 class="mb-0">➕ Add SKU</h4>
     </div>
     <div class="card-body">
         <form action="{{ route('sku.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
 
-        <div class="mb-3">
-        <div class="col-md-4">
-          <label for="itemType" class="form-label">Item Type</label>
-          <select class="form-select" name= "ItemType" id="itemType">
-            <option selected disabled>Select Item</option>
-            <option value="Stapler">Stapler</option>
-            <option value="PrinterPaper">Printer Paper</option>
-            <option value="GlueStick">glue stick</option>
-            <option value="Envelopes">Envelopes</option>
-          </select>
-        </div>
+<div class="row mb-3">
+    <div class="col-md-4">
+        <label for="Category" class="form-label">Category</label>
+        <select name="Category" id="Category" class="form-select" required>
+            <option value="">-- Select Category --</option>
+            @foreach($categories as $category)
+                <option value="{{ $category->Id }}">{{ $category->Name }}</option>
+            @endforeach
+        </select>
+    </div>
+    <div class="col-md-4">
+        <label for="Subcategory" class="form-label">Subcategory</label>
+        <select name="Subcategory" id="Subcategory" class="form-select">
+            <option value="">-- Select Subcategory --</option>
+        </select>
+    </div>
+    <div class="col-md-4">
+        <label for="ItemID" class="form-label">Item</label>
+        <select name="ItemID" id="Item" class="form-select" required>
+            <option value="">-- Select Item --</option>
+        </select>
+    </div>
        
 <div class="mb-3">
     <div class="form-check form-check-inline">
     <input type="hidden" name="Batch" value="0">
     <input class="form-check-input" type="checkbox" name="Batch" value="1" {{ isset($item) && $item->Batch ? 'checked' : '' }}>
     <label class="form-check-label">Is Batch Tracked</label>
-
 </div>
     
     <div class="form-check form-check-inline">
@@ -107,14 +117,12 @@
            <input class="form-check-input" type="checkbox" name="Status" value="1" id="Status" checked>
            <label class="form-check-label" for="Status">Is Active</label>
        </div>
-
+      
         <div class="d-flex justify-content-end">
+        
           <button type="submit" class="btn btn-success px-4">Save Item</button>
+          <button type="Cancel" class="btn btn-secondary px-4">Cancel</button>
         </div>
-        <div class="d-flex justify-content-end">
-          <button type="Cancel" class="btn btn-success px-4">Cancel</button>
-        </div>
-
       </form>
     </div>
   </div>
@@ -156,6 +164,87 @@ document.addEventListener('DOMContentLoaded', function () {
     if (branchSelect.value) {
         branchSelect.dispatchEvent(new Event('change'));
     }
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const categorySelect = document.getElementById('Category');
+    const subcategorySelect = document.getElementById('Subcategory');
+    const itemSelect = document.getElementById('Item');
+
+    // When category changes, load subcategories and items directly under the category
+    categorySelect.addEventListener('change', function () {
+        const categoryId = this.value;
+        subcategorySelect.innerHTML = '<option value="">-- Select Subcategory --</option>';
+        itemSelect.innerHTML = '<option value="">-- Select Item --</option>';
+
+        if (categoryId) {
+            // Load subcategories
+            fetch(`/inventory/get-subcategories?category_id=${categoryId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length > 0) {
+                        data.forEach(subcat => {
+                            const option = document.createElement('option');
+                            option.value = subcat.Id;
+                            option.text = subcat.Name;
+                            subcategorySelect.appendChild(option);
+                        });
+                    }
+                });
+
+            // Load items directly under the category
+            fetch(`/inventory/get-items?category_id=${categoryId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length > 0) {
+                        data.forEach(item => {
+                            const option = document.createElement('option');
+                            option.value = item.Id;
+                            option.text = item.ItemName;
+                            itemSelect.appendChild(option);
+                        });
+                    }
+                });
+        }
+    });
+
+    // When subcategory changes, load items for that subcategory
+    subcategorySelect.addEventListener('change', function () {
+        const subcategoryId = this.value;
+        itemSelect.innerHTML = '<option value="">-- Select Item --</option>';
+        if (subcategoryId) {
+            fetch(`/inventory/get-items?subcategory_id=${subcategoryId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length > 0) {
+                        data.forEach(item => {
+                            const option = document.createElement('option');
+                            option.value = item.Id;
+                            option.text = item.ItemName;
+                            itemSelect.appendChild(option);
+                        });
+                    }
+                });
+        } else {
+            // If subcategory is cleared, reload items for the selected category
+            const categoryId = categorySelect.value;
+            if (categoryId) {
+                fetch(`/inventory/get-items?category_id=${categoryId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.length > 0) {
+                            data.forEach(item => {
+                                const option = document.createElement('option');
+                                option.value = item.Id;
+                                option.text = item.ItemName;
+                                itemSelect.appendChild(option);
+                            });
+                        }
+                    });
+            }
+        }
+    });
 });
 </script>
 @endsection

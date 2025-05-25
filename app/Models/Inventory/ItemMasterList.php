@@ -27,7 +27,7 @@ class ItemMasterList extends Model
                            'UOM',
                            'InventoryType',
                            'Category',
-                           'ImageUpload',
+                           'ImageId',
                            'ItemDescription',
                            'DocumentUpload',
                            'CreatedBy',
@@ -45,7 +45,7 @@ class ItemMasterList extends Model
                             'Category'      => 'int',
                             'UOM'           => 'string',
                             'InventoryType' => 'string',
-                            'ImageUpload' => 'string',
+                            'ImageId' => 'integer',
                             'ItemDescription' => 'string',
                             'DocumentUpload' => 'string',
                             'CreatedBy'     => 'integer',
@@ -69,27 +69,9 @@ public function parentCategory()
 }
 
 
-
-protected static function booted()
+public function image()
 {
-   static::creating(function ($item) {
-    if (empty($item->ItemCode)) {
-        $latestCode = self::where('ItemCode', 'like', 'ITM-%')
-            ->orderBy('ItemCode', 'desc')
-            ->pluck('ItemCode')
-            ->first();
-
-        if ($latestCode) {
-            // Extract number from the latest code
-            $number = intval(substr($latestCode, 4)) + 1;
-        } else {
-            $number = 1;
-        }
-
-        $item->ItemCode = 'ITM-' . str_pad($number, 3, '0', STR_PAD_LEFT);
-    }
-});
-
+    return $this->belongsTo(\App\Models\DMS\Image::class, 'ImageId', 'ImageID');
 }
 
 

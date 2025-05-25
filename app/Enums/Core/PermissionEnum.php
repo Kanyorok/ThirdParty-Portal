@@ -35,6 +35,8 @@ use App\Models\ThirdParies\Competitor;
 use App\Traits\UsefulEnumTrait;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use App\Models\Inventory\ItemMasterList;
+
 
 enum PermissionEnum: string
 {
@@ -199,6 +201,9 @@ enum PermissionEnum: string
     * ========================================  Inventory  ========================================
     */
     case MasterListView = 'masterList-view';
+    case MasterListUpdate = 'masterList-update';
+    case MasterListCreate = 'masterList-create';
+    case MasterListDestroy = 'masterList-destroy';
 
     /*
      *
@@ -245,7 +250,9 @@ enum PermissionEnum: string
 
             [self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete, self::Departments],
             [self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval, self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval],
-            [self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval]
+            [self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval],
+
+            [self::MasterListView, self::MasterListUpdate, self::MasterListCreate, self::MasterlistDestroy],
 
 
         ]);
@@ -293,7 +300,7 @@ enum PermissionEnum: string
         
             self::Departments, self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete => ModulesEnum::HRM,
 
-            self::MasterListView => ModulesEnum::Inventory,
+            self::MasterListView, self::MasterListUpdate, self::MasterListCreate, self::MasterlistDestroy => ModulesEnum::Inventory,
         };
     }
 
@@ -335,6 +342,9 @@ enum PermissionEnum: string
 
             //PurchaseOrder
             self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval => 'Purchase Order',
+
+            //Inventory
+            self::MasterListView, self::MasterListUpdate, self::MasterListCreate, self::MasterlistDestroy => 'Item Master',
         };
     }
 }

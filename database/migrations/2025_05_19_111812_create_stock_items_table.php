@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('t_StockItems', static function (Blueprint $table) {
             $table->id('Id');
             $table->string('SKUCode')->nullable()->unique();
-            $table->string('ItemType');
+            $table->foreignId('ItemID')->constrained('t_Items', 'Id');
             $table->boolean('Batch');
             $table->boolean('Serial');
             $table->boolean('Perishable');

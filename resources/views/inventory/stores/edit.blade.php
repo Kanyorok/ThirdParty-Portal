@@ -16,7 +16,7 @@
             <div class="row g-3">
                 <div class="col-md-6">
                     <label for="StoreID" class="form-label">Store ID</label>
-                    <input type="text" name="StoreID" class="form-control" id="StoreID" value="{{ $store->StoreID }}" required>
+                    <input type="text" name="StoreID" class="form-control" id="StoreID" value="{{ $store->StoreID }}" readonly>
                 </div>
 
                 <div class="col-md-6">

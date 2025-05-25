@@ -4,7 +4,8 @@
 @section('content')
 <div class="container mt-5">
   <div class="card shadow rounded-4">
-    <div class="card-header text-dark rounded-top-4" style="background-color: #add8e6;">
+        <div class="card-header text-dark rounded-top-4 d-flex justify-content-between align-items-center" style="background-color: #add8e6;">
+      <h4 class="mb-0">Stores List</h4>
       <a href="{{ route('stores.create') }}" class="btn btn-success">➕ Add New Store</a>
     </div>
     <div class="card-body">
@@ -32,10 +33,9 @@
               {{ $store->Status ? 'Active' : 'Inactive' }}
               </span>
             <td>{{ $store->Actions }}
-              <a href="{{ route('stores.show', $store->Id) }}">View</a> |
-              <a href="{{ route('stores.edit', $store->Id) }}">Edit</a> |
-              <a href="#" onclick="confirmDelete('{{ $store->Id }}')">Delete</a>
-            </td>
+              <a href="{{ route('stores.show', $store->Id) }}" class="btn btn-secondary btn-sm">View</a>
+              <a href="{{ route('stores.edit', $store->Id) }}" class="btn btn-warning btn-sm">Edit</a>
+              <a href="#" class="btn btn-danger btn-sm" onclick="confirmDelete('{{ $store->Id }}')">Delete</a>
               <form id="delete-form-{{ $store->Id }}" action="{{ route('stores.destroy', $store->Id) }}" method="POST" style="display:none;">
                @csrf
                @method('DELETE')
