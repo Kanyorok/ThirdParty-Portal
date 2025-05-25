@@ -143,7 +143,7 @@ class RFQController extends Controller
     public function edit($id)
     {
         $rfq = RFQ::with('suppliers')->findOrFail($id);
-        $categories = ItemCategory::all();
+        $categories = ItemCategories::all();
         $suppliers = Supplier::all();
 
         return view('procurement.rfqs.edit', compact('rfq', 'categories', 'suppliers'));
