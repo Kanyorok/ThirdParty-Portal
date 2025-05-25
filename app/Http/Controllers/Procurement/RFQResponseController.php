@@ -15,10 +15,9 @@ class RFQResponseController extends Controller
 {
     public function index()
     {
-        $rfqResponses = RFQResponse::with(['rfq'])->get();
+        $rfqResponses = RFQResponse::with(['rfq', 'items'])->get();
         return view('procurement.rfqresponses.index', compact('rfqResponses'));
     }
-
     public function create()
     {
         $rfqs = RFQ::all();
@@ -99,7 +98,7 @@ class RFQResponseController extends Controller
 
     public function edit($id)
     {
-        $rfqResponse = RFQResponse::with(['rfq'])->findOrFail($id);
+        $rfqResponse = RFQResponse::with(['rfq', 'items'])->findOrFail($id);
         $rfqs = RFQ::all();
         return view('procurement.rfqresponses.edit', compact('rfqResponse', 'rfqs'));
     }
@@ -113,12 +112,57 @@ class RFQResponseController extends Controller
             'TotalPayable' => 'required|numeric|min:0',
             'Currency' => 'required|string|max:3',
             'DurationDays' => 'required|integer|min:1',
+            'RequisitionItems' => 'required|array',
+            'RequisitionItems.*.id' => 'nullable|integer|exists:t_ResponseItems,Id',
+            'RequisitionItems.*.name' => 'required|string|max:255',
+            'RequisitionItems.*.uom' => 'nullable|string|max:50',
+            'RequisitionItems.*.quantity' => 'required|integer|min:1',
+            'RequisitionItems.*.quotedprice' => 'required|numeric|min:0',
+            'RequisitionItems.*.totalpayable' => 'required|numeric|min:0',
         ]);
 
         $rfqResponse = RFQResponse::findOrFail($id);
-        $rfqResponse->update($request->only([
-            'RFQId', 'RFQNumber', 'SupplierName', 'TotalPayable', 'Currency', 'DurationDays'
-        ]));
+        $rfqResponse->update([
+            'RFQId' => $request->RFQId,
+            'RFQNumber' => $request->RFQNumber,
+            'SupplierName' => $request->SupplierName,
+            'TotalPayable' => $request->TotalPayable,
+            'Currency' => $request->Currency,
+            'DurationDays' => $request->DurationDays,
+            'ModifiedBy' => auth()->user()->Id,
+        ]);
+
+        // Update or recreate associated items
+        $existingItemIds = $rfqResponse->items->pluck('Id')->toArray();
+
+        $submittedItems = $request->RequisitionItems;
+
+        foreach ($submittedItems as $itemData) {
+            if (!empty($itemData['id'])) {
+                // Update existing item
+                $item = RFQResponseItem::findOrFail($itemData['id']);
+                $item->update([
+                    'ItemName' => $itemData['name'],
+                    'UOM' => $itemData['uom'] ?? null,
+                    'Quantity' => $itemData['quantity'],
+                    'QuotedPrice' => $itemData['quotedprice'],
+                    'TotalPayable' => $itemData['totalpayable'],
+                    'ModifiedBy' => auth()->user()->Id,
+                ]);
+            } else {
+                // Create new item
+                RFQResponseItem::create([
+                    'RfqResponseId' => $rfqResponse->Id,
+                    'ItemName' => $itemData['name'],
+                    'UOM' => $itemData['uom'] ?? null,
+                    'Quantity' => $itemData['quantity'],
+                    'QuotedPrice' => $itemData['quotedprice'],
+                    'TotalPayable' => $itemData['totalpayable'],
+                    'CreatedBy' => auth()->user()->Id,
+                    'ModifiedBy' => auth()->user()->Id,
+                ]);
+            }
+        }
 
         return redirect()->route('rfqresponses.index')->with('success', 'RFQ Response updated successfully.');
     }
@@ -147,20 +191,28 @@ class RFQResponseController extends Controller
 
     public function getSuppliers($rfqId)
     {
-        // Assuming each RFQ has a relation to suppliers (many-to-many or hasMany)
+        // Get the RFQ with its associated suppliers
         $rfq = RFQ::with('suppliers')->find($rfqId);
 
         if (!$rfq) {
             return response()->json([], 404);
         }
-        
-        // Return only necessary fields to keep the response lightweight
-        return response()->json($rfq->suppliers->map(function ($supplier) {
+
+        // Get Supplier IDs that have already responded to this RFQ
+        $alreadyRespondedSupplierIds = RFQResponse::where('RFQId', $rfqId)->pluck('SupplierId')->toArray();
+
+        // Filter out the already responded suppliers
+        $availableSuppliers = $rfq->suppliers->filter(function ($supplier) use ($alreadyRespondedSupplierIds) {
+            return !in_array($supplier->Id, $alreadyRespondedSupplierIds);
+        });
+
+        // Return the remaining suppliers
+        return response()->json($availableSuppliers->map(function ($supplier) {
             return [
                 'Id' => $supplier->Id,
                 'SupplierName' => $supplier->SupplierName,
             ];
-        }));
+        })->values()); // use ->values() to reset the keys
     }
 
     public function getRFQResponses($rfqId)
