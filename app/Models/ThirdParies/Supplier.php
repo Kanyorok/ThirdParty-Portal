@@ -6,11 +6,17 @@ use App\Models\Procurement\ItemCategory;
 use App\Models\Procurement\ProcurementPeriod;
 use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQEvaluation;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Supplier extends Model
 {
+    use HasFactory,SoftDeletes;
 
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    const string DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Suppliers';
 
@@ -19,7 +25,7 @@ class Supplier extends Model
         'ContactEmail',
         'ContactPhone',
         'Address',
-        'IsPrequalified',
+        'IsPrequalified', 
         'CategoryId',
         'CreatedBy',
         'ModifiedBy',
@@ -39,7 +45,7 @@ class Supplier extends Model
 
     public function category()
     {
-        return $this->belongsTo(ItemCategory::class, 'CategoryId', 'id');
+        return $this->belongsTo(ItemCategory::class, 'CategoryId', 'Id');
     }
 
     public function rfqEvaluations()

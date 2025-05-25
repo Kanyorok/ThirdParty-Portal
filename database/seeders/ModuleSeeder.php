@@ -134,6 +134,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 302200, 'Name' => 'Requisition Approval', 'Icon' => null, 'ParentID' => 302000, 'Route' => 'requisition.index'],
             ['ModuleID' => 302300, 'Name' => 'Priority List', 'Icon' => null, 'ParentID' => 302000, 'Route' => 'requisitionItem.index'],
             ['ModuleID' => 303000, 'Name' => 'Suppliers', 'Icon' => null, 'ParentID' => 300000, 'Route' => null],
+            ['ModuleID' => 303100, 'Name' => 'Suppliers List', 'Icon' => null, 'ParentID' => 303000, 'Route' => 'suppliers.index'],
             ['ModuleID' => 304000, 'Name' => 'Procurement Modes', 'Icon' => null, 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 304100, 'Name' => 'List Modes', 'Icon' => null, 'ParentID' => 304000, 'Route' => 'procurement-modes.index'],
             ['ModuleID' => 304200, 'Name' => 'Add Mode', 'Icon' => null, 'ParentID' => 304000, 'Route' => 'procurement-modes.create'],

@@ -34,9 +34,9 @@ class TenderController extends Controller
         $tenderCategories = TenderCategoryEnum::cases();
         $statuses = TenderStatusEnum::cases();
         $suppliers = collect();
-        return$tenderCategory = TenderCategory::select('Id', 'TenderCategory')->get();
+        $tenderCategory = TenderCategory::select('Id', 'TenderCategory')->get();
         $itemsCategories = ItemCategory::select('Id', 'Name')->whereNull('ParentId')->get();
-        $procurementPlan= ProcurementPlan::with(['items'])->get();
+        $procurementPlan= ProcurementPlan::all();
 
 
         return view('procurement.tendering.tendersetup.tenderinitiation.create', compact(
