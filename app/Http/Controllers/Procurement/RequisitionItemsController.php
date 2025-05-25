@@ -19,14 +19,15 @@ class RequisitionItemsController extends Controller
     public function __construct(protected RequisitionItemService $service,protected ItemService $itemService)
     {
 
-        $this->middleware('ajax')->except(['index', 'create','show']);
+       $this->middleware('ajax')->except(['index', 'create','show']);
        // $this->authorizeResource(RequisitionLines::class);
     }
     /**
      * Display a listing of the resource.
+     *
      */
 
-    public function getItems($type): JsonResponse
+    public function getItems(string $type): JsonResponse
     {
 //        $this->authorize('view',RequisitionLines::class);
         try{
@@ -145,7 +146,7 @@ class RequisitionItemsController extends Controller
             if ($requisitionAddLines['status'] === 'success') {
                 return response()->json([
                     'message' => $requisitionAddLines['message'],
-                    'route' =>route('requisition.show',['id' => $validatedData['RequisitionID']])
+                    'route' =>route('requisition.show',$validatedData['RequisitionID'])
                 ], 200);
             }
 

@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Add Floor to Block')
 @section('content')
 <div class="container mt-4">
   <h4 class="fw-bold mb-3">🏬 Add Floor to Block</h4>

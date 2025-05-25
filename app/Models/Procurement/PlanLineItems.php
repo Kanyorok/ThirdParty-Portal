@@ -2,10 +2,12 @@
 
 namespace App\Models\Procurement;
 
+use App\Models\Auth\User;
+use App\Models\BR\Branch;
+use App\Models\HRM\Department;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Procurement\PlanLineItems;
 
 class PlanLineItems extends Model
 {
@@ -21,19 +23,24 @@ class PlanLineItems extends Model
     protected $fillable = [
         'PlanID',
         'ItemID',
+        'CategoryID',
         'BranchID',
         'DepartmentID',
         'MergedQty',
+        'UnitOfMeasure',
         'EstimatedUnitCost',
         'AdjustedCost',
         'ProcurementMethod',
         'SchedulePeriod',
         'ExecutionStatus',
+        'BudgetLineID',
         'ChangeRemarks',
         'IsDeleted',
         'CreatedBy',
         'ModifiedBy',
-        'DeletedBy'
+        'DeletedBy',
+        'ExpectedDeliveryDate',
+
     ];
     protected $dates = ['ExpectedDeliveryDate'];
 

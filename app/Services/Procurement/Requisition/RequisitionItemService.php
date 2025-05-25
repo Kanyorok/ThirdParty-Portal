@@ -135,7 +135,7 @@ class RequisitionItemService
         return DB::table(DB::raw('t_RequisitionLines WITH (NOLOCK)'))
             ->leftJoin(DB::raw('t_Items WITH (NOLOCK)'), 't_RequisitionLines.Item', '=', 't_Items.Id')
             ->leftJoin(DB::raw('t_Users WITH (NOLOCK)'), 't_RequisitionLines.CreatedBy', '=', 't_Users.Id')
-            ->leftJoin(DB::raw('t_ItemCategories WITH (NOLOCK)'), 't_Items.Id', '=', 't_ItemCategories.ParentId')
+            ->leftJoin(DB::raw('t_ItemCategories WITH (NOLOCK)'), 't_Items.Category', '=', 't_ItemCategories.Id')
             ->where('t_RequisitionLines.RequisitionId',$RequsitionId)
             ->select(
                 't_RequisitionLines.*',

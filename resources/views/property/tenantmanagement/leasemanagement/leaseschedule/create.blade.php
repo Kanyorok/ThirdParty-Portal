@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Lease Schedule')
 @section('content')
 <table class="table table-bordered table-striped mt-4">
   <thead class="table-light">
