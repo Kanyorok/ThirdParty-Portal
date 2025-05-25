@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Create New Inventory')
+@section('title', 'Create Sub Category')
 @section('content')
 <div class="container mt-5">
   <div class="card shadow rounded-4">
@@ -24,7 +24,6 @@
           <label for="subCategoryCode" class="form-label">Sub Category Code</label>
           <input type="text" name= "SubCategoryCode" class="form-control" id="subCategoryCode" placeholder="e.g., SUB-CAT-001" required>
         </div>
-        
 
         <div class="mb-3">
           <label for="subCategoryName" class="form-label">Sub Category Name</label>

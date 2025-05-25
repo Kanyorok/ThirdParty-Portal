@@ -6,6 +6,44 @@
         .select2-container {
             width: 100% !important;
         }
+        /*!* Improved table layout *!*/
+        /*.table-responsive {*/
+        /*    overflow-x: auto;*/
+        /*}*/
+        /*.table {*/
+        /*    min-width: 100%;*/
+        /*    table-layout: fixed;*/
+        /*}*/
+        /*.table th, .table td {*/
+        /*    padding: 8px 12px;*/
+        /*    vertical-align: middle;*/
+        /*    white-space: normal;*/
+        /*    word-wrap: break-word;*/
+        /*}*/
+        /*!* Fixed column widths *!*/
+        /*.col-3 { width: 3%; min-width: 40px; }*/
+        /*.col-10 { width: 10%; min-width: 120px; }*/
+        /*.col-15 { width: 15%; min-width: 180px; }*/
+        /*.col-20 { width: 20%; min-width: 240px; }*/
+        /*.col-5 { width: 5%; min-width: 80px; }*/
+
+        /*!* Form spacing *!*/
+        /*.form-section {*/
+        /*    margin-bottom: 1.5rem;*/
+        /*}*/
+
+        /*!* Textarea fix *!*/
+        /*textarea.form-control {*/
+        /*    min-height: 38px;*/
+        /*    resize: vertical;*/
+        /*}*/
+
+        /*!* Totals section *!*/
+        /*.totals-section {*/
+        /*    background-color: #f8f9fa;*/
+        /*    padding: 15px;*/
+        /*    border-radius: 4px;*/
+        /*}*/
     </style>
 @endsection
 @section('content')
@@ -32,7 +70,7 @@
                 <div class="col-md-6">
                     <label>Supplier</label>
                     <select class="form-control supplier" id="supplier" name="supplier">
-                        <option selected>{{$orderInfo->AccountID ?? 'N/A'}}</option>
+                        <option selected>{{$orderInfo->SupplierName ?? 'N/A'}}</option>
                     </select>
                 </div>
 {{--                <div class="col-md-6">--}}
@@ -79,15 +117,15 @@
                 <table class="table table-bordered table-sm">
                     <thead class="table-light">
                     <tr>
-                        <th style="width:5%;">#</th>
-                        <th style="width:10%;">Item Type</th>
-                        <th style="width:15%;">Item Name</th>
-                        <th style="width:15%;">Item Description</th>
-                        <th style="width:10%;">Quantity</th>
-                        <th style="width:10%;">Unit Price</th>
-                        <th style="width:10%;">Tax</th>
-                        <th style="width:10%;">Discount</th>
-                        <th style="width:20%;">Line Total</th>
+                        <th style="width: 1%; min-width: 10px;">#</th>
+                        <th style="width: 10%; min-width: 100px;">Item Type</th>
+                        <th style="width: 15%; min-width: 150px;">Item Name</th>
+                        <th style="width: 20%; min-width: 200px;">Item Description</th>
+                        <th style="width: 5%; min-width: 80px;">Quantity</th>
+                        <th style="width: 10%; min-width: 100px;">Unit Price</th>
+                        <th style="width: 7%; min-width: 80px;">Tax</th>
+                        <th style="width: 5%; min-width: 80px;">Discount</th>
+                        <th style="width: 15%; min-width: 150px;">Line Total</th>
                     </tr>
                     </thead>
                     <tbody id="po-items">
@@ -111,7 +149,7 @@
                         <td class="text-start">
                                 <textarea class="form-control form-control-sm itemDescription" name="itemDescription[]"
                                           id="Description" cols="30"
-                                          rows="5" readonly>{{$line ->Description}}</textarea>
+                                          rows="5" readonly style="display: flex; align-items: center; justify-content: center; text-align: center; padding: 0; resize: none;">{{$line ->Description}}</textarea>
                             {{--                            <input type="text" class="form-control form-control-sm itemDescription" --}}
                             {{--                                name="itemDescription[]" id="Description" readonly> --}}
                         </td>
@@ -124,7 +162,7 @@
                         <td class="text-start"><input type="number" class="form-control form-control-sm discount"
                                                       name="discount[]" id="Discount" value="{{$line ->fLineDiscount}}"></td>
                         <td class="text-start"><input type="number" class="form-control form-control-sm line-total"
-                                                      name="lineTotal[]" id="lineTotal" step="" value="0"></td>
+                                                      name="lineTotal[]" id="lineTotal" step="" value="{{$line ->LineTotal}}"></td>
                     </tr>
                     @endforeach
                     </tbody>
@@ -151,7 +189,7 @@
                     </div>
                     <div>
                         <label>Inclusive Total</label>
-                        <input type="text" class="form-control" value="{{$orderInfo->OrdTotExcl ?? 'N/A'}}" readonly/>
+                        <input type="text" class="form-control" value="{{$orderInfo->OrdTotIncl ?? 'N/A'}}" readonly/>
                     </div>
                 </div>
             </div>

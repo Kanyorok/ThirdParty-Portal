@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Unit of Measure & Conversion Setup')
 @section('content')
 <div class="container mt-4">
   <h4 class="fw-bold mb-3">🔧 Unit of Measure & Conversion Setup</h4>

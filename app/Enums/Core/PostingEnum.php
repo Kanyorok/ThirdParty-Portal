@@ -1,16 +1,15 @@
 <?php
- 
 namespace App\Enums\Core;
- 
+
 use App\Traits\UsefulEnumTrait;
- 
+
 enum PostingEnum: string
 {
     use UsefulEnumTrait;
     case Posted = 'p';
- 
+
     case Draft = 'd';
- 
+
     public function label(): string
     {
         return match($this) {
@@ -26,3 +25,4 @@ enum PostingEnum: string
         };
     }
 }
+

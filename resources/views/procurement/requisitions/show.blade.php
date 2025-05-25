@@ -238,7 +238,7 @@
                 if (type !== '') {
                     // alert(type + 'eric');
                     $.ajax({
-                        url: `/requisitionItem/getItem/${type}`,
+                        url: `/procurement/requisitionItem/getItem/${type}`,
                         type: 'GET',
                         success: function(response) {
                             // console.log('AJAX Response:', response);
@@ -270,7 +270,7 @@
 
                 if (item !== '') {
                     $.ajax({
-                        url: `/requisitionItem/getItemDetails/${item}`,
+                        url: `/procurement/requisitionItem/getItemDetails/${item}`,
                         type: 'GET',
                         success: function(response) {
                             if (response.data && response.data.length > 0) {

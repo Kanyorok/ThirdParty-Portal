@@ -174,6 +174,7 @@ class OrderService
         return DB::table(DB::raw('t_Orders WITH (NOLOCK)'))
             ->leftJoin(DB::raw('t_OrderLines WITH (NOLOCK)'), 't_Orders.Id', '=', 't_OrderLines.iOrderID')
             ->leftJoin(DB::raw('t_Users WITH (NOLOCK)'), 't_Orders.CreatedBy', '=', 't_Users.Id')
+            ->leftJoin(DB::raw('t_Suppliers WITH (NOLOCK)'), 't_Orders.AccountID', '=', 't_Suppliers.Id')
             ->where('t_Orders.Id', '=', $id)
             ->select(DB::raw('
                 t_Orders.Id,
@@ -190,7 +191,8 @@ class OrderService
                   t_Orders.OrdTotExcl,
                 t_Orders.OrdTotIncl,
                 t_Orders.OrdTotTax,
-                t_Orders.OrdDiscAmnt
+                t_Orders.OrdDiscAmnt,
+                t_Suppliers.SupplierName
             '))
             ->groupBy(
                 't_Orders.Id',
@@ -205,7 +207,8 @@ class OrderService
                 't_Orders.OrdTotExcl',
                 't_Orders.OrdTotIncl',
                 't_Orders.OrdTotTax',
-                't_Orders.OrdDiscAmnt'
+                't_Orders.OrdDiscAmnt',
+                't_Suppliers.SupplierName'
             )
             ->first();
     }
@@ -231,7 +234,8 @@ class OrderService
                 t_Items.Id as ItemID,
                 t_Items.ItemName,
                 t_Items.ItemType,
-                t_Items.ItemDescription as Description
+                t_Items.ItemDescription as Description,
+                t_OrderLines.LineTotal
             '))
             ->get();
     }
