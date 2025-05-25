@@ -9,7 +9,6 @@ use App\Services\Procurement\ProcurementPlan\DepartmentNeedsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
 use Throwable;
 
 class DepartmentNeedsController extends Controller
@@ -49,7 +48,6 @@ class DepartmentNeedsController extends Controller
     {
         $departmentneedviews = DepartmentNeeds::with('creator')->where('Status', 'p')->get();
         return view('procurement.procurementplan.departmentneeds.raiseneed.index', compact('departmentneedviews'));
-        // return view('procurement.procurementplan.departmentneeds.raiseneed.index');
     }
     
     public function fetchLinesByDPlan($NeedID)
@@ -59,8 +57,8 @@ class DepartmentNeedsController extends Controller
             ->get()
             ->map(function ($line) {
                 return [
-                    'id' => $line->id, // Add this
-                    'NeedID' => $line->NeedID, // Optional: include if needed
+                    'id' => $line->id, 
+                    'NeedID' => $line->NeedID,
                     'ItemID' => $line->ItemID,
                     'ItemName' => $line->item->ItemName ?? 'Unknown',
                     'RequestedQty' => $line->RequestedQty,
@@ -97,7 +95,7 @@ class DepartmentNeedsController extends Controller
             $needs = DepartmentNeeds::where('NeedID', $NeedID)->get();
 
             foreach ($needs as $need) {
-                $need->delete(); // soft delete
+                $need->delete();
             }
 
             return redirect()->route('procurementdepartmentalplan.index')->with('success', 'Department need deleted.');
