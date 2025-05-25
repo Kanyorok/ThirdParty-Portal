@@ -56,7 +56,7 @@ public function show($id)
         'RequestedQty' => $need->RequestedQty,
         'EstimatedCost' => number_format($need->RequestedQty * $need->EstimatedUnitCost, 2),
         'CreatedOn' => \Carbon\Carbon::parse($need->CreatedOn)->format('Y-m-d'),
-        'Status' => $need->Status ?? 'Pending',
+        'Status' => $need->Status,
     ]);
 }
 

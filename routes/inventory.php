@@ -18,14 +18,11 @@ use App\Http\Controllers\Inventory\TransactionAdjustmentController;
 use App\Http\Controllers\Inventory\TransactionReceiptsController;
 use App\Http\Controllers\Inventory\TransactionTransfersController;
 use App\Http\Controllers\Inventory\UOMConversionController;
-use App\Http\Controllers\Inventory\StoreController;
-use App\Http\Controllers\Property\PropertyReceiptPrintController;
 use Illuminate\Support\Facades\Route;
 
-//use App\Http\Controllers\Inventory\ReceiptController;
-
-//use App\Http\Controllers\Inventory\PropertyReceiptPrintController;
-
+use App\Http\Controllers\Inventory\UOMController;
+use App\Http\Controllers\Inventory\ItemTypeController;
+use App\Http\Controllers\Inventory\InventoryTypeController;
 
 Route::namespace('Inventory')->prefix('inventory')->group(function () {
     // Route::resource('receipts', ReceiptController::class);
@@ -45,26 +42,8 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::put('/itemmasterlist/{Id}', [ItemMasterListController::class, 'update'])->name('itemmasterlist.update');
     Route::delete('/itemmasterlist/{Id}', [ItemMasterListController::class, 'destroy'])->name('itemmasterlist.destroy');
     Route::get('/get-subcategories', [ItemMasterListController::class, 'getSubcategories'])->name('get.subcategories');
+    Route::resource('sku', SKUController::class);
 
-    Route::get('/stores', [StoreController::class, 'index'])->name('stores.index');
-    Route::get('/stores/create', [StoreController::class, 'create'])->name('stores.create');
-    Route::post('/stores', [StoreController::class, 'store'])->name('stores.store');
-    Route::get('/stores/{Id}', [StoreController::class, 'show'])->name('stores.show');
-    Route::get('/stores/{Id}/edit', [StoreController::class, 'edit'])->name('stores.edit');
-    Route::put('/stores/{Id}', [StoreController::class, 'update'])->name('stores.update');
-    Route::delete('/stores/{Id}', [StoreController::class, 'destroy'])->name('stores.destroy');
-    
-    
-    //Route::resource('sku', SKUController::class);
-    Route::get('/sku', [SKUController::class, 'index'])->name('sku.index');
-    Route::get('/sku/create', [SKUController::class, 'create'])->name('sku.create');
-    Route::post('/sku', [SKUController::class, 'store'])->name('sku.store');
-    Route::get('/sku/{Id}', [SKUController::class, 'show'])->name('sku.show');
-    Route::get('/sku/{Id}/edit', [SKUController::class, 'edit'])->name('sku.edit');
-    Route::put('/sku/{Id}', [SKUController::class, 'update'])->name('sku.update');
-    Route::delete('/sku/{Id}', [SKUController::class, 'destroy'])->name('sku.destroy');
-    Route::get('/get-stores', [SKUController::class, 'getStores'])->name('get.stores');
-    Route::get('/get-items', [SKUController::class, 'getItemsByCategoryOrSubcategory'])->name('get.items');
 
 
     //Route::resource('itemcategory', ItemCategoryController::class);
@@ -99,5 +78,11 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::resource('interbranchrequisitionapproval', InterBranchRequisitionApprovalController::class);
     Route::resource('inventoryreports', ReportsController::class);
     //Route::resource('rentdashboard', RentDashboardController::class);
-    Route::resource('receiptprint', PropertyReceiptPrintController::class);
+
+   // Route::resource('receiptprint', PropertyReceiptPrintController::class);
+
+    Route::resource('unitofmeasure', UOMController::class);
+    Route::resource('itemtype', ItemTypeController::class);
+    Route::resource('inventorytype', InventoryTypeController::class);
+
 });

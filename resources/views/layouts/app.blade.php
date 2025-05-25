@@ -1045,6 +1045,7 @@
 @include('layouts._partials._scripts')
 
 {{--@yield('scripts')--}}
+@stack('scripts')
 </body>
 
 </html>

@@ -108,8 +108,19 @@ class PurchaseOrderController extends Controller
      */
     public function create()
     {
+
+        try {
+            $suppliers = $this->supplierService->getSuppliers();
+            \Log::info('Suppliers loaded in create():', $suppliers->toArray());
+        } catch (\Exception $e) {
+            \Log::error('Error fetching suppliers in create(): ' . $e->getMessage());
+            $suppliers = collect(); // fallback to empty collection
+        }
         //
-        return view("procurement.orders.create");
+
+
+        return view("procurement.orders.create", compact('suppliers'));
+//        return view("procurement.orders.create");
     }
 
     /**
@@ -118,7 +129,7 @@ class PurchaseOrderController extends Controller
     public function store(PurchaseOrderRequest $request): JsonResponse
     {
 
-//        dd($request->user());
+//       dd($request->all());
         try {
             $validatedData = $request->validated();
 
@@ -210,7 +221,7 @@ class PurchaseOrderController extends Controller
             // Everything succeeded
             return response()->json([
                 'message' => $POAdd['message'] ?? 'Order created successfully',
-                'route' => route('purchaseOrder.create')
+                'route' => route('purchaseOrder.index')
             ], 200);
 
         } catch (\Throwable $e) {
