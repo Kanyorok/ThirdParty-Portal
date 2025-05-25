@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Property Management Analytics Dashboard')
 @section('content')
 <div class="container mt-4">
   <h3 class="fw-bold mb-4">📊 Property Management Analytics Dashboard</h3>

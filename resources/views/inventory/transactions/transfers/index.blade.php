@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'View Transfer')
+@section('title', 'View Transfers')
 @section('content')
 <div class="container bg-white shadow-sm rounded p-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
