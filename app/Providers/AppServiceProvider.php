@@ -30,6 +30,7 @@ use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
 use App\Models\Procurement\DepartmentNeeds;
 use App\Models\Procurement\Order;
+use App\Models\Procurement\ProcurementMethod;
 use App\Models\Procurement\RequisitionLines;
 use App\Models\Procurement\Requisitions;
 use App\Models\Procurement\RFQ;
@@ -39,6 +40,7 @@ use App\Models\ThirdParies\Competitor;
 use App\Policies\CrmBranchPolicy;
 use App\Policies\Procurement\DepartmentNeedsPolicy;
 use App\Policies\Procurement\OrderPolicy;
+use App\Policies\Procurement\ProcurementMethodPolicy;
 use App\Policies\Procurement\RequisitionLinesPolicy;
 use App\Policies\Procurement\RequisitionPolicy;
 use App\Policies\ProductDevelopmentPolicy;
@@ -98,6 +100,7 @@ class AppServiceProvider extends ServiceProvider
             RequisitionLines::getPrimaryKey() => RequisitionLines::class,
             Order::getPrimaryKey() => Order::class,
             DepartmentNeeds::getPrimaryKey() => DepartmentNeeds::class,
+            ProcurementMethod::getPrimaryKey() => ProcurementMethod::class,
         ]);
 
         Gate::policy(Role::class, RolePolicy::class);
@@ -107,6 +110,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(ProductDevelopment::class, ProductDevelopmentPolicy::class);
         Gate::policy(Order::class, OrderPolicy::class);
         Gate::policy(DepartmentNeeds::class, DepartmentNeedsPolicy::class);
+        Gate::policy(ProcurementMethod::class, ProcurementMethodPolicy::class);
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);
          Event::listen(SMSSendEvent::class, SMSSendListener::class);
