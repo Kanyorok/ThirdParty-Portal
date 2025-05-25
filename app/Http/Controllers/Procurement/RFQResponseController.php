@@ -9,6 +9,7 @@ use App\Models\Procurement\RFQResponse;
 use App\Models\ThirdParies\Supplier;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class RFQResponseController extends Controller
 {
@@ -23,26 +24,23 @@ class RFQResponseController extends Controller
         $rfqs = RFQ::all();
         $currencies = config('app.currencies');
 
-        $supplierIds = $rfqs->pluck('Suppliers')
-            ->filter()
-            ->flatMap(function ($suppliers) {
-                return json_decode($suppliers, true);
-            })
-            ->pluck('ContactEmail')
-            ->unique();
+        // Get all unique SupplierIds from the pivot table t_RFQ_Supplier
+        $supplierIds = DB::table('t_RFQ_Supplier')->pluck('SupplierId')->unique();
 
-        $suppliers = Supplier::whereIn('ContactEmail', $supplierIds)->get();
+        // Fetch the suppliers using those IDs
+        $suppliers = Supplier::whereIn('Id', $supplierIds)->get();
+        
         return view('procurement.rfqresponses.create', compact('rfqs', 'suppliers', 'currencies'));
     }
-
 
     public function store(Request $request)
     {
         $request->validate([
             'RFQId' => 'required|exists:t_RFQ,Id',
             'RFQNumber' => 'required|string|max:255',
-            'RequisitionItems' => 'required|array',
+            'RequisitionItems' => 'required|array|min:1',
             'RequisitionItems.*.name' => 'required|string|max:255',
+            'RequisitionItems.*.uom' => 'nullable|string|max:50',
             'RequisitionItems.*.quantity' => 'required|integer|min:1',
             'RequisitionItems.*.quotedprice' => 'required|numeric|min:0',
             'RequisitionItems.*.totalpayable' => 'required|numeric|min:0',
@@ -52,7 +50,7 @@ class RFQResponseController extends Controller
             'TotalPayable' => 'required|numeric|min:0',
         ]);
 
-        // Fetch the SupplierName based on SupplierId
+        $userId = auth()->user()->Id;
         $supplier = Supplier::findOrFail($request->SupplierId);
 
         $prefix = 'RFQRE-';
@@ -60,19 +58,35 @@ class RFQResponseController extends Controller
         $lastNumber = $lastRFQResponse ? intval(substr($lastRFQResponse->RFQResponseNumber, strlen($prefix))) : 0;
         $newRFQResponseNumber = $prefix . str_pad($lastNumber + 1, 5, '0', STR_PAD_LEFT);
 
-        RFQResponse::create([
-            'RFQId' => $request->RFQId,
-            'RFQResponseNumber' => $newRFQResponseNumber,
-            'RFQNumber' => $request->RFQNumber,
-            'SupplierId' => $request->SupplierId,
-            'SupplierName' => $supplier->SupplierName, // Insert the SupplierName from the Supplier table
-            'TotalPayable' => $request->TotalPayable,
-            'Currency' => $request->Currency,
-            'DurationDays' => $request->DurationDays,
-            'CreatedBy' => auth()->user()->Id,
-            'ModifiedBy' => auth()->user()->Id,
-            'RequisitionItems' => json_encode($request->RequisitionItems),
-        ]);
+        DB::transaction(function () use ($request, $supplier, $newRFQResponseNumber, $userId) {
+            // Create RFQ Response (header)
+            $rfqResponse = RFQResponse::create([
+                'RFQId' => $request->RFQId,
+                'RFQResponseNumber' => $newRFQResponseNumber,
+                'RFQNumber' => $request->RFQNumber,
+                'SupplierId' => $supplier->Id,
+                'SupplierName' => $supplier->SupplierName,
+                'TotalPayable' => $request->TotalPayable,
+                'Currency' => $request->Currency,
+                'DurationDays' => $request->DurationDays,
+                'CreatedBy' => $userId,
+                'ModifiedBy' => $userId,
+            ]);
+
+            // Create associated line items
+            foreach ($request->RequisitionItems as $item) {
+                $rfqResponse->items()->create([
+                    'RfqResponseId' => $rfqResponse->Id,
+                    'ItemName' => $item['name'],
+                    'UOM' => $item['uom'] ?? null,
+                    'Quantity' => $item['quantity'],
+                    'QuotedPrice' => $item['quotedprice'],
+                    'TotalPayable' => $item['totalpayable'],
+                    'CreatedBy' => $userId,
+                    'ModifiedBy' => $userId,
+                ]);
+            }
+        });
 
         return redirect()->route('rfqresponses.index')->with('success', 'RFQ Response created successfully.');
     }
@@ -131,21 +145,22 @@ class RFQResponseController extends Controller
         ]);
     }
 
-    public function getSuppliersByRFQ($id)
+    public function getSuppliers($rfqId)
     {
-        try {
-            $rfq = RFQ::with('suppliers')->findOrFail($id);
-            $suppliers = $rfq->suppliers->map(function ($supplier) {
-                return [
-                    'SupplierName' => $supplier->SupplierName,
-                    'ContactEmail' => $supplier->ContactEmail,
-                    'Id' => $supplier->Id,
-                ];
-            });
-            return response()->json($suppliers);
-        } catch (Exception $e) {
-            return response()->json(['error' => 'Failed to load suppliers again'], 500);
+        // Assuming each RFQ has a relation to suppliers (many-to-many or hasMany)
+        $rfq = RFQ::with('suppliers')->find($rfqId);
+
+        if (!$rfq) {
+            return response()->json([], 404);
         }
+        
+        // Return only necessary fields to keep the response lightweight
+        return response()->json($rfq->suppliers->map(function ($supplier) {
+            return [
+                'Id' => $supplier->Id,
+                'SupplierName' => $supplier->SupplierName,
+            ];
+        }));
     }
 
     public function getRFQResponses($rfqId)

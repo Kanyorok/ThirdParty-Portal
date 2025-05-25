@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         // Load suppliers
-        fetch(`/rfq-suppliers/${rfqId}`)
+        fetch(`/procurement/rfq-suppliers/${rfqId}`)
             .then(response => response.json())
             .then(data => {
                 supplierSelect.innerHTML = '<option value="">-- Select Supplier --</option>';
@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
         // Load requisition items
-        fetch(`/rfqs/${rfqId}/requisition-items`)
+        fetch(`/procurement/rfqs/${rfqId}/requisition-items`)
             .then(response => response.json())
             .then(data => {
                 if (data.requisitionItems && data.requisitionItems.length > 0) {

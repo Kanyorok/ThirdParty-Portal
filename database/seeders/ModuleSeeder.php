@@ -144,10 +144,10 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 305110, 'Name' => 'Tender Initiation', 'Icon' => null, 'ParentID' => 305100, 'Route' => 'initiatetender.index'],
             ['ModuleID' => 305120, 'Name' => 'Initiation Approval', 'Icon' => null, 'ParentID' => 305100, 'Route' => 'initiateapprove.index'],
 
-            ['ModuleID' => 306000, 'Name' => 'RFQS', 'Icon' => null, 'ParentID' => 300000, 'Route' => null],
-            ['ModuleID' => 306100, 'Name' => 'View RFQs', 'Icon' => null, 'ParentID' => 306000, 'Route' => 'rfqs.index'],
-            ['ModuleID' => 306200, 'Name' => 'RFQ Responses', 'Icon' => null, 'ParentID' => 306000, 'Route' => 'rfqresponses.index'],
-            ['ModuleID' => 306300, 'Name' => 'RFQ Evaluation', 'Icon' => null, 'ParentID' => 306000, 'Route' => 'evaluations.index'],
+            ['ModuleID' => 306000, 'Name' => 'Quotations', 'Icon' => null, 'ParentID' => 300000, 'Route' => null],
+            ['ModuleID' => 306100, 'Name' => 'View Quotations', 'Icon' => null, 'ParentID' => 306000, 'Route' => 'rfqs.index'],
+            ['ModuleID' => 306200, 'Name' => 'Quotation Responses', 'Icon' => null, 'ParentID' => 306000, 'Route' => 'rfqresponses.index'],
+            ['ModuleID' => 306300, 'Name' => 'Quotation Evaluation', 'Icon' => null, 'ParentID' => 306000, 'Route' => 'evaluations.index'],
 
             ['ModuleID' => 307000, 'Name' => 'Purchase Order', 'Icon' => null, 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 307100, 'Name' => 'View Purchase Orders', 'Icon' => null, 'ParentID' => 307000, 'Route' => 'purchaseOrder.index'],
