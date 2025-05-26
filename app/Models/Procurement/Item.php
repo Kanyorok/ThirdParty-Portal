@@ -25,7 +25,6 @@ class Item extends Model
     {
         return $this->belongsTo(ItemCategory::class, 'CategoryId','Id');
     }
-
     public function scopeGoods($query)
     {
         return $query->where('type', 'good');

@@ -51,6 +51,7 @@ public function store(Request $request)
 }
     public function create(){
         return view('procurement.procurementplan.procurementplanmaintenance.create');
+        
     }
 
 }

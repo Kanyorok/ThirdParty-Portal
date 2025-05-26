@@ -25,9 +25,13 @@
         <label class="form-label">Item Name</label>
         <select name="ItemID" class="form-select" required>
           <option selected disabled>Select Item</option>
-          @foreach($items as $item)
-            <option value="{{ $item->Id }}">{{ $item->ItemName }}</option>
-          @endforeach
+            @foreach($items as $item)
+              <option value="{{ $item->Id }}"
+                      data-category-id="{{ $item->category->Id ?? '' }}"
+                      data-uom="{{ $item->UOM ?? 'N/A' }}">
+                  {{ $item->ItemName }}
+              </option>
+            @endforeach
         </select>
       </div>
 
@@ -47,15 +51,11 @@
         <label class="form-label">Quantity</label>
         <input type="number" name="quantity" class="form-control" placeholder="e.g. 10" required>
       </div>
-      <div class="col-md-4">
-        <label class="form-label">Unit of Measure</label>
-        <select name="unit_of_measure" class="form-select" required>
-          <option selected disabled>Select Unit</option>
-          <option>Pcs</option>
-          <option>Boxes</option>
-          <option>Units</option>
-        </select>
-      </div>
+    <div class="col-md-6">
+      <label class="form-label">Unit of Measure</label>
+      <input type="text" class="form-control" id="display-uom" readonly>
+      <input type="hidden" name="unit_of_measure" id="unit_of_measure">
+    </div>
       <div class="col-md-4">
         <label class="form-label">Estimated Cost</label>
         <input type="number" name="estimated_cost" class="form-control" placeholder="e.g. 50000" required>
@@ -105,5 +105,21 @@
     </div>
   </form>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const itemSelect = document.querySelector('[name="ItemID"]');
+  const uomInput = document.getElementById('unit_of_measure');
+  const uomDisplay = document.getElementById('display-uom');
+
+  itemSelect.addEventListener('change', function () {
+    const selectedOption = this.options[this.selectedIndex];
+    const uom = selectedOption.getAttribute('data-uom');
+
+    // Fill the hidden inputs and display values
+    uomInput.value = uom || '';
+    uomDisplay.value = uom || 'N/A';
+  });
+});
+</script>
 
 @endsection

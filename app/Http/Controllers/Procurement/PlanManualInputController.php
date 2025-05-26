@@ -94,6 +94,6 @@ class PlanManualInputController extends Controller
 
         $planLineItem->save();
 
-        return redirect()->route('plan.manual-input.create')->with('success', 'Line item added successfully.');
+        return redirect()->route('procurement.procurementplan.planconsolidation.manualentry.index')->with('success', 'Line item added successfully.');
     }
 }

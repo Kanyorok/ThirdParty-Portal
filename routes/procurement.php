@@ -259,18 +259,19 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
 
     //procurement Consolidation
     Route::get('/dashboard', [ConsolidatedDashboardController::class, 'index'])->name('dashboard.index');
-    Route::get('/dashboard/show/{id}', [ConsolidatedDashboardController::class, 'show'])->name('dashboard.show');
+    Route::get('/dashboard/show/{needId}', [ConsolidatedDashboardController::class, 'show'])->name('dashboard.show');
 
     Route::post('/procurement-plans', [ProcurementPlanMaintainController::class, 'store'])->name('procurementplanmaintain.store');
 
     Route::prefix('procurement')->group(function () {
+    Route::get('plan-manual-input', [PlanManualInputController::class, 'index'])->name('procurement.procurementplan.planconsolidation.manualentry.index');
     Route::get('plan-manual-input/create', [PlanManualInputController::class, 'create'])->name('plan.manual-input.create');
     Route::post('plan-manual-input', [PlanManualInputController::class, 'store'])->name('plan.manual-input.store');
         });
     Route::prefix('procurement/plan')->name('plan-from-needs.')->group(function () {
-    Route::get('/select-approved-needs', [PlanFromNeedsController::class, 'create'])->name('create');
-    Route::post('/store-from-needs', [PlanFromNeedsController::class, 'store'])->name('store');
-        });
+    Route::get('/create', [PlanFromNeedsController::class, 'create'])->name('create');
+    Route::post('/store', [PlanFromNeedsController::class, 'store'])->name('store');
+});
     Route::get('/planning/edit-draft/{plan_id}', [PlanEditController::class, 'index']);
     Route::post('/planning/update-draft-items', [PlanEditController::class, 'updateDraftItems'])->name('planning.updateDraftItems');
     Route::delete('procurement/planning/delete-draft-item/{id}', [PlanEditController::class, 'deleteDraftItem'])->name('procurement.planning.deleteDraftItem');

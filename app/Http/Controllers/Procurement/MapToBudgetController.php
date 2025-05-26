@@ -18,7 +18,7 @@ class MapToBudgetController extends Controller
         public function index()
     {
         $draftItems = PlanLineItems::whereHas('consolidatedProcurementPlan', function ($query) {
-        $query->where('Status', 'Draft');
+        $query->where('Status', 'd');
     })->get();
         
         $budgetLines = BudgetMaster::all();

@@ -54,17 +54,16 @@ class PlanFromNeedsController extends Controller
  public function store(Request $request)
 {
     $request->validate([
-        'plan_id' => 'required|integer',
-        'selected_needs' => 'required|array',
-        'budget_line_id' => 'required|array',
-        'category_id' => 'required|integer',
-    ]);
+    'plan_id' => 'required|integer',
+    'category_id' => 'required|integer',
+    'selected_needs' => 'required|array|min:1',
+    'budget_line_id' => 'required|array',
+]);
 
     $selectedNeeds = DepartmentNeeds::whereIn('Id', $request->selected_needs)->get();
 
     foreach ($selectedNeeds as $need) {
         $budgetLineId = $request->budget_line_id[$need->Id] ?? null;
-
         PlanLineItems::create([
             'PlanID' => $request->plan_id,
             'ItemID' => $need->ItemID,

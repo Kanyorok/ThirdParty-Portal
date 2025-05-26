@@ -45,20 +45,25 @@ if ($department !== 'All Departments' && $department !== null && $department !==
         'needs', 'branches', 'departments', 'years', 'branch', 'department', 'year'
     ));
 }
-public function show($id)
-{
-    $need = DepartmentNeeds::with(['branch', 'department', 'item'])->findOrFail($id);
+    public function show($needId)
+    {
+        $needs = DepartmentNeeds::with('item')
+            ->where('NeedID', $needId)
+            ->get()
+            ->map(function ($need) {
+                return [
+                    'ItemName' => $need->item->ItemName ?? 'N/A',
+                    'BranchName' => $need->branch->Name ?? 'N/A',
+                    'DepartmentName' => $need->department->Name ?? 'N/A',
+                    'RequestedQty' => $need->RequestedQty,
+                    'EstimatedCost' => number_format($need->RequestedQty * $need->EstimatedUnitCost, 2),
+                    'CreatedOn' => \Carbon\Carbon::parse($need->CreatedOn)->format('Y-m-d'),
+                    'Status' => $need->Status->label(),
+                ];
+            });
 
-    return response()->json([
-        'ItemName' => $need->item->ItemName ?? 'N/A',
-        'BranchName' => $need->branch->Name ?? 'N/A',
-        'DepartmentName' => $need->department->Name ?? 'N/A',
-        'RequestedQty' => $need->RequestedQty,
-        'EstimatedCost' => number_format($need->RequestedQty * $need->EstimatedUnitCost, 2),
-        'CreatedOn' => \Carbon\Carbon::parse($need->CreatedOn)->format('Y-m-d'),
-        'Status' => $need->Status,
-    ]);
-}
+        return response()->json($needs);
+    }
 
     public function create()
     {

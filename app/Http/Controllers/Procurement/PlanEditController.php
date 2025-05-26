@@ -13,7 +13,7 @@ class PlanEditController extends Controller
 {
     $planId = $request->input('PlanID');
     $draftItems = PlanLineItems::whereHas('consolidatedProcurementPlan', function ($query) {
-        $query->where('Status', 'Draft');
+        $query->where('Status', 'd');
     })->get();
 
 

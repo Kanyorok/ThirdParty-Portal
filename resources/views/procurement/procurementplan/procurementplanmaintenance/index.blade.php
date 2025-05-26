@@ -60,17 +60,7 @@
             <td>{{ $plan->FiscalYear }}</td>
             <td>{{ $itemsCount }}</td>
             <td>{{ number_format($estimatedCost, 2) }}</td> <!-- Use $estimatedCost, not $plan->estimatedCost -->
-            <td>
-              @php
-                $badgeClass = match($plan->Status) {
-                  'Approved' => 'bg-success',
-                  'Pending Approval' => 'bg-warning',
-                  'Draft' => 'bg-secondary',
-                  default => 'bg-light'
-                };
-              @endphp
-              <span class="badge {{ $badgeClass }}">{{ $plan->Status }}</span>
-            </td>
+            <td> <span class="badge bg-info">{{ $plan->Status->label()}}</td></span>
             <td>{{ $plan->createdBy->Name ?? 'N/A' }}</td>
             <td>
               @if($plan->CreatedDate)
