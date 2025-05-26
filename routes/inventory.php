@@ -101,8 +101,31 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
 
    // Route::resource('receiptprint', PropertyReceiptPrintController::class);
 
-    Route::resource('unitofmeasure', UOMController::class);
-    Route::resource('itemtype', ItemTypeController::class);
-    Route::resource('inventorytype', InventoryTypeController::class);
+   // Route::resource('unitofmeasure', UOMController::class);
+    Route::get('/unitofmeasure', [UOMController::class, 'index'])->name('unitofmeasure.index');
+    Route::get('/unitofmeasure/create', [UOMController::class, 'create'])->name('unitofmeasure.create');
+    Route::post('/unitofmeasure', [UOMController::class, 'store'])->name('unitofmeasure.store');
+    Route::get('/unitofmeasure/{Id}', [UOMController::class, 'show'])->name('unitofmeasure.show');
+    Route::get('/unitofmeasure/{Id}/edit', [UOMController::class, 'edit'])->name('unitofmeasure.edit');
+    Route::put('/unitofmeasure/{Id}', [UOMController::class, 'update'])->name('unitofmeasure.update');
+    Route::delete('/unitofmeasure/{Id}', [UOMController::class, 'destroy'])->name('unitofmeasure.destroy');
+    
+    
+    //Route::resource('itemtype', ItemTypeController::class);
+    Route::get('/itemtype', [ItemTypeController::class, 'index'])->name('itemtype.index');
+    Route::get('/itemtype/create', [ItemTypeController::class, 'create'])->name('itemtype.create');
+    Route::post('/itemtype', [ItemTypeController::class, 'store'])->name('itemtype.store');
+    Route::get('/itemtype/{Id}', [ItemTypeController::class, 'show'])->name('itemtype.show');
+    Route::get('/itemtype/{Id}/edit', [ItemTypeController::class, 'edit'])->name('itemtype.edit');
+    Route::put('/itemtype/{Id}', [ItemTypeController::class, 'update'])->name('itemtype.update');
+    Route::delete('/itemtype/{Id}', [ItemTypeController::class, 'destroy'])->name('itemtype.destroy');
+    
+    //Route::resource('inventorytype', InventoryTypeController::class);
+    Route::get('/inventorytype', [InventoryTypeController::class, 'index'])->name('inventorytype.index');
+    Route::get('/inventorytype/create', [InventoryTypeController::class, 'create'])->name('inventorytype.create');
+    Route::post('/inventorytype', [InventoryTypeController::class, 'store'])->name('inventorytype.store');
+    Route::put('/inventorytype/{id}', [InventoryTypeController::class, 'update'])->name('inventorytype.update');
+    Route::delete('/inventorytype/{id}', [InventoryTypeController::class, 'destroy'])->name('inventorytype.destroy');
+
 
 });

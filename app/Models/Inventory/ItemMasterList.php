@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Inventory\ItemCategories;
+use App\Models\Inventory\InventoryType;
+use App\Models\Inventory\ItemType;
+use App\Models\Inventory\UnitOfMeasure;
 
 class ItemMasterList extends Model
 {
@@ -74,7 +77,20 @@ public function image()
     return $this->belongsTo(\App\Models\DMS\Image::class, 'ImageId', 'ImageID');
 }
 
+    public function itemType()
+    {
+        return $this->belongsTo(ItemType::class, 'ItemType', 'Id');
+    }
 
+    public function uom()
+    {
+        return $this->belongsTo(UnitOfMeasure::class, 'UOM', 'Id');
+    }
+
+    public function inventoryType()
+    {
+        return $this->belongsTo(InventoryType::class, 'InventoryType', 'Id');
+    }
     
 }
 

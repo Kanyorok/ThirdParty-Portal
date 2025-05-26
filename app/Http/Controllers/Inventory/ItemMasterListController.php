@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\ItemCategories;
+use App\Models\Inventory\InventoryType;
+use App\Models\Inventory\ItemType;
+use App\Models\Inventory\UnitOfMeasure;
 use Yajra\DataTables\DataTables;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -24,6 +27,9 @@ class ItemMasterListController extends Controller
                 ->addColumn('ParentCategory', function ($item) {
                     return optional($item->category->parent)->Name ?? '—';
                 })
+                ->addColumn('ItemType', fn($item) => optional($item->itemType)->TypeName ?? '—')
+                ->addColumn('InventoryType', fn($item) => optional($item->inventoryType)->Type ?? '—')
+                ->addColumn('UOM', fn($item) => optional($item->uom)->Code ?? '—')
                 ->addColumn('Action', function ($item) {
                     return '
                         <a href="' . route('itemmasterlist.show', ['Id' => $item->Id]) . '" class="btn btn-sm btn-primary">View</a>
@@ -39,23 +45,35 @@ class ItemMasterListController extends Controller
 
     public function create()
     {
-        $categories = ItemCategories::whereNull('ParentId')->get(); // Main categories
-        return view('inventory.itemmaster.itemmasterlist.create', compact('categories'));
+            $categories = ItemCategories::whereNull('ParentId')->get();
+            $itemTypes = ItemType::all();
+            $uoms = UnitOfMeasure::all();
+             $inventoryTypes = InventoryType::all();
+
+return view('inventory.itemmaster.itemmasterlist.create', compact(
+    'categories', 'itemTypes', 'uoms', 'inventoryTypes'
+));
+
     }
+
+
+
 
 public function store(Request $request)
 {
     $request->validate([
-        'BarCode'         => 'required|string|max:255',
-        'ItemName'        => 'required|string|max:255',
-        'ItemType'        => 'required|string|max:255',
-        'Category'        => 'required|exists:t_ItemCategories,Id',
-        'UOM'             => 'required|string|max:255',
-        'InventoryType'   => 'required|string|max:255',
-        'ImageUpload'     => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-        'ItemDescription' => 'nullable|string',
-        'DocumentUpload'  => 'nullable|file|mimes:pdf,doc,docx,xlsx,xls|max:5120',
-    ]);
+    'BarCode'         => 'required|string|max:255',
+    'ItemName'        => 'required|string|max:255',
+    'ItemType'        => 'required|exists:t_ItemTypes,Id',
+    'Category'        => 'required|exists:t_ItemCategories,Id',
+    'UOM'             => 'required|exists:t_UOM,Id',
+    'InventoryType'   => 'required|exists:t_InventoryTypes,Id',
+    'ImageUpload'     => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+    'DocumentUpload'  => 'nullable|file|mimes:pdf,doc,docx,xlsx,xls|max:5120',
+    'ItemDescription' => 'nullable|string',
+]);
+
+
 
     DB::transaction(function () use ($request) {
         $item = new ItemMasterList();
@@ -101,44 +119,46 @@ if ($request->hasFile('ImageUpload')) {
     return redirect()->route('itemmaster.index')->with('success', 'Item created successfully.');
 }
     public function edit($Id)
+
     {
         $item = ItemMasterList::findOrFail($Id);
-        $categories = ItemCategories::whereNull('ParentId')->get(); // For parent dropdown
+        $categories = ItemCategories::whereNull('ParentId')->get();
         $subcategories = ItemCategories::where('ParentId', $item->category?->ParentId ?? $item->Category)->get();
-        return view('inventory.itemmaster.itemmasterlist.edit', compact('item', 'categories', 'subcategories'));
+        $itemTypes = ItemType::all();
+        $uoms = UnitOfMeasure::all();
+        $inventoryTypes = InventoryType::all();
+
+return view('inventory.itemmaster.itemmasterlist.edit', compact(
+    'item', 'categories', 'subcategories', 'itemTypes', 'uoms', 'inventoryTypes'
+));
+
     }
 
     public function update(Request $request, $Id)
     {
-        $request->validate([
-            'BarCode'         => 'required|string|max:255',
-            'ItemName'        => 'required|string|max:255',
-            'ItemType'        => 'required|string|max:255',
-            'Category'        => 'required|exists:t_ItemCategories,Id',
-            'UOM'             => 'required|string|max:255',
-            'InventoryType'   => 'required|string|max:255',
-            'ImageUpload'     => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'DocumentUpload'  => 'nullable|file|mimes:pdf,doc,docx,xlsx,xls|max:5120',
-            'ItemDescription' => 'nullable|string',
-        ]);
+    
+    $request->validate([
+    'BarCode'         => 'required|string|max:255',
+    'ItemName'        => 'required|string|max:255',
+    'ItemType'        => 'required|exists:t_ItemTypes,Id',
+    'Category'        => 'required|exists:t_ItemCategories,Id',
+    'UOM'             => 'required|exists:t_UOM,Id',
+    'InventoryType'   => 'required|exists:t_InventoryTypes,Id',
+    'ImageUpload'     => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+    'DocumentUpload'  => 'nullable|file|mimes:pdf,doc,docx,xlsx,xls|max:5120',
+    'ItemDescription' => 'nullable|string',
+]);
 
-        $item = ItemMasterList::findOrFail($Id);
-        $item->fill($request->except('ImageUpload'));
 
-        $item->Category = $request->Category;
-        $item->ModifiedBy = Auth::id();
-        $item->ModifiedOn = Carbon::now();
 
-        if ($request->hasFile('ImageUpload')) {
-            // Delete old image if exists
-            if ($item->ImageId) {
-                $oldImage = \App\Models\DMS\Image::find($item->ImageId);
-                if ($oldImage) {
-                    $oldImage->delete();
-                }
-            }
+$item = ItemMasterList::findOrFail($Id);
+$item->fill($request->except('ImageUpload'));
 
-            if ($request->input('remove_image') == '1' && $item->ImageId) {
+$item->Category = $request->Category;
+$item->ModifiedBy = Auth::id();
+$item->ModifiedOn = Carbon::now();
+
+if ($request->input('remove_image') == '1' && $item->ImageId) {
     $oldImage = \App\Models\DMS\Image::find($item->ImageId);
     if ($oldImage) {
         $oldImage->delete();
@@ -146,22 +166,26 @@ if ($request->hasFile('ImageUpload')) {
     $item->ImageId = null;
 }
 
-            $file = $request->file('ImageUpload');
-            $imageContent = base64_encode(file_get_contents($file->getRealPath()));
-            $image = \App\Models\DMS\Image::create([
-                'Name' => $file->getClientOriginalName(),
-                'Image' => $imageContent,
-                'MIMEType' => $file->getMimeType(),
-                'CreatedBy' => Auth::id(),
-                'CreatedOn' => now(),
-                'ModifiedBy' => Auth::id(),
-                'ModifiedOn' => now(),
-            ]);
-            $item->ImageId = $image->ImageID;
+if ($request->hasFile('ImageUpload')) {
+    // Delete old image if exists (if not already deleted above)
+    if ($item->ImageId) {
+        $oldImage = \App\Models\DMS\Image::find($item->ImageId);
+        if ($oldImage) {
+            $oldImage->delete();
         }
-        if ($request->hasFile('DocumentUpload')) {
-            $docPath = $request->file('DocumentUpload')->store('items/documents', 'public');
-            $item->DocumentUpload = $docPath;
+    }
+    $file = $request->file('ImageUpload');
+    $imageContent = base64_encode(file_get_contents($file->getRealPath()));
+    $image = \App\Models\DMS\Image::create([
+        'Name' => $file->getClientOriginalName(),
+        'Image' => $imageContent,
+        'MIMEType' => $file->getMimeType(),
+        'CreatedBy' => Auth::id(),
+        'CreatedOn' => now(),
+        'ModifiedBy' => Auth::id(),
+        'ModifiedOn' => now(),
+    ]);
+    $item->ImageId = $image->ImageID;
 }
 
         $item->save();

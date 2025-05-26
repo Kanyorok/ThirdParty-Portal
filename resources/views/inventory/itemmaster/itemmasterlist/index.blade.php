@@ -29,6 +29,9 @@
                     <th>Item Name</th>
                     <th>Category</th>
                     <th>Parent Category</th>
+                    <th>Item Type</th>
+                    <th>Inventory Type</th>
+                    <th>UOM</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -53,6 +56,9 @@ $(document).ready(function () {
             { data: 'ItemName', name: 'ItemName' },
             { data: 'Category', name: 'Category' },
             { data: 'ParentCategory', name: 'ParentCategory' },
+            { data: 'ItemType', name: 'ItemType' },
+            { data: 'InventoryType', name: 'InventoryType' },
+            { data: 'UOM', name: 'UOM' },
 
             {
                 data: 'Action',

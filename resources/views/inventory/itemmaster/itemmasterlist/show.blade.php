@@ -28,7 +28,7 @@
 
     <div class="row mb-3">
         <div class="col-md-6">
-            <p><strong>Item Type:</strong> {{ $item->ItemType }}</p>
+            <p><strong>Item Type:</strong> {{ $item->itemType?->TypeName ?? 'N/A' }}</p>
         </div>
         <div class="col-md-6">
             <p><strong>Category:</strong> {{ $item->category?->Name ?? 'N/A' }}</p>
@@ -40,13 +40,13 @@
             <p><strong>Parent Category:</strong> {{ $item->category->parent?->Name ?? 'N/A' }}</p>
         </div>
         <div class="col-md-6">
-            <p><strong>Unit of Measure (UOM):</strong> {{ $item->UOM }}</p>
+            <p><strong>Unit of Measure (UOM):</strong> {{ $item->uom?->Code ?? 'N/A' }}</p>
         </div>
     </div>
 
     <div class="row mb-3">
         <div class="col-md-6">
-            <p><strong>Inventory Type:</strong> {{ $item->InventoryType }}</p>
+            <p><strong>Inventory Type:</strong> {{ $item->inventoryType?->Type ?? 'N/A' }}</p>
         </div>
         <div class="col-md-6">
             <p><strong>Item Image:</strong></p>

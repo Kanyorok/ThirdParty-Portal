@@ -38,9 +38,12 @@
                 <label for="ItemType" class="form-label">Item Type</label>
                 <select name="ItemType" class="form-select" required>
                     <option disabled>Select Type</option>
-                    <option value="Stock" {{ old('ItemType', $item->ItemType) == 'Stock' ? 'selected' : '' }}>Stock</option>
-                    <option value="Asset" {{ old('ItemType', $item->ItemType) == 'Asset' ? 'selected' : '' }}>Asset</option>
-                    <option value="Non-Stock" {{ old('ItemType', $item->ItemType) == 'Non-Stock' ? 'selected' : '' }}>Non-Stock</option>
+                @foreach($itemTypes as $itemType)
+               <option value="{{ $itemType->Id }}" {{ old('ItemType') == $itemType->Id ? 'selected' : '' }}>
+                {{ $itemType->TypeName }}
+               </option>
+               @endforeach
+
                 </select>
             </div>
             <div class="col-md-4">
@@ -72,18 +75,24 @@
                 <label for="UOM" class="form-label">Unit of Measure (UOM)</label>
                 <select name="UOM" class="form-select" required>
                     <option disabled>Select UOM</option>
-                    <option value="pcs" {{ old('UOM', $item->UOM) == 'pcs' ? 'selected' : '' }}>pcs</option>
-                    <option value="kg" {{ old('UOM', $item->UOM) == 'kg' ? 'selected' : '' }}>kg</option>
-                    <option value="litres" {{ old('UOM', $item->UOM) == 'litres' ? 'selected' : '' }}>litres</option>
+                    @foreach($uoms as $uom)
+                    <option value="{{ $uom->Id }}" {{ old('UOM') == $uom->Id ? 'selected' : '' }}>
+                    {{ $uom->Code }}
+                </option>
+                    @endforeach
+
                 </select>
             </div>
             <div class="col-md-4">
                 <label for="InventoryType" class="form-label">Inventory Type</label>
                 <select name="InventoryType" class="form-select" required>
                     <option disabled>Select Inventory Type</option>
-                    <option value="Consumable" {{ old('InventoryType', $item->InventoryType) == 'Consumable' ? 'selected' : '' }}>Consumable</option>
-                    <option value="Durable" {{ old('InventoryType', $item->InventoryType) == 'Durable' ? 'selected' : '' }}>Durable</option>
-                    <option value="Perishable" {{ old('InventoryType', $item->InventoryType) == 'Perishable' ? 'selected' : '' }}>Perishable</option>
+                    @foreach($inventoryTypes as $inventoryType) 
+                    <option value="{{ $inventoryType->Id }}" {{ old('InventoryType') == $inventoryType->Id ? 'selected' : '' }}>
+                    {{ $inventoryType->Type }}
+                   </option>
+                   @endforeach
+
                 </select>
             </div>
         </div>
