@@ -37,6 +37,11 @@ class RFQResponse extends Model
         return $this->belongsTo(RFQ::class, 'RFQId', 'Id');
     }
 
+    public function items()
+    {
+        return $this->hasMany(RFQResponseItem::class, 'RfqResponseId', 'Id');
+    }
+
     public function supplier()
     {
         return $this->belongsTo(Supplier::class, 'SupplierId', 'Id');
