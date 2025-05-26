@@ -31,17 +31,18 @@
                 <label for="tenderCategory" class="form-label fw-bold">Tender Category:</label>
                 <select class="form-select" id="tenderCategory">
                     <option selected disabled>-- Select Category --</option>
-                    <option>Goods</option>
-                    <option>Services</option>
-                    <option>Works</option>
+                    @foreach ($tenderCategories as $item)
+                        <option value="{{$item->Id}}">{{$item->TenderCategory}}</option>
+                    @endforeach
                 </select>
             </div>
             <div class="col-md-6 mb-3">
                 <label for="relatedPR" class="form-label fw-bold">Item Category</label>
                 <select class="form-select" id="relatedPR">
                     <option selected disabled>-- Item Categories --</option>
-                    <option>Technology</option>
-                    <option>Stationery</option>
+                    @foreach ($AllItemsCategories as $item)
+                        <option value="{{$item->Id}}">{{$item->Name}}</option>
+                    @endforeach
                 </select>
             </div>
         </div>
@@ -64,8 +65,9 @@
         <label class="form-label fw-bold">Select Procurement Plan:</label>
         <select class="form-select" id="selectedProcurementPlan" onchange="loadPlanItemsForPlan()">
             <option selected disabled>-- Choose Procurement Plan --</option>
-            <option value="2025-DEP01">2025 - ICT Department</option>
-            <option value="2025-DEP02">2025 - Finance Department</option>
+                @foreach ($procurementPlan as $item)
+                    <option value="{{$item->PlanID}}">{{$item->Title}} - {{$item->ReferenceNumber}}</option>
+                @endforeach
         </select>
     </div>
  
@@ -216,25 +218,8 @@
         document.getElementById('manualItemsBody').insertAdjacentHTML('beforeend', row);
     }
  
-  const procurementPlans = {
-        '2025-DEP01': [
-            { id: 1, name: 'Office Desks', plannedQty: 100 },
-            { id: 2, name: 'UPS Systems', plannedQty: 10 }
-        ],
-        '2025-DEP02': [
-            { id: 3, name: 'Audit Software', plannedQty: 5 },
-            { id: 4, name: 'Laptops', plannedQty: 20 }
-        ]
-    };
- 
-    // Full item lookup for metadata
-    const planItemData = {
-        1: { name: 'Office Desks', plannedQty: 100 },
-        2: { name: 'UPS Systems', plannedQty: 10 },
-        3: { name: 'Audit Software', plannedQty: 5 },
-        4: { name: 'Laptops', plannedQty: 20 }
-    };
- 
+    const procurementPlans = @json($procurementPlansOutput);
+    const planItemData = @json($planItemData);
     const addedPlanItems = new Set();
  
     function loadPlanItemsForPlan() {
@@ -242,6 +227,8 @@
         const select = document.getElementById('planItemSelect');
         select.innerHTML = `<option selected disabled>-- Select Item --</option>`;
  
+        console.log(procurementPlans);
+        
         if (procurementPlans[planId]) {
             procurementPlans[planId].forEach(item => {
                 const opt = document.createElement('option');
@@ -254,10 +241,12 @@
  
     function addPlanItemToGrid() {
         const select = document.getElementById('planItemSelect');
+        console.log(select);
+        
         const itemId = select.value;
         const item = planItemData[itemId];
         const tbody = document.querySelector('#planItemsGrid tbody');
- 
+
         if (!itemId || addedPlanItems.has(itemId)) {
             alert('Item already added or not selected');
             return;

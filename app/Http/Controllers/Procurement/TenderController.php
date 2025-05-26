@@ -9,7 +9,10 @@ use App\Enums\TenderTypeEnum;
 use App\Http\Controllers\Controller;
 use App\Enums\TenderCategoryEnum;
 use App\Enums\TenderStatusEnum;
+use App\Models\Procurement\ConsolidatedProcurementPlan;
+use App\Models\Procurement\Item;
 use App\Models\Procurement\ItemCategory;
+use App\Models\Procurement\PlanLineItems;
 use App\Models\Procurement\ProcurementPlan;
 use App\Models\Procurement\TenderCategory;
 use Illuminate\Http\Request;
@@ -31,14 +34,65 @@ class TenderController extends Controller
         $procurementModes = ProcurementMode::all();
         $currencies = Currency::all();
         $tenderTypes = TenderTypeEnum::cases();
-        $tenderCategories = TenderCategoryEnum::cases();
         $statuses = TenderStatusEnum::cases();
         $suppliers = collect();
-        $tenderCategory = TenderCategory::select('Id', 'TenderCategory')->get();
-        $itemsCategories = ItemCategory::select('Id', 'Name')->whereNull('ParentId')->get();
-        $procurementPlan= ProcurementPlan::all();
+        $tenderCategories = TenderCategory::select('Id', 'TenderCategory')->get();
+        $AllItemsCategories = ItemCategory::select('Id', 'Name')->whereNull('ParentId')->get();
+        // $itemsCategories = PlanLineItems::select('LineItemId','PlanID','ItemId')->get();
+        // // Fetching item with respective planitem data
+        // foreach($itemsCategories as $item){
+        //     return$lineItems=Item::all()->where('Id',$item->ItemId);
+        //     $planItemData[]=[
+        //         $item->PlanID:{
 
+        //         }
+        //     ]
+        // }
+        $procurementPlan= ConsolidatedProcurementPlan::select('PlanID','ReferenceNumber','Title')
+            //->where('Status', 'Approved') //Add this once approval process is done
+            ->get();
 
+        // Fetch procurement plans
+        $procurementPlans = ConsolidatedProcurementPlan::select('PlanID', 'ReferenceNumber', 'Title')
+            // ->where('Status', 'Approved') // Uncomment when approval process is ready
+            ->get()
+            ->keyBy('PlanID'); // Key by PlanID for easier lookup
+
+        // Fetch plan line items with related item details
+        $itemsCategories = PlanLineItems::select('LineItemID', 'PlanID', 'ItemID', 'MergedQty')
+            ->with(['item' => function ($query) {
+                $query->select('Id', 'ItemName'); // Make sure column name matches the DB
+            }])
+            ->get();
+
+        // Initialize the output arrays
+        $procurementPlansOutput = [];
+        $planItemData = [];
+
+        // Group line items by PlanID and build output
+        foreach ($itemsCategories as $lineItem) {
+            $planId = $lineItem->PlanID;
+            $item = $lineItem->item;
+
+            // Skip if item is null
+            if (!$item) {
+                continue;
+            }
+
+            // Add to procurementPlansOutput
+            $procurementPlansOutput[$planId][] = [
+                'id' => $planId,
+                'name' => $item->ItemName,
+                'plannedQty' => $lineItem->MergedQty,
+            ];
+
+            // Add to planItemData
+            $planItemData[$planId] = [
+                'name' => $item->ItemName,
+                'plannedQty' => $lineItem->MergedQty,
+            ];
+        }
+        //return $procurementPlansOutput;
         return view('procurement.tendering.tendersetup.tenderinitiation.create', compact(
             'procurementModes',
             'currencies',
@@ -46,7 +100,13 @@ class TenderController extends Controller
             'tenderCategories',
             'statuses',
             'suppliers',
-            'itemsCategories'
+            'itemsCategories',
+            'procurementPlan',
+            'AllItemsCategories',
+            'procurementPlansOutput',
+            'procurementPlans',
+            'planItemData'
+            
         ));
     }
 
