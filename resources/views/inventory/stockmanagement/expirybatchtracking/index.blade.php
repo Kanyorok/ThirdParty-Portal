@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Stock Expiry List')
 @section('content')
 <div class="container mt-4">
 <a href="{{ route('expirytracking.create') }}" class="btn btn-sm btn-light">➕ Add Expiry Batch Manually</a>

@@ -18,18 +18,21 @@ class RFQ extends Model
     public const UPDATED_AT = 'ModifiedOn';
     const string DELETED_AT = 'DeletedOn';
 
-    protected $fillable = [
-        'RFQNumber', 'ItemCategoryId', 'Comments', 'RequisitionItems', 'Status', 'SubmissionDeadline',  'CreatedBy', 'ModifiedBy', 'Suppliers'
-    ];
-
-    protected $casts = [
-        'RequisitionItems' => 'array',
-    ];
-
+    
     public static function getPrimaryKey(): string
     {
         return 'RFQId';
     }
+
+    protected $fillable = [
+        'RFQNumber', 'Comments', 'Status', 'SubmissionDeadline',  'CreatedBy', 'ModifiedBy'
+    ];
+
+    public function rfqLines()
+    {
+        return $this->hasMany(RFQLine::class, 'RFQId');
+    }
+
 
     public function category()
     {

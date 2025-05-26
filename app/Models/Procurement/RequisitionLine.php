@@ -5,9 +5,10 @@ namespace App\Models\Procurement;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Procurement\ItemCategory;
+use App\Models\Inventory\ItemCategories;
+use App\Models\Inventory\ItemMasterList;
 
-class RequisitionLines extends Model
+class RequisitionLine extends Model
 {
     use SoftDeletes;
     use UserActorTrait;
@@ -37,8 +38,12 @@ class RequisitionLines extends Model
         // 'Processing' => 'boolean'
                        ];
 
-    public function category()
+    
+    public function item()
     {
-        return $this->belongsTo(ItemCategory::class, 'CategoryId');
+        return $this->belongsTo(ItemMasterList::class, 'Item', 'Id');
     }
+
+    
+
 }

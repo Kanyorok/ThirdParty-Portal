@@ -23,10 +23,11 @@ use App\Models\CRM\Social;
 use App\Models\CRM\Survey;
 use App\Models\CRM\Ticket;
 use App\Models\Procurement\DepartmentNeeds;
+use App\Models\Procurement\ProcurementMethod;
 use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
 use App\Models\Procurement\Order;
-use App\Models\Procurement\RequisitionLines;
+use App\Models\Procurement\RequisitionLine;
 use App\Models\Procurement\Requisitions;
 use App\Models\Procurement\RFQ;
 use App\Models\Settings\APICredential;
@@ -35,6 +36,7 @@ use App\Models\ThirdParies\Competitor;
 use App\Traits\UsefulEnumTrait;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use App\Models\Procurement\ConsolidatedProcurementPlan;
 
 enum PermissionEnum: string
 {
@@ -175,11 +177,11 @@ enum PermissionEnum: string
     case RequisitionItemsApproval = 'requisitionItem-approval';
 
     //RFQ
-    case RfqRead = 'rfqItem-read';
-    case RfqWrite = 'rfqItem-create';
-    case RfqUpdate = 'rfqItem-update';
-    case RfqDelete = 'rfqItem-delete';
-    case RfqApproval = 'rfqItem-approval';
+    case RfqRead = 'rfq-read';
+    case RfqWrite = 'rfq-create';
+    case RfqUpdate = 'rfq-update';
+    case RfqDelete = 'rfq-delete';
+    case RfqApproval = 'rfq-approval';
 
     //RequisitionItems
     case PurchaseOrderRead = 'purchaseOrder-read';
@@ -194,6 +196,16 @@ enum PermissionEnum: string
     case DepartmentNeedsUpdate = 'departmentneeds-update';
     case DepartmentNeedsDelete = 'departmentneeds-delete';
     case DepartmentNeedsApproval = 'departmentneeds-approval';
+
+    //Procument Plan- Plan Consolidation
+    case PlanConsolidationRead = 'panconsolidation-read';
+    case PlanConsolidationWrite = 'panconsolidation-write';
+    case PlanConsolidationUpdate = 'panconsolidation-update';
+    case PlanConsolidationDelete = 'panconsolidation-delete';
+
+        //ProcurementPlan ProcurementMethod
+    case ProcurementMethodRead = 'procurementmethod-read';
+    case ProcurementMethodWrite = 'procurementmethod-create';
     /*
     *
     * ========================================  Inventory  ========================================
@@ -217,6 +229,7 @@ enum PermissionEnum: string
         return collect([
             [self::TicketRead, self::TicketWrite, self::TicketUpdate, self::TicketDelete, self::TicketApproval,],
             [self::TaskCreate, self::TaskDelegate,],
+            [self::RfqRead, self::RfqWrite, self::RfqUpdate, self::RfqDelete, self::RfqApproval,],
             [self::Members],
             [self::LeadRead, self::LeadWrite, self::LeadDelegate, self::LeadUpdate, self::LeadViewAll, self::LeadsManager, self::LeadDelete,],
             [self::EmailRead, self::EmailAssign, self::EmailDelete,],
@@ -242,11 +255,14 @@ enum PermissionEnum: string
             [self::Roles],
 
             [self::DepartmentNeedsRead, self::DepartmentNeedsWrite, self::DepartmentNeedsUpdate, self::DepartmentNeedsDelete, self::DepartmentNeedsApproval,],
+            [self::ProcurementMethodRead, self::ProcurementMethodWrite,],
+
 
             [self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete, self::Departments],
             [self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval, self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval],
-            [self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval]
+            [self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval],
 
+            [self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete],
 
         ]);
     }
@@ -254,7 +270,7 @@ enum PermissionEnum: string
     public static function approvals(): Collection
     {
         return collect([self::MarketingPlannerApproval, /* self::MarketingListApproval,*/ self::TicketApproval, self::CampaignApproval, self::SurveyApproval, self::Ceo, self::MarketingManager,
-            self::PurchaseOrderApproval, self::RequisitionApproval,self::RequisitionItemsApproval,self::DepartmentNeedsApproval]);
+            self::PurchaseOrderApproval, self::RequisitionApproval,self::RequisitionItemsApproval]);
     }
 
 
@@ -289,10 +305,12 @@ enum PermissionEnum: string
             self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval,
             self::RfqRead, self::RfqWrite, self::RfqUpdate, self::RfqApproval, self::RfqDelete,
              self::DepartmentNeedsRead, self::DepartmentNeedsWrite, self::DepartmentNeedsUpdate, self::DepartmentNeedsDelete, self::DepartmentNeedsApproval,
+             self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete
+            self::ProcurementMethodRead, self::ProcurementMethodWrite
             => ModulesEnum::Procurement,
         
             self::Departments, self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete => ModulesEnum::HRM,
-
+            
             self::MasterListView => ModulesEnum::Inventory,
         };
     }
@@ -313,6 +331,7 @@ enum PermissionEnum: string
             self::CallRead, self::CallWrite, self::CallUpdate, self::CallDelete => 'Calls',
             self::SocialRead, self::SocialWrite, self::SocialDelete => 'Social Media',
             self::CampaignRead, self::CampaignWrite, self::CampaignUpdate, self::CampaignDelete, self::CampaignApproval => 'Campaigns',
+            self::RfqRead, self::RfqWrite, self::RfqUpdate, self::RfqDelete, self::RfqApproval => 'RFQ',
             self::TicketRead, self::TicketWrite, self::TicketUpdate, self::TicketDelete, self::TicketApproval => 'Tickets',
             self::TaskCreate, self::TaskDelegate => 'Tasks',
             self::DebtCollectionView, self::DebtCollectionAssignment, self::DebtCollectionAdmin, self::DebtNotificationView, self::DebtNotificationSend, self::DebtCollectionLists => 'Debt Collection',
@@ -328,6 +347,8 @@ enum PermissionEnum: string
             self::ListsView, self::ListsUpdate => 'System Codes',
             self::DepartmentNeedsRead, self::DepartmentNeedsWrite, self::DepartmentNeedsUpdate, self::DepartmentNeedsDelete, self::DepartmentNeedsApproval => 'Department Needs',
             self::Departments, self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete => 'Employees',
+            self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete, => 'Consolodidated Needs',
+            self::ProcurementMethodRead, self::ProcurementMethodWrite => 'Procurement Method',
 
             //Requisition
             self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval, self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval =>'Requisitions',

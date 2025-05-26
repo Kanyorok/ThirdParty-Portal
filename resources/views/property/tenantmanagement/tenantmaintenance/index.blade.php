@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Registered Tenants')
 @section('content')
 <div class="container mt-4">
 <a href="{{ route('addtenant.create') }}" class="btn btn-primary mb-3">Add Tenant</a>

@@ -22,10 +22,12 @@ class DatabaseSeeder extends Seeder
         $this->call(SysFilterSeeder::class);
         $this->call(SysFilterSeeder::class);
         $this->call(CurrencySeeder::class);
-        $this->call(ModulesEnum::class);
+        $this->call(ModuleSeeder::class);
         $this->call(RolePermissionSeeder::class);
         $this->call(CommitteeSeeder::class);
         $this->call(DepartmentSeeder::class);
         $this->call(EmployeeSeeder::class);
+        $this->call(ItemCategoriesSeeder::class);
+        $this->call(ItemMasterListSeeder::class);
     }
 }
