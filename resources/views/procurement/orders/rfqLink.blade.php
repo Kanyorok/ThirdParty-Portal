@@ -70,7 +70,7 @@
                 <div class="col-md-6">
                     <label>Supplier</label>
                     <select class="form-control supplier" id="supplier" name="supplier">
-                        <option selected>{{$orderInfo->SupplierName ?? 'N/A'}}</option>
+                        <option disabled selected>Choose Supplier</option>
                     </select>
                 </div>
                 {{--                <div class="col-md-6">--}}
@@ -83,25 +83,32 @@
             <div class="row mb-4">
                 <div class="col-md-4">
                     <label>LPO Number</label>
-                    <input type="text" name="LPONo" class="form-control" value="{{$orderInfo->OrderNo ?? 'N/A'}}" readonly/>
+                    <input type="text" name="LPONo" class="form-control" value="" readonly/>
                 </div>
                 <div class="col-md-4">
                     <label>Date</label>
-                    <input type="date" class="form-control poDate" name="pODate" value="{{ isset($orderInfo->OrderDate) ? \Carbon\Carbon::parse($orderInfo->OrderDate)->format('Y-m-d') : '' }}"/>
+                    <input type="date" class="form-control poDate" name="pODate" id="pODate" value=""/>
                 </div>
                 <div class="col-md-4">
                     <label>Reference Number</label>
-                    <input type="text" class="form-control refNo" name="refNo" placeholder="RFQ Number" value="{{$orderInfo->ExtOrdNum ?? 'N/A'}}"/>
+{{--                    <input type="text" class="form-control refNo" name="refNo" placeholder="RFQ Number" value="{{$orderInfo->ExtOrdNum ?? 'N/A'}}"/>--}}
+                    <select class="form-control refNo" name="refNo" id="refNo">
+                        <option selected disabled>Select RFQ</option>
+                            @foreach ($RFQ as $data)
+                                <option value="{{ $data->RFQId }}">{{ $data->RFQNumber }}</option>
+                            @endforeach
+                    </select>
+
                 </div>
                 <div class="col-md-4 mt-2">
                     <label>Priority</label>
                     <select class="form-control priority" name="priority">
-                        <option selected>{{$orderInfo->Priority ?? 'N/A'}}</option>
+                        <option selected></option>
                     </select>
                 </div>
                 <div class="col-md-4 mt-2">
                     <label>Payment Terms</label>
-                    <input type="text" name="terms" class="form-control terms" placeholder="e.g., Net 30, 50%" value="{{$orderInfo->Terms ?? 'N/A'}}"/>
+                    <input type="text" name="terms" class="form-control terms" placeholder="e.g., Net 30, 50%" value=""/>
                 </div>
             </div>
 
@@ -114,7 +121,7 @@
 
             <!-- Line Items Table -->
             <div class="table-responsive mb-4">
-                <table class="table table-bordered table-sm">
+                <table class="table table-bordered table-sm" id="poTable">
                     <thead class="table-light">
                     <tr>
                         <th style="width: 1%; min-width: 10px;">#</th>
@@ -207,51 +214,70 @@
 @endsection
 @section('scripts')
     <script>
-        function fetchSuppliers() {
-            const supplierUrl = "{{ route('purchaseOrder.getSuppliers') }}"
+
+        // fetch related RFQs
+
+        // fetch related RFQs
+        $(document).on('change', '#refNo', function () {
+            let referenceNumber = $(this).val();
+
+            if (referenceNumber && referenceNumber !== 'Select RFQ') {
+                $.ajax({
+                    url: `/procurement/purchaseOrder/rqfDetails/${referenceNumber}`,
+                    type: 'GET',
+                    success: function (response) {
+                        console.log('RFQ Details:', response);
 
 
-            console.log(supplierUrl);
+                        if (response.success) {
+                            const rfq = response.data;
 
-            $.ajax({
-                url: supplierUrl,
-                type: 'GET',
-                dataType: 'json',
-                success: function (response) {
-                    console.log('AJAX Response:', response);
-
-
-                    if (!response || !response.data || response.data.length === 0) {
-                        console.warn('No suppliers found');
-                        $('#supplier').html('<option selected disabled>No suppliers available</option>');
-                        return;
-                    }
-
-                    let supplierSelect = $('#supplier');
-                    if (supplierSelect.children().length <= 1) {
-                        supplierSelect.empty().append('<option selected disabled>Select supplier</option>');
-
-                        $.each(response.data, function (key, item) {
-                            supplierSelect.append(
-                                `<option value="${item.id}">${item.name}</option>`
+                            // $('#supplier').val(rfq.SupplierName || '');
+                            $('#supplier').empty().append(
+                                `<option selected value="${rfq.SupplierName}">${rfq.SupplierName}</option>`
                             );
-                        });
-                    }
-                },
-                error: function (xhr, status, error) {
-                    console.error('AJAX error: ', status, error);
-                    console.error('Raw response:', xhr.responseText); // This is key!
-                    $('#supplier').html('<option selected disabled>Error loading suppliers</option>');
-                }
-            });
-        }
+                            $('#lpo_number').val(rfq.lpoNumber || '');
+                            $('#date').val(rfq.date || '');
+                            $('#priority').val(rfq.priority || '');
+                            $('#payment_terms').val(rfq.paymentTerms || '');
 
-        // $(document).on('change','#supplier',function () {
-        //     fetchSuppliers();
-        //
-        //
-        //     // alert('eric');
-        // });
+                            // Populate line items
+                            if (rfq.items && rfq.items.length > 0) {
+                                let itemsTable = $('#poTable tbody');
+                                itemsTable.empty();
+
+                                $.each(rfq.items, function (index, line) {
+                                    const item = line.item;
+
+                                    itemsTable.append(`
+                                <tr>
+                                    <td class="line-no">${index + 1}</td>
+                                    <td><select class="type form-control"><option value="${item.ItemType}">${item.ItemType}</option></select></td>
+                                    <td><input type="text" class="itemName form-control" value="${item.ItemName}" readonly></td>
+                                    <td><input type="text" class="itemDescription form-control" value="${item.Description}" readonly></td>
+                                    <td><input type="number" class="quantity form-control" value="${line.Quantity}"></td>
+                                    <td><input type="number" class="unit-price form-control" value="${line.UnitPrice}"></td>
+                                    <td><input type="number" class="tax form-control" value="${line.Tax || 0}"></td>
+                                    <td><input type="number" class="discount form-control" value="${line.Discount || 0}"></td>
+                                    <td><input type="number" class="line-total form-control" readonly></td>
+                                </tr>
+                            `);
+                                });
+                            }
+                        } else {
+                            alert('Failed to load RFQ: ' + (response.message || 'Unknown error'));
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error fetching RFQ details:', error);
+                    },
+                });
+            } else {
+                $('#supplier, #lpo_number, #priority, #payment_terms').val('');
+                $('#date').val('');
+                $('#poTable tbody').empty();
+            }
+        });
 
         $(function () {
             // Handle item type change using event delegation
@@ -276,7 +302,7 @@
                         type: 'GET',
                         success: function (response) {
 
-                            console.log(response)
+                            // console.log(response)/
                             let itemCodeSelect = row.find('.itemCode');
                             itemCodeSelect.empty().append(
                                 '<option value="">Select Item</option>');
@@ -297,7 +323,9 @@
                 }
             });
 
-            ////fetching suppliers
+            // $(document).ready(function() {
+            //     calculateSummaryTotals();
+            // });
 
 
             // Handle item code change using event delegation

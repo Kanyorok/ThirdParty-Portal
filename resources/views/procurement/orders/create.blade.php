@@ -191,7 +191,7 @@
             const supplierUrl = "{{ route('purchaseOrder.getSuppliers') }}"
 
 
-            console.log(supplierUrl);
+            // console.log(supplierUrl);
 
             $.ajax({
                 url: supplierUrl,
@@ -368,10 +368,6 @@
                 $('input[name="inclusiveTotal"]').val(inclusiveTotal.toFixed(2));
             }
 
-
-            $(document).ready(function() {
-                calculateSummaryTotals();
-            });
 
 
             function calculateSummaryTotals() {

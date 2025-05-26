@@ -18,7 +18,7 @@ class PurchaseOrderController extends Controller
     public function __construct(protected ItemService $itemService, protected SupplierService $supplierService, protected OrderService $orderService, protected RFQService $rfqService)
     {
 
-        $this->middleware('ajax')->except(['index', 'create','show','linkRFQ']);
+        $this->middleware('ajax')->except(['index', 'create','show','linkRFQ','fetchRFQDetails']);
 //        $this->authorizeResource(Order::class);
     }
 
@@ -60,10 +60,7 @@ class PurchaseOrderController extends Controller
 
     {
 
-        \Log::info('getSuppliers() was triggered.');
-
-
-        try{
+         try{
             $suppliers = $this->supplierService->getSuppliers();
             \Log::info('Suppliers data:', $suppliers->toArray());
             return response()->json([
@@ -301,29 +298,74 @@ class PurchaseOrderController extends Controller
     }
 
     public function linkRFQ(){
-//        $this->authorize('view', RFQ::query()->findOrFail($id));
-//        Log::info('linkRFQ() was called');
-        return view('procurement.orders.rfqLInk');
+        try {
+            $RFQ = $this->rfqService->fetchRFQ();
+//            \Log::info('RFQ loaded in create():', $RFQ->toArray());
+        } catch (\Exception $e) {
+            \Log::error('Error fetching RFQS: ' . $e->getMessage());
+            $RFQ = collect(); // fallback to empty collection
+        }
+
+        return view("procurement.orders.rfqLInk", compact('RFQ'));
     }
 
 
-    public function fetchRFQDetails($id){
 
+//    public function fetchRFQDetails($id){
+////        dd($id);
+//        try {
+//
+//            $RFQData = $this->rfqService->RFQTOPO($id);
+//            return response()->json($RFQData);
+//
+//        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+//            Log::warning("Unauthorized access attempt to view RFQ ID: {$id} by user ID: " . auth()->id());
+//            return redirect()->back()->with('error', 'Unauthorized access.');
+//        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+//            Log::error("RFQ ID {$id} not found. Exception: " . $e->getMessage());
+//            return redirect()->back()->with('error', 'RFQ not found.');
+//        } catch (\Exception $e) {
+//            Log::error("Failed to fetch RFQ ID {$id}. Exception: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+//            return redirect()->back()->with('error', 'Failed to fetch RFQ.');
+//        }
+//    }
+//
+
+    public function fetchRFQDetails($id): JsonResponse
+    {
         try {
-
             $RFQData = $this->rfqService->RFQTOPO($id);
 
-//            return view('procurement.orders.show', compact('orderInfo', 'lineInfo'));
-
+            return response()->json([
+                'success' => true,
+                'data' => $RFQData,
+            ]);
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
             Log::warning("Unauthorized access attempt to view RFQ ID: {$id} by user ID: " . auth()->id());
-            return redirect()->back()->with('error', 'Unauthorized access.');
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized access.',
+            ], 403);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             Log::error("RFQ ID {$id} not found. Exception: " . $e->getMessage());
-            return redirect()->back()->with('error', 'RFQ not found.');
+
+            return response()->json([
+                'success' => false,
+                'message' => 'RFQ not found.',
+            ], 404);
         } catch (\Exception $e) {
-            Log::error("Failed to fetch RFQ ID {$id}. Exception: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            return redirect()->back()->with('error', 'Failed to fetch RFQ.');
+            Log::error("Failed to fetch RFQ ID {$id}. Exception: " . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch RFQ.',
+                'error' => $e->getMessage(),
+            ], 500);
         }
     }
+
+
 }
