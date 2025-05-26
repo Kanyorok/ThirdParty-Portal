@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Procurement\Requisition\RequisitionItemRequest;
-use App\Models\Procurement\RequisitionLines;
+use App\Models\Procurement\RequisitionLine;
 use App\Models\Procurement\Requisitions;
 use App\Services\Procurement\Items\ItemService;
 use App\Services\Procurement\Requisition\RequisitionItemService;
@@ -89,7 +89,7 @@ class RequisitionItemsController extends Controller
 
     public function index()
     {
-        $this->authorize('viewAny', RequisitionLines::class);
+        $this->authorize('viewAny', RequisitionLine::class);
         // use for requisitionItem approval
 
 //        return view ('procurement.requisitionItems.approval');
@@ -107,7 +107,7 @@ class RequisitionItemsController extends Controller
      */
     public function create($id)
     {
-        $this->authorize('create', RequisitionLines::class);
+        $this->authorize('create', RequisitionLine::class);
         try {
             $details = $this->service->getRequisitionItems();
             return view('procurement.requisitionItems.create', compact('details'));
@@ -122,7 +122,7 @@ class RequisitionItemsController extends Controller
 
     public function store(RequisitionItemRequest $request): JsonResponse
     {
-        $this->authorize('create', RequisitionLines::class);
+        $this->authorize('create', RequisitionLine::class);
 //        dd($request->all());
         try {
             $validatedData = $request->validated();

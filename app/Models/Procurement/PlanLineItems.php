@@ -62,24 +62,20 @@ class PlanLineItems extends Model
     }
 
     // PlanLineItems.php
-public function item()
-{
-    return $this->belongsTo(Item::class, 'ItemID', 'Id');
-}
-
-
+    public function item()
+    {
+        return $this->belongsTo(Item::class, 'ItemID', 'Id');
+    }
 
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'CreatedBy', 'Id');
     }
 
-
     public function modifiedBy()
     {
         return $this->belongsTo(User::class, 'ModifiedBy', 'Id');
     }
-
 
     public function deletedBy()
     {

@@ -15,7 +15,7 @@ class RFQEvaluationController extends Controller
     {
         // Fetch RFQ evaluations from the database
         $rfqEvaluations = RFQEvaluation::with(['rfq', 'evaluations'])->get();
-
+        // dd($rfqEvaluations);
         // Return the view with the RFQ evaluations
         return view('procurement.rfqevaluation.index', compact('rfqEvaluations'));
     }

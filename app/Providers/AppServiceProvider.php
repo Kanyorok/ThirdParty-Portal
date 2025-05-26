@@ -30,10 +30,12 @@ use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
 use App\Models\Procurement\DepartmentNeeds;
 use App\Models\Procurement\Order;
+use App\Models\Procurement\RequisitionLine;
 use App\Models\Procurement\ProcurementMethod;
 use App\Models\Procurement\RequisitionLines;
 use App\Models\Procurement\Requisitions;
 use App\Models\Procurement\RFQ;
+use App\Models\Procurement\RFQLine;
 use App\Models\Settings\APICredential;
 use App\Models\ThirdParies\Board;
 use App\Models\ThirdParies\Competitor;
@@ -88,6 +90,7 @@ class AppServiceProvider extends ServiceProvider
             Notes::getPrimaryKey() => Notes::class,
             ProductDevelopment::getPrimaryKey() => ProductDevelopment::class,
             RFQ::getPrimaryKey() => RFQ::class,
+            RFQLine::getPrimaryKey() => RFQLine::class,
             Review::getPrimaryKey() => Review::class,
             Schedule::getPrimaryKey() => Schedule::class,
             Social::getPrimaryKey() => Social::class,
@@ -97,7 +100,7 @@ class AppServiceProvider extends ServiceProvider
             Ticket::getPrimaryKey() => Ticket::class,
             User::getPrimaryKey() => User::class,
             Requisitions::getPrimaryKey() => Requisitions::class,
-            RequisitionLines::getPrimaryKey() => RequisitionLines::class,
+            RequisitionLine::getPrimaryKey() => RequisitionLine::class,
             Order::getPrimaryKey() => Order::class,
             DepartmentNeeds::getPrimaryKey() => DepartmentNeeds::class,
             ProcurementMethod::getPrimaryKey() => ProcurementMethod::class,
@@ -106,7 +109,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Role::class, RolePolicy::class);
         Gate::policy(Branch::class, CrmBranchPolicy::class);
         Gate::policy(Requisitions::class, RequisitionPolicy::class);
-        Gate::policy(RequisitionLines::class, RequisitionLinesPolicy::class);
+        Gate::policy(RequisitionLine::class, RequisitionLinesPolicy::class);
         Gate::policy(ProductDevelopment::class, ProductDevelopmentPolicy::class);
         Gate::policy(Order::class, OrderPolicy::class);
         Gate::policy(DepartmentNeeds::class, DepartmentNeedsPolicy::class);

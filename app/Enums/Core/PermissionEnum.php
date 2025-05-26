@@ -27,7 +27,7 @@ use App\Models\Procurement\ProcurementMethod;
 use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
 use App\Models\Procurement\Order;
-use App\Models\Procurement\RequisitionLines;
+use App\Models\Procurement\RequisitionLine;
 use App\Models\Procurement\Requisitions;
 use App\Models\Procurement\RFQ;
 use App\Models\Settings\APICredential;
@@ -176,11 +176,11 @@ enum PermissionEnum: string
     case RequisitionItemsApproval = 'requisitionItem-approval';
 
     //RFQ
-    case RfqRead = 'rfqItem-read';
-    case RfqWrite = 'rfqItem-create';
-    case RfqUpdate = 'rfqItem-update';
-    case RfqDelete = 'rfqItem-delete';
-    case RfqApproval = 'rfqItem-approval';
+    case RfqRead = 'rfq-read';
+    case RfqWrite = 'rfq-create';
+    case RfqUpdate = 'rfq-update';
+    case RfqDelete = 'rfq-delete';
+    case RfqApproval = 'rfq-approval';
 
     //RequisitionItems
     case PurchaseOrderRead = 'purchaseOrder-read';
@@ -224,6 +224,7 @@ enum PermissionEnum: string
         return collect([
             [self::TicketRead, self::TicketWrite, self::TicketUpdate, self::TicketDelete, self::TicketApproval,],
             [self::TaskCreate, self::TaskDelegate,],
+            [self::RfqRead, self::RfqWrite, self::RfqUpdate, self::RfqDelete, self::RfqApproval,],
             [self::Members],
             [self::LeadRead, self::LeadWrite, self::LeadDelegate, self::LeadUpdate, self::LeadViewAll, self::LeadsManager, self::LeadDelete,],
             [self::EmailRead, self::EmailAssign, self::EmailDelete,],
@@ -323,6 +324,7 @@ enum PermissionEnum: string
             self::CallRead, self::CallWrite, self::CallUpdate, self::CallDelete => 'Calls',
             self::SocialRead, self::SocialWrite, self::SocialDelete => 'Social Media',
             self::CampaignRead, self::CampaignWrite, self::CampaignUpdate, self::CampaignDelete, self::CampaignApproval => 'Campaigns',
+            self::RfqRead, self::RfqWrite, self::RfqUpdate, self::RfqDelete, self::RfqApproval => 'RFQ',
             self::TicketRead, self::TicketWrite, self::TicketUpdate, self::TicketDelete, self::TicketApproval => 'Tickets',
             self::TaskCreate, self::TaskDelegate => 'Tasks',
             self::DebtCollectionView, self::DebtCollectionAssignment, self::DebtCollectionAdmin, self::DebtNotificationView, self::DebtNotificationSend, self::DebtCollectionLists => 'Debt Collection',
