@@ -15,6 +15,7 @@ use App\Models\Procurement\ItemCategory;
 use App\Models\Procurement\PlanLineItems;
 use App\Models\Procurement\ProcurementPlan;
 use App\Models\Procurement\TenderCategory;
+use App\Models\ThirdParies\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
@@ -38,19 +39,11 @@ class TenderController extends Controller
         $suppliers = collect();
         $tenderCategories = TenderCategory::select('Id', 'TenderCategory')->get();
         $AllItemsCategories = ItemCategory::select('Id', 'Name')->whereNull('ParentId')->get();
-        // $itemsCategories = PlanLineItems::select('LineItemId','PlanID','ItemId')->get();
-        // // Fetching item with respective planitem data
-        // foreach($itemsCategories as $item){
-        //     return$lineItems=Item::all()->where('Id',$item->ItemId);
-        //     $planItemData[]=[
-        //         $item->PlanID:{
-
-        //         }
-        //     ]
-        // }
         $procurementPlan= ConsolidatedProcurementPlan::select('PlanID','ReferenceNumber','Title')
             //->where('Status', 'Approved') //Add this once approval process is done
             ->get();
+
+        //return$allItemsWithCategoryIds = Item::select('Id', 'ItemName', 'Category')->get()->groupBy('Category');
 
         // Fetch procurement plans
         $procurementPlans = ConsolidatedProcurementPlan::select('PlanID', 'ReferenceNumber', 'Title')
@@ -92,6 +85,10 @@ class TenderController extends Controller
                 'plannedQty' => $lineItem->MergedQty,
             ];
         }
+
+        //Getting List of All Suppliers
+        $suppliers = Supplier::select('Id', 'SupplierName','CategoryId')->get();
+
         //return $procurementPlansOutput;
         return view('procurement.tendering.tendersetup.tenderinitiation.create', compact(
             'procurementModes',
@@ -105,7 +102,8 @@ class TenderController extends Controller
             'AllItemsCategories',
             'procurementPlansOutput',
             'procurementPlans',
-            'planItemData'
+            'planItemData',
+            'suppliers'
             
         ));
     }

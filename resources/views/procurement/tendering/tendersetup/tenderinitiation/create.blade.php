@@ -37,8 +37,8 @@
                 </select>
             </div>
             <div class="col-md-6 mb-3">
-                <label for="relatedPR" class="form-label fw-bold">Item Category</label>
-                <select class="form-select" id="relatedPR">
+                <label for="itemCategory" class="form-label fw-bold">Item Category</label>
+                <select class="form-select" id="itemCategory">
                     <option selected disabled>-- Item Categories --</option>
                     @foreach ($AllItemsCategories as $item)
                         <option value="{{$item->Id}}">{{$item->Name}}</option>
@@ -177,10 +177,9 @@
         <!-- Conditional Suppliers List -->
         <div class="mb-3" id="restrictedSuppliersSection" style="display: none;">
             <label for="suppliersList" class="form-label fw-bold">Add Suppliers to Invite:</label>
-            <select class="form-select" id="suppliersList" multiple>
-                <option>Supplier A - Tech Supplies Ltd</option>
-                <option>Supplier B - Nova Solutions</option>
-                <option>Supplier C - EquiBuild Ltd</option>
+            <select class="form-select" id="suppliersList" name="suppliers[]" multiple>
+                <!-- Options will be populated dynamically -->
+            </select>
             </select>
         </div>
        
@@ -275,4 +274,70 @@
     }  
 </script>
  
+    <script>
+        // Pass supplier and category data from Laravel to JavaScript
+        const suppliers = @json($suppliers);
+        const categories = @json($AllItemsCategories);
+
+        // Get DOM elements
+        const openTender = document.getElementById('openTender');
+        const restrictedTender = document.getElementById('restrictedTender');
+        const suppliersSection = document.getElementById('restrictedSuppliersSection');
+        const suppliersList = document.getElementById('suppliersList');
+        const itemCategory = document.getElementById('itemCategory');
+
+        // Function to populate suppliers list
+        function populateSuppliers(categoryId = null) {
+            // Clear existing options
+            suppliersList.innerHTML = '';
+
+            // Filter suppliers by categoryId (if provided) or show all suppliers
+            const filteredSuppliers = categoryId
+                ? suppliers.filter(supplier => String(supplier.CategoryId) === String(categoryId))
+                : suppliers;
+
+            // If no suppliers match, show a placeholder option
+            if (filteredSuppliers.length === 0) {
+                const option = document.createElement('option');
+                option.disabled = true;
+                option.textContent = categoryId
+                    ? 'No suppliers available for this category'
+                    : 'No suppliers available';
+                suppliersList.appendChild(option);
+                return;
+            }
+
+            // Add filtered suppliers as options
+            filteredSuppliers.forEach(supplier => {
+                const option = document.createElement('option');
+                option.value = supplier.Id;
+                option.textContent = supplier.SupplierName;
+                suppliersList.appendChild(option);
+            });
+        }
+
+        // Event listeners for radio buttons
+        openTender.addEventListener('change', () => {
+            suppliersSection.style.display = 'none';
+            suppliersList.innerHTML = ''; // Clear options when hiding
+            itemCategory.value = ''; // Reset category selection
+        });
+
+        restrictedTender.addEventListener('change', () => {
+            suppliersSection.style.display = 'block';
+            populateSuppliers(); // Show all suppliers initially
+        });
+
+        // Event listener for category dropdown
+        itemCategory.addEventListener('change', () => {
+            if (restrictedTender.checked) {
+                suppliersSection.style.display = 'block';
+                populateSuppliers(itemCategory.value); // Filter suppliers by selected category
+            } else {
+                suppliersSection.style.display = 'none';
+                suppliersList.innerHTML = ''; // Clear options if restricted is not selected
+            }
+        });
+    </script>
+
 @endsection
