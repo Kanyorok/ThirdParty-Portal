@@ -6,6 +6,9 @@ use App\Enums\Core\IntegrationsEnum;
 use App\Exceptions\ErroredException;
 use App\Models\Settings\APICredential;
 use Exception;
+use GuzzleHttp\Client;
+use GuzzleHttp\Cookie\FileCookieJar;
+use GuzzleHttp\Exception\GuzzleException;
 use Http;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Http\Client\ConnectionException;
@@ -13,6 +16,7 @@ use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Str;
+use Psr\Http\Message\ResponseInterface;
 use SensitiveParameter;
 use stdClass;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -23,6 +27,8 @@ class SSRSService
 
     protected string $_serverAPIUrl;
     public string $serverURL;
+    protected string $_cookiePath;
+
 
     protected string $_username;
     protected string $_password;
@@ -53,15 +59,66 @@ class SSRSService
         }
         $username = $ssrsConfig->username;
         $this->_username = $username;
-        $this->_password = $password;
+        $this->_password = (string)$password;
         $this->serverURL = $ssrsConfig->host;
         $this->_serverAPIUrl = $this->serverURL . "/reports/api/v2.0/";
 
-        $this->_query = Http::withBasicAuth($username, $password)->withOptions(['auth' => [$username, $password, 'ntlm']]);
+        $this->_query = Http::withCookies(request()->cookie(), parse_url($this->serverURL, PHP_URL_HOST))
+            ->withHeaders(request()->header())->retry(3, 100)->timeout(60)
+            ->withBasicAuth($username, $password)->withOptions(['auth' => [$username, $password, 'ntlm']]);
+
     }
 
-    public function getQuery(): PendingRequest
+    public function getPassword(): string
     {
+        return $this->_password;
+    }
+
+    /**
+     * @throws GuzzleException
+     */
+    public function initiateRequest(string $path): ResponseInterface
+
+    {
+        $cookieJar = new FileCookieJar($this->_getPath(), true);
+        $client = new Client([
+            'base_uri' => $this->serverURL,
+            'auth' => [$this->_username, $this->_password, 'ntlm'],
+            'cookies' => $cookieJar,
+            'verify' => false, // disable SSL verification if needed
+        ]);
+        $response = $client->get($path);
+
+        $cookieJar->save($this->_getPath());
+        return $response;
+    }
+
+    /**
+     * @throws GuzzleException
+     */
+    public function cookieRequest(string $path): ResponseInterface
+    {
+        $cookieJar = new FileCookieJar($this->_getPath(), true);
+
+        $client = new Client([
+            'base_uri' => $this->serverURL,
+            'cookies' => $cookieJar,
+        ]);
+
+        return $client->get($path);
+    }
+
+    private function _getPath(): string
+    {
+        $this->_cookiePath = storage_path('app/cookies/ntlm_cookies.json');
+        return $this->_cookiePath;
+    }
+
+    public function getQuery(bool $wilAuth = false): PendingRequest
+    {
+        /* if ($wilAuth){
+             return $this->_query->withBasicAuth($this->_username, $this->_password)->withOptions(['auth' => [$this->_username, $this->_password, 'ntlm']]);
+         }*/
         return $this->_query;
     }
 
@@ -94,7 +151,7 @@ class SSRSService
         #https://<YourServer>/ReportServer?/Finance/SalesReport&rs:Format=PDF
 
         $response = $this->_query
-            ->get("http://172.16.2.13:7092/ReportServer?" . $path . "&rs:Format=$format");
+            ->get($this->serverURL . "/ReportServer?" . $path . "&rs:Format=$format");
 
         if (!$response->successful()) {
             throw new ConnectionException(
@@ -106,14 +163,12 @@ class SSRSService
         $contentType = $this->getContentType($format);
         $extension = $this->getFileExtension($format);
 
-        dd($response->body());
-        /*
         return response()->streamDownload(function () use ($response) {
             echo $response->body();
         }, basename($path) . $extension, [
             'Content-Type' => $contentType,
             'Content-Disposition' => 'attachment',
-        ]);*/
+        ]);
     }
 
     /**

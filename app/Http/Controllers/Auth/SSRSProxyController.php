@@ -6,12 +6,30 @@ use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
 use App\Models\Core\Report;
 use App\Services\ThirdParty\SSRSService;
+use GuzzleHttp\Client;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class SSRSProxyController extends Controller
 {
+
+    public function fetchReport(Request $request)
+    {
+        $ssrsUrl = "http://172.16.2.13:7092/ReportServer?/BRERP/Inventory/ItemCatalogue&rs:embed=true";
+
+        $client = new Client([
+            'auth' => ['CraftSilicon\\Mureithi.Maina', (new SSRSService())->getPassword(), 'ntlm'], // NTLM authentication
+            'verify' => false, // Disable SSL verification if needed
+        ]);
+
+        $response = $client->get($ssrsUrl);
+
+        return response($response->getBody(), $response->getStatusCode(), [
+            'Content-Type' => $response->getHeader('Content-Type')[0]
+        ]);
+    }
+
     /**
      * Handle the incoming request.
      */
@@ -169,6 +187,7 @@ class SSRSProxyController extends Controller
         if ($queryString) {
             $completePath .= '?' . $queryString;
         }
+
         // Credentials
         /*  $username = $service->getUsername();
           $password = $service->getPassword();*/
@@ -183,10 +202,15 @@ class SSRSProxyController extends Controller
             ])->withHeaders([
                 'User-Agent' => $request->userAgent(),
             ])*/
-            $response = $service->getQuery()->get($completePath);
+            $response = $service->getQuery(true)->{strtolower($request->method())}($completePath);
         } catch (ConnectionException $e) {
             dd($e);//todo show view error
         }
+
+        if ($response->hasHeader('ControlID')) {
+            dd($response->headers(), 'Headers');
+        }
+
 
         $body = $response->body();
         $body = preg_replace(
@@ -204,20 +228,28 @@ class SSRSProxyController extends Controller
 
         // Return response with proper headers
         return response($body, $response->status())
-            ->withHeaders([
-                'Content-Type' => $response->header('Content-Type'),
-            ]);
+            ->withHeaders(array_merge($response->headers(), [
+                'Content-Security-Policy' => "default-src 'self' 'unsafe-inline' 'unsafe-eval' http://172.16.2.13:7092 data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' http://172.16.2.13:7092; frame-src 'self' http://172.16.2.13:7092;",
+                'X-Content-Security-Policy' => "default-src 'self' 'unsafe-inline' 'unsafe-eval' http://172.16.2.13:7092 data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' http://172.16.2.13:7092; frame-src 'self' http://172.16.2.13:7092;"
+
+            ]));
     }
 
     public function preview(Request $request, string $any = null)
     {
         $service = new SSRSService();
 
-        $completePath = Str::of($request->url())->replace(config('app.url'), rtrim($service->serverURL, '/'));
+        //$completePath =rtrim($service->serverURL, '/').'/ReportServer/'.$any;
+        $completePath = rtrim($service->serverURL, '/') . $request->getRequestUri();
+        //Str::of($request->url())->replace(config('app.url'), rtrim($service->serverURL, '/'));
 
-        if ($request->getQueryString()) {
-            $completePath .= '?' . $request->getQueryString();
-        }
+        /* if ($request->getQueryString()) {
+             $completePath .= '?' . $request->getQueryString();
+         }
+
+         if (Str::contains($any, 'Pages/ReportViewer.aspx')) {
+             $completePath = Str::replace('=&rc','&rc', $completePath);
+         }*/
         // Credentials
         /*$username = $service->getUsername();
         $password = $service->getPassword();*/
@@ -230,9 +262,25 @@ class SSRSProxyController extends Controller
             ])->withHeaders([
                 'User-Agent' => $request->userAgent(),
             ])*/
-            $response = $service->getQuery()->get($completePath);
+
+            $response = $service->getQuery()->{strtolower($request->method())}($completePath);
         } catch (ConnectionException $e) {
-            dd($e);//todo show view error
+            dd($completePath, $e);//todo show view error
+        }
+
+
+        if ($response->hasHeader('ControlID')) {
+            dd($response->headers(), 'Headers');
+        }
+
+
+        if (!$response->successful()) {
+            /* if ($response->body() ==="OK"){
+                 $status = 200;
+             }else{*/
+            dd("Failed", $response);//todo show view error
+            //  }
+
         }
 
 
@@ -243,6 +291,9 @@ class SSRSProxyController extends Controller
             $body
         );
 
+        //  $body = str_replace('<script>', '<script nonce="reportscript">', $body);
+
+
         /*    session()?->put('ssrs_report_url', $metadata['Route']);
             session()?->put('ssrs_report_path', $path);
             session(['ssrs_cookies' => $cookieJar]);*/
@@ -251,10 +302,25 @@ class SSRSProxyController extends Controller
 
 
         // Return response with proper headers
-        return response($body, $response->status())
-            ->withHeaders([
-                'Content-Type' => $response->header('Content-Type'),
-            ]);
+        $proxyResponse = response($body, $response->status())
+            ->withHeaders($response->headers());
+        /*array_merge($response->headers(), [
+            'Content-Security-Policy' => "script-src 'self' 'nonce-reportscript' 'unsafe-inline' 'unsafe-eval';"
+        ])*/
+        foreach ($response->cookies() as $cookie) {
+            $proxyResponse->cookie(
+                $cookie->getName(),
+                $cookie->getValue(),
+                $cookie->getExpires() ? (int)(($cookie->getExpires() - time()) / 60) : null,
+                $cookie->getPath(),
+                config('app.url'), // $cookie->getDomain(),
+                $cookie->getSecure(),
+                $cookie->getHttpOnly()
+            );
+        }
+
+        return $proxyResponse;
+
     }
 
 }

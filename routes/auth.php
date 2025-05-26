@@ -29,9 +29,12 @@ Route::middleware('auth')->group(function () {
 
     Route::get('pending-workflows', PendingWorkflowController::class)->name('pending-workflows');
 
+    Route::get('/ssrs-proxy', [SSRSProxyController::class, 'fetchReport']);
     Route::get('core/auth/report/{report}/ssrs-report-proxy', SSRSProxyController::class)->name('auth.ssrs.proxy');
-    Route::any('report/{any}', [SSRSProxyController::class, 'report'])->where('any', '.*')->name('ssrs.proxy.report');
-    Route::any('ReportServer/{any?}', [SSRSProxyController::class, 'preview'])->where('any', '.*');
+    Route::any('report/{any}', [SSRSProxyController::class, 'report'])->where('any', '.*')->name('ssrs.proxy.report')
+        ->withoutMiddleware([Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
+    Route::any('ReportServer/{any?}', [SSRSProxyController::class, 'preview'])->where('any', '.*')
+        ->withoutMiddleware([Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
     Route::any('reports/{any}', [SSRSProxyController::class, 'assets'])->where('any', '.*');
     Route::get('core/auth/report/assets/{asset?}', [SSRSProxyController::class, 'assets'])->name('auth.ssrs.proxy.assets');
 

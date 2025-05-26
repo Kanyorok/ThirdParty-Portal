@@ -15,9 +15,10 @@
                     {{--   <iframe id="reportIframe" width="100%" height="600px" frameborder="0"
                       /*dd(route('auth.ssrs.proxy', [$report->Id]))*/{{ route('ssrs.proxy.report', ['report'.$report->Path,'rs:embed'=>'true']) }}
                                src="http://172.16.2.13:7092/reports/report/BRERP/Admin/Permissions?rs:embed=true"></iframe>--}}
+                    <!--http://brerp.localhost/reports/report/BRERP/Inventory/ItemCatalogue?rs:embed=true-->
 
                     <iframe id="reportIframe" width="100%" height="600px" frameborder="0"
-                            src="http://brerp.localhost/reports/report/BRERP/Admin/Permissions?rs:embed=true"></iframe>
+                            src="{{ url('ReportServer/Pages/ReportViewer.aspx?/BRERP/Inventory/ItemCatalogue&rs:embed=true') }}"></iframe>
                 </div>
             </div>
         </div>
