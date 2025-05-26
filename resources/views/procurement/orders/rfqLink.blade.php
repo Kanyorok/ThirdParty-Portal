@@ -130,41 +130,42 @@
                     </thead>
                     <tbody id="po-items">
 
-                    @foreach($lineInfo as $line)
+{{--                        <tr>--}}
+{{--                            <td class="line-no">{{ $index + 1 }}</td>--}}
+{{--                            <td class="text-start">--}}
+{{--                                <select class="form-select form-select-sm type" name="type[]" id="Type">--}}
+{{--                                    <option  selected>{{$line ->ItemType}}</option>--}}
 
-                        <tr>
-                            <td class="line-no">1.</td>
-                            <td class="text-start">
-                                <select class="form-select form-select-sm type" name="type[]" id="Type">
-                                    <option  selected>{{$line ->ItemType}}</option>
-
-                                </select>
-                            </td>
-                            <td class="text-start">
-                                <select class="form-select form-select-sm itemCode" name="itemCode[]" id="Item">
-                                    <option  selected>{{$line ->ItemName}}</option>
-                                </select>
-                            </td>
-                            {{--                    <td><input type="text" class="form-control" name="itemCode[]"></td> --}}
-                            <td class="text-start">
-                                <textarea class="form-control form-control-sm itemDescription" name="itemDescription[]"
-                                          id="Description" cols="30"
-                                          rows="5" readonly style="display: flex; align-items: center; justify-content: center; text-align: center; padding: 0; resize: none;">{{$line ->Description}}</textarea>
-                                {{--                            <input type="text" class="form-control form-control-sm itemDescription" --}}
-                                {{--                                name="itemDescription[]" id="Description" readonly> --}}
-                            </td>
-                            <td class="text-start"><input type="number" class="form-control form-control-sm qty quantity"
-                                                          name="quantity[]" id="Quantity" value="{{$line ->fQuantity}}"></td>
-                            <td class="text-start"><input type="number" class="form-control form-control-sm unit-price "
-                                                          name="unitPrice[]" id="Price" value="{{$line ->fUnitPriceExcl}}"></td>
-                            <td class="text-start"><input type="number" class="form-control form-control-sm tax"
-                                                          name="tax[]" id="Tax" value="{{$line ->fTaxRate}}"></td>
-                            <td class="text-start"><input type="number" class="form-control form-control-sm discount"
-                                                          name="discount[]" id="Discount" value="{{$line ->fLineDiscount}}"></td>
-                            <td class="text-start"><input type="number" class="form-control form-control-sm line-total"
-                                                          name="lineTotal[]" id="lineTotal" step="" value="{{$line ->LineTotal}}"></td>
-                        </tr>
-                    @endforeach
+{{--                                </select>--}}
+{{--                            </td>--}}
+{{--                            <td class="text-start">--}}
+{{--                                <select class="form-select form-select-sm itemCode" name="itemCode[]" id="Item">--}}
+{{--                                    <option  selected>{{$line ->ItemName}}</option>--}}
+{{--                                </select>--}}
+{{--                            </td>--}}
+{{--                            --}}{{--                    <td><input type="text" class="form-control" name="itemCode[]"></td> --}}
+{{--                            <td class="text-start">--}}
+{{--                                <textarea class="form-control form-control-sm itemDescription" name="itemDescription[]"--}}
+{{--                                          id="Description" cols="30"--}}
+{{--                                          rows="5" readonly style="display: flex; align-items: center; justify-content: center; text-align: center; padding: 0; resize: none;">{{$line ->Description}}</textarea>--}}
+{{--                             --}}
+{{--                            </td>--}}
+{{--                            <td class="text-start"><input type="number" class="form-control form-control-sm qty quantity"--}}
+{{--                                                          name="quantity[]" id="Quantity" value="{{$line ->fQuantity}}"></td>--}}
+{{--                            <td class="text-start"><input type="number" class="form-control form-control-sm unit-price "--}}
+{{--                                                          name="unitPrice[]" id="Price" value="{{$line ->fUnitPriceExcl}}"></td>--}}
+{{--                            <td class="text-start"><input type="number" class="form-control form-control-sm tax"--}}
+{{--                                                          name="tax[]" id="Tax" value="{{$line ->fTaxRate}}"></td>--}}
+{{--                            <td class="text-start"><input type="number" class="form-control form-control-sm discount"--}}
+{{--                                                          name="discount[]" id="Discount" value="{{$line ->fLineDiscount}}"></td>--}}
+{{--                            <td class="text-start"><input type="number" class="form-control form-control-sm line-total"--}}
+{{--                                                          name="lineTotal[]" id="lineTotal" step="" value="{{$line ->LineTotal}}"></td>--}}
+{{--                        </tr>--}}
+{{--                        @empty--}}
+{{--                            <tr>--}}
+{{--                                <td colspan="9" class="text-center">No line items found.</td>--}}
+{{--                            </tr>--}}
+{{--                        @endforelse--}}
                     </tbody>
                 </table>
 
@@ -181,15 +182,15 @@
                 <div class="col-md-4 offset-md-8">
                     <div class="mb-2">
                         <label>Exclusive Total</label>
-                        <input type="text" class="form-control" value="{{$orderInfo->OrdTotExcl ?? 'N/A'}}" readonly/>
+                        <input type="text" class="form-control" value="" readonly/>
                     </div>
                     <div class="mb-2">
                         <label>Tax Amount</label>
-                        <input type="text" class="form-control" value="{{$orderInfo->OrdTotTax ?? 'N/A'}}" readonly/>
+                        <input type="text" class="form-control" value="" readonly/>
                     </div>
                     <div>
                         <label>Inclusive Total</label>
-                        <input type="text" class="form-control" value="{{$orderInfo->OrdTotIncl ?? 'N/A'}}" readonly/>
+                        <input type="text" class="form-control" value="" readonly/>
                     </div>
                 </div>
             </div>

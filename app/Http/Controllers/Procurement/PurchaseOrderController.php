@@ -5,10 +5,9 @@ namespace App\Http\Controllers\Procurement;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Orders\PurchaseOrderRequest;
 use App\Models\Procurement\Order;
-use App\Models\Procurement\RequisitionLines;
-use App\Models\Procurement\Requisitions;
-use App\Services\Orders\OrderService;
 use App\Services\Procurement\Items\ItemService;
+use App\Services\Procurement\Orders\OrderService;
+use App\Services\Procurement\RFQ\RFQService;
 use App\Services\ThirdParty\SupplierService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,10 +15,10 @@ use Illuminate\Support\Facades\Log;
 
 class PurchaseOrderController extends Controller
 {
-    public function __construct(protected ItemService $itemService, protected SupplierService $supplierService, protected OrderService $orderService)
+    public function __construct(protected ItemService $itemService, protected SupplierService $supplierService, protected OrderService $orderService, protected RFQService $rfqService)
     {
 
-        $this->middleware('ajax')->except(['index', 'create','show']);
+        $this->middleware('ajax')->except(['index', 'create','show','linkRFQ']);
 //        $this->authorizeResource(Order::class);
     }
 
@@ -302,12 +301,29 @@ class PurchaseOrderController extends Controller
     }
 
     public function linkRFQ(){
-        Log::info('linkRFQ() was called');
-//        return view('procurement.orders.rfqLInk');
+//        $this->authorize('view', RFQ::query()->findOrFail($id));
+//        Log::info('linkRFQ() was called');
+        return view('procurement.orders.rfqLInk');
     }
 
 
-    public function fetchRFQ(){
-        return view('procurement.orders.rfqLInk');
+    public function fetchRFQDetails($id){
+
+        try {
+
+            $RFQData = $this->rfqService->RFQTOPO($id);
+
+//            return view('procurement.orders.show', compact('orderInfo', 'lineInfo'));
+
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            Log::warning("Unauthorized access attempt to view RFQ ID: {$id} by user ID: " . auth()->id());
+            return redirect()->back()->with('error', 'Unauthorized access.');
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::error("RFQ ID {$id} not found. Exception: " . $e->getMessage());
+            return redirect()->back()->with('error', 'RFQ not found.');
+        } catch (\Exception $e) {
+            Log::error("Failed to fetch RFQ ID {$id}. Exception: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return redirect()->back()->with('error', 'Failed to fetch RFQ.');
+        }
     }
 }
