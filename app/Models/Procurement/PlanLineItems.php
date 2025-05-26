@@ -2,12 +2,16 @@
 
 namespace App\Models\Procurement;
 
+use App\Models\Auth\User;
+use App\Models\BR\Branch;
+use App\Models\HRM\Department;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Procurement\PlanLineItems;
 use App\Models\Core\Branch;
 use App\Models\HRM\Department;
+=
 
 class PlanLineItems extends Model
 {
@@ -62,24 +66,20 @@ class PlanLineItems extends Model
     }
 
     // PlanLineItems.php
-public function item()
-{
-    return $this->belongsTo(Item::class, 'ItemID', 'Id');
-}
-
-
+    public function item()
+    {
+        return $this->belongsTo(Item::class, 'ItemID', 'Id');
+    }
 
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'CreatedBy', 'Id');
     }
 
-
     public function modifiedBy()
     {
         return $this->belongsTo(User::class, 'ModifiedBy', 'Id');
     }
-
 
     public function deletedBy()
     {
