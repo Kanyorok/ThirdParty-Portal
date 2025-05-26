@@ -39,6 +39,7 @@ class TenderController extends Controller
         $suppliers = collect();
         $tenderCategories = TenderCategory::select('Id', 'TenderCategory')->get();
         $AllItemsCategories = ItemCategory::select('Id', 'Name')->whereNull('ParentId')->get();
+        $allItemsWithCategoryIds = Item::select('Id', 'ItemName', 'Category')->get();
         $procurementPlan= ConsolidatedProcurementPlan::select('PlanID','ReferenceNumber','Title')
             //->where('Status', 'Approved') //Add this once approval process is done
             ->get();
@@ -96,35 +97,54 @@ class TenderController extends Controller
             'tenderTypes',
             'tenderCategories',
             'statuses',
-            'suppliers',
             'itemsCategories',
             'procurementPlan',
             'AllItemsCategories',
             'procurementPlansOutput',
             'procurementPlans',
             'planItemData',
-            'suppliers'
+            'suppliers',
+            'allItemsWithCategoryIds'
             
         ));
     }
 
     public function store(Request $request)
     {
+        return $request->all();
         $validated = $request->validate([
-            'Title' => 'required|string|max:255',
-            'TenderType' => ['required', new Enum(TenderTypeEnum::class)],
-            'TenderCategory' => ['required', new Enum(TenderCategoryEnum::class)],
-            'ScopeOfWork' => 'nullable|string',
-            'Instructions' => 'nullable|string',
-            'SubmissionDeadline' => 'required|date|after:today',
-            'OpeningDate' => 'required|date|after:SubmissionDeadline',
-            'Status' => ['required', new Enum(TenderStatusEnum::class)],
-            'RelatedPRID' => 'nullable|integer',
-            'ProcurementModeId' => 'required|integer|exists:t_ProcurementModes,id',
-            'Currency' => 'required|exists:t_Currencies,Id',
-            'EstimatedValue' => 'nullable|numeric|min:0',
-            'StartDate' => 'required|date|after_or_equal:today',
+            'title' => 'required|string|max:255',
+            'tender_type' => 'required|string',
+            'tender_category_id' => 'required|integer',
+            'item_category_id' => 'required|integer',
+            'procurement_plan_id' => 'required|integer',
+            
+            'plan_items' => 'required|array',
+            'plan_items.*.item_id' => 'required|integer',
+            'plan_items.*.qty' => 'required|integer',
+            'plan_items.*.pr_ref' => 'nullable|string|max:255',
+            'plan_items.*.file' => 'nullable|file|max:5120', // max 5MB 
+
+            'manual_items' => 'nullable|array',
+            'manual_items.*.item_id' => 'required|integer',
+            'manual_items.*.qty' => 'required|integer',
+            'manual_items.*.pr_ref' => 'nullable|string|max:255',
+            'manual_items.*.specs_file' => 'nullable|file|max:5120',
+
+            'scope_of_work' => 'required|string',
+            'instructions' => 'required|string',
+            'submission_deadline' => 'required|date|after_or_equal:today',
+            'opening_date' => 'required|date|after_or_equal:submission_deadline',
+
+            'suppliers' => 'nullable|array',
+            'suppliers.*' => 'integer',
+
+            'documents' => 'nullable|array',
+            'documents.*' => 'file|max:5120', // If documents are files, otherwise adjust
+
         ]);
+
+        return $validated;
 
         $tender = new Tender();
         $tender->TenderNo = 'TNDR-' . Str::upper(Str::random(8));
