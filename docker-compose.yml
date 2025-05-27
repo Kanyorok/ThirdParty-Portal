@@ -10,10 +10,10 @@ services:
     volumes:
       - .:/var/www
     networks:
-        - Applications
+      - Applications
     ports:
-        - "80:80"
+      - "80:80"
 
 networks:
-    Applications:
-        external: true
+  Applications:
+    external: true
