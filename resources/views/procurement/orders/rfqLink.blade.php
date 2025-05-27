@@ -6,44 +6,8 @@
         .select2-container {
             width: 100% !important;
         }
-        /*!* Improved table layout *!*/
-        /*.table-responsive {*/
-        /*    overflow-x: auto;*/
-        /*}*/
-        /*.table {*/
-        /*    min-width: 100%;*/
-        /*    table-layout: fixed;*/
-        /*}*/
-        /*.table th, .table td {*/
-        /*    padding: 8px 12px;*/
-        /*    vertical-align: middle;*/
-        /*    white-space: normal;*/
-        /*    word-wrap: break-word;*/
-        /*}*/
-        /*!* Fixed column widths *!*/
-        /*.col-3 { width: 3%; min-width: 40px; }*/
-        /*.col-10 { width: 10%; min-width: 120px; }*/
-        /*.col-15 { width: 15%; min-width: 180px; }*/
-        /*.col-20 { width: 20%; min-width: 240px; }*/
-        /*.col-5 { width: 5%; min-width: 80px; }*/
 
-        /*!* Form spacing *!*/
-        /*.form-section {*/
-        /*    margin-bottom: 1.5rem;*/
-        /*}*/
 
-        /*!* Textarea fix *!*/
-        /*textarea.form-control {*/
-        /*    min-height: 38px;*/
-        /*    resize: vertical;*/
-        /*}*/
-
-        /*!* Totals section *!*/
-        /*.totals-section {*/
-        /*    background-color: #f8f9fa;*/
-        /*    padding: 15px;*/
-        /*    border-radius: 4px;*/
-        /*}*/
     </style>
 @endsection
 @section('content')
@@ -136,7 +100,6 @@
                     </tr>
                     </thead>
                     <tbody id="po-items">
-
 {{--                        <tr>--}}
 {{--                            <td class="line-no">{{ $index + 1 }}</td>--}}
 {{--                            <td class="text-start">--}}
@@ -217,7 +180,6 @@
 
         // fetch related RFQs
 
-        // fetch related RFQs
         $(document).on('change', '#refNo', function () {
             let referenceNumber = $(this).val();
 
@@ -245,21 +207,23 @@
                             if (rfq.items && rfq.items.length > 0) {
                                 let itemsTable = $('#poTable tbody');
                                 itemsTable.empty();
-
+                                    // console.log('start')
                                 $.each(rfq.items, function (index, line) {
-                                    const item = line.item;
+                                    // const item = line.item;
+
+                                    // console.log('end' + line.ItemType)
 
                                     itemsTable.append(`
                                 <tr>
                                     <td class="line-no">${index + 1}</td>
-                                    <td><select class="type form-control"><option value="${item.ItemType}">${item.ItemType}</option></select></td>
-                                    <td><input type="text" class="itemName form-control" value="${item.ItemName}" readonly></td>
-                                    <td><input type="text" class="itemDescription form-control" value="${item.Description}" readonly></td>
+                                    <td><select class="type form-control"><option value="${line.ItemType}">${line.ItemType}</option></select></td>
+                                    <td><input type="text" class="itemName form-control" value="${line.ItemName}" readonly></td>
+                                    <td><input type="text" class="itemDescription form-control" value="${line.ItemDescription}" readonly></td>
                                     <td><input type="number" class="quantity form-control" value="${line.Quantity}"></td>
-                                    <td><input type="number" class="unit-price form-control" value="${line.UnitPrice}"></td>
+                                    <td><input type="number" class="unit-price form-control" value="${line.QuotedPrice}"></td>
                                     <td><input type="number" class="tax form-control" value="${line.Tax || 0}"></td>
                                     <td><input type="number" class="discount form-control" value="${line.Discount || 0}"></td>
-                                    <td><input type="number" class="line-total form-control" readonly></td>
+                                    <td><input type="number" class="line-total form-control" value="${line.TotalPayable || 0}"" readonly></td>
                                 </tr>
                             `);
                                 });
@@ -322,10 +286,6 @@
                     row.find('.itemCode').empty().append('<option value="">Select Item</option>');
                 }
             });
-
-            // $(document).ready(function() {
-            //     calculateSummaryTotals();
-            // });
 
 
             // Handle item code change using event delegation

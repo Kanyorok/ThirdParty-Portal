@@ -27,25 +27,6 @@ class RFQService
             '))->get();
 
     }
-//    public static function RFQTOPO($rfqID){
-//
-//            return DB::table(DB::raw('t_RFQResponse WITH (NOLOCK)'))
-//                ->leftJoin(DB::raw('t_ResponseItems WITH (NOLOCK)'), 't_RFQResponse.Id', '=', 't_ResponseItems.RfqResponseId')
-////            ->leftJoin(DB::raw('t_Users WITH (NOLOCK)'), 't_Orders.CreatedBy', '=', 't_Users.Id')
-//                ->leftJoin(DB::raw('t_Suppliers WITH (NOLOCK)'), 't_RFQResponse.SupplierId', '=', 't_Suppliers.Id')
-//                ->where('t_RFQResponse.RFQId', '=', $rfqID)
-//                ->select(DB::raw('
-//                t_ResponseItems.ItemName,
-//                t_ResponseItems.Quantity,
-//                t_ResponseItems.QuotedPrice,
-//                t_ResponseItems.TotalPayable,
-//                t_ResponseItems.UOM,
-//                t_RFQResponse.RFQNumber,
-//                t_RFQResponse.RFQResponseNumber,
-//                t_RFQResponse.RFQId,
-//                t_Suppliers.SupplierName
-//            '))->first();
-//        }
 
     public static function RFQTOPO($rfqID)
     {
@@ -73,13 +54,20 @@ class RFQService
 
         // Get all items related to this RFQ response
         $items = DB::table('t_ResponseItems')
-            ->where('RfqResponseId', $rfq->RFQResponseId)  // Use the actual response ID we got from the first query
+            ->leftJoin('t_RFQResponse', 't_ResponseItems.RfqResponseId', '=', 't_RFQResponse.Id')
+            ->leftJoin('t_RFQ', 't_RFQResponse.RFQId', '=', 't_RFQ.Id')
+            ->leftJoin('t_RFQLines', 't_RFQ.Id', '=', 't_RFQLines.RFQId')
+            ->leftJoin('t_Items', 't_RFQLines.ItemId', '=', 't_Items.Id')
+            ->where('t_ResponseItems.RfqResponseId', $rfq->RFQResponseId)
+            ->whereNotNull('t_Items.Id') // prevent missing item records
             ->select(
-                'ItemName',
-                'Quantity',
-                'QuotedPrice',
-                'TotalPayable',
-                'UOM'
+                't_Items.ItemName',
+                't_RFQLines.Quantity',
+                't_ResponseItems.QuotedPrice',
+                't_ResponseItems.TotalPayable',
+                't_Items.UOM',
+                't_Items.ItemType',
+                't_Items.ItemDescription'
             )
             ->get();
 
