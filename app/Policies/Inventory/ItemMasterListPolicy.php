@@ -46,7 +46,7 @@ class ItemMasterListPolicy
      */
     public function destroy(User $user, ItemMasterList $itemMasterList): bool
     {
-        return $user->can(PermissionEnum::MasterListDelete->value);
+        return $user->can(PermissionEnum::MasterListDestroy->value);
     }
 
     /**

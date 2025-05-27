@@ -50,28 +50,20 @@ $(document).ready(function () {
         serverSide: true,
         ajax: "{{ route('itemmaster.index') }}",
         columns: [
-            { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, visible: true },
+            { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
             { data: 'ItemCode', name: 'ItemCode' },
             { data: 'BarCode', name: 'BarCode' },
             { data: 'ItemName', name: 'ItemName' },
-            { data: 'Category', name: 'Category' },
-            { data: 'ParentCategory', name: 'ParentCategory' },
+            { data: 'Category', name: 'Category', defaultContent: 'Uncategorized' },
+            { data: 'ParentCategory', name: 'ParentCategory', defaultContent: '—' },
             { data: 'ItemType', name: 'ItemType' },
             { data: 'InventoryType', name: 'InventoryType' },
             { data: 'UOM', name: 'UOM' },
-
             {
                 data: 'Action',
                 name: 'Action',
                 orderable: false,
-                searchable: false,
-                render: function (data, type, row) {
-                    return `
-                        <a href="{{ url('inventory/itemmasterlist') }}/${row.Id}" class="btn btn-sm btn-primary">View</a>
-                        <a href="{{ url('inventory/itemmasterlist') }}/${row.Id}/edit" class="btn btn-sm btn-warning">Edit</a>
-                        <a href="#" onclick="confirmDelete(${row.Id})" class="btn btn-sm btn-danger">Delete</a>
-                    `;
-                }
+                searchable: false
             }
         ],
         language: {

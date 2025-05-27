@@ -4,97 +4,82 @@ namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Models\Inventory\ItemCategories;
-use Yajra\DataTables\DataTables;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
 class ItemCategoryController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        if ($request->ajax()) {
-            return Datatables::of(ItemCategories::whereNull('ParentId')->with('parent')->select('t_ItemCategories.*'))
-            ->addIndexColumn()
-                ->addColumn('Action', function (ItemCategories $item) {
-                    return '
-                        <a href="' . route('itemcategory.show', ['id' => $item->Id]) . '" class="btn btn-sm btn-primary">View</a>
-                        <a href="' . route('itemcategory.edit', ['id' => $item->Id]) . '" class="btn btn-sm btn-warning">Edit</a>
-                        <button class="btn btn-sm btn-danger delete-category" data-id="' . $item->Id . '">Delete</button>';
-                })
-                ->rawColumns(['Action'])
-                ->make(true);
-        }
-
-        return view('inventory.itemmaster.itemcategory.index');
+        $categories = ItemCategories::whereNull('ParentId')->with('parent')->get();
+        return view('inventory.itemmaster.itemcategory.index', compact('categories'));
     }
 
     public function create()
     {
-        $categories = ItemCategories::whereNull('ParentId')->get(); // Only top-level
+        $categories = ItemCategories::whereNull('ParentId')->get();
         return view('inventory.itemmaster.itemcategory.create', compact('categories'));
     }
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validatedData = $request->validate([
             'Name' => 'required|string|max:255',
             'Description' => 'nullable|string',
             'ParentId' => 'nullable|exists:t_ItemCategories,Id',
         ]);
 
-        $item = new ItemCategories();
-        $item->fill($request->all());
-        $item->CreatedBy = Auth::id();
-        $item->ModifiedBy = Auth::id();
-        $item->CreatedOn = Carbon::now();
-        $item->save();
+        $validatedData['CreatedBy'] = Auth::id();
+        $validatedData['ModifiedBy'] = Auth::id();
+        $validatedData['CreatedOn'] = Carbon::now();
+        $validatedData['ModifiedOn'] = Carbon::now();
+
+        ItemCategories::create($validatedData);
 
         return redirect()->route('itemcategory.index')->with('success', 'Category created successfully.');
     }
 
-public function edit($id)
-{
-    // You're working directly with categories
-    $item = ItemCategories::with('parent')->findOrFail($id);
-    $categories = ItemCategories::whereNull('ParentId')->where('Id', '!=', $id)->get(); // Avoid self-parenting
+    public function show($Id)
+    {
+        $category = ItemCategories::with('parent', 'children')->findOrFail($Id);
+        return view('inventory.itemmaster.itemcategory.show', compact('category'));
+    }
 
-    return view('inventory.itemmaster.itemcategory.edit', compact('item', 'categories'));
-}
+    public function edit($Id)
+    {
+        $category = ItemCategories::with('parent')->findOrFail($Id);
+        $categories = ItemCategories::whereNull('ParentId')->where('Id', '!=', $Id)->get(); // Avoid self-parenting
 
-
+        return view('inventory.itemmaster.itemcategory.edit', compact('category', 'categories'));
+    }
 
     public function update(Request $request, $Id)
     {
-        $request->validate([
+        $validatedData = $request->validate([
             'Name' => 'required|string|max:255',
             'Description' => 'nullable|string',
             'ParentId' => 'nullable|exists:t_ItemCategories,Id',
         ]);
 
-        $item = ItemCategories::findOrFail($Id);
-        $item->fill($request->all());
-        $item->ModifiedBy = Auth::id();
-        $item->ModifiedOn = Carbon::now();
-        $item->save();
+        $category = ItemCategories::findOrFail($Id);
+        $validatedData['ModifiedBy'] = Auth::id();
+        $validatedData['ModifiedOn'] = Carbon::now();
+
+        $category->update($validatedData);
 
         return redirect()->route('itemcategory.index')->with('success', 'Category updated successfully.');
     }
 
-    public function show($Id)
-    {
-        $item = ItemCategories::with('parent', 'children')->findOrFail($Id);
-        return view('inventory.itemmaster.itemcategory.show', compact('item'));
-    }
-
     public function destroy($Id)
     {
-        $item = ItemCategories::findOrFail($Id);
-        $item->DeletedBy = Auth::id();
-        $item->DeletedOn = Carbon::now();
-        $item->save();
-        $item->delete();
+        $category = ItemCategories::findOrFail($Id);
+        $category->DeletedBy = Auth::id();
+        $category->DeletedOn = Carbon::now();
+        $category->save();
+        $category->delete();
 
-        return response()->json(['success' => 'Category deleted successfully.']);
+        return redirect()->route('itemcategory.index')->with('success', 'Category updated successfully.');
     }
 }

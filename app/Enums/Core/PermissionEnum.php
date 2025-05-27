@@ -37,6 +37,7 @@ use App\Traits\UsefulEnumTrait;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use App\Models\Inventory\ItemMasterList;
+use App\Models\Inventory\ItemCategories;
 
 
 enum PermissionEnum: string
@@ -212,6 +213,14 @@ enum PermissionEnum: string
     case MasterListCreate = 'masterList-create';
     case MasterListDestroy = 'masterList-destroy';
 
+    case ItemCategoryView = 'itemCategory-view';
+    case ItemCategoryUpdate = 'itemCategory-update';
+    case ItemCategoryCreate = 'itemCategory-create';
+    case ItemCategoryDestroy = 'itemCategory-destroy';
+    
+
+
+
     /*
      *
      * ========================================  Human Resource management  ========================================
@@ -261,7 +270,8 @@ enum PermissionEnum: string
             [self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval, self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval],
             [self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval],
 
-            [self::MasterListView, self::MasterListUpdate, self::MasterListCreate, self::MasterlistDestroy],
+            [self::MasterListView, self::MasterListUpdate, self::MasterListCreate, self::MasterListDestroy],
+            [self::ItemCategoryView, self::ItemCategoryUpdate, self::ItemCategoryCreate, self::ItemCategoryDestroy],
 
 
         ]);
@@ -310,7 +320,9 @@ enum PermissionEnum: string
         
             self::Departments, self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete => ModulesEnum::HRM,
 
-            self::MasterListView, self::MasterListUpdate, self::MasterListCreate, self::MasterlistDestroy => ModulesEnum::Inventory,
+            self::MasterListView, self::MasterListUpdate, self::MasterListCreate, self::MasterListDestroy,
+            self::ItemCategoryView, self::ItemCategoryUpdate, self::ItemCategoryCreate, self::ItemCategoryDestroy
+            => ModulesEnum::Inventory,
         };
     }
 
@@ -355,7 +367,8 @@ enum PermissionEnum: string
             self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval => 'Purchase Order',
 
             //Inventory
-            self::MasterListView, self::MasterListUpdate, self::MasterListCreate, self::MasterlistDestroy => 'Item Master',
-        };
+            self::MasterListView, self::MasterListUpdate, self::MasterListCreate, self::MasterListDestroy => 'Item Master',
+            self::ItemCategoryView, self::ItemCategoryUpdate, self::ItemCategoryCreate, self::ItemCategoryDestroy => 'Item Category'
+        };  
     }
 }
