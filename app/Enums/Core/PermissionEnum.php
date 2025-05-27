@@ -198,10 +198,10 @@ enum PermissionEnum: string
     case DepartmentNeedsApproval = 'departmentneeds-approval';
 
     //Procument Plan- Plan Consolidation
-    case PlanConsolidationRead = 'panconsolidation-read';
-    case PlanConsolidationWrite = 'panconsolidation-write';
-    case PlanConsolidationUpdate = 'panconsolidation-update';
-    case PlanConsolidationDelete = 'panconsolidation-delete';
+    case PlanConsolidationRead = 'planconsolidation-read';
+    case PlanConsolidationWrite = 'planconsolidation-write';
+    case PlanConsolidationUpdate = 'planconsolidation-update';
+    case PlanConsolidationDelete = 'planconsolidation-delete';
 
         //ProcurementPlan ProcurementMethod
     case ProcurementMethodRead = 'procurementmethod-read';
@@ -304,10 +304,8 @@ enum PermissionEnum: string
             self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval,
             self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval,
             self::RfqRead, self::RfqWrite, self::RfqUpdate, self::RfqApproval, self::RfqDelete,
-<<<<<<<<< Temporary merge branch 1
              self::DepartmentNeedsRead, self::DepartmentNeedsWrite, self::DepartmentNeedsUpdate, self::DepartmentNeedsDelete, self::DepartmentNeedsApproval,
              self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete,
-=========
             self::DepartmentNeedsRead, self::DepartmentNeedsWrite, self::DepartmentNeedsUpdate, self::DepartmentNeedsDelete, self::DepartmentNeedsApproval,
             self::ProcurementMethodRead, self::ProcurementMethodWrite
             => ModulesEnum::Procurement,
@@ -350,7 +348,7 @@ enum PermissionEnum: string
             self::ListsView, self::ListsUpdate => 'System Codes',
             self::DepartmentNeedsRead, self::DepartmentNeedsWrite, self::DepartmentNeedsUpdate, self::DepartmentNeedsDelete, self::DepartmentNeedsApproval => 'Department Needs',
             self::Departments, self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete => 'Employees',
-            self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete, => 'Consolodidated Needs',
+            self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete, => 'Consolidated Needs',
             self::ProcurementMethodRead, self::ProcurementMethodWrite => 'Procurement Method',
 
             //Requisition

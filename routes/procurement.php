@@ -262,15 +262,26 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::get('/dashboard/show/{needId}', [ConsolidatedDashboardController::class, 'show'])->name('dashboard.show');
 
     Route::post('/procurement-plans', [ProcurementPlanMaintainController::class, 'store'])->name('procurementplanmaintain.store');
+    Route::get('/planning/edit-draft/{plan_id}', [ProcurementPlanMaintainController::class, 'editDraft'])
+     ->name('planning.editDraft');
+     Route::get('/procurementplanmaintain/{id}', [ProcurementPlanMaintainController::class, 'show'])->name('procurementplanmaintain.show');
+
 
     Route::prefix('procurement')->group(function () {
     Route::get('plan-manual-input', [PlanManualInputController::class, 'index'])->name('procurement.procurementplan.planconsolidation.manualentry.index');
     Route::get('plan-manual-input/create', [PlanManualInputController::class, 'create'])->name('plan.manual-input.create');
     Route::post('plan-manual-input', [PlanManualInputController::class, 'store'])->name('plan.manual-input.store');
+
+    Route::get('/edit/{lineItem}', [PlanManualInputController::class, 'edit'])->name('edit');
+    Route::put('/update/{lineItem}', [PlanManualInputController::class, 'update'])->name('update');
+    Route::delete('/destroy/{lineItem}', [PlanManualInputController::class, 'destroy'])->name('destroy');
         });
     Route::prefix('procurement/plan')->name('plan-from-needs.')->group(function () {
     Route::get('/create', [PlanFromNeedsController::class, 'create'])->name('create');
     Route::post('/store', [PlanFromNeedsController::class, 'store'])->name('store');
+    Route::get('/planning/filter-needs', [PlanFromNeedsController::class, 'filterNeeds'])->name('planning.filterNeeds');
+    Route::get('/departments/{branchId}', [PlanFromNeedsController::class, 'getDepartments']);
+    Route::get('/categories', [PlanFromNeedsController::class, 'getCategories']);
 });
     Route::get('/planning/edit-draft/{plan_id}', [PlanEditController::class, 'index']);
     Route::post('/planning/update-draft-items', [PlanEditController::class, 'updateDraftItems'])->name('planning.updateDraftItems');

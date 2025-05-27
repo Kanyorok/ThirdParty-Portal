@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Enums\Core\PostingEnum;
+use App\Models\Procurement\PlanLineItem;
 
 class ProcurementPlanMaintainController extends Controller
 {
@@ -53,5 +54,22 @@ public function store(Request $request)
         return view('procurement.procurementplan.procurementplanmaintenance.create');
         
     }
+public function editDraft($plan_id)
+{
+    $draftItems = PlanLineItem::with(['item', 'branch'])
+                    ->where('PlanID', $plan_id)
+                    ->where('Status', PostingEnum::Draft)
+                    ->get();
+
+    // Pass any other data your blade expects, like Plan info or counts if needed
+
+    return view('procurement.procurementplan.planapproval.ammendplan.index', compact('draftItems'));
+}
+public function show($id)
+{
+    $plan = ConsolidatedProcurementPlan::with(['lineItems.item', 'createdBy'])->findOrFail($id);
+
+    return view('procurement.procurementplan.procurementplanmaintenance.show', compact('plan'));
+}
 
 }
