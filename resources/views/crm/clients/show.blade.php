@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Gwendolyn&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
     <style>
         .select2-container {
             width: 100% !important;
@@ -872,7 +872,7 @@
     @include('snippets.actions.notes')
     @include('snippets.actions.schedule')
     @include('snippets.actions.sms')
-    <script src="{{ asset('assets/plugins/select2/js/select2.full.min.js') }}"></script>
+    <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
     <script src="{{ asset('assets/js/datatables.js') }}"></script>
     <script> const $Modal = $('#clientsActionsModal');
         let accountsTable = null, relationsTable = null, callsTable = null, discussionsTable = null, notesTable = null,

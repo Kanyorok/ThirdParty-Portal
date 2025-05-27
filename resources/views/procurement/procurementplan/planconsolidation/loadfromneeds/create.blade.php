@@ -6,69 +6,80 @@
 <div class="card p-4 shadow rounded-4">
     <h4 class="mb-4">📥 Select Approved Needs to Include in Draft Plan</h4>
 
-    <!-- Plan Selection -->
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <label class="form-label">Target Plan</label>
-            <select class="form-select" id="plan_id_selector" required>
-              <option disabled selected>Select Draft Plan</option>
-              @foreach($plans as $plan)
-                  <option value="{{ $plan->PlanID }}" data-year="{{ $plan->FiscalYear }}">
-                      {{ $plan->Title }}
-                  </option>
-              @endforeach
-          </select>
-
+    <!-- 🔹 FILTER FORM (GET) -->
+    <form method="GET" action="{{ route('plan-from-needs.create') }}">
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <label class="form-label">Target Plan</label>
+                <select class="form-select" name="plan_id" id="plan_id_selector" required onchange="updateFiscalYear()">
+                    <option disabled selected>Select Draft Plan</option>
+                    @foreach($plans as $plan)
+                        <option value="{{ $plan->PlanID }}" data-year="{{ $plan->FiscalYear }}"
+                            {{ request('plan_id') == $plan->PlanID ? 'selected' : '' }}>
+                            {{ $plan->Title }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Planning Period</label>
+                <input type="text" name="fiscal_year" id="fiscal_year_input" class="form-control" readonly
+                       value="{{ request('fiscal_year') }}">
+            </div>
         </div>
-        <div class="col-md-6">
-    <label class="form-label">Planning Period</label>
-    <input type="text" id="fiscal_year_input" class="form-control" readonly>
-</div>
-    </div>
-
-    <!-- Filter Options (Optional) -->
-    
-    <!-- Approved Needs Table -->
-    <form method="POST" action="{{ route('plan-from-needs.store') }}">
-        @csrf
-        <input type="hidden" name="plan_id" id="plan_id_input">
 
         <div class="row mb-3">
-        <div class="col-md-3">
-            <label class="form-label">Branch</label>
-            <select class="form-select" name="branch_filter">
-                <option value="">All</option>
-                @foreach($branches as $branch)
-                    <option value="{{ $branch->Id }}">{{ $branch->Name }}</option>
-                @endforeach
-            </select>
+            <div class="col-md-3">
+                <label class="form-label">Branch</label>
+                <select class="form-select" name="branch_filter">
+                    <option value="">All</option>
+                    @foreach($branches as $branch)
+                        <option value="{{ $branch->Id }}" {{ request('branch_filter') == $branch->Id ? 'selected' : '' }}>
+                            {{ $branch->Name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Department</label>
+                <select class="form-select" name="department_filter">
+                    <option value="">All</option>
+                    @foreach($departments as $dept)
+                        <option value="{{ $dept->Id }}" {{ request('department_filter') == $dept->Id ? 'selected' : '' }}>
+                            {{ $dept->Name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Category</label>
+                <select class="form-select" name="category_id">
+                    <option value="">All</option>
+                    @foreach($categories as $category)
+                        <option value="{{ $category->Id }}" {{ request('category_id') == $category->Id ? 'selected' : '' }}>
+                            {{ $category->Name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button class="btn btn-outline-primary w-100">Apply Filters</button>
+            </div>
+        </div>
+    </form>
 
-        </div>
-        <div class="col-md-3">
-            <label class="form-label">Department</label>
-            <select class="form-select" name="department_filter">
-                  <option value="">All</option>
-                  @foreach($departments as $dept)
-                      <option value="{{ $dept->Id }}">{{ $dept->Name }}</option>
-                  @endforeach
-            </select>
+    <!-- 🔹 SUBMISSION FORM (POST) -->
+    <form method="POST" action="{{ route('plan-from-needs.store') }}">
+        @csrf
 
-        </div>
-        <div class="col-md-3">
-            <label class="form-label">Category</label>
-            <select class="form-select" name="category_id" required>
-        <option value="" disabled selected>Select Category</option>
-        @foreach($categories as $category)
-            <option value="{{ $category->Id }}">{{ $category->Name }}</option>
-        @endforeach
-    </select>
-        </div>
-        <div class="col-md-3 d-flex align-items-end">
-            <button class="btn btn-outline-primary w-100">Apply Filters</button>
-        </div>
-    </div>
+        <!-- Preserve filters -->
+        <input type="hidden" name="plan_id" value="{{ request('plan_id') }}">
+        <input type="hidden" name="fiscal_year" value="{{ request('fiscal_year') }}">
+        <input type="hidden" name="branch_filter" value="{{ request('branch_filter') }}">
+        <input type="hidden" name="department_filter" value="{{ request('department_filter') }}">
+        <input type="hidden" name="category_id" value="{{ request('category_id') }}">
 
-        <table class="table table-bordered table-hover">
+        <table class="table table-bordered table-hover mt-3">
             <thead class="table-light">
                 <tr>
                     <th><input type="checkbox" id="selectAll"></th>
@@ -83,7 +94,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($approvedNeeds as $need)
+                @forelse($approvedNeeds as $need)
                 <tr>
                     <td><input type="checkbox" class="need-checkbox" name="selected_needs[]" value="{{ $need->Id }}"></td>
                     <td>{{ $need->item->ItemName ?? 'N/A' }}</td>
@@ -94,18 +105,24 @@
                     <td>{{ \Carbon\Carbon::parse($need->RequestedDate)->toDateString() }}</td>
                     <td>{{ $need->Justification }}</td>
                     <td>
-                        <select class="form-select" name="budgetLine_{{ $need->Id }}">
-                            <option selected disabled>Select</option>
-                            <option value="201">Nairobi - ICT Equipment (KES 1,000,000)</option>
-                            <option value="202">Nairobi - General Supplies (KES 300,000)</option>
+                        <select name="budget_line_id[{{ $need->Id }}]" class="form-select" required>
+                            <option selected disabled>Select Budget Line</option>
+                            @foreach($budgetLines as $budgetLine)
+                            <option value="{{ $budgetLine->BudgetLineID }}">
+                                {{ $budgetLine->Description }}
+                            </option>
+                            @endforeach
                         </select>
                     </td>
                 </tr>
-                @endforeach
+                @empty
+                <tr>
+                    <td colspan="9" class="text-center text-muted">No approved needs match the selected filters.</td>
+                </tr>
+                @endforelse
             </tbody>
         </table>
 
-        <!-- Submission -->
         <div class="d-flex justify-content-end mt-3">
             <button type="submit" class="btn btn-success" id="submitBtn" disabled>
                 ➕ Include Selected Items in Draft Plan
@@ -114,24 +131,21 @@
     </form>
 </div>
 
-<!-- Script to sync selected plan ID -->
+<!-- 🔹 Script -->
 <script>
     const planSelector = document.getElementById('plan_id_selector');
     const fiscalYearInput = document.getElementById('fiscal_year_input');
-    const planIdInput = document.getElementById('plan_id_input');
     const selectAllCheckbox = document.getElementById('selectAll');
     const checkboxes = document.querySelectorAll('.need-checkbox');
     const submitBtn = document.getElementById('submitBtn');
 
-    planSelector.addEventListener('change', function () {
-        const selectedOption = this.options[this.selectedIndex];
+    function updateFiscalYear() {
+        const selectedOption = planSelector.options[planSelector.selectedIndex];
         const fiscalYear = selectedOption.getAttribute('data-year');
-
-        planIdInput.value = this.value;
         fiscalYearInput.value = fiscalYear;
-    });
+    }
 
-    selectAllCheckbox.addEventListener('click', function () {
+    selectAllCheckbox?.addEventListener('click', function () {
         checkboxes.forEach(cb => cb.checked = this.checked);
         toggleSubmitButton();
     });
@@ -145,6 +159,6 @@
         cb.addEventListener('change', toggleSubmitButton);
     });
 
-    toggleSubmitButton();
+    toggleSubmitButton(); // Initial call on load
 </script>
 @endsection

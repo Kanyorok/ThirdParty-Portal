@@ -37,6 +37,7 @@ use App\Models\Procurement\SchedulePlan;
 use App\Traits\UsefulEnumTrait;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use App\Models\Procurement\ConsolidatedProcurementPlan;
 
 enum PermissionEnum: string
 {
@@ -197,6 +198,12 @@ enum PermissionEnum: string
     case DepartmentNeedsDelete = 'departmentneeds-delete';
     case DepartmentNeedsApproval = 'departmentneeds-approval';
 
+    //Procument Plan- Plan Consolidation
+    case PlanConsolidationRead = 'panconsolidation-read';
+    case PlanConsolidationWrite = 'panconsolidation-write';
+    case PlanConsolidationUpdate = 'panconsolidation-update';
+    case PlanConsolidationDelete = 'panconsolidation-delete';
+
     //ProcurementPlan ProcurementMethod
     case ProcurementMethodRead = 'procurementmethod-read';
     case ProcurementMethodWrite = 'procurementmethod-create';
@@ -261,8 +268,9 @@ enum PermissionEnum: string
 
             [self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete, self::Departments],
             [self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval, self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval],
-            [self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval]
+            [self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval],
 
+            [self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete],
 
         ]);
     }
@@ -304,7 +312,8 @@ enum PermissionEnum: string
             self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval,
             self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval,
             self::RfqRead, self::RfqWrite, self::RfqUpdate, self::RfqApproval, self::RfqDelete,
-            self::DepartmentNeedsRead, self::DepartmentNeedsWrite, self::DepartmentNeedsUpdate, self::DepartmentNeedsDelete, self::DepartmentNeedsApproval,
+             self::DepartmentNeedsRead, self::DepartmentNeedsWrite, self::DepartmentNeedsUpdate, self::DepartmentNeedsDelete, self::DepartmentNeedsApproval,
+             self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete,
             self::ProcurementMethodRead, self::ProcurementMethodWrite,self::SchedulePlanRead, self::SchedulePlanWrite, self::SchedulePlanUpdate,
             => ModulesEnum::Procurement,
         
@@ -346,6 +355,7 @@ enum PermissionEnum: string
             self::ListsView, self::ListsUpdate => 'System Codes',
             self::DepartmentNeedsRead, self::DepartmentNeedsWrite, self::DepartmentNeedsUpdate, self::DepartmentNeedsDelete, self::DepartmentNeedsApproval => 'Department Needs',
             self::Departments, self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete => 'Employees',
+            self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete, => 'Consolodidated Needs',
             self::ProcurementMethodRead, self::ProcurementMethodWrite => 'Procurement Method',
             self::SchedulePlanRead, self::SchedulePlanWrite, self::SchedulePlanUpdate => 'Procurement Schedule Plan',
 
