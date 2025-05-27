@@ -2,7 +2,7 @@
 
 @section('title','Product Development')
 @section('styles')
-    <link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
     <style>
         .select2-container {
             width: 100% !important;
@@ -89,7 +89,7 @@
 
 @endsection
 @section('scripts')
-    <script src="{{ asset('assets/js/datatables.js') }}"></script>
+    
     <script> const $Modal = $('#ProductActionsModal');
         let productsTable = null;
         $(function () {

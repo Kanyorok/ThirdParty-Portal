@@ -5,9 +5,9 @@
     {{ \Illuminate\Support\Str::upper($product->ProductID) }}
 @endsection
 @section('styles')
-    <link rel="stylesheet" href="{{ asset('assets/plugins/summernote/summernote-bs5.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/plugins/dropzone/dropzone.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/libs/summernote/summernote-bs5.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/libs/dropzone/dropzone.min.css') }}">
     <style>
         .select2-container {
             width: 100% !important;
@@ -621,10 +621,10 @@
 
 @endsection
 @section('scripts')
-    <script src="{{ asset('assets/plugins/dropzone/dropzone.min.js') }}"></script>
-    <script src="{{ asset('assets/plugins/summernote/summernote-bs5.min.js') }}"></script>
-    <script src="{{ asset('assets/plugins/select2/js/select2.full.min.js') }}"></script>
-    <script src="{{ asset('assets/js/datatables.js') }}"></script>
+    <script src="{{ asset('assets/libs/dropzone/dropzone.min.js') }}"></script>
+    <script src="{{ asset('assets/libs/summernote/summernote-bs5.min.js') }}"></script>
+    <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
+   
     <script>const $Modal = $('#productActionsModal');
         window._commentPage = '{{ route('product-development-comment.index',[$product->ProductID]) }}';
         Dropzone.options.uploadForm = {
