@@ -38,6 +38,11 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\ItemCategories;
+use App\Models\Inventory\StockItem;
+use App\Models\Inventory\Store;
+use App\Models\Inventory\InventoryType;
+use App\Models\Inventory\ItemType;
+use App\Models\Inventory\UnitOfMeasure;
 
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 
@@ -192,7 +197,7 @@ enum PermissionEnum: string
     case PurchaseOrderUpdate = 'purchaseOrder-update';
     case PurchaseOrderDelete = 'purchaseOrder-delete';
     case PurchaseOrderApproval = 'purchaseOrder-approval';
-
+    
     //ProcurementPlan Department Needs
     case DepartmentNeedsRead = 'departmentneeds-read';
     case DepartmentNeedsWrite = 'departmentneeds-create';
@@ -222,6 +227,31 @@ enum PermissionEnum: string
     case ItemCategoryUpdate = 'itemCategory-update';
     case ItemCategoryCreate = 'itemCategory-create';
     case ItemCategoryDestroy = 'itemCategory-destroy';
+
+    case StockItemView = 'stockItem-view';
+    case StockItemUpdate = 'stockItem-update';
+    case StockItemCreate = 'stockItem-create';
+    case StockItemDestroy = 'stockItem-destroy';
+
+    case StoreView = 'storeItem-view';
+    case StoreUpdate = 'storeItem-update';
+    case StoreCreate = 'storeItem-create';
+    case StoreDestroy= 'storeItem-destroy';
+
+    case InventoryTypeView = 'inventoryType-view';
+    case InventoryTypeUpdate = 'inventoryType-update';
+    case InventoryTypeCreate = 'inventoryType-create';
+    case InventoryTypeDestroy= 'inventoryType-destroy';
+
+    case ItemTypeView = 'itemType-view';
+    case ItemTypeUpdate = 'itemType-update';
+    case ItemTypeCreate = 'itemType-create';
+    case ItemTypeDestroy= 'itemType-destroy';
+
+    case UOMView = 'uom-view';
+    case UOMUpdate = 'uom-update';
+    case UOMCreate = 'uom-create';
+    case UOMDestroy= 'uom-destroy';
     
 
 
@@ -274,11 +304,15 @@ enum PermissionEnum: string
 
             [self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete, self::Departments],
             [self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval, self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval],
-            [self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval],,
+            [self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval],
 
             [self::MasterListView, self::MasterListUpdate, self::MasterListCreate, self::MasterListDestroy],
             [self::ItemCategoryView, self::ItemCategoryUpdate, self::ItemCategoryCreate, self::ItemCategoryDestroy],
-
+            [self::StockItemView, self::StockItemUpdate, self::StockItemCreate, self::StockItemDestroy],
+            [self::StoreView, self::StoreUpdate, self::StoreCreate, self::StoreDestroy],
+            [self::InventoryTypeView, self::InventoryTypeUpdate, self::InventoryTypeCreate, self::InventoryTypeDestroy],
+            [self::ItemTypeView, self::ItemTypeUpdate, self::ItemTypeCreate, self::ItemTypeDestroy],
+            [self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy],
             [self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete],
 
         ]);
@@ -321,15 +355,20 @@ enum PermissionEnum: string
             self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval,
             self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval,
             self::RfqRead, self::RfqWrite, self::RfqUpdate, self::RfqApproval, self::RfqDelete,
-             self::DepartmentNeedsRead, self::DepartmentNeedsWrite, self::DepartmentNeedsUpdate, self::DepartmentNeedsDelete, self::DepartmentNeedsApproval,
-             self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete
-            self::ProcurementMethodRead, self::ProcurementMethodWrite
+            self::DepartmentNeedsRead, self::DepartmentNeedsWrite, self::DepartmentNeedsUpdate, self::DepartmentNeedsDelete, self::DepartmentNeedsApproval,
+            self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete,
+            self::ProcurementMethodRead, self::ProcurementMethodWrite,
             => ModulesEnum::Procurement,
         
             self::Departments, self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete => ModulesEnum::HRM,
 
             self::MasterListView, self::MasterListUpdate, self::MasterListCreate, self::MasterListDestroy,
-            self::ItemCategoryView, self::ItemCategoryUpdate, self::ItemCategoryCreate, self::ItemCategoryDestroy
+            self::ItemCategoryView, self::ItemCategoryUpdate, self::ItemCategoryCreate, self::ItemCategoryDestroy,
+            self::StockItemView, self::StockItemUpdate, self::StockItemCreate, self::StockItemDestroy,
+            self::StoreView, self::StoreUpdate, self::StoreCreate, self::StoreDestroy,
+            self::InventoryTypeView, self::InventoryTypeUpdate, self::InventoryTypeCreate, self::InventoryTypeDestroy,
+            self::ItemTypeView, self::ItemTypeUpdate, self::ItemTypeCreate, self::ItemTypeDestroy,
+            self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy,
             => ModulesEnum::Inventory,
         };
     }
@@ -378,7 +417,12 @@ enum PermissionEnum: string
 
             //Inventory
             self::MasterListView, self::MasterListUpdate, self::MasterListCreate, self::MasterListDestroy => 'Item Master',
-            self::ItemCategoryView, self::ItemCategoryUpdate, self::ItemCategoryCreate, self::ItemCategoryDestroy => 'Item Category'
+            self::ItemCategoryView, self::ItemCategoryUpdate, self::ItemCategoryCreate, self::ItemCategoryDestroy => 'Item Category',
+            self::StockItemView, self::StockItemUpdate, self::StockItemCreate, self::StockItemDestroy => 'Stock Item',
+            self::StoreView, self::StoreUpdate, self::StoreCreate, self::StoreDestroy=> 'Store',
+            self::InventoryTypeView, self::InventoryTypeUpdate, self::InventoryTypeCreate, self::InventoryTypeDestroy => 'Inventory Type',
+            self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy => 'UOM',
+            self::ItemTypeView, self::ItemTypeUpdate, self::ItemTypeCreate, self::ItemTypeDestroy => 'Item Type',
         };  
     }
 }

@@ -3,7 +3,7 @@
 namespace App\Policies;
 
 use App\Enums\Core\PermissionEnum;
-use App\Models\StockItem;
+use App\Models\Inventory\StockItem;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
 
