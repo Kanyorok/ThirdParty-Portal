@@ -33,6 +33,7 @@ use App\Models\Procurement\RFQ;
 use App\Models\Settings\APICredential;
 use App\Models\ThirdParies\Board;
 use App\Models\ThirdParies\Competitor;
+use App\Models\Procurement\SchedulePlan;
 use App\Traits\UsefulEnumTrait;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -196,10 +197,14 @@ enum PermissionEnum: string
     case DepartmentNeedsDelete = 'departmentneeds-delete';
     case DepartmentNeedsApproval = 'departmentneeds-approval';
 
-        //ProcurementPlan ProcurementMethod
+    //ProcurementPlan ProcurementMethod
     case ProcurementMethodRead = 'procurementmethod-read';
     case ProcurementMethodWrite = 'procurementmethod-create';
 
+    //ProcurementPlan Procurement Schedule
+    case SchedulePlanRead = 'scheduleplan-read';
+    case SchedulePlanWrite = 'scheduleplan-create';
+    case SchedulePlanUpdate = 'scheduleplan-update';
 
     /*
     *
@@ -251,6 +256,7 @@ enum PermissionEnum: string
 
             [self::DepartmentNeedsRead, self::DepartmentNeedsWrite, self::DepartmentNeedsUpdate, self::DepartmentNeedsDelete, self::DepartmentNeedsApproval,],
             [self::ProcurementMethodRead, self::ProcurementMethodWrite,],
+            [self::SchedulePlanRead, self::SchedulePlanWrite, self::SchedulePlanUpdate,],
 
 
             [self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete, self::Departments],
@@ -299,7 +305,7 @@ enum PermissionEnum: string
             self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval,
             self::RfqRead, self::RfqWrite, self::RfqUpdate, self::RfqApproval, self::RfqDelete,
             self::DepartmentNeedsRead, self::DepartmentNeedsWrite, self::DepartmentNeedsUpdate, self::DepartmentNeedsDelete, self::DepartmentNeedsApproval,
-            self::ProcurementMethodRead, self::ProcurementMethodWrite
+            self::ProcurementMethodRead, self::ProcurementMethodWrite,self::SchedulePlanRead, self::SchedulePlanWrite, self::SchedulePlanUpdate,
             => ModulesEnum::Procurement,
         
             self::Departments, self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete => ModulesEnum::HRM,
@@ -341,6 +347,7 @@ enum PermissionEnum: string
             self::DepartmentNeedsRead, self::DepartmentNeedsWrite, self::DepartmentNeedsUpdate, self::DepartmentNeedsDelete, self::DepartmentNeedsApproval => 'Department Needs',
             self::Departments, self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete => 'Employees',
             self::ProcurementMethodRead, self::ProcurementMethodWrite => 'Procurement Method',
+            self::SchedulePlanRead, self::SchedulePlanWrite, self::SchedulePlanUpdate => 'Procurement Schedule Plan',
 
             //Requisition
             self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval, self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval =>'Requisitions',

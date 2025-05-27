@@ -55,9 +55,9 @@ use App\Http\Controllers\Procurement\PlanEditController;
 use App\Http\Controllers\Procurement\PlanApprovalInboxController;
 use App\Http\Controllers\Procurement\PlanExectionDashboardController;
 use App\Http\Controllers\Procurement\DepartmentNeedApprovalController;
+use App\Http\Controllers\Procurement\ProcurementSchedulePlanController;
 
 Route::namespace('Procurement')->prefix('procurement')->group(function () {
-
 
 
     //Requisitions
@@ -218,13 +218,22 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::delete('/procurementdepartmentalplan/delete/{NeedID}', [DepartmentNeedsController::class, 'destroy'])->name('procurementdepartmentalplan.destroy');
     Route::get('/procurementdepartmentalplan/data', [DepartmentNeedsController::class, 'getDepartmentNeeds'])->name('procurementdepartmentalplan.data');
 
+    //Procurement Schedule Plan
+    //Route::resource('procurementplanquaterly', ProcurementquaterlyController::class);
+    Route::get('/Procurement-Plan-Schedule', [ProcurementSchedulePlanController::class,'index'])->name('Procurement-Plan-Schedule.index');
+    Route::get('/Procurement-Plan-Schedule/create/{PlanId}', [ProcurementSchedulePlanController::class,'create'])->name('Procurement-Plan-Schedule.create');
+    Route::get('/Procurement-Plan-Schedule/lines/{PlanId}', [ProcurementSchedulePlanController::class, 'fetchLinesByDPlan'])->name('Procurement-Plan-Schedule.view');
+    Route::post('/Procurement-Plan-Schedule', [ProcurementSchedulePlanController::class, 'store'])->name('Procurement-Plan-Schedule.store');
+    Route::get('/Procurement-Plan-Schedule/edit/{lineItemId}', [ProcurementSchedulePlanController::class, 'edit'])->name('Procurement-Plan-Schedule.edit');
+
+
+
 
     //Procurement Plan, Plan Consolidation
     Route::resource('procurementplanmaintain', ProcurementPlanMaintainController::class);
     Route::resource('procurementplanapproval', ProcurementApprovalController::class);
     Route::resource('consolidated', ConsolidatedDashboardController::class);
     Route::resource('procurementplandetails', ProcurementPlanDetailController::class);
-    Route::resource('procurementplanquaterly', ProcurementquaterlyController::class);
     Route::resource('procurementitemsdashboard', ConsolidatedDashboardController::class);
     Route::resource('maptobudget', MapToBudgetController::class);
     Route::resource('plantimeline', TimelineController::class);
