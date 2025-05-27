@@ -1,5 +1,7 @@
 @extends('layouts.app')
+
 @section('title', 'Edit Draft Plan Items')
+
 @section('content')
 <div class="container mt-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
@@ -12,9 +14,12 @@
     <strong>Status:</strong> DRAFT | <strong>Total Items:</strong> 20 | <strong>Editable:</strong> Yes
   </div>
 
-  <form method="POST" action="/planning/update-draft-items">
-    <!-- You’ll add CSRF and hidden plan ID when backend is ready -->
-    
+  <form method="POST" action="{{ route('planning.updateDraftItems') }}">
+    @csrf
+    @foreach($draftItems as $item)
+      <input type="hidden" name="lineItemIds[]" value="{{ $item->LineItemID }}">
+    @endforeach
+
     <div class="table-responsive">
       <table class="table table-bordered align-middle table-hover">
         <thead class="table-light">
@@ -31,40 +36,56 @@
           </tr>
         </thead>
         <tbody>
-          <!-- Sample Editable Row -->
+          @foreach($draftItems as $index => $item)
           <tr>
-            <td>1</td>
-            <td>Desktop Computers</td>
-            <td>Nairobi (ICT)</td>
-            <td>120</td>
+            <td>{{ $index + 1 }}</td>
+            <td>{{ $item->item->ItemName ?? 'N/A' }}</td>
+            <td>{{ $item->branch->Name ?? 'N/A' }}</td>
+            <td>{{ $item->MergedQty }}</td>
             <td>
-              <input type="number" class="form-control form-control-sm" name="qty_501" value="100" min="1">
+              <input type="number" class="form-control form-control-sm" name="qty_{{ $item->LineItemID }}" value="{{ $item->MergedQty }}" min="1">
             </td>
             <td>
-              <input type="number" class="form-control form-control-sm" name="unitCost_501" value="30000" min="0">
-            </td>
-            <td><span class="text-muted">3,000,000</span></td>
-            <td>
-              <textarea name="remarks_501" class="form-control form-control-sm" rows="1" placeholder="e.g. Reduced to meet cap"></textarea>
+              <input type="number" class="form-control form-control-sm" name="unitCost_{{ $item->LineItemID }}" value="{{ $item->EstimatedUnitCost }}" min="0" step="0.01">
             </td>
             <td>
-              <button type="submit" name="removeItem" value="501" class="btn btn-sm btn-outline-danger">🗑 Remove</button>
-              <input type="hidden" name="lineItemIds[]" value="501">
+              <span class="text-muted">{{ number_format($item->MergedQty * $item->EstimatedUnitCost) }}</span>
+            </td>
+            <td>
+              <textarea name="remarks_{{ $item->LineItemID }}" class="form-control form-control-sm" rows="1">{{ $item->ChangeRemarks }}</textarea>
+            </td>
+            <td>
+              <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDelete({{ $item->LineItemID }})">
+                🗑 Remove
+              </button>
             </td>
           </tr>
-
-          <!-- More dynamic rows -->
+          @endforeach
         </tbody>
       </table>
     </div>
 
-    <!-- Save All Button -->
     <div class="d-flex justify-content-end mt-3">
       <button type="submit" class="btn btn-success">
         💾 Save Changes to Draft Plan
       </button>
     </div>
   </form>
+
+  <!-- Hidden Delete Forms -->
+  @foreach($draftItems as $item)
+  <form id="delete-form-{{ $item->LineItemID }}" method="POST" action="{{ route('procurement.planning.deleteDraftItem', ['id' => $item->LineItemID]) }}" style="display:none;">
+    @csrf
+    @method('DELETE')
+  </form>
+  @endforeach
 </div>
 
+<script>
+function confirmDelete(id) {
+  if(confirm("⚠️ Are you sure you want to delete this draft item? This action cannot be undone.")) {
+    document.getElementById('delete-form-' + id).submit();
+  }
+}
+</script>
 @endsection

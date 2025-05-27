@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Procurement;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
+use App\Enums\Core\PostingEnum;
 
 class ProcurementPlanMaintainController extends Controller
 {
@@ -17,8 +18,7 @@ class ProcurementPlanMaintainController extends Controller
 }
 public function getEstimatedCostAttribute()
 {
-    return $this->lineItems->sum(fn($item) => $item->MergedQty * $item->EstimatedUnitCost);
-}
+    return $this->lineItems->sum(fn($item) => $item->MergedQty * $item->EstimatedUnitCost);}
 public function store(Request $request)
 {
     $request->validate([
@@ -34,7 +34,7 @@ public function store(Request $request)
         'Title'           => $request->Title,
         'ReferenceNumber' => 'PLAN/' . $request->FiscalYear . '/' . rand(100, 999), // You may replace with a unique generator
         'FiscalYear'      => $request->FiscalYear,
-        'Status'          => $request->Status,
+        'Status'          => PostingEnum::Draft,
         'CreatedBy'       => $userId,
         'SubmittedBy'     => $userId, 
         'CreatedDate'     => now(),

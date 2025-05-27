@@ -2,48 +2,41 @@
 
 namespace App\Models\Procurement;
 
-use App\Models\ThirdParies\Supplier;
-use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Inventory\ItemCategories;
+use App\Models\ThirdParies\Supplier;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\Model\UserActorTrait;
 
-class RFQ extends Model
+class RFQLine extends Model
 {
     use UserActorTrait, SoftDeletes;
 
-    protected $table = 't_RFQ';
+    protected $table = 't_RFQLines';
     protected $primaryKey = 'Id';
 
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
     const string DELETED_AT = 'DeletedOn';
 
-    
-    public static function getPrimaryKey(): string
-    {
-        return 'RFQId';
-    }
-
     protected $fillable = [
-        'RFQNumber', 'Comments', 'Status', 'SubmissionDeadline',  'CreatedBy', 'ModifiedBy'
+        'RFQLineNo', 'RequisitionId', 'RequisitionLineId','RFQId', 'ItemId', 'UOM', 'Quantity', 'ItemName', 'ItemCategoryId', 'CreatedOn', 'ModifiedOn', 'CreatedBy', 'ModifiedBy'
     ];
 
-    public function rfqLines()
+    public static function getPrimaryKey(): string
     {
-        return $this->hasMany(RFQLine::class, 'RFQId');
+        return 'RFQLineId';
     }
 
+    public function rfq()
+    {
+        return $this->belongsTo(RFQ::class, 'RFQId');
+    }
 
     public function category()
     {
-        return $this->belongsTo(ItemCategory::class, 'ItemCategoryId');
+        return $this->belongsTo(ItemCategories::class, 'ItemCategoryId');
     }
-
-    public function rfqResponses()
-    {
-        return $this->hasMany(RFQResponse::class, 'RFQId', 'Id');
-    }
-
 
     public function suppliers()
     {

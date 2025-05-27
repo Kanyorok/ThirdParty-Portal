@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Auth;
 use App\Traits\Model\UserActorTrait;
 use App\Models\Auth\User;
 use Carbon\Carbon;
+use App\Models\Procurement\BudgetMaster;
+
 
 class PlanManualInputController extends Controller
 {
@@ -42,8 +44,9 @@ class PlanManualInputController extends Controller
         $plans = ConsolidatedProcurementPlan::all();
         $items = Item::all(); 
         $categories = ItemCategory::all();
+        $budgetLines = BudgetMaster::all();
 
-        return view('procurement.procurementplan.planconsolidation.manualentry.create', compact('plans', 'items', 'categories'));
+        return view('procurement.procurementplan.planconsolidation.manualentry.create', compact('plans', 'items', 'categories', 'budgetLines'));
     }
 
    public function store(Request $request)

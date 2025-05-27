@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Enums\Core;
 
 use App\Traits\UsefulEnumTrait;

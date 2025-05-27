@@ -21,11 +21,11 @@ class ConsolidatedDashboardController extends Controller
     $query = DepartmentNeeds::query();
 
 if ($branch !== 'All Branches' && $branch !== null && $branch !== '') {
-    $query->where('BranchID', $branch);
+    $query->where('Id', $branch);
 }
 
 if ($department !== 'All Departments' && $department !== null && $department !== '') {
-    $query->where('DepartmentID', $department);
+    $query->where('Id', $department);
 }
 
 
@@ -37,8 +37,8 @@ if ($department !== 'All Departments' && $department !== null && $department !==
     $needs = $query->get();
 
     // Fetch filters
-    $branches = Branch::orderBy('Name')->pluck('Name', 'BranchID')->prepend('All Branches', 'All Branches');
-    $departments = Department::orderBy('Name')->pluck('Name', 'DepartmentID')->prepend('All Departments', 'All Departments');
+    $branches = Branch::orderBy('Name')->pluck('Name', 'Id')->prepend('All Branches', 'All Branches');
+    $departments = Department::orderBy('Name')->pluck('Name', 'Id')->prepend('All Departments', 'All Departments');
     $years = ['All Years', 2025, 2026, 2027];
 
     return view('procurement.procurementplan.planconsolidation.dashboard.index', compact(

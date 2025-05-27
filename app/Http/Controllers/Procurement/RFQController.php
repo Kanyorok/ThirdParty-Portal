@@ -3,8 +3,9 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
-use App\Models\Procurement\ItemCategory;
+use App\Models\Inventory\ItemCategories;
 use App\Models\Procurement\RFQ;
+use App\Models\Procurement\RFQLine;
 use App\Models\ThirdParies\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +17,7 @@ class RFQController extends Controller
      */
     public function index()
     {
+        
         $rfqs = RFQ::with(['category', 'suppliers'])->get();
         return view('procurement.rfqs.index', compact('rfqs'));
     }
@@ -25,7 +27,7 @@ class RFQController extends Controller
      */
     public function create()
     {
-        $categories = ItemCategory::all();
+        $categories = ItemCategories::all();
         $suppliers = Supplier::all(); // Fetch all suppliers for selection
         return view('procurement.rfqs.create', compact('categories', 'suppliers'));
     }
@@ -36,22 +38,21 @@ class RFQController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'ItemCategoryId' => 'required|exists:t_ItemCategories,id',
             'Comments' => 'nullable|string|max:255',
             'SubmissionDeadline' => 'required|date|after:today',
         ]);
 
         // Fetch items + quantities for this category
-        $items = DB::table('t_RequisitionLines as rl')
-            ->join('t_Items as i', 'rl.Item', '=', 'i.id')
-            ->where('rl.CategoryId', $request->ItemCategoryId)
-            ->select('i.Name as name', 'rl.Quantity as quantity', 'i.UOM as uom', 'rl.Description as description')
-            ->get();
+        // $items = DB::table('t_RequisitionLines as rl')
+        //     ->join('t_Items as i', 'rl.Item', '=', 'i.id')
+        //     ->where('rl.CategoryId', $request->ItemCategoryId)
+        //     ->select('i.Name as name', 'rl.Quantity as quantity', 'i.UOM as uom', 'rl.Description as description')
+        //     ->get();
 
         // Check if no items are found
-        if ($items->isEmpty()) {
-            return redirect()->back()->with('warning', 'No items requisitioned with the chosen category.');
-        }
+        // if ($items->isEmpty()) {
+        //     return redirect()->back()->with('warning', 'No items requisitioned with the chosen category.');
+        // }
 
         // Format items for JSON storage
 
@@ -60,20 +61,10 @@ class RFQController extends Controller
         $lastRFQ = RFQ::where('RFQNumber', 'like', $prefix . '%')->orderBy('Id', 'desc')->first();
         $lastNumber = $lastRFQ ? intval(substr($lastRFQ->RFQNumber, strlen($prefix))) : 0;
         $newRFQNumber = $prefix . str_pad($lastNumber + 1, 5, '0', STR_PAD_LEFT);
-        $requisitionItems = $items->map(function ($item) {
-            return [
-                'name' => $item->name,
-                'quantity' => $item->quantity,
-                'unit' => $item->uom,
-                'description' => $item->description,
-            ];
-        });
 
         // Create the RFQ
         $rfq = RFQ::create([
             'RFQNumber' => $newRFQNumber,
-            'ItemCategoryId' => $request->ItemCategoryId,
-            'RequisitionItems' => $requisitionItems,
             'Comments' => $request->Comments,
             'SubmissionDeadline' => $request->SubmissionDeadline,
             'CreatedBy' => auth()->user()->Id,
@@ -134,10 +125,14 @@ class RFQController extends Controller
      */
     public function show($id)
     {
-        $rfq = RFQ::with(['category'])->findOrFail($id);
+        // Get the RFQ and its associated RFQLines
+        $rfq = RFQ::with('rfqLines')->findOrFail($id);
+        
+        // Get unique itemCategoryIds from the RFQLines
+        $itemCategoryIds = $rfq->rfqLines->pluck('ItemCategoryId')->unique();
 
-        // Get suppliers based on the RFQ's category
-        $suppliers = Supplier::where('CategoryId', $rfq->ItemCategoryId)->get();
+        // Fetch suppliers whose CategoryId matches any of the itemCategoryIds
+        $suppliers = Supplier::whereIn('CategoryId', $itemCategoryIds)->get();
 
         return view('procurement.rfqs.show', compact('rfq', 'suppliers'));
     }
@@ -148,7 +143,7 @@ class RFQController extends Controller
     public function edit($id)
     {
         $rfq = RFQ::with('suppliers')->findOrFail($id);
-        $categories = ItemCategory::all();
+        $categories = ItemCategories::all();
         $suppliers = Supplier::all();
 
         return view('procurement.rfqs.edit', compact('rfq', 'categories', 'suppliers'));
