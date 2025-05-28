@@ -3,16 +3,14 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\Procurement\PlanManualInputRequest;
+use App\Models\Procurement\BudgetMaster;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
-use App\Models\Procurement\PlanLineItems;
 use App\Models\Procurement\Item;
 use App\Models\Procurement\ItemCategory;
-use Illuminate\Support\Facades\Auth;
-use App\Traits\Model\UserActorTrait;
-use App\Models\Auth\User;
+use App\Models\Procurement\PlanLineItems;
 use Carbon\Carbon;
-use App\Models\Procurement\BudgetMaster;
+use Illuminate\Http\Request;
 
 
 class PlanManualInputController extends Controller
@@ -20,10 +18,10 @@ class PlanManualInputController extends Controller
     //
    public function index(Request $request)
     {
-        $planId = $request->query('plan_id');
+        $planId = $request->query('plan_id');//todo pass plan id from url
         $plans = ConsolidatedProcurementPlan::all();
 
-        $lineItemsQuery = PlanLineItems::with(['item', 'item.category']); 
+        $lineItemsQuery = PlanLineItems::with(['item', 'item.category']);
 
         if ($planId) {
             $lineItemsQuery->where('PlanID', $planId);
@@ -42,33 +40,21 @@ class PlanManualInputController extends Controller
     public function create()
     {
         $plans = ConsolidatedProcurementPlan::all();
-        $items = Item::all(); 
+        $items = Item::all();
         $categories = ItemCategory::all();
         $budgetLines = BudgetMaster::all();
 
         return view('procurement.procurementplan.planconsolidation.manualentry.create', compact('plans', 'items', 'categories', 'budgetLines'));
     }
 
-   public function store(Request $request)
+    public function store(PlanManualInputRequest $request)
     {
-        $validated = $request->validate([
-            'PlanID' => 'required|exists:t_ConsolidatedProcurementPlan,PlanID',
-            'ItemID' => 'required|exists:t_items,Id',
-            'CategoryID' => 'required|exists:t_ItemCategories,Id',
-            'quantity' => 'required|integer|min:1',
-            'unit_of_measure' => 'required|string|max:50',
-            'estimated_cost' => 'required|numeric|min:0',
-            'schedule_period' => 'required|string|max:10',
-            'expected_delivery_date' => 'required|date',
-            'budget_line_id' => 'required|integer',
-            'notes' => 'nullable|string|max:1000',
-        ]);
 
-        $user = Auth::user();
+        $user = $request->user();
 
         // Fetch the related models (optional, can skip if you just want to save foreign keys)
-        $item = Item::findOrFail($validated['ItemID']);
-        $category = ItemCategory::findOrFail($validated['CategoryID']);
+        $item = $request->getItem();
+        $category = ItemCategory::findOrFail($validated['CategoryID']);//todo
 
         $planLineItem = new PlanLineItems();
         $planLineItem->PlanID = $validated['PlanID'];

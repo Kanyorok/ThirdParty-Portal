@@ -3,14 +3,16 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Procurement\DepartmentNeeds;
-use App\Models\Procurement\PlanLineItems;
+use App\Models\Core\Branch;
+use App\Models\HRM\Department;
 use App\Models\Procurement\BudgetMaster;
+use App\Models\Procurement\ConsolidatedProcurementPlan;
+use App\Models\Procurement\DepartmentNeeds;
+use App\Models\Procurement\ItemCategory;
+use App\Models\Procurement\PlanLineItems;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use App\Traits\Model\UserActorTrait;
-use App\Models\Auth\User;
 
 class PlanFromNeedsController extends Controller
 {
@@ -19,14 +21,13 @@ class PlanFromNeedsController extends Controller
     {
         $approvedNeeds = $this->getFilteredNeeds($request);
 
-        $plans = \App\Models\Procurement\ConsolidatedProcurementPlan::select('PlanID', 'Title', 'FiscalYear')->get();
-        $branches = \App\Models\Core\Branch::all();
-        $departments = \App\Models\HRM\Department::all();
-        $categories = \App\Models\Procurement\ItemCategory::select('Id', 'Name')->orderBy('Name')->get();
-        $budgetLines = \App\Models\Procurement\BudgetMaster::all();
+        $plans = ConsolidatedProcurementPlan::select('PlanID', 'Title', 'FiscalYear')->get();//todo draft
+        $branches = Branch::all();
+        $departments = Department::all();
+        $budgetLines = BudgetMaster::all();
 
          $categoryIds = $approvedNeeds->pluck('item.Category')->filter()->unique();
-         $categories = \App\Models\Procurement\ItemCategory::whereIn('Id', $categoryIds)->orderBy('Name')->get();
+         $categories = ItemCategory::whereIn('Id', $categoryIds)->orderBy('Name')->get();
 
         return view('procurement.procurementplan.planconsolidation.loadfromneeds.create', compact(
             'approvedNeeds', 'plans', 'branches', 'departments', 'categories', 'budgetLines'
@@ -34,7 +35,7 @@ class PlanFromNeedsController extends Controller
     }
 
     // AJAX endpoint to return filtered needs
-    public function filterNeeds(Request $request)
+    public function filterNeeds(Request $request): string
     {
         $approvedNeeds = $this->getFilteredNeeds($request);
         return view('procurement.procurementplan.planconsolidation.loadfromneeds.partials.needs_list', compact('approvedNeeds'))->render();
@@ -43,7 +44,7 @@ class PlanFromNeedsController extends Controller
     // Utility to apply filters
     private function getFilteredNeeds(Request $request)
     {
-        $query = DepartmentNeeds::with(['item', 'branch', 'department'])->where('Status', 'a');
+        $query = DepartmentNeeds::with(['item', 'branch', 'department'])->where('Status', 'a');//todo fix
 
         if ($request->filled('branch_filter')) {
             $query->where('BranchID', $request->branch_filter);
@@ -90,7 +91,7 @@ class PlanFromNeedsController extends Controller
                 'UnitOfMeasure' => $need->UnitOfMeasure ?? 'Unit',
                 'ProcurementMethod' => 'Open Tender',
                 'SchedulePeriod' => $request->fiscal_year ?? now()->year,
-                'ExpectedDeliveryDate' => \Carbon\Carbon::parse($need->RequestedDate),
+                'ExpectedDeliveryDate' => Carbon::parse($need->RequestedDate),
                 'BudgetLineID' => $budgetLineId ?? 0,
                 'ExecutionStatus' => 'Pending',
                 'ChangeRemarks' => $need->Justification,

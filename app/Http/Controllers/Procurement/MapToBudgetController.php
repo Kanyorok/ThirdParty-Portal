@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers\Procurement;
 
+use App\Enums\Core\PostingEnum;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\Procurement\BudgetLineLink;
 use App\Models\Procurement\BudgetMaster;
 use App\Models\Procurement\PlanLineItems;
-use App\Models\HRM\Department;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Carbon;
-use App\Models\Procurement\BudgetLineLink;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 
 class MapToBudgetController extends Controller
@@ -17,21 +16,21 @@ class MapToBudgetController extends Controller
 
         public function index()
     {
-        $draftItems = PlanLineItems::whereHas('consolidatedProcurementPlan', function ($query) {
-        $query->where('Status', 'd');
-    })->get();
-        
+        $draftItems = PlanLineItems::whereHas('consolidatedProcurementPlan', static function ($query) {
+            $query->where('Status', PostingEnum::Draft);
+        })->get();
+
         $budgetLines = BudgetMaster::all();
 
         return view('procurement.procurementplan.planneditemsandactivities.linktobudget.index', compact('draftItems', 'budgetLines'));
     }
     public function store(Request $request)
 {
-    $userId = Auth::id(); // get current user ID
+    $userId = $request->user()->id;
 
     foreach ($request->lineItemIds as $lineItemId) {
         $budgetLineId = $request->input("budgetLine_$lineItemId");
-
+//todo validate this data
        if ($budgetLineId) {
             // Fetch item to calculate amount
             $item = PlanLineItems::find($lineItemId);
@@ -43,7 +42,7 @@ class MapToBudgetController extends Controller
                 'BudgetLineID'   => $budgetLineId,
                 'AmountAllocated'=>$amount,
                 'LinkedBy'       => $userId,
-                'LinkedDate'     => Carbon::now(),
+                'LinkedDate' => now(),
                 'CreatedBy'      => $userId,
                 'ModifiedBy'     => $userId,
             ]);
@@ -53,7 +52,8 @@ class MapToBudgetController extends Controller
     return redirect()->back()->with('success', 'Budget lines linked successfully.');
 }
 
-    public function create(){
+    public function create(): View //todo why
+    {
         return view('procurement.procurementplan.planneditemsandactivities.linktobudget.create');
     }
 

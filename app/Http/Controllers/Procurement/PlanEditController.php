@@ -3,8 +3,9 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\PlanLineItems;
+use Illuminate\Http\Request;
 
 class PlanEditController extends Controller
 {
@@ -12,22 +13,24 @@ class PlanEditController extends Controller
     public function index(Request $request)
 {
     $planId = $request->input('PlanID');
-    $draftItems = PlanLineItems::whereHas('consolidatedProcurementPlan', function ($query) {
-        $query->where('Status', 'd');
-    })->get();
+    $plan = ConsolidatedProcurementPlan::where('PlanID', $planId)->where('Status', 'd')->with('lineItems')->get();
+    if (!$plan instanceof ConsolidatedProcurementPlan) {
+        return redirect()->back()->with('error', 'Plan not found.');
+    }
 
 
-    // dd($request->all());
+
     return view('procurement.procurementplan.planapproval.ammendplan.index', [
-        'draftItems' => $draftItems,
+        'draftItems' => $plan->lineItems,
         'PlanID' => $planId,
     ]);
 }
 
-public function updateDraftItems(Request $request)
+    public function updateDraftItems(Request $request, ConsolidatedProcurementPlan $plan)
 {
+    $actor = $request->user();
     $itemIds = $request->input('lineItemIds', []);
-
+//todo validate
     foreach ($itemIds as $id) {
         $qty = $request->input("qty_$id");
         $cost = $request->input("unitCost_$id");
@@ -38,20 +41,26 @@ public function updateDraftItems(Request $request)
             'EstimatedUnitCost' => $cost,
             'ChangeRemarks' => $remarks,
             'ModifiedOn' => now(),
-            'ModifiedBy' => auth()->id(),
+            'ModifiedBy' => $actor->id
         ]);
+        activity()->causedBy($actor)->performedOn('plan line')->event('update')->log("Update plan line item $id.");
     }
 
-    return redirect()->back()->with('success', 'Draft items updated successfully.');
+
+        return redirect()->back()->with('success', 'Draft items updated successfully.');
 }
-public function deleteDraftItem($id)
+
+    public function deleteDraftItem($id, ConsolidatedProcurementPlan $plan)
     {
+        //todo validate
         PlanLineItems::where('LineItemID', $id)->update([
             'DeletedBy' => auth()->id(),
             'DeletedOn' => now(),
         ]);
 
         PlanLineItems::where('LineItemID', $id)->delete();
+
+        activity()->causedBy($actor)->performedOn($employee)->event('create')->log("Added employee {$employee->EmployeeID}.");
 
         return redirect()->back()->with('success', 'Item removed successfully.');
     }
