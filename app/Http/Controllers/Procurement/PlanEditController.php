@@ -60,7 +60,7 @@ class PlanEditController extends Controller
 
         PlanLineItems::where('LineItemID', $id)->delete();
 
-        activity()->causedBy($actor)->performedOn($employee)->event('create')->log("Added employee {$employee->EmployeeID}.");
+        activity()->causedBy($actor)->performedOn('plan line')->event('create')->log("Deleted $id.");
 
         return redirect()->back()->with('success', 'Item removed successfully.');
     }

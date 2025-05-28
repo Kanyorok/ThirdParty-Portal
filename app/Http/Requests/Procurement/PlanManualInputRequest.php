@@ -6,6 +6,7 @@ use App\Models\Procurement\Item;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\ValidationException;
+use App\Models\Procurement\ItemCategory;
 
 class PlanManualInputRequest extends FormRequest
 {
@@ -47,4 +48,13 @@ class PlanManualInputRequest extends FormRequest
 
         throw ValidationException::withMessages(['ItemID' => 'Item not found']);
     }
+    public function getCategory(): ItemCategory
+{
+    $category = ItemCategory::find($this->validated('CategoryID'));
+    if ($category instanceof ItemCategory) {
+        return $category;
+    }
+
+    throw ValidationException::withMessages(['CategoryID' => 'Category not found']);
+}
 }

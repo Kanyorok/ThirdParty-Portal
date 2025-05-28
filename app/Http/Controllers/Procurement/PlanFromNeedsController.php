@@ -13,6 +13,8 @@ use App\Models\Procurement\PlanLineItems;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Enums\Procurement\DepartmentNeedsEnum;
+use App\Http\Requests\Procurement\PlanFromNeedsRequest;
 
 class PlanFromNeedsController extends Controller
 {
@@ -44,7 +46,7 @@ class PlanFromNeedsController extends Controller
     // Utility to apply filters
     private function getFilteredNeeds(Request $request)
     {
-        $query = DepartmentNeeds::with(['item', 'branch', 'department'])->where('Status', 'a');//todo fix
+        $query = DepartmentNeeds::with(['item', 'branch', 'department'])->where('Status', DepartmentNeedsEnum::Approved);//todo fix
 
         if ($request->filled('branch_filter')) {
             $query->where('BranchID', $request->branch_filter);
@@ -64,14 +66,9 @@ class PlanFromNeedsController extends Controller
     }
 
     // Store selected needs
-    public function store(Request $request)
+    public function store(PlanFromNeedsRequest $request)
     {
-        $request->validate([
-            'plan_id' => 'required|integer',
-            'category_id' => 'required|integer',
-            'selected_needs' => 'required|array|min:1',
-            'budget_line_id' => 'required|array',
-        ]);
+        $user = $request->user();
 
         $selectedNeeds = DepartmentNeeds::whereIn('Id', $request->selected_needs)->get();
 
@@ -100,6 +97,7 @@ class PlanFromNeedsController extends Controller
                 'CreatedOn' => now(),
                 'ModifiedOn' => now(),
             ]);
+            activity()->causedBy($user)->performedOn($selectedNeeds)->event('create')->log('created plan line item ' . $need->Id);
         }
 
         return redirect()->back()->with('success', 'Selected needs successfully included in the draft plan.');

@@ -27,11 +27,11 @@ class ConsolidatedDashboardController extends Controller
         $query = DepartmentNeeds::with(['item', 'branch', 'department']);
 
         if ($branch !== 'All Branches' && !empty($branch)) {
-            $query->where('BranchID', $branch); // ✅ Correct field
+            $query->where('BranchID', $branch); 
         }
 
         if ($department !== 'All Departments' && !empty($department)) {
-            $query->where('DepartmentID', $department); // ✅ Correct field
+            $query->where('DepartmentID', $department);
         }
 
         if ($year !== 'All Years') {
@@ -59,7 +59,7 @@ class ConsolidatedDashboardController extends Controller
                 return [
                     'ItemName' => $need->item?->ItemName ?? 'N/A',
                     'BranchName' => $need->branch?->Name ?? 'N/A',
-                    'DepartmentName' => $need->department->Name ?? 'N/A',
+                    'DepartmentName' => $need->department?->Name ?? 'N/A',
                     'RequestedQty' => $need->RequestedQty,
                     'EstimatedCost' => number_format($need->RequestedQty * $need->EstimatedUnitCost, 2),
                     'CreatedOn' => $need->CreatedOn->format('Y-m-d'),
@@ -71,7 +71,7 @@ class ConsolidatedDashboardController extends Controller
     }
 
     public function create()
-    {//todo why?
+    {
         // Fetch branches and departments for the create form dropdowns
         $branches = DepartmentNeed::distinct()->pluck('branch');
         $departments = DepartmentNeed::distinct()->pluck('department');

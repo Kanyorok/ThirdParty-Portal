@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', '')
+@section('title', 'Add Plan Item To Procurement Plan')
 @section('content')
 
 <div class="card p-4 shadow rounded-4">
@@ -48,36 +48,47 @@
 
     <div class="row mb-3">
       <div class="col-md-4">
-        <label class="form-label">Quantity</label>
-        <input type="number" name="quantity" class="form-control" placeholder="e.g. 10" required>
-      </div>
+          <label class="form-label">Quantity</label>
+          <input type="number" name="quantity" class="form-control @error('quantity') is-invalid @enderror" placeholder="e.g. 10" required>
+          @error('quantity')
+            <div class="alert alert-danger mt-1">{{ $message }}</div>
+          @enderror
+        </div>
     <div class="col-md-6">
       <label class="form-label">Unit of Measure</label>
       <input type="text" class="form-control" id="display-uom" readonly>
       <input type="hidden" name="unit_of_measure" id="unit_of_measure">
     </div>
       <div class="col-md-4">
-        <label class="form-label">Estimated Cost</label>
-        <input type="number" name="estimated_cost" class="form-control" placeholder="e.g. 50000" required>
-      </div>
+          <label class="form-label">Estimated Cost</label>
+          <input type="number" name="estimated_cost" class="form-control @error('estimated_cost') is-invalid @enderror" placeholder="e.g. 50000" required>
+          @error('estimated_cost')
+            <div class="alert alert-danger mt-1">{{ $message }}</div>
+          @enderror
+        </div>
     </div>
 
     <!-- Schedule -->
-    <div class="row mb-3">
+    <div class="col-md-6">
+          <label class="form-label">Planned Quarter</label>
+          <select name="schedule_period" class="form-select @error('schedule_period') is-invalid @enderror" required>
+            <option selected disabled>Select Quarter</option>
+            <option value="Q1">Q1</option>
+            <option value="Q2">Q2</option>
+            <option value="Q3">Q3</option>
+            <option value="Q4">Q4</option>
+          </select>
+          @error('schedule_period')
+            <div class="alert alert-danger mt-1">{{ $message }}</div>
+          @enderror
+        </div>
       <div class="col-md-6">
-        <label class="form-label">Planned Quarter</label>
-        <select name="schedule_period" class="form-select" required>
-          <option selected disabled>Select Quarter</option>
-          <option value="Q1">Q1</option>
-          <option value="Q2">Q2</option>
-          <option value="Q3">Q3</option>
-          <option value="Q4">Q4</option>
-        </select>
-      </div>
-      <div class="col-md-6">
-        <label class="form-label">Expected Delivery Date</label>
-        <input type="date" name="expected_delivery_date" class="form-control" required>
-      </div>
+          <label class="form-label">Expected Delivery Date</label>
+          <input type="date" name="expected_delivery_date" class="form-control @error('expected_delivery_date') is-invalid @enderror" required>
+          @error('expected_delivery_date')
+            <div class="alert alert-danger mt-1">{{ $message }}</div>
+          @enderror
+        </div>
     </div>
 
     <!-- Budget Line -->

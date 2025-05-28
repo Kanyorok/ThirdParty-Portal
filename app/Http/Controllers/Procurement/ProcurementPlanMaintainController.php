@@ -33,7 +33,7 @@ public function store(Request $request)
 
     $plan = ConsolidatedProcurementPlan::create([
         'Title'           => $request->Title,
-        'ReferenceNumber' => 'PLAN/' . $request->FiscalYear . '/' . rand(100, 999), // You may replace with a unique generator
+        'ReferenceNumber' => 'PLAN/' . $request->FiscalYear . '/' . rand(100, 999),
         'FiscalYear'      => $request->FiscalYear,
         'Status'          => PostingEnum::Draft,
         'CreatedBy'       => $userId,
@@ -46,6 +46,7 @@ public function store(Request $request)
         'ModifiedBy' => $userId,  
     ]);
 
+    activity()->causedBy($user)->performedOn($plan)->event('create')->log('created plan ' . $plan->Id);
     // Redirect to manual entry page with the new plan ID
     return redirect()->route('planmanualinput.index', ['plan_id' => $plan->PlanID])
                      ->with('success', 'Plan created successfully. You may now add line items.');
