@@ -18,7 +18,9 @@
   <form action="{{ route('Procurement-Plan-Schedule.store') }}" method="POST">
     @csrf
     <input type="hidden" name="pending_plan_id" value="{{ $plan->PlanID }}">
-
+      @error('pending_plan_id')
+      {{ $message }}
+      @enderror
     <table class="table table-bordered align-middle">
     <thead class="table-secondary">
         <tr>
@@ -36,7 +38,7 @@
         @php $months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']; @endphp
         @foreach ($plan->lineItems as $lineItem)
             <tr>
-                <input type="hidden" name="lineItemIds[]" value="{{ $lineItem->LineItemID }}">
+                <{{--input type="hidden" name="lineItemIds[]" value="{{ $lineItem->LineItemID }}">--}}
                 <td>{{ $lineItem->item->ItemName ?? 'Unnamed' }}</td>
                 <td>
                     <select name="mode_{{ $lineItem->LineItemID }}" class="form-control schedule-mode" data-id="{{ $lineItem->LineItemID }}">

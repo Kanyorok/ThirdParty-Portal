@@ -2,96 +2,90 @@
 
 namespace App\Http\Controllers\Procurement;
 
+use App\Enums\Core\PostingEnum;
 use App\Enums\Procurement\SchedulePlanEnum;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\procurement\SchedulePlanRequest;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\PlanLineItems;
 use App\Services\Procurement\ProcurementPlan\SchedulePlanService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Log;
+use Throwable;
 
 class ProcurementSchedulePlanController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('ajax')->only('fetchLinesByDPlan');
+    }
+
     public function index()
     {
-        $draftedplans = ConsolidatedProcurementPlan::where('Status', 'd')->get();
+        $draftedplans = ConsolidatedProcurementPlan::where('Status', PostingEnum::Draft)->get();
         return view('procurement.procurementplan.scheduleplan.index', compact('draftedplans'));
     }
 
-    public function create(Request $request)
-    {
-        $planId = $request->input('plan_id');
-        $plan = ConsolidatedProcurementPlan::with('lineItems.item')->findOrFail($planId);
-        return view('procurement.procurementplan.scheduleplan.create', compact('plan'));
-    }
-
-    public function fetchLinesByDPlan($planId) 
+    public function fetchLinesByDPlan($planId): JsonResponse
     {
         try {
             $Lines = PlanLineItems::with(['item', 'schedulePlan.periods']) // Include periods
-                ->where('PlanID', $planId)
+            ->where('PlanID', $planId)
                 ->get();
 
-            \Log::info('Fetched lines:', $Lines->toArray());
 
-            $mappedLines = $Lines->map(function ($lineItem) {
-                $statusCode = optional($lineItem->schedulePlan)->Status ?? SchedulePlanEnum::NotScheduled->value;
-
-                if ($statusCode instanceof SchedulePlanEnum) {
-                    $statusEnum = $statusCode;
-                } else {
-                    $statusEnum = SchedulePlanEnum::tryFrom($statusCode) ?? SchedulePlanEnum::NotScheduled;
-                }
+            return $this->succeeded('ok', data: $Lines->map(function ($lineItem) {
+                $statusEnum = $lineItem->schedulePlan?->Status ?? SchedulePlanEnum::NotScheduled;
 
                 return [
-                    'LineItemID'   => $lineItem->LineItemID,
-                    'item_name'    => optional($lineItem->item)->ItemName,
-                    'MergedQty'    => $lineItem->MergedQty,
-                    'ScheduleQTY'  => optional($lineItem->schedulePlan)->ScheduleQTY,
-                    'Status'       => $statusEnum->label(),
-                    'Periods'      => optional($lineItem->schedulePlan)->periods ?? [], // Optional: return schedule breakdown
+                    'LineItemID' => $lineItem->LineItemID,
+                    'item_name' => optional($lineItem->item)->ItemName,
+                    'MergedQty' => $lineItem->MergedQty,
+                    'ScheduleQTY' => optional($lineItem->schedulePlan)->ScheduleQTY,
+                    'Status' => $statusEnum->label(),
+                    'Periods' => $lineItem->schedulePlan?->periods ?? [], // Optional: return schedule breakdown
                 ];
-            });
+            }));
 
-            return response()->json($mappedLines);
-        } catch (\Throwable $e) {
-            \Log::error('Error in fetchLinesByDPlan: ' . $e->getMessage());
-            return response()->json(['error' => 'Server error.'], 500);
+        } catch (Throwable $e) {
+            Log::error('Error in fetchLinesByDPlan: ' . $e->getMessage());
+            return $this->errored('error occurred, try again later.');
         }
     }
 
-
-    public function store(Request $request, SchedulePlanService $schedulePlanService)
+    public function store(SchedulePlanRequest $request, SchedulePlanService $schedulePlanService)
     {
-        $actor = auth()->user(); 
-        $planId = $request->input('pending_plan_id');
-        $consolidatedPlan = ConsolidatedProcurementPlan::findOrFail($planId);
-        
-        $lineItemIds = $request->input('lineItemIds', []);
+        $actor = $request->user();
+        $consolidatedPlan = $request->getPlan();
 
-        foreach ($lineItemIds as $lineItemId) {
-            $planLineItem = PlanLineItems::findOrFail($lineItemId);
+        //fail a redirect back with statate
+
+        foreach ($consolidatedPlan->lineItems as $planLineItem) {
+
             $mode = $request->input("mode_$lineItemId");
 
             $totalQty = 0;
             $periods = [];
 
             if ($mode === 'quarter') {
-                $q1 = (int) $request->input("q1_$lineItemId", 0);
-                $q2 = (int) $request->input("q2_$lineItemId", 0);
-                $q3 = (int) $request->input("q3_$lineItemId", 0);
-                $q4 = (int) $request->input("q4_$lineItemId", 0);
+                $q1 = $request->getQuarterOne($lineItemId);
+
+                $q2 = (int)$request->input("q2_$lineItemId", 0);
+                $q3 = (int)$request->input("q3_$lineItemId", 0);
+                $q4 = (int)$request->input("q4_$lineItemId", 0);
                 $periods = [
                     'Q1' => $q1,
                     'Q2' => $q2,
                     'Q3' => $q3,
                     'Q4' => $q4,
                 ];
-                $totalQty = $q1 + $q2 + $q3 + $q4;
+                $totalQty = (int)bcadd($q1, bcadd($q2, bcadd($q3, $q4)));
             } elseif ($mode === 'month') {
-                $months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+                $months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
                 foreach ($months as $month) {
                     $inputKey = strtolower($month) . "_$lineItemId";
-                    $qty = (int) $request->input($inputKey, 0);
+                    $qty = (int)$request->input($inputKey, 0);
                     $periods[$month] = $qty;
                     $totalQty += $qty;
                 }
@@ -123,6 +117,17 @@ class ProcurementSchedulePlanController extends Controller
 
         return redirect()->route('Procurement-Plan-Schedule.index')->with('success', 'Schedules saved successfully.');
     }
+
+    public function create(Request $request)
+    {
+        $planId = $request->input('plan_id');
+        $plan = ConsolidatedProcurementPlan::with('lineItems.item')->where('PlanID', $planId)->first();
+        if (!$plan instanceof ConsolidatedProcurementPlan) {
+            return redirect()->back()->with('fail', 'Plan is not in draft status.');
+        }
+        return view('procurement.procurementplan.scheduleplan.create', compact('plan'));
+    }
+
     public function edit($lineItemId, Request $request)
     {
         $planId = $request->query('plan_id');

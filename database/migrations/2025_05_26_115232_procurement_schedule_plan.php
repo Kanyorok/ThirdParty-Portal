@@ -17,14 +17,14 @@ return new class extends Migration
             $table->foreignId('PlanId')->constrained('t_ConsolidatedProcurementPlan','PlanID');
             $table->foreignId('PlanLineId')->constrained('t_PlanLineItem','LineItemID');
             $table->integer('ScheduleQTY');
-            $table->text('Status');
+            $table->char('Status', 1);
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
             $table->dateTime('ModifiedOn');
             $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
             $table->softDeletes('DeletedOn');
-    }); 
+        });
     }
 
     /**
