@@ -227,13 +227,14 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::get('/Procurement-Plan-Schedule/edit/{lineItemId}', [ProcurementSchedulePlanController::class, 'edit'])->name('Procurement-Plan-Schedule.edit');
 
 
+    
 
 
     //Procurement Plan, Plan Consolidation
+    Route::resource('procurementplandetails', ProcurementPlanDetailController::class);
     Route::resource('procurementplanmaintain', ProcurementPlanMaintainController::class);
     Route::resource('procurementplanapproval', ProcurementApprovalController::class);
     Route::resource('consolidated', ConsolidatedDashboardController::class);
-    Route::resource('procurementplandetails', ProcurementPlanDetailController::class);
     Route::resource('procurementitemsdashboard', ConsolidatedDashboardController::class);
     Route::resource('maptobudget', MapToBudgetController::class);
     Route::resource('plantimeline', TimelineController::class);

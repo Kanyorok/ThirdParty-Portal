@@ -23,7 +23,7 @@ class SchedulePlanService
     $schedule = $existing
         ? tap($existing)->update([
             'ScheduleQTY' => $data['ScheduleQTY'],
-            'Status' => $data['Status']->value, // ✅ Use enum value
+            'Status' => $data['Status']->value, 
             'ModifiedBy' => $actor->Id,
         ])
         : SchedulePlan::create([
@@ -31,12 +31,12 @@ class SchedulePlanService
             'PlanId' => $plan->PlanID,
             'PlanLineId' => $lineItem->LineItemID,
             'ScheduleQTY' => $data['ScheduleQTY'],
-            'Status' => $data['Status']->value, // ✅ Use enum value
+            'Status' => $data['Status']->value, 
             'CreatedBy' => $actor->Id,
             'ModifiedBy' => $actor->Id,
         ]);
 
-    // Clear existing period records if re-scheduling
+    
     SchedulePeriod::where('ScheduleId', $schedule->Id)->delete();
 
     $now = Carbon::now();
