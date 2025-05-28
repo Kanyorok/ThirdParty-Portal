@@ -411,4 +411,9 @@ class SSRSService
 
         return collect($response->json()['value'] ?? []);
     }
+
+    public function getUsername()
+    {
+        return $this->_username;
+    }
 }

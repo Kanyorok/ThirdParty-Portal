@@ -6,10 +6,12 @@ use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
 use App\Models\Core\Report;
 use App\Services\ThirdParty\SSRSService;
+use Exception;
 use GuzzleHttp\Client;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Log;
 
 class SSRSProxyController extends Controller
 {
@@ -238,51 +240,20 @@ class SSRSProxyController extends Controller
     public function preview(Request $request, string $any = null)
     {
         $service = new SSRSService();
-
-        //$completePath =rtrim($service->serverURL, '/').'/ReportServer/'.$any;
         $completePath = rtrim($service->serverURL, '/') . $request->getRequestUri();
-        //Str::of($request->url())->replace(config('app.url'), rtrim($service->serverURL, '/'));
 
-        /* if ($request->getQueryString()) {
-             $completePath .= '?' . $request->getQueryString();
-         }
-
-         if (Str::contains($any, 'Pages/ReportViewer.aspx')) {
-             $completePath = Str::replace('=&rc','&rc', $completePath);
-         }*/
-        // Credentials
-        /*$username = $service->getUsername();
-        $password = $service->getPassword();*/
-
-
-        // Make the request with basic auth
         try {
-            /*$response = Http::->withOptions([
-                'auth' => [$username, $password, 'ntlm'],
-            ])->withHeaders([
-                'User-Agent' => $request->userAgent(),
-            ])*/
-
             $response = $service->getQuery()->{strtolower($request->method())}($completePath);
         } catch (ConnectionException $e) {
-            dd($completePath, $e);//todo show view error
+            return response('Failed to load resource: ' . $e->getMessage(), 500);
         }
 
-
-        if ($response->hasHeader('ControlID')) {
-            dd($response->headers(), 'Headers');
+        // Special handling for AJAX requests, especially SessionKeepAlive
+        if ($request->ajax() || Str::contains($request->getRequestUri(), 'Reserved.ReportViewerWebControl.axd')) {
+            // Return the response as-is without modification for AJAX/control requests
+            return response($response->body(), $response->status())
+                ->withHeaders($response->headers());
         }
-
-
-        if (!$response->successful()) {
-            /* if ($response->body() ==="OK"){
-                 $status = 200;
-             }else{*/
-            dd("Failed", $response);//todo show view error
-            //  }
-
-        }
-
 
         $body = $response->body();
         $body = preg_replace(
@@ -291,22 +262,10 @@ class SSRSProxyController extends Controller
             $body
         );
 
-        //  $body = str_replace('<script>', '<script nonce="reportscript">', $body);
-
-
-        /*    session()?->put('ssrs_report_url', $metadata['Route']);
-            session()?->put('ssrs_report_path', $path);
-            session(['ssrs_cookies' => $cookieJar]);*/
-
-        //  dd($response);
-
-
         // Return response with proper headers
         $proxyResponse = response($body, $response->status())
             ->withHeaders($response->headers());
-        /*array_merge($response->headers(), [
-            'Content-Security-Policy' => "script-src 'self' 'nonce-reportscript' 'unsafe-inline' 'unsafe-eval';"
-        ])*/
+
         foreach ($response->cookies() as $cookie) {
             $proxyResponse->cookie(
                 $cookie->getName(),
@@ -320,7 +279,37 @@ class SSRSProxyController extends Controller
         }
 
         return $proxyResponse;
-
     }
 
+
+    public function handleAxd(Request $request)
+    {
+        $service = new SSRSService();
+        $targetUrl = rtrim($service->serverURL, '/') . '/ReportServer/Reserved.ReportViewerWebControl.axd';
+
+        if ($request->getQueryString()) {
+            $targetUrl .= '?' . $request->getQueryString();
+    }
+
+        try {
+            $method = strtolower($request->method());
+            $client = new Client([
+                'auth' => [$service->getUsername(), $service->getPassword(), 'ntlm'],
+                'verify' => false,
+                'headers' => $request->headers->all() // Pass all original headers
+            ]);
+
+            // Forward the request with the same method and parameters
+            $ssrsResponse = ($method === 'get')
+                ? $client->get($targetUrl)
+                : $client->post($targetUrl, ['form_params' => $request->post()]);
+
+            // Return the response directly without modification
+            return response($ssrsResponse->getBody(), $ssrsResponse->getStatusCode())
+                ->withHeaders($ssrsResponse->getHeaders());
+        } catch (Exception $e) {
+            Log::error('SSRS Proxy Error: ' . $e->getMessage());
+            return response('Error proxying to SSRS server: ' . $e->getMessage(), 500);
+        }
+    }
 }
