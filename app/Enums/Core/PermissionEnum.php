@@ -211,7 +211,7 @@ enum PermissionEnum: string
     case PlanConsolidationUpdate = 'panconsolidation-update';
     case PlanConsolidationDelete = 'panconsolidation-delete';
 
-        //ProcurementPlan ProcurementMethod
+    //ProcurementPlan ProcurementMethod
     case ProcurementMethodRead = 'procurementmethod-read';
     case ProcurementMethodWrite = 'procurementmethod-create';
     /*
