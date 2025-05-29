@@ -316,9 +316,9 @@ enum PermissionEnum: string
              self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete,
             self::ProcurementMethodRead, self::ProcurementMethodWrite,self::SchedulePlanRead, self::SchedulePlanWrite, self::SchedulePlanUpdate,
             => ModulesEnum::Procurement,
-        
+
             self::Departments, self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete => ModulesEnum::HRM,
-            
+
             self::MasterListView => ModulesEnum::Inventory,
         };
     }
