@@ -75,7 +75,7 @@ class PlanFromNeedsController extends Controller
         foreach ($selectedNeeds as $need) {
             $budgetLineId = $request->budget_line_id[$need->Id] ?? null;
 
-            PlanLineItems::create([
+            $planitems = PlanLineItems::create([
                 'PlanID' => $request->plan_id,
                 'ItemID' => $need->ItemID,
                 'BranchID' => $need->BranchID,
@@ -97,7 +97,7 @@ class PlanFromNeedsController extends Controller
                 'CreatedOn' => now(),
                 'ModifiedOn' => now(),
             ]);
-            activity()->causedBy($user)->performedOn($selectedNeeds)->event('create')->log('created plan line item ' . $need->Id);
+            activity()->causedBy($user)->performedOn($planitems)->event('create')->log('created plan line item ' . $need->Id);
         }
 
         return redirect()->back()->with('success', 'Selected needs successfully included in the draft plan.');
