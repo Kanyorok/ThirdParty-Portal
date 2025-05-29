@@ -12,7 +12,7 @@
         <div class="card-body">
             <div class="row g-3 align-items-end">
                 <div class="col-md-6">
-                    <label class="form-label">Select Approved Plan</label>
+                    <label class="form-label">Select Plan</label>
                     <select class="form-select" id="approved-plan-select">
                         <option selected disabled>-- Choose Plan --</option>
                         @foreach ($draftedplans as $plan)
@@ -26,12 +26,6 @@
             </div>
         </div>
     </div>
-
-  <!-- Plan Info -->
-  <div class="mb-4 p-3 bg-light rounded border">
-    <p><strong>Plan:</strong> Annual Procurement Plan - 2025</p>
-    <p><strong>Status:</strong> DRAFT</p>
-  </div>
 
 <form method="POST" action="{{ route('procurement-set-method.store') }}">
   @csrf
@@ -78,28 +72,33 @@
                 .then(data => {
                     const tbody = document.getElementById('items-table-body');
                     tbody.innerHTML = '';
-                      data.forEach((line, index) => {
-                          const row = `
-                              <tr>
-                                  <td>${index + 1}</td>
-                                  <td>${line.item_name}</td>
-                                  <td>${line.MergedQty}</td>
-                                  <td>${line.ScheduleQTY ?? '-'}</td>
-                                  <td>${line.ScheduleType ?? '-'}</td>
-                                  <td>${line.Status ?? 'Not Scheduled'}</td>
-                                  <td>
-                                      <a href="/procurement/Procurement-Plan-Schedule/create/${line.LineItemID}?plan_id=${planId}" class="btn btn-sm btn-primary">Schedule</a>|
-                                      <a href="/procurement/Procurement-Plan-Schedule/edit/${line.LineItemID}?plan_id=${planId}" class="btn btn-sm btn-warning">Edit</a>|
-                                      <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.history.back();">Cancel</button>
-                                  </td>
-                              </tr>
-                          `;
-                          tbody.insertAdjacentHTML('beforeend', row);
-                      });
+
+                    if (Array.isArray(data) && data.length > 0) {
+                        data.forEach((line, index) => {
+                            const row = `
+                                <tr>
+                                    <td>${index + 1}</td>
+                                    <td>${line.item_name}</td>
+                                    <td>${line.MergedQty}</td>
+                                    <td>${line.ScheduleQTY ?? '-'}</td>
+                                    <td>${line.ScheduleType ?? '-'}</td>
+                                    <td>${line.Status ?? 'Not Scheduled'}</td>
+                                    <td>
+                                        <a href="/procurement/Procurement-Plan-Schedule/create/${line.LineItemID}?plan_id=${planId}" class="btn btn-sm btn-primary">Schedule</a> |
+                                        <a href="/procurement/Procurement-Plan-Schedule/edit/${line.LineItemID}?plan_id=${planId}" class="btn btn-sm btn-warning">Edit</a> |
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.history.back();">Cancel</button>
+                                    </td>
+                                </tr>
+                            `;
+                            tbody.insertAdjacentHTML('beforeend', row);
+                        });
+                    } else {
+                        nWarning('No lines created for the selected plan.');
+                    }
                 })
                 .catch(error => {
                     console.error('Error loading items:', error);
-                    alert('An error occurred while loading items.');
+                    nError('An error occurred while loading items.');
                 });
         });
     });

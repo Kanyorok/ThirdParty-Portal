@@ -20,7 +20,11 @@
       $months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
     @endphp
 
-    <h5 class="mb-3">{{ $lineItem->item->ItemName ?? 'Unnamed Item' }}</h5>
+    <div class="mb-4 p-3 border rounded bg-light">
+        <p><strong>Plan:</strong> {{ $plan->ReferenceNumber ?? 'N/A' }} <strong>Year: </strong> {{ $plan->FiscalYear }}</p>
+        <p><strong>Item Name:</strong> {{ $lineItem->item->ItemName ?? 'Unnamed Item' }}</p>
+        <p><strong>Instructions:</strong> Choose whether to break down each item by Quarter or Month, and update the quantity accordingly.</p>
+    </div>
 
     <div class="form-group mb-4">
       <label for="modeSelect" class="form-label">Mode</label>

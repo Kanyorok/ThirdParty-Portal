@@ -5,10 +5,13 @@ namespace App\Http\Controllers\Procurement;
 use App\Enums\Core\PostingEnum;
 use App\Enums\Procurement\SchedulePlanEnum;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Procurement\ProcurementPlan\SchedulePlanRequest;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\PlanLineItems;
 use App\Services\Procurement\ProcurementPlan\SchedulePlanService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class ProcurementSchedulePlanController extends Controller
 {
@@ -29,45 +32,35 @@ class ProcurementSchedulePlanController extends Controller
     {
         try {
             $Lines = PlanLineItems::with(['item', 'schedulePlan.periods']) // Include periods
-                ->where('PlanID', $planId)
-                ->get();
-
-            \Log::info('Fetched lines:', $Lines->toArray());
+                ->where('PlanID', $planId)->get();
 
             $mappedLines = $Lines->map(function ($lineItem) {
-                $statusCode = optional($lineItem->schedulePlan)->Status ?? SchedulePlanEnum::NotScheduled->value;
-
-                if ($statusCode instanceof SchedulePlanEnum) {
-                    $statusEnum = $statusCode;
-                } else {
-                    $statusEnum = SchedulePlanEnum::tryFrom($statusCode) ?? SchedulePlanEnum::NotScheduled;
-                }
+                $statusEnum = $lineItem->schedulePlan?->Status ?? SchedulePlanEnum::NotScheduled;
 
                 return [
                     'LineItemID'   => $lineItem->LineItemID,
-                    'item_name'    => optional($lineItem->item)->ItemName,
+                    'item_name'    => $lineItem->item?->ItemName,
                     'MergedQty'    => $lineItem->MergedQty,
-                    'ScheduleQTY'  => optional($lineItem->schedulePlan)->ScheduleQTY,
+                    'ScheduleQTY'  => $lineItem->schedulePlan?->ScheduleQTY,
                     'Status'       => $statusEnum->label(),
-                    'Periods'      => optional($lineItem->schedulePlan)->periods ?? [], // Optional: return schedule breakdown
+                    'Periods'      => $lineItem->schedulePlan?->periods ?? [], // Optional: return schedule breakdown
                 ];
             });
 
             return response()->json($mappedLines);
-        } catch (\Throwable $e) {
-            \Log::error('Error in fetchLinesByDPlan: ' . $e->getMessage());
-            return response()->json(['error' => 'Server error.'], 500);
+        } catch (Throwable $e) {
+            Log::error('Error in fetchLinesByDPlan: ' . $e->getMessage());
+            return $this->errored('error occurred, try again later.');
         }
     }
 
 
-    public function store(Request $request, SchedulePlanService $schedulePlanService)
+    public function store(SchedulePlanRequest $request, SchedulePlanService $schedulePlanService)
     {
-        $actor = auth()->user(); 
-        $planId = $request->input('pending_plan_id');
-        $consolidatedPlan = ConsolidatedProcurementPlan::findOrFail($planId);
+        $actor = $request->user();
+        $consolidatedPlan = $request->getPlan();
         
-        $lineItemIds = $request->input('lineItemIds', []);
+        $lineItemIds = $request->input('lineItemIds');
 
         foreach ($lineItemIds as $lineItemId) {
             $planLineItem = PlanLineItems::findOrFail($lineItemId);
@@ -77,17 +70,17 @@ class ProcurementSchedulePlanController extends Controller
             $periods = [];
 
             if ($mode === 'quarter') {
-                $q1 = (int) $request->input("q1_$lineItemId", 0);
-                $q2 = (int) $request->input("q2_$lineItemId", 0);
-                $q3 = (int) $request->input("q3_$lineItemId", 0);
-                $q4 = (int) $request->input("q4_$lineItemId", 0);
+                $q1 = $request->getQuarterOne($lineItemId);
+                $q2 = $request->getQuarterTwo($lineItemId);
+                $q3 = $request->getQuarterThree($lineItemId);
+                $q4 = $request->getQuarterFour($lineItemId);
                 $periods = [
                     'Q1' => $q1,
                     'Q2' => $q2,
                     'Q3' => $q3,
                     'Q4' => $q4,
                 ];
-                $totalQty = $q1 + $q2 + $q3 + $q4;
+                $totalQty = (int)bcadd($q1, bcadd($q2, bcadd($q3, $q4)));
             } elseif ($mode === 'month') {
                 $months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
                 foreach ($months as $month) {
@@ -132,5 +125,6 @@ class ProcurementSchedulePlanController extends Controller
 
         return view('procurement.procurementplan.scheduleplan.edit', compact('plan', 'lineItem'));
     }
+    
 
 }

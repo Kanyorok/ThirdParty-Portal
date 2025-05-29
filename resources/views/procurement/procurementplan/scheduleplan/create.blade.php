@@ -8,12 +8,11 @@
     <a href="{{ route('Procurement-Plan-Schedule.index') }}" class="btn btn-sm btn-outline-secondary">← Back to Plan</a>
   </div>
 
-  <!-- Plan Info -->
-  <div class="mb-4 p-3 border rounded bg-light">
-    <p><strong>Plan:</strong> Annual Procurement Plan - 2025</p>
-    <p><strong>Status:</strong> DRAFT</p>
+<div class="mb-4 p-3 border rounded bg-light">
+    <p><strong>Plan:</strong> {{ $plan->ReferenceNumber ?? 'N/A' }} <strong>Year: </strong> {{ $plan->FiscalYear }}</p>
+    <p><strong>Status:</strong> {{ strtoupper($plan->Status->label()) }}</p>
     <p><strong>Instructions:</strong> Choose whether to break down each item by Quarter or Month, and assign quantity accordingly.</p>
-  </div>
+</div>
 
   <form action="{{ route('Procurement-Plan-Schedule.store') }}" method="POST">
     @csrf
