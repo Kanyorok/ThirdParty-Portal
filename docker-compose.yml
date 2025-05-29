@@ -8,12 +8,16 @@ services:
     container_name: ERP
     working_dir: /var/www
     volumes:
-      - .:/var/www
+      - .:/var/www                      # mount your app code
+      - logs:/var/www/logs              # mount a named volume for logs, so logs folder is preserved inside container
     networks:
-        - Applications
+      - Applications
     ports:
-        - "80:80"
+      - "80:80"
 
 networks:
-    Applications:
-        external: true
+  Applications:
+    external: true
+
+volumes:
+  logs:                              # declare a named volume for logs
