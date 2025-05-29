@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Orders;
+namespace App\Services\Procurement\Orders;
 
 use App\Models\Auth\User;
 use Illuminate\Database\QueryException;

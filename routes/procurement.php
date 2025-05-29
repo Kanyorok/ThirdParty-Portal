@@ -77,6 +77,10 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
 
     //Purchase Order
     Route::get('purchaseOrder/getSuppliers', [PurchaseOrderController::class, 'getSuppliers'])->name('purchaseOrder.getSuppliers');
+    Route::get('purchaseOrder/linkRFQ', [PurchaseOrderController::class, 'linkRFQ'])->name('purchaseOrder.linkRFQ');
+    Route::get('purchaseOrder/getRFQs', [PurchaseOrderController::class, 'fetchRFQ'])->name('purchaseOrder.getRFQ');
+    //this route is static affecting orders/rfqLink
+    Route::get('purchaseOrder/rqfDetails/{id}', [PurchaseOrderController::class, 'fetchRFQDetails'])->name('purchaseOrder.RFQ');
     Route::resource('purchaseOrder', 'PurchaseOrderController');
 
 
@@ -197,20 +201,20 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::resource('approvals/department-need', DepartmentNeedApprovalController::class)->only([
         'index','show','update','destroy'
     ])->names([
-       'index' => 'department-need-approval.index','show' => 'department-need-approval.show','update' => 'department-need-approval.update',
-       'destroy' => 'department-need-approval.destroy'
+        'index' => 'department-need-approval.index','show' => 'department-need-approval.show','update' => 'department-need-approval.update',
+        'destroy' => 'department-need-approval.destroy'
     ]);
 
 
     //Procurement plan set Method
     Route::get('/Procurement-Set-Method', [ProcurementSetMethodController::class,'index'])->name('procurement-set-method.index');
-    Route::get('/procurement/set-method/plan-items/{PlanId}', [ProcurementSetMethodController::class, 'getPlanItems']); 
+    Route::get('/procurement/set-method/plan-items/{PlanId}', [ProcurementSetMethodController::class, 'getPlanItems']);
     Route::get('/Procurement-Set-Method/create', [ProcurementSetMethodController::class,'create'])->name(name: 'procurement-set-method.create');
     Route::post('/Procurement-Set-Method', [ProcurementSetMethodController::class,'store'])->name('procurement-set-method.store');
 
 
     //Procurement Plan Department Needs
-    Route::get('/departmentalplan', [DepartmentNeedsController::class,'index'])->name('procurementdepartmentalplan.index'); 
+    Route::get('/departmentalplan', [DepartmentNeedsController::class,'index'])->name('procurementdepartmentalplan.index');
     Route::get('/procurementdepartmentalplan/create', [DepartmentNeedsController::class,'create'])->name('procurementdepartmentalplan.create');
     Route::post('/procurementdepartmentalplan', [DepartmentNeedsController::class,'store'])->name('procurementdepartmentalplan.store');
     Route::get('/procurementdepartmentalplan/lines/{NeedID}', [DepartmentNeedsController::class, 'fetchLinesByDPlan'])->name('procurementdepartmentalplan.view');
@@ -268,6 +272,7 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
 
 
     Route::prefix('procurement')->group(function () {
+
     Route::get('plan-manual-input', [PlanManualInputController::class, 'index'])->name('procurement.procurementplan.planconsolidation.manualentry.index');
     Route::get('plan-manual-input/create', [PlanManualInputController::class, 'create'])->name('plan.manual-input.create');
     Route::post('plan-manual-input', [PlanManualInputController::class, 'store'])->name('plan.manual-input.store');
@@ -282,13 +287,14 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::get('/planning/filter-needs', [PlanFromNeedsController::class, 'filterNeeds'])->name('planning.filterNeeds');
     Route::get('/departments/{branchId}', [PlanFromNeedsController::class, 'getDepartments']);
     Route::get('/categories', [PlanFromNeedsController::class, 'getCategories']);
-});
+    });
+
     Route::get('/planning/edit-draft/{plan_id}', [PlanEditController::class, 'index']);
     Route::post('/planning/update-draft-items', [PlanEditController::class, 'updateDraftItems'])->name('planning.updateDraftItems');
     Route::delete('procurement/planning/delete-draft-item/{id}', [PlanEditController::class, 'deleteDraftItem'])->name('procurement.planning.deleteDraftItem');
 
-Route::get('/planning/assign-methods', [MapToBudgetController::class, 'index'])->name('planning.assign.methods');
-Route::post('/planning/assign-methods', [MapToBudgetController::class, 'store'])->name('planning.assign.methods.store');
+    Route::get('/planning/assign-methods', [MapToBudgetController::class, 'index'])->name('planning.assign.methods');
+    Route::post('/planning/assign-methods', [MapToBudgetController::class, 'store'])->name('planning.assign.methods.store');
 
 
 

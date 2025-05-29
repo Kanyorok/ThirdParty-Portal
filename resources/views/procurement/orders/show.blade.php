@@ -351,7 +351,7 @@
     </script>
 
     <script>
-        let rowCount = 0;
+        let rowCount = 1;
 
         document.getElementById('add-row').addEventListener('click', function () {
             rowCount++;
