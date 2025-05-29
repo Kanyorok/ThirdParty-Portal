@@ -50,10 +50,11 @@
             <p><strong>Last Received Date:</strong> {{ $item->LastReceived }}</p>
         </div>
         <div class="col-md-4">
-            <p><strong>Store:</strong> {{ $item->store->StoreName }}</p>
+            <p><strong>Store:</strong> {{ optional($item->store)->StoreName ?? 'N/A' }}</p>
         </div>
         <div class="col-md-4">
-            <p><strong>Branch:</strong> {{ $item->branch->Name }}</p>
+           <p><strong>Store:</strong> {{ optional($item->branch)->Name ?? 'N/A' }}</p>
+
         </div>
     </div>
 

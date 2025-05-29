@@ -74,12 +74,14 @@
 
     <div class="d-flex gap-2 mt-3">
         <a href="{{ route('itemmaster.index') }}" class="btn btn-secondary">Back</a>
+
         <a href="{{ route('itemmasterlist.edit', $item->Id) }}" class="btn btn-warning">Edit Item</a>
-        <form action="{{ route('itemmasterlist.destroy', $item->Id) }}" method="POST" onsubmit="return confirm('⚠️ Are you sure you want to delete this item?');">
+        <form action="{{ route('itemmasterlist.destroy', $item->Id) }}" method="POST" onsubmit="return confirm('⚠️ Are you sure you want to delete this Item?');">
             @csrf
             @method('DELETE')
             <button type="submit" class="btn btn-danger">Delete Item</button>
         </form>
+
     </div>
 </div>
 

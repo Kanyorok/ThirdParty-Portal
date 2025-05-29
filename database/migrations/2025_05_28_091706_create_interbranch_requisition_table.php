@@ -11,12 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('t_ProcurementPeriods', function (Blueprint $table) {
+        Schema::create('t_InterBranchRequisition', static function (Blueprint $table) {
             $table->id('Id');
-            $table->string('ProcurementPeriodNumber')->unique()->comment('Unique identifier for the procurement period');
-            $table->string('Title')->nullable();
-            $table->date('StartDate');
-            $table->date('EndDate');
+            $table->string('ReqNo')->nullable()->unique();
+            $table->foreignId('FromBranch')->constrained('t_Branches', 'Id');
+            $table->foreignId('ToBranch')->constrained('t_Branches', 'Id');
+            $table->foreignId('ItemCode')->constrained('t_Items', 'Id');
+            $table->foreignId('ItemName')->constrained('t_Items', 'Id');
+            $table->foreignId('UOM')->constrained('t_Items', 'Id');
+            $table->integer('Requested Qty');
+            $table->string('Remarks');
+            $table->boolean('Status');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
@@ -31,6 +36,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('t_ProcurementPeriods');
+        Schema::dropIfExists('t_StockItems');
     }
 };

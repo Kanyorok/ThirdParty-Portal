@@ -1,176 +1,131 @@
 <?php
 
 namespace App\Http\Controllers\Inventory;
+
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use App\Http\Requests\Inventory\StockItemRequest;
 use App\Models\Inventory\StockItem;
-use Illuminate\Support\Facades\Auth; 
-use Carbon\Carbon; 
+use App\Models\Inventory\ItemCategories;
 use App\Models\Inventory\Store;
+use App\Models\Inventory\ItemMasterList;
 use App\Models\Core\Branch;
+use App\Services\Inventory\StockItemService;
+use Illuminate\Http\Request;
 
 class SKUController extends Controller
 {
-    
+    protected StockItemService $stockItemService;
+
+    public function __construct(StockItemService $stockItemService)
+    {
+        $this->stockItemService = $stockItemService;
+    }
+
     public function index()
     {
-        $items = StockItem::all(); 
+        $this->authorize('viewAny', StockItem::class);
+
+        $items = StockItem::all();
         return view('inventory.itemmaster.sku.index', compact('items'));
     }
 
-
     public function create()
-{
-    $categories = \App\Models\Inventory\ItemCategories::whereNull('ParentId')->get();
-    $branches = Branch::all();
-    $stores = [];
-    return view('inventory.itemmaster.sku.create', compact('branches', 'stores', 'categories'));
-}
-
-public function getStores(Request $request)
-{
-    $Id = $request->get('BranchID');
-    if (!$Id) {
-        return response()->json([], 400);
-    }
-    $stores = Store::where('BranchID', $Id)->get(['Id', 'StoreName']);
-    return response()->json($stores);
-}
-
-
-
-    public function store(Request $request)
-{
-    $validatedData = $request->validate([
-        'Batch'         => 'required|boolean',
-        'ItemID'      => 'required|exists:t_Items,Id',
-        'Serial'        => 'required|boolean',
-        'Perishable'    => 'required|boolean',
-        'Saleable'      => 'required|boolean',
-        'Purchasable'   => 'required|boolean',
-        'Store' => 'required|integer|exists:t_Stores,Id',
-        'Branch' => 'required|integer|exists:t_Branches,Id',
-        'CurrentQty'    => 'required|integer|min:0',
-        'Min'           => 'required|integer|min:0',
-        'Reorder'       => 'required|integer|min:0',
-        'Max'           => 'required|integer|min:0',
-        'LastReceived'  => 'nullable|date',
-        'Status'        => 'required|boolean',
-    ]);
-    
-    try {
-        $skuCode = DB::transaction(function () use ($validatedData) {
-            // Lock the table and get the latest SKU in one operation
-            $latestItem = DB::table('t_StockItems')
-                ->lockForUpdate()
-                ->orderBy('CreatedOn', 'desc')
-                ->first();
-                
-            // Generate next SKU code based on the locked result
-            $latestSku = $latestItem ? $latestItem->SKUCode : 'SKU-00000';
-            $skuNumber = intval(substr($latestSku, 4)) + 1;
-            $newSkuCode = 'SKU-' . str_pad($skuNumber, 5, '0', STR_PAD_LEFT);
-            
-            // Add SKUCode and timestamps to validated data
-            $validatedData['SKUCode'] = $newSkuCode;
-            $validatedData['CreatedBy'] = Auth::id();
-            $validatedData['CreatedOn'] = Carbon::now();
-            $validatedData['ModifiedBy'] = Auth::id();
-            $validatedData['ModifiedOn'] = Carbon::now();
-            
-            // Create the item
-            StockItem::create($validatedData);
-            
-            return $newSkuCode;
-        });
-        
-        return redirect()->route('sku.index')->with('success', 'Stock item added successfully with SKU: ' . $skuCode);
-    } catch (\Exception $e) {
-        return back()->withErrors('Failed to create stock item: ' . $e->getMessage());
-    }
-}
-    // Show details of a specific stock item
-    public function show($Id)
     {
-        $item = StockItem::findOrFail($Id);
+        $this->authorize('create', StockItem::class);
+
+        $categories = ItemCategories::whereNull('ParentId')->get();
+        $branches = Branch::all();
+        $stores = [];
+
+        return view('inventory.itemmaster.sku.create', compact('branches', 'stores', 'categories'));
+    }
+
+    public function store(StockItemRequest $request)
+    {
+        $this->authorize('create', StockItem::class);
+
+        $data = $request->validated();
+
+        try {
+            $skuCode = $this->stockItemService->create($data);
+            return redirect()->route('sku.index')->with('success', 'Stock item added successfully with SKU: ' . $skuCode);
+        } catch (\Exception $e) {
+            return back()->withErrors('Failed to create stock item: ' . $e->getMessage())->withInput();
+        }
+    }
+
+    public function show($id)
+    {
+        $item = StockItem::findOrFail($id);
+        $this->authorize('view', $item);
+
         return view('inventory.itemmaster.sku.show', compact('item'));
     }
 
-
-
-public function edit($Id)
-{
-    $item = StockItem::findOrFail($Id);
-    $categories = \App\Models\Inventory\ItemCategories::whereNull('ParentId')->get();
-    $branches = Branch::all();
-    $stores = Store::where('BranchID', $item->Branch)->get();
-
-    // Determine the relevant category or subcategory
-    $categoryId = $item->item->category->parent ? $item->item->category->parent->Id : $item->item->category->Id;
-    $subcategoryId = $item->item->category->parent ? $item->item->category->Id : null;
-
-    // Fetch items for the selected (sub)category
-    if ($subcategoryId) {
-        $items = \App\Models\Inventory\ItemMasterList::where('Category', $subcategoryId)->get();
-    } else {
-        $items = \App\Models\Inventory\ItemMasterList::where('Category', $categoryId)->get();
-    }
-
-    return view('inventory.itemmaster.sku.edit', compact('item', 'branches', 'stores', 'categories', 'items'));
-}
-
-public function getItemsByCategoryOrSubcategory(Request $request)
-{
-    $categoryId = $request->get('category_id');
-    $subcategoryId = $request->get('subcategory_id');
-
-    if ($subcategoryId) {
-        // Fetch items by subcategory
-        $items = \App\Models\Inventory\ItemMasterList::where('Category', $subcategoryId)->get(['Id', 'ItemName']);
-    } else {
-        // Fetch items directly under the category (no subcategory selected)
-        $items = \App\Models\Inventory\ItemMasterList::where('Category', $categoryId)->get(['Id', 'ItemName']);
-    }
-    return response()->json($items);
-}
-
-
-    // Update stock item details
-  public function update(Request $request, $Id)
-{
-    $item = StockItem::findOrFail($Id);
-
-    $validatedData = $request->validate([
-        'ItemID'     => 'required|exists:t_Items,Id',
-        'Batch'        => 'required|boolean',
-        'Serial'       => 'required|boolean',
-        'Perishable'   => 'required|boolean',
-        'Saleable'     => 'required|boolean',
-        'Purchasable'  => 'required|boolean',
-        'Store'        => 'required|string|max:255',
-        'Branch'       => 'required|string|max:255',
-        'CurrentQty'   => 'required|integer|min:0',
-        'Min'          => 'required|integer|min:0',
-        'Reorder'      => 'required|integer|min:0',
-        'Max'          => 'required|integer|min:0',
-        'LastReceived' => 'nullable|date',
-        'Status'       => 'required|boolean',
-    ]);
-
-    $validatedData['ModifiedBy'] = Auth::id();
-
-    $item->update($validatedData);
-
-    return redirect()->route('sku.index')->with('Success', 'Stock item updated successfully!');
-}
-
-    // Delete a stock item
-    public function destroy($Id)
+    public function edit($id)
     {
-        $item = StockItem::findOrFail($Id);
-        $item->delete();
+        $item = StockItem::findOrFail($id);
+        $this->authorize('update', $item);
 
-        return redirect()->route('sku.index')->with('success', '🗑️ Stock item deleted successfully!');
+        $categories = ItemCategories::whereNull('ParentId')->get();
+        $branches = Branch::all();
+        $stores = Store::where('BranchID', $item->Branch)->get();
+
+        $categoryId = $item->item->category->parent ? $item->item->category->parent->Id : $item->item->category->Id;
+        $subcategoryId = $item->item->category->parent ? $item->item->category->Id : null;
+
+        $items = ItemMasterList::where('Category', $subcategoryId ?? $categoryId)->get();
+
+        return view('inventory.itemmaster.sku.edit', compact('item', 'branches', 'stores', 'categories', 'items'));
+    }
+
+    public function update(StockItemRequest $request, $id)
+    {
+        $item = StockItem::findOrFail($id);
+        $this->authorize('update', $item);
+
+        $data = $request->validated();
+
+        try {
+            $this->stockItemService->update($item, $data);
+            return redirect()->route('sku.index')->with('success', 'Stock item updated successfully!');
+        } catch (\Exception $e) {
+            return back()->withErrors('Failed to update stock item: ' . $e->getMessage())->withInput();
+        }
+    }
+
+    public function destroy($id)
+    {
+        $item = StockItem::findOrFail($id);
+        $this->authorize('destroy', $item); // Laravel convention uses 'delete'
+
+        try {
+            $this->stockItemService->delete($item);
+            return redirect()->route('sku.index')->with('success', '🗑️ Stock item deleted successfully!');
+        } catch (\Exception $e) {
+            return back()->withErrors('Failed to delete stock item: ' . $e->getMessage());
+        }
+    }
+
+    // AJAX: get stores by branch
+    public function getStores(Request $request)
+    {
+        $branchId = $request->get('BranchID');
+        if (!$branchId) {
+            return response()->json([], 400);
+        }
+
+        $stores = Store::where('BranchID', $branchId)->get(['Id', 'StoreName']);
+        return response()->json($stores);
+    }
+
+    // AJAX: get items by category or subcategory
+    public function getItemsByCategoryOrSubcategory(Request $request)
+    {
+        $categoryId = $request->get('category_id');
+        $subcategoryId = $request->get('subcategory_id');
+
+        $items = ItemMasterList::where('Category', $subcategoryId ?? $categoryId)->get(['Id', 'ItemName']);
+        return response()->json($items);
     }
 }

@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Policies;
+namespace App\Policies\Inventory;
 
 use App\Enums\Core\PermissionEnum;
 use App\Models\Inventory\StockItem;
-use App\Models\User;
+use App\Models\Auth\User;
 use Illuminate\Auth\Access\Response;
 
 class StockItemPolicy
@@ -22,13 +22,13 @@ class StockItemPolicy
      */
     public function view(User $user, StockItem $stockItem): bool
     {
-        return false;
+        return $user->can(PermissionEnum::StockItemView->value);
     }
 
     /**
      * Determine whether the user can create models.
      */
-    public function create(User $user, StockItem $stockItem): bool
+    public function create(User $user): bool
     {
         return $user->can(PermissionEnum::StockItemCreate->value);
     }
@@ -44,7 +44,7 @@ class StockItemPolicy
     /**
      * Determine whether the user can delete the model.
      */
-    public function destroy(User $user, StockItem $stockItem): bool
+    public function destroy(User $user): bool
     {
         return $user->can(PermissionEnum::StockItemDestroy->value);
     }

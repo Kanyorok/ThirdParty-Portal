@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Policies;
+namespace App\Policies\Inventory;
+
 
 use App\Enums\Core\PermissionEnum;
 use App\Models\Inventory\ItemType;
-use App\Models\User;
+use App\Models\Auth\User;
 use Illuminate\Auth\Access\Response;
 
 class ItemTypePolicy
@@ -22,13 +23,13 @@ class ItemTypePolicy
      */
     public function view(User $user, ItemType $itemType): bool
     {
-        return false;
+       return $user->can(PermissionEnum::ItemTypeView->value);
     }
 
     /**
      * Determine whether the user can create models.
      */
-    public function create(User $user, ItemType $itemType): bool
+    public function create(User $user): bool
     {
         return $user->can(PermissionEnum::ItemTypeCreate->value);
     }
@@ -44,7 +45,7 @@ class ItemTypePolicy
     /**
      * Determine whether the user can delete the model.
      */
-    public function destroy(User $user, ItemType $itemType): bool
+    public function destroy(User $user): bool
     {
         return $user->can(PermissionEnum::ItemTypeDestroy->value);
     }

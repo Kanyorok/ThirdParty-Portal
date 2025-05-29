@@ -1,14 +1,16 @@
 <?php
 
-namespace App\Policies;
+
+namespace App\Policies\Inventory;
 
 use App\Enums\Core\PermissionEnum;
-use App\Models\ItemMasterList;
-use App\Models\User;
+use App\Models\Inventory\ItemMasterList;
+use App\Models\Auth\User;
 use Illuminate\Auth\Access\Response;
 
 class ItemMasterListPolicy
 {
+    
     /**
      * Determine whether the user can view any models.
      */
@@ -22,13 +24,13 @@ class ItemMasterListPolicy
      */
     public function view(User $user, ItemMasterList $itemMasterList): bool
     {
-        return false;
+        return $user->can(PermissionEnum::MasterListView->value);
     }
 
     /**
      * Determine whether the user can create models.
      */
-    public function create(User $user, ItemMasterList $itemMasterList): bool
+    public function create(User $user): bool
     {
         return $user->can(PermissionEnum::MasterListCreate->value);
     }
@@ -44,7 +46,7 @@ class ItemMasterListPolicy
     /**
      * Determine whether the user can delete the model.
      */
-    public function destroy(User $user, ItemMasterList $itemMasterList): bool
+    public function destroy(User $user): bool
     {
         return $user->can(PermissionEnum::MasterListDestroy->value);
     }
@@ -52,9 +54,16 @@ class ItemMasterListPolicy
     /**
      * Determine whether the user can restore the model.
      */
-    public function edit(User $user, ItemMasterList $itemMasterList): bool
+    public function restore(User $user, ItemMasterList $itemMasterList): bool
     {
-        return $user->can(PermissionEnum::MasterListRestore->value);
+        return false;
     }
 
+    /**
+     * Determine whether the user can permanently delete the model.
+     */
+    public function forceDelete(User $user, ItemMasterList $itemMasterList): bool
+    {
+        return false;
+    }
 }

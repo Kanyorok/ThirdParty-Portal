@@ -4,91 +4,70 @@ namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
 use App\Models\Inventory\ItemType;
-use Illuminate\Http\Request;
+use App\Http\Requests\Inventory\ItemTypeRequest;
+use App\Services\Inventory\ItemTypeService;
 use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
 
 class ItemTypeController extends Controller
 {
+    protected ItemTypeService $service;
+
+    public function __construct(ItemTypeService $service)
+    {
+        $this->service = $service;
+    }
+
     public function index()
     {
         $itemtypes = ItemType::all();
         return view('inventory.itemmaster.itemtype.index', compact('itemtypes'));
     }
-        public function create()
+
+    public function create()
     {
+        $this->authorize('create', ItemType::class);
         return view('inventory.itemmaster.itemtype.create');
     }
 
-
-    public function store(Request $request)
+    public function store(ItemTypeRequest $request)
     {
-        $request->validate([
-            'TypeName' => 'required|string',
-            'StockTracked' => 'required|boolean',
-            'RequiresTagging' => 'required|boolean',
-            'Active' => 'nullable|boolean',
-        ]);
-
-        $itemtype = ItemType::create([
-            'TypeName' => $request->TypeName,
-            'StockTracked' => $request->StockTracked,
-            'RequiresTagging' => $request->RequiresTagging,
-            'Active' => $request->Active,
-            'CreatedBy' => Auth::id(),
-            'CreatedOn' => Carbon::now(),
-            'ModifiedBy' => Auth::id(),
-            'ModifiedOn' => Carbon::now(),
-        ]);
+        $this->authorize('create', ItemType::class);
+        $this->service->create($request->validated());
 
         return redirect()->route('itemtype.index')->with('success', 'Inventory type created successfully.');
-    
     }
 
     public function show($Id)
     {
         $itemtype = ItemType::findOrFail($Id);
+        $this->authorize('view', $itemtype);
         return response()->json($itemtype);
     }
 
     public function edit($Id)
     {
         $itemtype = ItemType::findOrFail($Id);
+        $this->authorize('update', $itemtype);
         return response()->json($itemtype);
     }
 
+    public function update(ItemTypeRequest $request, $Id)
+    {
+        $itemtype = ItemType::findOrFail($Id);
+        $this->authorize('update', $itemtype);
 
-    public function update(Request $request, $Id)
-{
-    $request->validate([
-        'TypeName' => 'required|string',
-        'StockTracked' => 'required|boolean',
-        'RequiresTagging' => 'required|boolean',
-        'Active' => 'nullable|boolean',
-    ]);
+        $this->service->update($itemtype, $request->validated());
 
-    $itemtype = ItemType::findOrFail($Id);
-
-    $itemtype->update([
-        'TypeName' => $request->TypeName,
-        'StockTracked' => $request->StockTracked,
-        'RequiresTagging' => $request->RequiresTagging,
-        'Active' => $request->input('Active', 0),
-        'ModifiedBy' => Auth::id(),
-        'ModifiedOn' => Carbon::now(),
-    ]);
-
-    return redirect()->route('itemtype.index')->with('success', 'Item Type Updated successfully.');
-}
-
+        return redirect()->route('itemtype.index')->with('success', 'Item Type updated successfully.');
+    }
 
     public function destroy($Id)
     {
         $itemtype = ItemType::findOrFail($Id);
-        $itemtype->DeletedBy = Auth::id();
-        $itemtype->save();
-        $itemtype->delete();
+        $this->authorize('destroy', $itemtype);
 
-        return redirect()->route('itemtype.index')->with('success', 'Item Type Deleted successfully.');
+        $this->service->delete($itemtype);
+
+        return redirect()->route('itemtype.index')->with('success', 'Item Type deleted successfully.');
     }
 }

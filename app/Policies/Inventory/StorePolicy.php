@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Policies;
+namespace App\Policies\Inventory;
 
 use App\Enums\Core\PermissionEnum;
+use App\Models\Auth\User;
 use App\Models\Inventory\Store;
-use App\Models\User;
 use Illuminate\Auth\Access\Response;
 
 class StorePolicy
@@ -20,15 +20,15 @@ class StorePolicy
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, Store $storeItem): bool
+    public function view(User $user): bool
     {
-        return false;
+         return $user->can(PermissionEnum::StoreView->value);
     }
 
     /**
      * Determine whether the user can create models.
      */
-    public function create(User $user, Store $storeItem): bool
+    public function create(User $user): bool
     {
         return $user->can(PermissionEnum::StoreCreate->value);
     }
@@ -36,7 +36,7 @@ class StorePolicy
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, Store $storeItem): bool
+    public function update(User $user): bool
     {
         return $user->can(PermissionEnum::StoreUpdate->value);
     }
@@ -44,7 +44,7 @@ class StorePolicy
     /**
      * Determine whether the user can delete the model.
      */
-    public function destroy(User $user, Store $storeItem): bool
+    public function destroy(User $user): bool
     {
         return $user->can(PermissionEnum::StoreDestroy->value);
     }

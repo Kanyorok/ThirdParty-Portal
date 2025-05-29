@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Policies;
+namespace App\Policies\Inventory;
 
 use App\Enums\Core\PermissionEnum;
 use App\Models\Inventory\InventoryType;
-use App\Models\User;
+use App\Models\Auth\User;
 use Illuminate\Auth\Access\Response;
 
 class InventoryTypePolicy
@@ -22,13 +22,13 @@ class InventoryTypePolicy
      */
     public function view(User $user, InventoryType $inventoryType): bool
     {
-        return false;
+        return $user->can(PermissionEnum::InventoryTypeView->value);
     }
 
     /**
      * Determine whether the user can create models.
      */
-    public function create(User $user, InventoryType $inventoryType): bool
+    public function create(User $user): bool
     {
         return $user->can(PermissionEnum::InventoryTypeCreate->value);
     }
@@ -36,7 +36,7 @@ class InventoryTypePolicy
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, InventoryType $inventoryType): bool
+     public function update(User $user): bool
     {
         return $user->can(PermissionEnum::InventoryTypeUpdate->value);
     }
@@ -44,7 +44,7 @@ class InventoryTypePolicy
     /**
      * Determine whether the user can delete the model.
      */
-    public function destroy(User $user, InventoryType $inventoryType): bool
+ public function destroy(User $user): bool
     {
         return $user->can(PermissionEnum::InventoryTypeDestroy->value);
     }

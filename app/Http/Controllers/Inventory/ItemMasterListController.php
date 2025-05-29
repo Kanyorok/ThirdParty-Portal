@@ -16,7 +16,7 @@ use App\Models\Inventory\UnitOfMeasure;
 
 class ItemMasterListController extends Controller
 {
-    // Display item master list
+
     public function index(Request $request)
     {
         if ($request->ajax()) {
@@ -32,19 +32,27 @@ class ItemMasterListController extends Controller
                     return '
                         <a href="' . route('itemmasterlist.show', $item->Id) . '" class="btn btn-sm btn-primary">View</a>
                         <a href="' . route('itemmasterlist.edit', $item->Id) . '" class="btn btn-sm btn-warning">Edit</a>
-                        <a href="#" onclick="confirmDelete(' . $item->getKey() . ')" class="btn btn-sm btn-danger">Delete</a>';
-                })
-                ->rawColumns(['Action'])
-                ->make(true);
+                        <button onclick="confirmDelete('.$item->Id.')" class="btn btn-danger btn-sm">Delete</button>
+                        <form id="delete-form-'.$item->Id.'" action="'.route('itemmasterlist.destroy', $item->Id).'" method="POST" style="display:none;">
+                        '.csrf_field().'
+                       '.method_field('DELETE').'
+                        </form>
+                       ';
+    })
+    ->rawColumns(['Action'])
+    ->make(true);
+                    
         }
 
         return view('inventory.itemmaster.itemmasterlist.index');
     }
 
-    // Show item creation form
+
     public function create()
     {
+        $this->authorize('create', ItemMasterList::class);
         return view('inventory.itemmaster.itemmasterlist.create', [
+            
             'categories' => ItemCategories::whereNull('ParentId')->get(),
             'itemTypes' => ItemType::all(),
             'uoms' => UnitOfMeasure::all(),
@@ -52,9 +60,10 @@ class ItemMasterListController extends Controller
         ]);
     }
 
-    // Store new item in database
+  
     public function store(Request $request)
     {
+        $this->authorize('create', ItemMasterList::class);
         $validatedData = $request->validate([
             'BarCode' => 'required|string|max:255',
             'ItemName' => 'required|string|max:255',
@@ -98,29 +107,29 @@ class ItemMasterListController extends Controller
 
             // Set category or subcategory
             $item->Category = $request->SubCategory ?: $request->Category;
-
-            // Save first to get the auto-incremented Id
             $item->save();
 
             // Generate ItemCode using the Id and save again
             $item->ItemCode = 'ITM-' . str_pad($item->Id, 5, '0', STR_PAD_LEFT);
             $item->save();
+            
         });
 
         return redirect()->route('itemmaster.index')->with('success', 'Item created successfully.');
     }
 
-    // Show item details
     public function show($Id)
     {
         $item = ItemMasterList::with('category.parent')->findOrFail($Id);
+        $this->authorize('view', $item);
         return view('inventory.itemmaster.itemmasterlist.show', compact('item'));
     }
 
-    // Show item edit form
+   
     public function edit($Id)
     {
         $item = ItemMasterList::findOrFail($Id);
+        $this->authorize('update', $item);
         return view('inventory.itemmaster.itemmasterlist.edit', [
             'item' => $item,
             'categories' => ItemCategories::whereNull('ParentId')->get(),
@@ -131,10 +140,12 @@ class ItemMasterListController extends Controller
         ]);
     }
 
-    // Update item details
-    // Update item details
+
 public function update(Request $request, $Id)
 {
+    $item = ItemMasterList::findOrFail($Id);
+    $this->authorize('update', $item);
+
     $validatedData = $request->validate([
         'BarCode' => 'required|string|max:255',
         'ItemName' => 'required|string|max:255',
@@ -147,13 +158,11 @@ public function update(Request $request, $Id)
         'ItemDescription' => 'nullable|string',
     ]);
 
-    $item = ItemMasterList::findOrFail($Id);
-    
     $item->fill($validatedData);
     $item->ModifiedBy = Auth::id();
     $item->ModifiedOn = Carbon::now();
 
-    // 👇 Update category properly
+   
     $item->Category = $request->SubCategory ?: $request->Category;
 
     // Handle image removal
@@ -195,12 +204,13 @@ public function update(Request $request, $Id)
     public function destroy($Id)
     {
         $item = ItemMasterList::findOrFail($Id);
+        $this->authorize('destroy', $item);
         $item->DeletedBy = Auth::id();
         $item->DeletedOn = Carbon::now();
         $item->save();
         $item->delete();
 
-        return response()->json(['success' => 'Item deleted successfully.']);
+        return redirect()->route('itemmaster.index')->with('success', 'Item Deleted successfully.');
     }
 
     // Get subcategories dynamically

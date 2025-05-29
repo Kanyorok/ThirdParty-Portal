@@ -3,96 +3,82 @@
 namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\Inventory\StoreRequest;
+use App\Services\Inventory\StoreService;
 use App\Models\Inventory\Store;
 use App\Models\Core\Branch;
-use Yajra\DataTables\DataTables;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
-
-
 
 class StoreController extends Controller
 {
+    protected $service;
+
+    public function __construct(StoreService $service)
+    {
+        $this->service = $service;
+    }
+
     public function index()
     {
-        $stores = Store::all(); 
+        $stores = Store::all();
         return view('inventory.stores.index', compact('stores'));
     }
 
     public function create()
     {
+        $this->authorize('create', Store::class);
         $branches = Branch::all();
         return view('inventory.stores.create', compact('branches'));
     }
 
-public function store(Request $request)
-{
-    $validatedData = $request->validate([
-        'StoreName'   => 'required|string|max:255',
-        'BranchID'    => 'required|integer',
-        'Status'      => 'required|boolean',
-    ]);
-
-    try {
-        $store = new Store($validatedData);
-        $store->CreatedBy = Auth::id();
-        $store->CreatedOn = now();
-        $store->ModifiedBy = Auth::id();
-        $store->ModifiedOn = now();
-        $store->save();
-
-        // Generate StoreID after save (using the auto-increment Id)
-        $store->StoreID = 'STR-' . str_pad($store->Id, 5, '0', STR_PAD_LEFT);
-        $store->save();
-
-        return redirect()->route('stores.index')->with('success', 'Store created successfully.');
-    } catch (\Exception $e) {
-        return redirect()->back()->with('error', 'Failed to create store: ' . $e->getMessage());
+    public function store(StoreRequest $request)
+    {
+        $this->authorize('create', Store::class);
+        try {
+            $store = $this->service->create($request->validated());
+            return redirect()->route('stores.index')->with('success', 'Store created successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to create store: ' . $e->getMessage())->withInput();
+        }
     }
-}
 
     public function show($Id)
     {
         $store = Store::findOrFail($Id);
+        $this->authorize('view', $store);
         return view('inventory.stores.show', compact('store'));
     }
+
     public function edit($Id)
     {
         $store = Store::findOrFail($Id);
+        $this->authorize('update', $store);
         $branches = Branch::all();
         return view('inventory.stores.edit', compact('store', 'branches'));
-        
     }
-    public function update(Request $request, $Id)
+
+    public function update(StoreRequest $request, $Id)
     {
-        $validatedData = $request->validate([
-            'StoreName'   => 'required|string|max:255',
-            'BranchID'    => 'required|integer',
-            'Status'      => 'required|boolean',
-        ]);
+        $store = Store::findOrFail($Id);
+        $this->authorize('update', $store);
 
         try {
-            $store = Store::findOrFail($Id);
-            $store->update($validatedData);
+            $this->service->update($store, $request->validated());
             return redirect()->route('stores.index')->with('success', 'Store updated successfully.');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Failed to update store: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to update store: ' . $e->getMessage())->withInput();
         }
     }
+
     public function destroy($Id)
     {
+        $store = Store::findOrFail($Id);
+        $this->authorize('destroy', $store);
+
         try {
-            $store = Store::findOrFail($Id);
-            $store->delete();
+            $this->service->delete($store);
             return redirect()->route('stores.index')->with('success', 'Store deleted successfully.');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Failed to delete store: ' . $e->getMessage());
         }
     }
-
-
-    }
-
-
+}

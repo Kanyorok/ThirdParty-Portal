@@ -2,6 +2,15 @@
 @extends('layouts.app')
 @section('title', 'Add Inventory Type')
 @section('content')
+@if($errors->any())
+    <div class="alert alert-danger">
+        <ul>
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
 
 <h4>Add Inventory Type</h4>
 <form action="{{ route('inventorytype.store') }}" method="POST" enctype="multipart/form-data">

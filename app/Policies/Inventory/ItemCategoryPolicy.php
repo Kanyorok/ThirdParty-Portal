@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Policies;
+namespace App\Policies\Inventory;
+
 
 use App\Enums\Core\PermissionEnum;
-use App\Models\ItemCategories;
-use App\Models\User;
+use App\Models\Inventory\ItemCategories;
+use App\Models\Auth\User;
 use Illuminate\Auth\Access\Response;
 
 class ItemCategoryPolicy
@@ -14,7 +15,7 @@ class ItemCategoryPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can(PermissionEnum::ItemCategory->value);
+        return $user->can(PermissionEnum::ItemCategoryView->value);
     }
 
     /**
@@ -22,16 +23,16 @@ class ItemCategoryPolicy
      */
     public function view(User $user, ItemCategories $Category): bool
     {
-        return false;
+        return $user->can(PermissionEnum::ItemCategoryView->value);
     }
 
     /**
      * Determine whether the user can create models.
      */
-    public function create(User $user, ItemCategories $Category): bool
-    {
-        return $user->can(PermissionEnum::ItemCategoryCreate->value);
-    }
+    public function create(User $user): bool
+{
+    return $user->can(PermissionEnum::ItemCategoryCreate->value);
+}
 
     /**
      * Determine whether the user can update the model.

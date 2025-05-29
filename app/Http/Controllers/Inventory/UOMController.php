@@ -4,45 +4,37 @@ namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
 use App\Models\Inventory\UnitOfMeasure;
-use Illuminate\Http\Request;
+use App\Http\Requests\Inventory\UnitOfMeasureRequest;
+use App\Services\Inventory\UnitOfMeasureService;
 use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
 
 class UOMController extends Controller
 {
+    protected $service;
+
+    public function __construct(UnitOfMeasureService $service)
+    {
+        $this->service = $service;
+    }
+
     public function index()
     {
         $units = UnitOfMeasure::all();
         return view('inventory.itemmaster.unitofmeasure.index', compact('units'));
     }
-        public function create()
+
+    public function create()
     {
+        $this->authorize('create', UnitOfMeasure::class);
         return view('inventory.itemmaster.unitofmeasure.create');
     }
 
-
-    public function store(Request $request)
+    public function store(UnitOfMeasureRequest $request)
     {
-        $request->validate([
-            'Code' => 'required|string|max:50',
-            'Name' => 'required|string|max:255',
-            'BaseUnit' => 'nullable|boolean',
-            'Active' => 'required|boolean',
-        ]);
+        $this->authorize('create', UnitOfMeasure::class);
+        $this->service->create($request->validated());
 
-        $unit = UnitOfMeasure::create([
-            'Code' => $request->Code,
-            'Name' => $request->Name,
-            'BaseUnit' => $request->BaseUnit,
-            'Active' => $request->Active,
-            'CreatedBy' => Auth::id(),
-            'CreatedOn' => Carbon::now(),
-            'ModifiedBy' => Auth::id(),
-            'ModifiedOn' => Carbon::now(),
-        ]);
-
-        return redirect()->route('unitofmeasure.index')->with('success', 'Inventory type created successfully.');
-    
+        return redirect()->route('unitofmeasure.index')->with('success', 'Unit of Measure created successfully.');
     }
 
     public function show($Id)
@@ -54,38 +46,25 @@ class UOMController extends Controller
     public function edit($Id)
     {
         $unit = UnitOfMeasure::findOrFail($Id);
+        $this->authorize('update', UnitOfMeasure::class);
         return response()->json($unit);
     }
 
-    public function update(Request $request, $Id)
+    public function update(UnitOfMeasureRequest $request, $Id)
     {
-        $request->validate([
-            'Code' => 'required|string|max:50',
-            'Name' => 'required|string|max:255',
-            'BaseUnit' => 'nullable|boolean',
-            'Active' => 'required|boolean',
-        ]);
-
         $unit = UnitOfMeasure::findOrFail($Id);
-        $unit->update([
-            'Code' => $request->Code,
-            'Name' => $request->Name,
-            'BaseUnit' => $request->BaseUnit,
-            'Active' => $request->Active,
-            'ModifiedBy' => Auth::id(),
-            'ModifiedOn' => Carbon::now(),
-        ]);
+        $this->authorize('update', UnitOfMeasure::class);
+        $this->service->update($unit, $request->validated());
 
-        return redirect()->route('unitofmeasure.index')->with('success', 'Unit of Measure Updated successfully.');
+        return redirect()->route('unitofmeasure.index')->with('success', 'Unit of Measure updated successfully.');
     }
 
     public function destroy($Id)
     {
         $unit = UnitOfMeasure::findOrFail($Id);
-        $unit->DeletedBy = Auth::id();
-        $unit->save();
-        $unit->delete();
+        $this->authorize('destroy', UnitOfMeasure::class);
+        $this->service->delete($unit);
 
-        return redirect()->route('unitofmeasure.index')->with('success', 'Unit of Measure Deleted successfully.');
+        return redirect()->route('unitofmeasure.index')->with('success', 'Unit of Measure deleted successfully.');
     }
 }

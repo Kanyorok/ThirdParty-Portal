@@ -3,6 +3,15 @@
 @section('title', 'Item Master List')
 
 @section('content')
+@if($errors->any())
+    <div class="alert alert-danger">
+        <ul>
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
 
 <div class="container bg-white shadow-sm rounded p-4">
     <h4 class="mb-4">📦 Item Master List</h4>
@@ -72,20 +81,9 @@ $(document).ready(function () {
     });
 });
 
-function confirmDelete(id) {
-    if (confirm("Are you sure you want to delete this item?")) {
-        $.ajax({
-            url: "{{ url('inventory/itemmasterlist') }}/" + id,
-            type: 'DELETE',
-            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-            success: function(response) {
-                alert('Item deleted successfully.');
-                $('#itemMasterListTbl').DataTable().ajax.reload();
-            },
-            error: function(error) {
-                alert('Error deleting item.');
-            }
-        });
+function confirmDelete(Id) {
+    if (confirm('⚠️ Are you sure you want to delete this unit?')) {
+        document.getElementById('delete-form-' + Id).submit();
     }
 }
 </script>
