@@ -331,44 +331,6 @@
             });
 
 
-            function calculateSummaryTotals() {
-                let exclusiveTotal = 0;
-                let totalTax = 0;
-
-                // Loop through each row to calculate totals
-                $('#po-items tr').each(function() {
-                    let row = $(this);
-                    let qty = parseFloat(row.find('.quantity').val()) || 0;
-                    let price = parseFloat(row.find('.unit-price').val()) || 0;
-                    let tax = parseFloat(row.find('.tax').val()) || 0;
-                    let discount = parseFloat(row.find('.discount').val()) || 0;
-
-                    // Calculate line total before tax and discount
-                    let lineTotalBeforeTax = qty * price;
-
-                    // Apply discount
-                    if (discount > 0) {
-                        lineTotalBeforeTax -= lineTotalBeforeTax * (discount / 100);
-                    }
-
-                    // Calculate tax for this line
-                    let lineTax = lineTotalBeforeTax * (tax / 100);
-
-                    // Add to totals
-                    exclusiveTotal += lineTotalBeforeTax;
-                    totalTax += lineTax;
-                });
-
-                // Calculate inclusive total
-                let inclusiveTotal = exclusiveTotal + totalTax;
-
-                // Update the summary fields
-                $('input[name="exclusiveTotal"]').val(exclusiveTotal.toFixed(2));
-                $('input[name="taxAmount"]').val(totalTax.toFixed(2));
-                $('input[name="inclusiveTotal"]').val(inclusiveTotal.toFixed(2));
-            }
-
-
 
             function calculateSummaryTotals() {
                 let exclusiveTotal = 0;
