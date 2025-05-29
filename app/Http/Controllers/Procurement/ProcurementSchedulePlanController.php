@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Procurement;
 
+use App\Enums\Core\PostingEnum;
 use App\Enums\Procurement\SchedulePlanEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
@@ -13,7 +14,7 @@ class ProcurementSchedulePlanController extends Controller
 {
     public function index()
     {
-        $draftedplans = ConsolidatedProcurementPlan::where('Status', 'd')->get();
+        $draftedplans = ConsolidatedProcurementPlan::where('Status', PostingEnum::Draft)->get();
         return view('procurement.procurementplan.scheduleplan.index', compact('draftedplans'));
     }
 

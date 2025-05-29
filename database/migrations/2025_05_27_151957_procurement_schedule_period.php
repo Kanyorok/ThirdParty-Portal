@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-            Schema::create('t_Schedule_period', static function (Blueprint $table) {
+            Schema::create('t_SchedulePeriod', static function (Blueprint $table) {
             $table->id('Id');
             $table->foreignId('ScheduleId')->constrained('t_SchedulePlan','Id');
             $table->string('SchedulePeriod');
@@ -27,6 +27,6 @@ return new class extends Migration
 
     public function down(): void
     {
-         Schema::dropIfExists('t_Schedule_period');
+         Schema::dropIfExists('t_SchedulePeriod');
     }
 };
