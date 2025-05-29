@@ -7,7 +7,7 @@
 @section('styles')
     <link rel="stylesheet" href="https://cdn.datatables.net/2.1.5/css/dataTables.dataTables.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/select/2.0.5/css/select.dataTables.css">
-    <link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
     <style>
         .select2-container {
             width: 100% !important;
@@ -295,11 +295,11 @@
     </div>
 @endsection
 @section('scripts')
-    <script src="{{ asset('assets/plugins/select2/js/select2.full.min.js') }}"></script>
+    <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
     <script src="https://cdn.datatables.net/2.1.5/js/dataTables.js"></script>
     <script src="https://cdn.datatables.net/select/2.0.5/js/dataTables.select.js"></script>
     <script src="https://cdn.datatables.net/select/2.0.5/js/select.dataTables.js"></script>
-    <script src='{{ asset('assets/plugins/moment/moment-with-locales.js') }}'></script>
+    <script src='{{ asset('assets/libs/moment/moment-with-locales.js') }}'></script>
     <script>const searchBtn = $('#searchFormBtn'), searchQuery = $('.search-form-item');
         let productsTable = null;
 

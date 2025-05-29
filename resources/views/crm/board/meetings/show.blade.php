@@ -2,8 +2,8 @@
 
 @section('title','Board Meeting')
 @section('styles')
-    <link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/plugins/dropzone/dropzone.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/libs/dropzone/dropzone.min.css') }}">
     <style>
         .select2-container {
             width: 100% !important;
@@ -173,10 +173,10 @@
     </div>
 @endsection
 @section('scripts')
-    <script src="{{ asset('assets/plugins/dropzone/dropzone.min.js') }}"></script>
-    <script src="{{ asset('assets/plugins/rangePlugin.js') }}"></script>
-    <script src="{{ asset('assets/plugins/select2/js/select2.full.min.js') }}"></script>
-    <script src='{{ asset('assets/plugins/moment/moment-with-locales.js') }}'></script>
+    <script src="{{ asset('assets/libs/dropzone/dropzone.min.js') }}"></script>
+    <script src="{{ asset('assets/libs/rangePlugin.js') }}"></script>
+    <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
+    <script src='{{ asset('assets/libs/moment/moment-with-locales.js') }}'></script>
     @include('snippets.actions.preview-files')
     <script>  $Modal = $('#meetingActionsModal');
         Dropzone.options.uploadForm = {

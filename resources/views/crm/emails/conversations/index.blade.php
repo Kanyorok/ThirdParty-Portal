@@ -5,7 +5,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.20/summernote-bs5.min.css"
           integrity="sha512-ngQ4IGzHQ3s/Hh8kMyG4FC74wzitukRMIcTOoKT3EyzFZCILOPF0twiXOQn75eDINUfKBYmzYn2AA8DkAk8veQ=="
           crossorigin="anonymous" referrerpolicy="no-referrer"/>
-    <link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
 @endsection
 @section('content')
     <div class="row">
@@ -94,8 +94,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.20/summernote-bs5.min.js"
             integrity="sha512-6F1RVfnxCprKJmfulcxxym1Dar5FsT/V2jiEUvABiaEiFWoQ8yHvqRM/Slf0qJKiwin6IDQucjXuolCfCKnaJQ=="
             crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="{{ asset('assets/plugins/select2/js/select2.full.min.js') }}"></script>
-    <script src="{{ asset('assets/js/datatables.js') }}"></script>
+    <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
     <script> const Listing = $("#MailListMainContent"), Content = $("#MailMainContent");
         let DRAFTSTable = null, SENTTable = null;
         $(function () {
