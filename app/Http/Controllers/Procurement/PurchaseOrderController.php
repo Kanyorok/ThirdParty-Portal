@@ -306,7 +306,7 @@ class PurchaseOrderController extends Controller
             $RFQ = collect(); // fallback to empty collection
         }
 
-        return view("procurement.orders.rfqLInk", compact('RFQ'));
+        return view("procurement.orders.rfqlink", compact('RFQ'));
     }
 
 
