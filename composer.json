@@ -14,10 +14,11 @@
         "ext-json": "*",
         "ext-mbstring": "*",
         "ext-pdo": "*",
-        "ext-zlib": "*",
         "ext-soap": "*",
+        "ext-zlib": "*",
         "barryvdh/laravel-dompdf": "*",
         "chartblocks/php-ssrs": "^1.0",
+        "clue/http-proxy-react": "^1.9",
         "davmixcool/php-sentiment-analyzer": "^1.2",
         "echolabsdev/prism": "^0.34.0",
         "facebook/php-business-sdk": "^21.0",
@@ -38,7 +39,6 @@
         "spatie/laravel-permission": "^6.9",
         "yajra/laravel-datatables": "^11.0",
         "yajra/laravel-datatables-html": "11.0"
-
     },
     "require-dev": {
         "roave/security-advisories": "dev-latest",

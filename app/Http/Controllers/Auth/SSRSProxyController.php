@@ -8,10 +8,12 @@ use App\Models\Core\Report;
 use App\Services\ThirdParty\SSRSService;
 use Exception;
 use GuzzleHttp\Client;
+use GuzzleHttp\Cookie\CookieJar;
+use GuzzleHttp\Cookie\SetCookie;
+use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Log;
 
 class SSRSProxyController extends Controller
 {
@@ -174,6 +176,9 @@ class SSRSProxyController extends Controller
 
     public function report(Request $request, string $path)
     {
+        if (Str::contains($request->server('HTTP_COOKIE'), 'AIConnectionString')) {
+            dd($request->server('HTTP_COOKIE'));
+        }
         $service = new SSRSService();
         try {
             $metadata = $service->getReportByPath('/' . $path);
@@ -289,27 +294,103 @@ class SSRSProxyController extends Controller
 
         if ($request->getQueryString()) {
             $targetUrl .= '?' . $request->getQueryString();
-    }
+        }
+
 
         try {
             $method = strtolower($request->method());
-            $client = new Client([
+            $jar = new CookieJar();
+            $cookiesValues = '';
+            if ($method === 'post') {
+                $cookies = collect(explode(';', $request->server('HTTP_COOKIE')))->map(function ($item) {
+                    $item = explode('=', $item);
+                    $key = Str::trim($item[0]);
+
+                    if (!Str::startsWith($key, 'ai_')) {
+                        return null;
+                    }
+
+                    return [
+                        'key' => $key,
+                        'value' => Str::trim($item[1]),
+                    ];
+                })->filter()->toArray();
+                #
+                foreach ($cookies as $cookie) {
+
+                    $jar->setCookie(new SetCookie([
+                        'Name' => $cookie['key'],
+                        'Value' => $cookie['value'],
+                        'Domain' => parse_url($service->serverURL, PHP_URL_HOST)
+                    ]));
+                    $cookiesValues .= $cookie['key'] . '=' . $cookie['value'] . ';';
+                }
+
+            }
+
+            $headers = [
+                'Accept' => $request->header('Accept', '*/*'),
+                'Accept-Language' => $request->header('Accept-Language', 'en-US,en;q=0.9'),
+                'User-Agent' => $request->header('User-Agent'),
+                'Content-Type' => $request->header('Content-Type', 'application/x-www-form-urlencoded'),
+            ];
+            if (!empty($cookiesValues)) {
+                $headers['Cookie'] = $cookiesValues;
+            }
+
+            // Remove null or empty values
+            //  $headers = array_filter($headers);
+
+
+            $options = [
                 'auth' => [$service->getUsername(), $service->getPassword(), 'ntlm'],
                 'verify' => false,
-                'headers' => $request->headers->all() // Pass all original headers
-            ]);
+                'headers' => $headers,
+                'cookies' => $jar
+            ];
+
+
+            // Add form data for POST requests
+            if ($method === 'post' && $request->post()) {
+                $params = collect();
+                foreach ($request->post() as $key => $value) {
+                    $value = $value ?? '';
+                    $params->put($key, $value);
+                }
+                $options['form_params'] = $params->toArray();
+            }
+
+            $client = new Client($options);
 
             // Forward the request with the same method and parameters
-            $ssrsResponse = ($method === 'get')
-                ? $client->get($targetUrl)
-                : $client->post($targetUrl, ['form_params' => $request->post()]);
+            try {
+                $ssrsResponse = ($method === 'get')
+                    ? $client->get($targetUrl)
+                    : $client->post($targetUrl, $options);
+            } catch (Exception|GuzzleException $e) {
+                dd($client, $targetUrl, $options, $e);
+            }
+
+
+            if ($request->isMethod('POST')) {
+                dd($ssrsResponse->getBody(), 'ssrsResponse', $ssrsResponse->getHeaders(), 'ssrsResponse Headers', $ssrsResponse->getStatusCode());
+
+            }
+            if ($request->query('OpType') === 'SessionKeepAlive') {
+                // Return a plain text 'OK' response which is what the client expects
+                return response('OK', 200)
+                    ->header('Content-Type', 'text/plain');
+            }
+
+
 
             // Return the response directly without modification
             return response($ssrsResponse->getBody(), $ssrsResponse->getStatusCode())
                 ->withHeaders($ssrsResponse->getHeaders());
         } catch (Exception $e) {
-            Log::error('SSRS Proxy Error: ' . $e->getMessage());
-            return response('Error proxying to SSRS server: ' . $e->getMessage(), 500);
+
+            dd('SSRS Proxy Error: ' . $e->getMessage() . ' URL: ' . $targetUrl, $e->getTrace());
+            return response('Error proxying to SSRS server: ' . $e->getMessage());
         }
     }
 }

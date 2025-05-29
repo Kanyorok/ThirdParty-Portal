@@ -5,42 +5,74 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Services\ThirdParty\SSRSService;
 use Exception;
+use GuzzleHttp\Client;
 use Illuminate\Http\Request;
-use SoapFault;
-use SSRS\Report;
+
+//use function React\Async\await;
 
 class ReportController extends Controller
 {
-
     public function viewSsrsReport(Request $request)
     {
-        $service = new SSRSService();
-
         try {
-            $ssrs = new Report($service->serverURL . 'ReportServer/', [
-                'username' => $service->getUsername(),
-                'password' => $service->getPassword(),
+            // Get the SSRS service instance
+            $ssrsService = new SSRSService();
+
+            // Get proxy configuration from environment or config
+            //$proxyUrl = config('services.proxy.url', 'http://proxy-server:8080'); &rs:embed=true
+
+            // Get report parameters
+            $reportPath = /*$request->input('reportPath',*/
+                '/BRERP/Inventory/ItemCatalogue&rs:embed=true';//);
+            $reportFormat = 'rs:embed=true';/* $request->input('format','HTML4.0');*/
+            //$reportParameters = $request->input('parameters', []);
+
+
+            /*if (empty($reportPath)) {
+                return response()->json(['error' => 'Report path is required'], 400);
+            }*/
+
+            // Create a custom Guzzle client with proxy configuration
+            $client = new Client([
+                'base_uri' => $ssrsService->serverURL,
+                'proxy' => $ssrsService->serverURL,//$proxyUrl,
+                'auth' => [$ssrsService->getUsername(), $ssrsService->getPassword(), 'ntlm'],
+                'verify' => false,
+                'cookies' => true,
+                'timeout' => 60,
             ]);
 
+            // Build the report URL
+            $reportUrl = '/reportserver?' . $reportPath;
+            //$queryParams = ['rs:Format' => $reportFormat];
+            $queryParams = ['rs:embed' => 'true'];
 
-            // Set the report path
-            $ssrs->loadReport('/BRERP/Inventory/ItemCatalogue');
+            // Add custom report parameters if provided
+            /* foreach ($reportParameters as $key => $value) {
+                 $queryParams[$key] = $value;
+             }*/
 
-            // Set parameters if any
-            //$ssrs->setExecutionParameters(['Param1' => 'Value1']);
+            // Make the request through the proxy
+            $response = $client->get($reportUrl, [
+                //'query' => 'rs:embed=true',
+                'headers' => [
+                    'Accept' => 'text/html,application/xhtml+xml,application/xml',
+                    'User-Agent' => $request->header('User-Agent'),
+                ],
+            ]);
 
-            // Render the report (e.g., to HTML)
-            $output = $ssrs->render('HTML5'); // Or other formats like PDF
+            // Get the content type from the response
+            $contentType = $response->getHeaderLine('Content-Type');
 
-            // You might then save this output to a temporary file and display it,
-            // or directly embed if it's HTML.
-            // For HTML, you could pass it to a view or return it directly.
-            return view('reports.details', ['reportHtml' => $output]);
-        } catch (SoapFault $sf) {
-            dd($sf);
+            // Return the response with appropriate headers
+            return response($response->getBody()->getContents())
+                ->header('Content-Type', $contentType);
+
         } catch (Exception $e) {
-            // Handle error
-            dd($e);
+            return response()->json([
+                'error' => 'An error occurred while loading the report',
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
 }
