@@ -318,7 +318,7 @@ enum PermissionEnum: string
             => ModulesEnum::Procurement,
         
             self::Departments, self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete => ModulesEnum::HRM,
-            
+
             self::MasterListView => ModulesEnum::Inventory,
         };
     }
