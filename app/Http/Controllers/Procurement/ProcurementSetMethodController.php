@@ -7,7 +7,6 @@ use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\PlanLineItems;
 use App\Services\Procurement\ProcurementPlan\ProcurementMethodService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 
 class ProcurementSetMethodController extends Controller
@@ -15,7 +14,7 @@ class ProcurementSetMethodController extends Controller
     //
     public function index()
     {
-        $approvedPlans = ConsolidatedProcurementPlan::where('Status', 'approved')->get();
+        $approvedPlans = ConsolidatedProcurementPlan::where('Status', 'd')->get();
         return view('procurement.procurementplan.planneditemsandactivities.assignprocurementmethod.index', compact('approvedPlans'));
     }
 

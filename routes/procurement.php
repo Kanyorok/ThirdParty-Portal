@@ -55,9 +55,9 @@ use App\Http\Controllers\Procurement\PlanEditController;
 use App\Http\Controllers\Procurement\PlanApprovalInboxController;
 use App\Http\Controllers\Procurement\PlanExectionDashboardController;
 use App\Http\Controllers\Procurement\DepartmentNeedApprovalController;
+use App\Http\Controllers\Procurement\ProcurementSchedulePlanController;
 
 Route::namespace('Procurement')->prefix('procurement')->group(function () {
-
 
 
     //Requisitions
@@ -222,13 +222,22 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::delete('/procurementdepartmentalplan/delete/{NeedID}', [DepartmentNeedsController::class, 'destroy'])->name('procurementdepartmentalplan.destroy');
     Route::get('/procurementdepartmentalplan/data', [DepartmentNeedsController::class, 'getDepartmentNeeds'])->name('procurementdepartmentalplan.data');
 
+    //Procurement Schedule Plan
+    //Route::resource('procurementplanquaterly', ProcurementquaterlyController::class);
+    Route::get('/Procurement-Plan-Schedule', [ProcurementSchedulePlanController::class,'index'])->name('Procurement-Plan-Schedule.index');
+    Route::get('/Procurement-Plan-Schedule/create/{PlanId}', [ProcurementSchedulePlanController::class,'create'])->name('Procurement-Plan-Schedule.create');
+    Route::get('/Procurement-Plan-Schedule/lines/{PlanId}', [ProcurementSchedulePlanController::class, 'fetchLinesByDPlan'])->name('Procurement-Plan-Schedule.view');
+    Route::post('/Procurement-Plan-Schedule', [ProcurementSchedulePlanController::class, 'store'])->name('Procurement-Plan-Schedule.store');
+    Route::get('/Procurement-Plan-Schedule/edit/{lineItemId}', [ProcurementSchedulePlanController::class, 'edit'])->name('Procurement-Plan-Schedule.edit');
+
+
+
 
     //Procurement Plan, Plan Consolidation
     Route::resource('procurementplanmaintain', ProcurementPlanMaintainController::class);
     Route::resource('procurementplanapproval', ProcurementApprovalController::class);
     Route::resource('consolidated', ConsolidatedDashboardController::class);
     Route::resource('procurementplandetails', ProcurementPlanDetailController::class);
-    Route::resource('procurementplanquaterly', ProcurementquaterlyController::class);
     Route::resource('procurementitemsdashboard', ConsolidatedDashboardController::class);
     Route::resource('maptobudget', MapToBudgetController::class);
     Route::resource('plantimeline', TimelineController::class);
@@ -238,7 +247,7 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::resource('planfromneeds', PlanFromNeedsController::class);
     Route::resource('planmanualinput', PlanManualInputController::class);
     Route::resource('submitplan', SubmitForApprovalController::class);
-    Route::resource('editplan', PlanEditController::class);
+    Route::resource('ammendplan', PlanEditController::class);
     Route::resource('approvalinbox', PlanApprovalInboxController::class);
     Route::resource('executiondashboard', PlanExectionDashboardController::class);
 
@@ -263,18 +272,32 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
 
     //procurement Consolidation
     Route::get('/dashboard', [ConsolidatedDashboardController::class, 'index'])->name('dashboard.index');
-    Route::get('/dashboard/show/{id}', [ConsolidatedDashboardController::class, 'show'])->name('dashboard.show');
+    Route::get('/dashboard/show/{needId}', [ConsolidatedDashboardController::class, 'show'])->name('dashboard.show');
 
     Route::post('/procurement-plans', [ProcurementPlanMaintainController::class, 'store'])->name('procurementplanmaintain.store');
+    Route::get('/planning/edit-draft/{plan_id}', [ProcurementPlanMaintainController::class, 'editDraft'])
+     ->name('planning.editDraft');
+     Route::get('/procurementplanmaintain/{id}', [ProcurementPlanMaintainController::class, 'show'])->name('procurementplanmaintain.show');
+
 
     Route::prefix('procurement')->group(function () {
-        Route::get('plan-manual-input/create', [PlanManualInputController::class, 'create'])->name('plan.manual-input.create');
-        Route::post('plan-manual-input', [PlanManualInputController::class, 'store'])->name('plan.manual-input.store');
-    });
+
+    Route::get('plan-manual-input', [PlanManualInputController::class, 'index'])->name('procurement.procurementplan.planconsolidation.manualentry.index');
+    Route::get('plan-manual-input/create', [PlanManualInputController::class, 'create'])->name('plan.manual-input.create');
+    Route::post('plan-manual-input', [PlanManualInputController::class, 'store'])->name('plan.manual-input.store');
+
+    Route::get('/edit/{lineItem}', [PlanManualInputController::class, 'edit'])->name('edit');
+    Route::put('/update/{lineItem}', [PlanManualInputController::class, 'update'])->name('update');
+    Route::delete('/destroy/{lineItem}', [PlanManualInputController::class, 'destroy'])->name('destroy');
+        });
     Route::prefix('procurement/plan')->name('plan-from-needs.')->group(function () {
-        Route::get('/select-approved-needs', [PlanFromNeedsController::class, 'create'])->name('create');
-        Route::post('/store-from-needs', [PlanFromNeedsController::class, 'store'])->name('store');
-    });
+    Route::get('/create', [PlanFromNeedsController::class, 'create'])->name('create');
+    Route::post('/store', [PlanFromNeedsController::class, 'store'])->name('store');
+    Route::get('/planning/filter-needs', [PlanFromNeedsController::class, 'filterNeeds'])->name('planning.filterNeeds');
+    Route::get('/departments/{branchId}', [PlanFromNeedsController::class, 'getDepartments']);
+    Route::get('/categories', [PlanFromNeedsController::class, 'getCategories']);
+});
+    Route::get('/planning/edit', [PlanEditController::class, 'index'])->name('planning.editDraftItems');
     Route::get('/planning/edit-draft/{plan_id}', [PlanEditController::class, 'index']);
     Route::post('/planning/update-draft-items', [PlanEditController::class, 'updateDraftItems'])->name('planning.updateDraftItems');
     Route::delete('procurement/planning/delete-draft-item/{id}', [PlanEditController::class, 'deleteDraftItem'])->name('procurement.planning.deleteDraftItem');

@@ -1,11 +1,13 @@
 @extends('layouts.app')
 
 @section('title', 'Edit Draft Plan Items')
-
+@section('styles')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+@endsection
 @section('content')
 <div class="container mt-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4>✏️ Edit Draft Plan Items – Annual Procurement Plan 2025</h4>
+    <h4>✏️ Edit Draft Plan Items </h4>
     <a href="/planning" class="btn btn-sm btn-outline-secondary">← Back to Dashboard</a>
   </div>
 
@@ -13,6 +15,39 @@
   <div class="alert alert-info">
     <strong>Status:</strong> DRAFT | <strong>Total Items:</strong> 20 | <strong>Editable:</strong> Yes
   </div>
+@if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        ✅ {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
+
+@if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        ⚠️ {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
+<!-- Plan selection form -->
+<form method="GET" action="{{ route('planning.editDraftItems') }}" class="mb-3">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-6">
+            <label for="PlanID" class="form-label">Select Draft Plan</label>
+            <select name="PlanID" id="PlanID" class="form-select" onchange="this.form.submit()">
+                <option value="">-- Choose Draft Plan --</option>
+                @foreach($availablePlans as $plan)
+                    <option value="{{ $plan->PlanID }}" {{ $PlanID == $plan->PlanID ? 'selected' : '' }}>
+                        {{ $plan->Title ?? 'Unnamed Plan' }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+        <div class="col-md-3">
+            <button type="submit" class="btn btn-primary">🔍 Filter</button>
+        </div>
+    </div>
+</form>
+
 
   <form method="POST" action="{{ route('planning.updateDraftItems') }}">
     @csrf
@@ -21,7 +56,7 @@
     @endforeach
 
     <div class="table-responsive">
-      <table class="table table-bordered align-middle table-hover">
+      <table id="amendTable" class="table table-bordered table-striped align-middle">
         <thead class="table-light">
           <tr>
             <th>#</th>
@@ -87,5 +122,23 @@ function confirmDelete(id) {
     document.getElementById('delete-form-' + id).submit();
   }
 }
+</script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        @if(!$draftItems->isEmpty())
+        $('#amendTable').DataTable({
+            pageLength: 10,
+            ordering: true,
+            searching: true,
+            lengthChange: true,
+            language: {
+                emptyTable: ""
+            }
+        });
+        @endif
+    });
 </script>
 @endsection
