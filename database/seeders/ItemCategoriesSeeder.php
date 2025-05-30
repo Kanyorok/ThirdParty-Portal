@@ -1,5 +1,4 @@
 <?php
-
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
@@ -11,20 +10,7 @@ class ItemCategoriesSeeder extends Seeder
 {
     public function run()
     {
-        // Disable constraints
-        DB::statement('ALTER TABLE t_ItemCategories NOCHECK CONSTRAINT ALL');
-
-        // Delete all records
-        ItemCategories::query()->forceDelete();
-
-        // Reseed identity
-        DB::statement("DBCC CHECKIDENT ('t_ItemCategories', RESEED, 0)");
-
-        // Enable constraints again
-        DB::statement('ALTER TABLE t_ItemCategories WITH CHECK CHECK CONSTRAINT ALL');
-
-        // Seed data
-        $now = \Illuminate\Support\Carbon::now();
+        $now = Carbon::now();
         $createdBy = 1;
 
         $categories = [
@@ -34,27 +20,33 @@ class ItemCategoriesSeeder extends Seeder
         ];
 
         foreach ($categories as $parentName => $subCategories) {
-            $parent = ItemCategories::create([
-                'Name' => $parentName,
-                'Description' => "$parentName for company use",
-                'CreatedBy' => $createdBy,
-                'ModifiedBy' => $createdBy,
-                'CreatedOn' => $now,
-                'ModifiedOn' => $now,
-        ]);
-
-            foreach ($subCategories as $childName) {
-                ItemCategories::create([
-                    'Name' => $childName,
-                    'Description' => "$childName under $parentName",
-                    'ParentId' => $parent->Id,
+            $parent = ItemCategories::firstOrCreate(
+                ['Name' => $parentName],
+                [
+                    'Description' => "$parentName for company use",
                     'CreatedBy' => $createdBy,
                     'ModifiedBy' => $createdBy,
                     'CreatedOn' => $now,
                     'ModifiedOn' => $now,
-                ]);
+                    // Optional: add unique CategoryCode if needed
+                    'CategoryCode' => strtoupper(substr($parentName, 0, 3)) . '-PARENT',
+                ]
+            );
+
+            foreach ($subCategories as $childName) {
+                ItemCategories::firstOrCreate(
+                    ['Name' => $childName, 'ParentId' => $parent->Id],
+                    [
+                        'Description' => "$childName under $parentName",
+                        'CreatedBy' => $createdBy,
+                        'ModifiedBy' => $createdBy,
+                        'CreatedOn' => $now,
+                        'ModifiedOn' => $now,
+                        // Optional: make CategoryCode based on name
+                        'CategoryCode' => strtoupper(substr($childName, 0, 3)) . '-' . rand(100, 999),
+                    ]
+                );
             }
         }
     }
-
 }

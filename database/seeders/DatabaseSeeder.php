@@ -28,6 +28,8 @@ class DatabaseSeeder extends Seeder
         $this->call(DepartmentSeeder::class);
         $this->call(EmployeeSeeder::class);
         $this->call(ItemCategoriesSeeder::class);
+        $this->call(ItemTypeSeeder::class);
+        $this->call(InventoryTypeSeeder::class);
         $this->call(ItemMasterListSeeder::class);
     }
 }
