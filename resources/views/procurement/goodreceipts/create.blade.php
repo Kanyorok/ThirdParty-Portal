@@ -20,17 +20,18 @@
       <select id="poSelect" name="poSelectDisplay" class="form-select" onchange="populatePODetails()">
         <option value="">-- Select PO --</option>
         @foreach($Orders as $po)
-          <option value="{{ $po->RequisitionNo }}" 
-            data-requisitionno="{{ $po->RequisitionNo }}" 
-            data-remarks="{{ $po->Remarks }}" 
-            data-lines='@json($po->requisitionLines)'>
-            {{ $po->RequisitionNo }}
+              <option value="{{ $po->OrderNo }}"
+                      data-OrderNo="{{ $po->OrderNo }}"
+                      data-remarks="{{ $po->ExtOrdNum }}"
+                      data-account-id="{{ $po->AccountID }}"
+                      data-lines='@json($po->OrderLines)'>
+                  {{ $po->OrderNo }}
           </option>
         @endforeach
       </select>
     </div>
     <div class="col-md-4 mb-2">
-      <label class="form-label">PO Description</label>
+        <label class="form-label">PO Reference No:</label>
       <div class="form-control form-control-lg bg-light" id="poDesc">--</div>
     </div>
   </div>
@@ -39,6 +40,7 @@
     @csrf
     <input type="hidden" name="GRNID" id="grnNoInput">
     <input type="hidden" name="POID" id="poIDInput">
+      <input type="hidden" name="SupplierID" id="supplierIdInput">
 
     <div class="table-responsive">
       <table class="table table-bordered" id="itemsTable">
@@ -64,7 +66,6 @@
     <div class="mt-4">
       <button type="button" class="btn btn-secondary me-2" onclick="window.location='{{ route('procurementreceipts.index') }}'">Cancel</button>
       <button type="submit" class="btn btn-primary me-2">Save Receipt</button>
-      <button type="button" class="btn btn-success">Post and Transfer</button>
     </div>
   </form>
 </div>
@@ -97,14 +98,17 @@ function startNewReceipt() {
   document.getElementById("poDesc").textContent = "--";
 }
 
+
 function populatePODetails() {
   const select = document.getElementById("poSelect");
   const selectedOption = select.options[select.selectedIndex];
   const poId = selectedOption.value;
   const remarks = selectedOption.getAttribute("data-remarks");
+    const accountId = selectedOption.getAttribute("data-account-id"); // <-- new
   const lines = JSON.parse(selectedOption.getAttribute("data-lines"));
 
   document.getElementById("poIDInput").value = poId;
+    document.getElementById("supplierIdInput").value = accountId; // <-- set hidden input
   document.getElementById("poDesc").textContent = remarks || "--";
 
   const itemsBody = document.getElementById("itemsBody");
@@ -113,14 +117,14 @@ function populatePODetails() {
   lines.forEach((item, index) => {
     const row = `
       <tr>
-        <td><input type="text" class="form-control" name="items[${index}][ItemNo]" value="${item.Item}" readonly></td>
-        <td>${item.Item}</td>
-        <td>${item.Description}</td>
-        <td>${item.CategoryId}</td>
+        <td><input type="text" class="form-control" name="items[${index}][ItemNo]" value="${item.iStockCodeID}" readonly></td>
+        <td>${item.ItemName}</td>
+        <td>${item.ItemDescription}</td>
+        <td>${item.Category}</td>
         <td>${item.UOM}</td>
-        <td><input type="number" class="form-control" name="items[${index}][POQTY]" value="${item.Quantity}" readonly></td>
-        <td><input type="number" class="form-control" name="items[${index}][ReceivedQTY]" value="${item.Quantity}"></td>
-        <td><input type="text" class="form-control" name="items[${index}][TransferTo]" value="${item.Type}" readonly></td>
+        <td><input type="number" class="form-control" name="items[${index}][POQTY]" value="${item.fQuantity}" readonly></td>
+        <td><input type="number" class="form-control" name="items[${index}][ReceivedQTY]" value="${item.fQuantity}"></td>
+        <td><input type="text" class="form-control" name="items[${index}][TransferTo]" value="${item.InventoryType}" readonly></td>
         <td><input type="hidden" name="items[${index}][TagRequired]" value="0">
         <input type="checkbox" name="items[${index}][TagRequired]" value="1"></td>
       </tr>

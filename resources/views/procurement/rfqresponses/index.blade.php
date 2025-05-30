@@ -5,7 +5,7 @@
     <h3>RFQ Response List</h3>
 
     <div class="container mt-3">
-        
+
         <a href="{{ route('rfqresponses.create') }}" class="btn btn-primary mb-2">Create RFQ Response</a>
         <table class="table table-bordered">
             <thead>
@@ -29,14 +29,16 @@
                     <td>{{ $response->RFQNumber }}</td>
                     <td>{{ $response->SupplierName }}</td>
                     <td>
-                        @php
-                            $requisitionItems = json_decode($response->RequisitionItems, true); // Decode JSON to array
-                        @endphp
-
-                        @if (is_array($requisitionItems))
-                            @foreach($requisitionItems as $item)
-                                <li>{{ $item['name'] }} — Price Quoted {{ $item['quotedprice'] }} — Total Payable(Tax 16%) {{ $item['totalpayable'] }}</li>
-                            @endforeach
+                        @if ($response->items->isNotEmpty())
+                            <ul class="mb-0">
+                                @foreach($response->items as $item)
+                                    <li>
+                                        {{ $item->ItemName }} —
+                                        Price Quoted: {{ number_format($item->QuotedPrice, 2) }} —
+                                        Total Payable (Tax 16%): {{ number_format($item->TotalPayable, 2) }}
+                                    </li>
+                                @endforeach
+                            </ul>
                         @else
                             <p>No items found</p>
                         @endif
@@ -60,7 +62,7 @@
 
 <td>{{ $deliveryDate->format('d M Y') }}</td
                     <td>
-                        
+
                     </td>
                 </tr>
                 @endforeach

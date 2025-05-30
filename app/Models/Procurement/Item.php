@@ -23,7 +23,7 @@ class Item extends Model
 
     public function category()
     {
-        return $this->belongsTo(ItemCategory::class, 'CategoryId');
+        return $this->belongsTo(ItemCategory::class, 'CategoryId', 'Id');
     }
 
     public function scopeGoods($query)

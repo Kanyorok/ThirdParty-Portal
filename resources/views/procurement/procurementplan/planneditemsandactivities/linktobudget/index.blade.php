@@ -2,10 +2,6 @@
 @section('title', 'Link Procurement Items to Budget Lines')
 @section('content')
 <div class="container mt-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4>🛠️ Assign Procurement Method – Draft Plan</h4>
-    <a href="/planning" class="btn btn-sm btn-outline-secondary">← Back to Plans</a>
-  </div>
 
   <!-- Plan Summary -->
   <div class="mb-4 p-3 border rounded bg-light">
@@ -14,7 +10,8 @@
     <p><strong>Total Items:</strong> 15 | <strong>Unassigned Methods:</strong> 9</p>
   </div>
 
-  <form method="POST" action="/planning/assign-methods">
+    <form method="POST" action="{{ route('planning.assign.methods.store') }}">
+        @csrf
     <div class="table-responsive">
       <table class="table table-bordered align-middle table-hover">
         <thead class="table-light">
@@ -25,49 +22,31 @@
             <th>Dept</th>
             <th>Qty</th>
             <th>Est. Cost</th>
-            <th>Procurement Method</th>
+              <th>Budget Line</th>
           </tr>
         </thead>
         <tbody>
-          <!-- Sample Row -->
-          <tr>
-            <td>1</td>
-            <td>ICT Equipment</td>
-            <td>Nairobi</td>
-            <td>ICT</td>
-            <td>5</td>
-            <td>480,000</td>
-            <td>
-              <select name="procMethod_301" class="form-select">
-                <option selected disabled>Select Method</option>
-                <option value="OPEN">Open Tender</option>
-                <option value="RFQ">Request for Quotation</option>
-                <option value="DIRECT">Direct Procurement</option>
-                <option value="RESTRICTED">Restricted Tender</option>
-              </select>
-              <input type="hidden" name="lineItemIds[]" value="301">
-            </td>
-          </tr>
-
-          <tr>
-            <td>2</td>
-            <td>Office Furniture</td>
-            <td>Mombasa</td>
-            <td>Admin</td>
-            <td>10</td>
-            <td>200,000</td>
-            <td>
-              <select name="procMethod_302" class="form-select">
-                <option selected disabled>Select Method</option>
-                <option value="OPEN">Open Tender</option>
-                <option value="RFQ">Request for Quotation</option>
-                <option value="DIRECT">Direct Procurement</option>
-              </select>
-              <input type="hidden" name="lineItemIds[]" value="302">
-            </td>
-          </tr>
-          <!-- Dynamically loaded rows -->
+        @foreach($draftItems as $index => $item)
+            <tr>
+                <td>{{ $index + 1 }}</td>
+                <td>{{ $item->item->ItemName ?? 'N/A' }}</td>
+                <td>{{ $item->branch->Name ?? 'N/A' }}</td>
+                <td>{{ $item->department->Name ?? 'N/A' }}</td>
+                <td>{{ $item->MergedQty }}</td>
+                <td>{{ number_format($item->MergedQty * $item->EstimatedUnitCost, 2) }}</td>
+                <td>
+                    <select name="budgetLine_{{ $item->LineItemID }}" class="form-select">
+                        <option selected disabled>Select Budget Line</option>
+                        @foreach($budgetLines as $budgetLine)
+                            <option value="{{ $budgetLine->BudgetLineID }}">{{ $budgetLine->Description }}</option>
+                        @endforeach
+                    </select>
+                    <input type="hidden" name="lineItemIds[]" value="{{ $item->LineItemID }}">
+                </td>
+            </tr>
+        @endforeach
         </tbody>
+
       </table>
     </div>
 

@@ -55,12 +55,17 @@
 
 <script>
     $(document).ready(function () {
+        @if(!$invitations->isEmpty())
         $('#responsetrackingTable').DataTable({
             pageLength: 10,
             ordering: true,
             searching: true,
-            lengthChange: true
+            lengthChange: true,
+            language: {
+                emptyTable: ""
+            }
         });
+        @endif
     });
 </script>
 @endsection

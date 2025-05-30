@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Lease Terminations')
 @section('content')
 <div class="container mt-4">
 <a href="{{ route('terminatelease.create') }}" class="btn btn-primary mb-3">Terminate Lease</a>
