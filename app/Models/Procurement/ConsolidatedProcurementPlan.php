@@ -38,6 +38,10 @@ class ConsolidatedProcurementPlan extends Model
         'SubmittedDate'
     ];
 
+    protected $casts = [
+        'Status' => PostingEnum::class,
+    ];
+    
     // Relationship with User for CreatedBy
     protected $casts = [
     'Status' => PostingEnum::class,

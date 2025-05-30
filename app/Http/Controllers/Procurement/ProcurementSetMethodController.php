@@ -7,7 +7,6 @@ use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\PlanLineItems;
 use App\Services\Procurement\ProcurementPlan\ProcurementMethodService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 
 class ProcurementSetMethodController extends Controller

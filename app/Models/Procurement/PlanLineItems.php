@@ -83,4 +83,9 @@ class PlanLineItems extends Model
     {
         return $this->belongsTo(User::class, 'DeletedBy', 'Id');
     }
+    public function schedulePlan()
+    {
+        return $this->hasOne(SchedulePlan::class, 'PlanLineId', 'LineItemID');
+    }
+
 }
