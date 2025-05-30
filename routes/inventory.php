@@ -18,9 +18,10 @@ use App\Http\Controllers\Inventory\TransactionAdjustmentController;
 use App\Http\Controllers\Inventory\TransactionReceiptsController;
 use App\Http\Controllers\Inventory\TransactionTransfersController;
 use App\Http\Controllers\Inventory\UOMConversionController;
-
+use App\Http\Controllers\Inventory\InventoryTypeController;
 use App\Http\Controllers\Inventory\StoreController;
-
+use App\Http\Controllers\Inventory\UOMController;
+use App\Http\Controllers\Inventory\ItemTypeController;
 use App\Http\Controllers\Property\PropertyReceiptPrintController;
 use Illuminate\Support\Facades\Route;
 

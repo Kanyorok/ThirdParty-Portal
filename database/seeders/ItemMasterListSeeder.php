@@ -19,6 +19,10 @@ class ItemMasterListSeeder extends Seeder
         $now = Carbon::now();
         $createdBy = 1;
 
+        // Get foreign key IDs for ItemType and InventoryType
+        $itemTypeId = DB::table('t_ItemTypes')->where('TypeName', 'Stock')->value('Id');
+        $inventoryTypeId = DB::table('t_InventoryTypes')->where('Type', 'Consumable')->value('Id');
+
         // Fetch subcategories (where ParentId is not null)
         $categories = ItemCategories::with('parent')->whereNotNull('ParentId')->get();
 
@@ -63,8 +67,8 @@ class ItemMasterListSeeder extends Seeder
             ItemMasterList::create([
                 'ItemName' => $name,
                 'UOM' => $uom,
-                'ItemType' => 'Stock',
-                'InventoryType' => 'Consumable',
+                'ItemType' => $itemTypeId,
+                'InventoryType' => $inventoryTypeId,
                 'Category' => $category->Id,
                 'ItemDescription' => $name . ' for office use',
                 'BarCode' => $barCode,
