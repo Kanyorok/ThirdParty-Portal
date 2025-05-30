@@ -7,7 +7,7 @@
 @section('content')
 <div class="container mt-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4>✏️ Edit Draft Plan Items – Annual Procurement Plan 2025</h4>
+    <h4>✏️ Edit Draft Plan Items </h4>
     <a href="/planning" class="btn btn-sm btn-outline-secondary">← Back to Dashboard</a>
   </div>
 
@@ -15,6 +15,39 @@
   <div class="alert alert-info">
     <strong>Status:</strong> DRAFT | <strong>Total Items:</strong> 20 | <strong>Editable:</strong> Yes
   </div>
+@if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        ✅ {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
+
+@if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        ⚠️ {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
+<!-- Plan selection form -->
+<form method="GET" action="{{ route('planning.editDraftItems') }}" class="mb-3">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-6">
+            <label for="PlanID" class="form-label">Select Draft Plan</label>
+            <select name="PlanID" id="PlanID" class="form-select" onchange="this.form.submit()">
+                <option value="">-- Choose Draft Plan --</option>
+                @foreach($availablePlans as $plan)
+                    <option value="{{ $plan->PlanID }}" {{ $PlanID == $plan->PlanID ? 'selected' : '' }}>
+                        {{ $plan->Title ?? 'Unnamed Plan' }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+        <div class="col-md-3">
+            <button type="submit" class="btn btn-primary">🔍 Filter</button>
+        </div>
+    </div>
+</form>
+
 
   <form method="POST" action="{{ route('planning.updateDraftItems') }}">
     @csrf

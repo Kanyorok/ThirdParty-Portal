@@ -234,7 +234,7 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::resource('planfromneeds', PlanFromNeedsController::class);
     Route::resource('planmanualinput', PlanManualInputController::class);
     Route::resource('submitplan', SubmitForApprovalController::class);
-    Route::resource('editplan', PlanEditController::class);
+    Route::resource('ammendplan', PlanEditController::class);
     Route::resource('approvalinbox', PlanApprovalInboxController::class);
     Route::resource('exectiondashboard', PlanExectionDashboardController::class);
 
@@ -283,6 +283,7 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::get('/departments/{branchId}', [PlanFromNeedsController::class, 'getDepartments']);
     Route::get('/categories', [PlanFromNeedsController::class, 'getCategories']);
 });
+    Route::get('/planning/edit', [PlanEditController::class, 'index'])->name('planning.editDraftItems');
     Route::get('/planning/edit-draft/{plan_id}', [PlanEditController::class, 'index']);
     Route::post('/planning/update-draft-items', [PlanEditController::class, 'updateDraftItems'])->name('planning.updateDraftItems');
     Route::delete('procurement/planning/delete-draft-item/{id}', [PlanEditController::class, 'deleteDraftItem'])->name('procurement.planning.deleteDraftItem');

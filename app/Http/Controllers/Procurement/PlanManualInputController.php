@@ -40,11 +40,10 @@ class PlanManualInputController extends Controller
     public function create()
     {
         $plans = ConsolidatedProcurementPlan::all();
-        $items = Item::all();
-        $categories = ItemCategory::all();
+       $items = Item::with('category')->get();
         $budgetLines = BudgetMaster::all();
 
-        return view('procurement.procurementplan.planconsolidation.manualentry.create', compact('plans', 'items', 'categories', 'budgetLines'));
+        return view('procurement.procurementplan.planconsolidation.manualentry.create', compact('plans', 'items', 'budgetLines'));
     }
 
     public function store(PlanManualInputRequest $request)

@@ -48,7 +48,7 @@
       <tr>
         <td>{{ $index + 1 }}</td>
         <td>{{ $item->item->ItemName ?? 'N/A' }}</td>
-        <td>{{ $item->item->Category->Name ?? 'N/A' }}</td> 
+        <td>{{ $item->item->category->Name ?? 'N/A' }}</td> 
         <td>{{ $item->MergedQty }}</td>
         <td>{{ $item->item->UOM ?? 'N/A' }}</td>  
         <td>{{ number_format($item->EstimatedUnitCost, 2) }}</td>

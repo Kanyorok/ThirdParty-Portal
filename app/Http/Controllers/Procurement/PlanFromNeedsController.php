@@ -97,7 +97,14 @@ class PlanFromNeedsController extends Controller
                 'CreatedOn' => now(),
                 'ModifiedOn' => now(),
             ]);
-            activity()->causedBy($user)->performedOn($selectedNeeds)->event('create')->log('created plan line item ' . $need->Id);
+            foreach ($selectedNeeds as $need) {
+                activity()
+                    ->causedBy($user)
+                    ->performedOn($need)
+                    ->event('create')
+                    ->log('Created plan line item for: ' . $need->id);
+            }
+
         }
 
         return redirect()->back()->with('success', 'Selected needs successfully included in the draft plan.');
