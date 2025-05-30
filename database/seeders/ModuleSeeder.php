@@ -146,7 +146,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 305120, 'Name' => 'Initiation Approval', 'Icon' => null, 'ParentID' => 305100, 'Route' => 'initiateapprove.index'],
             ['ModuleID' => 305130, 'Name' => 'Tender Category', 'Icon' => null, 'ParentID' => 305100, 'Route' => 'tendercategory.index'],
             ['ModuleID' => 305140, 'Name' => 'Tender Type', 'Icon' => null, 'ParentID' => 305100, 'Route' => 'tendertype.index'],
-            ['ModuleID' => 305150, 'Name' => 'Criteria Setup', 'Icon' => null, 'ParentID' => 305100, 'Route' => 'evaluationcriteria.index'],
+            ['ModuleID' => 305160, 'Name' => 'Tender Criteria Setup', 'Icon' => null, 'ParentID' => 305100, 'Route' => 'tenderevaluations.index'],
 
             // Suppliers
             ['ModuleID' => 305200, 'Name' => 'Suppliers', 'Icon' => null, 'ParentID' => 305000, 'Route' => null],
@@ -179,6 +179,9 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 308000, 'Name' => 'Good Receipt', 'Icon' => null, 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 308100, 'Name' => 'View Good Receipt', 'Icon' => null, 'ParentID' => 308000, 'Route' => 'procurementreceipts.index'],
             ['ModuleID' => 308200, 'Name' => 'Create Good Receipt', 'Icon' => null, 'ParentID' => 308000, 'Route' => 'procurementreceipts.create'],
+            
+            ['ModuleID' => 398000, 'Name' => 'Settings', 'Icon' => null, 'ParentID' => 300000, 'Route' => null],
+            ['ModuleID' => 398100, 'Name' => 'Criteria Setup', 'Icon' => null, 'ParentID' => 398000, 'Route' => 'sections.index'],
 
             ['ModuleID' => 399000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'ParentID' => 300000, 'Route' => null],
         ]);

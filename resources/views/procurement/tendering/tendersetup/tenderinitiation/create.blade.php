@@ -11,6 +11,9 @@
     <div class="mb-3">
         <label for="tenderTitle" class="form-label fw-bold">Tender Title:</label>
         <input type="text" class="form-control" id="tenderTitle" name="title" placeholder="Enter tender title">
+        @error('title')
+            <div class="text-danger">{{ $message }}</div>
+        @enderror
     </div>
 
     <!-- Tender Type -->
@@ -18,19 +21,22 @@
         <label class="form-label fw-bold">Tender Type:</label>
         <div>
             <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="tender_type" id="openTender" value="Open">
+                <input class="form-check-input" type="radio" name="tender_type" id="openTender" value="op">
                 <label class="form-check-label" for="openTender">Open Tender (Public posting)</label>
             </div>
             <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="tender_type" id="restrictedTender" value="Restricted">
+                <input class="form-check-input" type="radio" name="tender_type" id="restrictedTender" value="rs">
                 <label class="form-check-label" for="restrictedTender">Restricted Tender (Selected vendors only)</label>
             </div>
         </div>
+        @error('tender_type')
+            <div class="text-danger">{{ $message }}</div>
+        @enderror
     </div>
 
     <!-- Category and Requisition -->
     <div class="row">
-        <div class="col-md-6 mb-3">
+        <div class="col-md-4 mb-3">
             <label for="tenderCategory" class="form-label fw-bold">Tender Category:</label>
             <select class="form-select" id="tenderCategory" name="tender_category_id">
                 <option selected disabled>-- Select Category --</option>
@@ -38,8 +44,11 @@
                     <option value="{{$item->Id}}">{{$item->TenderCategory}}</option>
                 @endforeach
             </select>
+            @error('tender_category_id')
+                <div class="text-danger">{{ $message }}</div>
+            @enderror
         </div>
-        <div class="col-md-6 mb-3">
+        <div class="col-md-4 mb-3">
             <label for="itemCategory" class="form-label fw-bold">Item Category</label>
             <select class="form-select" id="itemCategory" name="item_category_id">
                 <option selected disabled>-- Item Categories --</option>
@@ -47,6 +56,21 @@
                     <option value="{{$item->Id}}">{{$item->Name}}</option>
                 @endforeach
             </select>
+            @error('item_category_id')
+                <div class="text-danger">{{ $message }}</div>   
+            @enderror
+        </div>
+        <div class="col-md-4 mb-3">
+            <label for="itemCategory" class="form-label fw-bold">Currency</label>
+            <select class="form-select" id="currencyType" name="currency_id">
+                <option selected disabled>-- Select Your Currency --</option>
+                @foreach ($allCurrency as $item)
+                    <option value="{{$item->Id}}">{{$item->Name}} ({{$item->Code}})</option>
+                @endforeach
+            </select>
+            @error('currency_id')
+                <div class="text-danger">{{ $message }}</div>
+            @enderror
         </div>
     </div>
 
@@ -122,7 +146,7 @@
                     <tr>
                         <td>
                             <select class="form-select manual-item-select" name="manual_items[0][item_id]">
-                                <option selected>-- Select Item --</option>
+                                <option selected value="">-- Select Item --</option>
                                 @foreach ($allItemsWithCategoryIds as $item)
                                     <option value="{{$item->Id}}" data-item-category="{{$item->Category}}">{{$item->ItemName}}</option>
                                 @endforeach
@@ -143,12 +167,18 @@
     <div class="mb-3">
         <label for="scopeOfWork" class="form-label fw-bold">Scope of Work</label>
         <textarea class="form-control" id="scopeOfWork" name="scope_of_work" rows="3"></textarea>
+        @error('scope_of_work')
+            <div class="text-danger">{{ $message }}</div>
+        @enderror
     </div>
 
     <!-- Instructions -->
     <div class="mb-3">
         <label for="instructions" class="form-label fw-bold">Instructions to Bidders:</label>
         <textarea class="form-control" id="instructions" name="instructions" rows="3"></textarea>
+        @error('instructions')
+            <div class="text-danger">{{ $message }}</div>
+        @enderror
     </div>
 
     <!-- Dates -->
@@ -156,16 +186,22 @@
         <div class="col-md-6 mb-3">
             <label for="submissionDeadline" class="form-label fw-bold">Submission Deadline:</label>
             <input type="date" class="form-control" id="submissionDeadline" name="submission_deadline">
+            @error('submission_deadline')
+                <div class="text-danger">{{ $message }}</div>
+            @enderror
         </div>
         <div class="col-md-6 mb-3">
             <label for="openingDate" class="form-label fw-bold">Opening Date:</label>
             <input type="date" class="form-control" id="openingDate" name="opening_date">
+            @error('opening_date')
+                <div class="text-danger">{{ $message }}</div>
+            @enderror
         </div>
     </div>
 
     <!-- Upload -->
     <div class="mb-3">
-        <label for="tenderDocuments" class="form-label fw-bold">Attach Tender Documents:</label>
+        <label for="tenderDocuments" class="form-label fw-bold">Attach Tender Document:</label>
         <input class="form-control" type="file" id="tenderDocuments" name="documents[]" multiple>
     </div>
 
@@ -179,10 +215,10 @@
 
     <!-- Buttons -->
     <div class="d-flex gap-2 mt-4">
-        <button type="submit" class="btn btn-primary">Publish Tender</button>
-        <button type="button" class="btn btn-outline-secondary">Save Draft</button>
-        <button type="reset" class="btn btn-outline-dark">Cancel</button>
-        <button type="button" class="btn btn-outline-info">Edit</button>
+        <button type="submit" class="btn btn-primary">Save Tender</button>
+        {{-- <button type="button" class="btn btn-outline-secondary">Save Draft</button> --}}
+        {{-- <button type="reset" class="btn btn-outline-dark">Cancel</button>
+        <button type="button" class="btn btn-outline-info">Edit</button> --}}
     </div>
 </form>
 

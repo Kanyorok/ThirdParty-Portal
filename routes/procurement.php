@@ -50,6 +50,7 @@ use App\Http\Controllers\Procurement\DepartmentNeedsController;
 use App\Http\Controllers\Procurement\ProcurementPlanDashboardController;
 use App\Http\Controllers\Procurement\TimelineController;
 use App\Http\Controllers\Procurement\CalenderBasedController;
+use App\Http\Controllers\Procurement\CriteriaController;
 use App\Http\Controllers\Procurement\DelayedItemsController;
 use App\Http\Controllers\Procurement\PlanvsActualController;
 use App\Http\Controllers\Procurement\PlanFromNeedsController;
@@ -59,6 +60,9 @@ use App\Http\Controllers\Procurement\PlanEditController;
 use App\Http\Controllers\Procurement\PlanApprovalInboxController;
 use App\Http\Controllers\Procurement\PlanExectionDashboardController;
 use App\Http\Controllers\Procurement\DepartmentNeedApprovalController;
+use App\Http\Controllers\Procurement\SectionController;
+use App\Http\Controllers\Procurement\TenderEvaluationsController;
+use App\Models\Procurement\Tender;
 
 Route::namespace('Procurement')->prefix('procurement')->group(function () {
 
@@ -175,6 +179,9 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::resource('initiatetender', TenderController::class);
     Route::resource('tendercategory', TenderCategoryController::class);
     Route::resource('tendertype', TenderTypeController::class);
+    //Route for tender approval and Reject
+    Route::post('/tenderapproval', [TenderController::class, 'approveTender'])->name('tender.approve');
+    Route::post('/tenderRejection', [TenderController::class, 'rejectTender'])->name('tender.reject');
     Route::resource('initiateapprove', TenderInitiationApproveController::class);
     Route::resource('tenderresponse', TenderResponseController::class);
     Route::resource('tenderclarification', TenderclarificationController::class);
@@ -196,6 +203,14 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::resource('evaluationdashboard', EvaluatorDashboardController::class);
     Route::resource('bidscores', BidScoreConsolidationController::class);
     Route::resource('procurementreports', ProcurementReportsController::class);
+
+    //Tender Creteria setup
+    Route::resource('sections',SectionController::class);
+    Route::resource('criterias',CriteriaController::class);
+    Route::resource('tenderevaluations',TenderEvaluationsController::class);
+    
+    Route::get('/criteria-sections', [EvaluationCriteriaController::class, 'viewCriteria'])->name('tender-criteria.index');
+    //Route::get('/tenderevaluations', [EvaluationCriteriaController::class, 'tenderEvaluations'])->name('tenderevaluations.index');
 
 
     //Procurementplan

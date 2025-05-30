@@ -13,7 +13,7 @@ class TenderCategory extends Model {
     protected $table = 't_TenderCategories';
     public $incrementing = true;
 
-    
+
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
     const string DELETED_AT = 'DeletedOn';

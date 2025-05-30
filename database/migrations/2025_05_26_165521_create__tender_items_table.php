@@ -11,11 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('TenderItems', function (Blueprint $table) {
+        Schema::create('t_TenderItems', function (Blueprint $table) {
             $table->id();
             
             $table->integer('TenderID')->unsigned();
-            $table->foreign('TenderID')->references('Id')->on('Tenders');
 
             $table->string('SourceType', 20); // 'PLAN' or 'MANUAL'
 
@@ -31,9 +30,14 @@ return new class extends Migration
 
             $table->string('Remarks', 255)->nullable();
 
-            $table->integer('RelatedPRID')->nullable(); // Optional PR reference
+            $table->string('RelatedPRID',20)->nullable(); // Optional PR reference
 
-            $table->timestamps();
+            $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('CreatedOn');
+            $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('ModifiedOn');
+            $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
+            $table->softDeletes('DeletedOn');
         });
     }
 
@@ -42,6 +46,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('TenderItems');
+        Schema::dropIfExists('t_TenderItems');
     }
 };

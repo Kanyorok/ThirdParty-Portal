@@ -15,7 +15,7 @@ return new class extends Migration {
             $table->string('TenderNo', 50)->unique()->comment('Auto-generated tender number');
             $table->string('Title', 255);
             $table->string('TenderType', 20)->comment('Enum: Open, Restricted');
-            $table->string('TenderCategory', 20)->comment('Enum: Goods, Services, Works');
+            $table->string('TenderCategory', 20);
             $table->text('ScopeOfWork')->nullable();
             $table->text('Instructions')->nullable();
             $table->date('SubmissionDeadline');

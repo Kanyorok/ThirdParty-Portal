@@ -6,6 +6,7 @@ use App\Models\Procurement\ItemCategory;
 use App\Models\Procurement\ProcurementPeriod;
 use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQEvaluation;
+use App\Models\Procurement\Tender;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -68,6 +69,12 @@ class Supplier extends Model
         return $this->belongsToMany(Supplier::class, 't_RFQ_Supplier', 'RFQId', 'SupplierId')
             ->withPivot('Status')
             ->withTimestamps();
+    }
+
+    public function tenders()
+    {
+        return $this->belongsToMany(Tender::class, 'TenderSupplier', 'SupplierID', 'TenderID')
+                    ->withTimestamps();
     }
 
 }

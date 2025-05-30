@@ -18,11 +18,17 @@
             <label for="TenderCategory">Tender Type</label>
             <input type="text" class="form-control" id="TenderCategory" name="TenderCategory" 
                    value="{{ $tenderCategory->TenderCategory }}" required>
+            @error('TenderCategory')
+                <div class="alert alert-danger">{{ $message }}</div>
+            @enderror
         </div>
         
         <div class="form-group">
             <label for="categoryDescription">Description</label>
             <textarea class="form-control" id="categoryDescription" name="Description" rows="3">{{ $tenderCategory->Description }}</textarea>
+            @error('Description')
+                <div class="alert alert-danger">{{ $message }}</div>
+            @enderror
         </div>
         
         <button type="submit" class="btn btn-primary">Update</button>
