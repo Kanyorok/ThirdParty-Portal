@@ -94,7 +94,18 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::resource('bintracking', BinTrackingController::class);
     Route::resource('stockvaluationhistory', StockValuationHistoryController::class);
     Route::resource('expirytracking', ExpiryBatchTrackingController::class);
-    Route::resource('interbranchrequisition', InterBranchRequisitionController::class);
+    //Route::resource('interbranchrequisition', InterBranchRequisitionController::class);
+    Route::get('/interbranchrequisition', [InterBranchRequisitionController::class, 'index'])->name('interbranchrequisition.index');
+    Route::get('/interbranchrequisition/create', [InterBranchRequisitionController::class, 'create'])->name('interbranchrequisition.create');
+    Route::post('/interbranchrequisition', [InterBranchRequisitionController::class, 'store'])->name('interbranchrequisition.store');
+    Route::get('/interbranchrequisition/{Id}', [InterBranchRequisitionController::class, 'show'])->name('interbranchrequisition.show');
+    Route::get('/interbranchrequisition/{Id}/edit', [InterBranchRequisitionController::class, 'edit'])->name('interbranchrequisition.edit');
+    Route::put('/interbranchrequisition/{Id}', [InterBranchRequisitionController::class, 'update'])->name('interbranchrequisition.update');
+    Route::delete('/interbranchrequisition/{Id}', [InterBranchRequisitionController::class, 'destroy'])->name('interbranchrequisition.destroy');
+    Route::get('/subcategories/{categoryId}', [InterBranchRequisitionController::class, 'getSubcategories']);
+    Route::get('/items/{subcategoryId}', [InterBranchRequisitionController::class, 'getItems']);
+
+    
     Route::resource('interbranchrequisitionapproval', InterBranchRequisitionApprovalController::class);
     Route::resource('inventoryreports', ReportsController::class);
     //Route::resource('rentdashboard', RentDashboardController::class);
