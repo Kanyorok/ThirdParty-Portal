@@ -107,6 +107,6 @@ class PlanFromNeedsController extends Controller
 
         }
 
-        return redirect()->back()->with('success', 'Selected needs successfully included in the draft plan.');
+        return redirect()->route('procurementplanmaintain.index')->with('success', 'Selected needs successfully included in the draft plan.');
     }
 }
