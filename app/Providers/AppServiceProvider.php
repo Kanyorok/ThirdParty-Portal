@@ -54,6 +54,20 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Permission\Models\Role;
+use App\Policies\Inventory\ItemMasterListPolicy;
+use App\Policies\Inventory\ItemCategoryPolicy;
+use App\Policies\Inventory\ItemTypePolicy;
+use App\Policies\Inventory\StockItemPolicy;
+use App\Policies\Inventory\InventoryTypePolicy;
+use App\Policies\Inventory\StorePolicy;
+use App\Policies\Inventory\UnitOfMeasurePolicy;
+use App\Models\Inventory\ItemType;
+use App\Models\Inventory\ItemMasterList;
+use App\Models\Inventory\ItemCategories;
+use App\Models\Inventory\StockItem;
+use App\Models\Inventory\UnitOfMeasure;
+use App\Models\Inventory\Store;
+use App\Models\Inventory\InventoryType;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -108,8 +122,14 @@ class AppServiceProvider extends ServiceProvider
             Order::getPrimaryKey() => Order::class,
             DepartmentNeeds::getPrimaryKey() => DepartmentNeeds::class,
             ProcurementMethod::getPrimaryKey() => ProcurementMethod::class,
+            ItemMasterList::getPrimaryKey() => ItemMasterList::class,
+            ItemCategories::getPrimaryKey() => ItemCategories::class,
+            ItemType::getPrimaryKey() => ItemType::class,
+            InventoryType::getPrimaryKey() => InventoryType::class,
+            StockItem::getPrimaryKey() => StockItem::class,
+            Store::getPrimaryKey() => Store::class,
+            UnitOfMeasure::getPrimaryKey() => UnitOfMeasure::class,
             SchedulePlan::getPrimaryKey() => SchedulePlan::class,
-
         ]);
 
         Gate::policy(Role::class, RolePolicy::class);
@@ -120,6 +140,14 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Order::class, OrderPolicy::class);
         Gate::policy(DepartmentNeeds::class, DepartmentNeedsPolicy::class);
         Gate::policy(ProcurementMethod::class, ProcurementMethodPolicy::class);
+        Gate::policy(ItemMasterList::class, ItemMasterListPolicy::class);
+        Gate::policy(ItemCategories::class, ItemCategoryPolicy::class);
+        Gate::policy(ItemType::class, ItemTypePolicy::class);
+        Gate::policy(StockItem::class, StockItemPolicy::class);
+        Gate::policy(InventoryType::class, InventoryTypePolicy::class);
+        Gate::policy(Store::class, StorePolicy::class);
+        Gate::policy(UnitOfMeasure::class, UnitOfMeasurePolicy::class);
+
         Gate::policy(SchedulePlan::class, SchedulePlanPolicy::class);
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);
