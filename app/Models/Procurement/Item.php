@@ -23,9 +23,8 @@ class Item extends Model
 
     public function category()
     {
-        return $this->belongsTo(ItemCategory::class, 'CategoryId', 'Id');
+        return $this->belongsTo(ItemCategory::class, 'Category', 'Id');
     }
-
     public function scopeGoods($query)
     {
         return $query->where('type', 'good');

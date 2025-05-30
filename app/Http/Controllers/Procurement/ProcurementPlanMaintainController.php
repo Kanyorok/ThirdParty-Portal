@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Enums\Core\PostingEnum;
+use App\Models\Procurement\PlanLineItem;
+use App\Models\Auth\User;
+use Illuminate\Support\Facades\Auth;
 
 class ProcurementPlanMaintainController extends Controller
 {
@@ -32,10 +35,11 @@ class ProcurementPlanMaintainController extends Controller
         ]);
 
         $userId = $request->CreatedBy;
+        $user = User::find($userId);
 
         $plan = ConsolidatedProcurementPlan::create([
             'Title' => $request->Title,
-            'ReferenceNumber' => 'PLAN/' . $request->FiscalYear . '/' . rand(100, 999), // You may replace with a unique generator
+            'ReferenceNumber' => 'PLAN/' . $request->FiscalYear . '/' . rand(100, 999),
             'FiscalYear' => $request->FiscalYear,
             'Status' => PostingEnum::Draft,
             'CreatedBy' => $userId,
@@ -48,12 +52,33 @@ class ProcurementPlanMaintainController extends Controller
             'ModifiedBy' => $userId,
         ]);
 
+        activity()->causedBy($user)->performedOn($plan)->event('create')->log('created plan ' . $plan->Id);
         // Redirect to manual entry page with the new plan ID
         return redirect()->route('planmanualinput.index', ['plan_id' => $plan->PlanID])
             ->with('success', 'Plan created successfully. You may now add line items.');
     }
     public function create(){
         return view('procurement.procurementplan.procurementplanmaintenance.create');
+
+    }
+
+    public function editDraft($plan_id)
+    {
+        $draftItems = PlanLineItem::with(['item', 'branch'])
+            ->where('PlanID', $plan_id)
+            ->where('Status', PostingEnum::Draft)
+            ->get();
+
+        // Pass any other data your blade expects, like Plan info or counts if needed
+
+        return view('procurement.procurementplan.planapproval.ammendplan.index', compact('draftItems'));
+    }
+
+    public function show($id)
+    {
+        $plan = ConsolidatedProcurementPlan::with(['lineItems.item', 'createdBy'])->findOrFail($id);
+
+        return view('procurement.procurementplan.procurementplanmaintenance.show', compact('plan'));
     }
 
 }

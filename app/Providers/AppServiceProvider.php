@@ -37,6 +37,7 @@ use App\Models\Procurement\RequisitionLines;
 use App\Models\Procurement\Requisitions;
 use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQLine;
+use App\Models\Procurement\SchedulePlan;
 use App\Models\Settings\APICredential;
 use App\Models\ThirdParies\Board;
 use App\Models\ThirdParies\Competitor;
@@ -46,6 +47,7 @@ use App\Policies\Procurement\OrderPolicy;
 use App\Policies\Procurement\ProcurementMethodPolicy;
 use App\Policies\Procurement\RequisitionLinesPolicy;
 use App\Policies\Procurement\RequisitionPolicy;
+use App\Policies\Procurement\SchedulePlanPolicy;
 use App\Policies\ProductDevelopmentPolicy;
 use App\Policies\RolePolicy;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -106,6 +108,8 @@ class AppServiceProvider extends ServiceProvider
             Order::getPrimaryKey() => Order::class,
             DepartmentNeeds::getPrimaryKey() => DepartmentNeeds::class,
             ProcurementMethod::getPrimaryKey() => ProcurementMethod::class,
+            SchedulePlan::getPrimaryKey() => SchedulePlan::class,
+
         ]);
 
         Gate::policy(Role::class, RolePolicy::class);
@@ -116,6 +120,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Order::class, OrderPolicy::class);
         Gate::policy(DepartmentNeeds::class, DepartmentNeedsPolicy::class);
         Gate::policy(ProcurementMethod::class, ProcurementMethodPolicy::class);
+        Gate::policy(SchedulePlan::class, SchedulePlanPolicy::class);
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);
          Event::listen(SMSSendEvent::class, SMSSendListener::class);

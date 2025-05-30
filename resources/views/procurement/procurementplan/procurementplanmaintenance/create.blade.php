@@ -21,7 +21,7 @@
           <option>2027</option>
           </select>
       </div>
-      <div class="col-md-4">
+        <div class="col-md-4 d-none">
         <label class="form-label">Created By</label>
           <input type="text" class="form-control" value="{{ auth()->user()->name }}" readonly>
           <input type="hidden" name="CreatedBy" value="{{ auth()->user()->Id }}">

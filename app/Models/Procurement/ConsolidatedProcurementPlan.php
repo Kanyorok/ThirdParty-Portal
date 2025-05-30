@@ -5,6 +5,7 @@ namespace App\Models\Procurement;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\Model\UserActorTrait;
 use App\Models\Auth\User;
+use App\Enums\Core\PostingEnum;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ConsolidatedProcurementPlan extends Model
@@ -37,7 +38,11 @@ class ConsolidatedProcurementPlan extends Model
         'SubmittedDate'
     ];
 
-    // Relationship with User for CreatedBy
+    protected $casts = [
+        'Status' => PostingEnum::class,
+    ];
+
+
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'CreatedBy', 'Id');
@@ -47,7 +52,6 @@ class ConsolidatedProcurementPlan extends Model
     {
         return $this->belongsTo(User::class, 'SubmittedBy', 'Id');
     }
-
     public function modifiedBy()
     {
         return $this->belongsTo(User::class, 'ModifiedBy', 'Id');
@@ -63,7 +67,6 @@ class ConsolidatedProcurementPlan extends Model
     {
         return $this->belongsTo(Item::class, 'ItemID', 'Id');
     }
-
     public function lineItems()
     {
         return $this->hasMany(PlanLineItems::class, 'PlanID');

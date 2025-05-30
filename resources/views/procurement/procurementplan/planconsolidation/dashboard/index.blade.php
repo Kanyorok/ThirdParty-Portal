@@ -1,5 +1,8 @@
 @extends('layouts.app')
 @section('title', 'Consolidated Procurement Needs')
+@section('styles')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+@endsection
 @section('content')
 
 <div class="card p-4 shadow rounded-4">
@@ -42,7 +45,7 @@
     </form>
 
     <!-- Consolidation Table -->
-    <table class="table table-bordered table-striped">
+    <table id="consolidatedneedsTable" class="table table-bordered table-striped align-middle">
         <thead class="table-light">
         <tr>
             <th>#</th>
@@ -71,7 +74,7 @@
                 <td>
                     <button
                         class="btn btn-sm btn-outline-info view-need-btn"
-                        data-id="{{ $need->id }}"
+                        data-id="{{ $need->NeedID }}"
                         data-bs-toggle="modal"
                         data-bs-target="#needModal">
                         View
@@ -119,7 +122,7 @@
                     console.log('Fetching details for needId:', needId);
                     needDetails.innerHTML = '<p class="text-muted"><i class="spinner-border spinner-border-sm"></i> Loading details...</p>';
 
-                    fetch(`/dashboard/show/${needId}`)
+                    fetch(`/procurement/dashboard/show/${needId}`)
                         .then(res => {
                             if (!res.ok) {
                                 throw new Error(`HTTP error! Status: ${res.status}`);
@@ -127,16 +130,17 @@
                             return res.json();
                         })
                         .then(data => {
-                            console.log('Response data:', data);
+                            const need = data[0];
+
                             needDetails.innerHTML = `
                         <ul class="list-group list-group-flush">
-                            <li class="list-group-item"><strong>Item Name:</strong> ${data.ItemName}</li>
-                            <li class="list-group-item"><strong>Branch:</strong> ${data.BranchName}</li>
-                            <li class="list-group-item"><strong>Department:</strong> ${data.DepartmentName}</li>
-                            <li class="list-group-item"><strong>Quantity:</strong> ${data.RequestedQty}</li>
-                            <li class="list-group-item"><strong>Est. Cost:</strong> ${data.EstimatedCost}</li>
-                            <li class="list-group-item"><strong>Required By:</strong> ${data.CreatedOn}</li>
-                            <li class="list-group-item"><strong>Status:</strong> <span class="badge bg-info">${data.Status}</span></li>
+                            <li class="list-group-item"><strong>Item Name:</strong> ${need.ItemName}</li>
+                            <li class="list-group-item"><strong>Branch:</strong> ${need.BranchName}</li>
+                            <li class="list-group-item"><strong>Department:</strong> ${need.DepartmentName}</li>
+                            <li class="list-group-item"><strong>Quantity:</strong> ${need.RequestedQty}</li>
+                            <li class="list-group-item"><strong>Est. Cost:</strong> ${need.EstimatedCost}</li>
+                            <li class="list-group-item"><strong>Required By:</strong> ${need.CreatedOn}</li>
+                            <li class="list-group-item"><strong>Status:</strong> <span class="badge bg-info">${need.Status}</span></li>
                         </ul>
                     `;
                         })
@@ -149,4 +153,22 @@
         });
     </script>
 @endpush
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        @if(!$needs->isEmpty())
+        $('#consolidatedneedsTable').DataTable({
+            pageLength: 10,
+            ordering: true,
+            searching: true,
+            lengthChange: true,
+            language: {
+                emptyTable: ""
+            }
+        });
+        @endif
+    });
+</script>
 @endsection

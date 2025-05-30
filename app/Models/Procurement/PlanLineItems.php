@@ -3,16 +3,14 @@
 namespace App\Models\Procurement;
 
 use App\Models\Auth\User;
-use App\Models\BR\Branch;
+
+//use App\Models\BR\Branch;
 use App\Models\HRM\Department;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Procurement\PlanLineItems;
 use App\Models\Core\Branch;
-use App\Models\HRM\Department;
-
-=
 
 class PlanLineItems extends Model
 {
@@ -55,7 +53,6 @@ class PlanLineItems extends Model
     {
         return $this->belongsTo(ConsolidatedProcurementPlan::class, 'PlanID');
     }
-
     public function branch()
     {
         return $this->belongsTo(Branch::class, 'BranchID');
@@ -87,4 +84,10 @@ class PlanLineItems extends Model
     {
         return $this->belongsTo(User::class, 'DeletedBy', 'Id');
     }
+
+    public function schedulePlan()
+    {
+        return $this->hasOne(SchedulePlan::class, 'PlanLineId', 'LineItemID');
+    }
+
 }
