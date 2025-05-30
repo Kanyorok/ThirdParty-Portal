@@ -2,6 +2,7 @@
 @section('title', 'Item Type List')
 @section('content')
 
+
 <div class="container mt-5">
   <div class="card shadow rounded-4">
     <div class="card-header text-dark rounded-top-4 d-flex justify-content-between align-items-center" style="background-color: #add8e6;">

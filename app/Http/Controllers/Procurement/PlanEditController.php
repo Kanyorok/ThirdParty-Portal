@@ -12,48 +12,48 @@ class PlanEditController extends Controller
 {
     //
     public function index(Request $request)
-{
-    $planId = $request->input('PlanID');
+    {
+        $planId = $request->input('PlanID');
 
-    $availablePlans = ConsolidatedProcurementPlan::where('Status', PostingEnum::Draft)->get();
+        $availablePlans = ConsolidatedProcurementPlan::where('Status', PostingEnum::Draft)->get();
 
-    $draftItems = collect();
-    if ($planId) {
-        $draftItems = PlanLineItems::where('PlanID', $planId)
-            ->whereHas('consolidatedProcurementPlan', function ($query) {
-                $query->where('Status', PostingEnum::Draft);
-            })
-            ->get();
+        $draftItems = collect();
+        if ($planId) {
+            $draftItems = PlanLineItems::where('PlanID', $planId)
+                ->whereHas('consolidatedProcurementPlan', function ($query) {
+                    $query->where('Status', PostingEnum::Draft);
+                })
+                ->get();
+        }
+
+        return view('procurement.procurementplan.planapproval.ammendplan.index', [
+            'draftItems' => $draftItems,
+            'PlanID' => $planId,
+            'availablePlans' => $availablePlans,
+        ]);
     }
 
-    return view('procurement.procurementplan.planapproval.ammendplan.index', [
-        'draftItems' => $draftItems,
-        'PlanID' => $planId,
-        'availablePlans' => $availablePlans,
-    ]);
-}
+    public function updateDraftItems(Request $request)
+    {
+        $user = auth()->user();
+        $itemIds = $request->input('lineItemIds', []);
 
-public function updateDraftItems(Request $request)
-{
-    $user = auth()->user();
-    $itemIds = $request->input('lineItemIds', []);
+        foreach ($itemIds as $id) {
+            $qty = $request->input("qty_$id");
+            $cost = $request->input("unitCost_$id");
+            $remarks = $request->input("remarks_$id");
 
-    foreach ($itemIds as $id) {
-        $qty = $request->input("qty_$id");
-        $cost = $request->input("unitCost_$id");
-        $remarks = $request->input("remarks_$id");
+            $qty = (int)$qty;
+            $cost = (float)$cost;
 
-        $qty = (int) $qty;
-        $cost = (float) $cost;
-
-        PlanLineItems::where('LineItemID', $id)->update([
-            'MergedQty' => $qty,
-            'EstimatedUnitCost' => $cost,
-            'ChangeRemarks' => $remarks,
-            'ModifiedOn' => now(),
-            'ModifiedBy' => auth()->id(),
-        ]);
-         $updatedItem = PlanLineItems::find($id);
+            PlanLineItems::where('LineItemID', $id)->update([
+                'MergedQty' => $qty,
+                'EstimatedUnitCost' => $cost,
+                'ChangeRemarks' => $remarks,
+                'ModifiedOn' => now(),
+                'ModifiedBy' => auth()->id(),
+            ]);
+            $updatedItem = PlanLineItems::find($id);
             activity()
                 ->causedBy($user)
                 ->performedOn($updatedItem)
@@ -61,10 +61,10 @@ public function updateDraftItems(Request $request)
                 ->log("Updated draft item: LineItemID {$id}");
     }
 
-    return redirect()->back()->with('success', 'Draft plan items updated successfully.');
-}
+        return redirect()->back()->with('success', 'Draft plan items updated successfully.');
+    }
 
- public function deleteDraftItem($id)
+    public function deleteDraftItem($id)
     {
         $user = auth()->user();
 

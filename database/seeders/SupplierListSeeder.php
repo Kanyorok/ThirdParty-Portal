@@ -40,16 +40,16 @@ class SupplierListSeeder extends Seeder
             $category = $categories->random();
 
             Supplier::create([
-                'SupplierName'   => $name,
-                'ContactEmail'   => $email,
-                'ContactPhone'   => $phone,
-                'Address'        => $address,
+                'SupplierName' => $name,
+                'ContactEmail' => $email,
+                'ContactPhone' => $phone,
+                'Address' => $address,
                 'IsPrequalified' => rand(0, 1),
-                'CategoryId'     => $category->Id,
-                'CreatedBy'      => $createdBy,
-                'ModifiedBy'     => $createdBy,
-                'CreatedOn'      => $now,
-                'ModifiedOn'     => $now,
+                'CategoryId' => $category->Id,
+                'CreatedBy' => $createdBy,
+                'ModifiedBy' => $createdBy,
+                'CreatedOn' => $now,
+                'ModifiedOn' => $now,
             ]);
         }
     }

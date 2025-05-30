@@ -83,7 +83,7 @@
 
 @endsection
 @section('scripts')
-    
+
     <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
     <script> let MessagesTable = null, progressInterval = null;
         $(function () {

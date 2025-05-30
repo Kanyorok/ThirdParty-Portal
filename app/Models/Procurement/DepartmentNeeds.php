@@ -23,20 +23,22 @@ class DepartmentNeeds extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-           'NeedID','BranchID','DepartmentID','ItemID','RequestedQty','EstimatedUnitCost',
-           'Justification','Status','FiscalYear','RequestedDate','PriorityLevel','IsEmergency',
-           'CreatedBy','ModifiedBy','DeletedBy'
-    ] ;
+        'NeedID', 'BranchID', 'DepartmentID', 'ItemID', 'RequestedQty', 'EstimatedUnitCost',
+        'Justification', 'Status', 'FiscalYear', 'RequestedDate', 'PriorityLevel', 'IsEmergency',
+        'CreatedBy', 'ModifiedBy', 'DeletedBy'
+    ];
 
     protected $casts = [
-    'Status' => DepartmentNeedsEnum::class,];
+        'Status' => DepartmentNeedsEnum::class,];
 
-    public static function getPrimaryKey(): string{
+    public static function getPrimaryKey(): string
+    {
         return 'DepartmentNeedID';
     }
+
     public function item()
     {
-        return $this->belongsTo(Item::class, 'ItemID','Id');
+        return $this->belongsTo(Item::class, 'ItemID', 'Id');
     }
 
     public function workflows(): MorphMany
@@ -48,10 +50,12 @@ class DepartmentNeeds extends Model
     {
         return $this->morphMany(PendingWorkflow::class, __FUNCTION__, 'Source', 'SourceID', 'Id');
     }
+
     public function department()
-{
-    return $this->belongsTo(Department::class, 'DepartmentID');
-}
+    {
+        return $this->belongsTo(Department::class, 'DepartmentID');
+    }
+
     public function branch()
     {
         return $this->belongsTo(Branch::class, 'BranchID');

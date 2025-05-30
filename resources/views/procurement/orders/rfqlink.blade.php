@@ -55,12 +55,12 @@
                 </div>
                 <div class="col-md-4">
                     <label>Reference Number</label>
-{{--                    <input type="text" class="form-control refNo" name="refNo" placeholder="RFQ Number" value="{{$orderInfo->ExtOrdNum ?? 'N/A'}}"/>--}}
+                    {{--                    <input type="text" class="form-control refNo" name="refNo" placeholder="RFQ Number" value="{{$orderInfo->ExtOrdNum ?? 'N/A'}}"/>--}}
                     <select class="form-control refNo" name="refNo" id="refNo">
                         <option selected disabled>Select RFQ</option>
-                            @foreach ($RFQ as $data)
-                                <option value="{{ $data->RFQId }}">{{ $data->RFQNumber }}</option>
-                            @endforeach
+                        @foreach ($RFQ as $data)
+                            <option value="{{ $data->RFQId }}">{{ $data->RFQNumber }}</option>
+                        @endforeach
                     </select>
 
                 </div>
@@ -72,7 +72,8 @@
                 </div>
                 <div class="col-md-4 mt-2">
                     <label>Payment Terms</label>
-                    <input type="text" name="terms" class="form-control terms" placeholder="e.g., Net 30, 50%" value=""/>
+                    <input type="text" name="terms" class="form-control terms" placeholder="e.g., Net 30, 50%"
+                           value=""/>
                 </div>
             </div>
 
@@ -100,42 +101,42 @@
                     </tr>
                     </thead>
                     <tbody id="po-items">
-{{--                        <tr>--}}
-{{--                            <td class="line-no">{{ $index + 1 }}</td>--}}
-{{--                            <td class="text-start">--}}
-{{--                                <select class="form-select form-select-sm type" name="type[]" id="Type">--}}
-{{--                                    <option  selected>{{$line ->ItemType}}</option>--}}
+                    {{--                        <tr>--}}
+                    {{--                            <td class="line-no">{{ $index + 1 }}</td>--}}
+                    {{--                            <td class="text-start">--}}
+                    {{--                                <select class="form-select form-select-sm type" name="type[]" id="Type">--}}
+                    {{--                                    <option  selected>{{$line ->ItemType}}</option>--}}
 
-{{--                                </select>--}}
-{{--                            </td>--}}
-{{--                            <td class="text-start">--}}
-{{--                                <select class="form-select form-select-sm itemCode" name="itemCode[]" id="Item">--}}
-{{--                                    <option  selected>{{$line ->ItemName}}</option>--}}
-{{--                                </select>--}}
-{{--                            </td>--}}
-{{--                            --}}{{--                    <td><input type="text" class="form-control" name="itemCode[]"></td> --}}
-{{--                            <td class="text-start">--}}
-{{--                                <textarea class="form-control form-control-sm itemDescription" name="itemDescription[]"--}}
-{{--                                          id="Description" cols="30"--}}
-{{--                                          rows="5" readonly style="display: flex; align-items: center; justify-content: center; text-align: center; padding: 0; resize: none;">{{$line ->Description}}</textarea>--}}
-{{--                             --}}
-{{--                            </td>--}}
-{{--                            <td class="text-start"><input type="number" class="form-control form-control-sm qty quantity"--}}
-{{--                                                          name="quantity[]" id="Quantity" value="{{$line ->fQuantity}}"></td>--}}
-{{--                            <td class="text-start"><input type="number" class="form-control form-control-sm unit-price "--}}
-{{--                                                          name="unitPrice[]" id="Price" value="{{$line ->fUnitPriceExcl}}"></td>--}}
-{{--                            <td class="text-start"><input type="number" class="form-control form-control-sm tax"--}}
-{{--                                                          name="tax[]" id="Tax" value="{{$line ->fTaxRate}}"></td>--}}
-{{--                            <td class="text-start"><input type="number" class="form-control form-control-sm discount"--}}
-{{--                                                          name="discount[]" id="Discount" value="{{$line ->fLineDiscount}}"></td>--}}
-{{--                            <td class="text-start"><input type="number" class="form-control form-control-sm line-total"--}}
-{{--                                                          name="lineTotal[]" id="lineTotal" step="" value="{{$line ->LineTotal}}"></td>--}}
-{{--                        </tr>--}}
-{{--                        @empty--}}
-{{--                            <tr>--}}
-{{--                                <td colspan="9" class="text-center">No line items found.</td>--}}
-{{--                            </tr>--}}
-{{--                        @endforelse--}}
+                    {{--                                </select>--}}
+                    {{--                            </td>--}}
+                    {{--                            <td class="text-start">--}}
+                    {{--                                <select class="form-select form-select-sm itemCode" name="itemCode[]" id="Item">--}}
+                    {{--                                    <option  selected>{{$line ->ItemName}}</option>--}}
+                    {{--                                </select>--}}
+                    {{--                            </td>--}}
+                    {{--                            --}}{{--                    <td><input type="text" class="form-control" name="itemCode[]"></td> --}}
+                    {{--                            <td class="text-start">--}}
+                    {{--                                <textarea class="form-control form-control-sm itemDescription" name="itemDescription[]"--}}
+                    {{--                                          id="Description" cols="30"--}}
+                    {{--                                          rows="5" readonly style="display: flex; align-items: center; justify-content: center; text-align: center; padding: 0; resize: none;">{{$line ->Description}}</textarea>--}}
+                    {{--                             --}}
+                    {{--                            </td>--}}
+                    {{--                            <td class="text-start"><input type="number" class="form-control form-control-sm qty quantity"--}}
+                    {{--                                                          name="quantity[]" id="Quantity" value="{{$line ->fQuantity}}"></td>--}}
+                    {{--                            <td class="text-start"><input type="number" class="form-control form-control-sm unit-price "--}}
+                    {{--                                                          name="unitPrice[]" id="Price" value="{{$line ->fUnitPriceExcl}}"></td>--}}
+                    {{--                            <td class="text-start"><input type="number" class="form-control form-control-sm tax"--}}
+                    {{--                                                          name="tax[]" id="Tax" value="{{$line ->fTaxRate}}"></td>--}}
+                    {{--                            <td class="text-start"><input type="number" class="form-control form-control-sm discount"--}}
+                    {{--                                                          name="discount[]" id="Discount" value="{{$line ->fLineDiscount}}"></td>--}}
+                    {{--                            <td class="text-start"><input type="number" class="form-control form-control-sm line-total"--}}
+                    {{--                                                          name="lineTotal[]" id="lineTotal" step="" value="{{$line ->LineTotal}}"></td>--}}
+                    {{--                        </tr>--}}
+                    {{--                        @empty--}}
+                    {{--                            <tr>--}}
+                    {{--                                <td colspan="9" class="text-center">No line items found.</td>--}}
+                    {{--                            </tr>--}}
+                    {{--                        @endforelse--}}
                     </tbody>
                 </table>
 
@@ -184,7 +185,7 @@
             let totalTax = 0;
 
             // Loop through each row to calculate totals
-            $('#po-items tr').each(function() {
+            $('#po-items tr').each(function () {
                 let row = $(this);
                 let qty = parseFloat(row.find('.quantity').val()) || 0;
                 let price = parseFloat(row.find('.unit-price').val()) || 0;
@@ -215,6 +216,7 @@
             $('input[name="taxAmount"]').val(totalTax.toFixed(2));
             $('input[name="inclusiveTotal"]').val(inclusiveTotal.toFixed(2));
         }
+
         // fetch related RFQs
 
         $(document).on('change', '#refNo', function () {
@@ -244,7 +246,7 @@
                             if (rfq.items && rfq.items.length > 0) {
                                 let itemsTable = $('#poTable tbody');
                                 itemsTable.empty();
-                                    // console.log('start')
+                                // console.log('start')
                                 $.each(rfq.items, function (index, line) {
                                     // const item = line.item;
 

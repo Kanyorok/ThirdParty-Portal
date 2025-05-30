@@ -8,12 +8,13 @@ use Illuminate\Http\Request;
 class BudgetProductEntryController extends Controller
 {
     //
-   public function index()
+    public function index()
     {
         return view('budgetandanalytics.budgetworkspace.entry.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('budgetandanalytics.budgetworkspace.entry.create');
     }
 }

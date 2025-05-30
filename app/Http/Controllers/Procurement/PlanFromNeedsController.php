@@ -28,8 +28,8 @@ class PlanFromNeedsController extends Controller
         $departments = Department::all();
         $budgetLines = BudgetMaster::all();
 
-         $categoryIds = $approvedNeeds->pluck('item.Category')->filter()->unique();
-         $categories = ItemCategory::whereIn('Id', $categoryIds)->orderBy('Name')->get();
+        $categoryIds = $approvedNeeds->pluck('item.Category')->filter()->unique();
+        $categories = ItemCategory::whereIn('Id', $categoryIds)->orderBy('Name')->get();
 
         return view('procurement.procurementplan.planconsolidation.loadfromneeds.create', compact(
             'approvedNeeds', 'plans', 'branches', 'departments', 'categories', 'budgetLines'
@@ -56,7 +56,7 @@ class PlanFromNeedsController extends Controller
             $query->where('DepartmentID', $request->department_filter);
         }
 
-         if ($request->filled('category_id')) {
+        if ($request->filled('category_id')) {
             $query->whereHas('item', function ($q) use ($request) {
                 $q->where('Category', $request->category_id);
             });

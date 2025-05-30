@@ -25,6 +25,7 @@ class InventoryTypeController extends Controller
     public function create()
     {
         $this->authorize('create', InventoryType::class);
+
         return view('inventory.itemmaster.inventorytype.create');
     }
 

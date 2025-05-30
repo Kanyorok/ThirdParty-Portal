@@ -48,6 +48,7 @@ class SettingsController extends Controller
         $x = $all->where('Integration', IntegrationsEnum::Twitter->value)->first();
         $ai = $all->where('Integration', IntegrationsEnum::LLM->value)->first();
         $InfoBip = $all->where('Integration', IntegrationsEnum::InfoBip->value)->first();
+        $srsConfig = $all->where('Integration', IntegrationsEnum::ReportService->value)->first();
 
         return view('settings.integrations')
             ->with('twitterConfig', ($x instanceof APICredential) ? $x->Configuration : new APICredential)
@@ -57,6 +58,7 @@ class SettingsController extends Controller
             ->with('emailConfig', ($email instanceof APICredential) ? $email->Configuration : new APICredential)
             ->with('channelsConfig', ($channel instanceof APICredential) ? $channel->Configuration : new APICredential)
             ->with('llmConfig', ($ai instanceof APICredential) ? $ai->Configuration : new APICredential)
-            ->with('infoBipConfig', ($InfoBip instanceof APICredential) ? $InfoBip->Configuration : new APICredential);
+            ->with('infoBipConfig', ($InfoBip instanceof APICredential) ? $InfoBip->Configuration : new APICredential)
+            ->with('srsConfig', ($srsConfig instanceof APICredential) ? $srsConfig->Configuration : new APICredential);
     }
 }

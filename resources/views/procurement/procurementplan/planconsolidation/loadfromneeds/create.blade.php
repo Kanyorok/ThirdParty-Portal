@@ -35,7 +35,8 @@
         <div class="row mb-4">
             <div class="col-md-6">
                 <label class="form-label">Target Plan</label>
-                <select class="form-select filter-input" name="plan_id" id="plan_id_selector" required onchange="updateFiscalYear()">
+                <select class="form-select filter-input" name="plan_id" id="plan_id_selector" required
+                        onchange="updateFiscalYear()">
                     <option disabled selected>Select Draft Plan</option>
                     @foreach($plans as $plan)
                         <option value="{{ $plan->PlanID }}" data-year="{{ $plan->FiscalYear }}"
@@ -58,7 +59,8 @@
                 <select class="form-select filter-input" name="branch_filter" id="branch_filter">
                     <option value="">All</option>
                     @foreach($branches as $branch)
-                        <option value="{{ $branch->Id }}" {{ request('branch_filter') == $branch->Id ? 'selected' : '' }}>
+                        <option
+                            value="{{ $branch->Id }}" {{ request('branch_filter') == $branch->Id ? 'selected' : '' }}>
                             {{ $branch->Name }}
                         </option>
                     @endforeach
@@ -69,7 +71,8 @@
                 <select class="form-select filter-input" name="department_filter" id="department_filter">
                     <option value="">All</option>
                     @foreach($departments as $dept)
-                        <option value="{{ $dept->Id }}" {{ request('department_filter') == $dept->Id ? 'selected' : '' }}>
+                        <option
+                            value="{{ $dept->Id }}" {{ request('department_filter') == $dept->Id ? 'selected' : '' }}>
                             {{ $dept->Name }}
                         </option>
                     @endforeach
@@ -80,7 +83,8 @@
                 <select class="form-select filter-input" name="category_id" id="category_id">
                     <option value="">All</option>
                     @foreach($categories as $category)
-                        <option value="{{ $category->Id }}" {{ request('category_id') == $category->Id ? 'selected' : '' }}>
+                        <option
+                            value="{{ $category->Id }}" {{ request('category_id') == $category->Id ? 'selected' : '' }}>
                             {{ $category->Name }}
                         </option>
                     @endforeach
@@ -96,22 +100,23 @@
             @if($approvedNeeds->count())
                 <table id="loadfromneedsTable" class="table table-bordered table-striped align-middle">
                     <thead class="table-light">
-                        <tr>
-                            <th><input type="checkbox" id="selectAll"></th>
-                            <th>Item</th>
-                            <th>Branch</th>
-                            <th>Dept</th>
-                            <th>Qty</th>
-                            <th>Est. Cost</th>
-                            <th>Required By</th>
-                            <th>Justification</th>
-                            <th>Budget Line</th>
-                        </tr>
+                    <tr>
+                        <th><input type="checkbox" id="selectAll"></th>
+                        <th>Item</th>
+                        <th>Branch</th>
+                        <th>Dept</th>
+                        <th>Qty</th>
+                        <th>Est. Cost</th>
+                        <th>Required By</th>
+                        <th>Justification</th>
+                        <th>Budget Line</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        @foreach($approvedNeeds as $need)
+                    @foreach($approvedNeeds as $need)
                         <tr>
-                            <td><input type="checkbox" class="need-checkbox" name="selected_needs[]" value="{{ $need->Id }}"></td>
+                            <td><input type="checkbox" class="need-checkbox" name="selected_needs[]"
+                                       value="{{ $need->Id }}"></td>
                             <td>{{ $need->item->ItemName ?? 'N/A' }}</td>
                             <td>{{ $need->branch->Name ?? 'N/A' }}</td>
                             <td>{{ $need->department->Name ?? 'N/A' }}</td>
@@ -123,12 +128,13 @@
                                 <select name="budget_line_id[{{ $need->Id }}]" class="form-select" required>
                                     <option selected disabled>Select Budget Line</option>
                                     @foreach($budgetLines as $budgetLine)
-                                    <option value="{{ $budgetLine->BudgetLineID }}">{{ $budgetLine->Description }}</option>
+                                        <option
+                                            value="{{ $budgetLine->BudgetLineID }}">{{ $budgetLine->Description }}</option>
                                     @endforeach
                                 </select>
                             </td>
                         </tr>
-                        @endforeach
+                    @endforeach
                     </tbody>
                 </table>
 
@@ -177,21 +183,21 @@
                 'X-Requested-With': 'XMLHttpRequest'
             }
         })
-        .then(response => response.text())
-        .then(html => {
-            // Parse returned full page html to extract #needs-table-container
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
+            .then(response => response.text())
+            .then(html => {
+                // Parse returned full page html to extract #needs-table-container
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
 
-            const newContainer = doc.querySelector('#needs-table-container');
-            const currentContainer = document.getElementById('needs-table-container');
+                const newContainer = doc.querySelector('#needs-table-container');
+                const currentContainer = document.getElementById('needs-table-container');
 
-            if (newContainer && currentContainer) {
-                currentContainer.innerHTML = newContainer.innerHTML;
-                attachCheckboxEvents();
-            }
-        })
-        .catch(err => console.error('Error fetching filtered needs:', err));
+                if (newContainer && currentContainer) {
+                    currentContainer.innerHTML = newContainer.innerHTML;
+                    attachCheckboxEvents();
+                }
+            })
+            .catch(err => console.error('Error fetching filtered needs:', err));
     }
 
     // Enable/disable submit button depending on checkbox selection

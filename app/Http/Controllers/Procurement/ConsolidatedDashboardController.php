@@ -12,37 +12,38 @@ use App\Models\Core\Branch;
 class ConsolidatedDashboardController extends Controller
 {
     public function index(Request $request)
-{
-    $branch = $request->input('branch', 'All Branches');
-    $department = $request->input('department', 'All Departments');
-    $year = $request->input('year', 'All Years');
-    
+    {
+        $branch = $request->input('branch', 'All Branches');
+        $department = $request->input('department', 'All Departments');
+        $year = $request->input('year', 'All Years');
 
-    $query = DepartmentNeeds::with(['item', 'branch', 'department']);
 
-if ($branch !== 'All Branches' && !empty($branch)) {
-        $query->where('BranchID', $branch); // ✅ Correct field
+        $query = DepartmentNeeds::with(['item', 'branch', 'department']);
+
+        if ($branch !== 'All Branches' && !empty($branch)) {
+            $query->where('BranchID', $branch); // ✅ Correct field
+        }
+
+        if ($department !== 'All Departments' && !empty($department)) {
+            $query->where('DepartmentID', $department); // ✅ Correct field
+        }
+
+        if ($year !== 'All Years') {
+            $query->where('FiscalYear', $year);
+        }
+
+        $needs = $query->get();
+
+        // Load filter dropdown options
+        $branches = \App\Models\Core\Branch::orderBy('Name')->pluck('Name', 'Id')->prepend('All Branches', 'All Branches');
+        $departments = \App\Models\HRM\Department::orderBy('Name')->pluck('Name', 'Id')->prepend('All Departments', 'All Departments');
+        $years = ['All Years', 2025, 2026, 2027];
+
+        return view('procurement.procurementplan.planconsolidation.dashboard.index', compact(
+            'needs', 'branches', 'departments', 'years', 'branch', 'department', 'year'
+        ));
     }
 
-    if ($department !== 'All Departments' && !empty($department)) {
-        $query->where('DepartmentID', $department); // ✅ Correct field
-    }
-
-    if ($year !== 'All Years') {
-        $query->where('FiscalYear', $year);
-    }
-
-   $needs = $query->get();
-
-    // Load filter dropdown options
-    $branches = \App\Models\Core\Branch::orderBy('Name')->pluck('Name', 'Id')->prepend('All Branches', 'All Branches');
-    $departments = \App\Models\HRM\Department::orderBy('Name')->pluck('Name', 'Id')->prepend('All Departments', 'All Departments');
-    $years = ['All Years', 2025, 2026, 2027];
-
-    return view('procurement.procurementplan.planconsolidation.dashboard.index', compact(
-        'needs', 'branches', 'departments', 'years', 'branch', 'department', 'year'
-    ));
-}
     public function show($needId)
     {
         $needs = DepartmentNeeds::with('item')

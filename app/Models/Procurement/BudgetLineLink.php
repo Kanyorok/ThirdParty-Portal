@@ -8,13 +8,13 @@ use App\Traits\Model\UserActorTrait;
 
 class BudgetLineLink extends Model
 {
-     use SoftDeletes, UserActorTrait;
+    use SoftDeletes, UserActorTrait;
 
     const string CREATED_AT = 'CreatedOn';
     const string UPDATED_AT = 'ModifiedOn';
     const string DELETED_AT = 'DeletedOn';
 
-    protected $table = 't_BudgetLineLink'; 
+    protected $table = 't_BudgetLineLink';
     protected $primaryKey = 'LinkID';
 
     protected $fillable = [
@@ -30,9 +30,10 @@ class BudgetLineLink extends Model
 
 
     ];
+
     public function budgetMaster()
-{
-    return $this->belongsTo(BudgetMaster::class, 'BudgetLineID', 'BudgetLineID');
-}
+    {
+        return $this->belongsTo(BudgetMaster::class, 'BudgetLineID', 'BudgetLineID');
+    }
 
 }

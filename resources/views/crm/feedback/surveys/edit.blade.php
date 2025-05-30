@@ -411,7 +411,7 @@
     </div>
 @endsection
 @section('scripts')
-    
+
     <script src='{{ asset('assets/libs/moment/moment-with-locales.js') }}'></script>
     <script>let filtersTable = null;
         const $Modal = $('#SurveyActionsModal');

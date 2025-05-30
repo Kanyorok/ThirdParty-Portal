@@ -12,6 +12,7 @@
     </div>
 @endif
 
+
 <h4>Add Inventory Type</h4>
 <form action="{{ route('inventorytype.store') }}" method="POST" enctype="multipart/form-data">
     @csrf

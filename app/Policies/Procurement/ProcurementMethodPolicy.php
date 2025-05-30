@@ -15,10 +15,13 @@ class ProcurementMethodPolicy
     {
         return $user->can(PermissionEnum::ProcurementMethodRead->value);
     }
-    public function store (User $user,ProcurementMethod $procurementMethod): bool{
+
+    public function store(User $user, ProcurementMethod $procurementMethod): bool
+    {
         return $user->can(PermissionEnum::ProcurementMethodWrite->value);
     }
-    public function view(User $user,ProcurementMethod $procurementMethod): bool
+
+    public function view(User $user, ProcurementMethod $procurementMethod): bool
     {
         return $user->can(PermissionEnum::ProcurementMethodRead->value);
     }

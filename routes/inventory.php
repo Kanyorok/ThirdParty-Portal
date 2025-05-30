@@ -18,13 +18,16 @@ use App\Http\Controllers\Inventory\TransactionAdjustmentController;
 use App\Http\Controllers\Inventory\TransactionReceiptsController;
 use App\Http\Controllers\Inventory\TransactionTransfersController;
 use App\Http\Controllers\Inventory\UOMConversionController;
+
 use App\Http\Controllers\Inventory\StoreController;
+
 use App\Http\Controllers\Property\PropertyReceiptPrintController;
 use Illuminate\Support\Facades\Route;
 
-use App\Http\Controllers\Inventory\UOMController;
-use App\Http\Controllers\Inventory\ItemTypeController;
-use App\Http\Controllers\Inventory\InventoryTypeController;
+//use App\Http\Controllers\Inventory\ReceiptController;
+
+//use App\Http\Controllers\Inventory\PropertyReceiptPrintController;
+
 
 Route::namespace('Inventory')->prefix('inventory')->group(function () {
     // Route::resource('receipts', ReceiptController::class);
@@ -65,7 +68,6 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/get-stores', [SKUController::class, 'getStores'])->name('get.stores');
     Route::get('/get-items', [SKUController::class, 'getItemsByCategoryOrSubcategory'])->name('get.items');
 
-
     //Route::resource('itemcategory', ItemCategoryController::class);
     Route::get('/itemcategory', [ItemCategoryController::class, 'index'])->name('itemcategory.index');
     Route::get('/itemcategory/create', [ItemCategoryController::class, 'create'])->name('itemcategory.create');
@@ -99,6 +101,7 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::resource('inventoryreports', ReportsController::class);
     //Route::resource('rentdashboard', RentDashboardController::class);
 
+
    // Route::resource('receiptprint', PropertyReceiptPrintController::class);
 
    // Route::resource('unitofmeasure', UOMController::class);
@@ -127,5 +130,8 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::put('/inventorytype/{id}', [InventoryTypeController::class, 'update'])->name('inventorytype.update');
     Route::delete('/inventorytype/{id}', [InventoryTypeController::class, 'destroy'])->name('inventorytype.destroy');
 
+
+
+    Route::resource('receiptprint', PropertyReceiptPrintController::class);
 
 });

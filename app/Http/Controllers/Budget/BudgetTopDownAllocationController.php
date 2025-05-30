@@ -8,12 +8,13 @@ use Illuminate\Http\Request;
 class BudgetTopDownAllocationController extends Controller
 {
     //
-   public function index()
+    public function index()
     {
         return view('budgetandanalytics.budgetworkspace.topdownallocationtool.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('budgetandanalytics.budgetworkspace.topdownallocationtool.create');
     }
 
