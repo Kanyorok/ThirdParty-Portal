@@ -40,6 +40,7 @@
                 @foreach($categories as $category)
                 <option value="{{ $category->Id }}"
                     {{ old('CategoryId', $item->CategoryId ?? '') == $category->Id ? 'selected' : '' }}>
+
                     {{ $category->Name }}
                 </option>
                 @endforeach

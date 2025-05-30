@@ -2,22 +2,17 @@
 @section('title', 'RFQ Details')
 @section('content')
 <div class="container">
-    <h3>RFQ Details</h3>
+    <button type="button" class="btn btn-primary mb-3"
+            data-bs-toggle="modal" data-bs-target="#createRFQModal"
+            @if($rfq->rfqLines->where('RFQId', $rfq->Id)->count()) disabled @endif>
+        + New RFQ Line
+    </button>
 
     <div class="card mb-3">
         <div class="card-body">
             <p><strong>RFQ Number:</strong> {{ $rfq->RFQNumber }}</p>
             <p><strong>RFQ Comments:</strong> {{ $rfq->Comments }}</p>
-            <p><strong>Item Category:</strong> {{ $rfq->category->Name }}</p>
-            @if ($rfq->Suppliers)
-                <ul>
-                    @foreach (json_decode($rfq->Suppliers) as $supplier)
-                        <li>{{ $supplier->SupplierName }} — {{ $supplier->ContactEmail }}</li>
-                    @endforeach
-                </ul>
-            @else
-                <p>No suppliers selected.</p>
-            @endif
+
         </div>
     </div>
 
@@ -26,31 +21,29 @@
         <thead>
             <tr>
                 <th>#</th>
+                <th>RFQ Line No</th>
                 <th>Item Name</th>
                 <th>Quantity</th>
                 <th>UOM</th>
                 <th>Submission Deadline</th>
-                <th>Description</th>
-                <th>Status</th>
             </tr>
         </thead>
         <tbody>
-            @foreach ($rfq->RequisitionItems as $item)
+        @foreach ($rfq->rfqLines as $item)
                 <tr>
                     <td>{{ $loop->iteration }}</td>
-                    <td>{{ $item['name'] }}</td>
-                    <td>{{ $item['quantity'] }}</td>
-                    <td>{{ $item['unit'] }}</td>
+                    <td>{{ $item->RFQLineNo }}</td>
+                    <td>{{ $item->ItemName}}</td>
+                    <td>{{ $item->Quantity }}</td>
+                    <td>{{ $item->UOM}}</td>
                     <td>{{ \Carbon\Carbon::parse($rfq->SubmissionDeadline)->format('d M Y') }}</td>
-                    <td>{{ $item['description'] }}</td>
-                    <td>{{ $rfq->Status}}</td>
                 </tr>
             @endforeach
         </tbody>
         <tfoot>
             <tr>
             @if ($rfq->Status === 'Approved')
-                <td colspan="4" class="text-center">
+                    <td colspan="3" class="text-center">
                     <button type="button" class="btn btn-primary btn-sm">Save</button>
                 </td>
                 <td colspan="3" class="text-center">
@@ -127,12 +120,54 @@
         </div>
     </div>
 </div>
+
+<!-- Modal -->
+<div class="modal fade" id="createRFQModal" tabindex="-1" aria-labelledby="createRFQModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="POST" action="{{ route('linecategories.store') }}" class="modal-content">
+            @csrf
+            <div class="modal-header">
+                <h5 class="modal-title" id="createRFQModalLabel">Create RFQ Line</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Comments -->
+                <div class="mb-3">
+                    <label>Item Category</label>
+                    <select name="ItemCategoryId" id="categoryDropdown" class="form-control" required>
+                        <option value="">-- Select Category --</option>
+                    </select>
+                </div>
+            </div>
+            <input type="hidden" name="RFQId" id="rfq-number" value="{{ $rfq->Id }}">
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save RFQ Line</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
-    $(document).ready(function() {
-        $('#suppliers').select2({
-            placeholder: "Select suppliers",
-            allowClear: true
+    document.addEventListener('DOMContentLoaded', function () {
+        const categoryDropdown = document.getElementById('categoryDropdown');
+        // Clear existing options except the placeholder
+        categoryDropdown.length = 1;
+        fetch('{{ url("/procurement/requisitionlines/categories") }}') // if in a Blade file
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat.Id;
+                    option.textContent = cat.Name;
+                    categoryDropdown.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching categories:', error);
         });
     });
 </script>
+
 @endsection

@@ -30,7 +30,7 @@ class DepartmentNeedApprovalController extends Controller
         return view('procurement.procurementplan.departmentneeds.approval.show', compact('need'));
     }
 
-public function update(Request $request, $departmentNeed_ID):RedirectResponse
+    public function update(Request $request, $departmentNeed_ID): RedirectResponse
     {
         $departmentNeeds = DepartmentNeeds::query()->findOrFail($departmentNeed_ID);
 
@@ -54,7 +54,7 @@ public function update(Request $request, $departmentNeed_ID):RedirectResponse
             return redirect()
                 ->back()
                 ->with('error', $e->getMessage());
-        } catch (\Throwable | Exception $e) {
+        } catch (\Throwable|Exception $e) {
             \Log::error('Error approve department needs failed: ' . $e->getMessage());
             return redirect()
                 ->back()
@@ -72,13 +72,13 @@ public function update(Request $request, $departmentNeed_ID):RedirectResponse
         $this->authorize('approve', $departmentNeeds);
         $actor = $request->user();
         $data = $request->validate([
-                                    'Department_needs_reject_reason' => [
-                                                                 'required',
-                                                                 'string',
-                                                                 'min:15',
-                                                                 'max:2000',
-                                                                ],
-                                   ]);
+            'Department_needs_reject_reason' => [
+                'required',
+                'string',
+                'min:15',
+                'max:2000',
+            ],
+        ]);
 
         try {
             DB::transaction(static function () use ($departmentNeeds, $actor, $data) {

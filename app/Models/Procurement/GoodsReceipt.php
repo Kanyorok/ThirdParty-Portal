@@ -2,9 +2,11 @@
 
 namespace App\Models\Procurement;
 
+use App\Enums\Core\PostingEnum;
+use App\Models\Auth\User;
+use App\Models\ThirdParies\Supplier;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class GoodsReceipt extends Model
@@ -14,7 +16,7 @@ class GoodsReceipt extends Model
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
-    
+
     protected $table = 't_GoodsReceipts';
     protected $primaryKey = 'id';
     protected $fillable = [
@@ -36,7 +38,26 @@ class GoodsReceipt extends Model
                            'DeletedBy',
                            'DeletedOn',
                           ];
-        public static function getPrimaryKey(): string{
+
+    public static function getPrimaryKey(): string
+    {
         return 'id';
     }
+
+    public function receiver()
+    {
+        return $this->belongsTo(User::class, 'ReceivedBy', 'Id');
+    }
+
+    protected $casts = [
+
+        'InspectionStatus' => PostingEnum::class,
+
+    ];
+
+    public function supplier()
+    {
+        return $this->belongsTo(Supplier::class, 'SupplierId');
+    }
+
 }

@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Maintenance Request')
 @section('content')
 <div class="container mt-4">
   <h4 class="fw-bold mb-3">🛠️ New Maintenance Request</h4>

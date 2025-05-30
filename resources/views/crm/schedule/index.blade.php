@@ -4,7 +4,7 @@
 @section('styles')
     {{--<link rel="stylesheet" href="{{ asset('assets/plugins/fullcalendar/fullcalendar.min.css') }}">
     <link href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css' rel='stylesheet'>--}}
-    <link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
     <style>
         .select2-container {
             width: 100% !important;
@@ -264,10 +264,10 @@
     </div>
 @endsection
 @section('scripts')
-    <script src="{{ asset('assets/plugins/rangePlugin.js') }}"></script>
+    <script src="{{ asset('assets/libs/rangePlugin.js') }}"></script>
     <script src='{{ asset('assets/js/fullcalendar-6.1.14.js') }}'></script>
-    <script src='{{ asset('assets/plugins/moment/moment-with-locales.js') }}'></script>
-    <script src="{{ asset('assets/plugins/select2/js/select2.full.min.js') }}"></script>
+    <script src='{{ asset('assets/libs/moment/moment-with-locales.js') }}'></script>
+    <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
     <script>
         $Modal = $('#scheduleActionsModal');
         const _type = $('#scheduleType'), windowLocation = window.location.toString();

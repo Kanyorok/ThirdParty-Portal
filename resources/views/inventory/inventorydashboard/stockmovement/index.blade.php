@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Stock Movement Dashboard')
 @section('content')
 <div class="container-fluid mt-4">
   <div class="mb-4">

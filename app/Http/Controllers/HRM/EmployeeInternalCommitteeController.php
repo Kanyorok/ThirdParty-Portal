@@ -27,7 +27,7 @@ class EmployeeInternalCommitteeController extends Controller
 
     public function store(Request $request)
     {
-        
+
         $request->validate([
             'Employee' => 'required|exists:t_Employees,Id',
             'Committee' => 'required|exists:t_Committees,Id',
@@ -37,7 +37,7 @@ class EmployeeInternalCommitteeController extends Controller
         $committeeId = $request->input('Committee');
         $userId = Auth::id();
         $now = now();
-  
+
         // Check if relationship exists and is not soft-deleted
         $exists = DB::table('t_Committee_Employee')
             ->where('EmployeeId', $employeeId)
@@ -76,6 +76,5 @@ class EmployeeInternalCommitteeController extends Controller
         return back()->with('success', 'Employee removed from committee.');
     }
 
-  
 
 }

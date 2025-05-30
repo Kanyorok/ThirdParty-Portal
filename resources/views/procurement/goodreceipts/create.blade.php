@@ -20,18 +20,18 @@
       <select id="poSelect" name="poSelectDisplay" class="form-select" onchange="populatePODetails()">
         <option value="">-- Select PO --</option>
         @foreach($Orders as $po)
-          <option value="{{ $po->OrderNo }}" 
-            data-OrderNo="{{ $po->OrderNo }}" 
-            data-remarks="{{ $po->Description }}" 
-            data-account-id="{{ $po->AccountID }}"
-            data-lines='@json($po->OrderLines)'>
-            {{ $po->OrderNo }}
+              <option value="{{ $po->OrderNo }}"
+                      data-OrderNo="{{ $po->OrderNo }}"
+                      data-remarks="{{ $po->ExtOrdNum }}"
+                      data-account-id="{{ $po->AccountID }}"
+                      data-lines='@json($po->OrderLines)'>
+                  {{ $po->OrderNo }}
           </option>
         @endforeach
       </select>
     </div>
     <div class="col-md-4 mb-2">
-      <label class="form-label">PO Description</label>
+        <label class="form-label">PO Reference No:</label>
       <div class="form-control form-control-lg bg-light" id="poDesc">--</div>
     </div>
   </div>
@@ -40,7 +40,7 @@
     @csrf
     <input type="hidden" name="GRNID" id="grnNoInput">
     <input type="hidden" name="POID" id="poIDInput">
-    <input type="hidden" name="SupplierID" id="supplierIdInput">
+      <input type="hidden" name="SupplierID" id="supplierIdInput">
 
     <div class="table-responsive">
       <table class="table table-bordered" id="itemsTable">
@@ -66,7 +66,6 @@
     <div class="mt-4">
       <button type="button" class="btn btn-secondary me-2" onclick="window.location='{{ route('procurementreceipts.index') }}'">Cancel</button>
       <button type="submit" class="btn btn-primary me-2">Save Receipt</button>
-      <button type="button" class="btn btn-success">Post and Transfer</button>
     </div>
   </form>
 </div>
@@ -105,11 +104,11 @@ function populatePODetails() {
   const selectedOption = select.options[select.selectedIndex];
   const poId = selectedOption.value;
   const remarks = selectedOption.getAttribute("data-remarks");
-  const accountId = selectedOption.getAttribute("data-account-id"); // <-- new
+    const accountId = selectedOption.getAttribute("data-account-id"); // <-- new
   const lines = JSON.parse(selectedOption.getAttribute("data-lines"));
 
   document.getElementById("poIDInput").value = poId;
-  document.getElementById("supplierIdInput").value = accountId; // <-- set hidden input
+    document.getElementById("supplierIdInput").value = accountId; // <-- set hidden input
   document.getElementById("poDesc").textContent = remarks || "--";
 
   const itemsBody = document.getElementById("itemsBody");

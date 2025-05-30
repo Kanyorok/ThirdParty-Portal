@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        fetch(`/rfq-responses/${rfqId}`)
+        fetch(`/procurement/rfq-responses/${rfqId}`)
             .then(response => response.json())
             .then(data => {
                 if (data.length > 0) {

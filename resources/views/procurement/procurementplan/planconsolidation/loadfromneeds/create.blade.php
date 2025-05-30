@@ -1,108 +1,257 @@
 @extends('layouts.app')
+
 @section('title', 'Select Approved Needs')
+@section('styles')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+@endsection
 @section('content')
 <div class="card p-4 shadow rounded-4">
-  <h4 class="mb-4">📥 Select Approved Needs to Include in Draft Plan</h4>
+    <h4 class="mb-4">📥 Select Approved Needs to Include in Draft Plan</h4>
 
-  <!-- Plan Selection -->
-  <div class="row mb-4">
-    <div class="col-md-6">
-      <label class="form-label">Target Plan</label>
-      <select class="form-select">
-        <option selected disabled>Select Draft Plan</option>
-        <option value="1">Annual Procurement Plan - 2025</option>
-        <option value="2">Mid-Year Supplementary - 2025</option>
-      </select>
-    </div>
-    <div class="col-md-6">
-      <label class="form-label">Planning Period</label>
-      <select class="form-select">
-        <option>2025</option>
-        <option>2026</option>
-        <option>2027</option>
-      </select>
-    </div>
-  </div>
+    {{-- ✅ FLASH MESSAGES --}}
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            ✅ {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
 
-  <!-- Filter Options -->
-  <div class="row mb-3">
-    <div class="col-md-3">
-      <label class="form-label">Branch</label>
-      <select class="form-select">
-        <option>All</option>
-        <option>Nairobi Branch</option>
-        <option>Mombasa Branch</option>
-      </select>
-    </div>
-    <div class="col-md-3">
-      <label class="form-label">Department</label>
-      <select class="form-select">
-        <option>All</option>
-        <option>ICT</option>
-        <option>Finance</option>
-      </select>
-    </div>
-    <div class="col-md-3">
-      <label class="form-label">Category</label>
-      <select class="form-select">
-        <option>All</option>
-        <option>IT Equipment</option>
-        <option>Stationery</option>
-      </select>
-    </div>
-    <div class="col-md-3 d-flex align-items-end">
-      <button class="btn btn-outline-primary w-100">Apply Filters</button>
-    </div>
-  </div>
+    @if($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>⚠️ {{ $error }}</li>
+                @endforeach
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
 
-  <!-- List of Needs -->
-  <form>
-    <table class="table table-bordered table-hover">
-      <thead class="table-light">
-        <tr>
-          <th><input type="checkbox" id="selectAll"></th>
-          <th>Item</th>
-          <th>Branch</th>
-          <th>Dept</th>
-          <th>Qty</th>
-          <th>Est. Cost</th>
-          <th>Required By</th>
-          <th>Justification</th>
-          <th>Budget Line</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- Sample Row -->
-        <tr>
-          <td><input type="checkbox" class="need-checkbox" value="101"></td>
-          <td>Desktop Computers</td>
-          <td>Nairobi</td>
-          <td>ICT</td>
-          <td>4</td>
-          <td>120,000</td>
-          <td>2025-06-01</td>
-          <td>To upgrade old machines</td>
-          <td>
-            <select class="form-select" name="budgetLine_101">
-              <option selected disabled>Select</option>
-              <option value="201">Nairobi - ICT Equipment (KES 1,000,000)</option>
-              <option value="202">Nairobi - General Supplies (KES 300,000)</option>
-            </select>
-          </td>
-        </tr>
+    {{-- 🔹 Form for Including Needs --}}
+    <form method="POST" action="{{ route('plan-from-needs.store') }}">
+        @csrf
 
-        <!-- More rows dynamically added -->
-      </tbody>
-    </table>
+        {{-- 🔹 Filter Fields --}}
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <label class="form-label">Target Plan</label>
+                <select class="form-select filter-input" name="plan_id" id="plan_id_selector" required
+                        onchange="updateFiscalYear()">
+                    <option disabled selected>Select Draft Plan</option>
+                    @foreach($plans as $plan)
+                        <option value="{{ $plan->PlanID }}" data-year="{{ $plan->FiscalYear }}"
+                            {{ old('plan_id', request('plan_id')) == $plan->PlanID ? 'selected' : '' }}>
+                            {{ $plan->Title }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Planning Period</label>
+                <input type="text" name="fiscal_year" id="fiscal_year_input" class="form-control" readonly
+                       value="{{ old('fiscal_year', request('fiscal_year')) }}">
+            </div>
+        </div>
 
-    <!-- Submission -->
-    <div class="d-flex justify-content-end mt-3">
-      <button type="submit" class="btn btn-success">
-        ➕ Include Selected Items in Draft Plan
-      </button>
-    </div>
-  </form>
+        <div class="row mb-3">
+            <div class="col-md-3">
+                <label class="form-label">Branch</label>
+                <select class="form-select filter-input" name="branch_filter" id="branch_filter">
+                    <option value="">All</option>
+                    @foreach($branches as $branch)
+                        <option
+                            value="{{ $branch->Id }}" {{ request('branch_filter') == $branch->Id ? 'selected' : '' }}>
+                            {{ $branch->Name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Department</label>
+                <select class="form-select filter-input" name="department_filter" id="department_filter">
+                    <option value="">All</option>
+                    @foreach($departments as $dept)
+                        <option
+                            value="{{ $dept->Id }}" {{ request('department_filter') == $dept->Id ? 'selected' : '' }}>
+                            {{ $dept->Name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Category</label>
+                <select class="form-select filter-input" name="category_id" id="category_id">
+                    <option value="">All</option>
+                    @foreach($categories as $category)
+                        <option
+                            value="{{ $category->Id }}" {{ request('category_id') == $category->Id ? 'selected' : '' }}>
+                            {{ $category->Name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                {{-- No apply button since filtering is automatic --}}
+            </div>
+        </div>
+
+        {{-- 🔹 Needs Table + Submit Button Container --}}
+        <div id="needs-table-container">
+            @if($approvedNeeds->count())
+                <table id="loadfromneedsTable" class="table table-bordered table-striped align-middle">
+                    <thead class="table-light">
+                    <tr>
+                        <th><input type="checkbox" id="selectAll"></th>
+                        <th>Item</th>
+                        <th>Branch</th>
+                        <th>Dept</th>
+                        <th>Qty</th>
+                        <th>Est. Cost</th>
+                        <th>Required By</th>
+                        <th>Justification</th>
+                        <th>Budget Line</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach($approvedNeeds as $need)
+                        <tr>
+                            <td><input type="checkbox" class="need-checkbox" name="selected_needs[]"
+                                       value="{{ $need->Id }}"></td>
+                            <td>{{ $need->item->ItemName ?? 'N/A' }}</td>
+                            <td>{{ $need->branch->Name ?? 'N/A' }}</td>
+                            <td>{{ $need->department->Name ?? 'N/A' }}</td>
+                            <td>{{ $need->RequestedQty }}</td>
+                            <td>{{ number_format($need->EstimatedUnitCost * $need->RequestedQty, 2) }}</td>
+                            <td>{{ \Carbon\Carbon::parse($need->RequestedDate)->toDateString() }}</td>
+                            <td>{{ $need->Justification }}</td>
+                            <td>
+                                <select name="budget_line_id[{{ $need->Id }}]" class="form-select" required>
+                                    <option selected disabled>Select Budget Line</option>
+                                    @foreach($budgetLines as $budgetLine)
+                                        <option
+                                            value="{{ $budgetLine->BudgetLineID }}">{{ $budgetLine->Description }}</option>
+                                    @endforeach
+                                </select>
+                            </td>
+                        </tr>
+                    @endforeach
+                    </tbody>
+                </table>
+
+                <div class="d-flex justify-content-end mt-3">
+                    <button type="submit" class="btn btn-success" id="submitBtn" name="action" value="submit" disabled>
+                        ➕ Include Selected Items in Draft Plan
+                    </button>
+                </div>
+            @else
+                <div class="text-center text-muted">No approved needs match the selected filters.</div>
+            @endif
+        </div>
+    </form>
 </div>
 
+{{-- 🔹 Script Section --}}
+<script>
+    // Update fiscal year based on selected plan
+    const planSelector = document.getElementById('plan_id_selector');
+    const fiscalYearInput = document.getElementById('fiscal_year_input');
 
+    function updateFiscalYear() {
+        const selectedOption = planSelector.options[planSelector.selectedIndex];
+        const fiscalYear = selectedOption ? selectedOption.getAttribute('data-year') : '';
+        fiscalYearInput.value = fiscalYear || '';
+    }
+
+    // Fetch filtered needs dynamically and update the table container
+    function fetchFilteredNeeds() {
+        const branch = document.getElementById('branch_filter').value || '';
+        const department = document.getElementById('department_filter').value || '';
+        const category = document.getElementById('category_id').value || '';
+
+        // Add plan_id param to keep consistency (optional)
+        const planId = planSelector.value || '';
+
+        const params = new URLSearchParams({
+            branch_filter: branch,
+            department_filter: department,
+            category_id: category,
+            plan_id: planId
+        });
+
+        fetch(window.location.pathname + '?' + params.toString(), {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+            .then(response => response.text())
+            .then(html => {
+                // Parse returned full page html to extract #needs-table-container
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                const newContainer = doc.querySelector('#needs-table-container');
+                const currentContainer = document.getElementById('needs-table-container');
+
+                if (newContainer && currentContainer) {
+                    currentContainer.innerHTML = newContainer.innerHTML;
+                    attachCheckboxEvents();
+                }
+            })
+            .catch(err => console.error('Error fetching filtered needs:', err));
+    }
+
+    // Enable/disable submit button depending on checkbox selection
+    function attachCheckboxEvents() {
+        const checkboxes = document.querySelectorAll('.need-checkbox');
+        const selectAll = document.getElementById('selectAll');
+        const submitBtn = document.getElementById('submitBtn');
+
+        if (selectAll) {
+            selectAll.addEventListener('click', function () {
+                checkboxes.forEach(cb => cb.checked = this.checked);
+                toggleSubmitButton();
+            });
+        }
+
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', toggleSubmitButton);
+        });
+
+        function toggleSubmitButton() {
+            const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+            if (submitBtn) {
+                submitBtn.disabled = !anyChecked;
+            }
+        }
+
+        toggleSubmitButton();
+    }
+
+    // Listen to filter changes
+    document.querySelectorAll('.filter-input').forEach(select => {
+        select.addEventListener('change', fetchFilteredNeeds);
+    });
+
+    // Initialize
+    updateFiscalYear();
+    attachCheckboxEvents();
+</script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        @if(!$approvedNeeds->isEmpty())
+        $('#loadfromneedsTable').DataTable({
+            pageLength: 10,
+            ordering: true,
+            searching: true,
+            lengthChange: true,
+            language: {
+                emptyTable: ""
+            }
+        });
+        @endif
+    });
+</script>
 @endsection
