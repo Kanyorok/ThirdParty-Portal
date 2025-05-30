@@ -97,7 +97,7 @@
     </div>
 @endsection
 @section('scripts')
-    
+
     <script> const $Modal = $('#LoansListActionsModal');
         $(function () {
             $.fn.dataTable.ext.errMode = 'none';

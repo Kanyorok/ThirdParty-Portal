@@ -99,7 +99,7 @@
 
 @endsection
 @section('scripts')
-    
+
     <script>const searchBtn = $('#searchFormBtn'), searchQuery = $('.search-form-item');
         let productsTable = null;
         $(function () {

@@ -8,12 +8,13 @@ use Illuminate\Http\Request;
 class InventoryTypeController extends Controller
 {
     //
-        public function index()
+    public function index()
     {
         return view('inventory.itemmaster.inventorytype.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('inventory.itemmaster.inventorytype.create');
     }
 }

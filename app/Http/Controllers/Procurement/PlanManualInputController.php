@@ -16,7 +16,7 @@ use Illuminate\Http\Request;
 class PlanManualInputController extends Controller
 {
     //
-   public function index(Request $request)
+    public function index(Request $request)
     {
         $planId = $request->query('plan_id');//todo pass plan id from url
         $plans = ConsolidatedProcurementPlan::all();
@@ -40,7 +40,7 @@ class PlanManualInputController extends Controller
     public function create()
     {
         $plans = ConsolidatedProcurementPlan::all();
-       $items = Item::with('category')->get();
+        $items = Item::with('category')->get();
         $budgetLines = BudgetMaster::all();
 
         return view('procurement.procurementplan.planconsolidation.manualentry.create', compact('plans', 'items', 'budgetLines'));
@@ -59,74 +59,76 @@ class PlanManualInputController extends Controller
         $planLineItem = new PlanLineItems();
         $planLineItem->PlanID = $validated['PlanID'];
         $planLineItem->ItemID = $item->Id;
-        $planLineItem->CategoryID = $category->Id; 
+        $planLineItem->CategoryID = $category->Id;
         $planLineItem->MergedQty = $validated['quantity'];
         $planLineItem->UnitOfMeasure = $validated['unit_of_measure'];
         $planLineItem->EstimatedUnitCost = $validated['estimated_cost'];
         $planLineItem->AdjustedCost = 0;
-        $planLineItem->ProcurementMethod = 'Open Tender'; 
+        $planLineItem->ProcurementMethod = 'Open Tender';
         $planLineItem->SchedulePeriod = $validated['schedule_period'];
         $planLineItem->ExpectedDeliveryDate = $validated['expected_delivery_date'];
         $planLineItem->BudgetLineID = $validated['budget_line_id'];
         $planLineItem->ExecutionStatus = 'Pending';
         $planLineItem->ChangeRemarks = $validated['notes'] ?? null;
-        $planLineItem->BranchID=$user->employee->BranchId;
-        $planLineItem->DepartmentID=$user->employee->DepartmentId;
+        $planLineItem->BranchID = $user->employee->BranchId;
+        $planLineItem->DepartmentID = $user->employee->DepartmentId;
         $planLineItem->IsDeleted = 0;
-        $planLineItem->CreatedBy = $user->id??1;
-        $planLineItem->ModifiedBy = $user->id??1;
+        $planLineItem->CreatedBy = $user->id ?? 1;
+        $planLineItem->ModifiedBy = $user->id ?? 1;
         $planLineItem->CreatedOn = Carbon::now();
         $planLineItem->ModifiedOn = Carbon::now();
 
         $planLineItem->save();
 
-         activity()->causedBy($user)->performedOn($planLineItem)->event('create')->log('created plan line item ' . $planLineItem->ItemID);
+        activity()->causedBy($user)->performedOn($planLineItem)->event('create')->log('created plan line item ' . $planLineItem->ItemID);
 
         return redirect()->route('procurement.procurementplan.planconsolidation.manualentry.index')->with('success', 'Line item added successfully.');
     }
+
     public function edit($lineItemId)
-{
-    $lineItem = PlanLineItems::with(['item', 'item.category'])->findOrFail($lineItemId);
-    $plans = ConsolidatedProcurementPlan::all();
-    $items = Item::all();
-    $categories = ItemCategory::all();
-    $budgetLines = BudgetMaster::all();
+    {
+        $lineItem = PlanLineItems::with(['item', 'item.category'])->findOrFail($lineItemId);
+        $plans = ConsolidatedProcurementPlan::all();
+        $items = Item::all();
+        $categories = ItemCategory::all();
+        $budgetLines = BudgetMaster::all();
 
-    return view('procurement.procurementplan.planconsolidation.manualentry.edit', compact('lineItem', 'plans', 'items', 'categories', 'budgetLines'));
-}
+        return view('procurement.procurementplan.planconsolidation.manualentry.edit', compact('lineItem', 'plans', 'items', 'categories', 'budgetLines'));
+    }
 
-public function update(PlanManualInputRequest $request, $lineItemId)
-{
-    $validated = $request->validated();
+    public function update(PlanManualInputRequest $request, $lineItemId)
+    {
+        $validated = $request->validated();
 
-    $lineItem = PlanLineItems::findOrFail($lineItemId);
+        $lineItem = PlanLineItems::findOrFail($lineItemId);
 
-    $lineItem->PlanID = $validated['PlanID'];
-    $lineItem->ItemID = $validated['ItemID'];
-    $lineItem->CategoryID = $validated['CategoryID'];
-    $lineItem->MergedQty = $validated['quantity'];
-    $lineItem->UnitOfMeasure = $validated['unit_of_measure'];
-    $lineItem->EstimatedUnitCost = $validated['estimated_cost'];
-    $lineItem->SchedulePeriod = $validated['schedule_period'];
-    $lineItem->ExpectedDeliveryDate = $validated['expected_delivery_date'];
-    $lineItem->BudgetLineID = $validated['budget_line_id'];
-    $lineItem->ChangeRemarks = $validated['notes'] ?? null;
-    $lineItem->ModifiedOn = Carbon::now();
-    $lineItem->ModifiedBy = auth()->id();
+        $lineItem->PlanID = $validated['PlanID'];
+        $lineItem->ItemID = $validated['ItemID'];
+        $lineItem->CategoryID = $validated['CategoryID'];
+        $lineItem->MergedQty = $validated['quantity'];
+        $lineItem->UnitOfMeasure = $validated['unit_of_measure'];
+        $lineItem->EstimatedUnitCost = $validated['estimated_cost'];
+        $lineItem->SchedulePeriod = $validated['schedule_period'];
+        $lineItem->ExpectedDeliveryDate = $validated['expected_delivery_date'];
+        $lineItem->BudgetLineID = $validated['budget_line_id'];
+        $lineItem->ChangeRemarks = $validated['notes'] ?? null;
+        $lineItem->ModifiedOn = Carbon::now();
+        $lineItem->ModifiedBy = auth()->id();
 
-    $lineItem->save();
+        $lineItem->save();
 
-    activity()->causedBy($user)->performedOn($lineItem)->event('update')->log('updated plan line item ' . $lineItem->ItemID);
+        activity()->causedBy($user)->performedOn($lineItem)->event('update')->log('updated plan line item ' . $lineItem->ItemID);
 
-    return redirect()->route('procurement.procurementplan.planconsolidation.manualentry.index')->with('success', 'Line item updated successfully.');
-}
-public function destroy($lineItemId)
-{
-    $lineItem = PlanLineItems::findOrFail($lineItemId);
-    $lineItem->delete();
-    activity()->causedBy($user)->performedOn($lineItem)->event('deleted')->log('deleted plan line item ' . $lineItem->ItemID);
+        return redirect()->route('procurement.procurementplan.planconsolidation.manualentry.index')->with('success', 'Line item updated successfully.');
+    }
 
-    return redirect()->route('procurement.procurementplan.planconsolidation.manualentry.index')->with('success', 'Line item deleted successfully.');
-}
+    public function destroy($lineItemId)
+    {
+        $lineItem = PlanLineItems::findOrFail($lineItemId);
+        $lineItem->delete();
+        activity()->causedBy($user)->performedOn($lineItem)->event('deleted')->log('deleted plan line item ' . $lineItem->ItemID);
+
+        return redirect()->route('procurement.procurementplan.planconsolidation.manualentry.index')->with('success', 'Line item deleted successfully.');
+    }
 
 }

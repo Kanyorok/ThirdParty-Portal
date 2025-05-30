@@ -38,8 +38,8 @@
             <select name="CategoryId" class="form-control">
                 <option value="">-- None --</option>
                 @foreach($categories as $category)
-                <option value="{{ $category->Id }}"
-                    {{ old('CategoryId', $item->CategoryId ?? '') == $category->Id ? 'selected' : '' }}>
+                    <option value="{{ $category->Id }}"
+                        {{ old('CategoryId', $item->CategoryId ?? '') == $category->Id ? 'selected' : '' }}>
                     {{ $category->Name }}
                 </option>
                 @endforeach

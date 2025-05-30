@@ -46,7 +46,8 @@
                                 <td>{{ $item->ordercount }}</td>
                                 <td>{{ $item->CreatedBy }}</td>
                                 <td>{{ \Carbon\Carbon::parse($item->CreatedOn)->format('d-m-Y H:i') }}</td>
-                                <td><a href="{{ route('purchaseOrder.show', $item->Id) }}" class="btn btn-info">View</a></td>
+                                <td><a href="{{ route('purchaseOrder.show', $item->Id) }}" class="btn btn-info">View</a>
+                                </td>
                             </tr>
                         @empty
                             <tr>

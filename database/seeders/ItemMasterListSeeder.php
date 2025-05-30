@@ -61,17 +61,17 @@ class ItemMasterListSeeder extends Seeder
             $barCode = 'BAR-' . str_pad($barcodeCounter++, 4, '0', STR_PAD_LEFT);
 
             ItemMasterList::create([
-                'ItemName'        => $name,
-                'UOM'             => $uom,
-                'ItemType'        => 'Stock',
-                'InventoryType'   => 'Consumable',
-                'Category'        => $category->Id,
+                'ItemName' => $name,
+                'UOM' => $uom,
+                'ItemType' => 'Stock',
+                'InventoryType' => 'Consumable',
+                'Category' => $category->Id,
                 'ItemDescription' => $name . ' for office use',
-                'BarCode'         => $barCode,
-                'CreatedBy'       => $createdBy,
-                'ModifiedBy'      => $createdBy,
-                'CreatedOn'       => $now,
-                'ModifiedOn'      => $now,
+                'BarCode' => $barCode,
+                'CreatedBy' => $createdBy,
+                'ModifiedBy' => $createdBy,
+                'CreatedOn' => $now,
+                'ModifiedOn' => $now,
             ]);
         }
     }

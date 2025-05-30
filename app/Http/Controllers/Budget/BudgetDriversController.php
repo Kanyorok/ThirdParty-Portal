@@ -13,7 +13,8 @@ class BudgetDriversController extends Controller
         return view('budgetandanalytics.budgetdrivers.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('budgetandanalytics.budgetdrivers.create');
     }
 }

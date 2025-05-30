@@ -31,7 +31,7 @@ class EmployeeInternalCommittee extends Model
         'DeletedOn' => 'datetime',
     ];
 
-    public function employee():BelongsTo
+    public function employee(): BelongsTo
     {
         return $this->belongsTo(Employee::class, 'EmployeeId', 'Id');
     }

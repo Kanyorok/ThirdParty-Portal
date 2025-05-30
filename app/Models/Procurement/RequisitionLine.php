@@ -38,12 +38,11 @@ class RequisitionLine extends Model
         // 'Processing' => 'boolean'
                        ];
 
-    
+
     public function item()
     {
         return $this->belongsTo(ItemMasterList::class, 'Item', 'Id');
     }
 
-    
 
 }

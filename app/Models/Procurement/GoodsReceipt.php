@@ -16,7 +16,7 @@ class GoodsReceipt extends Model
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
-    
+
     protected $table = 't_GoodsReceipts';
     protected $primaryKey = 'id';
     protected $fillable = [
@@ -38,18 +38,23 @@ class GoodsReceipt extends Model
                            'DeletedBy',
                            'DeletedOn',
                           ];
-    public static function getPrimaryKey(): string{
+
+    public static function getPrimaryKey(): string
+    {
         return 'id';
     }
+
     public function receiver()
     {
         return $this->belongsTo(User::class, 'ReceivedBy', 'Id');
     }
+
     protected $casts = [
 
-    'InspectionStatus' => PostingEnum::class,
+        'InspectionStatus' => PostingEnum::class,
 
     ];
+
     public function supplier()
     {
         return $this->belongsTo(Supplier::class, 'SupplierId');

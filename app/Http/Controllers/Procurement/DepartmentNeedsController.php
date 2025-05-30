@@ -36,7 +36,7 @@ class DepartmentNeedsController extends Controller
                 $service->create($request->all(), $actor);
             });
 
-                    return redirect()->route('procurementdepartmentalplan.index')->with('success', 'Department need created!');
+            return redirect()->route('procurementdepartmentalplan.index')->with('success', 'Department need created!');
         } catch (Throwable $e) {
             Log::error("--- CREATE DEPARTMENT NEEDS ERROR --- " . $e->getMessage());
             return redirect()->back()->withErrors(['error' => 'Failed to create need.']);
@@ -49,7 +49,7 @@ class DepartmentNeedsController extends Controller
         $departmentneedviews = DepartmentNeeds::with('creator')->where('Status', 'p')->get();
         return view('procurement.procurementplan.departmentneeds.raiseneed.index', compact('departmentneedviews'));
     }
-    
+
     public function fetchLinesByDPlan($NeedID)
     {
         $lines = DepartmentNeeds::with('item')
@@ -57,7 +57,7 @@ class DepartmentNeedsController extends Controller
             ->get()
             ->map(function ($line) {
                 return [
-                    'id' => $line->id, 
+                    'id' => $line->id,
                     'NeedID' => $line->NeedID,
                     'ItemID' => $line->ItemID,
                     'ItemName' => $line->item->ItemName ?? 'Unknown',

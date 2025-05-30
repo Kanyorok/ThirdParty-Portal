@@ -72,7 +72,7 @@ class RFQLinesController extends Controller
         return redirect()->route('rfqs.show', $request->RFQId)->with('success', 'RFQ line(s) created successfully.');
     }
 
-   public function getCategories()
+    public function getCategories()
     {
         // Step 1: Get IDs of RequisitionLines already used in RFQ lines
         $excludedLineIds = DB::table('t_rfqlines')->pluck('requisitionlineid');
@@ -91,7 +91,6 @@ class RFQLinesController extends Controller
 
         return response()->json($categories);
     }
-
 
 
 }

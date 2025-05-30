@@ -4,22 +4,21 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Budget\BudgetItemsController;
 use App\Http\Controllers\Budget\BudgetPeriodController;
 use App\Http\Controllers\Budget\BudgetProductMasterController;
-use App\Http\Controllers\Budget\BudgetProductTypeController; 
+use App\Http\Controllers\Budget\BudgetProductTypeController;
 use App\Http\Controllers\Budget\BudgetLineMappingController;
 use App\Http\Controllers\Budget\BudgetGLMappingController;
-use App\Http\Controllers\Budget\BudgetDriversController; 
-use App\Http\Controllers\Budget\BudgetProductEntryController; 
+use App\Http\Controllers\Budget\BudgetDriversController;
+use App\Http\Controllers\Budget\BudgetProductEntryController;
 use App\Http\Controllers\Budget\BudgetGLLineEntryController;
 use App\Http\Controllers\Budget\BudgetSubmitController;
 use App\Http\Controllers\Budget\BudgetApprovalController;
 use App\Http\Controllers\Budget\BudgetTopDownAllocationController;
 use App\Http\Controllers\Budget\BudgetSceneriosController;
 use App\Http\Controllers\Budget\BudgetFormulaController;
-use App\Http\Controllers\Budget\BudgetConsolidationController;  
-use App\Http\Controllers\Budget\BudgetvsActualDashboardController; 
-use App\Http\Controllers\Budget\BudgetVarianceAnalysisController; 
-use App\Http\Controllers\Budget\BudgetKPIscorecardsController; 
-
+use App\Http\Controllers\Budget\BudgetConsolidationController;
+use App\Http\Controllers\Budget\BudgetvsActualDashboardController;
+use App\Http\Controllers\Budget\BudgetVarianceAnalysisController;
+use App\Http\Controllers\Budget\BudgetKPIscorecardsController;
 
 
 Route::namespace('Budget')->group(function () {
@@ -41,8 +40,6 @@ Route::namespace('Budget')->group(function () {
     Route::resource('budgetvsactualdashboard', BudgetvsActualDashboardController::class);
     Route::resource('budgetvarianceanalysis', BudgetVarianceAnalysisController::class);
     Route::resource('kpiscorecards', BudgetKPIscorecardsController::class);
-    
-    
 
 
 });

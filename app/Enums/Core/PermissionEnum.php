@@ -278,7 +278,7 @@ enum PermissionEnum: string
     public static function approvals(): Collection
     {
         return collect([self::MarketingPlannerApproval, /* self::MarketingListApproval,*/ self::TicketApproval, self::CampaignApproval, self::SurveyApproval, self::Ceo, self::MarketingManager,
-            self::PurchaseOrderApproval, self::RequisitionApproval,self::RequisitionItemsApproval]);
+            self::PurchaseOrderApproval, self::RequisitionApproval, self::RequisitionItemsApproval]);
     }
 
 
@@ -314,7 +314,7 @@ enum PermissionEnum: string
             self::RfqRead, self::RfqWrite, self::RfqUpdate, self::RfqApproval, self::RfqDelete,
             self::DepartmentNeedsRead, self::DepartmentNeedsWrite, self::DepartmentNeedsUpdate, self::DepartmentNeedsDelete, self::DepartmentNeedsApproval,
             self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete,
-            self::ProcurementMethodRead, self::ProcurementMethodWrite  => ModulesEnum::Procurement,
+            self::ProcurementMethodRead, self::ProcurementMethodWrite => ModulesEnum::Procurement,
 
             self::Departments, self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete => ModulesEnum::HRM,
 
@@ -359,7 +359,7 @@ enum PermissionEnum: string
             self::SchedulePlanRead, self::SchedulePlanWrite, self::SchedulePlanUpdate => 'Procurement Schedule Plan',
 
             //Requisition
-            self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval, self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval =>'Requisitions',
+            self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval, self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval => 'Requisitions',
 
 
             //PurchaseOrder

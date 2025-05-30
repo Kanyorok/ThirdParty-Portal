@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -15,7 +14,7 @@ return new class extends Migration
             // Drop existing string columns
             $table->dropColumn('BranchID');
             $table->dropColumn('DepartmentID');
-            
+
             // Add new foreign key columns
             $table->foreignId('BranchID')->after('PlanID')->constrained('t_Branches');
             $table->foreignId('DepartmentID')->after('BranchID')->constrained('t_Departments');
@@ -33,7 +32,7 @@ return new class extends Migration
             $table->dropForeign(['DepartmentID']);
             $table->dropColumn('BranchID');
             $table->dropColumn('DepartmentID');
-            
+
             // Restore original string columns
             $table->string('BranchID', 10)->after('PlanID');
             $table->string('DepartmentID', 10)->after('BranchID');

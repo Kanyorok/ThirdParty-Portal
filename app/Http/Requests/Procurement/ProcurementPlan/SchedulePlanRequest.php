@@ -46,22 +46,22 @@ class SchedulePlanRequest extends FormRequest
 
     public function getQuarterOne(int $lineItemId): int
     {
-        return (int) $this->input("q1_{$lineItemId}", 0);
+        return (int)$this->input("q1_{$lineItemId}", 0);
     }
 
     public function getQuarterTwo(int $lineItemId): int
     {
-        return (int) $this->input("q2_{$lineItemId}", 0);
+        return (int)$this->input("q2_{$lineItemId}", 0);
     }
 
     public function getQuarterThree(int $lineItemId): int
     {
-        return (int) $this->input("q3_{$lineItemId}", 0);
+        return (int)$this->input("q3_{$lineItemId}", 0);
     }
 
     public function getQuarterFour(int $lineItemId): int
     {
-        return (int) $this->input("q4_{$lineItemId}", 0);
+        return (int)$this->input("q4_{$lineItemId}", 0);
     }
 
 }

@@ -8,14 +8,15 @@ use Illuminate\Http\Request;
 class UOMController extends Controller
 {
     //
-        public function index()
+    public function index()
     {
         return view('inventory.itemmaster.unitofmeasure.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('inventory.itemmaster.unitofmeasure.create');
     }
-    
-    
+
+
 }

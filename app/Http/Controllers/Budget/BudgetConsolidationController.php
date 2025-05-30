@@ -13,7 +13,8 @@ class BudgetConsolidationController extends Controller
         return view('budgetandanalytics.budgetworkspace.budgetconsolidation.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('budgetandanalytics.budgetworkspace.budgetconsolidation.create');
     }
 }
