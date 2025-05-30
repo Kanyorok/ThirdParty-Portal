@@ -1,5 +1,8 @@
 @extends('layouts.app')
 @section('title', 'Link Procurement Items to Budget Lines')
+@section('styles')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+@endsection
 @section('content')
 <div class="container mt-4">
 
@@ -13,7 +16,7 @@
   <form method="POST" action="{{ route('planning.assign.methods.store') }}">
     @csrf
     <div class="table-responsive">
-      <table class="table table-bordered align-middle table-hover">
+      <table id="linkbudgetTable" class="table table-bordered table-striped align-middle">
         <thead class="table-light">
           <tr>
             <th>#</th>
@@ -58,5 +61,22 @@
     </div>
   </form>
 </div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
+<script>
+    $(document).ready(function () {
+        @if(!$draftItems->isEmpty())
+        $('#linkbudgetTable').DataTable({
+            pageLength: 10,
+            ordering: true,
+            searching: true,
+            lengthChange: true,
+            language: {
+                emptyTable: ""
+            }
+        });
+        @endif
+    });
+</script>
 @endsection
