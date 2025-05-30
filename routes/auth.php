@@ -5,7 +5,6 @@ use App\Http\Controllers\Auth\DashboardController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PendingWorkflowController;
 use App\Http\Controllers\Auth\ProfileController;
-use App\Http\Controllers\Auth\SSRSProxyController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
@@ -29,20 +28,19 @@ Route::middleware('auth')->group(function () {
 
     Route::get('pending-workflows', PendingWorkflowController::class)->name('pending-workflows');
 
-
-//    Route::any('ssrs-report', [ReportController::class, 'viewSsrsReport'])->name('ssrs.view_report');
+    // Route::any('ssrs-report', [\App\Http\Controllers\Auth\ReportController::class, 'show'])->name('ssrs.view_report');
     //Route::any('rpt',[ReportController::class,'view']);//->name('ssrs.view_report');
 
 //    Route::get('/ssrs-proxy', [SSRSProxyController::class, 'fetchReport']);
-    Route::get('core/auth/report/{report}/ssrs-report-proxy', SSRSProxyController::class)->name('auth.ssrs.proxy');
-    Route::any('report/{any}', [SSRSProxyController::class, 'report'])->where('any', '.*')->name('ssrs.proxy.report')
-        ->withoutMiddleware([Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
-    Route::any('ReportServer/Reserved.ReportViewerWebControl.axd', [SSRSProxyController::class, 'handleAxd'])
-        ->withoutMiddleware([Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
+    /* Route::get('core/auth/report/{report}/ssrs-report-proxy', SSRSProxyController::class)->name('auth.ssrs.proxy');
+     Route::any('report/{any}', [SSRSProxyController::class, 'report'])->where('any', '.*')->name('ssrs.proxy.report')
+         ->withoutMiddleware([Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
+     Route::any('ReportServer/Reserved.ReportViewerWebControl.axd', [SSRSProxyController::class, 'handleAxd'])
+         ->withoutMiddleware([Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
 
-    Route::any('ReportServer/{any?}', [SSRSProxyController::class, 'preview'])->where('any', '.*')
-        ->withoutMiddleware([Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
-    Route::any('reports/{any}', [SSRSProxyController::class, 'assets'])->where('any', '.*');
-    Route::get('core/auth/report/assets/{asset?}', [SSRSProxyController::class, 'assets'])->name('auth.ssrs.proxy.assets');
+     Route::any('ReportServer/{any?}', [SSRSProxyController::class, 'preview'])->where('any', '.*')
+         ->withoutMiddleware([Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
+     Route::any('reports/{any}', [SSRSProxyController::class, 'assets'])->where('any', '.*');
+     Route::get('core/auth/report/assets/{asset?}', [SSRSProxyController::class, 'assets'])->name('auth.ssrs.proxy.assets');*/
 
 });

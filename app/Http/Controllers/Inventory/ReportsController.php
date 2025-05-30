@@ -11,10 +11,13 @@ use Illuminate\View\View;
 
 class ReportsController extends Controller
 {
+
+    protected const ModulesEnum Module = ModulesEnum::Inventory;
+
     use ReportsTrait;
 
     public function index(Request $request): JsonResponse|View
     {
-        return $this->getReports($request->ajax(), ModulesEnum::Inventory);
+        return $this->getReports($request->ajax());
     }
 }

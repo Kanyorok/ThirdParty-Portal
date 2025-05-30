@@ -80,6 +80,7 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     //Route::resource('rentdashboard', RentDashboardController::class);
     Route::resource('receiptprint', PropertyReceiptPrintController::class);
 
+    Route::get('reports/{report}/export/{format}', [ReportsController::class, 'export'])->name('inventory-reports.export');
     Route::resource('reports', ReportsController::class)->names([
         'index' => 'inventory-reports.index',
         'show' => 'inventory-reports.show',

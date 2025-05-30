@@ -23,6 +23,10 @@ class Report extends Model
         'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
 
+    protected $casts = [
+        'ModuleId' => 'integer',
+    ];
+
     public static function getPrimaryKey(): string
     {
         return 'ReportId';
