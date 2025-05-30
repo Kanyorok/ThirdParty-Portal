@@ -19,7 +19,8 @@ BEGIN
     set @PriceIncl = isnull(@Price,0) * (1 + @Tax / 100)
 
 
-		set @LineTotal = ((@Quantity * @Price) - @Discount) * (1 + @Tax / 100)
+-- 		set @LineTotal = ((@Quantity * @Price) - @Discount) * (1 + @Tax / 100)
+    set @LineTotal = (@Quantity * @Price) * (1 - @Discount / 100) * (1 + @Tax / 100)
 
     -- Insert new purchase order lines
     INSERT INTO t_OrderLines (iOrderID, fQuantity, fUnitPriceExcl, fUnitPriceIncl, flineDiscount, fTaxRate, CreatedBy,CreatedOn, ModifiedBy,ModifiedOn,BranchID,iStockCodeID,LineTotal)

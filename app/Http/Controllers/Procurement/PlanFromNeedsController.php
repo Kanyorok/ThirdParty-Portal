@@ -75,7 +75,7 @@ class PlanFromNeedsController extends Controller
         foreach ($selectedNeeds as $need) {
             $budgetLineId = $request->budget_line_id[$need->Id] ?? null;
 
-            PlanLineItems::create([
+            $planitems = PlanLineItems::create([
                 'PlanID' => $request->plan_id,
                 'ItemID' => $need->ItemID,
                 'BranchID' => $need->BranchID,

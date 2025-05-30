@@ -1,5 +1,5 @@
-<link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
-<script src="{{ asset('assets/plugins/select2/js/select2.full.min.js') }}"></script>
+<link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
+<script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
 <style>
     .select2-container {
         width: 100% !important;

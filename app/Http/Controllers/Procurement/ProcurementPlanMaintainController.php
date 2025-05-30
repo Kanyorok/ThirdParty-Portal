@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Enums\Core\PostingEnum;
 use App\Models\Procurement\PlanLineItem;
+use App\Models\Auth\User;
+use Illuminate\Support\Facades\Auth;
 
 class ProcurementPlanMaintainController extends Controller
 {
@@ -30,6 +32,7 @@ public function store(Request $request)
     ]);
 
     $userId = $request->CreatedBy;
+    $user = User::find($userId);
 
     $plan = ConsolidatedProcurementPlan::create([
         'Title'           => $request->Title,
