@@ -15,7 +15,7 @@ class ProcurementSetMethodController extends Controller
     //
     public function index()
     {
-        $approvedPlans = ConsolidatedProcurementPlan::where('Status', 'approved')->get();
+        $approvedPlans = ConsolidatedProcurementPlan::where('Status', 'd')->get();
         return view('procurement.procurementplan.planneditemsandactivities.assignprocurementmethod.index', compact('approvedPlans'));
     }
 
