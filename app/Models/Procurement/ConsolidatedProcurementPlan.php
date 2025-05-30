@@ -42,10 +42,7 @@ class ConsolidatedProcurementPlan extends Model
         'Status' => PostingEnum::class,
     ];
     
-    // Relationship with User for CreatedBy
-    protected $casts = [
-    'Status' => PostingEnum::class,
-];
+  
    public function createdBy()
     {
         return $this->belongsTo(User::class, 'CreatedBy', 'Id');
