@@ -260,9 +260,6 @@ enum PermissionEnum: string
     case UOMCreate = 'uom-create';
     case UOMDestroy= 'uom-destroy';
     
-
-
-
     /*
      *
      * ========================================  Human Resource management  ========================================
@@ -376,8 +373,7 @@ enum PermissionEnum: string
             self::StoreView, self::StoreUpdate, self::StoreCreate, self::StoreDestroy,
             self::InventoryTypeView, self::InventoryTypeUpdate, self::InventoryTypeCreate, self::InventoryTypeDestroy,
             self::ItemTypeView, self::ItemTypeUpdate, self::ItemTypeCreate, self::ItemTypeDestroy,
-            self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy,
-            => ModulesEnum::Inventory,
+            self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy=> ModulesEnum::Inventory,
         };
     }
 
