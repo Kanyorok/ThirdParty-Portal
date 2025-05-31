@@ -4,11 +4,16 @@ namespace App\Models\Procurement;
 
 use App\Models\Auth\User;
 
+use App\Models\BR\Branch;
+
+
 //use App\Models\BR\Branch;
+
 use App\Models\HRM\Department;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
+
 use App\Models\Procurement\PlanLineItems;
 use App\Models\Core\Branch;
 

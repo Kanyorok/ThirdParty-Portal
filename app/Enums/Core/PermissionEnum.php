@@ -204,7 +204,14 @@ enum PermissionEnum: string
     case DepartmentNeedsUpdate = 'departmentneeds-update';
     case DepartmentNeedsDelete = 'departmentneeds-delete';
     case DepartmentNeedsApproval = 'departmentneeds-approval';
- 
+
+    //Tender
+    case TenderRead = 'tender-read';
+    case TenderWrite = 'tender-create';
+    case TenderUpdate = 'tender-update';
+    case TenderDelete = 'tender-delete';
+    case TenderApproval = 'tender-approval';
+
     //Procument Plan- Plan Consolidation
     case PlanConsolidationRead = 'panconsolidation-read';
     case PlanConsolidationWrite = 'panconsolidation-write';
@@ -214,6 +221,11 @@ enum PermissionEnum: string
     //ProcurementPlan ProcurementMethod
     case ProcurementMethodRead = 'procurementmethod-read';
     case ProcurementMethodWrite = 'procurementmethod-create';
+
+    //ProcurementPlan Procurement Schedule
+    case SchedulePlanRead = 'scheduleplan-read';
+    case SchedulePlanWrite = 'scheduleplan-create';
+    case SchedulePlanUpdate = 'scheduleplan-update';
     /*
     *
     * ========================================  Inventory  ========================================
@@ -305,6 +317,9 @@ enum PermissionEnum: string
             [self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete, self::Departments],
             [self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval, self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval],
             [self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval],
+            
+            //Tenders
+            [self::TenderRead, self::TenderWrite, self::TenderUpdate, self::TenderDelete, self::TenderApproval],
  
             [self::MasterListView, self::MasterListUpdate, self::MasterListCreate, self::MasterListDestroy],
             [self::ItemCategoryView, self::ItemCategoryUpdate, self::ItemCategoryCreate, self::ItemCategoryDestroy],
@@ -321,7 +336,9 @@ enum PermissionEnum: string
     public static function approvals(): Collection
     {
         return collect([self::MarketingPlannerApproval, /* self::MarketingListApproval,*/ self::TicketApproval, self::CampaignApproval, self::SurveyApproval, self::Ceo, self::MarketingManager,
+            self::PurchaseOrderApproval, self::RequisitionApproval,self::RequisitionItemsApproval,self::DepartmentNeedsApproval, self::TenderApproval]);
             self::PurchaseOrderApproval, self::RequisitionApproval,self::RequisitionItemsApproval]);
+
     }
  
  
@@ -362,7 +379,10 @@ enum PermissionEnum: string
             => ModulesEnum::Procurement,
        
             self::Departments, self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete => ModulesEnum::HRM,
- 
+            self::MasterListView => ModulesEnum::Inventory,
+
+            //Tenders
+            self::TenderRead, self::TenderWrite, self::TenderUpdate, self::TenderDelete, self::TenderApproval => ModulesEnum::Procurement, 
             self::MasterListView, self::MasterListUpdate, self::MasterListCreate, self::MasterListDestroy,
             self::ItemCategoryView, self::ItemCategoryUpdate, self::ItemCategoryCreate, self::ItemCategoryDestroy,
             self::StockItemView, self::StockItemUpdate, self::StockItemCreate, self::StockItemDestroy,
@@ -415,7 +435,10 @@ enum PermissionEnum: string
  
             //PurchaseOrder
             self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval => 'Purchase Order',
- 
+
+            //Tendering
+            self::TenderRead, self::TenderWrite, self::TenderUpdate, self::TenderDelete, self::TenderApproval => 'Tenders',
+        }; 
             //Inventory
             self::MasterListView, self::MasterListUpdate, self::MasterListCreate, self::MasterListDestroy => 'Item Master',
             self::ItemCategoryView, self::ItemCategoryUpdate, self::ItemCategoryCreate, self::ItemCategoryDestroy => 'Item Category',
