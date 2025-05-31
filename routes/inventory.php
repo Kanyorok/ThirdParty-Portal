@@ -18,6 +18,10 @@ use App\Http\Controllers\Inventory\TransactionAdjustmentController;
 use App\Http\Controllers\Inventory\TransactionReceiptsController;
 use App\Http\Controllers\Inventory\TransactionTransfersController;
 use App\Http\Controllers\Inventory\UOMConversionController;
+use App\Http\Controllers\Inventory\InventoryTypeController;
+use App\Http\Controllers\Inventory\StoreController;
+use App\Http\Controllers\Inventory\UOMController;
+use App\Http\Controllers\Inventory\ItemTypeController;
 use App\Http\Controllers\Property\PropertyReceiptPrintController;
 use Illuminate\Support\Facades\Route;
 
@@ -36,6 +40,7 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::resource('transactionsadjustment', TransactionAdjustmentController::class);
 
     //Route::resource('itemmaster', ItemMasterController::class);
+    Route::get('/itemmaster', [ItemMasterListController::class, 'index'])->name('itemmaster.index');
     Route::get('/itemmasterlist/create', [ItemMasterListController::class, 'create'])->name('itemmasterlist.create');
     Route::post('/itemmasterlist', [ItemMasterListController::class, 'store'])->name('itemmasterlist.store');
     Route::get('/itemmasterlist/{Id}', [ItemMasterListController::class, 'show'])->name('itemmasterlist.show');
@@ -43,8 +48,26 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::put('/itemmasterlist/{Id}', [ItemMasterListController::class, 'update'])->name('itemmasterlist.update');
     Route::delete('/itemmasterlist/{Id}', [ItemMasterListController::class, 'destroy'])->name('itemmasterlist.destroy');
     Route::get('/get-subcategories', [ItemMasterListController::class, 'getSubcategories'])->name('get.subcategories');
-    Route::resource('sku', SKUController::class);
 
+    Route::get('/stores', [StoreController::class, 'index'])->name('stores.index');
+    Route::get('/stores/create', [StoreController::class, 'create'])->name('stores.create');
+    Route::post('/stores', [StoreController::class, 'store'])->name('stores.store');
+    Route::get('/stores/{Id}', [StoreController::class, 'show'])->name('stores.show');
+    Route::get('/stores/{Id}/edit', [StoreController::class, 'edit'])->name('stores.edit');
+    Route::put('/stores/{Id}', [StoreController::class, 'update'])->name('stores.update');
+    Route::delete('/stores/{Id}', [StoreController::class, 'destroy'])->name('stores.destroy');
+    
+    
+    //Route::resource('sku', SKUController::class);
+    Route::get('/sku', [SKUController::class, 'index'])->name('sku.index');
+    Route::get('/sku/create', [SKUController::class, 'create'])->name('sku.create');
+    Route::post('/sku', [SKUController::class, 'store'])->name('sku.store');
+    Route::get('/sku/{Id}', [SKUController::class, 'show'])->name('sku.show');
+    Route::get('/sku/{Id}/edit', [SKUController::class, 'edit'])->name('sku.edit');
+    Route::put('/sku/{Id}', [SKUController::class, 'update'])->name('sku.update');
+    Route::delete('/sku/{Id}', [SKUController::class, 'destroy'])->name('sku.destroy');
+    Route::get('/get-stores', [SKUController::class, 'getStores'])->name('get.stores');
+    Route::get('/get-items', [SKUController::class, 'getItemsByCategoryOrSubcategory'])->name('get.items');
 
     //Route::resource('itemcategory', ItemCategoryController::class);
     Route::get('/itemcategory', [ItemCategoryController::class, 'index'])->name('itemcategory.index');
@@ -54,7 +77,7 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/itemcategory/edit/{id}', [ItemCategoryController::class, 'edit'])->name('itemcategory.edit');
     Route::put('/itemcategory/{id}', [ItemCategoryController::class, 'update'])->name('itemcategory.update');
     Route::delete('/itemcategory/{id}', [ItemCategoryController::class, 'destroy'])->name('itemcategory.destroy');
-    Route::resource('sku', SKUController::class);
+
 
     //Route::resource('itemsubcategory', ItemSubCategoryController::class);
     Route::get('/itemsubcategory', [ItemSubCategoryController::class, 'index'])->name('itemsubcategory.index');
@@ -64,7 +87,7 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/itemsubcategory/{Id}/edit', [ItemSubCategoryController::class, 'edit'])->name('itemsubcategory.edit');
     Route::put('/itemsubcategory/{Id}', [ItemSubCategoryController::class, 'update'])->name('itemsubcategory.update');
     Route::delete('/itemsubcategory/{Id}', [ItemSubCategoryController::class, 'destroy'])->name('itemsubcategory.destroy');
-    Route::resource('sku', SKUController::class);
+
 
     Route::resource('inventorydashboard', InventoryDashboardController::class);
     Route::resource('movementdashboard', MovementDashboardController::class);
@@ -78,5 +101,38 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::resource('interbranchrequisitionapproval', InterBranchRequisitionApprovalController::class);
     Route::resource('inventoryreports', ReportsController::class);
     //Route::resource('rentdashboard', RentDashboardController::class);
+
+
+   // Route::resource('receiptprint', PropertyReceiptPrintController::class);
+
+   // Route::resource('unitofmeasure', UOMController::class);
+    Route::get('/unitofmeasure', [UOMController::class, 'index'])->name('unitofmeasure.index');
+    Route::get('/unitofmeasure/create', [UOMController::class, 'create'])->name('unitofmeasure.create');
+    Route::post('/unitofmeasure', [UOMController::class, 'store'])->name('unitofmeasure.store');
+    Route::get('/unitofmeasure/{Id}', [UOMController::class, 'show'])->name('unitofmeasure.show');
+    Route::get('/unitofmeasure/{Id}/edit', [UOMController::class, 'edit'])->name('unitofmeasure.edit');
+    Route::put('/unitofmeasure/{Id}', [UOMController::class, 'update'])->name('unitofmeasure.update');
+    Route::delete('/unitofmeasure/{Id}', [UOMController::class, 'destroy'])->name('unitofmeasure.destroy');
+    
+    
+    //Route::resource('itemtype', ItemTypeController::class);
+    Route::get('/itemtype', [ItemTypeController::class, 'index'])->name('itemtype.index');
+    Route::get('/itemtype/create', [ItemTypeController::class, 'create'])->name('itemtype.create');
+    Route::post('/itemtype', [ItemTypeController::class, 'store'])->name('itemtype.store');
+    Route::get('/itemtype/{Id}', [ItemTypeController::class, 'show'])->name('itemtype.show');
+    Route::get('/itemtype/{Id}/edit', [ItemTypeController::class, 'edit'])->name('itemtype.edit');
+    Route::put('/itemtype/{Id}', [ItemTypeController::class, 'update'])->name('itemtype.update');
+    Route::delete('/itemtype/{Id}', [ItemTypeController::class, 'destroy'])->name('itemtype.destroy');
+    
+    //Route::resource('inventorytype', InventoryTypeController::class);
+    Route::get('/inventorytype', [InventoryTypeController::class, 'index'])->name('inventorytype.index');
+    Route::get('/inventorytype/create', [InventoryTypeController::class, 'create'])->name('inventorytype.create');
+    Route::post('/inventorytype', [InventoryTypeController::class, 'store'])->name('inventorytype.store');
+    Route::put('/inventorytype/{id}', [InventoryTypeController::class, 'update'])->name('inventorytype.update');
+    Route::delete('/inventorytype/{id}', [InventoryTypeController::class, 'destroy'])->name('inventorytype.destroy');
+
+
+
     Route::resource('receiptprint', PropertyReceiptPrintController::class);
+
 });

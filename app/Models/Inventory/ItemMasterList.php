@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Inventory\ItemCategories;
+use App\Models\Inventory\InventoryType;
+use App\Models\Inventory\ItemType;
+use App\Models\Inventory\UnitOfMeasure;
 
 class ItemMasterList extends Model
 {
@@ -27,7 +30,7 @@ class ItemMasterList extends Model
                            'UOM',
                            'InventoryType',
                            'Category',
-                           'ImageUpload',
+                           'ImageId',
                            'ItemDescription',
                            'DocumentUpload',
                            'CreatedBy',
@@ -45,7 +48,7 @@ class ItemMasterList extends Model
                             'Category'      => 'int',
                             'UOM'           => 'string',
                             'InventoryType' => 'string',
-                            'ImageUpload' => 'string',
+                            'ImageId' => 'integer',
                             'ItemDescription' => 'string',
                             'DocumentUpload' => 'string',
                             'CreatedBy'     => 'integer',
@@ -69,29 +72,25 @@ public function parentCategory()
 }
 
 
-protected static function booted()
+public function image()
 {
-   static::creating(function ($item) {
-    if (empty($item->ItemCode)) {
-        $latestCode = self::where('ItemCode', 'like', 'ITM-%')
-            ->orderBy('ItemCode', 'desc')
-            ->pluck('ItemCode')
-            ->first();
-
-        if ($latestCode) {
-            // Extract number from the latest code
-            $number = intval(substr($latestCode, 4)) + 1;
-        } else {
-            $number = 1;
-        }
-
-        $item->ItemCode = 'ITM-' . str_pad($number, 3, '0', STR_PAD_LEFT);
-    }
-});
-
+    return $this->belongsTo(\App\Models\DMS\Image::class, 'ImageId', 'ImageID');
 }
 
+    public function itemType()
+    {
+        return $this->belongsTo(ItemType::class, 'ItemType', 'Id');
+    }
 
+    public function uom()
+    {
+        return $this->belongsTo(UnitOfMeasure::class, 'UOM', 'Id');
+    }
+
+    public function inventoryType()
+    {
+        return $this->belongsTo(InventoryType::class, 'InventoryType', 'Id');
+    }
     
 }
 
