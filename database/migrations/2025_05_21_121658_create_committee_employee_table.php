@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -21,7 +20,7 @@ return new class extends Migration
             $table->dateTime('ModifiedOn');
             $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
             $table->softDeletes('DeletedOn');
-        
+
             $table->foreign('EmployeeId')->references('Id')->on('t_Employees')->onDelete('cascade');
             $table->foreign('CommitteeId')->references('Id')->on('t_Committees')->onDelete('cascade');
             $table->unique(['EmployeeId', 'CommitteeId']); // prevent duplicates

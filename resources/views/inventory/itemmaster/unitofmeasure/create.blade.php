@@ -1,6 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Add Unit of Measure (UOM)')
 @section('content')
+
 @if ($errors->any())
   <div class="alert alert-danger">
     <ul class="mb-0">
@@ -37,5 +38,6 @@
     <button type="submit" class="btn btn-primary">Save</button>
   </form>
 </div>
+
 
 @endsection

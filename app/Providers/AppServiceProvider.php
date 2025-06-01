@@ -11,6 +11,7 @@ use App\Models\Communication\Call;
 use App\Models\Communication\Comment;
 use App\Models\Communication\Email;
 use App\Models\Core\Branch;
+use App\Models\Core\Report;
 use App\Models\Core\Task;
 use App\Models\CRM\Campaign;
 use App\Models\CRM\CampaignParty;
@@ -36,6 +37,7 @@ use App\Models\Procurement\RequisitionLines;
 use App\Models\Procurement\Requisitions;
 use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQLine;
+use App\Models\Procurement\SchedulePlan;
 use App\Models\Settings\APICredential;
 use App\Models\ThirdParies\Board;
 use App\Models\ThirdParies\Competitor;
@@ -45,6 +47,7 @@ use App\Policies\Procurement\OrderPolicy;
 use App\Policies\Procurement\ProcurementMethodPolicy;
 use App\Policies\Procurement\RequisitionLinesPolicy;
 use App\Policies\Procurement\RequisitionPolicy;
+use App\Policies\Procurement\SchedulePlanPolicy;
 use App\Policies\ProductDevelopmentPolicy;
 use App\Policies\RolePolicy;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -103,6 +106,7 @@ class AppServiceProvider extends ServiceProvider
             Meeting::getPrimaryKey() => Meeting::class,
             Notes::getPrimaryKey() => Notes::class,
             ProductDevelopment::getPrimaryKey() => ProductDevelopment::class,
+            Report::getPrimaryKey() => Report::class,
             RFQ::getPrimaryKey() => RFQ::class,
             RFQLine::getPrimaryKey() => RFQLine::class,
             Review::getPrimaryKey() => Review::class,
@@ -125,6 +129,7 @@ class AppServiceProvider extends ServiceProvider
             StockItem::getPrimaryKey() => StockItem::class,
             Store::getPrimaryKey() => Store::class,
             UnitOfMeasure::getPrimaryKey() => UnitOfMeasure::class,
+            SchedulePlan::getPrimaryKey() => SchedulePlan::class,
         ]);
 
         Gate::policy(Role::class, RolePolicy::class);
@@ -142,6 +147,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(InventoryType::class, InventoryTypePolicy::class);
         Gate::policy(Store::class, StorePolicy::class);
         Gate::policy(UnitOfMeasure::class, UnitOfMeasurePolicy::class);
+
+        Gate::policy(SchedulePlan::class, SchedulePlanPolicy::class);
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);
          Event::listen(SMSSendEvent::class, SMSSendListener::class);

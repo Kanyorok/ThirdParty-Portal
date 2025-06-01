@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 
 class ItemTypeController extends Controller
 {
+
     protected ItemTypeService $service;
 
     public function __construct(ItemTypeService $service)
@@ -25,6 +26,7 @@ class ItemTypeController extends Controller
 
     public function create()
     {
+
         $this->authorize('create', ItemType::class);
         return view('inventory.itemmaster.itemtype.create');
     }
@@ -70,4 +72,5 @@ class ItemTypeController extends Controller
 
         return redirect()->route('itemtype.index')->with('success', 'Item Type deleted successfully.');
     }
+
 }

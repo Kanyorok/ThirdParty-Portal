@@ -431,7 +431,7 @@
                                         Reports
                                     </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
                             <ul class="pc-submenu">
-                                <li class="pc-item"><a class="pc-link" href="{{ route('inventoryreports.index') }}"
+                                <li class="pc-item"><a class="pc-link" href="{{ route('reports.index') }}"
                                                        data-i18n="Procurement List">Reports</a></li>
                             </ul>
                         </li>

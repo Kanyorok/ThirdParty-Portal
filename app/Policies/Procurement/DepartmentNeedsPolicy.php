@@ -16,21 +16,27 @@ class DepartmentNeedsPolicy
     {
         return $user->can(PermissionEnum::DepartmentNeedsRead->value);
     }
-    public function store (User $user): bool{
+
+    public function store(User $user): bool
+    {
         return $user->can(PermissionEnum::DepartmentNeedsWrite->value);
     }
-    public function view(User $user,DepartmentNeeds $departmentNeeds): bool
+
+    public function view(User $user, DepartmentNeeds $departmentNeeds): bool
     {
         return $user->can(PermissionEnum::DepartmentNeedsRead->value);
     }
-    public function update(User $user, DepartmentNeeds $departmentNeeds):bool
+
+    public function update(User $user, DepartmentNeeds $departmentNeeds): bool
     {
         return $user->can(PermissionEnum::DepartmentNeedsUpdate->value);
     }
+
     public function destroy(User $user, DepartmentNeeds $departmentNeeds): bool
     {
         return $user->can(PermissionEnum::DepartmentNeedsDelete->value);
     }
+
     public function approve(User $user, DepartmentNeeds $departmentNeeds): bool
     {
         //dd($departmentNeeds);

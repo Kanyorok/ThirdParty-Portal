@@ -2,10 +2,10 @@
 
 namespace App\Models\Inventory;
 
-use App\Traits\Model\ImageTrait;
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\Model\UserActorTrait;
+
 use App\Models\Inventory\ItemCategories;
 use App\Models\Inventory\InventoryType;
 use App\Models\Inventory\ItemType;
@@ -24,58 +24,55 @@ class ItemMasterList extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-                           'BarCode',
-                           'ItemName',
-                           'ItemType',
-                           'UOM',
-                           'InventoryType',
-                           'Category',
-                           'ImageId',
-                           'ItemDescription',
-                           'DocumentUpload',
-                           'CreatedBy',
-                           'ModifiedBy',
-                           'DeletedBy',
-                           'CreatedOn',
-                           'ModifiedOn',
-                          ];
+        'BarCode',
+        'ItemName',
+        'ItemType',
+        'UOM',
+        'InventoryType',
+        'Category',
+        'ImageId',
+        'ItemDescription',
+        'DocumentUpload',
+        'CreatedBy',
+        'ModifiedBy',
+        'DeletedBy',
+        'CreatedOn',
+        'ModifiedOn',
+    ];
 
     protected $casts = [
-                            'ItemCode'       => 'string',
-                            'BarCode'       => 'string',
-                            'ItemName'      => 'string',
-                            'ItemType'      => 'string',
-                            'Category'      => 'int',
-                            'UOM'           => 'string',
-                            'InventoryType' => 'string',
-                            'ImageId' => 'integer',
-                            'ItemDescription' => 'string',
-                            'DocumentUpload' => 'string',
-                            'CreatedBy'     => 'integer',
-                            'ModifiedBy'    => 'integer',
-                            'DeletedBy'     => 'integer',
-                            'CreatedOn'     => 'datetime',
-                            'ModifiedOn'    => 'datetime',
+        'ItemCode'        => 'string',
+        'BarCode'         => 'string',
+        'ItemName'        => 'string',
+        'ItemType'        => 'integer',  
+        'UOM'             => 'integer',  
+        'InventoryType'   => 'integer',  
+        'Category'        => 'integer',
+        'ImageId'         => 'integer',
+        'ItemDescription' => 'string',
+        'DocumentUpload'  => 'string',
+        'CreatedBy'       => 'integer',
+        'ModifiedBy'      => 'integer',
+        'DeletedBy'       => 'integer',
+        'CreatedOn'       => 'datetime',
+        'ModifiedOn'      => 'datetime',
+    ];
 
-                        ];
+    // Relationships
+    public function category()
+    {
+        return $this->belongsTo(ItemCategories::class, 'Category');
+    }
 
-       
+    public function parentCategory()
+    {
+        return $this->category ? $this->category->parent() : null;
+    }
 
-public function category()
-{
-    return $this->belongsTo(ItemCategories::class, 'Category'); 
-}
-
-public function parentCategory()
-{
-    return $this->category ? $this->category->parent() : null;
-}
-
-
-public function image()
-{
-    return $this->belongsTo(\App\Models\DMS\Image::class, 'ImageId', 'ImageID');
-}
+    public function image()
+    {
+        return $this->belongsTo(\App\Models\DMS\Image::class, 'ImageId', 'ImageID');
+    }
 
     public function itemType()
     {
@@ -91,6 +88,4 @@ public function image()
     {
         return $this->belongsTo(InventoryType::class, 'InventoryType', 'Id');
     }
-    
 }
-

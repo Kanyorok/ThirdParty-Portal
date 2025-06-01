@@ -13,15 +13,22 @@ class TenderCategory extends Model {
     protected $table = 't_TenderCategories';
     public $incrementing = true;
 
+
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    const string DELETED_AT = 'DeletedOn';
+
     protected $fillable = [
         'CategoryCode',
         'TenderCategory',
-        'Description',
+        'Description', 
+        'CreatedBy', 
+        'ModifiedBy',
     ];  
 
-    protected $casts = [
-        'TenderCategory' => TenderCategoryEnum::class,
-    ];
+    // protected $casts = [
+    //     'TenderCategory' => TenderCategoryEnum::class,
+    // ];
 
     public static function generateCatCode(string $categoryValue = null)
     {

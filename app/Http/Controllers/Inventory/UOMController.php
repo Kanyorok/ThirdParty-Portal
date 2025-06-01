@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 
 class UOMController extends Controller
 {
+
     protected $service;
 
     public function __construct(UnitOfMeasureService $service)
@@ -25,6 +26,7 @@ class UOMController extends Controller
 
     public function create()
     {
+
         $this->authorize('create', UnitOfMeasure::class);
         return view('inventory.itemmaster.unitofmeasure.create');
     }
@@ -67,4 +69,5 @@ class UOMController extends Controller
 
         return redirect()->route('unitofmeasure.index')->with('success', 'Unit of Measure deleted successfully.');
     }
+
 }

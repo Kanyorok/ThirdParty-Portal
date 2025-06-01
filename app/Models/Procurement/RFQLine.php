@@ -20,7 +20,7 @@ class RFQLine extends Model
     const string DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
-        'RFQLineNo', 'RequisitionId', 'RequisitionLineId','RFQId', 'ItemId', 'UOM', 'Quantity', 'ItemName', 'ItemCategoryId', 'CreatedOn', 'ModifiedOn', 'CreatedBy', 'ModifiedBy'
+        'RFQLineNo', 'RequisitionId', 'RequisitionLineId', 'RFQId', 'ItemId', 'UOM', 'Quantity', 'ItemName', 'ItemCategoryId', 'CreatedOn', 'ModifiedOn', 'CreatedBy', 'ModifiedBy'
     ];
 
     public static function getPrimaryKey(): string
@@ -41,7 +41,7 @@ class RFQLine extends Model
     public function suppliers()
     {
         return $this->belongsToMany(Supplier::class, 't_RFQ_Supplier', 'RFQId', 'SupplierId')
-                    ->withPivot('Status')
-                    ->withTimestamps();
+            ->withPivot('Status')
+            ->withTimestamps();
     }
 }

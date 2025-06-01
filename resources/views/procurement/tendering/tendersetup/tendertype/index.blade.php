@@ -6,7 +6,7 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4>Tender Types</h4>
-        <a href="{{ route('tender-types.create') }}" class="btn btn-sm btn-success">+ New Type</a>
+        <a href="{{ route('tendertype.create') }}" class="btn btn-sm btn-success">+ New Type</a>
     </div>
 
     <div class="table-responsive">
@@ -28,8 +28,8 @@
                     <td>{{ $type->TenderType }}</td>
                     <td>{{ $type->Description }}</td>
                     <td>
-                        <a href="{{ route('tender-types.edit', $type->Id) }}" class="btn btn-sm btn-warning">Edit</a>
-                        <form action="{{ route('tender-types.destroy', $type->Id) }}" method="POST" class="d-inline">
+                        <a href="{{ route('tendertype.edit', $type->Id) }}" class="btn btn-sm btn-warning">Edit</a>
+                        <form action="{{ route('tendertype.destroy', $type->Id) }}" method="POST" class="d-inline">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">

@@ -13,7 +13,9 @@ class RFQService
     {
         //
     }
-    public static function fetchRFQ(){
+
+    public static function fetchRFQ()
+    {
 
         return DB::table(DB::raw('t_RFQResponse WITH (NOLOCK)'))
 //            ->leftJoin(DB::raw('t_ResponseItems WITH (NOLOCK)'), 't_RFQResponse.Id', '=', 't_ResponseItems.RfqResponseId')

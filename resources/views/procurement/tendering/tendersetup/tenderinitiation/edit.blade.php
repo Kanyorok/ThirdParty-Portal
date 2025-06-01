@@ -1,341 +1,371 @@
 @extends('layouts.app')
-
-@section('title', 'Edit Tender - ' . $tender->TenderNo)
-
-@push('styles')
-    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
-    <style>
-        .tender-form {
-            background-color: #f8f9fa;
-        }
-
-        .form-section {
-            margin-bottom: 2rem;
-            padding: 1.5rem;
-            background: white;
-            border-radius: 0.5rem;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-        }
-
-        .form-section-title {
-            color: #2c3e50;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 0.75rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .action-buttons {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-        }
-    </style>
-@endpush
-
+@section('title', 'Tender Item Details')
 @section('content')
-    <div class="container tender-form py-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0">
-                <i class="fas fa-edit text-primary me-2"></i>Edit Tender: {{ $tender->TenderNo }}
-            </h1>
-            <a href="{{ route('initiatetender.index') }}" class="btn btn-outline-secondary">
-                <i class="fas fa-chevron-left me-1"></i> Back to List
-            </a>
-        </div>
-
-        <form method="POST" action="{{ route('initiatetender.update', $tender->Id) }}" enctype="multipart/form-data" id="tenderForm">
+<div class="container mt-4">
+<h4 class="mb-4">📄 Tender Item Details – {{$tender->TenderNo}}</h4>
+ 
+ 
+   <!-- Tender Summary Info -->
+<div class="card shadow-sm mb-3">
+    <div class="card-body">
+        <form method="POST" action="{{ route('initiatetender.update', $tender->Id) }}">
             @csrf
             @method('PUT')
+            <input type="hidden" name="type" value='editTenderInfo'>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label fw-bold">Tender Title</label>
+                <input type="text" class="form-control" value="{{$tender->Title}}" name="title" placeholder="Enter Tender Title" required>
+                @error('title')
+                    <div class="text-danger">{{ $message }}</div>
+                @enderror
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-bold">Tender Type</label>
+                <select class="form-select" id="tenderCategory" name="tender_category_id" required>
+                    <option>-- Select Tender Type --</option>
+                    <option value="op" name="tender_type" id="openTender" {{$tender->TenderType->value=='op'?'selected':''}}>Open Tender</option>
+                    <option value="rs" name="tender_type" id="restrictedTender" {{$tender->TenderType->value=='rs'?'selected':''}}>Restricted Tender</option>
+                </select>
+                @error('tender_category_id')
+                    <div class="text-danger">{{ $message }}</div>
+                @enderror
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-bold">Initiated By</label>
+                <input type="text" class="form-control" value="{{auth()->user()->Name}}" readonly>
+            </div>
+        </div>
 
-            {{-- Section 1: Basic Information --}}
-            <div class="form-section">
-                <h5 class="form-section-title">1. Basic Information</h5>
-
-                <div class="row">
-                    <div class="col-md-12 mb-3">
-                        <label for="Title" class="form-label">Tender Title <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control @error('Title') is-invalid @enderror"
-                               id="Title" name="Title" value="{{ old('Title', $tender->Title) }}" required>
-                        @error('Title')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Tender Type <span class="text-danger">*</span></label>
-                        <div>
-                            @foreach(\App\Enums\TenderTypeEnum::cases() as $type)
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input @error('TenderType') is-invalid @enderror" type="radio" name="TenderType"
-                                           id="type-{{ $type->value }}" value="{{ $type->value }}"
-                                           {{ old('TenderType', $tender->TenderType->value) == $type->value ? 'checked' : '' }} required>
-                                    <label class="form-check-label" for="type-{{ $type->value }}">
-                                        {{ $type->displayName() }}
-                                    </label>
-                                </div>
-                            @endforeach
-                        </div>
-                        @error('TenderType')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label for="TenderCategory" class="form-label">Category <span class="text-danger">*</span></label>
-                        <select class="form-select @error('TenderCategory') is-invalid @enderror"
-                                id="TenderCategory" name="TenderCategory" required>
-                            <option value="" disabled {{ !old('TenderCategory', optional($tender->TenderCategory)->value) ? 'selected' : '' }}>-- Select Category --</option>
-                            @foreach(\App\Enums\TenderCategoryEnum::cases() as $category)
-                                <option value="{{ $category->value }}"
-                                    {{ old('TenderCategory', optional($tender->TenderCategory)->value) == $category->value ? 'selected' : '' }}>
-                                    {{ $category->displayName() }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('TenderCategory')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
+            <div class="row g-3 mt-2">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Tender Category</label>
+                    <select class="form-select" id="tenderCategory" name="tender_category_id" required>
+                        <option>-- Select Category --</option>
+                        @foreach ($tenderCategories as $item)
+                            <option value="{{$item->Id}}" {{$item->Id==$tenderCategory?'selected':''}}>{{$item->TenderCategory}}</option>
+                        @endforeach
+                    </select>
                 </div>
-
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="ProcurementModeId" class="form-label fw-bold">Procurement Mode <span class="text-danger">*</span></label>
-                        <select class="form-select @error('ProcurementModeId') is-invalid @enderror"
-                                id="ProcurementModeId"
-                                name="ProcurementModeId"
-                                required>
-                            <option value="" disabled {{ !old('ProcurementModeId', $tender->ProcurementModeId) ? 'selected' : '' }}>-- Select Mode --</option>
-                            @foreach($procurementModes as $mode)
-                                <option value="{{ $mode->id }}" {{ old('ProcurementModeId', $tender->ProcurementModeId) == $mode->id ? 'selected' : '' }}>
-                                    {{ $mode->Name }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('ProcurementModeId')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label for="RelatedPRID" class="form-label">Related PR ID (Optional)</label>
-                        <input type="number" class="form-control @error('RelatedPRID') is-invalid @enderror"
-                               id="RelatedPRID" name="RelatedPRID" value="{{ old('RelatedPRID', $tender->RelatedPRID) }}">
-                        @error('RelatedPRID') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Item Type</label>
+                    <select class="form-select" id="itemCategory" value="{{$itemCategory }}" required name="item_category_id">
+                        <option selected disabled>{{$itemCategory }}</option>
+                    </select>
                 </div>
-
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <label for="EstimatedValue" class="form-label">Estimated Value <span class="text-danger">*</span></label> {{-- Consider making * conditional if field is nullable --}}
-                        <input type="number" step="0.01" class="form-control @error('EstimatedValue') is-invalid @enderror"
-                               id="EstimatedValue" name="EstimatedValue" value="{{ old('EstimatedValue', $tender->EstimatedValue) }}" > {{-- Removed 'required' to align with 'nullable' validation, add back if it's truly required --}}
-                        @error('EstimatedValue')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                    </div>
-
-                    <div class="col-md-4 mb-3">
-                        <label for="Currency" class="form-label fw-bold">Currency <span class="text-danger">*</span></label>
-                        <select class="form-select @error('Currency') is-invalid @enderror"
-                                id="Currency" name="Currency" required>
-                            <option value="" {{ !old('Currency', $tender->CurrencyId ?? null) ? 'selected' : '' }} disabled>
-                                -- Select Currency --
-                            </option>
-                            @foreach($currencies as $currency)
-                                <option value="{{ $currency->Id }}" {{ old('Currency', $tender->CurrencyId ?? null) == $currency->Id ? 'selected' : '' }}>
-                                    {{ $currency->Code }} ({{ $currency->Name }})
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('Currency')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="col-md-4 mb-3">
-                        <label for="StartDate" class="form-label">Start Date <span class="text-danger">*</span></label>
-                        <input type="date" class="form-control @error('StartDate') is-invalid @enderror"
-                               id="StartDate" name="StartDate" value="{{ old('StartDate', optional($tender->StartDate)->format('Y-m-d')) }}"
-                               required>
-                        @error('StartDate')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-12 mb-3">
-                        <label for="ScopeOfWork" class="form-label">Scope Of Work</label>
-                        <textarea class="form-control @error('ScopeOfWork') is-invalid @enderror" id="ScopeOfWork" name="ScopeOfWork" rows="3">{{ old('ScopeOfWork', $tender->ScopeOfWork) }}</textarea>
-                        @error('ScopeOfWork') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-12 mb-3">
-                        <label for="Instructions" class="form-label">Instructions</label>
-                        <textarea class="form-control @error('Instructions') is-invalid @enderror" id="Instructions" name="Instructions" rows="3">{{ old('Instructions', $tender->Instructions) }}</textarea>
-                        @error('Instructions') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Currency</label>
+                    <select class="form-select" id="currencyType" name="currency_id" required>
+                        <option selected disabled>-- Select Your Currency --</option>
+                        @foreach ($allCurrency as $item)
+                            <option value="{{$item->Id}}" {{$item->Id==$currency?'selected':''}}>{{$item->Name}} ({{$item->Code}})</option>
+                        @endforeach
+                    </select>
                 </div>
             </div>
 
-            {{-- Section 2: Timeline & Status --}}
-            <div class="form-section">
-                <h5 class="form-section-title">2. Timeline & Status</h5>
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <label for="SubmissionDeadline" class="form-label">Submission Deadline <span class="text-danger">*</span></label>
-                        <input type="datetime-local" class="form-control @error('SubmissionDeadline') is-invalid @enderror"
-                               id="SubmissionDeadline" name="SubmissionDeadline"
-                               value="{{ old('SubmissionDeadline', optional($tender->SubmissionDeadline)->format('Y-m-d\TH:i')) }}" required>
-                        @error('SubmissionDeadline')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                    </div>
-
-                    <div class="col-md-4 mb-3">
-                        <label for="OpeningDate" class="form-label">Opening Date <span class="text-danger">*</span></label>
-                        <input type="datetime-local" class="form-control @error('OpeningDate') is-invalid @enderror"
-                               id="OpeningDate" name="OpeningDate"
-                               value="{{ old('OpeningDate', optional($tender->OpeningDate)->format('Y-m-d\TH:i')) }}" required>
-                        @error('OpeningDate')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label for="Status" class="form-label">Status <span class="text-danger">*</span></label>
-                        <select class="form-select @error('Status') is-invalid @enderror" id="Status" name="Status" required>
-                            @foreach($statuses as $status)
-                                <option value="{{ $status->value }}" {{ old('Status', $tender->Status->value) == $status->value ? 'selected' : '' }}>
-                                    {{ $status->displayName() }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('Status') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
+            <div class="row g-3 mt-2">
+                <div class="col-md-4 mb-3">
+                    <label for="submissionDeadline" class="form-label fw-bold">Submission Deadline:</label>
+                    <input type="date" value="{{ \Carbon\Carbon::parse($tender->SubmissionDeadline)->format('Y-m-d') }}" class="form-control" id="submissionDeadline" name="submission_deadline"required>
+                    @error('submission_deadline')
+                        <div class="text-danger">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="openingDate" class="form-label fw-bold">Opening Date:</label>
+                    <input type="date" value="{{ \Carbon\Carbon::parse($tender->OpeningDate)->format('Y-m-d') }}" class="form-control" id="openingDate" name="opening_date"required>
+                    @error('opening_date')
+                        <div class="text-danger">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div class="col-md-4">
+                    <label for="tenderDocuments" class="form-label fw-bold">Attach Tender Document:</label>
+                    <input class="form-control" type="file" id="tenderDocuments" name="documents[]" multiple>
                 </div>
             </div>
-
-            {{-- Section 3: Documents --}}
-            <div class="form-section">
-                <h5 class="form-section-title">3. Documents</h5>
-                <div class="mb-3">
-                    <label class="form-label">Attach New Documents</label>
-                    <input type="file" class="form-control @error('tender_documents.*') is-invalid @enderror @error('tender_documents') is-invalid @enderror" name="tender_documents[]" multiple>
-                    <small class="text-muted">You can select multiple files. PDF, DOC, XLS files up to 20MB each.</small>
-                    @error('tender_documents')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror>
-                    @error('tender_documents.*')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                </div>
-
-                @if($tender->documents && $tender->documents->count() > 0)
-                    <div class="mt-3">
-                        <h6 class="mb-2">Existing Documents:</h6>
-                        <ul class="list-group">
-                            @foreach($tender->documents as $document)
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <input type="checkbox" class="form-check-input me-2" name="delete_documents[]" value="{{ $document->Id }}" id="delete_document_{{ $document->Id }}">
-                                        <label class="form-check-label" for="delete_document_{{ $document->Id }}">
-                                            {{ $document->FileName ?? 'N/A' }}
-                                        </label>
-                                    </div>
-                                    <div>
-                                        <a href="{{-- route('tender.document.download', $document->Id) --}}" class="btn btn-sm btn-outline-primary me-2" title="Download" target="_blank">
-                                            <i class="fas fa-download"></i>
-                                        </a>
-                                    </div>
-                                </li>
-                            @endforeach
-                        </ul>
-                        <small class="text-muted mt-1 d-block">Check any documents you wish to remove upon updating.</small>
-                    </div>
-                @endif
+                    <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn btn-primary"onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Edit Tender Info</button>
             </div>
-
-            {{-- Action Buttons --}}
-            <div class="action-buttons mt-4">
-                <div class="d-flex justify-content-between">
-                    <a href="{{ route('initiatetender.index') }}" class="btn btn-outline-secondary">
-                        <i class="fas fa-times me-1"></i> Cancel
-                    </a>
-                    <div>
-                        @if($tender->Status === \App\Enums\TenderStatusEnum::Draft || old('Status', optional($tender->Status)->value) == \App\Enums\TenderStatusEnum::Draft->value)
-                            <button type="submit" name="action" value="save_draft" class="btn btn-outline-primary me-2">
-                                <i class="fas fa-save me-1"></i> Save Draft
-                            </button>
-                        @endif
-                        <button type="submit" name="action" value="publish" class="btn btn-primary">
-                            <i class="fas fa-check-circle me-1"></i> Update Tender
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </form>
+        </div>
+    </form>
     </div>
+</div>
+ 
+ 
+   <!-- Items Table -->
+<div class="card shadow-sm mb-4">
+<div class="card-body">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+<h5 class="card-title mb-3">📦 Items in this Tender</h5>
+        <h4></h4>
+        <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#addItemModal">
+    + Add Item
+</button>
+    </div>
+<div class="table-responsive">
+<table class="table table-bordered table-striped align-middle">
+<thead class="table-light">
+<tr>
+<th>#</th>
+<th>Item Description</th>
+<th>Category</th>
+<th>Quantity</th>
+<th>Document</th>
+<th>PR Ref</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody>
+    @foreach ($items as $item)
+        <tr>
+            <td>{{$loop->index+1}}</td>
+            <td>{{ $item->item?->ItemName }}</td>
+            <td>{{ $item->category?->Name }}</td>
+            <td>{{$item->QtyToTender}}</td>
+            <td>document.pdf <a href=""><i class="fa fa-download"></a></i></td>
+            <td>PR/2025/211</td>
+            <td>
+                <a href="#" class="btn btn-sm btn-outline-primary" title="Edit"
+                     data-bs-toggle="modal" data-bs-target="#editItemModal-{{$item->id}}">
+                    <i class="fas fa-edit"></i>
+                </a>
+                <form action="{{ route('initiatetender.update', $tender->Id) }}" method="POST" style="display: inline;">
+                    @csrf
+                    @method('PATCH')
+                    <input type="hidden" name="type" value='crudSupplier'>
+                    <input type="hidden" name="crudType" value='deleteItem'>
+                    <input type="hidden" name="item_id" value="{{$item->id}}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"
+                            onclick="return confirm('Are you sure you want to delete Item \'{{ $tender->item?->ItemName }}\'? This action cannot be undone.')">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </form>
+            </td>
+        </tr>      
+    @endforeach
+
+</tbody>
+<tfoot class="table-light fw-bold text-end">
+</tfoot>
+</table>
+</div>
+</div>
+</div>
+ 
+
+@if ($tender->TenderType?->name == 'Restricted')
+  <!-- Selected Suppliers Section -->
+  <div class="card shadow-sm mb-5">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="card-title mb-3">🏷️ Selected Suppliers (Restricted Tender)</h5>
+        <h4></h4>
+        <a href="#" class="btn btn-sm btn-success"
+         data-bs-toggle="modal" data-bs-target="#addSupplierModal">+ Add Supplier</a>
+    </div>
+  <div class="table-responsive">
+  <table class="table table-bordered align-middle">
+  <thead class="table-light">
+  <tr>
+  <th>#</th>
+  <th>Supplier Name</th>
+  <th>Email</th>
+  <th>Phone</th>
+  <th class="text-center">Action</th>
+  </tr>
+  </thead>
+  <tbody>
+      @foreach ($suppliers as $item)
+          <tr>
+              <td>{{$loop->index+1}}</td>
+              <td>{{$item->supplier->SupplierName}}</td>
+              <td>{{$item->supplier->ContactEmail}}</td>
+              <td>{{$item->supplier->ContactPhone}}</td>
+              <td class="text-center">
+                <form action="{{ route('initiatetender.update', $tender->Id) }}" method="POST" style="display: inline;">
+                    @csrf
+                    @method('PATCH')
+                    <input type="hidden" name="type" value='crudItem'>
+                    <input type="hidden" name="crudType" value='deleteSupplier'>
+                    <input type="hidden" name="supplier_id" value="{{$item->supplier->Id}}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"
+                            onclick="return confirm('Are you sure you want to delete Supplier name: \'{{ $item->supplier->SupplierName }}\'? This action cannot be undone.')">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </form>
+              </td>
+          </tr>
+      @endforeach
+  <!-- More suppliers -->
+  </tbody>
+  </table>
+  </div>
+  </div>
+  </div>
+   
+@endif
+
+</div>
+
+
+<!-- Add Item Modal -->
+<div class="modal fade" id="addItemModal" tabindex="-1" aria-labelledby="addItemModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-3 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addItemModalLabel">Add New Item</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form action="{{ route('initiatetender.update', $tender->Id) }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                @method('PATCH')
+                <input type="hidden" name="type" value='crudItem'>
+                <input type="hidden" name="crudType" value='addItem'>
+                <input type="hidden" name="itemCategoryID" value="{{$itemCategoryID}}">
+
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="item_id" class="form-label fw-bold">Item</label>
+                        <select name="item_id" name="item_id" id="item_id" class="form-select" required>
+                            <option selected>-- Select Item --</option>
+                            @foreach($otherItemsForThatTender as $item)
+                                <option value="{{ $item->Id }}">{{ $item->ItemName }}</option>
+                            @endforeach
+                        </select>
+                        @error('item_id')
+                            <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="QtyToTender" class="form-label fw-bold">Quantity to Tender</label>
+                        <input type="number" name="QtyToTender" id="QtyToTender" class="form-control" required>
+                        @error('QtyToTender')
+                            <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="Document" class="form-label fw-bold">Upload Specs Document</label>
+                        <input type="file" name="Document" id="Document" class="form-control">
+                        @error('Document')
+                            <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="PRNumber" class="form-label fw-bold">PR Number <small>(Optional)</small></label>
+                        <input type="text" name="pr_ref" id="PRNumber" class="form-control" placeholder="PR/2025/xxx">
+                        @error('PRNumber')
+                            <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button 
+                        type="submit" 
+                        class="btn btn-success" 
+                        onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();"
+                    >
+                        Add Item
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<!-- Edit Item Modal -->
+@foreach ($items as $item)    
+<div class="modal fade" id="editItemModal-{{$item->id}}" tabindex="-1" aria-labelledby="addItemModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-3 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addItemModalLabel">Edit Item</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form action="" method="POST" enctype="multipart/form-data">
+                @csrf
+                @method('PATCH')
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="item_id" class="form-label">Item</label>
+                        <select name="item_id" id="item_id" class="form-select" required>
+                            <option>-- Select Item --</option>
+                            @foreach($otherItemsForThatTender as $item1)
+                                <option value="{{ $item1->Id }}" {{$item1->ID==$item->itemID?'selected':''}}>{{ $item1->ItemName }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="QtyToTender" class="form-label">Quantity to Tender</label>
+                        <input type="number" name="QtyToTender" value="{{$item->QtyToTender}}" id="QtyToTender" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="Document" class="form-label">Upload Specs Document</label>
+                        <input type="file" name="Document" id="Document" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="PRNumber" class="form-label">PR Number</label>
+                        <input type="text" name="PRNumber" value="{{$item->RelatedPRID}}" id="PRNumber" class="form-control" placeholder="PR/2025/xxx" required>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Edit Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endforeach
+
+
+
+<!-- Add Supplier based on categoryfilter Modal -->
+<div class="modal fade" id="addSupplierModal" tabindex="-1" aria-labelledby="addItemModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-3 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addItemModalLabel">Add Supplier</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form action="{{ route('initiatetender.update', $tender->Id) }}" method="POST">
+                @csrf
+                @method('PATCH')
+                <input type="hidden" name="type" value='crudSupplier'>
+                <input type="hidden" name="crudType" value='addSupplier'>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="item_id" class="form-label">Select Supplier</label>
+                        <select name="item_id" id="item_id" class="form-select" required>
+                            <option selected disabled>-- Select Supplier --</option>
+                            @foreach($otherSuppliers as $item)
+                                <option value="{{ $item->Id }}">{{ $item->SupplierName }} |  {{ $item->ContactPhone }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Add Supplier</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
 @endsection
-
-@push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize TomSelect for specified elements
-            ['TenderCategory', 'ProcurementModeId', 'Currency'].forEach(id => {
-                if (document.getElementById(id)) {
-                    new TomSelect('#' + id, {
-                        create: false,
-                        sortField: { field: "text", direction: "asc" }
-                    });
-                }
-            });
-
-            const form = document.getElementById('tenderForm');
-            if (form) {
-                form.addEventListener('submit', function(e) {
-                    // Disable submit buttons to prevent multiple submissions
-                    const submitButtons = form.querySelectorAll('button[type="submit"]');
-                    submitButtons.forEach(button => {
-                        button.disabled = true;
-                        button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Processing...';
-                    });
-                });
-            }
-
-            // Date input logic for StartDate, SubmissionDeadline, and OpeningDate
-            const startDateInput = document.querySelector('input[name="StartDate"]');
-            const submissionInput = document.querySelector('input[name="SubmissionDeadline"]');
-            const openingInput = document.querySelector('input[name="OpeningDate"]');
-
-            function updateSubmissionMinDate() {
-                if (startDateInput && submissionInput && startDateInput.value) {
-                    // Submission deadline must be on or after start date.
-                    // For datetime-local, we need to append time.
-                    const startDateVal = startDateInput.value;
-                    submissionInput.min = startDateVal + 'T00:00';
-                    // If submission is before new min, clear or adjust it
-                    if (submissionInput.value && submissionInput.value < submissionInput.min) {
-                        // submissionInput.value = ''; // Option 1: Clear
-                    }
-                }
-            }
-
-            function updateOpeningMinDate() {
-                if (submissionInput && openingInput && submissionInput.value) {
-                    // Opening date must be after submission deadline.
-                    openingInput.min = submissionInput.value;
-                    // If opening date is before new min, clear or adjust it
-                    if (openingInput.value && openingInput.value <= submissionInput.min) {
-                        // openingInput.value = ''; // Option 1: Clear
-                    }
-                }
-            }
-
-            if (startDateInput) {
-                startDateInput.addEventListener('change', function() {
-                    updateSubmissionMinDate();
-                    updateOpeningMinDate();
-                });
-                // Initial check
-                if (startDateInput.value) updateSubmissionMinDate();
-            }
-
-            if (submissionInput) {
-                submissionInput.addEventListener('change', updateOpeningMinDate);
-                // Initial check
-                if (submissionInput.value) updateOpeningMinDate();
-            }
-        });
-    </script>
-@endpush

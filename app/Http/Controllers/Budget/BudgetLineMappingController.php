@@ -13,7 +13,8 @@ class BudgetLineMappingController extends Controller
         return view('budgetandanalytics.budgetlinemapping.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('budgetandanalytics.budgetlinemapping.create');
     }
 }

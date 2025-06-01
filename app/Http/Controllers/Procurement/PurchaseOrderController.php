@@ -18,7 +18,7 @@ class PurchaseOrderController extends Controller
     public function __construct(protected ItemService $itemService, protected SupplierService $supplierService, protected OrderService $orderService, protected RFQService $rfqService)
     {
 
-        $this->middleware('ajax')->except(['index', 'create','show','linkRFQ','fetchRFQDetails']);
+        $this->middleware('ajax')->except(['index', 'create', 'show', 'linkRFQ', 'fetchRFQDetails']);
 //        $this->authorizeResource(Order::class);
     }
 
@@ -60,7 +60,7 @@ class PurchaseOrderController extends Controller
 
     {
 
-         try{
+        try {
             $suppliers = $this->supplierService->getSuppliers();
             \Log::info('Suppliers data:', $suppliers->toArray());
             return response()->json([
@@ -297,7 +297,8 @@ class PurchaseOrderController extends Controller
         //
     }
 
-    public function linkRFQ(){
+    public function linkRFQ()
+    {
         try {
             $RFQ = $this->rfqService->fetchRFQ();
 //            \Log::info('RFQ loaded in create():', $RFQ->toArray());
