@@ -16,14 +16,11 @@ class StockItemService
         do {
             try {
                 return DB::transaction(function () use ($data) {
-                    $skuCode = $this->generateSKUCode($data['Branch'], $data['Store']);
-                    $data['SKUCode'] = $skuCode;
-
+                    // Create StockItem first to get primary key `Id`
                     $stockItem = StockItem::create([
                         'ItemID'      => $data['ItemID'],
                         'Branch'      => $data['Branch'],
                         'Store'       => $data['Store'],
-                        'SKUCode'     => $data['SKUCode'],
                         'CurrentQty'  => $data['CurrentQty'],
                         'Status'      => $data['Status'],
                         'Batch'       => $data['Batch'] ?? false,
@@ -41,6 +38,11 @@ class StockItemService
                         'ModifiedOn'  => now(),
                     ]);
 
+                    // Generate SKU based on `Id`, Branch, Store
+                    $skuCode = $this->generateSKUCode($stockItem->Id, $data['Branch'], $data['Store']);
+                    $stockItem->update(['SKUCode' => $skuCode]);
+
+                    // Log activity
                     activity()
                         ->causedBy(auth()->user())
                         ->performedOn($stockItem)
@@ -65,24 +67,12 @@ class StockItemService
     public function update(StockItem $item, array $data): void
     {
         DB::transaction(function () use ($item, $data) {
-            $item->update([
-                'ItemID'      => $data['ItemID'],
-                'Branch'      => $data['Branch'],
-                'Store'       => $data['Store'],
-                'CurrentQty'  => $data['CurrentQty'],
-                'Status'      => $data['Status'],
-                'Batch'       => $data['Batch'] ?? false,
-                'Serial'      => $data['Serial'] ?? false,
-                'Perishable'  => $data['Perishable'] ?? false,
-                'Saleable'    => $data['Saleable'] ?? false,
-                'Purchasable' => $data['Purchasable'] ?? false,
-                'Min'         => $data['Min'] ?? 0,
-                'Reorder'     => $data['Reorder'] ?? 0,
-                'Max'         => $data['Max'] ?? 0,
-                'LastReceived'=> $data['LastReceived'] ?? null,
-                'ModifiedBy'  => auth()->id(),
-                'ModifiedOn'  => now(),
-            ]);
+            // Regenerate SKU when branch or store changes
+            if ($data['Branch'] !== $item->Branch || $data['Store'] !== $item->Store) {
+                $data['SKUCode'] = $this->generateSKUCode($item->Id, $data['Branch'], $data['Store']);
+            }
+
+            $item->update($data);
 
             activity()
                 ->causedBy(auth()->user())
@@ -106,21 +96,23 @@ class StockItemService
         });
     }
 
-    protected function generateSKUCode(int $branchId, int $storeId): string
+    /**
+     * Generate SKUCode based on Item ID, Branch, and Store
+     */
+    protected function generateSKUCode(int $Id, int $branchId, int $storeId): string
     {
-        $lastSKU = StockItem::where('Branch', $branchId)
-            ->where('Store', $storeId)
-            ->orderByDesc('SKUCode')
-            ->lockForUpdate()
-            ->first();
-
-        $newNumber = $lastSKU ? ((int) str_replace('SKU-', '', $lastSKU->SKUCode) + 1) : 1;
-        return 'SKU-' . str_pad($newNumber, 5, '0', STR_PAD_LEFT);
+        return 'SKU-' . str_pad($branchId, 2, '0', STR_PAD_LEFT) . '-' .
+                       str_pad($storeId, 2, '0', STR_PAD_LEFT) . '-' .
+                       str_pad($Id, 5, '0', STR_PAD_LEFT);
     }
 
+    /**
+     * Check Duplicate SKUCode
+     */
     protected function isDuplicateSKUCodeError(QueryException $e): bool
     {
         return str_contains($e->getMessage(), 'Duplicate entry')
-            && str_contains($e->getMessage(), 'sku_code_branch_store_unique');
+            || str_contains($e->getMessage(), 'Cannot insert duplicate key')
+            || str_contains($e->getMessage(), 'sku_code_branch_store_unique');
     }
 }

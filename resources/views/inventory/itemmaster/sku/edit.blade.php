@@ -1,12 +1,12 @@
 @extends('layouts.app')
-@section('title', 'Edit Inventory')
+@section('title', 'Edit Stock Item')
 @section('content')
 <body class="bg-light">
 
 <div class="container mt-5">
   <div class="card shadow rounded-4">
     <div class="card-header text-dark rounded-top-4" style="background-color: #add8e6;">
-      <h4 class="mb-0">Edit SKU Master</h4>
+      <h4 class="mb-0">Edit Stock Item</h4>
     </div>
     <div class="card-body">
         <form action="{{ route('sku.update', $item->Id) }}" method="POST">
@@ -137,44 +137,71 @@
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const branchSelect = document.getElementById('Branch');
-    const storeSelect = document.getElementById('Store');
-    const selectedStore = "{{ old('Store', $item->Store) }}";
+    const categorySelect = document.getElementById('Category');
+    const subcategorySelect = document.getElementById('Subcategory');
+    const itemSelect = document.getElementById('Item');
 
-    function loadStores(branchId, selectedStoreId = null) {
-        storeSelect.innerHTML = '<option value="">-- Select Store --</option>';
-        if (branchId) {
-            fetch(`/inventory/get-stores?BranchID=${branchId}`)
+    // Function to load subcategories
+    function loadSubcategories(categoryId) {
+        subcategorySelect.innerHTML = '<option value="">-- Select Subcategory --</option>';
+        itemSelect.innerHTML = '<option value="">-- Select Item --</option>'; // Reset items
+
+        if (categoryId) {
+            fetch(`/inventory/get-subcategories?category_id=${categoryId}`)
                 .then(response => response.json())
                 .then(data => {
-                    if (data.length === 0) {
+                    subcategorySelect.disabled = false;
+                    data.forEach(subcat => {
                         const option = document.createElement('option');
-                        option.value = "";
-                        option.text = "No stores found for this branch";
-                        storeSelect.appendChild(option);
-                    } else {
-                        data.forEach(store => {
-                            const option = document.createElement('option');
-                            option.value = store.Id;
-                            option.text = store.StoreName;
-                            if (store.Id == (selectedStoreId ?? selectedStore)) {
-                                option.selected = true;
-                            }
-                            storeSelect.appendChild(option);
-                        });
-                    }
+                        option.value = subcat.Id;
+                        option.text = subcat.Name;
+                        subcategorySelect.appendChild(option);
+                    });
                 });
+        } else {
+            subcategorySelect.disabled = true;
+            itemSelect.disabled = true;
         }
     }
 
-    branchSelect.addEventListener('change', function () {
-        loadStores(this.value);
+    // Function to load items (based on category OR subcategory)
+    function loadItems(categoryId, subcategoryId = null) {
+        itemSelect.innerHTML = '<option value="">-- Select Item --</option>';
+        let url = subcategoryId 
+            ? `/inventory/get-items?subcategory_id=${subcategoryId}`
+            : `/inventory/get-items?category_id=${categoryId}`;
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                itemSelect.disabled = false;
+                data.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.Id;
+                    option.text = item.ItemName;
+                    itemSelect.appendChild(option);
+                });
+            });
+    }
+
+    // When Category changes, reload Subcategories and reset Items
+    categorySelect.addEventListener('change', function () {
+        const categoryId = this.value;
+        loadSubcategories(categoryId);
     });
 
-    // On page load, trigger loading if branch is already selected
-    if (branchSelect.value) {
-        loadStores(branchSelect.value, selectedStore);
+    // When Subcategory changes, reload Items
+    subcategorySelect.addEventListener('change', function () {
+        const subcategoryId = this.value;
+        const categoryId = categorySelect.value;
+        loadItems(categoryId, subcategoryId);
+    });
+
+    // If a category is already selected when the page loads, trigger refresh
+    if (categorySelect.value) {
+        loadSubcategories(categorySelect.value);
     }
 });
 </script>
+
 @endsection
