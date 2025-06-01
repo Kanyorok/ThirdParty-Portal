@@ -223,9 +223,9 @@ enum PermissionEnum: string
     case ProcurementMethodWrite = 'procurementmethod-create';
 
     //ProcurementPlan Procurement Schedule
-    case SchedulePlanRead = 'scheduleplan-read';
-    case SchedulePlanWrite = 'scheduleplan-create';
-    case SchedulePlanUpdate = 'scheduleplan-update';
+    //case SchedulePlanRead = 'scheduleplan-read';
+    //case SchedulePlanWrite = 'scheduleplan-create';
+    //case SchedulePlanUpdate = 'scheduleplan-update';
     /*
     *
     * ========================================  Inventory  ========================================
@@ -336,7 +336,7 @@ enum PermissionEnum: string
     public static function approvals(): Collection
     {
         return collect([self::MarketingPlannerApproval, /* self::MarketingListApproval,*/ self::TicketApproval, self::CampaignApproval, self::SurveyApproval, self::Ceo, self::MarketingManager,
-            self::PurchaseOrderApproval, self::RequisitionApproval,self::RequisitionItemsApproval,self::DepartmentNeedsApproval, self::TenderApproval]);
+            self::PurchaseOrderApproval, self::RequisitionApproval,self::RequisitionItemsApproval,self::DepartmentNeedsApproval, self::TenderApproval,
             self::PurchaseOrderApproval, self::RequisitionApproval,self::RequisitionItemsApproval]);
 
     }
@@ -367,30 +367,29 @@ enum PermissionEnum: string
             self::MeetingRooms, self::Roles, self::Ceo, self::Managers, self::MarketingManager, self::ListsView, self::ListsUpdate
             => ModulesEnum::Settings,
  
-            //Requisition
+            //Procurement
             self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval,
             self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval,
             self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval,
             self::RfqRead, self::RfqWrite, self::RfqUpdate, self::RfqApproval, self::RfqDelete,
- 
             self::DepartmentNeedsRead, self::DepartmentNeedsWrite, self::DepartmentNeedsUpdate, self::DepartmentNeedsDelete, self::DepartmentNeedsApproval,
             self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete,
             self::ProcurementMethodRead, self::ProcurementMethodWrite,
+            self::TenderRead, self::TenderWrite, self::TenderUpdate, self::TenderDelete, self::TenderApproval,
             => ModulesEnum::Procurement,
        
+            //Human Resource Management
             self::Departments, self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete => ModulesEnum::HRM,
-            self::MasterListView => ModulesEnum::Inventory,
-
-            //Tenders
-            self::TenderRead, self::TenderWrite, self::TenderUpdate, self::TenderDelete, self::TenderApproval => ModulesEnum::Procurement, 
+            
+            //Inventory
             self::MasterListView, self::MasterListUpdate, self::MasterListCreate, self::MasterListDestroy,
             self::ItemCategoryView, self::ItemCategoryUpdate, self::ItemCategoryCreate, self::ItemCategoryDestroy,
             self::StockItemView, self::StockItemUpdate, self::StockItemCreate, self::StockItemDestroy,
             self::StoreView, self::StoreUpdate, self::StoreCreate, self::StoreDestroy,
             self::InventoryTypeView, self::InventoryTypeUpdate, self::InventoryTypeCreate, self::InventoryTypeDestroy,
             self::ItemTypeView, self::ItemTypeUpdate, self::ItemTypeCreate, self::ItemTypeDestroy,
-            self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy,
-            => ModulesEnum::Inventory,
+            self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy,=> ModulesEnum::Inventory,
+            default => throw new \LogicException("Unhandled PermissionEnum case: {$this->value}"),
         };
     }
  
@@ -438,7 +437,6 @@ enum PermissionEnum: string
 
             //Tendering
             self::TenderRead, self::TenderWrite, self::TenderUpdate, self::TenderDelete, self::TenderApproval => 'Tenders',
-        }; 
             //Inventory
             self::MasterListView, self::MasterListUpdate, self::MasterListCreate, self::MasterListDestroy => 'Item Master',
             self::ItemCategoryView, self::ItemCategoryUpdate, self::ItemCategoryCreate, self::ItemCategoryDestroy => 'Item Category',

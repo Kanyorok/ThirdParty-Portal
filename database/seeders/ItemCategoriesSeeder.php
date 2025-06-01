@@ -1,4 +1,5 @@
 <?php
+
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
@@ -14,9 +15,24 @@ class ItemCategoriesSeeder extends Seeder
         $createdBy = 1;
 
         $categories = [
-            'Office Supplies' => ['Pens & Pencils', 'Paper Products', 'Binders & Folders'],
-            'Electronics' => ['Laptops', 'Printers', 'Monitors'],
-            'Furniture' => ['Desks', 'Chairs', 'Cabinets'],
+            'Office Supplies' => [
+                'Pens & Pencils',
+                'Paper Products',
+                'Binders & Folders',
+                'Miscellaneous', 
+            ],
+            'Electronics' => [
+                'Laptops',
+                'Printers',
+                'Monitors',
+                'Networking', 
+                'Audio',      
+            ],
+            'Furniture' => [
+                'Desks',
+                'Chairs',
+                'Cabinets',
+            ],
         ];
 
         foreach ($categories as $parentName => $subCategories) {
@@ -28,7 +44,6 @@ class ItemCategoriesSeeder extends Seeder
                     'ModifiedBy' => $createdBy,
                     'CreatedOn' => $now,
                     'ModifiedOn' => $now,
-                    // Optional: add unique CategoryCode if needed
                     'CategoryCode' => strtoupper(substr($parentName, 0, 3)) . '-PARENT',
                 ]
             );
@@ -42,7 +57,6 @@ class ItemCategoriesSeeder extends Seeder
                         'ModifiedBy' => $createdBy,
                         'CreatedOn' => $now,
                         'ModifiedOn' => $now,
-                        // Optional: make CategoryCode based on name
                         'CategoryCode' => strtoupper(substr($childName, 0, 3)) . '-' . rand(100, 999),
                     ]
                 );
