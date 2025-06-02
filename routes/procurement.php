@@ -56,6 +56,7 @@ use App\Http\Controllers\Procurement\PlanApprovalInboxController;
 use App\Http\Controllers\Procurement\PlanExectionDashboardController;
 use App\Http\Controllers\Procurement\DepartmentNeedApprovalController;
 use App\Http\Controllers\Procurement\ProcurementSchedulePlanController;
+use App\Http\Controllers\Procurement\ProcurementSubmitPlanController;
 
 Route::namespace('Procurement')->prefix('procurement')->group(function () {
 
@@ -230,6 +231,13 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::post('/Procurement-Plan-Schedule', [ProcurementSchedulePlanController::class, 'store'])->name('Procurement-Plan-Schedule.store');
     Route::get('/Procurement-Plan-Schedule/edit/{lineItemId}', [ProcurementSchedulePlanController::class, 'edit'])->name('Procurement-Plan-Schedule.edit');
 
+    //Procurement Plan Approval Submission
+    //Route::resource('procurementplandetails', ProcurementPlanDetailController::class);
+    Route::get('/Procurement-Plan-Submission', [ProcurementSubmitPlanController::class,'index'])->name('Procurement-Plan-Submission.index');
+    Route::get('/Procurement-Plan-Submission/create/{PlanId}', [ProcurementSubmitPlanController::class, 'create'])->name('Procurement-Plan-Submission.create');
+    //Route::put('/Procurement-Plan-Submission', [ProcurementSubmitPlanController::class, 'store'])->name('Procurement-Plan-Submission.store');
+    Route::put('/Procurement-Plan-Submission/{plan}', [ProcurementSubmitPlanController::class, 'update'])->name('Procurement-Plan-Submission.update');
+
 
 
 
@@ -237,7 +245,6 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::resource('procurementplanmaintain', ProcurementPlanMaintainController::class);
     Route::resource('procurementplanapproval', ProcurementApprovalController::class);
     Route::resource('consolidated', ConsolidatedDashboardController::class);
-    Route::resource('procurementplandetails', ProcurementPlanDetailController::class);
     Route::resource('procurementitemsdashboard', ConsolidatedDashboardController::class);
     Route::resource('maptobudget', MapToBudgetController::class);
     Route::resource('plantimeline', TimelineController::class);

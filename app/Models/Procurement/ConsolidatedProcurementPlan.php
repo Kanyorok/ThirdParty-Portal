@@ -2,6 +2,7 @@
 
 namespace App\Models\Procurement;
 
+use App\Models\Core\Workflow;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\Model\UserActorTrait;
 use App\Models\Auth\User;
@@ -41,22 +42,24 @@ class ConsolidatedProcurementPlan extends Model
     protected $casts = [
         'Status' => PostingEnum::class,
     ];
-    
+    public function workflows()
+    {
+        return $this->morphMany(Workflow::class, 'source', 'Source', 'SourceID');
+    }
+
     // Relationship with User for CreatedBy
    public function createdBy()
     {
         return $this->belongsTo(User::class, 'CreatedBy', 'Id');
     }
-
     public function submittedBy()
-{
-    return $this->belongsTo(User::class, 'SubmittedBy', 'Id'); 
-}
+    {
+        return $this->belongsTo(User::class, 'SubmittedBy', 'Id'); 
+    }
     public function modifiedBy()
     {
         return $this->belongsTo(User::class, 'ModifiedBy', 'Id');
     }
-
 
     public function deletedBy()
     {
@@ -67,8 +70,9 @@ class ConsolidatedProcurementPlan extends Model
         return $this->belongsTo(Item::class, 'ItemID', 'Id');
     }
     public function lineItems()
-{
-    return $this->hasMany(PlanLineItems::class, 'PlanID');
-}
+    {
+        return $this->hasMany(PlanLineItems::class, 'PlanID');
+    }
+
 
 }

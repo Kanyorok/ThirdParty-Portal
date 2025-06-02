@@ -67,6 +67,4 @@ class SchedulePlanService
 
         return $schedule;
     }
-
-
 }

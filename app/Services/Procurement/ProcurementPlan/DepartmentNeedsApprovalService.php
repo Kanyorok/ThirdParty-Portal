@@ -26,7 +26,7 @@ class DepartmentNeedsApprovalService
         $this->departmentNeeds->workflows()->create([
                                               'Stage'      => DepartmentNeedsEnum::Approved->name,
                                               'Status'     => WorkflowStatus::Accepted->value,
-                                              'Notes'      => 'Department Need Approval',
+                                              'Notes'      => 'Department Need Approved',
                                               'CreatedBy'  => $actor->Id,
                                               'ModifiedBy' => $actor->Id,
                                              ]);
