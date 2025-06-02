@@ -1,11 +1,11 @@
 @extends('layouts.app')
-@section('title', 'Tenders Criteria')
+@section('title', 'Tenders Sections')
 @section('content')
 
 
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4>📑 All Evaluation Criteria</h4>
+        <h4>📑 Tender Section Settings</h4>
         <a href="#" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#addSection1Modal">
             + New Section</a>
     </div>
@@ -17,7 +17,6 @@
                 <tr>
                     <th>#</th>
                     <th>Tender Ref</th>
-                    <th>Category</th>
                     <th>Sections</th>
                     <th>Criteria Items</th>
                     <th>Total Weight</th>
@@ -27,20 +26,22 @@
             </thead>
             <tbody>
                 <!-- Example Row -->
-                <tr>
-                    <td>1</td>
-                    <td>CRIT-2025-001</td>
-                    <td>ICT Equipment</td>
-                    <td>3</td>
-                    <td>5</td>
-                    <td>100</td>
-                    <td>50</td>
-                    <td>
-                        <a href="/evaluation-criteria/view/1" class="btn btn-sm btn-outline-primary">View</a>
-                        <a href="/evaluation-criteria/edit/1" class="btn btn-sm btn-outline-success">Edit</a>
-                        <button class="btn btn-sm btn-outline-danger">Delete</button>
-                    </td>
-                </tr>
+                @foreach ($data as $item)
+                    <tr>
+                        <td>{{$loop->index+1}}</td>
+                        <td>{{$item['TenderNo']}}</td>
+                        <td>{{$item['sectionsNumber']}}</td>
+                        <td>{{$item['criteriaNumber']}}</td>
+                        <td>100</td>
+                        <td>50</td>
+                        <td>
+                            <a href="/evaluation-criteria/view/1" class="btn btn-sm btn-outline-primary">View</a>
+                            <a href="/evaluation-criteria/edit/1" class="btn btn-sm btn-outline-success">Edit</a>
+                            <button class="btn btn-sm btn-outline-danger">Delete</button>
+                        </td>
+                    </tr>
+                    
+                @endforeach
 
                 <!-- More rows dynamically -->
             </tbody>
@@ -57,7 +58,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
-            <form action="#" method="POST" enctype="multipart/form-data">
+            <form action="{{route('store-tender-sections')}}" method="POST" enctype="multipart/form-data">
                 @csrf
                 @method('POST')
 
@@ -65,12 +66,15 @@
                     <div class="row mb-3">
                         <div class="col-md-12">
                             <label class="form-label fw-bold">Tender Title</label>
-                            <select name="tender_title" class="form-control form-select" id="tender_title">
-                                <option selected>--Select Tender title--</option>
+                            <select name="tender_id" class="form-control form-select" id="tender_id" required>
+                                <option selected disabled>--Select Tender title--</option>
                                 @foreach ($tenders as $item)
                                 <option value="{{ $item->Id }}">{{ $item->TenderNo }} | {{ $item->Title }}</option>
                                 @endforeach
                             </select>
+                            @error('tender_id')
+                                <div class="alert alert-danger">{{ $message }}</div>
+                            @enderror
                         </div>
                     </div>
 
@@ -85,16 +89,22 @@
                         <tbody>
                             @foreach ($sections as $item)
                                 <tr>
-                                    <td><input type="checkbox" name="sections[]" value="Technical"></td>
+                                    <td><input type="checkbox" name="sections[]" value="{{$item->id}}"></td>
+                                    @error('sections')
+                                        <div class="alert alert-danger">{{ $message }}</div>
+                                    @enderror
                                     <td>{{$item->SectionName}}</td>
                                     <td><input type="number" class="form-control weight-input" name="weights[]" value="0.00" step="1"></td>
+                                    @error('weights')
+                                        <div class="alert alert-danger">{{ $message }}</div>
+                                    @enderror
                                 </tr>
                             @endforeach
                         </tbody>
                         <tfoot>
                             <tr>
                                 <td colspan="2" class="text-end fw-bold">Total</td>
-                                <td><strong id="totalWeight">90.00</strong>%</td>
+                                <td><strong id="totalWeight">0.00</strong>%</td>
                             </tr>
                         </tfoot>
                     </table>

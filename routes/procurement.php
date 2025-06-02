@@ -206,6 +206,7 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::resource('sections',SectionController::class);
     Route::resource('criterias',CriteriaController::class);
     Route::resource('tenderevaluations',TenderEvaluationsController::class);
+    Route::post("/store-tender-sections",[TenderEvaluationsController::class,'tenderSections'])->name('store-tender-sections');
     
     Route::get('/criteria-sections', [EvaluationCriteriaController::class, 'viewCriteria'])->name('tender-criteria.index');
     //Route::get('/tenderevaluations', [EvaluationCriteriaController::class, 'tenderEvaluations'])->name('tenderevaluations.index');

@@ -14,12 +14,14 @@ class TenderSection extends Model
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
 
-    protected $table = 't_Sections';
+    protected $table = 't_TenderSection';
 
     protected $fillable = [
-        'SectionName',
-        'Description',
+        'TenderID',
+        'SectionID',
+        'Weight',
         'IsActive',
+        'Comments',
         'CreatedBy',
         'ModifiedBy',
     ];
