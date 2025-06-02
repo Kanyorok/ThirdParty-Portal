@@ -29,7 +29,7 @@
       <tr>
         <td>{{ $index + 1 ?? 'N/A'}}</td>
         <td>{{ $departmentneedview->item->ItemName ?? 'N/A' }}</td>
-        <td>{{ $departmentneedview->item->Category->Name ?? 'N/A' }}</td>
+        <td>{{ $departmentneedview->item->category->Name ?? 'N/A' }}</td>
         <td>{{ $departmentneedview->RequestedQty ?? 'N/A' }}</td>
         <td>{{ $departmentneedview->EstimatedUnitCost ?? 'N/A' }}</td>
         <td>{{ $departmentneedview->Status->label() ?? 'N/A' }}</td>
