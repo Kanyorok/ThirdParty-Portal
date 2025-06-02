@@ -34,9 +34,10 @@ class TenderTypeController extends Controller {
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'TenderType' => 'required|in:' . implode(',', TenderTypeEnum::values()),
+         $validated = $request->validate([
+            'TenderType' => 'required',
             'Description' => 'nullable|string',
+            'TypeCode' => 'required|string|max:20|unique:t_TenderTypes,TypeCode',
         ]);
 
         do {
@@ -46,10 +47,14 @@ class TenderTypeController extends Controller {
         TenderType::create([
             'TypeCode' => $newTypeCode,
             'TenderType' => $validated['TenderType'],
-            'Description' => $validated['Description']
+            'Description' => $validated['Description'],
+            'CreatedBy' => auth()->user()->Id,
+            'CreatedOn' => now(),
+            'ModifiedBy' => auth()->user()->Id,
+            'ModifiedOn' => now(),
         ]);
 
-        return redirect()->route('tender-types.index')
+        return redirect()->route('tendertype.index')
             ->with('success', 'Tender Type Created Successfully!');
     }
 
@@ -59,8 +64,7 @@ class TenderTypeController extends Controller {
     public function edit($id)
     {
         $tenderType = TenderType::findOrFail($id);
-        $tenderTypeOptions = TenderTypeEnum::cases();
-        return view('procurement.tendering.tendersetup.tendertype.edit', compact('tenderType', 'tenderTypeOptions'));
+        return view('procurement.tendering.tendersetup.tendertype.edit', compact('tenderType'));
     }
 
     /**
@@ -69,15 +73,14 @@ class TenderTypeController extends Controller {
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'TypeCode' => 'required|string|max:20|unique:t_TenderTypes,TypeCode,' . $id . ',Id',
-            'TenderType' => 'required|in:' . implode(',', array_column(TenderTypeEnum::cases(), 'value')),
+            'TenderType' => 'required|string|max:255',
             'Description' => 'nullable|string',
         ]);
 
         $tenderType = TenderType::findOrFail($id);
         $tenderType->update($validated);
 
-        return redirect()->route('tender-types.index')
+        return redirect()->route('tendertype.index')
             ->with('success', 'Tender type updated successfully.');
     }
 
@@ -89,7 +92,7 @@ class TenderTypeController extends Controller {
         $tenderType = TenderType::findOrFail($id);
         $tenderType->delete();
 
-        return redirect()->route('tender-types.index')
+        return redirect()->route('tendertype.index')
             ->with('success', 'Tender type deleted successfully.');
     }
 }

@@ -24,6 +24,7 @@ class DepartmentController extends Controller
         $this->authorizeResource(Department::class);
     }
 
+
     /**
      * Display a listing of the resource.
      */
@@ -45,6 +46,7 @@ class DepartmentController extends Controller
             }
             return $this->errored('cannot retrieve department list.');
         }
+
         return view('hrms.department.index');
     }
 

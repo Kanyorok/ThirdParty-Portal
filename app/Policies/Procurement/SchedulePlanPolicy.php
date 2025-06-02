@@ -12,14 +12,19 @@ class SchedulePlanPolicy
     {
         return $user->can(PermissionEnum::SchedulePlanRead->value);
     }
-    public function store (User $user,SchedulePlan $schedulePlan): bool{
+
+    public function store(User $user, SchedulePlan $schedulePlan): bool
+    {
         return $user->can(PermissionEnum::SchedulePlanWrite->value);
     }
-    public function view(User $user,SchedulePlan $schedulePlan): bool
+
+    public function view(User $user, SchedulePlan $schedulePlan): bool
     {
         return $user->can(PermissionEnum::SchedulePlanRead->value);
     }
-    public function update(User $user,SchedulePlan $schedulePlan): bool{
+
+    public function update(User $user, SchedulePlan $schedulePlan): bool
+    {
         return $user->can(PermissionEnum::SchedulePlanUpdate->value);
     }
 }

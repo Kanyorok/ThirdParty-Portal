@@ -28,7 +28,7 @@ class RFQResponseController extends Controller
 
         // Fetch the suppliers using those IDs
         $suppliers = Supplier::whereIn('Id', $supplierIds)->get();
-        
+
         return view('procurement.rfqresponses.create', compact('rfqs', 'suppliers', 'currencies'));
     }
 
@@ -178,11 +178,11 @@ class RFQResponseController extends Controller
     {
         // Fetch all RFQLines where RFQId matches the given $rfqId
         $rfqLines = RFQLine::where('RFQId', $rfqId)->get();
-    
+
         if ($rfqLines->isEmpty()) {
             return response()->json(['error' => 'No RFQ lines found for the given RFQ ID'], 404);
         }
-       
+
         // Return the RFQLines directly as JSON
         return response()->json([
             'requisitionItems' => $rfqLines,

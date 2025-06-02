@@ -89,7 +89,7 @@
 
 @endsection
 @section('scripts')
-    
+
     <script> const $Modal = $('#ProductActionsModal');
         let productsTable = null;
         $(function () {

@@ -4,14 +4,14 @@
 <div class="container">
     <h2>Edit Tender Type</h2>
     
-    <form action="{{ route('tender-types.update', $tenderType->Id) }}" method="POST">
+    <form action="{{ route('tendertype.update', $tenderType->Id) }}" method="POST">
         @csrf
         @method('PUT')
         
         <div class="form-group">
             <label for="TypeCode">Type Code</label>
             <input type="text" class="form-control" id="TypeCode" name="TypeCode" 
-                   value="{{ $tenderType->TypeCode }}" required>
+                   value="{{ $tenderType->TypeCode }}" readonly required>
         </div>
         
         <div class="form-group">
@@ -26,7 +26,7 @@
         </div>
         
         <button type="submit" class="btn btn-primary">Update</button>
-        <a href="{{ route('tender-types.index') }}" class="btn btn-secondary">Cancel</a>
+        <a href="{{ route('tendertype.index') }}" class="btn btn-secondary">Cancel</a>
     </form>
 </div>
 @endsection

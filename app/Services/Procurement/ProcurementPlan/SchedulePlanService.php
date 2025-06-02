@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 use App\Models\Procurement\SchedulePeriod;
 use Carbon\Carbon;
 use Illuminate\Validation\Rules\Enum;
-use Illuminate\Support\Facades\Validator; 
+use Illuminate\Support\Facades\Validator;
 
 
 class SchedulePlanService
@@ -20,12 +20,12 @@ class SchedulePlanService
     public function create(array $data, User $actor, ConsolidatedProcurementPlan $plan, PlanLineItems $lineItem): SchedulePlan
     {
         Validator::make($data, [
-        'ScheduleQTY' => 'required|integer|min:0',
-        'Status' => ['required', new Enum(SchedulePlanEnum::class)],
-        'periods' => 'required|array',
-        'periods.*' => 'nullable|integer|min:0',
-    ])->validate();
-    
+            'ScheduleQTY' => 'required|integer|min:0',
+            'Status' => ['required', new Enum(SchedulePlanEnum::class)],
+            'periods' => 'required|array',
+            'periods.*' => 'nullable|integer|min:0',
+        ])->validate();
+
         $existing = SchedulePlan::where('PlanId', $plan->PlanID)
             ->where('PlanLineId', $lineItem->LineItemID)
             ->first();
@@ -52,11 +52,11 @@ class SchedulePlanService
         $now = Carbon::now();
 
         foreach ($data['periods'] as $period => $qty) {
-            if ((int) $qty > 0) {
+            if ((int)$qty > 0) {
                 SchedulePeriod::create([
                     'ScheduleId' => $schedule->Id,
                     'SchedulePeriod' => $period,
-                    'ScheduleQTY' => (int) $qty,
+                    'ScheduleQTY' => (int)$qty,
                     'CreatedBy' => $actor->Id,
                     'CreatedOn' => $now,
                     'ModifiedBy' => $actor->Id,

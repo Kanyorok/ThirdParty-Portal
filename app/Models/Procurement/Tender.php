@@ -2,6 +2,7 @@
 
 namespace App\Models\Procurement;
 
+use App\Enums\TenderApprovalStatusEnum;
 use App\Enums\TenderCategoryEnum;
 use App\Enums\TenderStatusEnum;
 use App\Enums\TenderTypeEnum;
@@ -15,10 +16,12 @@ use App\Models\Auth\User;
 use App\Models\Core\Currency;
 use App\Models\Procurement\ProcurementMode;
 use App\Models\Procurement\ProcurementPlan;
+use App\Models\procurement\TenderItems;
+use App\Traits\Model\UserActorTrait;
 
 class Tender extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes,UserActorTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -37,19 +40,23 @@ class Tender extends Model
         'SubmissionDeadline',
         'OpeningDate',
         'Status',
-        'RelatedPRID',
+        //'RelatedPRID',
         'ProcurementModeId',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy',
         'StartDate',
-        'Currency',
+        'CurrencyId',
+        'TenderCategory',
+        'ApprovalRemarks',
+        'ApprovalStatus', // 1 for approved, 2 for rejected, 0 for pending
     ];
 
     protected $casts = [
         'TenderType' => TenderTypeEnum::class,
         'Status' => TenderStatusEnum::class,
-        'TenderCategory' => TenderCategoryEnum::class,
+        'ApprovalStatus' => TenderApprovalStatusEnum::class,
+        //'TenderCategory' => TenderCategoryEnum::class,
         'SubmissionDeadline' => 'datetime',
         'OpeningDate' => 'datetime',
         'ModifiedOn' => 'datetime',
@@ -179,4 +186,29 @@ class Tender extends Model
     {
         return $this->suppliers()->where('Id', $supplier->Id)->exists();
     }
+
+    public function tenderCategory()
+    {
+        return $this->belongsTo(TenderCategory::class, 'TenderCategory');
+    }
+
+    public function tenderItems()
+    {
+        return $this->hasMany(TenderItems::class, 'TenderID', 'Id');
+    }
+    public function items()
+    {
+        return $this->hasMany(TenderItems::class, 'TenderID', 'Id');
+    }
+
+    public static function getPrimaryKey(): string
+    {
+        return (new self())->getRouteKeyName();
+    }
+
+    public function getRouteKeyName(): string
+    {
+        return 'TenderID';
+    }
+
 }

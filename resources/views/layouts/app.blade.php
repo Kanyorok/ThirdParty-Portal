@@ -130,7 +130,7 @@
                                     Plan Execution
                                     </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
                                       <ul class="pc-submenu">
-                                     <li class="pc-item"><a class="pc-link" href="{{ route('submitplan.index') }}" data-i18n="Procurement List">Execution Dashboard</a></li>
+                                     <li class="pc-item"><a class="pc-link" href="{{ route('executiondashboard.index') }}" data-i18n="Procurement List">Execution Dashboard</a></li>
                                      <li class="pc-item"><a class="pc-link" href="{{ route('approvalinbox.index') }}" data-i18n="Procurement List">Pending Execution</a></li>
                                      <li class="pc-item"><a class="pc-link" href="{{ route('submitplan.index') }}" data-i18n="Procurement List">Execution Calendar</a></li>
                                      <li class="pc-item"><a class="pc-link" href="{{ route('approvalinbox.index') }}" data-i18n="Procurement List">Deviations</a></li>
@@ -431,7 +431,7 @@
                                         Reports
                                     </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
                             <ul class="pc-submenu">
-                                <li class="pc-item"><a class="pc-link" href="{{ route('inventoryreports.index') }}"
+                                <li class="pc-item"><a class="pc-link" href="{{ route('reports.index') }}"
                                                        data-i18n="Procurement List">Reports</a></li>
                             </ul>
                         </li>

@@ -10,51 +10,57 @@ use Illuminate\Support\Carbon;
 class ItemCategoriesSeeder extends Seeder
 {
     public function run()
-{
-    // Disable constraints
-    DB::statement('ALTER TABLE t_ItemCategories NOCHECK CONSTRAINT ALL');
+    {
+        $now = Carbon::now();
+        $createdBy = 1;
 
-    // Delete all records
-    ItemCategories::query()->forceDelete();
+        $categories = [
+            'Office Supplies' => [
+                'Pens & Pencils',
+                'Paper Products',
+                'Binders & Folders',
+                'Miscellaneous', 
+            ],
+            'Electronics' => [
+                'Laptops',
+                'Printers',
+                'Monitors',
+                'Networking', 
+                'Audio',      
+            ],
+            'Furniture' => [
+                'Desks',
+                'Chairs',
+                'Cabinets',
+            ],
+        ];
 
-    // Reseed identity
-    DB::statement("DBCC CHECKIDENT ('t_ItemCategories', RESEED, 0)");
+        foreach ($categories as $parentName => $subCategories) {
+            $parent = ItemCategories::firstOrCreate(
+                ['Name' => $parentName],
+                [
+                    'Description' => "$parentName for company use",
+                    'CreatedBy' => $createdBy,
+                    'ModifiedBy' => $createdBy,
+                    'CreatedOn' => $now,
+                    'ModifiedOn' => $now,
+                    'CategoryCode' => strtoupper(substr($parentName, 0, 3)) . '-PARENT',
+                ]
+            );
 
-    // Enable constraints again
-    DB::statement('ALTER TABLE t_ItemCategories WITH CHECK CHECK CONSTRAINT ALL');
-
-    // Seed data
-    $now = \Illuminate\Support\Carbon::now();
-    $createdBy = 1;
-
-    $categories = [
-        'Office Supplies' => ['Pens & Pencils', 'Paper Products', 'Binders & Folders'],
-        'Electronics'     => ['Laptops', 'Printers', 'Monitors'],
-        'Furniture'       => ['Desks', 'Chairs', 'Cabinets'],
-    ];
-
-    foreach ($categories as $parentName => $subCategories) {
-        $parent = ItemCategories::create([
-            'Name'        => $parentName,
-            'Description' => "$parentName for company use",
-            'CreatedBy'   => $createdBy,
-            'ModifiedBy'  => $createdBy,
-            'CreatedOn'   => $now,
-            'ModifiedOn'  => $now,
-        ]);
-
-        foreach ($subCategories as $childName) {
-            ItemCategories::create([
-                'Name'        => $childName,
-                'Description' => "$childName under $parentName",
-                'ParentId'    => $parent->Id,
-                'CreatedBy'   => $createdBy,
-                'ModifiedBy'  => $createdBy,
-                'CreatedOn'   => $now,
-                'ModifiedOn'  => $now,
-            ]);
+            foreach ($subCategories as $childName) {
+                ItemCategories::firstOrCreate(
+                    ['Name' => $childName, 'ParentId' => $parent->Id],
+                    [
+                        'Description' => "$childName under $parentName",
+                        'CreatedBy' => $createdBy,
+                        'ModifiedBy' => $createdBy,
+                        'CreatedOn' => $now,
+                        'ModifiedOn' => $now,
+                        'CategoryCode' => strtoupper(substr($childName, 0, 3)) . '-' . rand(100, 999),
+                    ]
+                );
+            }
         }
     }
-}
-
 }

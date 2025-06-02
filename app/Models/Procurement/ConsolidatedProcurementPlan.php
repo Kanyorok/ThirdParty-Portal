@@ -12,13 +12,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class ConsolidatedProcurementPlan extends Model
 {
     use SoftDeletes, UserActorTrait;
- 
+
     const string CREATED_AT = 'CreatedOn';
     const string UPDATED_AT = 'ModifiedOn';
     const string DELETED_AT = 'DeletedOn';
 
     protected $table = 't_ConsolidatedProcurementPlan';
-    protected $primaryKey = 'PlanID'; 
+    protected $primaryKey = 'PlanID';
     protected $fillable = [
         'Title',
         'ReferenceNumber',
@@ -65,7 +65,8 @@ class ConsolidatedProcurementPlan extends Model
     {
         return $this->belongsTo(User::class, 'DeletedBy', 'Id');
     }
-      public function item()
+
+    public function item()
     {
         return $this->belongsTo(Item::class, 'ItemID', 'Id');
     }
@@ -73,6 +74,5 @@ class ConsolidatedProcurementPlan extends Model
     {
         return $this->hasMany(PlanLineItems::class, 'PlanID');
     }
-
 
 }

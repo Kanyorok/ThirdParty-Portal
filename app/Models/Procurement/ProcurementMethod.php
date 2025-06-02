@@ -17,11 +17,12 @@ class ProcurementMethod extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-           'MethodId','ApprovedPlanId','ApprovedPlanLineId','AssignedMethod','Justification',
-           'CreatedBy','ModifiedBy','DeletedBy'
-    ] ;
+        'MethodId', 'ApprovedPlanId', 'ApprovedPlanLineId', 'AssignedMethod', 'Justification',
+        'CreatedBy', 'ModifiedBy', 'DeletedBy'
+    ];
 
-    public static function getPrimaryKey(): string{
+    public static function getPrimaryKey(): string
+    {
         return 'Id';
     }
 

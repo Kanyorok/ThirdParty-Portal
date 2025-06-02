@@ -13,7 +13,8 @@ class BudgetProductMasterController extends Controller
         return view('budgetandanalytics.productmaster.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('budgetandanalytics.productmaster.create');
     }
 }

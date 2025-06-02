@@ -28,22 +28,22 @@ class ProcurementSchedulePlanController extends Controller
         return view('procurement.procurementplan.scheduleplan.create', compact('plan'));
     }
 
-    public function fetchLinesByDPlan($planId) 
+    public function fetchLinesByDPlan($planId)
     {
         try {
             $Lines = PlanLineItems::with(['item', 'schedulePlan.periods']) // Include periods
-                ->where('PlanID', $planId)->get();
+            ->where('PlanID', $planId)->get();
 
             $mappedLines = $Lines->map(function ($lineItem) {
                 $statusEnum = $lineItem->schedulePlan?->Status ?? SchedulePlanEnum::NotScheduled;
 
                 return [
-                    'LineItemID'   => $lineItem->LineItemID,
-                    'item_name'    => $lineItem->item?->ItemName,
-                    'MergedQty'    => $lineItem->MergedQty,
-                    'ScheduleQTY'  => $lineItem->schedulePlan?->ScheduleQTY,
-                    'Status'       => $statusEnum->label(),
-                    'Periods'      => $lineItem->schedulePlan?->periods ?? [], // Optional: return schedule breakdown
+                    'LineItemID' => $lineItem->LineItemID,
+                    'item_name' => $lineItem->item?->ItemName,
+                    'MergedQty' => $lineItem->MergedQty,
+                    'ScheduleQTY' => $lineItem->schedulePlan?->ScheduleQTY,
+                    'Status' => $statusEnum->label(),
+                    'Periods' => $lineItem->schedulePlan?->periods ?? [], // Optional: return schedule breakdown
                 ];
             });
 
@@ -59,7 +59,7 @@ class ProcurementSchedulePlanController extends Controller
     {
         $actor = $request->user();
         $consolidatedPlan = $request->getPlan();
-        
+
         $lineItemIds = $request->input('lineItemIds');
 
         foreach ($lineItemIds as $lineItemId) {
@@ -82,10 +82,10 @@ class ProcurementSchedulePlanController extends Controller
                 ];
                 $totalQty = (int)bcadd($q1, bcadd($q2, bcadd($q3, $q4)));
             } elseif ($mode === 'month') {
-                $months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+                $months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
                 foreach ($months as $month) {
                     $inputKey = strtolower($month) . "_$lineItemId";
-                    $qty = (int) $request->input($inputKey, 0);
+                    $qty = (int)$request->input($inputKey, 0);
                     $periods[$month] = $qty;
                     $totalQty += $qty;
                 }
@@ -117,6 +117,7 @@ class ProcurementSchedulePlanController extends Controller
 
         return redirect()->route('Procurement-Plan-Schedule.index')->with('success', 'Schedules saved successfully.');
     }
+
     public function edit($lineItemId, Request $request)
     {
         $planId = $request->query('plan_id');
@@ -125,6 +126,6 @@ class ProcurementSchedulePlanController extends Controller
 
         return view('procurement.procurementplan.scheduleplan.edit', compact('plan', 'lineItem'));
     }
-    
+
 
 }

@@ -42,11 +42,11 @@
                     <label>Supplier</label>
                     <select class="form-control supplier" id="supplier" name="supplier">
                         <option selected disabled>Select supplier</option>
-{{--                        <option value="01">Supplier 1</option>--}}
-{{--                        <option value="02">Supplier 2</option>--}}
-                                             @foreach ($suppliers as $vendor)
-                                        <option value="{{ $vendor->Id }}">{{ $vendor->Name }}</option>
-                                            @endforeach
+                        {{--                        <option value="01">Supplier 1</option>--}}
+                        {{--                        <option value="02">Supplier 2</option>--}}
+                        @foreach ($suppliers as $vendor)
+                            <option value="{{ $vendor->Id }}">{{ $vendor->Name }}</option>
+                        @endforeach
 
                         <!-- Loop suppliers here -->
                     </select>
@@ -131,7 +131,8 @@
                         <td class="text-start">
                                 <textarea class="form-control form-control-sm itemDescription" name="itemDescription[]"
                                           id="Description" cols="30"
-                                          rows="5" readonly   style="display: flex; align-items: center; justify-content: center; text-align: center; padding: 0; resize: none;"></textarea>
+                                          rows="5" readonly
+                                          style="display: flex; align-items: center; justify-content: center; text-align: center; padding: 0; resize: none;"></textarea>
                             {{--                            <input type="text" class="form-control form-control-sm itemDescription" --}}
                             {{--                                name="itemDescription[]" id="Description" readonly> --}}
                         </td>
@@ -337,7 +338,7 @@
                 let totalTax = 0;
 
                 // Loop through each row to calculate totals
-                $('#po-items tr').each(function() {
+                $('#po-items tr').each(function () {
                     let row = $(this);
                     let qty = parseFloat(row.find('.quantity').val()) || 0;
                     let price = parseFloat(row.find('.unit-price').val()) || 0;
@@ -370,7 +371,7 @@
             }
 
 
-            $(document).ready(function() {
+            $(document).ready(function () {
                 calculateSummaryTotals();
             });
 
@@ -385,8 +386,6 @@
 
         document.getElementById('add-row').addEventListener('click', function () {
             rowCount++;
-
-
 
 
             const row = `

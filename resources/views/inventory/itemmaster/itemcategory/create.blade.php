@@ -38,8 +38,13 @@
             </select>
         </div>
 
+         <div class="mb-3">
+
+         <div class="d-flex justify-content-end mt-4">
         <button type="submit" class="btn btn-success">Save Category</button>
         <a href="{{ route('itemcategory.index') }}" class="btn btn-secondary">Cancel</a>
+</div>
+</div>
     </form>
 </div>
 @endsection

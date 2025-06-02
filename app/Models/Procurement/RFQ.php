@@ -18,14 +18,14 @@ class RFQ extends Model
     public const UPDATED_AT = 'ModifiedOn';
     const string DELETED_AT = 'DeletedOn';
 
-    
+
     public static function getPrimaryKey(): string
     {
         return 'RFQId';
     }
 
     protected $fillable = [
-        'RFQNumber', 'Comments', 'Status', 'SubmissionDeadline',  'CreatedBy', 'ModifiedBy'
+        'RFQNumber', 'Comments', 'Status', 'SubmissionDeadline', 'CreatedBy', 'ModifiedBy'
     ];
 
     public function rfqLines()

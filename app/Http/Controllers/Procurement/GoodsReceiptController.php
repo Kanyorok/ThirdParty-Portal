@@ -16,18 +16,18 @@ class GoodsReceiptController extends Controller
     public function index()
     {
 
-    // Get only POs not used in GoodsReceipts  
+        // Get only POs not used in GoodsReceipts
         $goodsReceipts = GoodsReceipt::with('receiver', 'supplier')->where('InspectionStatus', 'd')->get();
         return view('procurement.goodreceipts.index', compact('goodsReceipts'));
     }
 
     public function create()
     {
-        
+
         $usedOrderNos = DB::connection('sqlsrv')
-        ->table('t_GoodsReceipts')
-        ->distinct()
-        ->pluck('POID');
+            ->table('t_GoodsReceipts')
+            ->distinct()
+            ->pluck('POID');
 
         $Orders = DB::connection('sqlsrv')
             ->table('t_Orders')
@@ -39,7 +39,7 @@ class GoodsReceiptController extends Controller
         //     ->select('Id', 'OrderNo', 'Description','AccountID')
         //     ->get();
 
-       
+
         $OrderLines = DB::connection('sqlsrv')->table('t_OrderLines as ol')
             ->join('t_items as i', 'ol.iStockCodeID', '=', 'i.Id')
             ->select(
@@ -83,9 +83,9 @@ class GoodsReceiptController extends Controller
             GoodsReceipt::create([
                 'GRNID'            => $request->GRNID,
                 'ReceivedDate'     => now(),
-                'ReceivedBy'       => Auth::id(),
+                'ReceivedBy' => Auth::id(),
                 'POID'             => $request->POID,
-                'SupplierId'       => $request->SupplierID,
+                'SupplierId' => $request->SupplierID,
                 'ItemNo'           => $item['ItemNo'],
                 'StoreID'          => 'STORE-001',
                 'TransferTo'       => $item['TransferTo'],
@@ -99,7 +99,7 @@ class GoodsReceiptController extends Controller
             ]);
 
         }
-        return redirect()->route('procurementreceipts.index')->with('success',  'Goods receipt saved successfully.');
+        return redirect()->route('procurementreceipts.index')->with('success', 'Goods receipt saved successfully.');
     }
 
     public function fetchLinesByGRN($grnId, $poId)
@@ -138,8 +138,8 @@ class GoodsReceiptController extends Controller
         $deleted = GoodsReceipt::where('GRNID', $grnId)
                 ->where('POID', $poId)
                 ->update([
-                    'DeletedBy' => Auth::id(), 
-                    'DeletedOn' => now(), 
+                    'DeletedBy' => Auth::id(),
+                    'DeletedOn' => now(),
                 ]);
 
         if ($deleted) {
@@ -156,8 +156,8 @@ class GoodsReceiptController extends Controller
         $poId = $request->input('po_id');
 
         $grnLines = GoodsReceipt::where('GRNID', $grnId)
-                        ->where('POID', $poId)
-                        ->get();
+            ->where('POID', $poId)
+            ->get();
 
         if ($grnLines->isEmpty()) {
             return response()->json(['error' => 'GRN lines not found.'], 404);
