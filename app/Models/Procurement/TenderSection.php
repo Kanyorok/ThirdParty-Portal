@@ -47,7 +47,11 @@ class TenderSection extends Model
     }
     public function criteria()
     {
-        return $this->hasMany(TenderCriteria::class, 'SectionID', 'TenderSectionID');
+        return $this->hasMany(Criteria::class, 'SectionID', 'id');
+    }
+    public function sections()
+    {
+        return $this->belongsTo(Section::class, 'SectionID', 'id');
     }
     public function bids()
     {

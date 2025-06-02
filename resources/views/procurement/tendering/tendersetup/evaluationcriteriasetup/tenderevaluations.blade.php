@@ -31,10 +31,13 @@
                         <td>{{$loop->index+1}}</td>
                         <td>{{$item['TenderNo']}}</td>
                         <td>{{$item['sectionsNumber']}}</td>
-                        <td>{{$item['criteriaNumber']}}</td>
-                        <td>100</td>
-                        <td>50</td>
                         <td>
+                            <a href="{{route('tender-criteria',$item['id'])}}" class="btn btn-sm">{{$item['criteriaNumber']}} <i class="fa fa-eye" style="font-size:18px;color:rgb(63, 63, 252)"></i></a>
+                        </td>
+                        <td>100</td>
+                        <td>{{$item['criteriaNumber']*10}}</td>
+                        <td>
+                            <a href="{{route('tender-criteria',$item['id'])}}" class="btn btn-sm btn-outline-secondary">Criteria</a>
                             <a href="/evaluation-criteria/view/1" class="btn btn-sm btn-outline-primary">View</a>
                             <a href="/evaluation-criteria/edit/1" class="btn btn-sm btn-outline-success">Edit</a>
                             <button class="btn btn-sm btn-outline-danger">Delete</button>

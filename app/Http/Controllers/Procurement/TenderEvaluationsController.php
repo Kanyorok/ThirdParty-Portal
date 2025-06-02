@@ -4,11 +4,15 @@ namespace App\Http\Controllers\procurement;
 
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
-use App\Models\procurement\Section;
+use App\Models\Procurement\Criteria;
+use App\Models\Procurement\Section;
 use App\Models\Procurement\Tender;
-use App\Models\procurement\TenderSection;
+use App\Models\Procurement\TenderCriteria;
+use App\Models\Procurement\TenderSection;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class TenderEvaluationsController extends Controller
 {
@@ -36,7 +40,9 @@ class TenderEvaluationsController extends Controller
                 'TenderNo'=>$value->TenderNo,
                 'Title'=>$value->Title,
                 'sectionsNumber'=>TenderSection::where('TenderID',$value->Id)->count(),
-                'criteriaNumber'=>2,
+                'criteriaNumber'=>TenderCriteria::where('TenderID',$value->Id)
+                    ->where('IsActive',true)
+                    ->count(),
             ]);
         }
         //return$data;
@@ -155,4 +161,99 @@ class TenderEvaluationsController extends Controller
             return back()->with('error', 'Failed to create tender sections: ');
         }
     }
+
+    //Get Criteria associated to a tender section
+    public function getTenderCriteria(Request $request, $TenderId)
+    {
+        $tender = Tender::findOrFail($TenderId);
+
+        // Fetch all active criteria already stored for this tender
+        $existingCriteria = TenderCriteria::where('TenderID', $TenderId)
+            ->where('IsActive', true)
+            ->pluck('CriteriaID')
+            ->toArray();
+
+        // Get sections associated with the tender along with their criteria
+        $tenderSections = TenderSection::where('TenderID', $TenderId)
+            ->with(['sections', 'criteria']) // eager load
+            ->get();
+
+        // Add isChecked to each criterion
+        foreach ($tenderSections as $section) {
+            foreach ($section->criteria as $criteria) {
+                $criteria->isChecked = in_array($criteria->id, $existingCriteria);
+            }
+        }
+
+        return view('procurement.tendering.tendersetup.evaluationcriteriasetup.tenderCriteria', compact(
+            'TenderId',
+            'tender',
+            'tenderSections'
+        ));
+    }
+
+
+public function storeTenderCriteria(Request $request)
+{
+    $this->authorize(PermissionEnum::TenderWrite, Tender::class);
+    $validated = $request->validate([
+        'TenderId' => 'required|integer',
+        'weights' => 'required|array',
+        'criterias' => 'nullable|array',
+    ]);
+
+    $tenderId = $validated['TenderId'];
+    $weights = $validated['weights'];
+    $criterias = $validated['criterias'] ?? [];
+
+    try {
+        DB::beginTransaction();
+
+        // Loop through each section and its selected criterias
+        foreach ($weights as $sectionId => $weight) {
+            $selectedCriteria = $criterias[$sectionId] ?? [];
+
+            // Get all criteria IDs for this section (from the definitions table)
+            $allSectionCriteria = Criteria::where('SectionID', $sectionId)->pluck('id');
+
+            foreach ($allSectionCriteria as $criteriaId) {
+                $isSelected = in_array($criteriaId, $selectedCriteria);
+
+                TenderCriteria::updateOrCreate(
+                    [
+                        'TenderID' => $tenderId,
+                        'CriteriaID' => $criteriaId,
+                    ],
+                    [
+                        'SectionID' => $sectionId,
+                        'MaxScore' => 10, // Set weight if selected, otherwise 0
+                        'IsActive' => $isSelected,
+                        'CreatedBy' => Auth::id(),
+                        'ModifiedBy' => Auth::id(),
+                        'ModifiedOn' => now(),
+                    ]
+                );
+            }
+        }
+
+        DB::commit();
+        // Log the action
+        activity()
+            ->performedOn(new Tender())
+            ->causedBy(Auth::id())
+            ->log('Saved tender criteria for tender ID: ' . $tenderId);
+
+        return redirect()->back()->with('success', 'Tender criteria saved successfully.');
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return $e->getMessage();
+        Log::error('Error saving tender criteria', [
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+        ]);
+
+        return redirect()->back()->with('error', 'An error occurred. Please try again.');
+    }
+}
+
 }
