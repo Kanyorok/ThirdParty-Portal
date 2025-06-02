@@ -48,6 +48,7 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::put('/itemmasterlist/{Id}', [ItemMasterListController::class, 'update'])->name('itemmasterlist.update');
     Route::delete('/itemmasterlist/{Id}', [ItemMasterListController::class, 'destroy'])->name('itemmasterlist.destroy');
     Route::get('/get-subcategories', [ItemMasterListController::class, 'getSubcategories'])->name('get.subcategories');
+    
 
     Route::get('/stores', [StoreController::class, 'index'])->name('stores.index');
     Route::get('/stores/create', [StoreController::class, 'create'])->name('stores.create');
@@ -105,8 +106,10 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/interbranchrequisition/{Id}/edit', [InterBranchRequisitionController::class, 'edit'])->name('interbranchrequisition.edit');
     Route::put('/interbranchrequisition/{Id}', [InterBranchRequisitionController::class, 'update'])->name('interbranchrequisition.update');
     Route::delete('/interbranchrequisition/{Id}', [InterBranchRequisitionController::class, 'destroy'])->name('interbranchrequisition.destroy');
-    Route::get('/subcategories/{categoryId}', [InterBranchRequisitionController::class, 'getSubcategories']);
-    Route::get('/items/{subcategoryId}', [InterBranchRequisitionController::class, 'getItems']);
+    Route::get('/interbranchrequisition/get-items', [InterBranchRequisitionController::class, 'getItemsByCategoryOrSubcategory'])->name('interbranchrequisition.getItemsByCategoryOrSubcategory');
+
+
+Route::get('/inventory/get-subcategories', [InterBranchRequisitionController::class, 'getSubcategories'])->name('inventory.getSubcategories');
 
     
     Route::resource('interbranchrequisitionapproval', InterBranchRequisitionApprovalController::class);
