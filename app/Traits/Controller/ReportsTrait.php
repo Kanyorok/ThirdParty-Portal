@@ -41,8 +41,8 @@ trait ReportsTrait
         }
         //todo check permissions
         if ( $request->ajax()){
-            $service = new SSRSService();
             try {
+                $service = new SSRSService();
                 $xmlResponse = $service->exportReport($report->Path, 'XML', content: true);
             } catch (ConnectionException $e) {
                 return view('snippets.errors')->with('message', 'cannot connect to the report server.');
@@ -66,9 +66,8 @@ trait ReportsTrait
             return redirect()->back()->with('fail', 'invalid report.');
         }
         //todo check permissions
-        $service = new SSRSService();
         try {
-            return $service->exportReport($report->Path, $format);
+            return (new SSRSService())->exportReport($report->Path, $format);
         } catch (ConnectionException $e) {
             return redirect()->back()->with('fail', 'cannot connect to the report server.');
         } catch (ErroredException $e) {
