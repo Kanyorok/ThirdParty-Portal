@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Enums\Procurement\DepartmentNeedsEnum;
 use App\Http\Requests\Procurement\PlanFromNeedsRequest;
+use App\Enums\ProcurementPlanStatusEnum;
 
 class PlanFromNeedsController extends Controller
 {
@@ -23,7 +24,7 @@ class PlanFromNeedsController extends Controller
     {
         $approvedNeeds = $this->getFilteredNeeds($request);
 
-        $plans = ConsolidatedProcurementPlan::select('PlanID', 'Title', 'FiscalYear')->get();//todo draft
+        $plans = ConsolidatedProcurementPlan::where('Status', ProcurementPlanStatusEnum::Draft)->select('PlanID', 'Title', 'FiscalYear')->get();
         $branches = Branch::all();
         $departments = Department::all();
         $budgetLines = BudgetMaster::all();
