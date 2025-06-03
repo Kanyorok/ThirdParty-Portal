@@ -98,12 +98,9 @@
                                         class="text-danger">*</span></label>
                                 <select class="form-control" name="Type" id="Type" required>
                                     <option selected disabled>Select type</option>
-                                    <option value="Stock">Stock</option>
-                                    <option value="Asset">Asset</option>
-                                    <option value="Non-Stock">Non-Stock</option>
-                                    {{-- @foreach ($MarketingLists as $MarketingList)
-                                        <option value="{{ $MarketingList->slug }}">{{ $MarketingList->Label }}</option>
-                                    @endforeach --}}
+                                    @foreach ($types as $type)
+                                        <option value="{{ $type->Id }}">{{ $type->TypeName }}</option>
+                                    @endforeach
                                 </select>
 
                                 <p id="Type_error" class="invalid-feedback d-none error col-12" role="alert"></p>
