@@ -43,6 +43,7 @@ class ConsolidatedProcurementPlan extends Model
     protected $casts = [
         'Status' => ProcurementPlanStatusEnum::class,
     ];
+  
     public function workflows()
     {
         return $this->morphMany(Workflow::class, 'source', 'Source', 'SourceID');

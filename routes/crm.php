@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CRM\ReportsController;
 use Illuminate\Support\Facades\Route;
 
 Route::namespace('CRM')->group(function () {
@@ -293,4 +294,10 @@ Route::namespace('CRM')->group(function () {
         Route::resource('committee', 'CommitteeController')->except(['edit']);
         Route::resource('board', 'BoardController')->except(['edit']);
     });
+
+    Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('crm-reports.export');
+    Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
+        'index' => 'crm-reports.index',
+        'show' => 'crm-reports.show'
+    ]);
 });

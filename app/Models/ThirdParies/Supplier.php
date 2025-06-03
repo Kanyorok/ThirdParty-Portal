@@ -46,7 +46,6 @@ class Supplier extends Model
     public function category()
     {
         return $this->belongsTo(ItemCategories::class, 'CategoryId', 'Id');
-
     }
 
     public function rfqEvaluations()
