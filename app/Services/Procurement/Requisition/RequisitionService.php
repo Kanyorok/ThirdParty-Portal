@@ -106,4 +106,31 @@ class RequisitionService {
             )
             ->get();
     }
+
+    public static function fetchBranches()
+    {
+        return DB::table(DB::raw('t_Branches WITH (NOLOCK)'))
+            ->select('Id', 'Name', 'BranchID')
+            ->whereNull('DeletedBy')
+            ->whereNull('DeletedOn')
+            ->get();
+    }
+
+
+    public static function fetchDepartments(){
+        return DB::table(DB::raw('t_Departments WITH (NOLOCK)'))
+            ->select('Id', 'Name','DepartmentID')
+            ->whereNull('DeletedBy')
+            ->whereNull('DeletedOn')
+            ->get();
+    }
+
+    public static function fetchProcurementPlan(){
+        return DB::table(DB::raw('t_ConsolidatedProcurementPlan WITH (NOLOCK)'))
+            ->select('PlanID', 'Title','ReferenceNumber')
+            ->where('Status', '=', 'a')
+            ->whereNull('DeletedBy')
+            ->whereNull('DeletedOn')
+            ->get();
+    }
 }

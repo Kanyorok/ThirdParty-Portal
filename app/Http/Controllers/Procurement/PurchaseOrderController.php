@@ -107,16 +107,27 @@ class PurchaseOrderController extends Controller
 
         try {
             $suppliers = $this->supplierService->getSuppliers();
-            \Log::info('Suppliers loaded in create():', $suppliers->toArray());
+            $itemTypes = $this->itemService->getTypes();
+
+            if(!$suppliers || !$itemTypes){
+
+                return view('procurement.orders.create', [
+                    'suppliers' => $suppliers ?? [],
+                    'itemTypes' => $itemTypes ?? [],
+                ]);
+
+            }
+            return view("procurement.orders.create", compact('suppliers','itemTypes'));
+
+//            \Log::info('Suppliers loaded in create():', $suppliers->toArray());
         } catch (\Exception $e) {
-            \Log::error('Error fetching suppliers in create(): ' . $e->getMessage());
-            $suppliers = collect(); // fallback to empty collection
+            Log::error('Data fetch failed: ' . $e->getMessage());
+            return view('procurement.orders.create', [
+                'suppliers' => [],
+                'itemTypes' => [],
+            ])->with('error', 'An error occurred: ' . $e->getMessage());
         }
-        //
 
-
-        return view("procurement.orders.create", compact('suppliers'));
-//        return view("procurement.orders.create");
     }
 
     /**

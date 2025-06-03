@@ -52,18 +52,33 @@ class RequisitionsController extends Controller
     {
         try {
             $details = $this->service->fetchRequisition();
-            // if ($details ) {
-            return view('procurement.requisitions.create', compact('details'));
-        // /}
-            // else{  return view('procurement.requisitions.create', ['details' => []]);
-            // }
-        } catch (\Exception $e) {
-            Log::error('Create page failed: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Failed to fetch items: ' . $e->getMessage());
-        }
+            $branches = $this->service->fetchBranches();
+            $departments = $this->service->fetchDepartments();
+            $procurementPlans = $this->service->fetchProcurementPlan();
 
-//        return view('procurement.requisitions.create');
+            if (!$details || !$branches || !$departments || !$procurementPlans) {
+                return view('procurement.requisitions.create', [
+                    'details' => $details ?? [],
+                    'branches' => $branches ?? [],
+                    'departments' => $departments ?? [],
+                    'procurementPlans' => $procurementPlans ?? [],
+                ]);
+            }
+
+            return view('procurement.requisitions.create', compact(
+                'details', 'branches', 'departments', 'procurementPlans'
+            ));
+        } catch (\Exception $e) {
+            Log::error('Data fetch failed: ' . $e->getMessage());
+            return view('procurement.requisitions.create', [
+                'details' => [],
+                'branches' => [],
+                'departments' => [],
+                'procurementPlans' => [],
+            ])->with('error', 'An error occurred: ' . $e->getMessage());
+        }
     }
+
 
     /**
      * Store a newly created resource in storage.

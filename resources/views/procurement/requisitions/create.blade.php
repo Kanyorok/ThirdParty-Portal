@@ -107,12 +107,9 @@
                                 <label class="form-label" for="Branch">Branch <span class="text-danger">*</span></label>
                                 <select class="form-control" name="Branch" id="Branch" required>
                                     <option selected disabled>Select Branch</option>
-                                    <option value="01">Kericho</option>
-                                    <option value="02">Mulot</option>
-
-                                    {{-- @foreach ($MarketingLists as $MarketingList)
-                                        <option value="{{ $MarketingList->slug }}">{{ $MarketingList->Label }}</option>
-                                    @endforeach --}}
+                                    @foreach ($branches as $Branch)
+                                        <option value="{{ $Branch->Id }}">{{ $Branch->Name }}</option>
+                                    @endforeach
                                 </select>
 
                                 <p id="Branch_error" class="invalid-feedback d-none error col-12" role="alert"></p>
@@ -123,12 +120,10 @@
                                         class="text-danger">*</span></label>
                                 <select class="form-control" name="Department" id="Department" required>
                                     <option selected disabled>Select Department</option>
-                                    <option value="01">Finance</option>
-                                    <option value="02">Procurement</option>
+                                     @foreach ($departments as $Department)
+                                        <option value="{{ $Department->Id }}">{{ $Department->Name }}</option>
+                                    @endforeach
 
-                                    {{-- @foreach ($MarketingLists as $MarketingList)
-                                        <option value="{{ $MarketingList->slug }}">{{ $MarketingList->Label }}</option>
-                                    @endforeach --}}
                                 </select>
 
                                 <p id="Department_error" class="invalid-feedback d-none error col-12" role="alert"></p>
@@ -137,14 +132,11 @@
                             <div class="mb-3">
                                 <label class="form-label" for="ProcurementPlan">Procurement Plan <span
                                         class="text-danger">*</span></label>
-                                <select class="form-control" name="ProcurementPlan" id="ProcurementPlan" required>
+                                <select class="form-control" name="ProcurementPlan" id="ProcurementPlan" >
                                     <option selected disabled>Select Procurement Plan</option>
-                                    <option value="01">Finance</option>
-                                    <option value="02">Procurement</option>
-
-                                    {{-- @foreach ($MarketingLists as $MarketingList)
-                                        <option value="{{ $MarketingList->slug }}">{{ $MarketingList->Label }}</option>
-                                    @endforeach --}}
+                                     @foreach ($procurementPlans  as $procurementPlan )
+                                        <option value="{{ $procurementPlan->PlanID }}">{{ $procurementPlan->ReferenceNumber }}</option>
+                                    @endforeach
                                 </select>
 
                                 <p id="ProcurementPlan_error" class="invalid-feedback d-none error col-12" role="alert"></p>
