@@ -326,10 +326,19 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
 
     Route::get('/planning/assign-methods', [MapToBudgetController::class, 'index'])->name('planning.assign.methods');
     Route::post('/planning/assign-methods', [MapToBudgetController::class, 'store'])->name('planning.assign.methods.store');
+//Plan Approval
+Route::prefix('planning')->name('planning.')->group(function () {
+    Route::get('/approval', [ProcurementApprovalController::class, 'index'])->name('approval.index');
+    Route::get('/approval/plan-details', [ProcurementApprovalController::class, 'getPlanDetails'])->name('getPlanDetails');
+    Route::post('/approval/submit-decision', [ProcurementApprovalController::class, 'submitDecision'])->name('submitDecision');
+});
 
     Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('procurement-reports.export');
     Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
         'index' => 'procurement-reports.index',
         'show' => 'procurement-reports.show'
     ]);
+   // Route::get('/planning/get-plan-details', [ProcurementApprovalController::class, 'getPlanDetails'])
+   // ->name('planning.getPlanDetails');
+
 });

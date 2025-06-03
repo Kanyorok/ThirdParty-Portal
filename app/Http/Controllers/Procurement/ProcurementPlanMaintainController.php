@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Enums\Core\PostingEnum;
+use App\Enums\ProcurementPlanStatusEnum;
 use App\Models\Procurement\PlanLineItem;
 use App\Models\Auth\User;
 use Illuminate\Support\Facades\Auth;
@@ -37,20 +38,20 @@ class ProcurementPlanMaintainController extends Controller
         $userId = $request->CreatedBy;
         $user = User::find($userId);
 
-        $plan = ConsolidatedProcurementPlan::create([
-            'Title' => $request->Title,
-            'ReferenceNumber' => 'PLAN/' . $request->FiscalYear . '/' . rand(100, 999),
-            'FiscalYear' => $request->FiscalYear,
-            'Status' => PostingEnum::Draft,
-            'CreatedBy' => $userId,
-            'SubmittedBy' => $userId,
-            'CreatedDate' => now(),
-            'SubmittedDate' => now(),
-            'CreatedOn' => now(),
-            'ModifiedOn' => now(),
-            'CurrentApprLevel' => 0,
-            'ModifiedBy' => $userId,
-        ]);
+    $plan = ConsolidatedProcurementPlan::create([
+        'Title'           => $request->Title,
+        'ReferenceNumber' => 'PLAN/' . $request->FiscalYear . '/' . rand(100, 999),
+        'FiscalYear'      => $request->FiscalYear,
+        'Status'          => ProcurementPlanStatusEnum::Draft,
+        'CreatedBy'       => $userId,
+        'SubmittedBy'     => $userId, 
+        'CreatedDate'     => now(),
+        'SubmittedDate'   => now(),
+        'CreatedOn'       => now(),   
+        'ModifiedOn'      => now(),
+        'CurrentApprLevel'=> 0,
+        'ModifiedBy' => $userId,  
+    ]);
 
         activity()->causedBy($user)->performedOn($plan)->event('create')->log('created plan ' . $plan->Id);
         // Redirect to manual entry page with the new plan ID
