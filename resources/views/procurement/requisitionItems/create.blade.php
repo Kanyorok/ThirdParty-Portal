@@ -24,7 +24,7 @@
                         <thead>
 
                             <tr>
-                                <th>ID</th>
+                                <th>IDs</th>
                                 <th>Type</th>
                                 <th>Category</th>
                                 <th>Item</th>
