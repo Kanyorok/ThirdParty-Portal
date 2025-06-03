@@ -372,13 +372,6 @@ enum PermissionEnum: string
             self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval,
             self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval,
             self::RfqRead, self::RfqWrite, self::RfqUpdate, self::RfqApproval, self::RfqDelete,
-<<<<<<< HEAD
-             self::DepartmentNeedsRead, self::DepartmentNeedsWrite, self::DepartmentNeedsUpdate, self::DepartmentNeedsDelete, self::DepartmentNeedsApproval,
-             self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete,
-            self::ProcurementMethodRead, self::ProcurementMethodWrite,self::SchedulePlanRead, self::SchedulePlanWrite, self::SchedulePlanUpdate,
-            => ModulesEnum::Procurement,
-        
-=======
             self::DepartmentNeedsRead, self::DepartmentNeedsWrite, self::DepartmentNeedsUpdate, self::DepartmentNeedsDelete, self::DepartmentNeedsApproval,
             self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete,
             self::ProcurementMethodRead, self::ProcurementMethodWrite,
@@ -386,7 +379,6 @@ enum PermissionEnum: string
             => ModulesEnum::Procurement,
        
             //Human Resource Management
->>>>>>> dev
             self::Departments, self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete => ModulesEnum::HRM,
             
             //Inventory

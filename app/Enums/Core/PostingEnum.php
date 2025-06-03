@@ -10,6 +10,10 @@ enum PostingEnum: string
 
     case Posted = 'p';
 
+    case Submitted = 's';
+
+    case Approved = 'a';
+
     case Draft = 'd';
 
     public function label(): string
@@ -17,6 +21,8 @@ enum PostingEnum: string
         return match ($this) {
             self::Posted => 'Posted',
             self::Draft => 'Draft',
+            self::Approved => 'Approved',
+            self::Submitted => 'Submited',
         };
     }
 
@@ -25,6 +31,8 @@ enum PostingEnum: string
         return match ($this) {
             self::Posted => 'success',
             self::Draft => 'warning',
+            self::Approved => 'success',
+            self::Submitted => 'warning',
         };
     }
 }
