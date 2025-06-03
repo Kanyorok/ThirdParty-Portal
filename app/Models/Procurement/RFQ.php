@@ -2,6 +2,7 @@
 
 namespace App\Models\Procurement;
 
+use App\Models\Inventory\ItemCategories;
 use App\Models\ThirdParies\Supplier;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
@@ -36,7 +37,7 @@ class RFQ extends Model
 
     public function category()
     {
-        return $this->belongsTo(ItemCategory::class, 'ItemCategoryId');
+        return $this->belongsTo(ItemCategories::class, 'ItemCategoryId');
     }
 
     public function rfqResponses()

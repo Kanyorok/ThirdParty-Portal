@@ -4,10 +4,11 @@ namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Procurement\PlanManualInputRequest;
+use App\Models\Auth\User;
+use App\Models\Inventory\ItemCategories;
+use App\Models\Inventory\ItemMasterList;
 use App\Models\Procurement\BudgetMaster;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
-use App\Models\Procurement\Item;
-use App\Models\Procurement\ItemCategory;
 use App\Models\Procurement\PlanLineItems;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -41,8 +42,13 @@ class PlanManualInputController extends Controller
 
     public function create()
     {
+<<<<<<< Updated upstream
         $plans = ConsolidatedProcurementPlan::where('Status', ProcurementPlanStatusEnum::Draft)->get();
         $items = Item::with('category','itemuom')->get();
+=======
+        $plans = ConsolidatedProcurementPlan::all();
+        $items = ItemMasterList::with('category')->get();
+>>>>>>> Stashed changes
         $budgetLines = BudgetMaster::all();
 
         return view('procurement.procurementplan.planconsolidation.manualentry.create', compact('plans', 'items', 'budgetLines'));
@@ -91,14 +97,14 @@ class PlanManualInputController extends Controller
     {
         $lineItem = PlanLineItems::with(['item', 'item.category'])->findOrFail($lineItemId);
         $plans = ConsolidatedProcurementPlan::all();
-        $items = Item::all();
-        $categories = ItemCategory::all();
+        $items = ItemMasterList::all();
+        $categories = ItemCategories::all();
         $budgetLines = BudgetMaster::all();
 
         return view('procurement.procurementplan.planconsolidation.manualentry.edit', compact('lineItem', 'plans', 'items', 'categories', 'budgetLines'));
     }
 
-    public function update(PlanManualInputRequest $request, $lineItemId)
+    public function update(PlanManualInputRequest $request, $lineItemId, User $user)
     {
         $validated = $request->validated();
 
@@ -124,7 +130,7 @@ class PlanManualInputController extends Controller
         return redirect()->route('procurement.procurementplan.planconsolidation.manualentry.index')->with('success', 'Line item updated successfully.');
     }
 
-    public function destroy($lineItemId)
+    public function destroy($lineItemId, User $user)
     {
         $lineItem = PlanLineItems::findOrFail($lineItemId);
         $lineItem->delete();

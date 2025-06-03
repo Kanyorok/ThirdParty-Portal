@@ -22,7 +22,7 @@ class DepartmentNeedsController extends Controller
 
     public function create()
     {
-        $items = Item::with('category')->orderBy('ItemName')->get();
+        $items = Item::with('category','itemuom')->orderBy('ItemName')->get();
         return view('procurement.procurementplan.departmentneeds.raiseneed.create', compact('items'));
     }
 
