@@ -17,7 +17,7 @@ class ItemService
         // logger('Fetching items for type: ' . $type);
 
         return DB::table('t_Items')
-            ->leftjoin('t_ItemCategories','t_Items.Category','=','t_ItemCategories.Id')
+            ->leftjoin('t_ItemCategories', 't_Items.Category', '=', 't_ItemCategories.Id')
             ->where('t_Items.ItemType',$type)
             ->select('t_Items.Id','t_Items.ItemName','t_Items.ItemCode')
             ->get();
@@ -26,7 +26,7 @@ class ItemService
         // logger('Fetching items details: ' . $item);
 
         return DB::table('t_Items')
-            ->leftjoin('t_ItemCategories','t_Items.Category','=','t_ItemCategories.Id')
+            ->leftjoin('t_ItemCategories', 't_Items.Category', '=', 't_ItemCategories.Id')
             ->where('t_Items.Id',$item)
             ->select([
                 't_Items.ItemDescription',

@@ -160,7 +160,7 @@
     </div>
 @endsection
 @section('scripts')
-    
+
     <script> const $Modal = $('#MarketingListActionsModal');
         $(function () {
             $.fn.dataTable.ext.errMode = 'none';

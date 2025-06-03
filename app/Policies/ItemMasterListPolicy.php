@@ -3,8 +3,8 @@
 namespace App\Policies;
 
 use App\Enums\Core\PermissionEnum;
-use App\Models\ItemMasterList;
-use App\Models\User;
+use App\Models\Inventory\ItemMasterList;
+use App\Models\Auth\User;
 use Illuminate\Auth\Access\Response;
 
 class ItemMasterListPolicy
@@ -22,7 +22,7 @@ class ItemMasterListPolicy
      */
     public function view(User $user, ItemMasterList $itemMasterList): bool
     {
-        return false;
+        return $user->can(PermissionEnum::MasterListView->value);
     }
 
     /**
@@ -30,7 +30,7 @@ class ItemMasterListPolicy
      */
     public function create(User $user): bool
     {
-        return true;
+        return $user->can(PermissionEnum::MasterListCreate->value);
     }
 
     /**
@@ -38,7 +38,7 @@ class ItemMasterListPolicy
      */
     public function update(User $user, ItemMasterList $itemMasterList): bool
     {
-        return false;
+        return $user->can(PermissionEnum::MasterListUpdate->value);
     }
 
     /**
@@ -46,7 +46,7 @@ class ItemMasterListPolicy
      */
     public function delete(User $user, ItemMasterList $itemMasterList): bool
     {
-        return false;
+        return $user->can(PermissionEnum::MasterListDelete->value);
     }
 
     /**

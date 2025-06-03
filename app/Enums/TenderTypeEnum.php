@@ -18,7 +18,10 @@ enum TenderTypeEnum: string
             self::Restricted => 'Restricted Tender',
         };
     }
-
+    public function getTenderTypeEnumAttribute(): ?TenderTypeEnum
+    {
+        return TenderTypeEnum::tryFrom($this->TenderType);
+    }
     public function badgeClass(): string
     {
         return match ($this) {

@@ -1,11 +1,10 @@
-alter PROCEDURE p_AddPurchaseOrder
-    @Supplier bigint,
+alter PROCEDURE p_AddPurchaseOrder @Supplier bigint,
     @OrderDate date,
     @RfqNo varchar(20),
     @Priority varchar(20),
     @Terms varchar(255),
-    @User bigint,
-    @BranchId int = 0
+                                   @User bigint,
+                                   @BranchId int = 0
 
 
 AS
@@ -16,15 +15,16 @@ BEGIN
 
 
     -- Insert new purchase order
-    INSERT INTO t_Orders (OrderDate, Terms, Priority, ExtOrdNum, CreatedBy,CreatedOn, ModifiedBy,ModifiedOn,BranchID, AccountID)
-    VALUES( isnull(@OrderDate,getdate()), @Terms, @Priority,  @RfqNo ,@User, getdate(),@User,getdate(), @BranchId,@Supplier)
+    INSERT INTO t_Orders (OrderDate, Terms, Priority, ExtOrdNum, CreatedBy, CreatedOn, ModifiedBy, ModifiedOn, BranchID,
+                          AccountID)
+    VALUES (isnull(@OrderDate, getdate()), @Terms, @Priority, @RfqNo, @User, getdate(), @User, getdate(), @BranchId,
+            @Supplier)
 
 
 --     -- Generate OrderNo
     SET @OrderId = SCOPE_IDENTITY();
 
-    SET @OrderNo = (
-        SELECT 'PO-' + RIGHT(REPLICATE('0', 4) + CAST(isnull(@OrderId,0) AS VARCHAR), 4)
+    SET @OrderNo = (SELECT 'PO-' + RIGHT(REPLICATE('0', 4) + CAST(isnull(@OrderId, 0) AS VARCHAR), 4)
 
     )
 --

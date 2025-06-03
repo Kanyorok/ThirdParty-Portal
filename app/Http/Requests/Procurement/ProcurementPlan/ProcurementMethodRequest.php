@@ -17,11 +17,11 @@ class ProcurementMethodRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'MethodId'=>'required',
-            'ApprovedPlanId'=>'required|exists:t_ConsolidatedProcurementPlan,PlanID',
-            'ApprovedPlanLineId'=>'required|exists:t_PlanLineItem,LineItemmID',
-            'AssignedMethod'=>'required|string',
-            'Justification'=> 'text',
+            'MethodId' => 'required',
+            'ApprovedPlanId' => 'required|exists:t_ConsolidatedProcurementPlan,PlanID',
+            'ApprovedPlanLineId' => 'required|exists:t_PlanLineItem,LineItemmID',
+            'AssignedMethod' => 'required|string',
+            'Justification' => 'text',
         ];
     }
 }

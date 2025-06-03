@@ -14,17 +14,17 @@ class ProcurementMethodService
      * Create a new class instance.
      */
 
-    public function create(array $data, User $actor,ConsolidatedProcurementPlan $consolidatedProcurementPlan,PlanLineItems $planLineItems): ProcurementMethod
+    public function create(array $data, User $actor, ConsolidatedProcurementPlan $consolidatedProcurementPlan, PlanLineItems $planLineItems): ProcurementMethod
     {
-    $procurementMethod = ProcurementMethod::create([
-    'MethodId'=> 'Method-' . Str::upper(Str::random(5)),
-    'ApprovedPlanId'          => $consolidatedProcurementPlan->PlanID,
-    'ApprovedPlanLineId'      => $planLineItems->LineItemID,
-    'AssignedMethod'            => $data['AssignedMethod'],
-    'Justification'     => $data['Justification'],
-    'CreatedBy'         => $actor->Id,
-    'ModifiedBy'        => $actor->Id,
-    ]);
+        $procurementMethod = ProcurementMethod::create([
+            'MethodId' => 'Method-' . Str::upper(Str::random(5)),
+            'ApprovedPlanId' => $consolidatedProcurementPlan->PlanID,
+            'ApprovedPlanLineId' => $planLineItems->LineItemID,
+            'AssignedMethod' => $data['AssignedMethod'],
+            'Justification' => $data['Justification'],
+            'CreatedBy' => $actor->Id,
+            'ModifiedBy' => $actor->Id,
+        ]);
 
         activity()
             ->causedBy($actor)

@@ -13,7 +13,8 @@ class BudgetSceneriosController extends Controller
         return view('budgetandanalytics.scenarioplanning.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('budgetandanalytics.scenarioplanning.create');
     }
 }

@@ -5,8 +5,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -15,8 +14,8 @@ return new class extends Migration
         Schema::create('t_ProcurementMethod', static function (Blueprint $table) {
             $table->id('Id');
             $table->string('MethodId')->unique();
-            $table->foreignId('ApprovedPlanId')->constrained('t_ConsolidatedProcurementPlan','PlanID');
-            $table->foreignId('ApprovedPlanLineId')->constrained('t_PlanLineItem','LineItemID');
+            $table->foreignId('ApprovedPlanId')->constrained('t_ConsolidatedProcurementPlan', 'PlanID');
+            $table->foreignId('ApprovedPlanLineId')->constrained('t_PlanLineItem', 'LineItemID');
             $table->string('AssignedMethod');
             $table->text('Justification');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
@@ -25,7 +24,7 @@ return new class extends Migration
             $table->dateTime('ModifiedOn');
             $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
             $table->softDeletes('DeletedOn');
-    });
+        });
     }
 
     /**
@@ -34,5 +33,5 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('t_ProcurementMethod');
-}
+    }
 };

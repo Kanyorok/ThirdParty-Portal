@@ -246,7 +246,7 @@
     </div>
 @endsection
 @section('scripts')
- 
+
     <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
     <script src='{{ asset('assets/libs/moment/moment-with-locales.js') }}'></script>
     <script>const searchBtn = $('#searchFormBtn'), searchQuery = $('.search-form-item');

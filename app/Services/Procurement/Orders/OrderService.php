@@ -244,7 +244,7 @@ class OrderService
             ->get();
     }
 
-    public static function AddPurchaseOrderSum( $orderId)
+    public static function AddPurchaseOrderSum($orderId)
     {
         try {
             // Start transaction and execute the stored procedure
@@ -281,7 +281,7 @@ class OrderService
             ]);
 
             // Return a custom error message or handle as needed
-            return[
+            return [
                 'status' => 'error',
                 'message' => 'Error executing order update',
                 'error' => $e->getMessage()
