@@ -43,7 +43,7 @@ trait ReportsTrait
         if ( $request->ajax()){
             $service = new SSRSService();
             try {
-                $xmlResponse = $service->exportReport($report->Path.'/sdsd', 'XML', content: true);
+                $xmlResponse = $service->exportReport($report->Path, 'XML', content: true);
             } catch (ConnectionException $e) {
                 return view('snippets.errors')->with('message', 'cannot connect to the report server.');
             } catch (ErroredException $e) {
