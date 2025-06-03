@@ -35,27 +35,25 @@
               $estimatedCost = $plan->lineItems->sum(fn($item) => $item->MergedQty * $item->EstimatedUnitCost);
           @endphp
           <tr>
-              <td>{{ $key + 1 }}</td>
-              <td>{{ $plan->ReferenceNumber }}</td>
-              <td>{{ $plan->Title }}</td>
-              <td>{{ $plan->FiscalYear }}</td>
-              <td>{{ $itemsCount }}</td>
-              <td>{{ number_format($estimatedCost, 2) }}</td> <!-- Use $estimatedCost, not $plan->estimatedCost -->
-              <td><span class="badge bg-info">{{ $plan->Status->label()}}</td>
-              </span>
-              <td>{{ $plan->createdBy->Name ?? 'N/A' }}</td>
-              <td>
-                  @if($plan->CreatedDate)
-                      {{ (new DateTime($plan->CreatedDate))->format('Y-m-d') }}
-                  @else
-                      N/A
-                  @endif
-              </td>
-              <td>
-                  <a href="{{ route('procurementplanmaintain.show', $plan->PlanID) }}"
-                     class="btn btn-sm btn-outline-primary">View</a>
-                  <a href="{{ url('/planning/edit-draft/' . $plan->PlanID) }}" class="btn btn-sm btn-outline-success">Edit</a>
-              </td>
+            <td>{{ $key + 1 }}</td>
+            <td>{{ $plan->ReferenceNumber }}</td>
+            <td>{{ $plan->Title }}</td>
+            <td>{{ $plan->FiscalYear }}</td>
+            <td>{{ $itemsCount }}</td>
+            <td>{{ number_format($estimatedCost, 2) }}</td> <!-- Use $estimatedCost, not $plan->estimatedCost -->
+            <td><span class="badge bg-{{ $plan->Status->badgeColor() }}">{{ $plan->Status->label() }}</span></td>
+            <td>{{ $plan->createdBy->Name ?? 'N/A' }}</td>
+            <td>
+              @if($plan->CreatedDate)
+                {{ (new DateTime($plan->CreatedDate))->format('Y-m-d') }}
+              @else
+                N/A
+              @endif
+            </td> 
+            <td>
+              <a href="{{ route('procurementplanmaintain.show', $plan->PlanID) }}" class="btn btn-sm btn-outline-primary">View</a>
+              <a href="{{ url('/planning/edit-draft/' . $plan->PlanID) }}" class="btn btn-sm btn-outline-success">Edit</a>
+            </td>
           </tr>
       @endforeach
       </tbody>

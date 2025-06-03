@@ -6,7 +6,7 @@ use App\Models\Core\Workflow;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\Model\UserActorTrait;
 use App\Models\Auth\User;
-use App\Enums\Core\PostingEnum;
+use App\Enums\ProcurementPlanStatusEnum;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ConsolidatedProcurementPlan extends Model
@@ -40,7 +40,7 @@ class ConsolidatedProcurementPlan extends Model
     ];
 
     protected $casts = [
-        'Status' => PostingEnum::class,
+        'Status' => ProcurementPlanStatusEnum::class,
     ];
     public function workflows()
     {

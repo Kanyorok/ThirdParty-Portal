@@ -55,7 +55,6 @@ class PlanLineItems extends Model
         return $this->belongsTo(Branch::class, 'BranchID');
     }
 
-
     public function department()
     {
         return $this->belongsTo(Department::class, 'DepartmentID');
@@ -89,7 +88,6 @@ class PlanLineItems extends Model
     }
     public function schedulePlan()
     {
-        return $this->hasOne(SchedulePlan::class, 'PlanLineId', 'LineItemID');
+        return $this->belongsTo(BudgetMaster::class, 'BudgetLineID', 'BudgetLineID');
     }
-
 }
