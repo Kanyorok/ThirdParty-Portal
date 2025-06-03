@@ -3,6 +3,7 @@
 namespace App\Models\Procurement;
 
 use App\Models\Core\Workflow;
+use App\Models\Inventory\ItemMasterList;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\Model\UserActorTrait;
 use App\Models\Auth\User;
@@ -68,7 +69,7 @@ class ConsolidatedProcurementPlan extends Model
 
     public function item()
     {
-        return $this->belongsTo(Item::class, 'ItemID', 'Id');
+        return $this->belongsTo(ItemMasterList::class, 'ItemID', 'Id');
     }
     public function lineItems()
     {

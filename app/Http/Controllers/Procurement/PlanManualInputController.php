@@ -24,7 +24,7 @@ class PlanManualInputController extends Controller
         $planId = $request->query('plan_id');//todo pass plan id from url
         $plans = ConsolidatedProcurementPlan::all();
 
-        $lineItemsQuery = PlanLineItems::with(['item', 'item.category','item.itemuom']);
+        $lineItemsQuery = PlanLineItems::with(['item', 'item.category','item.uom']);
 
         if ($planId) {
             $lineItemsQuery->where('PlanID', $planId);
@@ -42,13 +42,8 @@ class PlanManualInputController extends Controller
 
     public function create()
     {
-<<<<<<< Updated upstream
         $plans = ConsolidatedProcurementPlan::where('Status', ProcurementPlanStatusEnum::Draft)->get();
-        $items = Item::with('category','itemuom')->get();
-=======
-        $plans = ConsolidatedProcurementPlan::all();
-        $items = ItemMasterList::with('category')->get();
->>>>>>> Stashed changes
+        $items = ItemMasterList::with('category','uom')->get();
         $budgetLines = BudgetMaster::all();
 
         return view('procurement.procurementplan.planconsolidation.manualentry.create', compact('plans', 'items', 'budgetLines'));

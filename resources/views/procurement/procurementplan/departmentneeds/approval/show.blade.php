@@ -28,7 +28,7 @@
             <div class="col-md-4">
                 <label class="form-label fw-semibold">Unit of Measure</label>
                 <div class="form-control-plaintext border rounded bg-light px-3 py-2">
-                    {{ $need->item->UOM ?? 'N/A' }}
+                    {{ $need->item->uom->Name ?? 'N/A' }}
                 </div>
             </div>
             <div class="col-md-4">
