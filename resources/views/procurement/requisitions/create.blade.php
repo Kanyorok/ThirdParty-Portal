@@ -134,6 +134,22 @@
                             </div>
 
                             <div class="mb-3">
+                                <label class="form-label" for="ProcurementPlan">Procurement Plan <span
+                                        class="text-danger">*</span></label>
+                                <select class="form-control" name="ProcurementPlan" id="ProcurementPlan" required>
+                                    <option selected disabled>Select Procurement Plan</option>
+                                    <option value="01">Finance</option>
+                                    <option value="02">Procurement</option>
+
+                                    {{-- @foreach ($MarketingLists as $MarketingList)
+                                        <option value="{{ $MarketingList->slug }}">{{ $MarketingList->Label }}</option>
+                                    @endforeach --}}
+                                </select>
+
+                                <p id="ProcurementPlan_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                            </div>
+
+                            <div class="mb-3">
                                 <label class="form-label" for="Remarks">Remarks </label>
                                 <textarea name="Remarks" id="Remarks" rows="3" class="form-control" maxlength="1000"></textarea>
                                 <p id="Remarks_error" class="invalid-feedback d-none error col-12" role="alert"></p>
