@@ -12102,9 +12102,6 @@
                 "sebastian/version": "^5.0.2",
                 "staabm/side-effects-detector": "^1.0.5"
             },
-            "suggest": {
-                "ext-soap": "To be able to generate mocks based on WSDL files"
-            },
             "bin": [
                 "phpunit"
             ],
@@ -14621,7 +14618,6 @@
         "ext-json": "*",
         "ext-mbstring": "*",
         "ext-pdo": "*",
-        "ext-soap": "*",
         "ext-zlib": "*"
     },
     "platform-dev": {},
