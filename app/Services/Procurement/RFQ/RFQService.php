@@ -44,7 +44,8 @@ class RFQService
                 't_RFQResponse.RFQNumber',
                 't_RFQResponse.RFQResponseNumber',
                 't_RFQResponse.RFQId',
-                't_Suppliers.SupplierName'
+                't_Suppliers.SupplierName',
+                't_Suppliers.Id'
             )
             ->first();
 
@@ -67,7 +68,8 @@ class RFQService
                 't_ResponseItems.TotalPayable',
                 't_Items.UOM',
                 't_Items.ItemType',
-                't_Items.ItemDescription'
+                't_Items.ItemDescription',
+                't_Items.Id'
             )
             ->get();
 

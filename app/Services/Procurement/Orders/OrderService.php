@@ -135,11 +135,12 @@ class OrderService
         return DB::table(DB::raw('t_Orders WITH (NOLOCK)'))
             ->leftJoin(DB::raw('t_OrderLines WITH (NOLOCK)'), 't_Orders.Id', '=', 't_OrderLines.iOrderID')
             ->leftJoin(DB::raw('t_Users WITH (NOLOCK)'), 't_Orders.CreatedBy', '=', 't_Users.Id')
+            ->leftJoin(DB::raw('t_RFQ WITH (NOLOCK)'), 't_Orders.ExtOrdNum', '=', 't_RFQ.Id')
             ->select(DB::raw('
                 t_Orders.Id,
                 t_Orders.OrderDate,
                 t_Orders.OrderNo,
-                t_Orders.ExtOrdNum,
+                COALESCE(t_RFQ.RFQNumber,t_Orders.ExtOrdNum) as ExtOrdNum,
                 t_Orders.Priority,
                 t_Orders.CreatedOn,
                 t_Users.Name as CreatedBy,
@@ -163,7 +164,8 @@ class OrderService
                 't_Orders.OrdTotExcl',
                 't_Orders.OrdTotIncl',
                 't_Orders.OrdTotTax',
-                't_Orders.OrdDiscAmnt'
+                't_Orders.OrdDiscAmnt',
+                't_RFQ.RFQNumber'
             )
             ->get();
     }
@@ -175,12 +177,13 @@ class OrderService
             ->leftJoin(DB::raw('t_OrderLines WITH (NOLOCK)'), 't_Orders.Id', '=', 't_OrderLines.iOrderID')
             ->leftJoin(DB::raw('t_Users WITH (NOLOCK)'), 't_Orders.CreatedBy', '=', 't_Users.Id')
             ->leftJoin(DB::raw('t_Suppliers WITH (NOLOCK)'), 't_Orders.AccountID', '=', 't_Suppliers.Id')
+            ->leftJoin(DB::raw('t_RFQ WITH (NOLOCK)'), 't_Orders.ExtOrdNum', '=', 't_RFQ.Id')
             ->where('t_Orders.Id', '=', $id)
             ->select(DB::raw('
                 t_Orders.Id,
                 t_Orders.OrderDate,
                 t_Orders.OrderNo,
-                t_Orders.ExtOrdNum,
+                COALESCE(t_RFQ.RFQNumber,t_Orders.ExtOrdNum) as ExtOrdNum,
                 t_Orders.Priority,
                 t_Orders.CreatedOn,
                 t_Users.Name as CreatedBy,
@@ -188,7 +191,7 @@ class OrderService
                 SUM(isnull(t_OrderLines.fUnitPriceExcl,0)) as UnitPrice,
                 COUNT(t_OrderLines.Id) as ordercount,
                 t_Orders.AccountID,
-                  t_Orders.OrdTotExcl,
+                t_Orders.OrdTotExcl,
                 t_Orders.OrdTotIncl,
                 t_Orders.OrdTotTax,
                 t_Orders.OrdDiscAmnt,
@@ -208,7 +211,8 @@ class OrderService
                 't_Orders.OrdTotIncl',
                 't_Orders.OrdTotTax',
                 't_Orders.OrdDiscAmnt',
-                't_Suppliers.SupplierName'
+                't_Suppliers.SupplierName',
+                't_RFQ.RFQNumber'
             )
             ->first();
     }
