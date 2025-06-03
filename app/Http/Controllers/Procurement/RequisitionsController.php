@@ -100,7 +100,7 @@ class RequisitionsController extends Controller
                 $validatedData['Branch'],
                 $validatedData['Department'],
                 $validatedData['Remarks'],
-                $validatedData['Category'],
+                $validatedData['ProcurementPlan'],
                 $actor
             );
 
