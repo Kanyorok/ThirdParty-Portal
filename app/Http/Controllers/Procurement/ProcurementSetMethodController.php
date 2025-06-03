@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Procurement;
 
+use App\Enums\Core\PostingEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\PlanLineItems;
@@ -14,7 +15,7 @@ class ProcurementSetMethodController extends Controller
     //
     public function index()
     {
-        $approvedPlans = ConsolidatedProcurementPlan::where('Status', 'd')->get();
+        $approvedPlans = ConsolidatedProcurementPlan::where('Status', PostingEnum::Draft)->get();
         return view('procurement.procurementplan.planneditemsandactivities.assignprocurementmethod.index', compact('approvedPlans'));
     }
 
