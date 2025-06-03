@@ -140,7 +140,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 304100, 'Name' => 'List Modes', 'Icon' => null, 'ParentID' => 304000, 'Route' => 'procurement-modes.index'],
             ['ModuleID' => 304200, 'Name' => 'Add Mode', 'Icon' => null, 'ParentID' => 304000, 'Route' => 'procurement-modes.create'],
             ['ModuleID' => 305000, 'Name' => 'Tendering', 'Icon' => null, 'ParentID' => 300000, 'Route' => null],
-            
+
             // Tender Setup
             ['ModuleID' => 305100, 'Name' => 'Tender Setup', 'Icon' => null, 'ParentID' => 305000, 'Route' => null],
             ['ModuleID' => 305110, 'Name' => 'Tender Initiation', 'Icon' => null, 'ParentID' => 305100, 'Route' => 'initiatetender.index'],
@@ -180,7 +180,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 308000, 'Name' => 'Good Receipt', 'Icon' => null, 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 308100, 'Name' => 'View Good Receipt', 'Icon' => null, 'ParentID' => 308000, 'Route' => 'procurementreceipts.index'],
             ['ModuleID' => 308200, 'Name' => 'Create Good Receipt', 'Icon' => null, 'ParentID' => 308000, 'Route' => 'procurementreceipts.create'],
-            
+
             ['ModuleID' => 398000, 'Name' => 'Settings', 'Icon' => null, 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 398100, 'Name' => 'Criteria Setup', 'Icon' => null, 'ParentID' => 398000, 'Route' => 'sections.index'],
 
@@ -230,9 +230,9 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 406000, 'Name' => 'Conversion Mapping', 'Icon' => null, 'Description' => 'Conversion Mapping Management', 'Route' => null, 'ParentID' => 400000],
             ['ModuleID' => 406100, 'Name' => 'Conversion Mapping', 'Icon' => null, 'Description' => 'UOM Conversion Mapping', 'Route' => 'uomconversion.index', 'ParentID' => 406000],
             ['ModuleID' => 408000, 'Name' => 'Stores', 'Icon' => null, 'Description' => 'List of Stores', 'Route' => 'stores.index', 'ParentID' => 400000],
-              
-            ['ModuleID' => 499000, 'Name' => 'Reports', 'Icon' => null, 'Description' => 'Inventory Reports', 'Route' => 'inventoryreports.index', 'ParentID' => 400000],
-    
+
+            ['ModuleID' => 499000, 'Name' => 'Reports', 'Icon' => null, 'Description' => 'Inventory Reports', 'Route' => 'inventory-reports.index', 'ParentID' => 400000],
+
 
 
 
