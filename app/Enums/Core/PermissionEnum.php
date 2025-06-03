@@ -45,6 +45,10 @@ use App\Models\Inventory\ItemType;
 use App\Models\Inventory\UnitOfMeasure;
  
 use App\Models\Procurement\ConsolidatedProcurementPlan;
+use App\Models\Procurement\PlanLineItems;
+use App\Models\Procurement\BidSubmission;
+use App\Models\Procurement\TenderInvitation;
+use App\Models\Procurement\VendorClarifications;
  
 enum PermissionEnum: string
 {
@@ -212,11 +216,33 @@ enum PermissionEnum: string
     case TenderDelete = 'tender-delete';
     case TenderApproval = 'tender-approval';
 
+     //Tender Suppliers
+    case BidSubmissionRead = 'BidSubmission-read';
+    case BidSubmissionWrite = 'BidSubmission-create';
+    case BidSubmissionUpdate = 'BidSubmission-update';
+    case BidSubmissionDelete = 'BidSubmission-delete';
+
+    case TenderInvitationRead = 'TenderInvitation-read';
+    case TenderInvitationWrite = 'TenderInvitation-create';
+    case TenderInvitationUpdate = 'TenderInvitation-update';
+    case TenderInvitationDelete = 'TenderInvitation-delete';
+
+    case VendorClarificationsRead = 'VendorClarifications-read';
+    case VendorClarificationsWrite = 'VendorClarifications-create';
+    case VendorClarificationsUpdate = 'VendorClarifications-update';
+    case VendorClarificationsDelete = 'VendorClarifications-delete';
+
     //Procument Plan- Plan Consolidation
-    case PlanConsolidationRead = 'panconsolidation-read';
-    case PlanConsolidationWrite = 'panconsolidation-write';
-    case PlanConsolidationUpdate = 'panconsolidation-update';
-    case PlanConsolidationDelete = 'panconsolidation-delete';
+    case PlanConsolidationRead = 'planconsolidation-read';
+    case PlanConsolidationWrite = 'planconsolidation-write';
+    case PlanConsolidationUpdate = 'planconsolidation-update';
+    case PlanConsolidationDelete = 'planconsolidation-delete';
+
+    //Procument Plan- Plan Line Items
+    case PlanLineItemsRead = 'planlineitems-read';
+    case PlanLineItemsWrite = 'planlineitems-write';
+    case PlanLineItemsUpdate = 'planlineitems-update';
+    case PlanLineItemsDelete = 'planlineitems-delete';
  
     //ProcurementPlan ProcurementMethod
     case ProcurementMethodRead = 'procurementmethod-read';
@@ -329,7 +355,10 @@ enum PermissionEnum: string
             [self::ItemTypeView, self::ItemTypeUpdate, self::ItemTypeCreate, self::ItemTypeDestroy],
             [self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy],
             [self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete],
- 
+            [self::PlanLineItemsRead, self::PlanLineItemsWrite, self::PlanLineItemsUpdate, self::PlanLineItemsDelete],
+            [self::BidSubmissionRead, self::BidSubmissionWrite, self::BidSubmissionUpdate, self::BidSubmissionDelete],
+            [self::TenderInvitationRead, self::TenderInvitationWrite, self::TenderInvitationUpdate, self::TenderInvitationDelete],
+            [self::VendorClarificationsRead, self::VendorClarificationsWrite, self::VendorClarificationsUpdate, self::VendorClarificationsDelete],
         ]);
     }
  
@@ -376,6 +405,10 @@ enum PermissionEnum: string
             self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete,
             self::ProcurementMethodRead, self::ProcurementMethodWrite,
             self::TenderRead, self::TenderWrite, self::TenderUpdate, self::TenderDelete, self::TenderApproval,
+            self::PlanLineItemsRead, self::PlanLineItemsWrite, self::PlanLineItemsUpdate, self::PlanLineItemsDelete,
+            self::BidSubmissionRead, self::BidSubmissionWrite, self::BidSubmissionUpdate, self::BidSubmissionDelete,
+            self::TenderInvitationRead, self::TenderInvitationWrite, self::TenderInvitationUpdate, self::TenderInvitationDelete,
+            self::VendorClarificationsRead, self::VendorClarificationsWrite, self::VendorClarificationsUpdate, self::VendorClarificationsDelete,
             => ModulesEnum::Procurement,
        
             //Human Resource Management
@@ -427,6 +460,7 @@ enum PermissionEnum: string
             self::Departments, self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete => 'Employees',
             self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete, => 'Consolodidated Needs',
             self::ProcurementMethodRead, self::ProcurementMethodWrite => 'Procurement Method',
+            self::PlanLineItemsRead, self::PlanLineItemsWrite, self::PlanLineItemsUpdate, self::PlanLineItemsDelete, => 'Plan Line Items',
  
             //Requisition
             self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval, self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval =>'Requisitions',
@@ -437,6 +471,9 @@ enum PermissionEnum: string
 
             //Tendering
             self::TenderRead, self::TenderWrite, self::TenderUpdate, self::TenderDelete, self::TenderApproval => 'Tenders',
+            self::BidSubmissionRead, self::BidSubmissionWrite, self::BidSubmissionUpdate, self::BidSubmissionDelete, => 'Tender Suppliers',
+            self::TenderInvitationRead, self::TenderInvitationWrite, self::TenderInvitationUpdate, self::TenderInvitationDelete, => 'Tender Suppliers',
+            self::VendorClarificationsRead, self::VendorClarificationsWrite, self::VendorClarificationsUpdate, self::VendorClarificationsDelete, => 'Tender Suppliers',
             //Inventory
             self::MasterListView, self::MasterListUpdate, self::MasterListCreate, self::MasterListDestroy => 'Item Master',
             self::ItemCategoryView, self::ItemCategoryUpdate, self::ItemCategoryCreate, self::ItemCategoryDestroy => 'Item Category',
