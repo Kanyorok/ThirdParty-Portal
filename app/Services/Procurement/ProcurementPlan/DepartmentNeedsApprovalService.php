@@ -25,12 +25,12 @@ class DepartmentNeedsApprovalService
             'Status' => DepartmentNeedsEnum::Approved->value,])->save(['timestamps' => false]);
 
         $this->departmentNeeds->workflows()->create([
-            'Stage' => DepartmentNeedsEnum::Approved->name,
-            'Status' => WorkflowStatus::Accepted->value,
-            'Notes' => 'Department Need Approval',
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
-        ]);
+                                              'Stage'      => DepartmentNeedsEnum::Approved->name,
+                                              'Status'     => WorkflowStatus::Accepted->value,
+                                              'Notes'      => 'Department Need Approved',
+                                              'CreatedBy'  => $actor->Id,
+                                              'ModifiedBy' => $actor->Id,
+                                             ]);
 
         activity()->causedBy($actor)->performedOn($this->departmentNeeds)->event('approved')->log('Approved Department Needs ' . $this->departmentNeeds->NeedID);
 
