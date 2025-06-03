@@ -228,11 +228,12 @@
             $('#Type').on('change', function() {
                 // alert('hello');
                 let type = $(this).val();
+                let requisitionId = getRequisitionIdFromUrl();
 
                 if (type !== '') {
                     // alert(type + 'eric');
                     $.ajax({
-                        url: `/procurement/requisitionItem/getItem/${type}`,
+                        url: `/procurement/requisitionItem/getItem/${type}?requisition_id=${requisitionId}`,
                         type: 'GET',
                         success: function(response) {
                             // console.log('AJAX Response:', response);

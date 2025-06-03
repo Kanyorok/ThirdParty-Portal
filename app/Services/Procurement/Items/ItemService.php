@@ -13,8 +13,24 @@ class ItemService
 //
     }
 
-    public static function getItemByType($type){
+    public static function getItemByType($type, $requisitionId =null){
         // logger('Fetching items for type: ' . $type);
+
+        if ($requisitionId) {
+            $requisition = DB::table('t_Requisitions')->where('Id', $requisitionId)->first();
+
+            if ($requisition && $requisition->PlanRef) {
+                // Fetch from Consolidate Procurement Plan
+                return DB::table('t_ConsolidateProcurementPlan as pi')
+                    ->join('t_PlanLineItem as i', 'pi.PlanID', '=', 'i.PlanID')
+                    ->join('t_Items as t', 'i.ItemID', '=', 't.Id')
+                    ->join('t_ItemTypes as f', 'i.ItemType', '=', 'f.Id')
+                    ->where('pi.ConsolidateProcurementPlanId', $requisition->PlanRef)
+                    ->where('i.ItemType', $type)
+                    ->select('i.Id', 'i.ItemName', 'i.ItemCode')
+                    ->get();
+            }
+        }
 
         return DB::table('t_Items')
             ->leftjoin('t_ItemCategories', 't_Items.Category', '=', 't_ItemCategories.Id')
