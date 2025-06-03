@@ -11,6 +11,7 @@ use App\Models\Procurement\ItemCategory;
 use App\Models\Procurement\PlanLineItems;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use App\Models\Inventory\UnitOfMeasure;
 
 
 class PlanManualInputController extends Controller
@@ -21,7 +22,7 @@ class PlanManualInputController extends Controller
         $planId = $request->query('plan_id');//todo pass plan id from url
         $plans = ConsolidatedProcurementPlan::all();
 
-        $lineItemsQuery = PlanLineItems::with(['item', 'item.category']);
+        $lineItemsQuery = PlanLineItems::with(['item', 'item.category','item.itemuom']);
 
         if ($planId) {
             $lineItemsQuery->where('PlanID', $planId);
@@ -40,7 +41,7 @@ class PlanManualInputController extends Controller
     public function create()
     {
         $plans = ConsolidatedProcurementPlan::all();
-        $items = Item::with('category')->get();
+        $items = Item::with('category','itemuom')->get();
         $budgetLines = BudgetMaster::all();
 
         return view('procurement.procurementplan.planconsolidation.manualentry.create', compact('plans', 'items', 'budgetLines'));

@@ -3,6 +3,7 @@
 namespace App\Models\Procurement;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Inventory\UnitOfMeasure; 
 
 class Item extends Model
 {
@@ -34,4 +35,8 @@ class Item extends Model
     {
         return $query->where('type', 'service');
     }
+         public function itemuom()
+{
+    return $this->belongsTo(UnitOfMeasure::class, 'UOM', 'Id');
+}
 }
