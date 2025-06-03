@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Item extends Model
 {
-    protected $table = 't_items';
+    protected $table = 't_Items';
     protected $fillable = [
                            'Name',
                            'Type',
@@ -23,9 +23,8 @@ class Item extends Model
 
     public function category()
     {
-        return $this->belongsTo(ItemCategory::class, 'CategoryId','Id');
+        return $this->belongsTo(ItemCategory::class, 'Category', 'Id');
     }
-
     public function scopeGoods($query)
     {
         return $query->where('type', 'good');

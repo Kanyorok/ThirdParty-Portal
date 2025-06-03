@@ -1,0 +1,123 @@
+[1mdiff --git a/app/Http/Controllers/Inventory/StoreController.php b/app/Http/Controllers/Inventory/StoreController.php[m
+[1mindex c1fec4b..9637e8e 100644[m
+[1m--- a/app/Http/Controllers/Inventory/StoreController.php[m
+[1m+++ b/app/Http/Controllers/Inventory/StoreController.php[m
+[36m@@ -4,16 +4,84 @@[m
+ [m
+ use App\Http\Controllers\Controller;[m
+ use Illuminate\Http\Request;[m
+[32m+[m[32muse App\Models\Inventory\Store;[m
+[32m+[m[32muse Yajra\DataTables\DataTables;[m
+[32m+[m[32muse Illuminate\Support\Facades\Auth;[m
+[32m+[m[32muse Illuminate\Support\Facades\DB;[m
+[32m+[m[32muse Carbon\Carbon;[m
+[32m+[m
+[32m+[m
+ [m
+ class StoreController extends Controller[m
+ {[m
+     public function index()[m
+     {[m
+[31m-        $store = Store::all(); [m
+[31m-        return view('inventory.stores.index', compact('items'));[m
+[32m+[m[32m        $stores = Store::all();[m[41m [m
+[32m+[m[32m        return view('inventory.stores.index', compact('stores'));[m
+     }[m
+ [m
+     public function create(){[m
+         return view('inventory.stores.create');[m
+     }[m
+[32m+[m
+[32m+[m[32m    public function show($Id)[m
+[32m+[m[32m    {[m
+[32m+[m[32m        $store = Store::findOrFail($Id);[m
+[32m+[m[32m        return view('inventory.stores.show', compact('store'));[m
+[32m+[m[32m    }[m
+[32m+[m[32m    public function edit($Id)[m
+[32m+[m[32m    {[m
+[32m+[m[32m        $store = Store::findOrFail($Id);[m
+[32m+[m[32m        $branchid = Store::whereNull('BranchID')->get();[m
+[32m+[m[32m        return view('inventory.stores.edit', compact('store', 'branchid'));[m
+[32m+[m[41m        [m
+[32m+[m[32m    }[m
+[32m+[m[32m    public function update(Request $request, $Id)[m
+[32m+[m[32m    {[m
+[32m+[m[32m        $validatedData = $request->validate([[m
+[32m+[m[32m            'StoreID'     => 'required|string|max:255',[m
+[32m+[m[32m            'StoreName'   => 'required|string|max:255',[m
+[32m+[m[32m            'BranchID'    => 'required|integer',[m
+[32m+[m[32m            'Status'      => 'required|boolean',[m
+[32m+[m[32m        ]);[m
+[32m+[m
+[32m+[m[32m        try {[m
+[32m+[m[32m            $store = Store::findOrFail($Id);[m
+[32m+[m[32m            $store->update($validatedData);[m
+[32m+[m[32m            return redirect()->route('stores.index')->with('success', 'Store updated successfully.');[m
+[32m+[m[32m        } catch (\Exception $e) {[m
+[32m+[m[32m            return redirect()->back()->with('error', 'Failed to update store: ' . $e->getMessage());[m
+[32m+[m[32m        }[m
+[32m+[m[32m    }[m
+[32m+[m[32m    public function destroy($Id)[m
+[32m+[m[32m    {[m
+[32m+[m[32m        try {[m
+[32m+[m[32m            $store = Store::findOrFail($Id);[m
+[32m+[m[32m            $store->delete();[m
+[32m+[m[32m            return redirect()->route('stores.index')->with('success', 'Store deleted successfully.');[m
+[32m+[m[32m        } catch (\Exception $e) {[m
+[32m+[m[32m            return redirect()->back()->with('error', 'Failed to delete store: ' . $e->getMessage());[m
+[32m+[m[32m        }[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    public function store(Request $request)[m
+[32m+[m[32m    {[m
+[32m+[m[32m        $validatedData = $request->validate([[m
+[32m+[m[32m            'StoreID'     => 'required|string|max:255',[m
+[32m+[m[32m            'StoreName'   => 'required|string|max:255',[m
+[32m+[m[32m            'BranchID'    => 'required|integer',[m
+[32m+[m[32m            'Status'      => 'required|boolean',[m
+[32m+[m[32m        ]);[m
+[32m+[m
+[32m+[m[32m        try {[m
+[32m+[m[32m            $store = Store::create($validatedData);[m
+[32m+[m[32m            return redirect()->route('stores.index')->with('success', 'Store created successfully.');[m
+[32m+[m[32m        } catch (\Exception $e) {[m
+[32m+[m[32m            return redirect()->back()->with('error', 'Failed to create store: ' . $e->getMessage());[m
+[32m+[m[32m        }[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[41m    [m
+[32m+[m
+[32m+[m[41m    [m
+ }[m
+[1mdiff --git a/database/seeders/ModuleSeeder.php b/database/seeders/ModuleSeeder.php[m
+[1mindex 80fbe13..0c33713 100644[m
+[1m--- a/database/seeders/ModuleSeeder.php[m
+[1m+++ b/database/seeders/ModuleSeeder.php[m
+[36m@@ -177,10 +177,10 @@[m [mprotected function _inventory(bool $fresh): Collection[m
+         $values = collect([[m
+             ['ModuleID' => 400000, 'Name' => ModulesEnum::Inventory->description(), 'Icon' => '<i data-feather="archive"></i>', 'Description' => 'Inventory Management Module', 'Route' => null, 'ParentID' => null],[m
+             ['ModuleID' => 401000, 'Name' => 'Item Master', 'Icon' => null, 'Description' => 'Item Master Management', 'Route' => null, 'ParentID' => 400000],[m
+[31m-            ['ModuleID' => 401100, 'Name' => 'Item Master List', 'Icon' => null, 'Description' => 'Item Master List', 'Route' => 'itemmaster.index', 'ParentID' => 401000],[m
+[31m-            ['ModuleID' => 401200, 'Name' => 'Stock Item', 'Icon' => null, 'Description' => 'Stock Item Management', 'Route' => 'sku.index', 'ParentID' => 401000],[m
+[31m-            ['ModuleID' => 401300, 'Name' => 'Item Category', 'Icon' => null, 'Description' => 'Item Category Management', 'Route' => 'itemcategory.index', 'ParentID' => 401000],[m
+[31m-            ['ModuleID' => 401400, 'Name' => 'Item Sub Category', 'Icon' => null, 'Description' => 'Item Sub Category Management', 'Route' => 'itemsubcategory.index', 'ParentID' => 401000],[m
+[32m+[m[32m                       ['ModuleID' => 401100, 'Name' => 'Item Master List', 'Icon' => null, 'Description' => 'Item Master List', 'Route' => 'itemmaster.index', 'ParentID' => 401000],[m
+[32m+[m[32m                       ['ModuleID' => 401200, 'Name' => 'Stock Item', 'Icon' => null, 'Description' => 'Stock Item Management', 'Route' => 'sku.index', 'ParentID' => 401000],[m
+[32m+[m[32m                       ['ModuleID' => 401300, 'Name' => 'Item Category', 'Icon' => null, 'Description' => 'Item Category Management', 'Route' => 'itemcategory.index', 'ParentID' => 401000],[m
+[32m+[m[32m                       ['ModuleID' => 401400, 'Name' => 'Item Sub Category', 'Icon' => null, 'Description' => 'Item Sub Category Management', 'Route' => 'itemsubcategory.index', 'ParentID' => 401000],[m
+             ['ModuleID' => 402000, 'Name' => 'InterBranch Requisition', 'Icon' => null, 'Description' => 'InterBranch Requisition Management', 'Route' => null, 'ParentID' => 400000],[m
+             ['ModuleID' => 402100, 'Name' => 'New Requisition', 'Icon' => null, 'Description' => 'Create New Requisition', 'Route' => 'interbranchrequisition.index', 'ParentID' => 402000],[m
+             ['ModuleID' => 402200, 'Name' => 'Requisition Approval', 'Icon' => null, 'Description' => 'Requisition Approval', 'Route' => 'interbranchrequisitionapproval.index', 'ParentID' => 402000],[m
+[36m@@ -199,8 +199,10 @@[m [mprotected function _inventory(bool $fresh): Collection[m
+             ['ModuleID' => 405500, 'Name' => 'Expiry Batch Tracking', 'Icon' => null, 'Description' => 'Expiry Batch Tracking', 'Route' => 'expirytracking.index', 'ParentID' => 405000],[m
+             ['ModuleID' => 406000, 'Name' => 'Conversion Mapping', 'Icon' => null, 'Description' => 'Conversion Mapping Management', 'Route' => null, 'ParentID' => 400000],[m
+             ['ModuleID' => 406100, 'Name' => 'Conversion Mapping', 'Icon' => null, 'Description' => 'UOM Conversion Mapping', 'Route' => 'uomconversion.index', 'ParentID' => 406000],[m
+[31m-[m
+[32m+[m[41m              [m
+             ['ModuleID' => 499000, 'Name' => 'Reports', 'Icon' => null, 'Description' => 'Inventory Reports', 'Route' => 'inventoryreports.index', 'ParentID' => 400000],[m
+[32m+[m[32m            ['ModuleID' => 408000, 'Name' => 'Stores', 'Icon' => null, 'Description' => 'List of Stores', 'Route' => 'stores.index', 'ParentID' => 400000],[m
+[32m+[m
+         ]);[m
+ [m
+         if ($fresh) {[m
+[1mdiff --git a/resources/views/i

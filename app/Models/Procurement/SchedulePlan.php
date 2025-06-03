@@ -19,15 +19,19 @@ class SchedulePlan extends Model
 
 
     protected $fillable = [
-           'ScheduleId','PlanId','PlanLineId','ScheduleQTY','Status',
-           'CreatedBy','ModifiedBy','DeletedBy'
-    ] ;
-    public static function getPrimaryKey(): string{
+        'ScheduleId', 'PlanId', 'PlanLineId', 'ScheduleQTY', 'Status',
+        'CreatedBy', 'ModifiedBy', 'DeletedBy'
+    ];
+
+    public static function getPrimaryKey(): string
+    {
         return 'Id';
     }
+
     protected $casts = [
-    'Status' => SchedulePlanEnum::class,
+        'Status' => SchedulePlanEnum::class,
     ];
+
     public function periods()
     {
         return $this->hasMany(SchedulePeriod::class, 'ScheduleId', 'Id');

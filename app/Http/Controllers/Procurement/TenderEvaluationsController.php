@@ -1,18 +1,26 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\procurement;
 
-use App\Models\Core\Module;
+use App\Http\Controllers\Controller;
+use App\Models\procurement\Section;
+use App\Models\Procurement\Tender;
 use Illuminate\Http\Request;
 
-class ModuleController extends Controller
+class TenderEvaluationsController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        //
+        //return Tender::all();
+        $tenders=Tender::select('Id','TenderNo','Title')->get();
+        $sections=Section::select('Id','SectionName')->get();
+        return view('procurement.tendering.tendersetup.evaluationcriteriasetup.tenderevaluations',compact(
+            'tenders',
+            'sections'
+        ));
     }
 
     /**
@@ -28,21 +36,21 @@ class ModuleController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Module $module)
+    public function show(string $id)
     {
-        //
+        
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Module $module)
+    public function edit(string $id)
     {
         //
     }
@@ -50,7 +58,7 @@ class ModuleController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Module $module)
+    public function update(Request $request, string $id)
     {
         //
     }
@@ -58,7 +66,7 @@ class ModuleController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Module $module)
+    public function destroy(string $id)
     {
         //
     }

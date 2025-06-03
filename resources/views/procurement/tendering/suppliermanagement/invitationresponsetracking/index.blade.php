@@ -61,7 +61,7 @@
             ordering: true,
             searching: true,
             lengthChange: true,
-             language: {
+            language: {
                 emptyTable: ""
             }
         });

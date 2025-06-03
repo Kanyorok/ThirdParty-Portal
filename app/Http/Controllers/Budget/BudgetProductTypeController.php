@@ -13,7 +13,8 @@ class BudgetProductTypeController extends Controller
         return view('budgetandanalytics.producttype.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('budgetandanalytics.producttype.create');
     }
 }

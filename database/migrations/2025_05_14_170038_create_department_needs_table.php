@@ -5,8 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use phpDocumentor\Reflection\Types\Nullable;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -15,9 +14,9 @@ return new class extends Migration
         Schema::create('t_DepartmentNeeds', static function (Blueprint $table) {
             $table->id('Id');
             $table->string('NeedID')->unique();
-            $table->foreignId('BranchID') ->constrained('t_Branches');//needBranch
+            $table->foreignId('BranchID')->constrained('t_Branches');//needBranch
             $table->foreignId('DepartmentID')->constrained('t_Departments');
-            $table->foreignId('ItemID')->constrained('t_Items','Id');
+            $table->foreignId('ItemID')->constrained('t_Items', 'Id');
             $table->integer('RequestedQty')->nullable();
             $table->decimal('EstimatedUnitCost')->Nullable();
             $table->text('Justification')->nullable();

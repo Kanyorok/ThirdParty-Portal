@@ -3,21 +3,32 @@
 namespace App\Models\Procurement;
 
 use App\Models\Auth\User;
+
 use App\Models\BR\Branch;
+
+
+//use App\Models\BR\Branch;
+
 use App\Models\HRM\Department;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
+<<<<<<< HEAD
+=======
+
+use App\Models\Procurement\PlanLineItems;
+use App\Models\Core\Branch;
+>>>>>>> dev
 
 class PlanLineItems extends Model
 {
     use SoftDeletes, UserActorTrait;
- 
+
     const string CREATED_AT = 'CreatedOn';
     const string UPDATED_AT = 'ModifiedOn';
     const string DELETED_AT = 'DeletedOn';
 
-    protected $table = 't_PlanLineItem'; 
+    protected $table = 't_PlanLineItem';
     protected $primaryKey = 'LineItemID';
 
     protected $fillable = [
@@ -46,10 +57,10 @@ class PlanLineItems extends Model
 
 
     // Relationships
-   public function consolidatedProcurementPlan()
+    public function consolidatedProcurementPlan()
     {
         return $this->belongsTo(ConsolidatedProcurementPlan::class, 'PlanID');
-    }    
+    }
     public function branch()
     {
         return $this->belongsTo(Branch::class, 'BranchID');
@@ -81,6 +92,7 @@ class PlanLineItems extends Model
     {
         return $this->belongsTo(User::class, 'DeletedBy', 'Id');
     }
+
     public function schedulePlan()
     {
         return $this->hasOne(SchedulePlan::class, 'PlanLineId', 'LineItemID');

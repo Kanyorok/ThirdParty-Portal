@@ -18,9 +18,11 @@ class ProcurementSetMethodController extends Controller
         return view('procurement.procurementplan.planneditemsandactivities.assignprocurementmethod.index', compact('approvedPlans'));
     }
 
-    public function create(){
+    public function create()
+    {
         //return view('procurement.procurementplan.planneditemsandactivities.assignprocurementmethod.create');
     }
+
     public function getPlanItems($planId)
     {
         $Lines = PlanLineItems::with('item')->where('PlanID', $planId)->get()
@@ -36,35 +38,35 @@ class ProcurementSetMethodController extends Controller
         return response()->json($Lines);
     }
 
-public function store(Request $request, ProcurementMethodService $service)
-{
-    //dd($request->all());
-    $request->validate([
-        'approved_plan_id' => 'required|exists:t_ConsolidatedProcurementPlan,PlanID',
-        'assigned_method' => 'required|array',
-        'justification' => 'nullable|array',
-    ]);
+    public function store(Request $request, ProcurementMethodService $service)
+    {
+        //dd($request->all());
+        $request->validate([
+            'approved_plan_id' => 'required|exists:t_ConsolidatedProcurementPlan,PlanID',
+            'assigned_method' => 'required|array',
+            'justification' => 'nullable|array',
+        ]);
 
-    $planId = $request->input('approved_plan_id');
-    $assignedMethods = $request->input('assigned_method');
-    $justifications = $request->input('justification');
+        $planId = $request->input('approved_plan_id');
+        $assignedMethods = $request->input('assigned_method');
+        $justifications = $request->input('justification');
 
-    $plan = ConsolidatedProcurementPlan::findOrFail($planId);
-    $user = auth()->user();
+        $plan = ConsolidatedProcurementPlan::findOrFail($planId);
+        $user = auth()->user();
 
-    foreach ($assignedMethods as $lineItemId => $method) {
-        $lineItem = PlanLineItems::find($lineItemId);
+        foreach ($assignedMethods as $lineItemId => $method) {
+            $lineItem = PlanLineItems::find($lineItemId);
 
-        if ($lineItem) {
-            $service->create([
-                'AssignedMethod' => $method,
-                'Justification' => $justifications[$lineItemId] ?? '',
-                'EstimatedUnitCost' => $lineItem->EstimatedUnitCost,
-            ], $user, $plan, $lineItem);
+            if ($lineItem) {
+                $service->create([
+                    'AssignedMethod' => $method,
+                    'Justification' => $justifications[$lineItemId] ?? '',
+                    'EstimatedUnitCost' => $lineItem->EstimatedUnitCost,
+                ], $user, $plan, $lineItem);
+            }
         }
-    }
 
-    return redirect()->back()->with('success', 'Procurement methods saved successfully.');
-}
+        return redirect()->back()->with('success', 'Procurement methods saved successfully.');
+    }
 
 }

@@ -5,7 +5,7 @@
     <h3>RFQ Response List</h3>
 
     <div class="container mt-3">
-        
+
         <a href="{{ route('rfqresponses.create') }}" class="btn btn-primary mb-2">Create RFQ Response</a>
         <table class="table table-bordered">
             <thead>
@@ -28,7 +28,7 @@
                     <td>{{ $response->RFQResponseNumber }}</td>
                     <td>{{ $response->RFQNumber }}</td>
                     <td>{{ $response->SupplierName }}</td>
-                   <td>
+                    <td>
                         @if ($response->items->isNotEmpty())
                             <ul class="mb-0">
                                 @foreach($response->items as $item)
@@ -62,7 +62,7 @@
 
 <td>{{ $deliveryDate->format('d M Y') }}</td
                     <td>
-                        
+
                     </td>
                 </tr>
                 @endforeach

@@ -44,4 +44,14 @@ class BidSubmission extends Model
         return $this->belongsTo(CodeDetail::class, 'SubmissionMode', 'ID');
     }
 
+    public function createdByUser()
+    {
+        return $this->belongsTo(User::class, 'CreatedBy', 'Id');
+    }
+
+    public function modifiedByUser()
+    {
+        return $this->belongsTo(User::class, 'ModifiedBy', 'Id');
+    }
+
 }

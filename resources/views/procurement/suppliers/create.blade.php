@@ -35,11 +35,12 @@
 
         <div class="mb-3">
             <label class="form-label">Category <span class="text-danger">*</span></label>
-            <select name="CategoryId" class="form-control">
-                <option value="">-- None --</option>
+            <select name="CategoryId" class="form-control" required>
+                <option value="">-- Select Category --</option>
                 @foreach($categories as $category)
                 <option value="{{ $category->Id }}"
                     {{ old('CategoryId', $item->CategoryId ?? '') == $category->Id ? 'selected' : '' }}>
+
                     {{ $category->Name }}
                 </option>
                 @endforeach
