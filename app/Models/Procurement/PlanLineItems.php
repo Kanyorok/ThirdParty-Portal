@@ -3,19 +3,11 @@
 namespace App\Models\Procurement;
 
 use App\Models\Auth\User;
-
-use App\Models\BR\Branch;
-
-
-//use App\Models\BR\Branch;
-
+use App\Models\Core\Branch;
 use App\Models\HRM\Department;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
-
-use App\Models\Procurement\PlanLineItems;
-use App\Models\Core\Branch;
 
 class PlanLineItems extends Model
 {
@@ -76,7 +68,7 @@ class PlanLineItems extends Model
     }
 
     public function createdBy()
-    {
+    {//todo @edwin by @mureithi
         return $this->belongsTo(User::class, 'CreatedBy', 'Id');
     }
 
@@ -89,7 +81,12 @@ class PlanLineItems extends Model
     {
         return $this->belongsTo(User::class, 'DeletedBy', 'Id');
     }
-
+    public function budgetline(){
+        return $this->belongsTo(BudgetMaster::class, 'BudgetLineID','BudgetLineID');
+    }
+    public function setMethod(){
+        return $this->belongsTo(ProcurementMethod::class,'LineItemID','ApprovedPlanLineId');
+    }
     public function schedulePlan()
     {
         return $this->hasOne(SchedulePlan::class, 'PlanLineId', 'LineItemID');
