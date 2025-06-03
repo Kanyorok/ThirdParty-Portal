@@ -302,7 +302,7 @@ class TenderEvaluationsController extends Controller
         try {
             $tenderId = $validated['TenderId'];
             $memberId = Auth::id(); // logged in user
-            $createdBy = Auth::user()->name;
+            $createdBy = Auth::id();
 
             $selectedCriteria = $validated['selected_criteria'];
             $scores = $validated['scores'];
@@ -311,23 +311,42 @@ class TenderEvaluationsController extends Controller
             foreach ($selectedCriteria as $criteriaId) {
                 $score = $scores[$criteriaId] ?? 0;
                 $sectionId = $sectionIds[$criteriaId] ?? null;
-
-                if ($sectionId !== null) {
-                    DB::table('t_TenderCommitteeEvaluations')->insert([
-                        'TenderID'    => (int) $tenderId,
-                        'MemberID'    => (int) $memberId,
-                        'SectionID'   => (int) $sectionId,
-                        'CriteriaID'  => (int) $criteriaId,
-                        'MaxScore'    => (float) $score,
-                        'CreatedBy'   => (string) $createdBy,
-                        'CreatedOn'   => now(),
-                    ]);
-                }
+                $committeeId = DB::table('t_TenderCommitteeMembers')
+                    ->where('TenderID', $request->TenderId)
+                    ->where('UserID', Auth::id())
+                    ->value('CommitteeID'); // Assuming `id` is the PK of the committee table
+                    if ($sectionId !== null) {
+                        DB::table('t_TenderCommitteeEvaluations')->updateOrInsert(
+                            [
+                                'TenderID'    => (int) $tenderId,
+                                'MemberID'    => (int) $memberId,
+                                'SectionID'   => (int) $sectionId,
+                                'CommitteeID' => (int) $committeeId,
+                                'CriteriaID'  => (int) $criteriaId,
+                            ],
+                            [
+                                'MaxScore'    => (float) $score,
+                                'CreatedBy'   => (string) $createdBy,
+                                'CreatedOn'   => now(),
+                                'ModifiedOn'  => now(),
+                                'ModifiedBy'  => Auth::id(),
+                            ]
+                        );
+                    }
             }
+            //Update HasEvaluated field in the tender
+            DB::table('t_TenderCommitteeMembers')
+                ->where('TenderID', $tenderId)
+                ->where('UserID', $memberId)
+                ->update(['HasEvaluated' => true, 'ModifiedBy' => $createdBy, 'ModifiedOn' => now()]);
+            // Log the action
+            activity()
+                ->performedOn(new Tender())
+                ->causedBy(Auth::id())
+                ->log('Scores submitted for tender ID: ' . $tenderId);
 
             DB::commit();
-
-            return redirect()->route('tenderevaluations.index')->with('success', 'Scores submitted successfully!');
+            return redirect()->route('evaluationdashboard.index')->with('success', 'Scores submitted successfully!');
         } catch (\Exception $e) {
             DB::rollBack();
             return $e->getMessage();

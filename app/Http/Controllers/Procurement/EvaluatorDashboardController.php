@@ -22,12 +22,12 @@ class EvaluatorDashboardController extends Controller
                 'tenderID'=>$item->tender->Id,
                 'supplier'=>$item->supplier->SupplierName,
                 'Role'=>TenderCommitteeMember::where('TenderID',$item->tender->Id)->where('UserID',Auth::id())->pluck('Role')->first(),
+                'HasEvaluated'=>TenderCommitteeMember::where('TenderID',$item->tender->Id)->where('UserID',Auth::id())->pluck('HasEvaluated')->first(),
                 'supplierID'=>$item->supplier->Id,
                 //'Status'=>TenderCommitteeMember::where('TenderID',$item->tender->Id)->where('UserID',Auth::id())->pluck('HasEvaluated')->first(),
             ]);
 
         }
-        //return $data;
         return view('procurement.tendering.bidopeningandevaluation.evaluationdashboard.index',compact('data'));
     }
 

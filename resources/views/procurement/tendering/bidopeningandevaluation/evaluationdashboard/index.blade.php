@@ -29,7 +29,11 @@
                     {{-- <td><span class="badge bg-warning">Pending</span></td> --}}
                     {{-- <td>2025-05-10</td> --}}
                     <td>
-                        <a href="{{ route('bidevaluation.index',['sID'=>$item['supplierID'],'tenderId'=>$item['tenderID']]) }}" class="btn btn-sm btn-outline-primary">Evaluate</a>
+                        @if ($item['HasEvaluated'])
+                         <a href="#" class="btn btn-sm btn-outline-secondary">Evaluated</a>
+                        @else
+                          <a href="{{ route('bidevaluation.index',['sID'=>$item['supplierID'],'tenderId'=>$item['tenderID']]) }}" class="btn btn-sm btn-outline-primary">Evaluate</a>
+                        @endif
                     </td>
                 </tr>
                 @empty
