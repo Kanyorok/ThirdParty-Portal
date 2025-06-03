@@ -2,6 +2,7 @@
 
 namespace App\Models\Procurement;
 
+use App\Models\Core\Workflow;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\Model\UserActorTrait;
 use App\Models\Auth\User;
@@ -39,22 +40,26 @@ class ConsolidatedProcurementPlan extends Model
     ];
 
     protected $casts = [
-    'Status' => ProcurementPlanStatusEnum::class,
-];
+      'Status' => ProcurementPlanStatusEnum::class,
+    ];
+  
+    public function workflows()
+    {
+        return $this->morphMany(Workflow::class, 'source', 'Source', 'SourceID');
+    }
+
    public function createdBy()
     {
         return $this->belongsTo(User::class, 'CreatedBy', 'Id');
     }
-
     public function submittedBy()
     {
-        return $this->belongsTo(User::class, 'SubmittedBy', 'Id');
+        return $this->belongsTo(User::class, 'SubmittedBy', 'Id'); 
     }
     public function modifiedBy()
     {
         return $this->belongsTo(User::class, 'ModifiedBy', 'Id');
     }
-
 
     public function deletedBy()
     {

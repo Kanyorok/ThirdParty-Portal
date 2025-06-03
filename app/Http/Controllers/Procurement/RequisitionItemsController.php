@@ -81,7 +81,7 @@ class RequisitionItemsController extends Controller
         catch(\Exception $e){
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to fetch items.',
+                'message' => 'Failed to fetch inventory.',
                 'error' => $e->getMessage(),
             ], 500);
         }
