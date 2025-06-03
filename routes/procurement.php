@@ -8,7 +8,6 @@ use App\Http\Controllers\Procurement\RequisitionsController;
 use App\Http\Controllers\procurement\SectionController;
 use App\Http\Controllers\procurement\TenderEvaluationsController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Procurement\ItemController;
 use App\Http\Controllers\Procurement\ModeTimelineController;
 use App\Http\Controllers\Procurement\ProcurementModeController;
 use App\Http\Controllers\Procurement\TenderController;
@@ -69,7 +68,6 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     //Requisitions
     Route::resource('requisition', 'RequisitionsController');
     Route::resource('requisitionItem', 'RequisitionItemsController');
-    Route::get('items/download', [ItemController::class, 'download'])->name('items.download');
 
     //this route is static affecting orders\create.blade.php & requisitions\show
     Route::get('requisitionItem/getItem/{type}', [RequisitionItemsController::class, 'getItems'])->name('requisitionItem.getItems');
@@ -93,11 +91,6 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
 
     //Sales Order
     Route::resource('salesOrder', 'SalesOrderController');
-
-
-    //Items
-    Route::resource('items', 'ItemController');
-    Route::resource('categories', 'ItemCategoryController');
 
     // Procurement Modes
     Route::resource('procurement-modes', ProcurementModeController::class);
