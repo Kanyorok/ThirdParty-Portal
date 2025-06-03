@@ -12,6 +12,8 @@ use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\PlanLineItems;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use App\Models\Inventory\UnitOfMeasure;
+use App\Enums\ProcurementPlanStatusEnum;
 
 
 class PlanManualInputController extends Controller
@@ -22,7 +24,7 @@ class PlanManualInputController extends Controller
         $planId = $request->query('plan_id');//todo pass plan id from url
         $plans = ConsolidatedProcurementPlan::all();
 
-        $lineItemsQuery = PlanLineItems::with(['item', 'item.category']);
+        $lineItemsQuery = PlanLineItems::with(['item', 'item.category','item.itemuom']);
 
         if ($planId) {
             $lineItemsQuery->where('PlanID', $planId);
