@@ -256,9 +256,11 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::put('/Procurement-Plan-Submission/{plan}', [ProcurementSubmitPlanController::class, 'update'])->name('Procurement-Plan-Submission.update');
 
 
+    
 
 
     //Procurement Plan, Plan Consolidation
+    Route::resource('procurementplandetails', ProcurementPlanDetailController::class);
     Route::resource('procurementplanmaintain', ProcurementPlanMaintainController::class);
     Route::resource('procurementplanapproval', ProcurementApprovalController::class);
     Route::resource('consolidated', ConsolidatedDashboardController::class);
