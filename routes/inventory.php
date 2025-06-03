@@ -22,12 +22,9 @@ use App\Http\Controllers\Inventory\InventoryTypeController;
 use App\Http\Controllers\Inventory\StoreController;
 use App\Http\Controllers\Inventory\UOMController;
 use App\Http\Controllers\Inventory\ItemTypeController;
-use App\Http\Controllers\Property\PropertyReceiptPrintController;
 use Illuminate\Support\Facades\Route;
 
 //use App\Http\Controllers\Inventory\ReceiptController;
-
-//use App\Http\Controllers\Inventory\PropertyReceiptPrintController;
 
 
 Route::namespace('Inventory')->prefix('inventory')->group(function () {
@@ -102,9 +99,6 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::resource('inventoryreports', ReportsController::class);
     //Route::resource('rentdashboard', RentDashboardController::class);
 
-
-   // Route::resource('receiptprint', PropertyReceiptPrintController::class);
-
    // Route::resource('unitofmeasure', UOMController::class);
     Route::get('/unitofmeasure', [UOMController::class, 'index'])->name('unitofmeasure.index');
     Route::get('/unitofmeasure/create', [UOMController::class, 'create'])->name('unitofmeasure.create');
@@ -130,9 +124,4 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::post('/inventorytype', [InventoryTypeController::class, 'store'])->name('inventorytype.store');
     Route::put('/inventorytype/{id}', [InventoryTypeController::class, 'update'])->name('inventorytype.update');
     Route::delete('/inventorytype/{id}', [InventoryTypeController::class, 'destroy'])->name('inventorytype.destroy');
-
-
-
-    Route::resource('receiptprint', PropertyReceiptPrintController::class);
-
 });
