@@ -1,0 +1,26 @@
+<?php
+
+namespace App\Models\PropertyManagement;
+
+use Illuminate\Database\Eloquent\Model;
+
+class PropertyBlock extends Model
+{
+    //
+    protected $table = 't_AddBlock';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    const string DELETED_AT = 'DeletedOn';
+    protected $primaryKey = 'Id';
+
+    protected $fillable = [
+        'PropertyID',
+        'BlockName',                                                                                                 
+        'Description',
+        'CreatedBy',
+        'ModifiedBy',
+        'DeletedBy'
+       
+        ];
+}
+

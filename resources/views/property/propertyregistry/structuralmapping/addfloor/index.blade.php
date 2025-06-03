@@ -2,47 +2,38 @@
 @section('title', 'Floors per Block')
 @section('content')
 <div class="container mt-4">
+  
 <a href="{{ route('addfloor.create') }}" class="btn btn-primary mb-3">Add Floor</a>
-  <h4 class="fw-bold mb-3">📋 Floors per Block</h4>
+    
+<h4 class="fw-bold mb-3">📋 Floors per Block</h4>
 
+    @if($floors->count())
   <table class="table table-bordered table-striped align-middle">
     <thead class="table-light">
       <tr>
-        <th>#</th>
-        <th>Floor Name</th>
-        <th>Block</th>
-        <th>Property</th>
-        <th>Units</th>
-        <th>Notes</th>
-        <th>Action</th>
+            <th>#</th>
+            <th>Block</th>
+            <th>Floor Name</th>
+            <th>Notes</th>
+            <th>Action</th>
       </tr>
     </thead>
     <tbody>
-      <tr>
-        <td>1</td>
-        <td>Ground Floor</td>
-        <td>Block A</td>
-        <td>Sunset Plaza</td>
-        <td>4</td>
-        <td>Shared entrance with lobby</td>
+        @foreach($floors as $floor)
+        <tr>
+        <td>{{ $loop->iteration }}</td>
+        <td>{{ $floor->BlockID }}</td>
+        <td>{{ $floor->FloorLabel }}</td>
+        <td>{{ $floor->FloorNotes }}</td>
         <td>
-          <button class="btn btn-sm btn-outline-primary">👁 View</button>
-          <button class="btn btn-sm btn-outline-warning">✏️ Edit</button>
+          <a href="{{ route('addfloor.show', $floor->id) }}" class="btn btn-sm btn-info">👁 View</a>
         </td>
       </tr>
-      <tr>
-        <td>2</td>
-        <td>2nd Floor</td>
-        <td>Tower 1</td>
-        <td>Mountain View Estate</td>
-        <td>8</td>
-        <td>Executive floor</td>
-        <td>
-          <button class="btn btn-sm btn-outline-primary">👁 View</button>
-          <button class="btn btn-sm btn-outline-warning">✏️ Edit</button>
-        </td>
-      </tr>
+      @endforeach
     </tbody>
   </table>
+   @else
+<p>No property floor registered yet.</p>
+@endif
 </div>
 @endsection
