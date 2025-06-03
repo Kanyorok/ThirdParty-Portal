@@ -97,7 +97,7 @@ class RequisitionsController extends Controller
             }
 
             // Log failure with details
-            \Log::error('Failed to create requisition.', [
+            Log::error('Failed to create requisition.', [
                 'input' => $validatedData,
                 'user_id' => $actor->id ?? null,
                 'service_response' => $requisitionAdd,
@@ -109,7 +109,7 @@ class RequisitionsController extends Controller
             ], 500);
 
         } catch (\Throwable $e) {
-            \Log::error('Exception occurred while creating requisition.', [
+            Log::error('Exception occurred while creating requisition.', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
@@ -151,7 +151,8 @@ class RequisitionsController extends Controller
         try {
 
             $details = $this->requisitionItemService->getRequisitionRelatedItems($id);
-            return view('procurement.requisitions.show', compact('details'));
+            $types = $this->service->getItemTypes();
+            return view('procurement.requisitions.show', compact('details', 'types'));
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Failed to fetch items: ' . $e->getMessage());
         }
