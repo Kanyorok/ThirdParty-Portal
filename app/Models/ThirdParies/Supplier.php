@@ -4,14 +4,10 @@ namespace App\Models\ThirdParies;
 
 use App\Models\Inventory\ItemCategories;
 use App\Models\Procurement\ProcurementPeriod;
-use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQEvaluation;
-
 use App\Models\Procurement\Tender;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-
 use App\Models\Procurement\RFQLine;
-
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -49,9 +45,7 @@ class Supplier extends Model
 
     public function category()
     {
-
         return $this->belongsTo(ItemCategories::class, 'CategoryId', 'Id');
-
     }
 
     public function rfqEvaluations()
