@@ -84,7 +84,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 209210, 'Name' => 'Lists', 'Icon' => null, 'ParentID' => 209200, 'Route' => 'loans-list.index'],
             ['ModuleID' => 209220, 'Name' => 'Loans', 'Icon' => null, 'ParentID' => 209200, 'Route' => 'debt-collection.index'],
 
-            ['ModuleID' => 299000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'ParentID' => 200000, 'Route' => null],
+            ['ModuleID' => 299000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'ParentID' => 200000, 'Route' => 'crm-reports.index'],
         ]);
 
         if ($fresh) {
@@ -184,7 +184,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 398000, 'Name' => 'Settings', 'Icon' => null, 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 398100, 'Name' => 'Criteria Setup', 'Icon' => null, 'ParentID' => 398000, 'Route' => 'sections.index'],
 
-            ['ModuleID' => 399000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'ParentID' => 300000, 'Route' => null],
+            ['ModuleID' => 399000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'ParentID' => 300000, 'Route' => 'procurement-reports.index'],
         ]);
 
         if ($fresh) {
