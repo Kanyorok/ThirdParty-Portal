@@ -23,17 +23,18 @@ class ItemService
             ->select('t_Items.Id','t_Items.ItemName','t_Items.ItemCode')
             ->get();
     }
-    public static function getItemDetails($item){
-        // logger('Fetching items details: ' . $item);
-
+    public static function getItemDetails($item)
+    {
         return DB::table('t_Items')
-            ->leftjoin('t_ItemCategories', 't_Items.Category', '=', 't_ItemCategories.Id')
-            ->where('t_Items.Id',$item)
+            ->leftJoin('t_ItemCategories', 't_Items.Category', '=', 't_ItemCategories.Id')
+            ->leftJoin('t_uom', 't_Items.UOM', '=', 't_uom.Id')
+            ->where('t_Items.Id', $item)
             ->select([
                 't_Items.ItemDescription',
-                't_Items.UOM',
-                DB::raw('0 as UnitPrice'),  // Properly casting the literal 0
-                't_ItemCategories.Name'
+                DB::raw('t_uom.Code AS UOM'),
+                DB::raw('t_uom.Id AS UOMID'),
+                DB::raw('0 AS UnitPrice'),
+                't_ItemCategories.Name AS CategoryName'
             ])
             ->get();
     }

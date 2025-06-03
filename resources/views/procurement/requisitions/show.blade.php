@@ -270,7 +270,7 @@
                             if (response.data && response.data.length > 0) {
                                 $.each(response.data, function(key, item) {
                                     $('#UOM').empty().append(
-                                        `<option value="${item.UOM}">${item.UOM}</option>`
+                                        `<option value="${item.UOMID}">${item.UOM}</option>`
                                     );
                                 });
                             }

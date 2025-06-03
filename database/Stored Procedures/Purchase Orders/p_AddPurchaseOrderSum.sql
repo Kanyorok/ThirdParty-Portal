@@ -7,7 +7,7 @@ BEGIN
         @TotPriceIncl FLOAT,
         @TotPriceExcl FLOAT,
         @TotTax FLOAT,
-        @TotDiscAmnt FLOAT;
+        @TotDiscAmnt FLOAT,
         @TotalBeforeDiscount FLOAT,
         @DiscountPercent FLOAT;
 
@@ -16,7 +16,7 @@ BEGIN
            @TotTax = SUM(((y.fQuantity * y.fUnitPriceExcl) - y.fLineDiscount) * (y.fTaxRate / 100.0)),
            @TotPriceIncl = SUM(((y.fQuantity * y.fUnitPriceExcl) - y.fLineDiscount) * (1 + (y.fTaxRate / 100.0))),
            @TotDiscAmnt = SUM(y.fLineDiscount),
-           @TotalBeforeDiscount = SUM(y.fQuantity * y.fUnitPriceExcl),
+           @TotalBeforeDiscount = SUM(y.fQuantity * y.fUnitPriceExcl)
     FROM t_OrderLines y
     WHERE y.iOrderID = @OrderId;
 
