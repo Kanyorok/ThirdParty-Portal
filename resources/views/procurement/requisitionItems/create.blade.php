@@ -24,7 +24,7 @@
                         <thead>
 
                             <tr>
-                                <th>ID</th>
+                                <th>IDs</th>
                                 <th>Type</th>
                                 <th>Category</th>
                                 <th>Item</th>
@@ -241,9 +241,9 @@
                 let type = $(this).val();
 
                 if (type !== '') {
-                    // alert(type + 'eric');
+                    alert(type + 'eric');
                     $.ajax({
-                        url: `/requisitionItem/getItem/${type}`,
+                        url: `procurement/requisitionItem/getItem/${type}`,
                         type: 'GET',
                         success: function(response) {
                             // console.log('AJAX Response:', response);

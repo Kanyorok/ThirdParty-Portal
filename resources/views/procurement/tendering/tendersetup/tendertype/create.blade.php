@@ -7,27 +7,19 @@
         <div class="card-header bg-white py-3 border-bottom">
             <div class="d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Create New Tender Type</h5>
-                <a href="{{ route('tender-types.index') }}" class="btn btn-sm btn-outline-secondary">
+                <a href="{{ route('tendertype.index') }}" class="btn btn-sm btn-outline-secondary">
                     <i class="fas fa-arrow-left me-1"></i> Back
                 </a>
             </div>
         </div>
         <div class="card-body">
-            <form action="{{ route('tender-types.store') }}" method="POST" id="tenderTypeForm">
+            <form action="{{ route('tendertype.store') }}" method="POST" id="tenderTypeForm">
                 @csrf
                 
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label for="TenderType" class="form-label">Tender Type <span class="text-danger">*</span></label>
-                        <select class="form-select @error('TenderType') is-invalid @enderror" 
-                                id="TenderType" name="TenderType" required>
-                            <option value="" disabled selected>Select a tender type</option>
-                            @foreach(App\Enums\TenderTypeEnum::cases() as $type)
-                                <option value="{{ $type->value }}" @selected(old('TenderType') == $type->value)>
-                                    {{ $type->name }}
-                                </option>
-                            @endforeach
-                        </select>
+                        <input type="text" class="form-control bg-light" id="TenderType" name="TenderType">
                         @error('TenderType')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror

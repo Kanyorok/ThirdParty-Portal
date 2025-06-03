@@ -11,6 +11,7 @@ use App\Models\Communication\Call;
 use App\Models\Communication\Comment;
 use App\Models\Communication\Email;
 use App\Models\Core\Branch;
+use App\Models\Core\Report;
 use App\Models\Core\Task;
 use App\Models\CRM\Campaign;
 use App\Models\CRM\CampaignParty;
@@ -30,23 +31,43 @@ use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
 use App\Models\Procurement\DepartmentNeeds;
 use App\Models\Procurement\Order;
+use App\Models\Procurement\RequisitionLine;
+use App\Models\Procurement\ProcurementMethod;
 use App\Models\Procurement\RequisitionLines;
 use App\Models\Procurement\Requisitions;
 use App\Models\Procurement\RFQ;
+use App\Models\Procurement\RFQLine;
+use App\Models\Procurement\SchedulePlan;
 use App\Models\Settings\APICredential;
 use App\Models\ThirdParies\Board;
 use App\Models\ThirdParies\Competitor;
 use App\Policies\CrmBranchPolicy;
 use App\Policies\Procurement\DepartmentNeedsPolicy;
 use App\Policies\Procurement\OrderPolicy;
+use App\Policies\Procurement\ProcurementMethodPolicy;
 use App\Policies\Procurement\RequisitionLinesPolicy;
 use App\Policies\Procurement\RequisitionPolicy;
+use App\Policies\Procurement\SchedulePlanPolicy;
 use App\Policies\ProductDevelopmentPolicy;
 use App\Policies\RolePolicy;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Permission\Models\Role;
+use App\Policies\Inventory\ItemMasterListPolicy;
+use App\Policies\Inventory\ItemCategoryPolicy;
+use App\Policies\Inventory\ItemTypePolicy;
+use App\Policies\Inventory\StockItemPolicy;
+use App\Policies\Inventory\InventoryTypePolicy;
+use App\Policies\Inventory\StorePolicy;
+use App\Policies\Inventory\UnitOfMeasurePolicy;
+use App\Models\Inventory\ItemType;
+use App\Models\Inventory\ItemMasterList;
+use App\Models\Inventory\ItemCategories;
+use App\Models\Inventory\StockItem;
+use App\Models\Inventory\UnitOfMeasure;
+use App\Models\Inventory\Store;
+use App\Models\Inventory\InventoryType;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -85,7 +106,9 @@ class AppServiceProvider extends ServiceProvider
             Meeting::getPrimaryKey() => Meeting::class,
             Notes::getPrimaryKey() => Notes::class,
             ProductDevelopment::getPrimaryKey() => ProductDevelopment::class,
+            Report::getPrimaryKey() => Report::class,
             RFQ::getPrimaryKey() => RFQ::class,
+            RFQLine::getPrimaryKey() => RFQLine::class,
             Review::getPrimaryKey() => Review::class,
             Schedule::getPrimaryKey() => Schedule::class,
             Social::getPrimaryKey() => Social::class,
@@ -95,18 +118,37 @@ class AppServiceProvider extends ServiceProvider
             Ticket::getPrimaryKey() => Ticket::class,
             User::getPrimaryKey() => User::class,
             Requisitions::getPrimaryKey() => Requisitions::class,
-            RequisitionLines::getPrimaryKey() => RequisitionLines::class,
+            RequisitionLine::getPrimaryKey() => RequisitionLine::class,
             Order::getPrimaryKey() => Order::class,
             DepartmentNeeds::getPrimaryKey() => DepartmentNeeds::class,
+            ProcurementMethod::getPrimaryKey() => ProcurementMethod::class,
+            ItemMasterList::getPrimaryKey() => ItemMasterList::class,
+            ItemCategories::getPrimaryKey() => ItemCategories::class,
+            ItemType::getPrimaryKey() => ItemType::class,
+            InventoryType::getPrimaryKey() => InventoryType::class,
+            StockItem::getPrimaryKey() => StockItem::class,
+            Store::getPrimaryKey() => Store::class,
+            UnitOfMeasure::getPrimaryKey() => UnitOfMeasure::class,
+            SchedulePlan::getPrimaryKey() => SchedulePlan::class,
         ]);
 
         Gate::policy(Role::class, RolePolicy::class);
         Gate::policy(Branch::class, CrmBranchPolicy::class);
         Gate::policy(Requisitions::class, RequisitionPolicy::class);
-        Gate::policy(RequisitionLines::class, RequisitionLinesPolicy::class);
+        Gate::policy(RequisitionLine::class, RequisitionLinesPolicy::class);
         Gate::policy(ProductDevelopment::class, ProductDevelopmentPolicy::class);
         Gate::policy(Order::class, OrderPolicy::class);
         Gate::policy(DepartmentNeeds::class, DepartmentNeedsPolicy::class);
+        Gate::policy(ProcurementMethod::class, ProcurementMethodPolicy::class);
+        Gate::policy(ItemMasterList::class, ItemMasterListPolicy::class);
+        Gate::policy(ItemCategories::class, ItemCategoryPolicy::class);
+        Gate::policy(ItemType::class, ItemTypePolicy::class);
+        Gate::policy(StockItem::class, StockItemPolicy::class);
+        Gate::policy(InventoryType::class, InventoryTypePolicy::class);
+        Gate::policy(Store::class, StorePolicy::class);
+        Gate::policy(UnitOfMeasure::class, UnitOfMeasurePolicy::class);
+
+        Gate::policy(SchedulePlan::class, SchedulePlanPolicy::class);
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);
          Event::listen(SMSSendEvent::class, SMSSendListener::class);

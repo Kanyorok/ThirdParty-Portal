@@ -2,40 +2,65 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Inventory\ItemCategories;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
 
 class ItemCategoriesSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
-    public function run(): void
+    public function run()
     {
-    
-        ItemCategories::insert([
-[
-    [
-        'CategoryCode'   => 'ELEC001',
-        'Name'          => 'Electronics',
-        'Description'   => 'Devices and gadgets',
-        'Status'        => true,
-        'CreatedBy'     => 34, // ID of the user who created it
-        'ModifiedBy'    => 02, // ID of the user who last modified it
-        'DeletedBy'     => null, // NULL if not deleted
-    ],
-    [
-        'CategoryCode'   => 'HOME002',
-        'Name'          => 'Home Appliances',
-        'Description'   => 'Household electrical items',
-        'Status'        => true,
-        'CreatedBy'     => 02,
-        'ModifiedBy'    => 02,
-        'DeletedBy'     => null,
-    ]
-]
+        $now = Carbon::now();
+        $createdBy = 1;
 
-        ]);
+        $categories = [
+            'Office Supplies' => [
+                'Pens & Pencils',
+                'Paper Products',
+                'Binders & Folders',
+                'Miscellaneous', 
+            ],
+            'Electronics' => [
+                'Laptops',
+                'Printers',
+                'Monitors',
+                'Networking', 
+                'Audio',      
+            ],
+            'Furniture' => [
+                'Desks',
+                'Chairs',
+                'Cabinets',
+            ],
+        ];
+
+        foreach ($categories as $parentName => $subCategories) {
+            $parent = ItemCategories::firstOrCreate(
+                ['Name' => $parentName],
+                [
+                    'Description' => "$parentName for company use",
+                    'CreatedBy' => $createdBy,
+                    'ModifiedBy' => $createdBy,
+                    'CreatedOn' => $now,
+                    'ModifiedOn' => $now,
+                    'CategoryCode' => strtoupper(substr($parentName, 0, 3)) . '-PARENT',
+                ]
+            );
+
+            foreach ($subCategories as $childName) {
+                ItemCategories::firstOrCreate(
+                    ['Name' => $childName, 'ParentId' => $parent->Id],
+                    [
+                        'Description' => "$childName under $parentName",
+                        'CreatedBy' => $createdBy,
+                        'ModifiedBy' => $createdBy,
+                        'CreatedOn' => $now,
+                        'ModifiedOn' => $now,
+                        'CategoryCode' => strtoupper(substr($childName, 0, 3)) . '-' . rand(100, 999),
+                    ]
+                );
+            }
+        }
     }
 }

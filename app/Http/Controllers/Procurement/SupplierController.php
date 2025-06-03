@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
-use App\Models\Procurement\ItemCategory;
+use App\Models\Inventory\ItemCategories;
 use App\Models\ThirdParies\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,8 +16,10 @@ class SupplierController extends Controller
     public function index(Request $request)
     {
         // Fetch all suppliers from the database
-        $suppliers = Supplier::with('category')->orderBy('created_at', 'desc')->paginate(20);
+        $suppliers = Supplier::with('category')->orderBy('CreatedOn', 'desc')->paginate(20);
+
         $categories = ItemCategory::all();
+
         // Return the view with the suppliers data
         return view('procurement.suppliers.index', compact('suppliers', 'categories'));
     }
@@ -28,7 +30,7 @@ class SupplierController extends Controller
     public function create()
     {
         // Return the view for creating a new supplier
-        $categories = ItemCategory::all();
+        $categories = ItemCategories::all();
         return view('procurement.suppliers.create', compact('categories'));
     }
 
@@ -41,7 +43,8 @@ class SupplierController extends Controller
         $validated = $request->validate([
             'SupplierName' => 'required|string|max:255',
             'ContactEmail' => 'required|email|max:255|unique:t_Suppliers,ContactEmail',
-            'CategoryId' => 'nullable|exists:t_ItemCategories,id',
+            'CategoryId' => 'required',
+
             'ContactPhone' => 'nullable|string|max:20',
             'Address' => 'nullable|string|max:255',
             'IsPrequalified' => 'boolean',

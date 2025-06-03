@@ -48,7 +48,7 @@
 {{--                                <td>{{ $item->Category }}</td>--}}
                                 <td>{{ $item->ItemName }}</td>
                                 <td>{{ $item->Description }}</td>
-                                <td>{{ $item->UOMx }}</td>
+                                <td>{{ $item->UOM}}</td>
                                 <td>{{ $item->Quantity }}</td>
                                 <td>{{ number_format($item->ExpectedPrice, 2) }}</td>
 {{--                                <td>{{ $item->NeededBy }}</td>--}}
@@ -98,12 +98,9 @@
                                         class="text-danger">*</span></label>
                                 <select class="form-control" name="Type" id="Type" required>
                                     <option selected disabled>Select type</option>
-                                    <option value="Stock">Stock</option>
-                                    <option value="Asset">Asset</option>
-                                    <option value="Non-Stock">Non-Stock</option>
-                                    {{-- @foreach ($MarketingLists as $MarketingList)
-                                        <option value="{{ $MarketingList->slug }}">{{ $MarketingList->Label }}</option>
-                                    @endforeach --}}
+                                    @foreach ($types as $type)
+                                        <option value="{{ $type->Id }}">{{ $type->TypeName }}</option>
+                                    @endforeach
                                 </select>
 
                                 <p id="Type_error" class="invalid-feedback d-none error col-12" role="alert"></p>
@@ -208,9 +205,6 @@
         }
 
         $(function() {
-            // $.fn.dataTable.ext.errMode = 'none';
-            // fetchCampaignsTable();
-
             $(document).on('click', '.modal-create-item', function() {
 
                 $(".modal-title").html('Add Item');
@@ -238,7 +232,7 @@
                 if (type !== '') {
                     // alert(type + 'eric');
                     $.ajax({
-                        url: `/requisitionItem/getItem/${type}`,
+                        url: `/procurement/requisitionItem/getItem/${type}`,
                         type: 'GET',
                         success: function(response) {
                             // console.log('AJAX Response:', response);
@@ -270,7 +264,7 @@
 
                 if (item !== '') {
                     $.ajax({
-                        url: `/requisitionItem/getItemDetails/${item}`,
+                        url: `/procurement/requisitionItem/getItemDetails/${item}`,
                         type: 'GET',
                         success: function(response) {
                             if (response.data && response.data.length > 0) {
@@ -278,12 +272,6 @@
                                     $('#UOM').empty().append(
                                         `<option value="${item.UOM}">${item.UOM}</option>`
                                     );
-
-                                    // $('#Description').val(item.Description || '');
-                                    // $('#EstimatedPrice').val(item.UnitPrice || '');
-                                    // $('#CategoryId').val(item.CategoryId ||
-                                    //     ''); // Populate the hidden CategoryId field
-                                    // console.log('CategoryId:', item);
                                 });
                             }
                         },
@@ -305,43 +293,5 @@
             });
 
         });
-
-        // function fetchCampaignsTable() {
-        //     if (!$.fn.DataTable.isDataTable('#requsitionItemsTable')) {
-        //         $('#requsitionItemsTable').DataTable({
-        //             processing: true,
-        //             serverSide: true,
-        //             responsive: true,
-        //             // "order": [[3, 'asc']],
-        //             "columnDefs": [
-        //                 {"className": "text-center", "targets": [2]}
-        //             ],
-        //             ajax: {
-        //                 url: getDocumentUrl(),
-        //                 error: function (request) {
-        //                     if (request.status === 400 && request.responseJSON.message) {
-        //                         nWarning(request.responseJSON.message);
-        //                     } else {
-        //                         codeNotify(request.status);
-        //                     }
-        //                 }
-        //             },
-        //             columns: [
-        //                 {data: "DT_RowIndex", name: 'DT_RowIndex', searchable: false, orderable: false},
-        //                 {data: 'Label', name: 'Label'},
-        //                 {data: 'Status', name: 'Status'},
-        //                 {data: 'contacts_count', name: 'contacts_count'},
-        //                 {data: 'CreatedOn', name: 'CreatedOn'},
-        //                 {data: 'action', name: 'action', orderable: false, searchable: false},
-        //             ], "oLanguage": {
-        //                 "sEmptyTable": "no campaigns under this filter"
-        //             }
-        //         }).on('error', function () {
-        //             nWarning("an issue occurred while loading campaigns.");
-        //         });
-        //     } else {
-        //         $('#requsitionItemsTable').DataTable().ajax.reload();
-        //     }
-        // }
     </script>
 @endsection

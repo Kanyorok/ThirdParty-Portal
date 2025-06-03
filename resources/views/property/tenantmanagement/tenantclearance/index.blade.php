@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Tenant Exit')
+@section('title', 'Tenant Exit & Clearance Records')
 @section('content')
 <div class="container mt-4">
 <a href="{{ route('tenantclearance.create') }}" class="btn btn-primary mb-3">New Clearance</a>

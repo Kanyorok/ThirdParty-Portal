@@ -1,10 +1,10 @@
 <?php
 
 namespace App\Models\Procurement;
-
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+
 
 class Requisitions extends Model
 {
@@ -38,7 +38,7 @@ class Requisitions extends Model
     ];
     public function requisitionLines()
     {
-        return $this->hasMany(RequisitionLines::class, 'RequisitionID', 'Id');
+        return $this->hasMany(RequisitionLine::class, 'RequisitionID', 'Id');
     }
 
 }

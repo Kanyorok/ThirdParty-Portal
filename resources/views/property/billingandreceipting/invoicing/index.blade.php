@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Rent Invoices')
 @section('content')
 <div class="container mt-4">
 <a href="{{ route('rentinvoice.create') }}" class="btn btn-primary mb-3">New Invoice</a>

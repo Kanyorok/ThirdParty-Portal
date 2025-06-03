@@ -5,7 +5,7 @@
 
 @section('title','Marketing Lists')
 @section('styles')
-    <link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
     <style>
         .select2-container {
             width: 100% !important;
@@ -160,7 +160,7 @@
     </div>
 @endsection
 @section('scripts')
-    <script src="{{ asset('assets/js/datatables.js') }}"></script>
+
     <script> const $Modal = $('#MarketingListActionsModal');
         $(function () {
             $.fn.dataTable.ext.errMode = 'none';

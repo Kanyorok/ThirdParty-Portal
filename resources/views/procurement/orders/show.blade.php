@@ -6,6 +6,45 @@
         .select2-container {
             width: 100% !important;
         }
+
+        /*!* Improved table layout *!*/
+        /*.table-responsive {*/
+        /*    overflow-x: auto;*/
+        /*}*/
+        /*.table {*/
+        /*    min-width: 100%;*/
+        /*    table-layout: fixed;*/
+        /*}*/
+        /*.table th, .table td {*/
+        /*    padding: 8px 12px;*/
+        /*    vertical-align: middle;*/
+        /*    white-space: normal;*/
+        /*    word-wrap: break-word;*/
+        /*}*/
+        /*!* Fixed column widths *!*/
+        /*.col-3 { width: 3%; min-width: 40px; }*/
+        /*.col-10 { width: 10%; min-width: 120px; }*/
+        /*.col-15 { width: 15%; min-width: 180px; }*/
+        /*.col-20 { width: 20%; min-width: 240px; }*/
+        /*.col-5 { width: 5%; min-width: 80px; }*/
+
+        /*!* Form spacing *!*/
+        /*.form-section {*/
+        /*    margin-bottom: 1.5rem;*/
+        /*}*/
+
+        /*!* Textarea fix *!*/
+        /*textarea.form-control {*/
+        /*    min-height: 38px;*/
+        /*    resize: vertical;*/
+        /*}*/
+
+        /*!* Totals section *!*/
+        /*.totals-section {*/
+        /*    background-color: #f8f9fa;*/
+        /*    padding: 15px;*/
+        /*    border-radius: 4px;*/
+        /*}*/
     </style>
 @endsection
 @section('content')
@@ -32,28 +71,31 @@
                 <div class="col-md-6">
                     <label>Supplier</label>
                     <select class="form-control supplier" id="supplier" name="supplier">
-                        <option selected>{{$orderInfo->AccountID ?? 'N/A'}}</option>
+                        <option selected>{{$orderInfo->SupplierName ?? 'N/A'}}</option>
                     </select>
                 </div>
-{{--                <div class="col-md-6">--}}
-{{--                    <label>Address</label>--}}
-{{--                    <input type="text" class="form-control" name="address" placeholder="Supplier address"/>--}}
-{{--                </div>--}}
+                {{--                <div class="col-md-6">--}}
+                {{--                    <label>Address</label>--}}
+                {{--                    <input type="text" class="form-control" name="address" placeholder="Supplier address"/>--}}
+                {{--                </div>--}}
             </div>
 
             <!-- LPO Details -->
             <div class="row mb-4">
                 <div class="col-md-4">
                     <label>LPO Number</label>
-                    <input type="text" name="LPONo" class="form-control" value="{{$orderInfo->OrderNo ?? 'N/A'}}" readonly/>
+                    <input type="text" name="LPONo" class="form-control" value="{{$orderInfo->OrderNo ?? 'N/A'}}"
+                           readonly/>
                 </div>
                 <div class="col-md-4">
                     <label>Date</label>
-                    <input type="date" class="form-control poDate" name="pODate" value="{{ isset($orderInfo->OrderDate) ? \Carbon\Carbon::parse($orderInfo->OrderDate)->format('Y-m-d') : '' }}"/>
+                    <input type="date" class="form-control poDate" name="pODate"
+                           value="{{ isset($orderInfo->OrderDate) ? \Carbon\Carbon::parse($orderInfo->OrderDate)->format('Y-m-d') : '' }}"/>
                 </div>
                 <div class="col-md-4">
                     <label>Reference Number</label>
-                    <input type="text" class="form-control refNo" name="refNo" placeholder="RFQ Number" value="{{$orderInfo->ExtOrdNum ?? 'N/A'}}"/>
+                    <input type="text" class="form-control refNo" name="refNo" placeholder="RFQ Number"
+                           value="{{$orderInfo->ExtOrdNum ?? 'N/A'}}"/>
                 </div>
                 <div class="col-md-4 mt-2">
                     <label>Priority</label>
@@ -63,7 +105,8 @@
                 </div>
                 <div class="col-md-4 mt-2">
                     <label>Payment Terms</label>
-                    <input type="text" name="terms" class="form-control terms" placeholder="e.g., Net 30, 50%" value="{{$orderInfo->Terms ?? 'N/A'}}"/>
+                    <input type="text" name="terms" class="form-control terms" placeholder="e.g., Net 30, 50%"
+                           value="{{$orderInfo->Terms ?? 'N/A'}}"/>
                 </div>
             </div>
 
@@ -79,53 +122,59 @@
                 <table class="table table-bordered table-sm">
                     <thead class="table-light">
                     <tr>
-                        <th style="width:5%;">#</th>
-                        <th style="width:10%;">Item Type</th>
-                        <th style="width:15%;">Item Name</th>
-                        <th style="width:15%;">Item Description</th>
-                        <th style="width:10%;">Quantity</th>
-                        <th style="width:10%;">Unit Price</th>
-                        <th style="width:10%;">Tax</th>
-                        <th style="width:10%;">Discount</th>
-                        <th style="width:20%;">Line Total</th>
+                        <th style="width: 1%; min-width: 10px;">#</th>
+                        <th style="width: 10%; min-width: 100px;">Item Type</th>
+                        <th style="width: 15%; min-width: 150px;">Item Name</th>
+                        <th style="width: 20%; min-width: 200px;">Item Description</th>
+                        <th style="width: 5%; min-width: 80px;">Quantity</th>
+                        <th style="width: 10%; min-width: 100px;">Unit Price</th>
+                        <th style="width: 7%; min-width: 80px;">Tax</th>
+                        <th style="width: 5%; min-width: 80px;">Discount</th>
+                        <th style="width: 15%; min-width: 150px;">Line Total</th>
                     </tr>
                     </thead>
                     <tbody id="po-items">
 
                     @foreach($lineInfo as $line)
 
-                    <tr>
-                        <td class="line-no">1.</td>
-                        <td class="text-start">
-                            <select class="form-select form-select-sm type" name="type[]" id="Type">
-                                <option  selected>{{$line ->ItemType}}</option>
+                        <tr>
+                            <td class="line-no">1.</td>
+                            <td class="text-start">
+                                <select class="form-select form-select-sm type" name="type[]" id="Type">
+                                    <option selected>{{$line ->ItemType}}</option>
 
-                            </select>
-                        </td>
-                        <td class="text-start">
-                            <select class="form-select form-select-sm itemCode" name="itemCode[]" id="Item">
-                                <option  selected>{{$line ->ItemName}}</option>
-                            </select>
-                        </td>
-                        {{--                    <td><input type="text" class="form-control" name="itemCode[]"></td> --}}
-                        <td class="text-start">
+                                </select>
+                            </td>
+                            <td class="text-start">
+                                <select class="form-select form-select-sm itemCode" name="itemCode[]" id="Item">
+                                    <option selected>{{$line ->ItemName}}</option>
+                                </select>
+                            </td>
+                            {{--                    <td><input type="text" class="form-control" name="itemCode[]"></td> --}}
+                            <td class="text-start">
                                 <textarea class="form-control form-control-sm itemDescription" name="itemDescription[]"
                                           id="Description" cols="30"
-                                          rows="5" readonly>{{$line ->Description}}</textarea>
-                            {{--                            <input type="text" class="form-control form-control-sm itemDescription" --}}
-                            {{--                                name="itemDescription[]" id="Description" readonly> --}}
-                        </td>
-                        <td class="text-start"><input type="number" class="form-control form-control-sm qty quantity"
-                                                      name="quantity[]" id="Quantity" value="{{$line ->fQuantity}}"></td>
-                        <td class="text-start"><input type="number" class="form-control form-control-sm unit-price "
-                                                      name="unitPrice[]" id="Price" value="{{$line ->fUnitPriceExcl}}"></td>
-                        <td class="text-start"><input type="number" class="form-control form-control-sm tax"
-                                                      name="tax[]" id="Tax" value="{{$line ->fTaxRate}}"></td>
-                        <td class="text-start"><input type="number" class="form-control form-control-sm discount"
-                                                      name="discount[]" id="Discount" value="{{$line ->fLineDiscount}}"></td>
-                        <td class="text-start"><input type="number" class="form-control form-control-sm line-total"
-                                                      name="lineTotal[]" id="lineTotal" step="" value="0"></td>
-                    </tr>
+                                          rows="5" readonly
+                                          style="display: flex; align-items: center; justify-content: center; text-align: center; padding: 0; resize: none;">{{$line ->Description}}</textarea>
+                                {{--                            <input type="text" class="form-control form-control-sm itemDescription" --}}
+                                {{--                                name="itemDescription[]" id="Description" readonly> --}}
+                            </td>
+                            <td class="text-start"><input type="number"
+                                                          class="form-control form-control-sm qty quantity"
+                                                          name="quantity[]" id="Quantity" value="{{$line ->fQuantity}}">
+                            </td>
+                            <td class="text-start"><input type="number" class="form-control form-control-sm unit-price "
+                                                          name="unitPrice[]" id="Price"
+                                                          value="{{$line ->fUnitPriceExcl}}"></td>
+                            <td class="text-start"><input type="number" class="form-control form-control-sm tax"
+                                                          name="tax[]" id="Tax" value="{{$line ->fTaxRate}}"></td>
+                            <td class="text-start"><input type="number" class="form-control form-control-sm discount"
+                                                          name="discount[]" id="Discount"
+                                                          value="{{$line ->fLineDiscount}}"></td>
+                            <td class="text-start"><input type="number" class="form-control form-control-sm line-total"
+                                                          name="lineTotal[]" id="lineTotal" step=""
+                                                          value="{{$line ->LineTotal}}"></td>
+                        </tr>
                     @endforeach
                     </tbody>
                 </table>
@@ -151,7 +200,7 @@
                     </div>
                     <div>
                         <label>Inclusive Total</label>
-                        <input type="text" class="form-control" value="{{$orderInfo->OrdTotExcl ?? 'N/A'}}" readonly/>
+                        <input type="text" class="form-control" value="{{$orderInfo->OrdTotIncl ?? 'N/A'}}" readonly/>
                     </div>
                 </div>
             </div>
@@ -313,7 +362,7 @@
     </script>
 
     <script>
-        let rowCount = 0;
+        let rowCount = 1;
 
         document.getElementById('add-row').addEventListener('click', function () {
             rowCount++;

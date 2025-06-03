@@ -1,7 +1,7 @@
 <div>
     <form action="{{ route('employeescommittee.store') }}" method="post" id="createUserForm"> @csrf
-        
-    <div class="mb-3">
+
+        <div class="mb-3">
             <label for="Employee" class="form-label">Employee <span class="text-danger">*</span></label>
             <select class="form-control select2" name="Employee" id="Employee" required>
                 <option selected disabled>Select an Employee</option>
@@ -10,7 +10,7 @@
                 @endforeach
             </select>
             @error('Employee')
-                <div class="text-danger">{{ $message }}</div>
+            <div class="text-danger">{{ $message }}</div>
             @enderror
         </div>
 
@@ -23,7 +23,7 @@
                 @endforeach
             </select>
             @error('Committee')
-                <div class="text-danger">{{ $message }}</div>
+            <div class="text-danger">{{ $message }}</div>
             @enderror
         </div>
         <hr>
@@ -33,7 +33,7 @@
                 cancel
             </button>
             <button class="btn btn-primary float-end" id="createUserBtn" type="submit"><i
-                        class="fas fa-save"></i> add User
+                    class="fas fa-save"></i> add User
             </button>
         </div>
     </form>

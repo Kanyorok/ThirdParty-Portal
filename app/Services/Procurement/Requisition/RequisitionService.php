@@ -65,6 +65,19 @@ class RequisitionService {
             ];
         }
     }
+
+    public function getItemTypes()
+    {
+        try {
+            return DB::table('t_ItemTypes')
+                ->select('Id', 'TypeName')
+                ->where('Active', true)
+                ->get();
+        } catch (QueryException $e) {
+            Log::error('Error fetching item types: ' . $e->getMessage());
+            return collect(); // Return an empty collection on error
+        }
+    }
 //
     public static function fetchRequisition()
     {
