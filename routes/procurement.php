@@ -191,6 +191,7 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::resource('tenderopening', TenderOpeningController::class);
     Route::resource('tenderdecrypt', TenderDecryptController::class);
     Route::resource('tendercommittee', TenderCommitteeController::class);
+    Route::post('/store-tender-committee', [TenderCommitteeController::class, 'membersAdd'])->name('tendercommittee.save');
     Route::resource('memberresponse', TenderAcceptController::class);
     Route::resource('assignrole', TenderAssignRoleController::class);
     Route::resource('evaluationcriteria', EvaluationCriteriaController::class);
@@ -209,6 +210,7 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::post("/store-tender-sections",[TenderEvaluationsController::class,'tenderSections'])->name('store-tender-sections');
     Route::get('/tender-criteria/{tenderId}', [TenderEvaluationsController::class, 'getTenderCriteria'])->name('tender-criteria');
     Route::post('/tender-criteria', [TenderEvaluationsController::class, 'storeTenderCriteria'])->name('tender-criteria.store');
+    Route::post('/store-criteria-scores', [TenderEvaluationsController::class, 'criteriaScores'])->name('store-criteria-scores');
     
     
     Route::get('/criteria-sections', [EvaluationCriteriaController::class, 'viewCriteria'])->name('tender-criteria.index');

@@ -37,10 +37,10 @@
                         <td>100</td>
                         <td>{{$item['criteriaNumber']*10}}</td>
                         <td>
-                            <a href="{{route('tender-criteria',$item['id'])}}" class="btn btn-sm btn-outline-secondary">Criteria</a>
-                            <a href="/evaluation-criteria/view/1" class="btn btn-sm btn-outline-primary">View</a>
+                            <a href="{{route('tender-criteria',$item['id'])}}" class="btn btn-sm btn-outline-secondary">Criterias</a>
+                            {{-- <a href="/evaluation-criteria/view/1" class="btn btn-sm btn-outline-primary">View</a>
                             <a href="/evaluation-criteria/edit/1" class="btn btn-sm btn-outline-success">Edit</a>
-                            <button class="btn btn-sm btn-outline-danger">Delete</button>
+                            <button class="btn btn-sm btn-outline-danger">Delete</button> --}}
                         </td>
                     </tr>
                     

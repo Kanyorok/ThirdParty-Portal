@@ -404,7 +404,7 @@ class TenderController extends Controller
 
     public function update(Request $request, $id)
     {
-        return $request->all();
+        //return $request->all();
         //Check if the user has permission to update tenders using the enum set
         $this->authorize(PermissionEnum::TenderUpdate, Tender::class);
         //Check the update is coming from which form 
@@ -517,6 +517,7 @@ class TenderController extends Controller
                 return redirect()->route('initiatetender.edit', $id)->with('success', 'Tender Item deleted successfully.');
             } catch (\Exception $e) {
                 DB::rollBack();
+                return $e->getMessage();
                 Log::error("--- DELETE TENDER ITEM ERROR --- " . $e->getMessage());
                 Log::error($e);
                 return redirect()->route('initiatetender.edit', $id)->with('error', 'Failed to delete Tender Item. Please try again.');
