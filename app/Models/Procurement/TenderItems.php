@@ -2,7 +2,8 @@
 
 namespace App\Models\procurement;
 
-use App\Models\Procurement\ItemCategory;
+use App\Models\Inventory\ItemCategories;
+use App\Models\Inventory\ItemMasterList;
 use Illuminate\Database\Eloquent\Model;
 
 class TenderItems extends Model
@@ -36,11 +37,11 @@ class TenderItems extends Model
 
     public function item()
     {
-        return $this->belongsTo(Item::class, 'ItemID');
+        return $this->belongsTo(ItemMasterList::class, 'ItemID');
     }
 
     public function category()
     {
-        return $this->belongsTo(ItemCategory::class, 'ItemCategory', 'Id');
+        return $this->belongsTo(ItemCategories::class, 'ItemCategory', 'Id');
     }
 }
