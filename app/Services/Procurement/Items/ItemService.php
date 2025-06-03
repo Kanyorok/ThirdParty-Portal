@@ -21,13 +21,13 @@ class ItemService
 
             if ($requisition && $requisition->PlanRef) {
                 // Fetch from Consolidate Procurement Plan
-                return DB::table('t_ConsolidateProcurementPlan as pi')
+                return DB::table('t_ConsolidatedProcurementPlan as pi')
                     ->join('t_PlanLineItem as i', 'pi.PlanID', '=', 'i.PlanID')
                     ->join('t_Items as t', 'i.ItemID', '=', 't.Id')
-                    ->join('t_ItemTypes as f', 'i.ItemType', '=', 'f.Id')
-                    ->where('pi.ConsolidateProcurementPlanId', $requisition->PlanRef)
-                    ->where('i.ItemType', $type)
-                    ->select('i.Id', 'i.ItemName', 'i.ItemCode')
+                    ->join('t_ItemTypes as f', 't.ItemType', '=', 'f.Id')
+                    ->where('pi.PlanID', $requisition->PlanRef)
+                    ->where('t.ItemType', $type)
+                    ->select('t.Id', 't.ItemName', 't.ItemCode')
                     ->get();
             }
         }

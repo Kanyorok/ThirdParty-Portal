@@ -4,10 +4,6 @@ namespace App\Models\Procurement;
 
 use App\Models\Auth\User;
 
-use App\Models\BR\Branch;
-
-
-//use App\Models\BR\Branch;
 
 use App\Models\HRM\Department;
 use Illuminate\Database\Eloquent\Model;
