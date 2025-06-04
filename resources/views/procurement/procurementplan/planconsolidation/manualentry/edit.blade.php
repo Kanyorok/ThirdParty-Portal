@@ -49,7 +49,7 @@
             <div class="mb-3">
                 <label for="unit_of_measure" class="form-label">Unit of Measure</label>
                 <input type="text" name="unit_of_measure" id="unit_of_measure" class="form-control"
-                       value="{{ $lineItem->UnitOfMeasure }}" required>
+                       value="{{ $lineItem->item->itemuom->Name ?? 'N/A' }}" required>
             </div>
 
             <div class="mb-3">
