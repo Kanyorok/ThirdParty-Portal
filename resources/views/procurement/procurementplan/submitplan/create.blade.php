@@ -58,9 +58,9 @@
           <td>{{ $item->Branch->Name ?? '—' }}</td>
           <td>{{ $item->MergedQty }}</td>
           <td>{{ number_format($item->EstimatedUnitCost, 0) }}</td>
-           <td> 
-          @if ($item->BudgetLineID)
-              {{ $item->BudgetLineID->Description }}
+           <td>
+          @if ($item->budgetline->Description)
+              {{ $item->budgetline->Description }}
             @else
               <span class="text-danger">Unlinked</span>
             @endif
@@ -77,7 +77,7 @@
         </td>
           <td>
             @php
-              $statusEnum = $item->schedulePlan->Status ?? null;
+              $statusEnum = $item->Status ?? null;
             @endphp
 
             @if ($statusEnum instanceof \App\Enums\Procurement\SchedulePlanEnum)

@@ -28,13 +28,14 @@
           <select name="ItemID" class="form-select" id="item-select" required>
               <option selected disabled>Select Item</option>
               @foreach($items as $item)
-                  <option value="{{ $item->Id }}"
-                          data-uom="{{ $item->UOM ?? 'N/A' }}"
-                          data-category-id="{{ $item->category->Id ?? '' }}"
-                          data-category-name="{{ $item->category->Name ?? 'N/A' }}">
-                      {{ $item->ItemName }}
-                  </option>
-              @endforeach
+                <option value="{{ $item->Id }}"
+                        data-uom-name="{{ $item->uom->Name ?? 'N/A' }}"
+                        data-uom-code="{{ $item->uom->Code ?? '' }}"
+                        data-category-id="{{ $item->category->Id ?? '' }}"
+                        data-category-name="{{ $item->category->Name ?? 'N/A' }}">
+                    {{ $item->ItemName }}
+                </option>
+            @endforeach
           </select>
       </div>
       <div class="col-md-6">
@@ -97,16 +98,21 @@
           @enderror
       </div>
             <div class="col-md-6">
-                <label class="form-label">Link to Budget Line</label>
-                <select name="budget_line_id" class="form-select" required>
-                    <option selected disabled>Select Budget Line</option>
-                    @foreach($budgetLines as $budgetLine)
-                        <option value="{{ $budgetLine->BudgetLineID }}">
-                            {{ $budgetLine->Description }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
+        <label class="form-label">Link to Budget Line</label>
+        <select name="budget_line_id"
+                class="form-select @error('budget_line_id') is-invalid @enderror" required>
+            <option selected disabled>Select Budget Line</option>
+            @foreach($budgetLines as $budgetLine)
+                <option value="{{ $budgetLine->BudgetLineID }}"
+                    {{ old('budget_line_id') == $budgetLine->BudgetLineID ? 'selected' : '' }}>
+                    {{ $budgetLine->Description }}
+                </option>
+            @endforeach
+        </select>
+        @error('budget_line_id')
+            <div class="alert alert-danger mt-1">{{ $message }}</div>
+        @enderror
+    </div>
         </div>
 
         <!-- Notes -->
@@ -128,24 +134,26 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const itemSelect = document.getElementById('item-select');
-        const uomInput = document.getElementById('unit_of_measure');
-        const uomDisplay = document.getElementById('display-uom');
+        const uomInput = document.getElementById('unit_of_measure'); // hidden field (code)
+        const uomDisplay = document.getElementById('display-uom');   // visible field (name)
         const categoryIdInput = document.getElementById('category-id');
         const categoryDisplay = document.getElementById('display-category');
 
         itemSelect.addEventListener('change', function () {
             const selected = this.options[this.selectedIndex];
-            const uom = selected.getAttribute('data-uom');
+            const uomCode = selected.getAttribute('data-uom-code');
+            const uomName = selected.getAttribute('data-uom-name');
             const categoryId = selected.getAttribute('data-category-id');
             const categoryName = selected.getAttribute('data-category-name');
 
-            uomInput.value = uom || '';
-            uomDisplay.value = uom || 'N/A';
+            uomInput.value = uomCode || '';
+            uomDisplay.value = uomName || 'N/A';
 
             categoryIdInput.value = categoryId || '';
             categoryDisplay.value = categoryName || 'N/A';
         });
     });
 </script>
+
 
 @endsection

@@ -2,7 +2,7 @@
 
 namespace App\Services\Procurement\ProcurementPlan;
 
-use App\Enums\Core\PostingEnum;
+use App\Enums\ProcurementPlanStatusEnum;
 use App\Enums\WorkflowStatus;
 use App\Models\Auth\User;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
@@ -17,12 +17,12 @@ class SubmitPlanService
     {
         // Update plan status to Submitted
         $this->consolidatedProcurementPlan->forceFill([
-            'Status' => PostingEnum::Submitted->value,
+            'Status' => ProcurementPlanStatusEnum::Submitted->value,
         ])->save(['timestamps' => false]);
 
         // Create workflow record for the submission
         $this->consolidatedProcurementPlan->workflows()->create([
-            'Stage'      => PostingEnum::Submitted->name,
+            'Stage'      => ProcurementPlanStatusEnum::Submitted->name,
             'Status'     => WorkflowStatus::Submitted->value,
             'Notes'      => 'Plan Submission',
             'CreatedBy'  => $actor->Id,

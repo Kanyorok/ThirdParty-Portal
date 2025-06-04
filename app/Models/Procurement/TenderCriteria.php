@@ -17,10 +17,10 @@ class TenderCriteria extends Model
     protected $table = 't_TenderCriteria';
 
     protected $fillable = [
-        'TenderRef',
+        'TenderID',
         'CriteriaID',
         'SectionID',
-        'Weight',
+        'MaxScore',
         'IsActive',
         'CreatedBy',
         'ModifiedBy',

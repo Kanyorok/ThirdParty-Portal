@@ -5,9 +5,11 @@ namespace App\Models\Procurement;
 use App\Models\Auth\User;
 use App\Models\Core\Branch;
 use App\Models\HRM\Department;
+use App\Models\Inventory\ItemMasterList;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Procurement\PlanLineItems;
 
 class PlanLineItems extends Model
 {
@@ -55,7 +57,6 @@ class PlanLineItems extends Model
         return $this->belongsTo(Branch::class, 'BranchID');
     }
 
-
     public function department()
     {
         return $this->belongsTo(Department::class, 'DepartmentID');
@@ -64,7 +65,7 @@ class PlanLineItems extends Model
     // PlanLineItems.php
     public function item()
     {
-        return $this->belongsTo(Item::class, 'ItemID', 'Id');
+        return $this->belongsTo(ItemMasterList::class, 'ItemID', 'Id');
     }
 
     public function createdBy()
@@ -89,7 +90,6 @@ class PlanLineItems extends Model
     }
     public function schedulePlan()
     {
-        return $this->hasOne(SchedulePlan::class, 'PlanLineId', 'LineItemID');
+        return $this->belongsTo(SchedulePlan::class, 'PlanLineId', 'LineItemID');
     }
-
 }

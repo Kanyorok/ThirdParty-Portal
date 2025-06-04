@@ -14,12 +14,14 @@ class TenderSection extends Model
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
 
-    protected $table = 't_Sections';
+    protected $table = 't_TenderSection';
 
     protected $fillable = [
-        'SectionName',
-        'Description',
+        'TenderID',
+        'SectionID',
+        'Weight',
         'IsActive',
+        'Comments',
         'CreatedBy',
         'ModifiedBy',
     ];
@@ -45,7 +47,15 @@ class TenderSection extends Model
     }
     public function criteria()
     {
-        return $this->hasMany(TenderCriteria::class, 'SectionID', 'TenderSectionID');
+        return $this->hasMany(Criteria::class, 'SectionID', 'id');
+    }
+    public function TenderCriteria()
+    {
+        return $this->hasMany(TenderCriteria::class, 'TenderID', 'id');
+    }
+    public function sections()
+    {
+        return $this->belongsTo(Section::class, 'SectionID', 'id');
     }
     public function bids()
     {
