@@ -26,6 +26,9 @@ class ItemMasterListController extends Controller
                 ->addColumn('ItemType', fn($item) => optional($item->itemType)->TypeName ?? '—')
                 ->addColumn('InventoryType', fn($item) => optional($item->inventoryType)->Type ?? '—')
                 ->addColumn('UOM', fn($item) => optional($item->uom)->Code ?? '—')
+                ->addColumn('Status', function($item) {
+                   return $item->Status == 1 ? 'Active' : 'Inactive';
+                   })
                 ->addColumn('Action', function ($item) {
                     return '
                         <a href="' . route('itemmasterlist.show', $item->Id) . '" class="btn btn-sm btn-primary">View</a>

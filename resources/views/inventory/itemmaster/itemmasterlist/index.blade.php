@@ -41,6 +41,7 @@
                     <th>Item Type</th>
                     <th>Inventory Type</th>
                     <th>UOM</th>
+                    <th>Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>
