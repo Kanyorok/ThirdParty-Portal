@@ -1,0 +1,26 @@
+<?php
+
+namespace App\Models\PropertyManagement;
+
+use Illuminate\Database\Eloquent\Model;
+
+class PropertyType extends Model
+{
+    //
+    protected $table = 't_PropertyType';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    const string DELETED_AT = 'DeletedOn';
+    protected $primaryKey = 'Id';
+
+    protected $fillable = [
+        'PropertyTypeName',
+        'PropertyCategoryId', // Foreign key to PropertyCategory
+        'Description',
+        'CreatedBy',
+        'ModifiedBy',
+        'DeletedBy'
+    ];
+
+
+}

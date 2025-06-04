@@ -5,7 +5,7 @@
 
 <a href="{{ route('attachments.create') }}" class="btn btn-primary mb-3">Attach Document</a>
   <h4 class="fw-bold mb-3">📋 Property Documents</h4>
-
+@if($propertyattachments->count())
   <table class="table table-bordered table-striped align-middle">
     <thead class="table-light">
       <tr>
@@ -13,37 +13,28 @@
         <th>Property</th>
         <th>Document Title</th>
         <th>Type</th>
-        <th>Uploaded By</th>
-        <th>Uploaded On</th>
+        <th>Description</th>
         <th>Action</th>
       </tr>
     </thead>
     <tbody>
+      @foreach($propertyattachments as $propertyattachment)
       <tr>
-        <td>1</td>
-        <td>Sunset Plaza</td>
-        <td>Title Deed</td>
-        <td>Ownership</td>
-        <td>Moses K.</td>
-        <td>2025-05-01</td>
+        <td>{{ $propertyattachment->Id }}</td>
+        <td>{{ $propertyattachment->PropertyID }}</td>
+        <td>{{ $propertyattachment->DocumentTitle }}</td>
+        <td>{{ $propertyattachment->DocumentType }}</td>
+        <td>{{ $propertyattachment->Description}}</td>       
         <td>
           <a href="#" class="btn btn-sm btn-outline-primary">⬇ Download</a>
           <button class="btn btn-sm btn-outline-danger">🗑 Delete</button>
         </td>
       </tr>
-      <tr>
-        <td>2</td>
-        <td>Mountain View Estate</td>
-        <td>Site Blueprint</td>
-        <td>Architectural Plan</td>
-        <td>Admin</td>
-        <td>2025-04-28</td>
-        <td>
-          <a href="#" class="btn btn-sm btn-outline-primary">⬇ Download</a>
-          <button class="btn btn-sm btn-outline-danger">🗑 Delete</button>
-        </td>
-      </tr>
+      @endforeach
     </tbody>
   </table>
+   @else
+<p>No property attachments registered yet.</p>
+@endif
 </div>
 @endsection
