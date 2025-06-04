@@ -16,12 +16,14 @@ use Illuminate\Support\Facades\Auth;
 use App\Enums\Procurement\DepartmentNeedsEnum;
 use App\Http\Requests\Procurement\PlanFromNeedsRequest;
 use App\Enums\ProcurementPlanStatusEnum;
+use App\Policies\Procurement\PlanManualInputPolicy;
 
 class PlanFromNeedsController extends Controller
 {
     // Load main view with filters and initial needs
     public function create(Request $request)
     {
+        $this->authorize('create', PlanLineItems::class);
         $approvedNeeds = $this->getFilteredNeeds($request);
 
         $plans = ConsolidatedProcurementPlan::where('Status', ProcurementPlanStatusEnum::Draft)->select('PlanID', 'Title', 'FiscalYear')->get();
@@ -69,6 +71,7 @@ class PlanFromNeedsController extends Controller
     // Store selected needs
     public function store(PlanFromNeedsRequest $request)
     {
+        $this->authorize('store', PlanLineItems::class);
         $user = $request->user();
 
         $selectedNeeds = DepartmentNeeds::whereIn('Id', $request->selected_needs)->get();

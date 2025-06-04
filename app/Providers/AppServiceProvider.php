@@ -50,6 +50,8 @@ use App\Policies\Procurement\RequisitionPolicy;
 use App\Policies\Procurement\SchedulePlanPolicy;
 use App\Policies\ProductDevelopmentPolicy;
 use App\Policies\RolePolicy;
+use App\Policies\Procurement\ProcurementPlanMaintainPolicy;
+use App\Policies\Procurement\PlanManualInputPolicy;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -68,6 +70,8 @@ use App\Models\Inventory\StockItem;
 use App\Models\Inventory\UnitOfMeasure;
 use App\Models\Inventory\Store;
 use App\Models\Inventory\InventoryType;
+use App\Models\Procurement\ConsolidatedProcurementPlan;
+use App\Models\Procurement\PlanLineItems;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -130,6 +134,8 @@ class AppServiceProvider extends ServiceProvider
             Store::getPrimaryKey() => Store::class,
             UnitOfMeasure::getPrimaryKey() => UnitOfMeasure::class,
             SchedulePlan::getPrimaryKey() => SchedulePlan::class,
+            ConsolidatedProcurementPlan::getPrimaryKey() => ConsolidatedProcurementPlan::class,
+            PlanLineItems::getPrimaryKey() => PlanLineItems::class,
         ]);
 
         Gate::policy(Role::class, RolePolicy::class);
@@ -147,8 +153,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(InventoryType::class, InventoryTypePolicy::class);
         Gate::policy(Store::class, StorePolicy::class);
         Gate::policy(UnitOfMeasure::class, UnitOfMeasurePolicy::class);
-
+        Gate::policy(ConsolidatedProcurementPlan::class, ProcurementPlanMaintainPolicy::class);
         Gate::policy(SchedulePlan::class, SchedulePlanPolicy::class);
+        Gate::policy(PlanLineItems::class, PlanManualInputPolicy::class);
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);
          Event::listen(SMSSendEvent::class, SMSSendListener::class);
