@@ -9,7 +9,6 @@ use App\Models\Inventory\ItemMasterList;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Procurement\PlanLineItems;
 
 class PlanLineItems extends Model
 {
