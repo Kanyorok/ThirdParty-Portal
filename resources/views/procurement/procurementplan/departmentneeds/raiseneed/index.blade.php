@@ -27,13 +27,13 @@
     <tbody>
     @forelse ($departmentneedviews as $index => $departmentneedview)
       <tr>
-          <td>{{ $index + 1 }}</td>
-          <td>{{ $departmentneedview->item->ItemName ?? 'N/A' }}</td>
-          <td>{{ $departmentneedview->item->Category->Name ?? 'N/A' }}</td>
-          <td>{{ $departmentneedview->RequestedQty }}</td>
-          <td>{{ $departmentneedview->EstimatedUnitCost }}</td>
-          <td>{{ $departmentneedview->Status->label() }}</td>
-          <td>{{ $departmentneedview->creator->Name }}</td>
+        <td>{{ $index + 1 ?? 'N/A'}}</td>
+        <td>{{ $departmentneedview->item->ItemName ?? 'N/A' }}</td>
+        <td>{{ $departmentneedview->item->category->Name ?? 'N/A' }}</td>
+        <td>{{ $departmentneedview->RequestedQty ?? 'N/A' }}</td>
+        <td>{{ $departmentneedview->EstimatedUnitCost ?? 'N/A' }}</td>
+        <td>{{ $departmentneedview->Status->label() ?? 'N/A' }}</td>
+        <td>{{ $departmentneedview->creator->Name ?? 'N/A' }}</td>
         <td>
             <button onclick="openEditModal('{{ $departmentneedview->NeedID }}')" class="btn btn-sm btn-outline-primary">
                 Edit
@@ -134,13 +134,13 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script>
-    $(document).ready(function () {
-        $('#raisedneeds').DataTable({
-            pageLength: 10,
-            ordering: true,
-            searching: true,
-            lengthChange: true
-        });
+  $(document).ready(function () {
+    $('#raisedneeds').DataTable({
+      pageLength: 10,
+      ordering: true,
+      searching: true,
+      lengthChange: true,
     });
+  });
 </script>
 @endsection

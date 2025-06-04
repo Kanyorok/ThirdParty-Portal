@@ -1,7 +1,7 @@
 alter PROCEDURE p_AddPurchaseOrder @Supplier bigint,
     @OrderDate date,
-                                   @RfqNo bigint,
-                                   @Priority varchar(20),
+    @RfqNo varchar(20),
+    @Priority varchar(20),
     @Terms varchar(255),
                                    @User bigint,
                                    @BranchId int = 0

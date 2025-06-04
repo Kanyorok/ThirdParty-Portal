@@ -17,7 +17,7 @@ class GoodsReceiptController extends Controller
     {
 
         // Get only POs not used in GoodsReceipts
-        $goodsReceipts = GoodsReceipt::with('receiver', 'supplier')->where('InspectionStatus', 'd')->get();
+        $goodsReceipts = GoodsReceipt::with('receiver', 'supplier')->where('InspectionStatus', PostingEnum::Draft)->get();
         return view('procurement.goodreceipts.index', compact('goodsReceipts'));
     }
 

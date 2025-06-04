@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\procurement;
+namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\BidSubmission;
@@ -54,7 +54,7 @@ class TenderOpeningController extends Controller
             ->get();
         $data=true; // This variable is used to indicate that there are no submissions yet
         return view('procurement.tendering.bidopeningandevaluation.opening.index',compact('tenders','submissions','data'));
-        
+
     }
 
     /**

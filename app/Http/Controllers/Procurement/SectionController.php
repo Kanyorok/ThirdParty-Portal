@@ -15,7 +15,8 @@ class SectionController extends Controller
      */
     public function index()
     {
-        return 11;
+        $sections= Section::all();
+        return view('procurement.tendering.settings.sections',compact('sections'));
     }
 
     /**

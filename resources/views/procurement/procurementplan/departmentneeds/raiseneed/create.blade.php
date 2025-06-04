@@ -20,7 +20,7 @@
               @foreach ($items as $item)
                   <option value="{{ $item->Id }}"
                           data-category="{{ $item->category ? $item->category->Name : '' }}"
-                          data-uom="{{ $item->UOM }}"
+                          data-uom="{{ $item->uom->Name ?? 'N/A' }}"
                       {{ old('ItemID') == $item->Id ? 'selected' : '' }}>
                       {{ $item->ItemName }}
                   </option>

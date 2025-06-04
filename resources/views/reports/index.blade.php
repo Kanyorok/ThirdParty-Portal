@@ -1,5 +1,10 @@
 @extends('layouts.app')
-@section('title', $module->description().' Reports')
+@section('title', 'Reports')
+
+@section('breadcrumbs')
+    <li class="breadcrumb-item"><a href="javascript:void(0);">{{ $module->description() }}</a></li>
+@endsection
+
 @section('content')
     <div class="row">
         <div class="col-12">
@@ -51,8 +56,10 @@
                         {data: 'Name', name: 'Name'},
                         {data: 'Description', name: 'Description'},
                         {data: 'action', name: 'action', orderable: false, searchable: false},
-                    ], "oLanguage": {
-                        "sEmptyTable": "no reports found, under current filter"
+                    ], "language": {
+                        emptyTable: function() {
+                            return table.ready() ? "no reports found, under current filter" : "Loading..."
+                        },
                     }
                 }).on('error', function () {
                     nWarning("an issue occurred while loading reports.");

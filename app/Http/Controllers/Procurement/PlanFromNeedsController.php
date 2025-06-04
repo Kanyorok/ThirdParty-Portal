@@ -5,16 +5,17 @@ namespace App\Http\Controllers\Procurement;
 use App\Http\Controllers\Controller;
 use App\Models\Core\Branch;
 use App\Models\HRM\Department;
+use App\Models\Inventory\ItemCategories;
 use App\Models\Procurement\BudgetMaster;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\DepartmentNeeds;
-use App\Models\Procurement\ItemCategory;
 use App\Models\Procurement\PlanLineItems;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Enums\Procurement\DepartmentNeedsEnum;
 use App\Http\Requests\Procurement\PlanFromNeedsRequest;
+use App\Enums\ProcurementPlanStatusEnum;
 
 class PlanFromNeedsController extends Controller
 {
@@ -23,13 +24,13 @@ class PlanFromNeedsController extends Controller
     {
         $approvedNeeds = $this->getFilteredNeeds($request);
 
-        $plans = ConsolidatedProcurementPlan::select('PlanID', 'Title', 'FiscalYear')->get();//todo draft
+        $plans = ConsolidatedProcurementPlan::where('Status', ProcurementPlanStatusEnum::Draft)->select('PlanID', 'Title', 'FiscalYear')->get();
         $branches = Branch::all();
         $departments = Department::all();
         $budgetLines = BudgetMaster::all();
 
         $categoryIds = $approvedNeeds->pluck('item.Category')->filter()->unique();
-        $categories = ItemCategory::whereIn('Id', $categoryIds)->orderBy('Name')->get();
+        $categories = ItemCategories::whereIn('Id', $categoryIds)->orderBy('Name')->get();
 
         return view('procurement.procurementplan.planconsolidation.loadfromneeds.create', compact(
             'approvedNeeds', 'plans', 'branches', 'departments', 'categories', 'budgetLines'
