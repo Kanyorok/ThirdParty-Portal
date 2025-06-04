@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\TenderCommitteeMember;
-use App\Models\procurement\TenderSupplier;
+use App\Models\Procurement\TenderSupplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 

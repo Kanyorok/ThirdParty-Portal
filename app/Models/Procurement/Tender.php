@@ -47,7 +47,7 @@ class Tender extends Model
         'DeletedBy',
         'StartDate',
         'CurrencyId',
-        'TenderCategory',
+        //'TenderCategory',
         'ApprovalRemarks',
         'ApprovalStatus', // 1 for approved, 2 for rejected, 0 for pending
     ];
