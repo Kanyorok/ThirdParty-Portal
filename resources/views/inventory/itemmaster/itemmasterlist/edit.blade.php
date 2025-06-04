@@ -4,6 +4,7 @@
 
 @section('content')
 
+
 @if($errors->any())
     <div class="alert alert-danger">
         <ul>
@@ -37,9 +38,12 @@
                 <label for="ItemType" class="form-label">Item Type</label>
                 <select name="ItemType" class="form-select" required>
                     <option disabled>Select Type</option>
-                    <option value="Stock" {{ old('ItemType', $item->ItemType) == 'Stock' ? 'selected' : '' }}>Stock</option>
-                    <option value="Asset" {{ old('ItemType', $item->ItemType) == 'Asset' ? 'selected' : '' }}>Asset</option>
-                    <option value="Non-Stock" {{ old('ItemType', $item->ItemType) == 'Non-Stock' ? 'selected' : '' }}>Non-Stock</option>
+                @foreach($itemTypes as $itemType)
+               <option value="{{ $itemType->Id }}" {{ old('ItemType') == $itemType->Id ? 'selected' : '' }}>
+                {{ $itemType->TypeName }}
+               </option>
+               @endforeach
+
                 </select>
             </div>
             <div class="col-md-4">
@@ -71,18 +75,24 @@
                 <label for="UOM" class="form-label">Unit of Measure (UOM)</label>
                 <select name="UOM" class="form-select" required>
                     <option disabled>Select UOM</option>
-                    <option value="pcs" {{ old('UOM', $item->UOM) == 'pcs' ? 'selected' : '' }}>pcs</option>
-                    <option value="kg" {{ old('UOM', $item->UOM) == 'kg' ? 'selected' : '' }}>kg</option>
-                    <option value="litres" {{ old('UOM', $item->UOM) == 'litres' ? 'selected' : '' }}>litres</option>
+                    @foreach($uoms as $uom)
+                    <option value="{{ $uom->Id }}" {{ old('UOM') == $uom->Id ? 'selected' : '' }}>
+                    {{ $uom->Code }}
+                </option>
+                    @endforeach
+
                 </select>
             </div>
             <div class="col-md-4">
                 <label for="InventoryType" class="form-label">Inventory Type</label>
                 <select name="InventoryType" class="form-select" required>
                     <option disabled>Select Inventory Type</option>
-                    <option value="Consumable" {{ old('InventoryType', $item->InventoryType) == 'Consumable' ? 'selected' : '' }}>Consumable</option>
-                    <option value="Durable" {{ old('InventoryType', $item->InventoryType) == 'Durable' ? 'selected' : '' }}>Durable</option>
-                    <option value="Perishable" {{ old('InventoryType', $item->InventoryType) == 'Perishable' ? 'selected' : '' }}>Perishable</option>
+                    @foreach($inventoryTypes as $inventoryType) 
+                    <option value="{{ $inventoryType->Id }}" {{ old('InventoryType') == $inventoryType->Id ? 'selected' : '' }}>
+                    {{ $inventoryType->Type }}
+                   </option>
+                   @endforeach
+
                 </select>
             </div>
         </div>
@@ -95,18 +105,52 @@
         <div class="mb-3">
             <label for="ImageUpload" class="form-label">Item Image</label>
             <input type="file" name="ImageUpload" class="form-control">
-            @if($item->ImageUpload)
-                <img src="{{ asset('storage/' . $item->ImageUpload) }}" class="img-thumbnail mt-2" style="max-height: 100px;">
+             @if($item->image)
+        <div class="mt-2" id="current-image-section">
+            <img src="data:{{ $item->image->MIMEType }};base64,{{ $item->image->Image }}" alt="Item Image" style="max-width:200px;">
+            <button type="button" class="btn btn-danger btn-sm ms-2" id="remove-image-btn">Remove Image</button>
+        </div>
+        <input type="hidden" name="remove_image" id="remove-image" value="0">
+    @endif
+
+        <div class="mb-3">
+            <label for="DocumentUpload" class="form-label">Attached Document</label>
+            @if($item->DocumentUpload)
+                <div class="mb-2">
+                    <a href="{{ asset('storage/' . $item->DocumentUpload) }}" target="_blank">View Existing Document</a>
+                </div>
             @endif
+            <input type="file" name="DocumentUpload" id="DocumentUpload" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx">
+        </div>
+         <div class="col-md-4">
+                <label for="Status" class="form-label">Active?</label>
+                    <input type="hidden" name="Status" value="0">
+                    <input class="form-check-input" type="checkbox" name="Status" value="1" id="Status"
+                     {{ old('Status', 1) == 1 ? 'checked' : '' }}>
+                
+            </div>
         </div>
 
-        <button type="submit" class="btn btn-success">💾 Update Item</button>
+        <button type="submit" class="btn btn-success">Update Item</button>
     </form>
 </div>
 
 @endsection
 
+
+
 @section('scripts')
+
+<script>
+    $(document).ready(function () {
+        // ...existing category/subcategory code...
+
+        $('#remove-image-btn').on('click', function () {
+            $('#current-image-section').hide();
+            $('#remove-image').val('1');
+        });
+    });
+</script>
 <script>
     $(document).ready(function () {
         $('#category').change(function () {

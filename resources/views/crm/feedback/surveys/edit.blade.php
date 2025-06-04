@@ -411,8 +411,8 @@
     </div>
 @endsection
 @section('scripts')
-    <script src="{{ asset('assets/js/datatables.js') }}"></script>
-    <script src='{{ asset('assets/plugins/moment/moment-with-locales.js') }}'></script>
+
+    <script src='{{ asset('assets/libs/moment/moment-with-locales.js') }}'></script>
     <script>let filtersTable = null;
         const $Modal = $('#SurveyActionsModal');
         $(function () {

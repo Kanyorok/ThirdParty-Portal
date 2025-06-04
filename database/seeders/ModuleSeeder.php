@@ -84,7 +84,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 209210, 'Name' => 'Lists', 'Icon' => null, 'ParentID' => 209200, 'Route' => 'loans-list.index'],
             ['ModuleID' => 209220, 'Name' => 'Loans', 'Icon' => null, 'ParentID' => 209200, 'Route' => 'debt-collection.index'],
 
-            ['ModuleID' => 299000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'ParentID' => 200000, 'Route' => null],
+            ['ModuleID' => 299000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'ParentID' => 200000, 'Route' => 'crm-reports.index'],
         ]);
 
         if ($fresh) {
@@ -111,12 +111,13 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 301200, 'Name' => 'Plan Consolidation', 'Icon' => null, 'ParentID' => 301000, 'Route' => null],
             ['ModuleID' => 301210, 'Name' => 'Consolidated Needs', 'Icon' => null, 'ParentID' => 301200, 'Route' => 'consolidated.index'],
             ['ModuleID' => 301220, 'Name' => 'New Plan', 'Icon' => null, 'ParentID' => 301200, 'Route' => 'procurementplanmaintain.index'],
-            ['ModuleID' => 301230, 'Name' => 'Amend Plan', 'Icon' => null, 'ParentID' => 301200, 'Route' => 'editplan.index'],
+            ['ModuleID' => 301230, 'Name' => 'Amend Plan', 'Icon' => null, 'ParentID' => 301200, 'Route' => 'ammendplan.index'],
             ['ModuleID' => 301240, 'Name' => 'Link Budget Lines', 'Icon' => null, 'ParentID' => 301200, 'Route' => 'maptobudget.index'],
             ['ModuleID' => 301250, 'Name' => 'Set Method', 'Icon' => null, 'ParentID' => 301200, 'Route' => 'procurement-set-method.index'],
-            ['ModuleID' => 301260, 'Name' => 'Schedule Plan', 'Icon' => null, 'ParentID' => 301200, 'Route' => 'procurementplanquaterly.index'],
+            ['ModuleID' => 301270, 'Name' => 'Submit Plan', 'Icon' => null, 'ParentID' => 301200, 'Route' => 'Procurement-Plan-Submission.index'],
+            ['ModuleID' => 301280, 'Name' => 'Approve Plan', 'Icon' => null, 'ParentID' => 301200, 'Route' => 'procurementplanapproval.index'],
+            ['ModuleID' => 301260, 'Name' => 'Schedule Plan', 'Icon' => null, 'ParentID' => 301200, 'Route' => 'Procurement-Plan-Schedule.index'],
             ['ModuleID' => 301300, 'Name' => 'Dashboard', 'Icon' => null, 'ParentID' => 301000, 'Route' => null],
-            ['ModuleID' => 301310, 'Name' => 'Plan View', 'Icon' => null, 'ParentID' => 301300, 'Route' => 'procurementplandetails.index'],
             ['ModuleID' => 301320, 'Name' => 'Timeline', 'Icon' => null, 'ParentID' => 301300, 'Route' => 'plantimeline.index'],
             ['ModuleID' => 301330, 'Name' => 'Calender Based', 'Icon' => null, 'ParentID' => 301300, 'Route' => 'calenderbased.index'],
             ['ModuleID' => 301340, 'Name' => 'Flagged Items', 'Icon' => null, 'ParentID' => 301300, 'Route' => 'delayeditems.index'],
@@ -140,9 +141,32 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 304100, 'Name' => 'List Modes', 'Icon' => null, 'ParentID' => 304000, 'Route' => 'procurement-modes.index'],
             ['ModuleID' => 304200, 'Name' => 'Add Mode', 'Icon' => null, 'ParentID' => 304000, 'Route' => 'procurement-modes.create'],
             ['ModuleID' => 305000, 'Name' => 'Tendering', 'Icon' => null, 'ParentID' => 300000, 'Route' => null],
+
+            // Tender Setup
             ['ModuleID' => 305100, 'Name' => 'Tender Setup', 'Icon' => null, 'ParentID' => 305000, 'Route' => null],
             ['ModuleID' => 305110, 'Name' => 'Tender Initiation', 'Icon' => null, 'ParentID' => 305100, 'Route' => 'initiatetender.index'],
             ['ModuleID' => 305120, 'Name' => 'Initiation Approval', 'Icon' => null, 'ParentID' => 305100, 'Route' => 'initiateapprove.index'],
+            ['ModuleID' => 305130, 'Name' => 'Tender Category', 'Icon' => null, 'ParentID' => 305100, 'Route' => 'tendercategory.index'],
+            ['ModuleID' => 305140, 'Name' => 'Tender Type', 'Icon' => null, 'ParentID' => 305100, 'Route' => 'tendertype.index'],
+            ['ModuleID' => 305160, 'Name' => 'Tender Criteria Setup', 'Icon' => null, 'ParentID' => 305100, 'Route' => 'tenderevaluations.index'],
+
+            // Suppliers
+            ['ModuleID' => 305200, 'Name' => 'Suppliers', 'Icon' => null, 'ParentID' => 305000, 'Route' => null],
+            ['ModuleID' => 305210, 'Name' => 'Response Tracking', 'Icon' => null, 'ParentID' => 305200, 'Route' => 'tenderresponse.index'],
+            ['ModuleID' => 305220, 'Name' => 'Clarifications', 'Icon' => null, 'ParentID' => 305200, 'Route' => 'tenderclarification.index'],
+            ['ModuleID' => 305230, 'Name' => 'Submission', 'Icon' => null, 'ParentID' => 305200, 'Route' => 'tendersubmission.index'],
+
+            // Opening
+            ['ModuleID' => 305300, 'Name' => 'Opening', 'Icon' => null, 'ParentID' => 305000, 'Route' => null],
+            ['ModuleID' => 305310, 'Name' => 'Opening', 'Icon' => null, 'ParentID' => 305300, 'Route' => 'tenderopening.index'],
+
+            // Evaluation
+            ['ModuleID' => 305400, 'Name' => 'Evaluation', 'Icon' => null, 'ParentID' => 305000, 'Route' => null],
+            ['ModuleID' => 305410, 'Name' => 'Appoint Committee', 'Icon' => null, 'ParentID' => 305400, 'Route' => 'tendercommittee.index'],
+            ['ModuleID' => 305420, 'Name' => 'Member Response', 'Icon' => null, 'ParentID' => 305400, 'Route' => 'memberresponse.index'],
+            ['ModuleID' => 305430, 'Name' => 'Assign Roles', 'Icon' => null, 'ParentID' => 305400, 'Route' => 'assignrole.index'],
+            ['ModuleID' => 305440, 'Name' => 'Evaluators Dashboard', 'Icon' => null, 'ParentID' => 305400, 'Route' => 'evaluationdashboard.index'],
+            ['ModuleID' => 305450, 'Name' => 'Consolidated Scores', 'Icon' => null, 'ParentID' => 305400, 'Route' => 'bidscores.index'],
 
             ['ModuleID' => 306000, 'Name' => 'Quotations', 'Icon' => null, 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 306100, 'Name' => 'View Quotations', 'Icon' => null, 'ParentID' => 306000, 'Route' => 'rfqs.index'],
@@ -152,13 +176,16 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 307000, 'Name' => 'Purchase Order', 'Icon' => null, 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 307100, 'Name' => 'View Purchase Orders', 'Icon' => null, 'ParentID' => 307000, 'Route' => 'purchaseOrder.index'],
             ['ModuleID' => 307200, 'Name' => 'Create Purchase Orders', 'Icon' => null, 'ParentID' => 307000, 'Route' => 'purchaseOrder.create'],
-//            ['ModuleID' => 307300, 'Name' => 'RFQ Evaluation', 'Icon' => null, 'ParentID' => 307000, 'Route' => 'evaluations.index'],
+            ['ModuleID' => 307300, 'Name' => 'Link RFQ to Purchase Order', 'Icon' => null, 'ParentID' => 307000, 'Route' => 'purchaseOrder.linkRFQ'],
 
             ['ModuleID' => 308000, 'Name' => 'Good Receipt', 'Icon' => null, 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 308100, 'Name' => 'View Good Receipt', 'Icon' => null, 'ParentID' => 308000, 'Route' => 'procurementreceipts.index'],
             ['ModuleID' => 308200, 'Name' => 'Create Good Receipt', 'Icon' => null, 'ParentID' => 308000, 'Route' => 'procurementreceipts.create'],
 
-            ['ModuleID' => 399000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'ParentID' => 300000, 'Route' => null],
+            ['ModuleID' => 398000, 'Name' => 'Settings', 'Icon' => null, 'ParentID' => 300000, 'Route' => null],
+            ['ModuleID' => 398100, 'Name' => 'Criteria Setup', 'Icon' => null, 'ParentID' => 398000, 'Route' => 'sections.index'],
+
+            ['ModuleID' => 399000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'ParentID' => 300000, 'Route' => 'procurement-reports.index'],
         ]);
 
         if ($fresh) {
@@ -179,6 +206,7 @@ class ModuleSeeder extends Seeder
         $values = collect([
             ['ModuleID' => 400000, 'Name' => ModulesEnum::Inventory->description(), 'Icon' => '<i data-feather="archive"></i>', 'Description' => 'Inventory Management Module', 'Route' => null, 'ParentID' => null],
             ['ModuleID' => 401000, 'Name' => 'Item Master', 'Icon' => null, 'Description' => 'Item Master Management', 'Route' => null, 'ParentID' => 400000],
+<<<<<<< HEAD
             ['ModuleID' => 401100, 'Name' => 'Item Master List', 'Icon' => null, 'Description' => 'Item Master List', 'Route' => 'itemmaster.index', 'ParentID' => 401000],
             ['ModuleID' => 401200, 'Name' => 'Stock Item', 'Icon' => null, 'Description' => 'Stock Item Management', 'Route' => 'sku.index', 'ParentID' => 401000],
             ['ModuleID' => 401300, 'Name' => 'Item Category', 'Icon' => null, 'Description' => 'Item Category Management', 'Route' => 'itemcategory.index', 'ParentID' => 401000],
@@ -186,6 +214,14 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 401700, 'Name' => 'Item Type', 'Icon' => null, 'Description' => 'Item Type Management', 'Route' => 'itemtype.index', 'ParentID' => 401000],
             ['ModuleID' => 401500, 'Name' => 'Inventory Type', 'Icon' => null, 'Description' => 'Inventory Type Management', 'Route' => 'inventorytype.index', 'ParentID' => 401000],
             ['ModuleID' => 401600, 'Name' => 'Unit Of Measure', 'Icon' => null, 'Description' => 'Unit of Measure Management', 'Route' => 'unitofmeasure.index', 'ParentID' => 401000],
+=======
+                       ['ModuleID' => 401100, 'Name' => 'Item Master List', 'Icon' => null, 'Description' => 'Item Master List', 'Route' => 'itemmaster.index', 'ParentID' => 401000],
+                       ['ModuleID' => 401200, 'Name' => 'Stock Item', 'Icon' => null, 'Description' => 'Stock Item Management', 'Route' => 'sku.index', 'ParentID' => 401000],
+                       ['ModuleID' => 401300, 'Name' => 'Item Category', 'Icon' => null, 'Description' => 'Item Category Management', 'Route' => 'itemcategory.index', 'ParentID' => 401000],
+                       ['ModuleID' => 401700, 'Name' => 'Item Type', 'Icon' => null, 'Description' => 'Item Type Management', 'Route' => 'itemtype.index', 'ParentID' => 401000],
+                       ['ModuleID' => 401500, 'Name' => 'Inventory Type', 'Icon' => null, 'Description' => 'Inventory Type Management', 'Route' => 'inventorytype.index', 'ParentID' => 401000],
+                       ['ModuleID' => 401600, 'Name' => 'Unit Of Measure', 'Icon' => null, 'Description' => 'Unit of Measure Management', 'Route' => 'unitofmeasure.index', 'ParentID' => 401000],
+>>>>>>> feature/newMenu-dev
             ['ModuleID' => 402000, 'Name' => 'InterBranch Requisition', 'Icon' => null, 'Description' => 'InterBranch Requisition Management', 'Route' => null, 'ParentID' => 400000],
             ['ModuleID' => 402100, 'Name' => 'New Requisition', 'Icon' => null, 'Description' => 'Create New Requisition', 'Route' => 'interbranchrequisition.index', 'ParentID' => 402000],
             ['ModuleID' => 402200, 'Name' => 'Requisition Approval', 'Icon' => null, 'Description' => 'Requisition Approval', 'Route' => 'interbranchrequisitionapproval.index', 'ParentID' => 402000],
@@ -204,8 +240,13 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 405500, 'Name' => 'Expiry Batch Tracking', 'Icon' => null, 'Description' => 'Expiry Batch Tracking', 'Route' => 'expirytracking.index', 'ParentID' => 405000],
             ['ModuleID' => 406000, 'Name' => 'Conversion Mapping', 'Icon' => null, 'Description' => 'Conversion Mapping Management', 'Route' => null, 'ParentID' => 400000],
             ['ModuleID' => 406100, 'Name' => 'Conversion Mapping', 'Icon' => null, 'Description' => 'UOM Conversion Mapping', 'Route' => 'uomconversion.index', 'ParentID' => 406000],
+            ['ModuleID' => 408000, 'Name' => 'Stores', 'Icon' => null, 'Description' => 'List of Stores', 'Route' => 'stores.index', 'ParentID' => 400000],
 
-            ['ModuleID' => 499000, 'Name' => 'Reports', 'Icon' => null, 'Description' => 'Inventory Reports', 'Route' => 'inventoryreports.index', 'ParentID' => 400000],
+            ['ModuleID' => 499000, 'Name' => 'Reports', 'Icon' => null, 'Description' => 'Inventory Reports', 'Route' => 'inventory-reports.index', 'ParentID' => 400000],
+
+
+
+
         ]);
 
         if ($fresh) {
@@ -221,7 +262,7 @@ class ModuleSeeder extends Seeder
         return $data;
     }
 
-   protected function _budgetline(bool $fresh): Collection
+    protected function _budgetline(bool $fresh): Collection
     {
         $values = collect([
             // Root Module

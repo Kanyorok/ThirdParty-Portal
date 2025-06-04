@@ -14,7 +14,8 @@ class BudgetLinesController extends Controller
         return view('budgetandanalytics.budgetlinesmaster.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('budgetandanalytics.budgetlinesmaster.create');
     }
 

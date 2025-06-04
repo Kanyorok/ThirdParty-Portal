@@ -14,7 +14,7 @@ class BudgetMaster extends Model
     const string UPDATED_AT = 'ModifiedOn';
     const string DELETED_AT = 'DeletedOn';
 
-    protected $table = 't_BudgetMaster'; 
+    protected $table = 't_BudgetMaster';
     protected $primaryKey = 'BudgetLineID';
 
     protected $fillable = [
@@ -27,10 +27,11 @@ class BudgetMaster extends Model
         'ModifiedBy',
         'DeletedBy',
     ];
+
     public function budgetLineLinks()
-{
-    return $this->hasMany(BudgetLineLink::class, 'BudgetLineID', 'BudgetLineID');
-}
+    {
+        return $this->hasMany(BudgetLineLink::class, 'BudgetLineID', 'BudgetLineID');
+    }
 
 }
 

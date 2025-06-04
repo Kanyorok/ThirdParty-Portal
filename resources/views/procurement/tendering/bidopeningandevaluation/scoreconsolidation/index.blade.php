@@ -16,12 +16,13 @@
 
     <!-- Consolidated Scoring Table -->
     <div class="table-responsive mb-4">
-        <table class="table table-bordered table-striped align-middle">
-            <thead class="table-light text-center">
+        <table class="table table-bordered align-middle">
+            <thead class="table-light text-center align-middle">
                 <tr>
                     <th rowspan="2">#</th>
                     <th rowspan="2">Bidder</th>
-                    <th colspan="5">Average Score per Criterion</th>
+                    <th colspan="3">Technical (60%)</th>
+                    <th colspan="2">Financial (40%)</th>
                     <th rowspan="2">Total Weighted Score (%)</th>
                     <th rowspan="2">Rank</th>
                     <th rowspan="2">Recommendation</th>
@@ -35,39 +36,59 @@
                 </tr>
             </thead>
             <tbody>
+                <!-- Bidder 1 -->
                 <tr>
                     <td>1</td>
                     <td>Tech Supplies Ltd</td>
-                    <td>9.0</td>
-                    <td>8.5</td>
-                    <td>8.0</td>
-                    <td>7.0</td>
-                    <td>8.5</td>
+                    @foreach ([9.0, 8.5, 8.0, 7.0, 8.5] as $score)
+                        <td>
+                            <div class="d-flex flex-column text-center">
+                                <small>{{ number_format($score, 1) }}/10</small>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-info" style="width: {{ $score * 10 }}%;"></div>
+                                </div>
+                            </div>
+                        </td>
+                    @endforeach
                     <td><strong>85%</strong></td>
                     <td>1</td>
                     <td><span class="badge bg-success">Recommended</span></td>
                 </tr>
+
+                <!-- Bidder 2 -->
                 <tr>
                     <td>2</td>
                     <td>Nova Systems</td>
-                    <td>8.5</td>
-                    <td>7.5</td>
-                    <td>7.0</td>
-                    <td>6.5</td>
-                    <td>7.5</td>
-                    <td>76%</td>
+                    @foreach ([8.5, 7.5, 7.0, 6.5, 7.5] as $score)
+                        <td>
+                            <div class="d-flex flex-column text-center">
+                                <small>{{ number_format($score, 1) }}/10</small>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-info" style="width: {{ $score * 10 }}%;"></div>
+                                </div>
+                            </div>
+                        </td>
+                    @endforeach
+                    <td><strong>76%</strong></td>
                     <td>2</td>
                     <td><span class="badge bg-secondary">Backup</span></td>
                 </tr>
+
+                <!-- Bidder 3 -->
                 <tr>
                     <td>3</td>
                     <td>EquiBuild Ltd</td>
-                    <td>7.0</td>
-                    <td>6.0</td>
-                    <td>6.0</td>
-                    <td>5.0</td>
-                    <td>6.5</td>
-                    <td>63%</td>
+                    @foreach ([7.0, 6.0, 6.0, 5.0, 6.5] as $score)
+                        <td>
+                            <div class="d-flex flex-column text-center">
+                                <small>{{ number_format($score, 1) }}/10</small>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-info" style="width: {{ $score * 10 }}%;"></div>
+                                </div>
+                            </div>
+                        </td>
+                    @endforeach
+                    <td><strong>63%</strong></td>
                     <td>3</td>
                     <td><span class="badge bg-danger">Not Recommended</span></td>
                 </tr>

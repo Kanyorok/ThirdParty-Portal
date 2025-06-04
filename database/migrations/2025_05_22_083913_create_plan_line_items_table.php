@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -13,18 +12,18 @@ return new class extends Migration
     {
         Schema::create('t_PlanLineItem', function (Blueprint $table) {
             $table->id('LineItemID'); // Custom primary key
-            $table->foreignId('PlanID') ->constrained('t_ConsolidatedProcurementPlan', 'PlanID'); // Foreign key to ConsolidatedProcurementPlan
+            $table->foreignId('PlanID')->constrained('t_ConsolidatedProcurementPlan', 'PlanID'); // Foreign key to ConsolidatedProcurementPlan
             $table->string('BranchID', 10);
             $table->string('DepartmentID', 10);
-            $table->foreignId('ItemID')->constrained('t_Items','Id');
+            $table->foreignId('ItemID')->constrained('t_Items', 'Id');
             $table->foreignId('CategoryID')->constrained('t_ItemCategories', 'Id');
             $table->integer('MergedQty');
             $table->string('UnitOfMeasure', 50);
-            $table->decimal('EstimatedUnitCost', 15, 2); 
-            $table->decimal('AdjustedCost', 15, 2); 
+            $table->decimal('EstimatedUnitCost', 15, 2);
+            $table->decimal('AdjustedCost', 15, 2);
             $table->string('ProcurementMethod');
             $table->date('ExpectedDeliveryDate');
-            $table->string('SchedulePeriod'); 
+            $table->string('SchedulePeriod');
             $table->string('ExecutionStatus');
             $table->string('BudgetLineID')->nullable();
             $table->text('ChangeRemarks')->nullable();

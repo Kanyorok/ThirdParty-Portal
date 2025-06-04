@@ -13,7 +13,8 @@ class BudgetFormulaController extends Controller
         return view('budgetandanalytics.formulasetup.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('budgetandanalytics.formulasetup.create');
     }
 }
