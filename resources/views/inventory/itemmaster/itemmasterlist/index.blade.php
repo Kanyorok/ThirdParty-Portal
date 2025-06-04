@@ -70,6 +70,12 @@ $(document).ready(function () {
             { data: 'InventoryType', name: 'InventoryType' },
             { data: 'UOM', name: 'UOM' },
             {
+        data: 'Status',
+        name: 'Status',
+        orderable: false,
+        searchable: false
+    },
+            {
                 data: 'Action',
                 name: 'Action',
                 orderable: false,
