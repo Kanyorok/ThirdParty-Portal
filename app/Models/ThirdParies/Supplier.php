@@ -4,23 +4,20 @@ namespace App\Models\ThirdParies;
 
 use App\Models\Inventory\ItemCategories;
 use App\Models\Procurement\ProcurementPeriod;
-use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQEvaluation;
-
 use App\Models\Procurement\Tender;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-
 use App\Models\Procurement\RFQLine;
-
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\Model\UserActorTrait;
 
 class Supplier extends Model
 {
-    use HasFactory,SoftDeletes;
+    use SoftDeletes, UserActorTrait;
 
-    public const CREATED_AT = 'CreatedOn';
-    public const UPDATED_AT = 'ModifiedOn';
+    const string CREATED_AT = 'CreatedOn';
+    const string UPDATED_AT = 'ModifiedOn';
     const string DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Suppliers';
@@ -49,9 +46,7 @@ class Supplier extends Model
 
     public function category()
     {
-
         return $this->belongsTo(ItemCategories::class, 'CategoryId', 'Id');
-
     }
 
     public function rfqEvaluations()

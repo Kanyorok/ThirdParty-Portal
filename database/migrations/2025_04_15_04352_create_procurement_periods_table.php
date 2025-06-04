@@ -1,8 +1,8 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
 
 return new class extends Migration
 {
@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+
         Schema::create('t_ProcurementPeriods', function (Blueprint $table) {
             $table->id('Id');
             $table->string('ProcurementPeriodNumber')->unique()->comment('Unique identifier for the procurement period');

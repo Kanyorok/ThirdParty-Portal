@@ -123,7 +123,9 @@
             <td>{{ $item->item?->ItemName }}</td>
             <td>{{ $item->category?->Name }}</td>
             <td>{{$item->QtyToTender}}</td>
-            <td>document.pdf <a href=""><i class="fa fa-download"></a></i></td>
+            <td>document.pdf 
+                {{-- <a href=""><i class="fa fa-download"></i></a> --}}
+            </td>
             <td>PR/2025/211</td>
             <td>
                 <a href="#" class="btn btn-sm btn-outline-primary" title="Edit"
@@ -311,7 +313,7 @@
 
                     <div class="mb-3">
                         <label for="Document" class="form-label">Upload Specs Document</label>
-                        <input type="file" name="Document" id="Document" class="form-control" required>
+                        <input type="file" name="Document" id="Document" class="form-control">
                     </div>
 
                     <div class="mb-3">

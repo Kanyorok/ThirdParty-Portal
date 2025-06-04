@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Procurement;
 
 use App\Enums\Core\PostingEnum;
 use App\Enums\Procurement\SchedulePlanEnum;
+use App\Enums\ProcurementPlanStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Procurement\ProcurementPlan\SchedulePlanRequest;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\PlanLineItems;
 use App\Services\Procurement\ProcurementPlan\SchedulePlanService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -17,7 +19,7 @@ class ProcurementSchedulePlanController extends Controller
 {
     public function index()
     {
-        $draftedplans = ConsolidatedProcurementPlan::where('Status', PostingEnum::Draft)->get();
+        $draftedplans = ConsolidatedProcurementPlan::where('Status', ProcurementPlanStatusEnum::Draft)->get();
         return view('procurement.procurementplan.scheduleplan.index', compact('draftedplans'));
     }
 
@@ -35,7 +37,7 @@ class ProcurementSchedulePlanController extends Controller
             ->where('PlanID', $planId)->get();
 
             $mappedLines = $Lines->map(function ($lineItem) {
-                $statusEnum = $lineItem->schedulePlan?->Status ?? SchedulePlanEnum::NotScheduled;
+            $statusEnum = $lineItem->schedulePlan?->Status ?? SchedulePlanEnum::NotScheduled;
 
                 return [
                     'LineItemID' => $lineItem->LineItemID,
@@ -43,7 +45,7 @@ class ProcurementSchedulePlanController extends Controller
                     'MergedQty' => $lineItem->MergedQty,
                     'ScheduleQTY' => $lineItem->schedulePlan?->ScheduleQTY,
                     'Status' => $statusEnum->label(),
-                    'Periods' => $lineItem->schedulePlan?->periods ?? [], // Optional: return schedule breakdown
+                    'Periods' => $lineItem->schedulePlan?->periods ?? [],
                 ];
             });
 
@@ -62,8 +64,8 @@ class ProcurementSchedulePlanController extends Controller
 
         $lineItemIds = $request->input('lineItemIds');
 
-        foreach ($lineItemIds as $lineItemId) {
-            $planLineItem = PlanLineItems::findOrFail($lineItemId);
+        foreach ($consolidatedPlan->lineItems as $planLineItem) {
+            $lineItemId = $planLineItem->LineItemID;
             $mode = $request->input("mode_$lineItemId");
 
             $totalQty = 0;
@@ -93,7 +95,6 @@ class ProcurementSchedulePlanController extends Controller
 
             $mergedQty = $planLineItem->MergedQty ?? 0;
 
-            // Determine schedule status
             if ($totalQty === 0) {
                 $status = SchedulePlanEnum::NotScheduled;
             } elseif ($totalQty < $mergedQty) {
@@ -101,21 +102,21 @@ class ProcurementSchedulePlanController extends Controller
             } elseif ($totalQty === $mergedQty) {
                 $status = SchedulePlanEnum::FullyScheduled;
             } else {
-                $status = SchedulePlanEnum::PartiallyScheduled; // fallback for excess
+                $status = SchedulePlanEnum::PartiallyScheduled; // fallback
             }
 
-            // Package all schedule data
             $data = [
                 'ScheduleQTY' => $totalQty,
                 'Status' => $status,
                 'periods' => $periods,
+                'mode' => $mode
             ];
 
-            // Save schedule and periods
             $schedulePlanService->create($data, $actor, $consolidatedPlan, $planLineItem);
         }
 
-        return redirect()->route('Procurement-Plan-Schedule.index')->with('success', 'Schedules saved successfully.');
+        return redirect()->route('Procurement-Plan-Schedule.index')
+                         ->with('success', 'Schedules saved successfully.');
     }
 
     public function edit($lineItemId, Request $request)

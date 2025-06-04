@@ -3,14 +3,12 @@
 namespace App\Models\Procurement;
 
 use App\Models\Auth\User;
+use App\Models\Core\Branch;
 use App\Models\HRM\Department;
+use App\Models\Inventory\ItemMasterList;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Procurement\PlanLineItems;
-use App\Models\Core\Branch;
-use App\Models\Procurement\BudgetMaster;
-use App\Models\Inventory\UnitOfMeasure;
 
 class PlanLineItems extends Model
 {
@@ -66,7 +64,7 @@ class PlanLineItems extends Model
     // PlanLineItems.php
     public function item()
     {
-        return $this->belongsTo(Item::class, 'ItemID', 'Id');
+        return $this->belongsTo(ItemMasterList::class, 'ItemID', 'Id');
     }
 
     public function createdBy()
@@ -83,7 +81,7 @@ class PlanLineItems extends Model
     {
         return $this->belongsTo(User::class, 'DeletedBy', 'Id');
     }
-  public function budgetLine(){
+    public function budgetline(){
         return $this->belongsTo(BudgetMaster::class, 'BudgetLineID','BudgetLineID');
     }
     public function setMethod(){
@@ -91,6 +89,6 @@ class PlanLineItems extends Model
     }
     public function schedulePlan()
     {
-        return $this->belongsTo(BudgetMaster::class, 'BudgetLineID', 'BudgetLineID');
+        return $this->belongsTo(SchedulePlan::class, 'LineItemID', 'PlanLineId');
     }
 }

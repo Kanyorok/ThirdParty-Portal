@@ -2,10 +2,10 @@
 
 namespace App\Models\Inventory;
 
+use App\Models\Auth\User;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\User;
 
 class ItemCategories extends Model
 {

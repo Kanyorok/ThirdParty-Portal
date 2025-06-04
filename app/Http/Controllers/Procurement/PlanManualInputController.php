@@ -4,10 +4,11 @@ namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Procurement\PlanManualInputRequest;
+use App\Models\Auth\User;
+use App\Models\Inventory\ItemCategories;
+use App\Models\Inventory\ItemMasterList;
 use App\Models\Procurement\BudgetMaster;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
-use App\Models\Procurement\Item;
-use App\Models\Procurement\ItemCategory;
 use App\Models\Procurement\PlanLineItems;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -25,7 +26,7 @@ class PlanManualInputController extends Controller
         $planId = $request->query('plan_id');//todo pass plan id from url
         $plans = ConsolidatedProcurementPlan::where('Status', ProcurementPlanStatusEnum::Draft)->get();
 
-        $lineItemsQuery = PlanLineItems::with(['item', 'item.category','item.itemuom']);
+        $lineItemsQuery = PlanLineItems::with(['item', 'item.category','item.uom']);
 
         if ($planId) {
             $lineItemsQuery->where('PlanID', $planId);
@@ -45,7 +46,7 @@ class PlanManualInputController extends Controller
     {
         $this->authorize('create', PlanLineItems::class);
         $plans = ConsolidatedProcurementPlan::where('Status', ProcurementPlanStatusEnum::Draft)->get();
-        $items = Item::with('category','itemuom')->get();
+        $items = ItemMasterList::with('category','uom')->get();
         $budgetLines = BudgetMaster::all();
 
         return view('procurement.procurementplan.planconsolidation.manualentry.create', compact('plans', 'items', 'budgetLines'));
@@ -95,14 +96,14 @@ class PlanManualInputController extends Controller
         $lineItem = PlanLineItems::with(['item', 'item.category'])->findOrFail($lineItemId);
         $this->authorize('edit', $lineItem);
         $plans = ConsolidatedProcurementPlan::all();
-        $items = Item::all();
-        $categories = ItemCategory::all();
+        $items = ItemMasterList::all();
+        $categories = ItemCategories::all();
         $budgetLines = BudgetMaster::all();
 
         return view('procurement.procurementplan.planconsolidation.manualentry.edit', compact('lineItem', 'plans', 'items', 'categories', 'budgetLines'));
     }
 
-    public function update(PlanManualInputRequest $request, $lineItemId)
+    public function update(PlanManualInputRequest $request, $lineItemId, User $user)
     {
         $validated = $request->validated();
         $user = $request->user();
@@ -128,7 +129,6 @@ class PlanManualInputController extends Controller
 
         return redirect()->route('procurement.procurementplan.planconsolidation.manualentry.index')->with('success', 'Line item updated successfully.');
     }
-
     public function destroy(Request $request, $lineItemId)
     {
         $user = $request->user();

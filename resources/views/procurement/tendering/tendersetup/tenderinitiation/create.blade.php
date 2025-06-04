@@ -414,7 +414,8 @@ function addManualItemRow() {
 
             document.getElementById('itemCategory').addEventListener('change', (e) => {
         const selectedCategoryId = e.target.value;
-
+                console.log(selectedCategoryId);
+                
         document.querySelectorAll('.manual-item-select').forEach(select => {
             // Clear all except default option
             const defaultOption = select.querySelector('option:first-child');

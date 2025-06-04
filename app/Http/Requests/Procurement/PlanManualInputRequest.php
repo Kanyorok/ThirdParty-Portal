@@ -2,11 +2,11 @@
 
 namespace App\Http\Requests\Procurement;
 
-use App\Models\Procurement\Item;
+use App\Models\Inventory\ItemCategories;
+use App\Models\Inventory\ItemMasterList;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\ValidationException;
-use App\Models\Procurement\ItemCategory;
 
 class PlanManualInputRequest extends FormRequest
 {
@@ -39,20 +39,20 @@ class PlanManualInputRequest extends FormRequest
         ];
     }
 
-    public function getItem(): Item
+    public function getItem(): ItemMasterList
     {
-        $item = Item::find($this->validated('ItemID'));
-        if ($item instanceof Item) {
+        $item = ItemMasterList::find($this->validated('ItemID'));
+        if ($item instanceof ItemMasterList) {
             return $item;
         }
 
         throw ValidationException::withMessages(['ItemID' => 'Item not found']);
     }
 
-    public function getCategory(): ItemCategory
+    public function getCategory(): ItemCategories
     {
-        $category = ItemCategory::find($this->validated('CategoryID'));
-        if ($category instanceof ItemCategory) {
+        $category = ItemCategories::find($this->validated('CategoryID'));
+        if ($category instanceof ItemCategories) {
             return $category;
         }
 

@@ -32,7 +32,7 @@
                             <th>Quantity</th>
                             <th>Estimated Cost</th>
                             <th>Urgency</th>
-                            <th>Status</th>
+{{--                            <th>Status</th>--}}
                             <th>Created By</th>
                             <th>Created On</th>
                         </tr>
@@ -53,7 +53,7 @@
                                 <td>{{ number_format($item->ExpectedPrice, 2) }}</td>
 {{--                                <td>{{ $item->NeededBy }}</td>--}}
                                 <td>{{ $item->Urgency }}</td>
-                                <td>{{ $item->Status }}</td>
+{{--                                <td>{{ $item->Status }}</td>--}}
                                 <td>{{ $item->UserName }}</td>
                                 <td>{{ $item->CreatedOn }}</td>
                                 {{--                                <td>{{ $item->ModifiedBy }}</td> --}}
@@ -228,11 +228,12 @@
             $('#Type').on('change', function() {
                 // alert('hello');
                 let type = $(this).val();
+                let requisitionId = getRequisitionIdFromUrl();
 
                 if (type !== '') {
                     // alert(type + 'eric');
                     $.ajax({
-                        url: `/procurement/requisitionItem/getItem/${type}`,
+                        url: `/procurement/requisitionItem/getItem/${type}?requisition_id=${requisitionId}`,
                         type: 'GET',
                         success: function(response) {
                             // console.log('AJAX Response:', response);
@@ -270,7 +271,7 @@
                             if (response.data && response.data.length > 0) {
                                 $.each(response.data, function(key, item) {
                                     $('#UOM').empty().append(
-                                        `<option value="${item.UOM}">${item.UOM}</option>`
+                                        `<option value="${item.UOMID}">${item.UOM}</option>`
                                     );
                                 });
                             }

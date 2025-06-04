@@ -27,11 +27,30 @@ class RequisitionItemsController extends Controller
      *
      */
 
-    public function getItems(string $type): JsonResponse
+//    public function getItems(string $type): JsonResponse
+//    {
+////        $this->authorize('view',RequisitionLines::class);
+//        try{
+//            $items = $this->itemService->getItemByType($type);
+//            return response()->json([
+//                'success' => true,
+//                'data' => $items,
+//            ]);}
+//        catch(\Exception $e){
+//            return response()->json([
+//                'success' => false,
+//                'message' => 'Failed to fetch items.',
+//                'error' => $e->getMessage(),
+//            ], 500);
+//        }
+//    }
+
+    public function getItems(string $type, Request $request): JsonResponse
     {
 //        $this->authorize('view',RequisitionLines::class);
         try{
-            $items = $this->itemService->getItemByType($type);
+            $requisitionId = $request->query('requisition_id');
+            $items = $this->itemService->getItemByType($type,$requisitionId);
             return response()->json([
                 'success' => true,
                 'data' => $items,

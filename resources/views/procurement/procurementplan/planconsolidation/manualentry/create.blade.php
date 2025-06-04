@@ -29,8 +29,8 @@
               <option selected disabled>Select Item</option>
               @foreach($items as $item)
                 <option value="{{ $item->Id }}"
-                        data-uom-name="{{ $item->itemuom->Name ?? 'N/A' }}"
-                        data-uom-code="{{ $item->itemuom->Code ?? '' }}"
+                        data-uom-name="{{ $item->uom->Name ?? 'N/A' }}"
+                        data-uom-code="{{ $item->uom->Code ?? '' }}"
                         data-category-id="{{ $item->category->Id ?? '' }}"
                         data-category-name="{{ $item->category->Name ?? 'N/A' }}">
                     {{ $item->ItemName }}
