@@ -53,31 +53,33 @@
         </form>
 
 
-        <!--script-->
-        @push('scripts')
-            <script>
-                document.addEventListener('DOMContentLoaded', function () {
-                    const loadBtn = document.getElementById('load-items-btn');
-                    const planSelect = document.getElementById('approved-plan-select');
+<!--script-->
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const loadBtn = document.getElementById('load-items-btn');
+        const planSelect = document.getElementById('approved-plan-select');
 
-                    loadBtn.addEventListener('click', function () {
-                        const planId = planSelect.value;
-                        if (!planId) {
-                            alert('Please select a plan.');
-                            return;
-                        }
+        const baseUrl = @json(route('Procurement-Plan-Schedule.view', ['PlanId' => '__PLAN_ID__']));
 
-                        document.getElementById('approved-plan-id-hidden').value = planId;
+        loadBtn.addEventListener('click', function () {
+            const planId = planSelect.value;
+            if (!planId) {
+                alert('Please select a plan.');
+                return;
+            }
 
-                        fetch(`/procurement/Procurement-Plan-Schedule/lines/${planId}`)
-                            .then(response => response.json())
-                            .then(data => {
-                                const tbody = document.getElementById('items-table-body');
-                                tbody.innerHTML = '';
+            document.getElementById('approved-plan-id-hidden').value = planId;
 
-                                if (Array.isArray(data) && data.length > 0) {
-                                    data.forEach((line, index) => {
-                                        const row = `
+            fetch(`${baseUrl.replace('__PLAN_ID__', planId)}`)
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('items-table-body');
+                    tbody.innerHTML = '';
+
+                    if (Array.isArray(data) && data.length > 0) {
+                        data.forEach((line, index) => {
+                            const row = `
                                 <tr>
                                     <td>${index + 1}</td>
                                     <td>${line.item_name}</td>
@@ -92,18 +94,19 @@
                                     </td>
                                 </tr>
                             `;
-                                        tbody.insertAdjacentHTML('beforeend', row);
-                                    });
-                                } else {
-                                    nWarning('No lines created for the selected plan.');
-                                }
-                            })
-                            .catch(error => {
-                                console.error('Error loading items:', error);
-                                nError('An error occurred while loading items.');
-                            });
-                    });
+                            tbody.insertAdjacentHTML('beforeend', row);
+                        });
+                    } else {
+                        nWarning('No lines created for the selected plan.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading items:', error);
+                    nError('An error occurred while loading items.');
                 });
-            </script>
-    @endpush
+        });
+    });
+</script>
+@endpush
+
 @endsection
