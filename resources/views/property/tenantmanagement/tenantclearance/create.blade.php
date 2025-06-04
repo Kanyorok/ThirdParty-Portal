@@ -15,7 +15,7 @@
           <label class="form-label">Tenant / Lease</label>
             <select name="Tenant" class="form-select" required>
               @foreach ($newtenants as $newtenant)
-                <option value="{{ $newtenant->TenantName }}">{{ $newtenant->TenantName }}</option>
+                <option value="{{ $newtenant->id }}">{{ $newtenant->TenantName }}</option>
               @endforeach
             </select>
         </div>

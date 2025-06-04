@@ -14,7 +14,7 @@
           <label class="form-label">Select Tenant</label>
             <select name="Tenant" class="form-select" required>
               @foreach ($newtenants as $newtenant)
-                <option value="{{ $newtenant->TenantName }}">{{ $newtenant->TenantName }}</option>
+                <option value="{{ $newtenant->id }}">{{ $newtenant->TenantName }}</option>
               @endforeach
             </select>
         </div>
@@ -22,7 +22,7 @@
       <label class="form-label">Select Property</label>
             <select name="PropertyID" class="form-select" required>
               @foreach ($units as $unit)
-                <option value="{{ $unit->PropertyID }}">{{ $unit->PropertyID }}</option>
+                <option value="{{ $unit->id }}">{{ $unit->PropertyID }}</option>
               @endforeach
             </select>
         </div>
@@ -30,7 +30,7 @@
           <label class="form-label">Select Block</label>
             <select name="BlockID" class="form-select" required>
               @foreach ($units as $unit)
-                <option value="{{ $unit->BlockID }}">{{ $unit->BlockID }}</option>
+                <option value="{{ $unit->id }}">{{ $unit->BlockID }}</option>
               @endforeach
             </select>
         </div>
@@ -38,7 +38,7 @@
           <label class="form-label">Select Floor</label>
             <select name="FloorID" class="form-select" required>
               @foreach ($units as $unit)
-                <option value="{{ $unit->FloorID }}">{{ $unit->FloorID }}</option>
+                <option value="{{ $unit->id }}">{{ $unit->FloorID }}</option>
               @endforeach
             </select>
         </div>
@@ -46,7 +46,7 @@
           <label class="form-label">Select Unit(s)</label>
             <select name="Unit" class="form-select" required>
               @foreach ($units as $unit)
-                <option value="{{ $unit->UnitCode }}">{{ $unit->UnitCode }}</option>
+                <option value="{{ $unit->id }}">{{ $unit->UnitCode }}</option>
               @endforeach
             </select>
         </div>

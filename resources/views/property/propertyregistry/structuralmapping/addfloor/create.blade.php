@@ -13,7 +13,7 @@
           <label class="form-label">Select Property</label>
             <select name="PropertyID" class="form-select" required>
               @foreach ($properties as $property)
-                <option value="{{ $property->PropertyName }}">{{ $property->PropertyName }}</option>
+                <option value="{{ $property->id }}">{{ $property->PropertyName }}</option>
               @endforeach
             </select>
         </div>
@@ -23,7 +23,7 @@
           <label class="form-label">Select Block</label>
             <select name="BlockID" class="form-select" required>
               @foreach ($blocks as $block)
-                <option value="{{ $block->BlockName }}">{{ $block->BlockName }}</option>
+                <option value="{{ $block->id }}">{{ $block->BlockName }}</option>
               @endforeach
             </select>
         </div>

@@ -16,7 +16,7 @@
             <label class="form-label">Property</label>
             <select name="Property" class="form-select" required>
               @foreach ($maintenancerequests as $maintenancerequest)
-                <option value="{{ $maintenancerequest->Property }}">{{ $maintenancerequest->Property }}</option>
+                <option value="{{ $maintenancerequest->id }}">{{ $maintenancerequest->Property }}</option>
               @endforeach
             </select>
           </div>
@@ -26,7 +26,7 @@
           <label class="form-label">Block</label>
             <select name="Block" class="form-select" required>
                @foreach ($maintenancerequests as $maintenancerequest)
-                <option value="{{ $maintenancerequest->Block }}">{{ $maintenancerequest->Block }}</option>
+                <option value="{{ $maintenancerequest->id }}">{{ $maintenancerequest->Block }}</option>
               @endforeach
             </select>
         </div>
@@ -34,7 +34,7 @@
           <label class="form-label">Floor</label>
           <select name="Floor" class="form-select" required>
              @foreach ($maintenancerequests as $maintenancerequest)
-              <option value="{{ $maintenancerequest->Floor }}">{{ $maintenancerequest->Floor }}</option>
+              <option value="{{ $maintenancerequest->id }}">{{ $maintenancerequest->Floor }}</option>
             @endforeach
           </select>
         </div>
@@ -42,7 +42,7 @@
           <label class="form-label">Unit</label>
             <select name="Unit" class="form-select" required>
               @foreach ($maintenancerequests as $maintenancerequest)
-                <option value="{{ $maintenancerequest->Unit }}">{{ $maintenancerequest->Unit }}</option>
+                <option value="{{ $maintenancerequest->id }}">{{ $maintenancerequest->Unit }}</option>
               @endforeach
             </select>
         </div>
@@ -51,7 +51,7 @@
           <label class="form-label">Select Maintenance Request</label>
             <select name="IssueDescription" class="form-select" required>
               @foreach ($maintenancerequests as $maintenancerequest)
-                <option value="{{ $maintenancerequest->IssueDescription }}">{{ $maintenancerequest->IssueDescription }}</option>
+                <option value="{{ $maintenancerequest->id }}">{{ $maintenancerequest->IssueDescription }}</option>
               @endforeach
             </select>
         </div>

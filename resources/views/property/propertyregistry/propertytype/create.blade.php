@@ -19,7 +19,7 @@
             <label for="PropertyCategoryId" class="form-label">Category</label>
             <select name="PropertyCategoryId" class="form-select" required>
               @foreach ($categories as $category)
-                <option value="{{ $category->PropertyCategoryName }}">{{ $category->PropertyCategoryName }}</option>
+                <option value="{{ $category->id }}">{{ $category->PropertyCategoryName }}</option>
               @endforeach
             </select>
           </div>

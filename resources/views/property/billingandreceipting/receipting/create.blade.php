@@ -1,15 +1,6 @@
 @extends('layouts.app')
 @section('title', 'Tenant Payments')
 @section('content')
-@if ($errors->any())
-    <div class="alert alert-danger">     
-        <ul>
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
 <div class="container mt-4">
   <h4 class="fw-bold mb-3">💳 Record Tenant Payment (Supports Partials)</h4>
 
@@ -24,7 +15,7 @@
           <label class="form-label">InvoiceID</label>
             <select name="InvoiceID" class="form-select" required>
               @foreach ($invoices as $invoice)
-                <option value="{{ $invoice->Lease }}">{{ $invoice->Lease }}</option>
+                <option value="{{ $invoice->id }}">{{ $invoice->Lease }}</option>
               @endforeach
             </select>
         </div>
@@ -32,7 +23,7 @@
           <label class="form-label">Billing Month</label>
             <select name="BillingMonth" class="form-select" required>
               @foreach ($invoices as $invoice)
-                <option value="{{ $invoice->BillingMonth }}">{{ $invoice->BillingMonth }}</option>
+                <option value="{{ $invoice->id }}">{{ $invoice->BillingMonth }}</option>
               @endforeach
             </select>
         </div>
@@ -40,7 +31,7 @@
           <label class="form-label">Invoice Date</label>
             <select name="InvoiceDate" class="form-select" required>
               @foreach ($invoices as $invoice)
-                <option value="{{ $invoice->InvoiceDate }}">{{ $invoice->InvoiceDate }}</option>
+                <option value="{{ $invoice->id }}">{{ $invoice->InvoiceDate }}</option>
               @endforeach
             </select>
         </div>
@@ -48,7 +39,7 @@
           <label class="form-label">Rent Amount</label>
             <select name="RentAmount" class="form-select" required>
               @foreach ($invoices as $invoice)
-                <option value="{{ $invoice->RentAmount }}">{{ $invoice->RentAmount }}</option>
+                <option value="{{ $invoice->id }}">{{ $invoice->RentAmount }}</option>
               @endforeach
             </select>
         </div>

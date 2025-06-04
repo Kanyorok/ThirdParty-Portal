@@ -1,16 +1,6 @@
 @extends('layouts.app')
 @section('title', 'Item Sub Category')
 @section('content')
-@if ($errors->any())
-  <div class="alert alert-danger">
-    <h6 class="mb-2">⚠️ Please fix the following errors:</h6>
-    <ul class="mb-0">
-      @foreach ($errors->all() as $error)
-        <li>{{ $error }}</li>
-      @endforeach
-    </ul>
-  </div>
-@endif
 <div class="container mt-4">
   <h4 class="fw-bold mb-3">🛠️ New Maintenance Request</h4>
 
@@ -25,7 +15,7 @@
           <label class="form-label">Property</label>
             <select name="Property" class="form-select" required>
               @foreach ($properties as $property)
-                <option value="{{ $property->PropertyName }}">{{ $property->PropertyName }}</option>
+                <option value="{{ $property->id }}">{{ $property->PropertyName }}</option>
               @endforeach
             </select>
         </div>
@@ -33,7 +23,7 @@
           <label class="form-label">Block</label>
             <select name="Block" class="form-select" required>
               @foreach ($blocks as $block)
-                <option value="{{ $block->BlockName }}">{{ $block->BlockName }}</option>
+                <option value="{{ $block->id }}">{{ $block->BlockName }}</option>
               @endforeach
             </select>
         </div>
@@ -41,7 +31,7 @@
           <label class="form-label">Floor</label>
           <select name="Floor" class="form-select" required>
             @foreach ($floors as $floor)
-              <option value="{{ $floor->FloorLabel }}">{{ $floor->FloorLabel }}</option>
+              <option value="{{ $floor->id }}">{{ $floor->FloorLabel }}</option>
             @endforeach
           </select>
         </div>
@@ -49,7 +39,7 @@
           <label class="form-label">Unit</label>
             <select name="Unit" class="form-select" required>
               @foreach ($units as $unit)
-                <option value="{{ $unit->UnitCode }}">{{ $unit->UnitCode }}</option>
+                <option value="{{ $unit->id }}">{{ $unit->UnitCode }}</option>
               @endforeach
             </select>
         </div>
