@@ -67,32 +67,36 @@ class DepartmentNeedApprovalController extends Controller
     }
 
 
-    public function destroy(Request $request, DepartmentNeeds $departmentNeeds): JsonResponse
-    {
-        $this->authorize('approve', $departmentNeeds);
-        $actor = $request->user();
-        $data = $request->validate([
-            'Department_needs_reject_reason' => [
-                'required',
-                'string',
-                'min:15',
-                'max:2000',
-            ],
-        ]);
+public function destroy(Request $request, $departmentNeed_ID): RedirectResponse
+{
+    $departmentNeeds = DepartmentNeeds::findOrFail($departmentNeed_ID);
+    $this->authorize('destroy', $departmentNeeds);
 
-        try {
-            DB::transaction(static function () use ($departmentNeeds, $actor, $data) {
-                (new DepartmentNeedsApprovalService($departmentNeeds))->workflowReject($actor, $data['Department_needs_reject_reason']);
-            });
-        } catch (ErroredException $e) {
-            return $e->toJson();
-        } catch (Exception $e) {
-            Log::error('Error reject campaign failed: ' . $e->getMessage());
-            return $this->errored('unexpected error, try again later');
-        }
+    $actor = $request->user();
+    $data = $request->validate([
+        'Department_needs_reject_reason' => ['required', 'string', 'min:15', 'max:2000'],
+    ]);
 
-        return $this->succeeded('campaign rejected successfully.', route(name: 'department-need-approval.index'));
+    try {
+        DB::transaction(static function () use ($departmentNeeds, $actor, $data) {
+            (new DepartmentNeedsApprovalService($departmentNeeds))
+                ->workflowReject($actor, $data['Department_needs_reject_reason']);
+        });
+    } catch (ErroredException $e) {
+        return redirect()
+            ->back()
+            ->with('error', $e->getMessage());
+    } catch (Exception $e) {
+        Log::error('Error reject department needs failed: ' . $e->getMessage());
+        return redirect()
+            ->back()
+            ->with('error', 'Unexpected error, try again later.');
     }
+
+    return redirect()
+        ->route('department-need-approval.index')
+        ->with('success', 'Department needs rejected successfully.');
+}
 
 }
 
