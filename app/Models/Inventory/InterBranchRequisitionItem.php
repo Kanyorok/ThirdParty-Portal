@@ -24,8 +24,8 @@ class InterBranchRequisitionItem extends Model
    
 
 public function item()
-{
+   {
     return $this->belongsTo(ItemMasterList::class, 'Item', 'Id');
-}
+   } 
 
 }
