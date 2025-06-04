@@ -14,7 +14,7 @@
     @endif
 
     <div class="container mt-4">
-        <h4 class="fw-bold mb-3">🔄 New Inter-Branch Requisition</h4>
+        <h4 class="fw-bold mb-3"> New Inter-Branch Requisition</h4>
 
         <form action="{{ route('interbranchrequisition.store') }}" method="POST">
             @csrf
@@ -28,7 +28,9 @@
                             <select name="FromBranch" class="form-select" required>
                                 <option value="">Select Branch</option>
                                 @foreach ($branches as $branch)
-                                    <option value="{{ $branch->Id }}">{{ $branch->Name }}</option>
+                                    <option value="{{ $branch->Id }}" {{ old('FromBranch') == $branch->Id ? 'selected' : '' }}>
+                                        {{ $branch->Name }}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
@@ -37,13 +39,15 @@
                             <select name="ToBranch" class="form-select" required>
                                 <option value="">Select Branch</option>
                                 @foreach ($branches as $branch)
-                                    <option value="{{ $branch->Id }}">{{ $branch->Name }}</option>
+                                    <option value="{{ $branch->Id }}" {{ old('ToBranch') == $branch->Id ? 'selected' : '' }}>
+                                        {{ $branch->Name }}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Date</label>
-                            <input type="date" name="CreatedOn" class="form-control" value="{{ now()->toDateString() }}" required>
+                            <input type="date" name="CreatedOn" class="form-control" value="{{ old('CreatedOn', now()->toDateString()) }}" required>
                         </div>
                     </div>
 
@@ -54,20 +58,21 @@
                     <div id="itemsContainer"></div>
 
                     <div class="text-end">
-                        <button type="submit" class="btn btn-success">📤 Submit Requisition</button>
+                        <button type="submit" class="btn btn-success">Submit Requisition</button>
                     </div>
                 </div>
             </div>
         </form>
     </div>
 
+    <!-- Item Template -->
     <template id="itemTemplate">
         <div class="card mb-3 item-entry">
             <div class="card-body border">
                 <div class="row g-3 align-items-end">
                     <div class="col-md-2">
-                        <label class="form-label">Category</label>
-                        <select name="Category" class="form-select category-select" required>
+                        <label class="form-label">Parent Category</label>
+                        <select name="items[__INDEX__][Category]" class="form-select category-select" required>
                             <option value="">-- Select Category --</option>
                             @foreach($categories as $category)
                                 <option value="{{ $category->Id }}">{{ $category->Name }}</option>
@@ -75,24 +80,20 @@
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <label class="form-label">Subcategory</label>
-                        <select name="Subcategory" class="form-select subcategory-select">
+                        <label class="form-label">Category</label>
+                        <select name="items[__INDEX__][Subcategory]" class="form-select subcategory-select">
                             <option value="">-- Select Subcategory --</option>
                         </select>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Item</label>
-                        <select name="Item" class="form-select item-select" required>
+                        <select name="items[__INDEX__][Item]" class="form-select item-select" required>
                             <option value="">-- Select Item --</option>
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Item Code</label>
-                        <input type="text" id="ItemCodeInput" name="ItemCode" class="form-control item-code" readonly>
-                    </div>
                     <div class="col-md-1">
                         <label class="form-label">UOM</label>
-                        <select name="UOM" class="form-select" required>
+                        <select name="items[__INDEX__][UOM]" class="form-select" required>
                             <option value="">Select UOM</option>
                             @foreach ($uoms as $uom)
                                 <option value="{{ $uom->Id }}">{{ $uom->Code }}</option>
@@ -101,12 +102,15 @@
                     </div>
                     <div class="col-md-1">
                         <label class="form-label">Requested Qty</label>
-                        <input type="number" name="RequestedQty" class="form-control" value="1" min="1" required>
+                        <input type="number" name="items[__INDEX__][RequestedQty]" class="form-control" value="1" min="1" required>
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">Remarks</label>
-                        <input type="text" name="Remarks" class="form-control">
-                    
+                        <input type="text" name="items[__INDEX__][Remarks]" class="form-control">
+                    </div>
+                    <div class="col-md-1 d-flex align-items-end">
+                        <button type="button" class="btn btn-danger btn-sm remove-item-btn">✖</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -116,20 +120,31 @@
         <script>
             let itemCounter = 0;
 
-            document.getElementById('addItemBtn').addEventListener('click', function () {
+            function addItem(values = {}) {
                 const template = document.getElementById('itemTemplate');
                 const clone = template.content.cloneNode(true);
-                
-                // Update the name attributes to include unique indices
-                const selects = clone.querySelectorAll('select, input');
-                selects.forEach(element => {
-                    if (element.name && element.name.includes('items[]')) {
-                        element.name = element.name.replace('items[]', `items[${itemCounter}]`);
+
+                // Replace __INDEX__ in all names
+                const fields = clone.querySelectorAll('[name]');
+                fields.forEach(element => {
+                    element.name = element.name.replace('__INDEX__', itemCounter);
+                    // Set old value if present
+                    if (values[element.name]) {
+                        element.value = values[element.name];
                     }
                 });
-                
+
+                // Add remove button event
+                clone.querySelector('.remove-item-btn').addEventListener('click', function () {
+                    this.closest('.item-entry').remove();
+                });
+
                 document.getElementById('itemsContainer').appendChild(clone);
                 itemCounter++;
+            }
+
+            document.getElementById('addItemBtn').addEventListener('click', function () {
+                addItem();
             });
 
             // Event delegation for dynamic elements
@@ -140,14 +155,11 @@
                     const entry = e.target.closest('.item-entry');
                     const subcategorySelect = entry.querySelector('.subcategory-select');
                     const itemSelect = entry.querySelector('.item-select');
-                    const itemCodeInput = entry.querySelector('.item-code');
 
-                    // Reset dependent fields
                     subcategorySelect.innerHTML = '<option value="">-- Select Subcategory --</option>';
                     subcategorySelect.disabled = false;
                     itemSelect.innerHTML = '<option value="">-- Select Item --</option>';
                     itemSelect.disabled = false;
-                    itemCodeInput.value = '';
 
                     if (categoryId) {
                         // Load subcategories
@@ -167,18 +179,15 @@
                                 console.error('Error fetching subcategories:', error);
                             });
 
-                        // Load items directly under the category
+                        // Load items for the category
                         fetch(`/inventory/get-items?category_id=${categoryId}`)
                             .then(response => response.json())
                             .then(data => {
-                                console.log('Full API response:', data); // Keep this one debug log
                                 if (data && data.length > 0) {
                                     data.forEach(item => {
-                                        console.log('Single item object:', item); // Keep this one debug log
                                         const option = document.createElement('option');
                                         option.value = item.Id;
                                         option.text = item.ItemName;
-                                        option.setAttribute('data-code', item.ItemCode);
                                         itemSelect.appendChild(option);
                                     });
                                 }
@@ -194,12 +203,9 @@
                     const subcategoryId = e.target.value;
                     const entry = e.target.closest('.item-entry');
                     const itemSelect = entry.querySelector('.item-select');
-                    const itemCodeInput = entry.querySelector('.item-code');
                     const categorySelect = entry.querySelector('.category-select');
 
-                    // Reset item field
                     itemSelect.innerHTML = '<option value="">-- Select Item --</option>';
-                    itemCodeInput.value = '';
 
                     if (subcategoryId) {
                         // Load items for the selected subcategory
@@ -211,7 +217,6 @@
                                         const option = document.createElement('option');
                                         option.value = item.Id;
                                         option.text = item.ItemName;
-                                        option.setAttribute('data-code', item.ItemCode);
                                         itemSelect.appendChild(option);
                                     });
                                 }
@@ -231,7 +236,6 @@
                                             const option = document.createElement('option');
                                             option.value = item.Id;
                                             option.text = item.ItemName;
-                                            option.setAttribute('data-code', item.ItemCode);
                                             itemSelect.appendChild(option);
                                         });
                                     }
@@ -242,19 +246,16 @@
                         }
                     }
                 }
-
-                // Handle item selection
-                if (e.target.classList.contains('item-select')) {
-                    const selectedOption = e.target.selectedOptions[0];
-                    const itemCode = selectedOption ? selectedOption.getAttribute('data-code') || '' : '';
-                    const entry = e.target.closest('.item-entry');
-                    const itemCodeInput = entry.querySelector('.item-code');
-                    itemCodeInput.value = itemCode;
-                }
             });
 
-            // Add first item automatically
-            document.getElementById('addItemBtn').click();
+            // Add first item automatically if no old inputs (fresh form)
+            @if (!old('items'))
+                addItem();
+            @else
+                @foreach (old('items', []) as $index => $oldItem)
+                    addItem(@json($oldItem));
+                @endforeach
+            @endif
         </script>
     @endpush
 @endsection

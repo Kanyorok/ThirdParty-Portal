@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Inventory;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\InterBranchRequisitionRequest;
 use App\Models\Inventory\InterBranchRequisition;
+use App\Models\Inventory\InterBranchRequisitionItem;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\UnitOfMeasure;
 use App\Models\Inventory\ItemCategories;
@@ -23,8 +24,9 @@ class InterBranchRequisitionController extends Controller
 
     public function index()
     {
-        $groupedRequisitions = InterBranchRequisition::with(['fromBranch', 'toBranch'])
-            ->orderBy('CreatedOn', 'desc')
+        // Eager load items as well, for counts or details
+        $groupedRequisitions = InterBranchRequisition::with(['fromBranch', 'toBranch', 'items'])
+            ->orderBy('CreatedOn', 'asc')
             ->get()
             ->groupBy('ReqNo')
             ->map(function ($group) {
@@ -42,104 +44,94 @@ class InterBranchRequisitionController extends Controller
         $categories = ItemCategories::whereNull('ParentId')->get();
         $branches = Branch::all();
         $uoms = UnitOfMeasure::all();
-       
 
         return view('inventory.interbranchrequisition.create', compact('branches', 'uoms', 'categories'));
     }
 
     public function store(InterBranchRequisitionRequest $request)
     {
+        // The service should handle creating the requisition and its items
         $this->service->create($request->validated());
         return redirect()->route('interbranchrequisition.index')->with('success', 'Requisition submitted successfully.');
     }
 
     public function show($Id)
-    {
-        $item = InterBranchRequisition::findOrFail($Id);
-        return view('inventory.interbranchrequisition.show', compact('item'));
-    }
+{
+    $item = InterBranchRequisition::with([
+        'fromBranch',
+        'toBranch',
+        'creator',
+        'items',
+        'items.item.category.parent',
+        'items.uom',
+    ])->findOrFail($Id);
+
+    return view('inventory.interbranchrequisition.show', compact('item'));
+}
 
     public function edit($Id)
-{
-    $item = InterBranchRequisition::with(['item.category'])->findOrFail($Id);
-    
-    $categories = ItemCategories::whereNull('ParentId')->get();
-    $branches = Branch::all();
-    $uoms = UnitOfMeasure::all(); // Changed variable name for consistency
-    
-    // Safely get category information
-    $categoryId = null;
-    $subcategoryId = null;
-    
-    if ($item->item && $item->item->category) {
-        $categoryId = $item->item->category->parent 
-            ? $item->item->category->parent->Id 
-            : $item->item->category->Id;
-        $subcategoryId = $item->item->category->parent 
-            ? $item->item->category->Id 
-            : null;
-    }
-    
-    $items = ItemMasterList::where('Category', $subcategoryId ?? $categoryId)->get();
-    
-    // Removed 'stores' from compact as it's not defined
-    return view('inventory.interbranchrequisition.edit', compact('item', 'branches', 'uoms', 'categories', 'items'));
-}
+    {
+        
+        $item = InterBranchRequisition::with([
+        'fromBranch',
+        'toBranch',
+        'creator',
+        'items',
+        'items.item.category.parent',
+        'items.uom',
+        ])->findOrFail($Id);
 
-public function update(InterBranchRequisitionRequest $request, $Id)
-{
-    $item = InterBranchRequisition::findOrFail($Id); // Fixed: was UnitOfMeasure
-    $data = $request->validated();
-    
-    try {
-        $this->service->update($item, $data); // Fixed: was InterBranchRequisitionService
-        return redirect()->route('interbranchrequisition.index')->with('success', 'Requisition updated successfully!');
-    } catch (\Exception $e) {
-        return back()->withErrors('Failed to update Requisition: ' . $e->getMessage())->withInput();
-    }
-}
+        $categories = ItemCategories::whereNull('ParentId')->get();
+        $branches = Branch::all();
+        $uoms = UnitOfMeasure::all();
 
+        return view('inventory.interbranchrequisition.edit', compact('item', 'branches', 'uoms', 'categories'));
+    }
+
+    public function update(InterBranchRequisitionRequest $request, $Id)
+    {
+        $item = InterBranchRequisition::with('items')->findOrFail($Id);
+        $data = $request->validated();
+
+        try {
+            $this->service->update($item, $data);
+            return redirect()->route('interbranchrequisition.index')->with('success', 'Requisition updated successfully!');
+        } catch (\Exception $e) {
+            return back()->withErrors('Failed to update Requisition: ' . $e->getMessage())->withInput();
+        }
+    }
 
     public function destroy($Id)
     {
-        $items = InterBranchRequisition::where('Id', $Id)->get();
-        foreach ($items as $item) {
-            $this->service->delete($item);
-        }
+        $item = InterBranchRequisition::findOrFail($Id);
+        $this->service->delete($item);
         return redirect()->route('interbranchrequisition.index')->with('success', 'Requisition deleted successfully.');
     }
 
     public function getSubcategories(Request $request)
-{
-    $categoryId = $request->get('category_id');
-    if (!$categoryId) {
-        return response()->json([]);
+    {
+        $categoryId = $request->get('category_id');
+        if (!$categoryId) {
+            return response()->json([]);
+        }
+
+        $subcategories = ItemCategories::where('ParentId', $categoryId)
+            ->select('Id', 'Name')
+            ->get();
+
+        return response()->json($subcategories);
     }
 
-    $subcategories = ItemCategories::where('ParentId', $categoryId)
-        ->select('Id', 'Name')
-        ->get();
+    public function getItemsByCategoryOrSubcategory(Request $request)
+    {
+        $categoryId = $request->get('category_id');
+        $subcategoryId = $request->get('subcategory_id');
 
-    return response()->json($subcategories);
-}
+        $items = \DB::table('t_Items')
+            ->where('Category', $subcategoryId ?? $categoryId)
+            ->select('Id', 'ItemName')
+            ->get();
 
-
-public function getItemsByCategoryOrSubcategory(Request $request)
-{
-    $categoryId = $request->get('category_id');
-    $subcategoryId = $request->get('subcategory_id');
-
-    $items = \DB::table('t_Items')
-        ->where('Category', $subcategoryId ?? $categoryId)
-        ->select('Id', 'ItemName', 'ItemCode') // Make sure ItemCode is included
-        ->get();
-
-    return response()->json($items); // ✅ RETURN THE DATA
-}
-
-
-
-
-    
-
+        return response()->json($items);
+    }
 }

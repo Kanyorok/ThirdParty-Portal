@@ -27,7 +27,6 @@ class InterBranchRequisition extends Model
         'ReqNo',
         'FromBranch',
         'ToBranch',
-        'ItemCode',
         'UOM',
         'RequestedQty',
         'Remarks',
@@ -45,25 +44,28 @@ class InterBranchRequisition extends Model
         'Status' => 'boolean',
     ];
 
-    public function item()
-    {
-        return $this->belongsTo(ItemMasterList::class, 'ItemCode', 'Id');
-    }
+   
 
-    public function uom()
-    {
-        return $this->belongsTo(UnitOfMeasure::class, 'UOM', 'Id');
-    }
+ 
 
-    public function branches()
-    {
-        return $this->belongsTo(Branch::class, 'ToBranch','fromBranch', 'Id');
-    }
+ public function fromBranch()
+{
+    return $this->belongsTo(Branch::class, 'FromBranch', 'Id');
+}
+
+
+public function toBranch()
+{
+    return $this->belongsTo(Branch::class, 'ToBranch', 'Id');
+}
+
+
 
     public function creator()
     {
         return $this->belongsTo(User::class, 'CreatedBy', 'Id');
     }
+    
 
     public function modifier()
     {
@@ -74,5 +76,9 @@ class InterBranchRequisition extends Model
     {
         return $this->belongsTo(User::class, 'DeletedBy', 'Id');
     }
+    public function items()
+{
+    return $this->hasMany(InterBranchRequisitionItem::class, 'RequisitionId', 'Id');
+}
 
 }

@@ -3,6 +3,7 @@
 namespace App\Services\Inventory;
 
 use App\Models\Inventory\InterBranchRequisition;
+use App\Models\Inventory\InterBranchRequisitionItem;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
 
@@ -10,24 +11,29 @@ class InterBranchRequisitionService
 {
     public function create(array $data): InterBranchRequisition
     {
-        static $reqNo = null;
-
-        if (!$reqNo) {
-            $reqNo = $this->generateReqNo();
-        }
+       
+        $items = $data['items'] ?? [];
+        unset($data['items']);
 
         $requisition = new InterBranchRequisition($data);
-        $requisition->ReqNo = $reqNo;
         $requisition->CreatedBy = Auth::id();
         $requisition->ModifiedBy = Auth::id();
         $requisition->CreatedOn = Carbon::now();
         $requisition->ModifiedOn = Carbon::now();
         $requisition->save();
+        $requisition->ReqNo = $this->generateReqNo($requisition);
+        $requisition->save();
+
+        
+        foreach ($items as $item) {
+            $item['RequisitionId'] = $requisition->Id;
+            InterBranchRequisitionItem::create($item);
+        }
 
         activity()
             ->performedOn($requisition)
             ->causedBy(Auth::user())
-            ->withProperties(['attributes' => $data])
+            ->withProperties(['attributes' => $data, 'items' => $items])
             ->log('Created InterBranch Requisition');
 
         return $requisition;
@@ -35,15 +41,26 @@ class InterBranchRequisitionService
 
     public function update(InterBranchRequisition $requisition, array $data): InterBranchRequisition
     {
+        $items = $data['items'] ?? [];
+        unset($data['items']);
+
         $requisition->fill($data);
         $requisition->ModifiedBy = Auth::id();
         $requisition->ModifiedOn = Carbon::now();
         $requisition->save();
 
+       
+        $requisition->items()->delete();
+
+        foreach ($items as $item) {
+            $item['RequisitionId'] = $requisition->Id;
+            InterBranchRequisitionItem::create($item);
+        }
+
         activity()
             ->performedOn($requisition)
             ->causedBy(Auth::user())
-            ->withProperties(['attributes' => $data])
+            ->withProperties(['attributes' => $data, 'items' => $items])
             ->log('Updated InterBranch Requisition');
 
         return $requisition;
@@ -55,6 +72,9 @@ class InterBranchRequisitionService
         $requisition->save();
         $requisition->delete();
 
+       
+        $requisition->items()->delete();
+
         activity()
             ->performedOn($requisition)
             ->causedBy(Auth::user())
@@ -63,9 +83,10 @@ class InterBranchRequisitionService
         return true;
     }
 
-    protected function generateReqNo(): string
+  
+    protected function generateReqNo(InterBranchRequisition $requisition): string
     {
-        $lastId = InterBranchRequisition::withTrashed()->max('Id') ?? 0;
-        return 'REQ-' . str_pad($lastId + 1, 5, '0', STR_PAD_LEFT);
+        $year = now()->format('Y');
+        return 'REQ-' . $year . '-' . str_pad($requisition->Id, 4, '0', STR_PAD_LEFT);
     }
 }

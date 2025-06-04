@@ -13,7 +13,5 @@ class InterBranchRequisitionApprovalController extends Controller
         return view('inventory.interbranchrequisition.approval.index');
     }
 
-    public function create(){
-        return view('inventory.interbranchrequisition.approval.create');
-    }
+   
 }

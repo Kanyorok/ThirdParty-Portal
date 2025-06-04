@@ -24,15 +24,21 @@ class InterBranchRequisitionRequest extends FormRequest
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
 
-    public function rules(): array
-    {
-        return [
-            'FromBranch' => 'required|exists:t_Branches,Id',
-            'ToBranch' => 'required|exists:t_Branches,Id|different:FromBranch',
-            'ItemCode' => 'required|exists:t_Items,Id',
-            'UOM' => 'required|exists:t_UOM,Id',
-            'RequestedQty' => 'required|integer|min:1',
-            'Remarks' => 'nullable|string|max:255',
-        ];
+public function rules(): array
+{
+    return [
+        'FromBranch' => 'required|exists:t_Branches,Id',
+        'ToBranch' => 'required|exists:t_Branches,Id|different:FromBranch',
+        'CreatedOn' => 'required|date',
+        'items' => 'required|array|min:1',
+        'items.*.Category' => 'required|exists:t_ItemCategories,Id',
+        'items.*.Subcategory' => 'nullable|exists:t_ItemCategories,Id',
+        'items.*.Item' => 'required|exists:t_Items,Id',
+        'items.*.UOM' => 'required|exists:t_UOM,Id',
+        'items.*.RequestedQty' => 'required|integer|min:1',
+        'items.*.Remarks' => 'nullable|string|max:255',
+    ];
+
+
     }
 }
