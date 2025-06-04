@@ -94,10 +94,11 @@ class RequisitionItemService
             ->leftJoin(DB::raw('t_Items WITH (NOLOCK)'), 't_Items.Id', '=', 't_RequisitionLines.Item')
             ->leftJoin(DB::raw('t_Users WITH (NOLOCK)'), 't_Users.Id', '=', 't_RequisitionLines.CreatedBy')
             ->leftJoin(DB::raw('t_ItemCategories WITH (NOLOCK)'), 't_Items.CategoryId', '=', 't_ItemCategories.id')
+            ->leftJoin(DB::raw('t_uom WITH (NOLOCK)'), 't_Items.UOM', '=', 't_uom.Id')
             ->select(
                 't_Items.Name as Item',
                 't_Users.Name as UserName',
-                't_Items.UOM as UOMx',
+                't_uom.Code as UOMx',
                 't_ItemCategories.Name as Category',
                 't_Requisitions.RequisitionNo',
                 't_Requisitions.BranchID',
@@ -106,10 +107,10 @@ class RequisitionItemService
                 DB::raw('t_RequisitionLines.ExpectedPrice * t_RequisitionLines.Quantity as ExpectedPrice'),
                 DB::raw('t_Items.UnitPrice * t_RequisitionLines.Quantity as ActualPrice'),
                 DB::raw("CASE
-            WHEN t_RequisitionLines.Urgency = 1 THEN 'Very High'
-            WHEN t_RequisitionLines.Urgency = 2 THEN 'High'
-            WHEN t_RequisitionLines.Urgency = 3 THEN 'Medium'
-            WHEN t_RequisitionLines.Urgency = 4 THEN 'Low'
+            WHEN t_RequisitionLines.UrgencyID = 1 THEN 'Very High'
+            WHEN t_RequisitionLines.UrgencyID = 2 THEN 'High'
+            WHEN t_RequisitionLines.UrgencyID = 3 THEN 'Medium'
+            WHEN t_RequisitionLines.UrgencyID = 4 THEN 'Low'
             ELSE 'Unknown'
         END as Urgency"),
                 DB::raw("FORMAT(t_RequisitionLines.CreatedOn, 'dd-MM-yyyy') as CreatedOn"),
@@ -130,25 +131,36 @@ class RequisitionItemService
                 ->get();
     }
 
-    public static function getRequisitionRelatedItems($RequsitionId){
-
+    public static function getRequisitionRelatedItems($RequisitionId)
+    {
         return DB::table(DB::raw('t_RequisitionLines WITH (NOLOCK)'))
             ->leftJoin(DB::raw('t_Items WITH (NOLOCK)'), 't_RequisitionLines.Item', '=', 't_Items.Id')
             ->leftJoin(DB::raw('t_Users WITH (NOLOCK)'), 't_RequisitionLines.CreatedBy', '=', 't_Users.Id')
             ->leftJoin(DB::raw('t_ItemCategories WITH (NOLOCK)'), 't_Items.Category', '=', 't_ItemCategories.Id')
-            ->where('t_RequisitionLines.RequisitionId',$RequsitionId)
-            ->select(
-                't_RequisitionLines.*',
+            ->leftJoin(DB::raw('t_uom WITH (NOLOCK)'), 't_Items.UOM', '=', 't_uom.Id')
+            ->leftJoin(DB::raw('t_ItemTypes WITH (NOLOCK)'), 't_Items.ItemType', '=', 't_ItemTypes.Id')
+            ->where('t_RequisitionLines.RequisitionId', $RequisitionId)
+            ->select([
+                't_RequisitionLines.Id',
+                't_RequisitionLines.Quantity',
                 't_Items.ItemName as ItemName',
+                't_Items.ItemDescription as Description',
                 't_Users.Name as UserName',
-                't_Items.UOM as UOMx',
+                't_uom.Code as UOM',
+                't_ItemTypes.TypeName as Type',
                 't_ItemCategories.Name as Category',
                 DB::raw('t_RequisitionLines.ExpectedPrice * t_RequisitionLines.Quantity as ExpectedPrice'),
                 DB::raw('0 * t_RequisitionLines.Quantity as ActualPrice'),
-                'StatusID as Status',
-                'UrgencyID as Urgency',
+                't_RequisitionLines.StatusID as Status',
+                DB::raw("CASE
+            WHEN t_RequisitionLines.UrgencyID = 1 THEN 'Very High'
+            WHEN t_RequisitionLines.UrgencyID = 2 THEN 'High'
+            WHEN t_RequisitionLines.UrgencyID = 3 THEN 'Medium'
+            WHEN t_RequisitionLines.UrgencyID = 4 THEN 'Low'
+            ELSE 'Unknown'
+        END as Urgency"),
                 DB::raw("FORMAT(t_RequisitionLines.CreatedOn, 'dd-MM-yyyy HH:mm') as CreatedOn")
-            )
+            ])
             ->get();
     }
 

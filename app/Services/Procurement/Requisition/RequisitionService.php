@@ -84,10 +84,12 @@ class RequisitionService {
         return DB::table(DB::raw('t_Requisitions WITH (NOLOCK)'))
             ->leftJoin(DB::raw('t_RequisitionLines WITH (NOLOCK)'), 't_Requisitions.id', '=', 't_RequisitionLines.RequisitionId')
             ->leftJoin(DB::raw('t_CodeDetails WITH (NOLOCK)'), 't_Requisitions.StatusID', '=', 't_CodeDetails.ID')
+            ->leftJoin(DB::raw('t_Branches WITH (NOLOCK)'), 't_Requisitions.BranchID', '=', 't_Branches.Id')
+            ->leftJoin(DB::raw('t_Departments WITH (NOLOCK)'), 't_Requisitions.DepartmentID', '=', 't_Departments.Id')
             ->select(DB::raw('
                 t_Requisitions.RequisitionNo,
-                t_Requisitions.BranchID,
-                t_Requisitions.DepartmentID,
+                COALESCE(t_Branches.Name,t_Requisitions.BranchID) as BranchID ,
+                COALESCE(t_Departments.Name,t_Requisitions.DepartmentID) as DepartmentID ,
                 t_Requisitions.Remarks,
                 t_CodeDetails.Description as Status,
                 t_Requisitions.CreatedOn,
@@ -102,7 +104,9 @@ class RequisitionService {
                 't_Requisitions.DepartmentID',
                 't_Requisitions.Remarks',
                 't_CodeDetails.Description',
-                't_Requisitions.CreatedOn'
+                't_Requisitions.CreatedOn',
+                't_Departments.Name',
+                't_Branches.Name'
             )
             ->get();
     }
@@ -128,7 +132,7 @@ class RequisitionService {
     public static function fetchProcurementPlan(){
         return DB::table(DB::raw('t_ConsolidatedProcurementPlan WITH (NOLOCK)'))
             ->select('PlanID', 'Title','ReferenceNumber')
-            ->where('Status', '=', 'a')
+//            ->where('Status', '=', 'a')
             ->whereNull('DeletedBy')
             ->whereNull('DeletedOn')
             ->get();

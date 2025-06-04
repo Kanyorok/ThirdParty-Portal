@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('DepartmentID');
             $table->string('Remarks');
             $table->foreignId('StatusID')->comment('RequisitionStatus')->constrained('t_CodeDetails', 'ID');
-            $table->integer('PlanRef');
+            $table->integer('PlanRef')->nullable();
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
