@@ -5,8 +5,9 @@ namespace App\Models\Procurement;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Inventory\ItemCategories;
 use App\Models\Inventory\ItemMasterList;
+use App\Models\Inventory\ItemType;
+use App\Models\Inventory\UnitOfMeasure;
 
 class RequisitionLine extends Model
 {
@@ -44,5 +45,14 @@ class RequisitionLine extends Model
         return $this->belongsTo(ItemMasterList::class, 'Item', 'Id');
     }
 
+    public function itemtype()
+    {
+        return $this->belongsTo(ItemType::class, 't_ItemTypes', 'Id');
+    }
+
+    public function uom()
+    {
+        return $this->belongsTo(UnitOfMeasure::class, 'UOM', 'Id');
+    }
 
 }

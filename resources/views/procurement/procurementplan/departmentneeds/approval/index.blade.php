@@ -33,9 +33,7 @@
         <td>
 
             <a class="btn btn-sm btn-primary"
-               href="{{ route('department-need-approval.show', $NeedsApprovalview->Id) }}">View</a>
-            <button class="btn btn-sm btn-success">Approve</button>
-            <button class="btn btn-sm btn-danger">Reject</button>
+               href="{{ route('department-need-approval.show', $NeedsApprovalview->Id) }}">View to Approve</a>
             </form>
         </td>
       </tr>

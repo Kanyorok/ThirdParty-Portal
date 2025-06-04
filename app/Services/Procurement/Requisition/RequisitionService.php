@@ -65,6 +65,19 @@ class RequisitionService {
             ];
         }
     }
+
+    public function getItemTypes()
+    {
+        try {
+            return DB::table('t_ItemTypes')
+                ->select('Id', 'TypeName')
+                ->where('Active', true)
+                ->get();
+        } catch (QueryException $e) {
+            Log::error('Error fetching item types: ' . $e->getMessage());
+            return collect(); // Return an empty collection on error
+        }
+    }
 //
     public static function fetchRequisition()
     {
@@ -91,6 +104,33 @@ class RequisitionService {
                 't_CodeDetails.Description',
                 't_Requisitions.CreatedOn'
             )
+            ->get();
+    }
+
+    public static function fetchBranches()
+    {
+        return DB::table(DB::raw('t_Branches WITH (NOLOCK)'))
+            ->select('Id', 'Name', 'BranchID')
+            ->whereNull('DeletedBy')
+            ->whereNull('DeletedOn')
+            ->get();
+    }
+
+
+    public static function fetchDepartments(){
+        return DB::table(DB::raw('t_Departments WITH (NOLOCK)'))
+            ->select('Id', 'Name','DepartmentID')
+            ->whereNull('DeletedBy')
+            ->whereNull('DeletedOn')
+            ->get();
+    }
+
+    public static function fetchProcurementPlan(){
+        return DB::table(DB::raw('t_ConsolidatedProcurementPlan WITH (NOLOCK)'))
+            ->select('PlanID', 'Title','ReferenceNumber')
+            ->where('Status', '=', 'a')
+            ->whereNull('DeletedBy')
+            ->whereNull('DeletedOn')
             ->get();
     }
 }
