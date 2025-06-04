@@ -17,8 +17,8 @@ use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\PlanLineItems;
 use App\Models\Procurement\ProcurementPlan;
 use App\Models\Procurement\TenderCategory;
-use App\Models\procurement\TenderItems;
-use App\Models\procurement\TenderSupplier;
+use App\Models\Procurement\TenderItems;
+use App\Models\Procurement\TenderSupplier;
 use App\Models\ThirdParies\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -284,10 +284,10 @@ class TenderController extends Controller
             // ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return $e->getMessage();
+            //return $e->getMessage();
             Log::error("--- CREATE TENDER ERROR --- " . $e->getMessage());
             Log::error($e);
-            return $e->getMessage();
+            //return $e->getMessage();
             return redirect()->route('initiatetender.index')->with('error', 'Failed to create Tender. Please try again.');
         }
         // Auto-generate stage deadlines
