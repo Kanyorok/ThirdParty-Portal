@@ -8,6 +8,15 @@
       <dl class="row">
         <dt class="col-sm-4">Tenant</dt>
         <dd class="col-sm-8">{{ $newlease->Tenant }}</dd>
+        
+        <dt class="col-sm-4">Property ID</dt>
+        <dd class="col-sm-8">{{ $newlease->PropertyID ?? '-' }}</dd>
+
+        <dt class="col-sm-4">Block ID</dt>
+        <dd class="col-sm-8">{{ $newlease->BlockID ?? '-' }}</dd>
+
+        <dt class="col-sm-4">Floor ID</dt>
+        <dd class="col-sm-8">{{ $newlease->FloorID ?? '-' }}</dd>
 
         <dt class="col-sm-4">Unit</dt>
         <dd class="col-sm-8">{{ $newlease->Unit ?? '-' }}</dd>

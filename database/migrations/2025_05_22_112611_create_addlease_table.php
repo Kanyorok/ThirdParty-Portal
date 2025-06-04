@@ -14,6 +14,9 @@ return new class extends Migration
         Schema::create('t_AddLease', function (Blueprint $table) {
             $table->id();
             $table->string('Tenant');
+            $table->string('PropertyID');
+            $table->string('BlockID');
+            $table->string('FloorID');
             $table->string('Unit');
             $table->date('StartDate');
             $table->date('EndDate');

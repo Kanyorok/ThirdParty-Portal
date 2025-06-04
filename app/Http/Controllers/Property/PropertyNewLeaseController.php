@@ -32,6 +32,9 @@ class PropertyNewLeaseController extends Controller
         //dd($request->all());
         $request->validate([
             'Tenant'=>'required|string|max:50',
+            'PropertyID'=>'required|string|max:50',
+            'BlockID'=>'required|string|max:50',
+            'FloorID'=>'required|string|max:50',
             'Unit'=>'required|string|max:100',
             'StartDate'=>'required|date',
             'EndDate'=>'required|date',
@@ -44,6 +47,9 @@ class PropertyNewLeaseController extends Controller
        //dd('validation passed');
          $newlease = PropertyNewLease::create([
             'Tenant'=> $request->Tenant,
+            'PropertyID'=> $request->PropertyID,
+            'BlockID'=> $request->BlockID,
+            'FloorID'=> $request->FloorID,
             'Unit'=> $request->Unit,
             'StartDate'=> $request->StartDate,
             'EndDate'=> $request->EndDate,

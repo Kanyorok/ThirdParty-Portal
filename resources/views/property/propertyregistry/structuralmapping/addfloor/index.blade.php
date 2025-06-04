@@ -12,6 +12,7 @@
     <thead class="table-light">
       <tr>
             <th>#</th>
+            <th>Property</th>
             <th>Block</th>
             <th>Floor Name</th>
             <th>Notes</th>
@@ -22,6 +23,7 @@
         @foreach($floors as $floor)
         <tr>
         <td>{{ $loop->iteration }}</td>
+        <td>{{ $floor->PropertyID }}</td>
         <td>{{ $floor->BlockID }}</td>
         <td>{{ $floor->FloorLabel }}</td>
         <td>{{ $floor->FloorNotes }}</td>

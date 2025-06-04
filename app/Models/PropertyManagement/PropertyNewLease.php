@@ -15,6 +15,9 @@ class PropertyNewLease extends Model
 
     protected $fillable = [
         'Tenant',
+        'PropertyID',
+        'BlockID',
+        'FloorID',
         'Unit',
         'StartDate',
         'EndDate',

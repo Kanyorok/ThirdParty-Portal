@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Property;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\PropertyManagement\PropertyReceipt;
+use App\Models\PropertyManagement\PropertyInvoice;
 
 class PropertyReceiptController extends Controller
 {
@@ -16,13 +17,17 @@ class PropertyReceiptController extends Controller
     }
 
     public function create(){
-        return view('property.billingandreceipting.receipting.create');
+        $invoices = PropertyInvoice::all();
+        return view('property.billingandreceipting.receipting.create', compact('invoices'));
     }
     public function store(Request $request)
     {
         //dd($request->all());
         $request->validate([
             'InvoiceID'=>'required|string|max:50',
+            'BillingMonth'=>'required|string|max:50',
+            'InvoiceDate'=>'required|date',
+            'RentAmount'=>'required|integer',
             'TotalDue'=>'required|integer',
             'AmountPaid'=>'required|integer',
             'Balance'=>'required|integer',
@@ -35,6 +40,9 @@ class PropertyReceiptController extends Controller
            //dd('validation');
          $receipt = PropertyReceipt::create([
             'InvoiceID'=> $request->InvoiceID,
+            'BillingMonth'=> $request->BillingMonth,
+            'InvoiceDate'=> $request->InvoiceDate,
+            'RentAmount'=> $request->RentAmount,
             'TotalDue'=> $request->TotalDue,
             'AmountPaid'=> $request->AmountPaid,
             'Balance'=> $request->Balance,

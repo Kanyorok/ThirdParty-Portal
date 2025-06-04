@@ -14,6 +14,9 @@ return new class extends Migration
         Schema::create('t_RentReceipt', function (Blueprint $table) {
             $table->id();
             $table->string('InvoiceID');
+            $table->string('BillingMonth');
+            $table->date('InvoiceDate');
+            $table->integer('RentAmount');
             $table->integer('TotalDue');
             $table->integer('AmountPaid');
             $table->integer('Balance');

@@ -15,7 +15,7 @@ class PropertyUnitController extends Controller
     //
     public function index()
     {
-            $units = PropertyUnit::all();
+        $units = PropertyUnit::all();
         return view('property.propertyregistry.structuralmapping.addunit.index', compact('units'));
     }
 

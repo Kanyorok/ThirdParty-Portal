@@ -14,6 +14,7 @@ class PropertyFloor extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
+        'PropertyID',
         'BlockID',
         'FloorLabel',
         'FloorNotes',

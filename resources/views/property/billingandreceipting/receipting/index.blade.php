@@ -11,6 +11,9 @@
       <tr>
         <th>#</th>
         <th>Invoice</th>
+        <th>Billing Month</th>
+        <th>Invoice Date</th>
+        <th>Rent Amount</th>
         <th>Total Due</th>
         <th>Amount Paid So Far</th>
         <th>Balance</th>
@@ -27,6 +30,9 @@
       <tr>
         <td>{{ $loop->iteration ??'_' }}</td>
         <td>{{ $receipt->InvoiceID ?? '_' }}</td>
+        <td>{{ $receipt->BillingMonth ?? '_' }}</td>
+        <td>{{ $receipt->InvoiceDate ?? '_' }}</td>
+        <td>{{ $receipt->RentAmount ?? '_' }}</td>
         <td>{{ $receipt->TotalDue ?? '_' }}</td>
         <td>{{ $receipt->AmountPaid ?? '_' }}</td>
         <td>{{ $receipt->Balance ?? '_' }}</td>

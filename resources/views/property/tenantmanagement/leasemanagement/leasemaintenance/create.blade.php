@@ -18,6 +18,30 @@
               @endforeach
             </select>
         </div>
+        <div class="row g-3 mb-3">
+      <label class="form-label">Select Property</label>
+            <select name="PropertyID" class="form-select" required>
+              @foreach ($units as $unit)
+                <option value="{{ $unit->PropertyID }}">{{ $unit->PropertyID }}</option>
+              @endforeach
+            </select>
+        </div>
+      <div class="col-md-4">
+          <label class="form-label">Select Block</label>
+            <select name="BlockID" class="form-select" required>
+              @foreach ($units as $unit)
+                <option value="{{ $unit->BlockID }}">{{ $unit->BlockID }}</option>
+              @endforeach
+            </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Select Floor</label>
+            <select name="FloorID" class="form-select" required>
+              @foreach ($units as $unit)
+                <option value="{{ $unit->FloorID }}">{{ $unit->FloorID }}</option>
+              @endforeach
+            </select>
+        </div>
         <div class="col-md-6">
           <label class="form-label">Select Unit(s)</label>
             <select name="Unit" class="form-select" required>

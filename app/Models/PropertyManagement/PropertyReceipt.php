@@ -15,6 +15,9 @@ class PropertyReceipt extends Model
 
     protected $fillable = [
         'InvoiceID',
+        'BillingMonth',
+        'InvoiceDate',
+        'RentAmount',
         'TotalDue',
         'AmountPaid',
         'Balance',

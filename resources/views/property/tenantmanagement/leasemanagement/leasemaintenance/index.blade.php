@@ -11,6 +11,9 @@
       <tr>
         <th>#</th>
         <th>Tenant</th>
+        <th>Property ID</th>
+        <th>Block ID</th>
+        <th>Floor ID</th>
         <th>Unit</th>
         <th>Start Date</th>
         <th>End Date</th>
@@ -27,6 +30,9 @@
       <tr>
         <td>{{ $loop->iteration ?? '-' }}</td>
         <td>{{ $newlease->Tenant ?? '-' }}</td>
+        <td>{{ $newlease->PropertyID ?? '-' }}</td>
+        <td>{{ $newlease->BlockID ?? '-' }}</td>
+        <td>{{ $newlease->FloorID ?? '-' }}</td>
         <td>{{ $newlease->Unit ?? '-' }}</td>
         <td>{{ $newlease->StartDate ?? '-' }}</td>
         <td>{{ $newlease->EndDate ?? '-' }}</td>

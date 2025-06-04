@@ -1,6 +1,15 @@
 @extends('layouts.app')
 @section('title', 'Tenant Payments')
 @section('content')
+@if ($errors->any())
+    <div class="alert alert-danger">     
+        <ul>
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
 <div class="container mt-4">
   <h4 class="fw-bold mb-3">💳 Record Tenant Payment (Supports Partials)</h4>
 
@@ -12,14 +21,37 @@
       <!-- Select Invoice -->
       <div class="row g-3 mb-3">
         <div class="col-md-6">
-          <label class="form-label">Select Invoice</label>
-          <select class="form-select"name="InvoiceID">
-            <option>INV-2025-0001 – Moses K. – KES 26,500</option>
-            <option>INV-2025-0002 – Acme Ltd. – KES 78,000</option>
-          </select>
+          <label class="form-label">InvoiceID</label>
+            <select name="InvoiceID" class="form-select" required>
+              @foreach ($invoices as $invoice)
+                <option value="{{ $invoice->Lease }}">{{ $invoice->Lease }}</option>
+              @endforeach
+            </select>
         </div>
-      </div>
-
+        <div class="col-md-3">
+          <label class="form-label">Billing Month</label>
+            <select name="BillingMonth" class="form-select" required>
+              @foreach ($invoices as $invoice)
+                <option value="{{ $invoice->BillingMonth }}">{{ $invoice->BillingMonth }}</option>
+              @endforeach
+            </select>
+        </div>
+                <div class="col-md-3">
+          <label class="form-label">Invoice Date</label>
+            <select name="InvoiceDate" class="form-select" required>
+              @foreach ($invoices as $invoice)
+                <option value="{{ $invoice->InvoiceDate }}">{{ $invoice->InvoiceDate }}</option>
+              @endforeach
+            </select>
+        </div>
+                <div class="col-md-3">
+          <label class="form-label">Rent Amount</label>
+            <select name="RentAmount" class="form-select" required>
+              @foreach ($invoices as $invoice)
+                <option value="{{ $invoice->RentAmount }}">{{ $invoice->RentAmount }}</option>
+              @endforeach
+            </select>
+        </div>
       <!-- Invoice Summary (Static example, should populate dynamically) -->
       <div class="row g-3 mb-3">
         <div class="col-md-3">
