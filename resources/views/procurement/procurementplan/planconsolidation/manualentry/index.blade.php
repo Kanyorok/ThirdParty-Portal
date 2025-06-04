@@ -51,7 +51,7 @@
           <td>{{ $item->item->ItemName ?? 'N/A' }}</td>
           <td>{{ $item->item->category->Name ?? 'N/A' }}</td>
           <td>{{ $item->MergedQty }}</td>
-          <td>{{ $item->item->UOM ?? 'N/A' }}</td>
+          <td>{{ $item->item->uom->Name ?? 'N/A' }}</td>
           <td>{{ number_format($item->EstimatedUnitCost, 2) }}</td>
           <td>{{ $item->SchedulePeriod ?? 'N/A' }}</td>
           <td>{{ \Carbon\Carbon::parse($item->ExpectedDeliveryDate)->format('Y-m-d') ?? 'N/A' }}</td>

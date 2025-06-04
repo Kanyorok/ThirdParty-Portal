@@ -3,6 +3,7 @@
 namespace App\Models\Procurement;
 
 use App\Enums\Procurement\DepartmentNeedsEnum;
+use App\Models\Inventory\ItemMasterList;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -38,7 +39,7 @@ class DepartmentNeeds extends Model
 
     public function item()
     {
-        return $this->belongsTo(Item::class, 'ItemID', 'Id');
+        return $this->belongsTo(ItemMasterList::class, 'ItemID', 'Id');
     }
 
     public function workflows(): MorphMany

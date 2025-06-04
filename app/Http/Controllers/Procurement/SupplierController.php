@@ -18,7 +18,7 @@ class SupplierController extends Controller
         // Fetch all suppliers from the database
         $suppliers = Supplier::with('category')->orderBy('CreatedOn', 'desc')->paginate(20);
 
-        $categories = ItemCategory::all();
+        $categories = ItemCategories::all();
 
         // Return the view with the suppliers data
         return view('procurement.suppliers.index', compact('suppliers', 'categories'));

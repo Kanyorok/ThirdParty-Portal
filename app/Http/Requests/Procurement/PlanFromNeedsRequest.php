@@ -3,10 +3,8 @@
 namespace App\Http\Requests\Procurement;
 
 
+use App\Models\Inventory\ItemCategories;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
-use App\Models\Procurement\DepartmentNeeds;
-use App\Models\Procurement\ItemCategory;
-use App\Models\Procurement\PlanLineItems;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\ValidationException;
 
@@ -47,10 +45,10 @@ class PlanFromNeedsRequest extends FormRequest
         throw ValidationException::withMessages(['plan_id' => 'Plan not found']);
     }
 
-    public function getCategory(): ItemCategory
+    public function getCategory(): ItemCategories
     {
-        $category = ItemCategory::find($this->validated('category_id'));
-        if ($category instanceof ItemCategory) {
+        $category = ItemCategories::find($this->validated('category_id'));
+        if ($category instanceof ItemCategories) {
             return $category;
         }
 
