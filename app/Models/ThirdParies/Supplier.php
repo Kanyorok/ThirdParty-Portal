@@ -10,10 +10,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Procurement\RFQLine;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\Model\UserActorTrait;
 
 class Supplier extends Model
 {
-    use HasFactory,SoftDeletes;
+    use SoftDeletes, UserActorTrait;
+
+    const string CREATED_AT = 'CreatedOn';
+    const string UPDATED_AT = 'ModifiedOn';
+    const string DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Suppliers';
     protected $primaryKey = 'Id';
