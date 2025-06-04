@@ -15,10 +15,6 @@ class Supplier extends Model
 {
     use HasFactory,SoftDeletes;
 
-    public const CREATED_AT = 'CreatedOn';
-    public const UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
-
     protected $table = 't_Suppliers';
     protected $primaryKey = 'Id';
 
