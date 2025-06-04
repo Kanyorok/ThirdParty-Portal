@@ -1,18 +1,18 @@
 <?php
-
+ 
 namespace App\Services\Inventory;
-
+ 
 use App\Models\Inventory\StockItem;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\QueryException;
-
+ 
 class StockItemService
 {
     public function create(array $data): string
     {
         $maxRetries = 3;
         $attempt = 0;
-
+ 
         do {
             try {
                 return DB::transaction(function () use ($data) {
@@ -37,18 +37,18 @@ class StockItemService
                         'ModifiedBy'  => auth()->id(),
                         'ModifiedOn'  => now(),
                     ]);
-
+ 
                     // Generate SKU based on `Id`, Branch, Store
                     $skuCode = $this->generateSKUCode($stockItem->Id, $data['Branch'], $data['Store']);
                     $stockItem->update(['SKUCode' => $skuCode]);
-
+ 
                     // Log activity
                     activity()
                         ->causedBy(auth()->user())
                         ->performedOn($stockItem)
                         ->event('created')
                         ->log('Created Stock Item with SKUCode ' . $stockItem->SKUCode);
-
+ 
                     return $stockItem->SKUCode;
                 });
             } catch (QueryException $e) {
@@ -63,7 +63,7 @@ class StockItemService
             }
         } while ($attempt < $maxRetries);
     }
-
+ 
     public function update(StockItem $item, array $data): void
     {
         DB::transaction(function () use ($item, $data) {
@@ -71,9 +71,9 @@ class StockItemService
             if ($data['Branch'] !== $item->Branch || $data['Store'] !== $item->Store) {
                 $data['SKUCode'] = $this->generateSKUCode($item->Id, $data['Branch'], $data['Store']);
             }
-
+ 
             $item->update($data);
-
+ 
             activity()
                 ->causedBy(auth()->user())
                 ->performedOn($item)
@@ -81,13 +81,13 @@ class StockItemService
                 ->log('Updated Stock Item with SKUCode ' . $item->SKUCode);
         });
     }
-
+ 
     public function delete(StockItem $item): void
     {
         DB::transaction(function () use ($item) {
             $skuCode = $item->SKUCode;
             $item->delete();
-
+ 
             activity()
                 ->causedBy(auth()->user())
                 ->performedOn($item)
@@ -95,7 +95,7 @@ class StockItemService
                 ->log('Deleted Stock Item with SKUCode ' . $skuCode);
         });
     }
-
+ 
     /**
      * Generate SKUCode based on Item ID, Branch, and Store
      */
@@ -105,7 +105,7 @@ class StockItemService
                        str_pad($storeId, 2, '0', STR_PAD_LEFT) . '-' .
                        str_pad($Id, 5, '0', STR_PAD_LEFT);
     }
-
+ 
     /**
      * Check Duplicate SKUCode
      */

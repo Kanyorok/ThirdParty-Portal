@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\User;
+use App\Models\Procurement\Requisitions;
 
 class ItemType extends Model
 {
@@ -58,6 +59,9 @@ class ItemType extends Model
         return $this->belongsTo(User::class, 'DeletedBy', 'Id');
     }
 
-
+    public function requisitionitems()
+    {
+        return $this->hasMany(Requisitions::class, 'ItemTypeId', 'Id');
+    }
 
 }

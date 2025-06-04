@@ -2,7 +2,7 @@
 @section('title', 'Edit Stock Item')
 @section('content')
 <body class="bg-light">
-
+ 
 <div class="container mt-5">
   <div class="card shadow rounded-4">
     <div class="card-header text-dark rounded-top-4" style="background-color: #add8e6;">
@@ -10,15 +10,15 @@
     </div>
     <div class="card-body">
         <form action="{{ route('sku.update', $item->Id) }}" method="POST">
-        @csrf 
+        @csrf
         @method('PUT')
-
+ 
         <div class="mb-3 row">
             <div class="col-md-4">
                 <label for="skuCode" class="form-label">SKU Code</label>
                 <input type="text" name="SKUCode" class="form-control" id="skuCode" value="{{ $item->SKUCode }}" readonly>
             </div>
-
+ 
 <div class="row mb-3">
     <div class="col-md-4">
         <label for="Category" class="form-label">Category</label>
@@ -57,7 +57,7 @@
         @endforeach
     </select>
 </div>
-
+ 
     <div class="row mb-3">
     <div class="col-md-6">
         <label for="Branch" class="form-label">Branch</label>
@@ -82,7 +82,7 @@
         </select>
     </div>
 </div>
-
+ 
         <div class="mb-3">
             @foreach(['Batch', 'Serial', 'Perishable', 'Saleable', 'Purchasable'] as $field)
             <div class="form-check form-check-inline">
@@ -92,7 +92,7 @@
         </div>
             @endforeach
         </div>
-
+ 
        
         <div class="row mb-3">
             <div class="col-md-4">
@@ -108,7 +108,7 @@
                 <input type="number" name="Reorder" class="form-control" id="reorderQty" value="{{ $item->Reorder }}">
             </div>
         </div>
-
+ 
         <div class="row mb-3">
             <div class="col-md-6">
                 <label for="maxStockLevel" class="form-label">Max Stock Level</label>
@@ -119,18 +119,18 @@
                 <input type="date" name="LastReceived" class="form-control" id="lastReceivedDate" value="{{ $item->LastReceived }}">
             </div>
         </div>
-
+ 
 <div class="form-check mb-4">
   <input type="hidden" name="Status" value="0">
   <input class="form-check-input" type="checkbox" name="Status" value="1" id="Status" {{ $item->Status ? 'checked' : '' }}>
   <label class="form-check-label" for="Status">Is Active</label>
 </div>
-
+ 
         <div class="d-flex justify-content-end">
             <button type="submit" class="btn btn-warning px-4">Update Item</button>
             <a href="{{ route('sku.index') }}" class="btn btn-danger px-4 ms-2">Cancel</a>
         </div>
-
+ 
       </form>
     </div>
   </div>
@@ -140,12 +140,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const categorySelect = document.getElementById('Category');
     const subcategorySelect = document.getElementById('Subcategory');
     const itemSelect = document.getElementById('Item');
-
+ 
     // Function to load subcategories
     function loadSubcategories(categoryId) {
         subcategorySelect.innerHTML = '<option value="">-- Select Subcategory --</option>';
         itemSelect.innerHTML = '<option value="">-- Select Item --</option>'; // Reset items
-
+ 
         if (categoryId) {
             fetch(`/inventory/get-subcategories?category_id=${categoryId}`)
                 .then(response => response.json())
@@ -163,14 +163,14 @@ document.addEventListener('DOMContentLoaded', function () {
             itemSelect.disabled = true;
         }
     }
-
+ 
     // Function to load items (based on category OR subcategory)
     function loadItems(categoryId, subcategoryId = null) {
         itemSelect.innerHTML = '<option value="">-- Select Item --</option>';
-        let url = subcategoryId 
+        let url = subcategoryId
             ? `/inventory/get-items?subcategory_id=${subcategoryId}`
             : `/inventory/get-items?category_id=${categoryId}`;
-
+ 
         fetch(url)
             .then(response => response.json())
             .then(data => {
@@ -183,25 +183,25 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             });
     }
-
+ 
     // When Category changes, reload Subcategories and reset Items
     categorySelect.addEventListener('change', function () {
         const categoryId = this.value;
         loadSubcategories(categoryId);
     });
-
+ 
     // When Subcategory changes, reload Items
     subcategorySelect.addEventListener('change', function () {
         const subcategoryId = this.value;
         const categoryId = categorySelect.value;
         loadItems(categoryId, subcategoryId);
     });
-
+ 
     // If a category is already selected when the page loads, trigger refresh
     if (categorySelect.value) {
         loadSubcategories(categorySelect.value);
     }
 });
 </script>
-
+ 
 @endsection

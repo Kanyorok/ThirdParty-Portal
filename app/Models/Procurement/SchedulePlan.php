@@ -5,6 +5,7 @@ namespace App\Models\Procurement;
 use App\Enums\Procurement\SchedulePlanEnum;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SchedulePlan extends Model

@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Procurement;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Procurement\PlanLineItems;
-use App\Enums\Core\PostingEnum;
+use App\Enums\ProcurementPlanStatusEnum;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 
 class PlanEditController extends Controller
@@ -15,16 +15,16 @@ class PlanEditController extends Controller
     {
         $planId = $request->input('PlanID');
 
-        $availablePlans = ConsolidatedProcurementPlan::where('Status', PostingEnum::Draft)->get();
+    $availablePlans = ConsolidatedProcurementPlan::where('Status', ProcurementPlanStatusEnum::Draft)->get();
 
-        $draftItems = collect();
-        if ($planId) {
-            $draftItems = PlanLineItems::where('PlanID', $planId)
-                ->whereHas('consolidatedProcurementPlan', function ($query) {
-                    $query->where('Status', PostingEnum::Draft);
-                })
-                ->get();
-        }
+    $draftItems = collect();
+    if ($planId) {
+        $draftItems = PlanLineItems::where('PlanID', $planId)
+            ->whereHas('consolidatedProcurementPlan', function ($query) {
+                $query->where('Status', ProcurementPlanStatusEnum::Draft);
+            })
+            ->get();
+    }
 
         return view('procurement.procurementplan.planapproval.ammendplan.index', [
             'draftItems' => $draftItems,
@@ -35,8 +35,10 @@ class PlanEditController extends Controller
 
     public function updateDraftItems(Request $request)
     {
+        
         $user = auth()->user();
         $itemIds = $request->input('lineItemIds', []);
+       // $this->authorize('update', $itemIds);
 
         foreach ($itemIds as $id) {
             $qty = $request->input("qty_$id");
@@ -69,6 +71,7 @@ class PlanEditController extends Controller
         $user = auth()->user();
 
         $item = PlanLineItems::find($id);
+       // $this->authorize('delete', $item);
         if ($item) {
             $item->update([
                 'DeletedBy' => $user->id,

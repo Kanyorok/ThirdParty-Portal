@@ -20,13 +20,13 @@ class DepartmentNeedApprovalController extends Controller
     //
     public function index()
     {
-        $NeedsApprovalviews = DepartmentNeeds::with('creator')->where('Status', 'p')->get();
+        $NeedsApprovalviews = DepartmentNeeds::with('creator')->where('Status', DepartmentNeedsEnum::Pending)->get();
         return view('procurement.procurementplan.departmentneeds.approval.index', compact('NeedsApprovalviews'));
     }
 
     public function show($Id)
     {
-        $need = DepartmentNeeds::with(['item.category', 'creator'])->findOrFail($Id);
+        $need = DepartmentNeeds::with(['item.category','item.uom', 'creator'])->findOrFail($Id);
         return view('procurement.procurementplan.departmentneeds.approval.show', compact('need'));
     }
 
