@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('t_PropertyCategory', function (Blueprint $table) {
-            $table->id();
+            $table->id('Id');
             $table->string('PropertyCategoryName');
             $table->string('Description');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');

@@ -12,9 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('t_PropertyType', function (Blueprint $table) {
-            $table->id();
+            $table->id('Id');
             $table->string('PropertyTypeName');
-            $table->string('PropertyCategoryId');
+            $table->foreignId('PropertyCategoryId')->constrained('t_PropertyCategory', 'Id');
             $table->string('Description');           
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
