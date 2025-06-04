@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Procurement;
 
-use App\Enums\Core\PostingEnum;
+use App\Enums\ProcurementPlanStatusEnum;
 use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
@@ -18,7 +18,7 @@ class ProcurementSubmitPlanController extends Controller
     //
     public function index()
     {
-        $draftedplans = ConsolidatedProcurementPlan::where('Status', PostingEnum::Draft)->get();
+        $draftedplans = ConsolidatedProcurementPlan::where('Status', ProcurementPlanStatusEnum::Draft)->get();
         return view('procurement.procurementplan.submitplan.index', compact('draftedplans'));
     }
 

@@ -5,10 +5,10 @@ namespace App\Http\Controllers\Procurement;
 use App\Http\Controllers\Controller;
 use App\Models\Core\Branch;
 use App\Models\HRM\Department;
+use App\Models\Inventory\ItemCategories;
 use App\Models\Procurement\BudgetMaster;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\DepartmentNeeds;
-use App\Models\Procurement\ItemCategory;
 use App\Models\Procurement\PlanLineItems;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -30,7 +30,7 @@ class PlanFromNeedsController extends Controller
         $budgetLines = BudgetMaster::all();
 
         $categoryIds = $approvedNeeds->pluck('item.Category')->filter()->unique();
-        $categories = ItemCategory::whereIn('Id', $categoryIds)->orderBy('Name')->get();
+        $categories = ItemCategories::whereIn('Id', $categoryIds)->orderBy('Name')->get();
 
         return view('procurement.procurementplan.planconsolidation.loadfromneeds.create', compact(
             'approvedNeeds', 'plans', 'branches', 'departments', 'categories', 'budgetLines'

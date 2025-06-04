@@ -114,9 +114,12 @@
                         <td class="text-start">
                             <select class="form-select form-select-sm type" name="type[]" id="Type">
                                 <option disabled selected>Select Type</option>
-                                <option value="Stock">Stock</option>
-                                <option value="Asset">Asset</option>
-                                <option value="Non-Stock">Non-Stock</option>
+                                @foreach ($itemTypes as $type)
+                                    <option value="{{ $type->Id }}">{{ $type->TypeName }}</option>
+                                @endforeach
+{{--                                <option value="Stock">Stock</option>--}}
+{{--                                <option value="Asset">Asset</option>--}}
+{{--                                <option value="Non-Stock">Non-Stock</option>--}}
                             </select>
                         </td>
                         <td class="text-start">

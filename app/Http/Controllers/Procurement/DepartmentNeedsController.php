@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers\Procurement;
 
+use App\Enums\Procurement\DepartmentNeedsEnum;
 use App\Http\Controllers\Controller;
+use App\Models\Inventory\ItemMasterList;
 use App\Models\Procurement\DepartmentNeeds;
-use App\Models\Procurement\Item;
 use App\Services\Procurement\ProcurementPlan\DepartmentNeedsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -22,7 +23,7 @@ class DepartmentNeedsController extends Controller
 
     public function create()
     {
-        $items = Item::with('category')->orderBy('ItemName')->get();
+        $items = ItemMasterList::with('category','uom')->orderBy('ItemName')->get();
         return view('procurement.procurementplan.departmentneeds.raiseneed.create', compact('items'));
     }
 
@@ -46,7 +47,7 @@ class DepartmentNeedsController extends Controller
 
     public function index(Request $request)
     {
-        $departmentneedviews = DepartmentNeeds::with('creator')->where('Status', 'p')->get();
+        $departmentneedviews = DepartmentNeeds::with('creator')->where('Status', DepartmentNeedsEnum::Pending)->get();
         return view('procurement.procurementplan.departmentneeds.raiseneed.index', compact('departmentneedviews'));
     }
 
