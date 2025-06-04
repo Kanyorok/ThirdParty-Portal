@@ -43,6 +43,7 @@ class ItemMasterListRequest extends FormRequest
             'ImageUpload' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'DocumentUpload' => 'nullable|file|mimes:pdf,doc,docx,xlsx,xls|max:5120',
             'ItemDescription' => 'nullable|string',
+            'Status' => 'required|boolean',
             'remove_image' => 'nullable|in:1',
         ];
     }
