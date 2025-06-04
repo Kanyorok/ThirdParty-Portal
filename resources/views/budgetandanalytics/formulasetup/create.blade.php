@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Budget Formula Setup')
 @section('content')
 <div class="card p-4">
   <h5>🧠 Budget Formula Setup</h5>

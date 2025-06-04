@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Budget Approval Inbox')
 @section('content')
 <div class="card p-3">
   <h5>✅ Budget Approval Inbox</h5>

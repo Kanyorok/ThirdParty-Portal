@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Inventory\UOMController;
 use App\Http\Controllers\Inventory\ItemTypeController;
 use App\Http\Controllers\Inventory\InventoryTypeController;
+use App\Http\Controllers\Inventory\PriceManagementController;
 
 Route::namespace('Inventory')->prefix('inventory')->group(function () {
     // Route::resource('receipts', ReceiptController::class);
@@ -83,5 +84,6 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::resource('unitofmeasure', UOMController::class);
     Route::resource('itemtype', ItemTypeController::class);
     Route::resource('inventorytype', InventoryTypeController::class);
+    Route::resource('pricemanagement', PriceManagementController::class);  
 
 });
