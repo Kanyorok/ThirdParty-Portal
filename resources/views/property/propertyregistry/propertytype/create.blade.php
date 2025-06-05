@@ -1,6 +1,15 @@
 @extends('layouts.app')
 @section('title', 'Item Sub Category')
 @section('content')
+@if ($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 <div class="container mt-4">
   <h4 class="fw-bold mb-3">🏷️ Add Property Type</h4>
 
@@ -19,7 +28,7 @@
             <label for="PropertyCategoryId" class="form-label">Category</label>
             <select name="PropertyCategoryId" class="form-select" required>
               @foreach ($categories as $category)
-                <option value="{{ $category->id }}">{{ $category->PropertyCategoryName }}</option>
+                <option value="{{ $category->Id }}">{{ $category->PropertyCategoryName }}</option>
               @endforeach
             </select>
           </div>
