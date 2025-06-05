@@ -70,6 +70,14 @@
                 <p>No document uploaded</p>
             @endif
         </div>
+        <div class="col-md-6">
+            <strong>Status:</strong>
+                @if($item->Status == 1)
+                    <span class="badge bg-success">Active</span>
+                @else
+                    <span class="badge bg-warning">Inactive</span>
+                @endif
+        </div>
     </div>
 
     <div class="d-flex gap-2 mt-3">

@@ -100,6 +100,11 @@
             <label for="DocumentUpload" class="form-label">Upload Document (PDF, DOCX, XLSX, etc.)</label>
             <input type="file" name="DocumentUpload" id="DocumentUpload" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx">
         </div>
+        <div class="form-check mb-3">
+            <input type="hidden" name="Status" value="0">
+           <input class="form-check-input" type="checkbox" name="Status" value="1" id="Status" checked>
+           <label class="form-check-label" for="Status">Is Active</label>
+       </div>
 
         <button type="submit" class="btn btn-primary">✅ Save Item</button>
     </form>

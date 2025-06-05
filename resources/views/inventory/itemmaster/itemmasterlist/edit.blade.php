@@ -122,8 +122,16 @@
             @endif
             <input type="file" name="DocumentUpload" id="DocumentUpload" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx">
         </div>
+         <div class="col-md-4">
+                <label for="Status" class="form-label">Active?</label>
+                    <input type="hidden" name="Status" value="0">
+                    <input class="form-check-input" type="checkbox" name="Status" value="1" id="Status"
+                     {{ old('Status', 1) == 1 ? 'checked' : '' }}>
+                
+            </div>
+        </div>
 
-        <button type="submit" class="btn btn-success">💾 Update Item</button>
+        <button type="submit" class="btn btn-success">Update Item</button>
     </form>
 </div>
 
