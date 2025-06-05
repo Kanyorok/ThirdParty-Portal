@@ -105,11 +105,12 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/interbranchrequisition/get-items', [InterBranchRequisitionController::class, 'getItemsByCategoryOrSubcategory'])->name('interbranchrequisition.getItemsByCategoryOrSubcategory');
 
 
-Route::get('/inventory/get-subcategories', [InterBranchRequisitionController::class, 'getSubcategories'])->name('inventory.getSubcategories');
+    Route::get('/inventory/get-subcategories', [InterBranchRequisitionController::class, 'getSubcategories'])->name('inventory.getSubcategories');
 
     
-    Route::resource('interbranchrequisitionapproval', InterBranchRequisitionApprovalController::class);
-    //Route::resource('rentdashboard', RentDashboardController::class);
+    //Route::resource('interbranchrequisitionapproval', InterBranchRequisitionApprovalController::class);
+    Route::get('/interbranchrequisitionapproval', [InterBranchRequisitionApprovalController::class, 'index'])->name('interbranchrequisitionapproval.index');
+Route::post('interbranchrequisitionapproval/submit', [InterBranchRequisitionApprovalController::class, 'submitDecision'])->name('interbranchrequisitionapproval.submit');    //Route::resource('rentdashboard', RentDashboardController::class);
 
    // Route::resource('unitofmeasure', UOMController::class);
     Route::get('/unitofmeasure', [UOMController::class, 'index'])->name('unitofmeasure.index');

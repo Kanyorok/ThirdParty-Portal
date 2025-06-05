@@ -7,9 +7,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Model\UserActorTrait;
 use App\Models\Auth\User;
 use App\Models\Core\Branch;
-use App\Models\Inventory\UnitOfMeasure;
-use App\Models\Inventory\ItemMasterList;
-use App\Models\Inventory\ItemCategories;
 
 class InterBranchRequisition extends Model
 {
@@ -27,9 +24,6 @@ class InterBranchRequisition extends Model
         'ReqNo',
         'FromBranch',
         'ToBranch',
-        'UOM',
-        'RequestedQty',
-        'Remarks',
         'Status',
         'CreatedBy',
         'ModifiedBy',
@@ -41,31 +35,23 @@ class InterBranchRequisition extends Model
     protected $casts = [
         'CreatedOn' => 'datetime',
         'ModifiedOn' => 'datetime',
-        'Status' => 'boolean',
+        'Status' => 'string',
     ];
 
-   
+    public function fromBranch()
+    {
+        return $this->belongsTo(Branch::class, 'FromBranch', 'Id');
+    }
 
- 
-
- public function fromBranch()
-{
-    return $this->belongsTo(Branch::class, 'FromBranch', 'Id');
-}
-
-
-public function toBranch()
-{
-    return $this->belongsTo(Branch::class, 'ToBranch', 'Id');
-}
-
-
+    public function toBranch()
+    {
+        return $this->belongsTo(Branch::class, 'ToBranch', 'Id');
+    }
 
     public function creator()
     {
         return $this->belongsTo(User::class, 'CreatedBy', 'Id');
     }
-    
 
     public function modifier()
     {
@@ -76,9 +62,9 @@ public function toBranch()
     {
         return $this->belongsTo(User::class, 'DeletedBy', 'Id');
     }
-    public function items()
-{
-    return $this->hasMany(InterBranchRequisitionItem::class, 'RequisitionId', 'Id');
-}
 
+    public function items()
+    {
+        return $this->hasMany(InterBranchRequisitionItem::class, 'RequisitionId', 'Id');
+    }
 }

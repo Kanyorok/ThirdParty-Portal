@@ -37,10 +37,14 @@
                 <div class="col-md-4">
                     <strong>Status:</strong>
                     <div>
-                        @if ($item->Status)
-                            <span class="badge bg-success">Issued</span>
-                        @else
+                        @if($item->Status === 'Approved')
+                            <span class="badge text-bg-success">Approved</span>
+                        @elseif($item->Status === 'Pending Approval' || $item->Status === 'Submitted')
                             <span class="badge bg-warning">Pending Approval</span>
+                        @elseif($item->Status === 'Rejected')
+                            <span class="badge bg-danger">Rejected</span>
+                        @else
+                            <span class="badge bg-secondary">{{ $item->Status }}</span>
                         @endif
                     </div>
                 </div>
@@ -62,6 +66,7 @@
                                 <th>Item</th>
                                 <th>UOM</th>
                                 <th>Qty</th>
+                                <th>ApprovedQty</th>
                                 <th>Remarks</th>
                                 <th>Actions</th>
                             </tr>
@@ -75,9 +80,9 @@
                                     <td>{{ $requisitionItem->item->ItemName ?? '-' }}</td>
                                     <td>{{ $requisitionItem->uom->Code ?? '-' }}</td>
                                     <td>{{ $requisitionItem->RequestedQty ?? '-' }}</td>
+                                    <td>{{ $requisitionItem->ApprovedQty ?? '-' }}</td>
                                     <td>{{ $requisitionItem->Remarks ?? '-' }}</td>
                                     <td>
-
                                         <a href="{{ route('interbranchrequisition.edit', $item->Id) }}" class="btn btn-sm btn-warning" title="Edit Requisition"><i class="bi bi-pencil"></i> Edit</a>
                                         <form action="{{ route('interbranchrequisition.destroy', $item->Id) }}" method="POST" class="d-inline">
                                             @csrf
@@ -91,7 +96,6 @@
                     </table>
                 </div>
             @else
-                
                 <div class="row mb-3">
                     <div class="col-md-2">
                         <strong>Category:</strong>

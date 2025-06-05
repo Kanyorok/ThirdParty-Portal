@@ -11,22 +11,26 @@ class InterBranchRequisitionService
 {
     public function create(array $data): InterBranchRequisition
     {
-       
         $items = $data['items'] ?? [];
         unset($data['items']);
 
         $requisition = new InterBranchRequisition($data);
+        $requisition->Status = 'Pending Approval'; // <-- Always set here!
         $requisition->CreatedBy = Auth::id();
         $requisition->ModifiedBy = Auth::id();
         $requisition->CreatedOn = Carbon::now();
         $requisition->ModifiedOn = Carbon::now();
         $requisition->save();
+
         $requisition->ReqNo = $this->generateReqNo($requisition);
         $requisition->save();
 
-        
         foreach ($items as $item) {
             $item['RequisitionId'] = $requisition->Id;
+            $item['CreatedBy'] = Auth::id();
+            $item['ModifiedBy'] = Auth::id();
+            $item['CreatedOn'] = Carbon::now();
+            $item['ModifiedOn'] = Carbon::now();
             InterBranchRequisitionItem::create($item);
         }
 
@@ -49,11 +53,14 @@ class InterBranchRequisitionService
         $requisition->ModifiedOn = Carbon::now();
         $requisition->save();
 
-       
         $requisition->items()->delete();
 
         foreach ($items as $item) {
             $item['RequisitionId'] = $requisition->Id;
+            $item['CreatedBy'] = Auth::id();
+            $item['ModifiedBy'] = Auth::id();
+            $item['CreatedOn'] = Carbon::now();
+            $item['ModifiedOn'] = Carbon::now();
             InterBranchRequisitionItem::create($item);
         }
 
@@ -72,7 +79,6 @@ class InterBranchRequisitionService
         $requisition->save();
         $requisition->delete();
 
-       
         $requisition->items()->delete();
 
         activity()
@@ -83,7 +89,6 @@ class InterBranchRequisitionService
         return true;
     }
 
-  
     protected function generateReqNo(InterBranchRequisition $requisition): string
     {
         $year = now()->format('Y');

@@ -3,6 +3,15 @@
 @section('title', 'Inter-Branch Requisition')
 
 @section('content')
+@if($errors->any())
+    <div class="alert alert-danger">
+        <ul>
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
 
 <div class="container mt-4">
   <h4 class="mb-3">Inter-Branch Requisition List</h4>
@@ -34,17 +43,33 @@
                 <td>{{ $requisition->toBranch->Name ?? '-' }}</td>
                 <td>{{ \Carbon\Carbon::parse($requisition->CreatedOn)->format('Y-m-d') }}</td>
                 <td>
-                  @if ($requisition->Status)
-                    <span class="badge bg-success">Issued</span>
-                  @else
+                  @if($requisition->Status === 'Approved')
+                    <span class="badge text-bg-success">Approved</span>
+                  @elseif($requisition->Status === 'Pending Approval' || $requisition->Status === 'Submitted')
                     <span class="badge bg-warning">Pending Approval</span>
+                  @elseif($requisition->Status === 'Rejected')
+                    <span class="badge bg-danger">Rejected</span>
+                  @else
+                    <span class="badge bg-secondary">{{ $requisition->Status }}</span>
                   @endif
                 </td>
                 <td>{{ $requisition->items->count() }}</td>
                 <td>
-                  <a href="{{ route('interbranchrequisition.show', $requisition->Id) }}" class="btn btn-secondary btn-sm">View</a>
-                  <a href="{{ route('interbranchrequisition.edit', $requisition->Id) }}" class="btn btn-warning btn-sm">Edit</a>
-                  <a href="#" class="btn btn-danger btn-sm" onclick="confirmDelete('{{ $requisition->Id }}')">Delete</a>
+                  <a href="{{ route('interbranchrequisition.show', $requisition->Id) }}"
+                     class="btn btn-secondary btn-sm"
+                     onclick="@if($requisition->Status !== 'Pending Approval' && $requisition->Status !== 'Submitted') return actionError(event); @endif">
+                    View
+                  </a>
+                  <a href="{{ route('interbranchrequisition.edit', $requisition->Id) }}"
+                     class="btn btn-warning btn-sm"
+                     onclick="@if($requisition->Status !== 'Pending Approval' && $requisition->Status !== 'Submitted') return actionError(event); @endif">
+                    Edit
+                  </a>
+                  <a href="#"
+                     class="btn btn-danger btn-sm"
+                     onclick="@if($requisition->Status !== 'Pending Approval' && $requisition->Status !== 'Submitted') return actionError(event); @else confirmDelete('{{ $requisition->Id }}'); return false; @endif">
+                    Delete
+                  </a>
                   <form id="delete-form-{{ $requisition->Id }}" action="{{ route('interbranchrequisition.destroy', $requisition->Id) }}" method="POST" style="display:none;">
                     @csrf
                     @method('DELETE')
@@ -56,10 +81,11 @@
         </table>
       </div>
     </div>
-   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
- 
-<script>
+  </div>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+  <script>
     $(document).ready(function () {
         $('#requisitionTable').DataTable({
             pageLength: 10,
@@ -74,5 +100,11 @@
             document.getElementById('delete-form-' + Id).submit();
         }
     }
-</script>
+
+    function actionError(event) {
+        alert('You cannot perform this action because a decision has already been made on this requisition.');
+        if(event) event.preventDefault();
+        return false;
+    }
+  </script>
 @endsection

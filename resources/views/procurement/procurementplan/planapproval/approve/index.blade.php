@@ -3,7 +3,7 @@
 @section('content')
 
 <div class="container mt-4">
-    <h3>📝 Procurement Plan Approval</h3>
+    <h3>Procurement Plan Approval</h3>
 
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
