@@ -10,12 +10,15 @@ enum DepartmentNeedsEnum: string
 
     case Approved = 'a';
 
+    case Rejected = 'r';
+
     case Pending = 'p';
 
     public function label(): string
     {
         return match ($this) {
             self::Pending => 'Pending',
+            self::Rejected => 'Rejected',
             self::Approved => 'Approved',
         };
     }
@@ -25,6 +28,7 @@ enum DepartmentNeedsEnum: string
         return match ($this) {
             self::Pending => 'warning',
             self::Approved => 'success',
+            self::Rejected => 'danger',
         };
     }
 }
