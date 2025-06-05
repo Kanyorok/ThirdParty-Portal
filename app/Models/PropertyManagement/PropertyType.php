@@ -15,12 +15,16 @@ class PropertyType extends Model
 
     protected $fillable = [
         'PropertyTypeName',
-        'PropertyCategoryId', // Foreign key to PropertyCategory
+        'PropertyCategoryId',
         'Description',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy'
     ];
 
+    public function propertycategory()
+    {
+        return $this->belongsTo(PropertyCategory::class, 'PropertyCategoryId', 'Id');
+    }
 
 }
