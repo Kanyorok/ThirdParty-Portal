@@ -7,12 +7,14 @@ use Illuminate\Http\Request;
 use App\Models\Procurement\DepartmentNeeds;
 use App\Models\HRM\Department;
 use App\Models\Core\Branch;
+use App\Policies\Procurement\ConsolidatedProcurementPlanPolicy;
 
 
 class ConsolidatedDashboardController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('viewAny', DepartmentNeeds::class);
         $branch = $request->input('branch', 'All Branches');
         $department = $request->input('department', 'All Departments');
         $year = $request->input('year', 'All Years');
@@ -50,6 +52,7 @@ class ConsolidatedDashboardController extends Controller
             ->where('NeedID', $needId)
             ->get()
             ->map(function ($need) {
+                $this->authorize('view', $need);
                 return [
                     'ItemName' => $need->item->ItemName ?? 'N/A',
                     'BranchName' => $need->branch->Name ?? 'N/A',
@@ -66,6 +69,7 @@ class ConsolidatedDashboardController extends Controller
 
     public function create()
     {
+        $this->authorize('create', DepartmentNeeds::class);
         // Fetch branches and departments for the create form dropdowns
         $branches = DepartmentNeed::distinct()->pluck('branch');
         $departments = DepartmentNeed::distinct()->pluck('department');
