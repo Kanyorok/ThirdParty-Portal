@@ -1,43 +1,43 @@
 @extends('layouts.app')
-@section('title', 'Driver Projections')
+@section('title', 'Driver Rates')
 @section('content')
 <div class="card mt-4">
 
   <div class="mb-2 d-flex justify-content-between">
-   <a href="{{ route('budgetprojections.create') }}" class="btn btn-success btn-sm">+ New Mapping</a>
+   <a href="{{ route('yieldexpenserate.create') }}" class="btn btn-success btn-sm">+ New Rate</a>
    </div>
-    <div class="card-header bg-secondary text-white">📊 KPI Driver Projections</div>
+    <div class="card-header bg-secondary text-white">📈 Loan Yield / Interest Expense Rates</div>
     <div class="card-body">
         <table class="table table-bordered table-striped">
             <thead class="table-light">
                 <tr>
                     <th>#</th>
                     <th>Period</th>
-                    <th>Branch</th>
                     <th>Product</th>
-                    <th>KPI Type</th>
-                    <th>Projected Amount</th>
-                    <th>Growth Rate (%)</th>
+                    <th>Rate Type</th>
+                    <th>Rate Value</th>
+                    <th>Effective Date</th>
+                    <th>Source</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
                     <td>1</td>
                     <td>FY2025-Q1</td>
-                    <td>Main Branch</td>
                     <td>Personal Loan</td>
-                    <td>Loan</td>
-                    <td>10,000,000</td>
-                    <td>6.50%</td>
+                    <td>LoanYield</td>
+                    <td>11.00%</td>
+                    <td>2025-01-01</td>
+                    <td>CBS</td>
                 </tr>
                 <tr>
                     <td>2</td>
                     <td>FY2025-Q1</td>
-                    <td>Westlands Branch</td>
                     <td>Fixed Deposit</td>
-                    <td>Deposit</td>
-                    <td>12,500,000</td>
-                    <td>4.00%</td>
+                    <td>InterestExpense</td>
+                    <td>6.00%</td>
+                    <td>2025-01-01</td>
+                    <td>Manual</td>
                 </tr>
             </tbody>
         </table>
