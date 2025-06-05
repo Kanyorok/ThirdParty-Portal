@@ -2,14 +2,18 @@
 
 namespace App\Models\PropertyManagement;
 
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PropertyCategory extends Model
 {
+    use SoftDeletes, UserActorTrait;
     //
     protected $table = 't_PropertyCategory';
-    public const CREATED_AT = 'CreatedOn';
-    public const UPDATED_AT = 'ModifiedOn';
+    const string CREATED_AT = 'CreatedOn';
+    const string UPDATED_AT = 'ModifiedOn';
     const string DELETED_AT = 'DeletedOn';
     protected $primaryKey = 'Id';
 
@@ -21,4 +25,12 @@ class PropertyCategory extends Model
         'DeletedBy'
         ];
 
+    public static function getPrimaryKey(): string
+    {
+        return 'PropertyCategoryId';
+    }
+    public function type(): HasMany
+    {
+        return $this->hasMany(PropertyType::class, 'PropertyCategoryId');
+    }
 }

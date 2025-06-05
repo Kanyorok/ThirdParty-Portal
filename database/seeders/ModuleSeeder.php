@@ -310,7 +310,7 @@ class ModuleSeeder extends Seeder
 
             // First level - Property Registry
             ['ModuleID' => 501000, 'Name' => 'Property Registry', 'Icon' => '<i class="fas fa-building"></i>', 'ParentID' => 500000, 'Route' => null],
-            ['ModuleID' => 501100, 'Name' => 'Add Property', 'Icon' => null, 'ParentID' => 501000, 'Route' => 'addproperty.index'],
+            ['ModuleID' => 501100, 'Name' => 'Add Property', 'Icon' => null, 'ParentID' => 501000, 'Route' => 'PropertyRegistry.index'],
             ['ModuleID' => 501200, 'Name' => 'Property Type', 'Icon' => null, 'ParentID' => 501000, 'Route' => 'propertytype.index'],
             ['ModuleID' => 501300, 'Name' => 'Property Category', 'Icon' => null, 'ParentID' => 501000, 'Route' => 'propertycategory.index'],
             ['ModuleID' => 501400, 'Name' => 'Property Attachments', 'Icon' => null, 'ParentID' => 501000, 'Route' => 'attachments.index'],

@@ -2,12 +2,15 @@
 
 namespace App\Models\PropertyManagement;
 
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PropertyFloor extends Model
 {
+    use SoftDeletes, UserActorTrait;
     //
-    protected $table = 't_AddFloor';
+    protected $table = 't_PropertyFloor';
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
     const string DELETED_AT = 'DeletedOn';
@@ -22,4 +25,16 @@ class PropertyFloor extends Model
         'ModifiedBy',
         'DeletedBy'
     ];
+
+    public static function getPrimaryKey(): string
+    {
+        return 'PropertyFloorId';
+    }
+    public function units(){
+        return $this->hasMany(PropertyUnit::class,'FloorID');
+    }
+    public function blocks()
+    {
+        return $this->belongsTo(PropertyBlock::class,'BlockID','Id');
+    }
 }

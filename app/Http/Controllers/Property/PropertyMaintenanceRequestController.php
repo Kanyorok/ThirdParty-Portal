@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Property;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\PropertyManagement\PropertyMaintenanceRequest;
-use App\Models\PropertyManagement\AddProperty;
+use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyFloor;
 use App\Models\PropertyManagement\PropertyBlock;
 use App\Models\PropertyManagement\PropertyUnit;
@@ -23,7 +23,7 @@ class PropertyMaintenanceRequestController extends Controller
          $units = PropertyUnit::all();
          $blocks = PropertyBlock::all();
          $floors = PropertyFloor::all();
-        $properties = AddProperty::all();
+        $properties = PropertyRegistry::all();
         return view('property.maintenanceandissues.maintenancerequest.create', compact('properties', 'floors', 'blocks', 'units'));
     }
     public function store(Request $request)

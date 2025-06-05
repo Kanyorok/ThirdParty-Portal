@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\PropertyManagement\PropertyUnit;
 use App\Models\PropertyManagement\PropertyFloor;
-use App\Models\PropertyManagement\AddProperty;
+use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyBlock;
 
 
@@ -20,7 +20,7 @@ class PropertyUnitController extends Controller
     }
 
     public function create(){
-        $properties = AddProperty::all();
+        $properties = PropertyRegistry::all();
         $blocks = PropertyBlock::all();
         $floors = PropertyFloor::all();
         return view('property.propertyregistry.structuralmapping.addunit.create', compact('floors', 'properties', 'blocks'));

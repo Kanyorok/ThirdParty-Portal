@@ -4,16 +4,16 @@ namespace App\Http\Controllers\Property;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\PropertyManagement\AddProperty;
+use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyType;
 use App\Models\PropertyManagement\PropertyCategory;
 
-class AddPropertyController extends Controller
+class PropertyRegistryController extends Controller
 {
     //
     public function index()
     {
-         $properties = AddProperty::all();
+         $properties = PropertyRegistry::all();
         return view('property.propertyregistry.registry.index', compact('properties'));
     }
 
@@ -24,7 +24,7 @@ class AddPropertyController extends Controller
     }
 
     public function show($id){
-        $property = AddProperty::find($id);
+        $property = PropertyRegistry::find($id);
         return view('property.propertyregistry.registry.show',compact('property'));
     }
     public function store(Request $request)
@@ -43,7 +43,7 @@ class AddPropertyController extends Controller
             'PropertyDescription'=>'required',
            
         ]);
-        $property = AddProperty::create([
+        $property = PropertyRegistry::create([
             'PropertyName'=> $request->PropertyName,
             'PropertyCode'=> $request->PropertyCode,
             'PropertyType'=> $request->PropertyType,
@@ -59,6 +59,6 @@ class AddPropertyController extends Controller
             'ModifiedBy' => auth()->user()->Id,
         ]);
         //dd($property);
-         return redirect()->route('addproperty.index')->with('success','property registry created successfully');
+         return redirect()->route('PropertyRegistry.index')->with('success','property registry created successfully');
     }
 }

@@ -2,14 +2,17 @@
 
 namespace App\Models\PropertyManagement;
 
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PropertyAttachments extends Model
 {
+    use SoftDeletes, UserActorTrait;
     //
     protected $table = 't_propertyattachments';
-    public const CREATED_AT = 'CreatedOn';
-    public const UPDATED_AT = 'ModifiedOn';
+    const string CREATED_AT = 'CreatedOn';
+    const string UPDATED_AT = 'ModifiedOn';
     const string DELETED_AT = 'DeletedOn';
     protected $primaryKey = 'Id';
 
@@ -22,4 +25,8 @@ class PropertyAttachments extends Model
         'ModifiedBy',
         'DeletedBy'
         ];
+
+    public function propertyid(){
+        return $this->belongsTo(PropertyRegistry::class ,'PropertyId','Id');
+    }
 }

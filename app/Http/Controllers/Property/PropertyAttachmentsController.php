@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Property;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\PropertyManagement\PropertyAttachments;
-use App\Models\PropertyManagement\AddProperty;
+use App\Models\PropertyManagement\PropertyRegistry;
 
 class PropertyAttachmentsController extends Controller
 {
@@ -18,7 +18,7 @@ class PropertyAttachmentsController extends Controller
     }
 
     public function create(){
-        $properties = AddProperty::all();
+        $properties = PropertyRegistry::all();
         return view('property.propertyregistry.propertyattachments.create', compact('properties'));
     }
      public function store(Request $request)

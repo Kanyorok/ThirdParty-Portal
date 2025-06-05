@@ -3,7 +3,7 @@
 @section('content')
 <div class="container mt-4">
 
-<a href="{{ route('addproperty.create') }}" class="btn btn-primary mb-3">Add Property</a>
+<a href="{{ route('PropertyRegistry.create') }}" class="btn btn-primary mb-3">Add Property</a>
 
   <h4 class="fw-bold mb-3">📋 Registered Properties</h4>
 
@@ -38,7 +38,7 @@
         <td>{{ $property->PropertyDescription?? '-' }}</td>
         <td><span class="badge bg-success">Active</span></td>
         <td>
-          <a href="{{ route('addproperty.show', $property->id) }}" class="btn btn-sm btn-info">👁 View</a>
+          <a href="{{ route('PropertyRegistry.show', $property->id) }}" class="btn btn-sm btn-info">👁 View</a>
           <button class="btn btn-sm btn-outline-warning">✏️ Edit</button>
         </td>
       </tr>

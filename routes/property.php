@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\Property\AddPropertyController;
-Route::post('propertyregistry', [AddPropertyController::class,'store'])->name('propertyregistry.store');
+use App\Http\Controllers\Property\PropertyRegistryController;
+Route::post('propertyregistry', [PropertyRegistryController::class,'store'])->name('propertyregistry.store');
 use App\Http\Controllers\Property\PropertyAttachmentsController;
 use App\Http\Controllers\Property\PropertyBlockController;
 use App\Http\Controllers\Property\PropertyCategoryController;
@@ -31,7 +31,7 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::namespace('Property')->prefix('property')->group(function () {
-    Route::resource('addproperty', AddPropertyController::class);
+    Route::resource('PropertyRegistry', PropertyRegistryController::class);
     Route::resource('propertytype', PropertyTypeController::class);
     Route::resource('propertycategory', PropertyCategoryController::class);
     Route::resource('addblock', PropertyBlockController::class);

@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Property;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\PropertyManagement\PropertyFloor;
-use App\Models\PropertyManagement\AddProperty;  
+use App\Models\PropertyManagement\PropertyRegistry;  
 use App\Models\PropertyManagement\PropertyBlock;
 
 class PropertyFloorController extends Controller
@@ -19,7 +19,7 @@ class PropertyFloorController extends Controller
     }
     public function create(){
         $blocks = PropertyBlock::all();
-        $properties = AddProperty::all();
+        $properties = PropertyRegistry::all();
         return view('property.propertyregistry.structuralmapping.addfloor.create', compact('blocks', 'properties'));
     }
     public function show($id){

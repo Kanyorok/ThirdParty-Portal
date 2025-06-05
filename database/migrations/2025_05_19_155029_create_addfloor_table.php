@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('t_AddFloor', function (Blueprint $table) {
+        Schema::create('t_PropertyFloor', function (Blueprint $table) {
             $table->id('Id');
             $table->foreignId('PropertyID')->constrained('t_PropertyRegistry','Id');
-            $table->foreignId('BlockID')->constrained('t_AddBlock','Id');
+            $table->foreignId('BlockID')->constrained('t_PropertyBlock','Id');
             $table->string('FloorLabel');
             $table->string('FloorNotes');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');

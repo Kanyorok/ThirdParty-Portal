@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('t_AddBlock', function (Blueprint $table) {
+        Schema::create('t_PropertyBlock', function (Blueprint $table) {
             $table->id('Id');
             $table->foreignId('PropertyID')->constrained('t_PropertyRegistry','Id');
             $table->string('BlockName');
