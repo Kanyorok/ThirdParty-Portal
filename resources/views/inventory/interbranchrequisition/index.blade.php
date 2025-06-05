@@ -3,6 +3,7 @@
 @section('title', 'Inter-Branch Requisition')
 
 @section('content')
+
 @if($errors->any())
     <div class="alert alert-danger">
         <ul>
@@ -13,10 +14,47 @@
     </div>
 @endif
 
+@if (session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert" id="sessionErrorAlert">
+        {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
+@if (session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert" id="sessionSuccessAlert">
+        {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
+
+
+<div id="customErrorContainer" style="display:none;">
+    <div class="alert alert-danger alert-dismissible fade show" role="alert" id="customErrorMessage">
+       
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"
+            onclick="hideCustomError()"></button>
+    </div>
+</div>
+
 <div class="container mt-4">
   <h4 class="mb-3">Inter-Branch Requisition List</h4>
 
-  <a href="{{ route('interbranchrequisition.create') }}" class="btn btn-sm btn-success mb-3">➕ Add Requisition</a>
+  <div class="mb-3 d-flex justify-content-between align-items-end flex-wrap">
+      <a href="{{ route('interbranchrequisition.create') }}" class="btn btn-sm btn-success mb-2">➕ Add Requisition</a>
+      <form id="filterForm" method="GET" class="d-flex align-items-center mb-2">
+          <label for="filterStatus" class="me-2 fw-bold">Filter by status:</label>
+          <select id="filterStatus" name="status" class="form-select form-select-sm me-2" style="width: 170px;">
+              <option value="">Show All</option>
+              <option value="Approved" {{ request('status') == 'Approved' ? 'selected' : '' }}>Approved</option>
+              <option value="Pending Approval" {{ request('status') == 'PendingApproval' ? 'selected' : '' }}>Pending Approval</option>
+              <option value="Rejected" {{ request('status') == 'Rejected' ? 'selected' : '' }}>Rejected</option>
+          </select>
+          <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+          @if(request()->has('Status') && request('Status') !== null && request('Status') !== "")
+              <a href="{{ route('interbranchrequisition.index') }}" class="btn btn-link btn-sm ms-2">Reset</a>
+          @endif
+      </form>
+  </div>
 
   <div class="card shadow-sm">
     <div class="card-body p-0">
@@ -45,7 +83,7 @@
                 <td>
                   @if($requisition->Status === 'Approved')
                     <span class="badge text-bg-success">Approved</span>
-                  @elseif($requisition->Status === 'Pending Approval' || $requisition->Status === 'Submitted')
+                  @elseif($requisition->Status === 'Pending Approval')
                     <span class="badge bg-warning">Pending Approval</span>
                   @elseif($requisition->Status === 'Rejected')
                     <span class="badge bg-danger">Rejected</span>
@@ -55,19 +93,15 @@
                 </td>
                 <td>{{ $requisition->items->count() }}</td>
                 <td>
-                  <a href="{{ route('interbranchrequisition.show', $requisition->Id) }}"
-                     class="btn btn-secondary btn-sm"
-                     onclick="@if($requisition->Status !== 'Pending Approval' && $requisition->Status !== 'Submitted') return actionError(event); @endif">
-                    View
-                  </a>
+                  <a href="{{ route('interbranchrequisition.show', $requisition->Id) }}" class="btn btn-secondary btn-sm">View</a>
                   <a href="{{ route('interbranchrequisition.edit', $requisition->Id) }}"
                      class="btn btn-warning btn-sm"
-                     onclick="@if($requisition->Status !== 'Pending Approval' && $requisition->Status !== 'Submitted') return actionError(event); @endif">
+                     onclick="@if($requisition->Status !== 'Pending Approval' && $requisition->Status !== 'Submitted') return showCustomError('You cannot edit this requisition because a decision has already been made.'); @endif">
                     Edit
                   </a>
                   <a href="#"
                      class="btn btn-danger btn-sm"
-                     onclick="@if($requisition->Status !== 'Pending Approval' && $requisition->Status !== 'Submitted') return actionError(event); @else confirmDelete('{{ $requisition->Id }}'); return false; @endif">
+                     onclick="@if($requisition->Status !== 'Pending Approval' && $requisition->Status !== 'Submitted') return showCustomError('You cannot delete this requisition because a decision has already been made.'); @else confirmDelete('{{ $requisition->Id }}'); return false; @endif">
                     Delete
                   </a>
                   <form id="delete-form-{{ $requisition->Id }}" action="{{ route('interbranchrequisition.destroy', $requisition->Id) }}" method="POST" style="display:none;">
@@ -91,7 +125,8 @@
             pageLength: 10,
             ordering: true,
             searching: true,
-            lengthChange: true
+            lengthChange: false, // Hide "Show N entries"
+            dom: 'rt<"bottom"ip><"clear">'
         });
     });
 
@@ -101,10 +136,15 @@
         }
     }
 
-    function actionError(event) {
-        alert('You cannot perform this action because a decision has already been made on this requisition.');
-        if(event) event.preventDefault();
+    function showCustomError(message) {
+        document.getElementById('customErrorMessage').childNodes[0].nodeValue = message;
+        document.getElementById('customErrorContainer').style.display = 'block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         return false;
+    }
+
+    function hideCustomError() {
+        document.getElementById('customErrorContainer').style.display = 'none';
     }
   </script>
 @endsection

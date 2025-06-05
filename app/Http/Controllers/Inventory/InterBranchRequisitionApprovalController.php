@@ -29,7 +29,6 @@ class InterBranchRequisitionApprovalController extends Controller
             }
         }
 
-        // Pass $requisition (not $items) to the view for clarity
         return view('inventory.interbranchrequisition.approval.index', [
             'pendingRequisitions' => $pendingRequisitions,
             'requisition' => $requisition,
@@ -53,7 +52,6 @@ class InterBranchRequisitionApprovalController extends Controller
         $user = auth()->user();
         $request->validate([
             'ReqId' => 'required|numeric',
-            'role' => 'required|string',
             'action' => 'required|in:APPROVED,REJECTED,COMMENTED',
             'comments' => 'required|string|max:1000',
             'approved_qty' => 'array',
@@ -62,7 +60,6 @@ class InterBranchRequisitionApprovalController extends Controller
 
         $requisition = InterBranchRequisition::findOrFail($request->ReqId);
 
-        // 1. Update per-item approved qty and remarks
         if ($request->has('approved_qty')) {
             foreach ($request->approved_qty as $itemId => $qty) {
                 $item = $requisition->items()->find($itemId);
@@ -76,7 +73,6 @@ class InterBranchRequisitionApprovalController extends Controller
             }
         }
 
-        // 2. Update requisition status
         switch ($request->action) {
             case 'APPROVED':
                 $requisition->Status = 'Approved';
@@ -85,16 +81,14 @@ class InterBranchRequisitionApprovalController extends Controller
                 $requisition->Status = 'Rejected';
                 break;
             case 'COMMENTED':
-                // No status change
+                
                 break;
         }
-
         
         $requisition->ModifiedBy = $user->Id;
         $requisition->ModifiedOn = Carbon::now();
         $requisition->save();
 
-        // 3. Log in workflow history (t_Workflows)
         Workflow::create([
             'Source' => 'InterBranchRequisition',
             'SourceID' => $requisition->Id,
@@ -111,27 +105,35 @@ class InterBranchRequisitionApprovalController extends Controller
             'ModifiedOn' => Carbon::now(),
         ]);
 
-        // 4. Update/remove pending workflow (t_PendingWorkflow)
+       
         $pending = PendingWorkflow::where([
             'Source'   => 'InterBranchRequisition',
             'SourceID' => $requisition->Id,
         ])->first();
 
-        if ($pending) {
-            if ($request->action === 'APPROVED' && $this->hasNextApprovalLevel($requisition)) {
-                // Assign to next approver
-                $pending->Stage = $this->getNextApprovalLevel($requisition);
-                $pending->AssignedTo = $this->getNextApproverId($requisition); // Implement this logic as needed
-                $pending->ModifiedBy = $user->Id;
-                $pending->ModifiedOn = Carbon::now();
-                $pending->save();
-            } else {
-                // Remove pending workflow (final approval or rejection)
-                $pending->delete();
-            }
+        
+        if (!$pending && in_array($requisition->Status, ['Pending Approval', 'Submitted'])) {
+            $pending = PendingWorkflow::create([
+                'Source'     => 'InterBranchRequisition',
+                'SourceID'   => $requisition->Id,
+                'Stage'      => $this->getApprovalLevelFromStatus($requisition->Status),
+                'Status'     => $request->action,
+                'CreatedBy'  => $user->Id,
+                'CreatedOn'  => Carbon::now(),
+                'ModifiedBy' => $user->Id,
+                'ModifiedOn' => Carbon::now(),
+            ]);
         }
 
-        // 5. Audit log
+       
+        if ($pending) {
+            $pending->Stage = $this->getApprovalLevelFromStatus($requisition->Status);
+            $pending->Status = $request->action;
+            $pending->ModifiedBy = $user->Id;
+            $pending->ModifiedOn = Carbon::now();
+            $pending->save();
+        }
+
         activity()
             ->causedBy($user)
             ->performedOn($requisition)
@@ -142,29 +144,22 @@ class InterBranchRequisitionApprovalController extends Controller
             ->with('success', 'Your decision has been recorded.');
     }
 
-    // Placeholder: determine if there's another approval level
-    private function hasNextApprovalLevel($requisition)
+
+    public static function createPendingWorkflowForRequisition($requisition, $user)
     {
-        // Implement your business logic for multi-level approval here
-        // Example: return false if only one level, true if more levels remain
-        return false;
+        return PendingWorkflow::create([
+            'Source'     => 'InterBranchRequisition',
+            'SourceID'   => $requisition->Id,
+            'Stage'      => 'Pending Approval',
+            'Status'     => 'PENDING',
+            'CreatedBy'  => $user->Id,
+            'CreatedOn'  => Carbon::now(),
+            'ModifiedBy' => $user->Id,
+            'ModifiedOn' => Carbon::now(),
+        ]);
     }
 
-    // Placeholder: get next approval level name/identifier
-    private function getNextApprovalLevel($requisition)
-    {
-        // Implement your business logic for next level here
-        return 'Level 2';
-    }
-
-    // Placeholder: get next approver's user id
-    private function getNextApproverId($requisition)
-    {
-        // Implement your business logic for assigning to the next approver
-        // Example: find user with role 'BranchManager' at destination branch, etc.
-        return null;
-    }
-
+    
     public function create()
     {
         return view('inventory.interbranchrequisition.approval.create');

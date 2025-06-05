@@ -22,7 +22,7 @@
         <div class="alert alert-danger">{{ session('error') }}</div>
     @endif
 
-    <!-- Form for selecting a pending requisition -->
+    
     <form method="GET" action="{{ route('interbranchrequisitionapproval.index') }}" id="requisition-selection-form">
         <div class="mb-3">
             <label for="ReqId" class="form-label">Select Pending Requisition</label>
@@ -110,24 +110,21 @@
                 <input type="hidden" name="ReqId" value="{{ $requisition->Id }}">
 
                 <div class="mb-3">
-                    <label class="form-label">Role</label>
-                    <input type="text" name="role" class="form-control" value="{{ Auth::user()->role() ? Auth::user()->role()->name : 'N/A' }}" required readonly>
+                    <label class="form-label">Notes</label>
+                    <textarea name="comments" rows="3" class="form-control" >{{ old('comments') }}</textarea>
                 </div>
-
+ 
                 <div class="mb-3">
                     <label class="form-label">Action</label>
                     <select name="action" class="form-select" required>
                         <option value="">-- Choose Action --</option>
                         <option value="APPROVED">Approve</option>
                         <option value="REJECTED">Reject</option>
-                        <option value="COMMENTED">Comment</option>
+                        
                     </select>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Comments</label>
-                    <textarea name="comments" rows="3" class="form-control" required>{{ old('comments') }}</textarea>
-                </div>
+                
 
                 <div class="d-flex justify-content-end">
                     <button type="submit" class="btn btn-primary">Submit</button>

@@ -36,6 +36,7 @@ use App\Models\ThirdParies\Competitor;
 use App\Traits\UsefulEnumTrait;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\ItemCategories;
 use App\Models\Inventory\StockItem;
@@ -43,6 +44,7 @@ use App\Models\Inventory\Store;
 use App\Models\Inventory\InventoryType;
 use App\Models\Inventory\ItemType;
 use App\Models\Inventory\UnitOfMeasure;
+use App\Models\Inventory\InterBranchRequisition;
  
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\PlanLineItems;
@@ -290,6 +292,11 @@ enum PermissionEnum: string
     case UOMUpdate = 'uom-update';
     case UOMCreate = 'uom-create';
     case UOMDestroy= 'uom-destroy';
+
+    case InterBranchRequisitionView = 'interBranchRequisition-view';
+    case InterBranchRequisitionUpdate = 'interBranchRequisition-update';
+    case InterBranchRequisitionCreate = 'interBranchRequisition-create';
+    case InterBranchRequisitionDestroy= 'interBranchRequisition-destroy';
    
  
  
@@ -347,6 +354,7 @@ enum PermissionEnum: string
             //Tenders
             [self::TenderRead, self::TenderWrite, self::TenderUpdate, self::TenderDelete, self::TenderApproval],
  
+            //Inventory
             [self::MasterListView, self::MasterListUpdate, self::MasterListCreate, self::MasterListDestroy],
             [self::ItemCategoryView, self::ItemCategoryUpdate, self::ItemCategoryCreate, self::ItemCategoryDestroy],
             [self::StockItemView, self::StockItemUpdate, self::StockItemCreate, self::StockItemDestroy],
@@ -354,6 +362,9 @@ enum PermissionEnum: string
             [self::InventoryTypeView, self::InventoryTypeUpdate, self::InventoryTypeCreate, self::InventoryTypeDestroy],
             [self::ItemTypeView, self::ItemTypeUpdate, self::ItemTypeCreate, self::ItemTypeDestroy],
             [self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy],
+            [self::InterBranchRequisitionView, self::InterBranchRequisitionUpdate, self::InterBranchRequisitionCreate, self::InterBranchRequisitionDestroy],
+
+
             [self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete],
             [self::PlanLineItemsRead, self::PlanLineItemsWrite, self::PlanLineItemsUpdate, self::PlanLineItemsDelete],
             [self::BidSubmissionRead, self::BidSubmissionWrite, self::BidSubmissionUpdate, self::BidSubmissionDelete],

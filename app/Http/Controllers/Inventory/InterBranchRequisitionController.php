@@ -21,23 +21,17 @@ class InterBranchRequisitionController extends Controller
         $this->service = $service;
     }
 
-    public function index()
-    {
-        $groupedRequisitions = InterBranchRequisition::with(['fromBranch', 'toBranch', 'items'])
-            ->orderBy('CreatedOn', 'asc')
-            ->get()
-            ->groupBy('Id')
-            ->map(function ($group) {
-                $first = $group->first();
-                $first->Items = $group->count();
-                // Add status for display
-                $first->StatusLabel = $first->Status ?? 'N/A';
-                return $first;
-            })
-            ->values();
-
-        return view('inventory.interbranchrequisition.index', compact('groupedRequisitions'));
+   
+public function index(Request $request) {
+    $query = InterBranchRequisition::with(['fromBranch', 'toBranch', 'items']);
+    if ($request->filled('status')) {
+        $query->where('Status', $request->status);
     }
+    $groupedRequisitions = $query->latest()->take(10)->get();
+    return view('inventory.interbranchrequisition.index', compact('groupedRequisitions'));
+}
+        
+    
 
     public function create()
     {
@@ -97,7 +91,6 @@ class InterBranchRequisitionController extends Controller
         $item = InterBranchRequisition::with('items')->findOrFail($Id);
         $data = $request->validated();
 
-        // Optionally allow status to be updated
         if (!isset($data['Status']) && $item->Status) {
             $data['Status'] = $item->Status;
         }
@@ -136,7 +129,7 @@ class InterBranchRequisitionController extends Controller
         $categoryId = $request->get('category_id');
         $subcategoryId = $request->get('subcategory_id');
 
-        // Ensure only integer IDs are used
+        
         if ((!is_null($subcategoryId) && !is_numeric($subcategoryId)) ||
             (!is_null($categoryId) && !is_numeric($categoryId))) {
             return response()->json([]);

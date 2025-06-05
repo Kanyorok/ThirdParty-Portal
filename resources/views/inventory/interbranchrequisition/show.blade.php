@@ -3,15 +3,30 @@
 @section('title', 'Inter-Branch Requisition')
 
 @section('content')
+<!-- Custom error alert for client-side (JS) errors -->
+<div id="customErrorContainer" style="display:none;">
+    <div class="alert alert-danger alert-dismissible fade show" role="alert" id="customErrorMessage">
+        <!-- Error message will be injected here -->
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"
+            onclick="hideCustomError()"></button>
+    </div>
+</div>
+
 <div class="container mt-4">
     <h4 class="mb-3">Inter-Branch Requisition Details</h4>
 
     <a href="{{ route('interbranchrequisition.index') }}" class="btn btn-sm btn-secondary mb-3">Back to List</a>
-    <a href="{{ route('interbranchrequisition.edit', $item->Id) }}" class="btn btn-sm btn-warning mb-3">Edit Requisition</a>
+    <a href="{{ route('interbranchrequisition.edit', $item->Id) }}" class="btn btn-sm btn-warning mb-3"
+       onclick="@if($item->Status !== 'Pending Approval' && $item->Status !== 'Submitted') return showCustomError('You cannot edit this requisition because a decision has already been made.'); @endif">
+       Edit Requisition
+    </a>
     <form action="{{ route('interbranchrequisition.destroy', $item->Id) }}" method="POST" class="d-inline">
         @csrf
         @method('DELETE')
-        <button class="btn btn-sm btn-danger mb-3" onclick="return confirm('Are you sure you want to delete this requisition?')">Delete Requisition</button>
+        <button class="btn btn-sm btn-danger mb-3"
+            onclick="@if($item->Status !== 'Pending Approval' && $item->Status !== 'Submitted') return showCustomError('You cannot delete this requisition because a decision has already been made.'); @else return confirm('Are you sure you want to delete this requisition?'); @endif">
+            Delete Requisition
+        </button>
     </form>
 
     <div class="card shadow">
@@ -83,11 +98,17 @@
                                     <td>{{ $requisitionItem->ApprovedQty ?? '-' }}</td>
                                     <td>{{ $requisitionItem->Remarks ?? '-' }}</td>
                                     <td>
-                                        <a href="{{ route('interbranchrequisition.edit', $item->Id) }}" class="btn btn-sm btn-warning" title="Edit Requisition"><i class="bi bi-pencil"></i> Edit</a>
+                                        <a href="{{ route('interbranchrequisition.edit', $item->Id) }}" class="btn btn-sm btn-warning" title="Edit Requisition"
+                                           onclick="@if($item->Status !== 'Pending Approval' && $item->Status !== 'Submitted') return showCustomError('You cannot edit this requisition because a decision has already been made.'); @endif">
+                                            <i class="bi bi-pencil"></i> Edit
+                                        </a>
                                         <form action="{{ route('interbranchrequisition.destroy', $item->Id) }}" method="POST" class="d-inline">
                                             @csrf
                                             @method('DELETE')
-                                            <button class="btn btn-sm btn-danger" title="Delete Requisition" onclick="return confirm('Are you sure you want to delete this requisition?')"><i class="bi bi-trash"></i> Delete</button>
+                                            <button class="btn btn-sm btn-danger" title="Delete Requisition"
+                                                onclick="@if($item->Status !== 'Pending Approval' && $item->Status !== 'Submitted') return showCustomError('You cannot delete this requisition because a decision has already been made.'); @else return confirm('Are you sure you want to delete this requisition?'); @endif">
+                                                <i class="bi bi-trash"></i> Delete
+                                            </button>
                                         </form>
                                     </td>
                                 </tr>
@@ -126,4 +147,15 @@
         </div>
     </div>
 </div>
+<script>
+function showCustomError(message) {
+    document.getElementById('customErrorMessage').childNodes[0].nodeValue = message;
+    document.getElementById('customErrorContainer').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return false;
+}
+function hideCustomError() {
+    document.getElementById('customErrorContainer').style.display = 'none';
+}
+</script>
 @endsection
