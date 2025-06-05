@@ -28,11 +28,12 @@ trait ReportsTrait
                     })->make();
             } catch (Exception) {
             }
-            return $this->errored('cannot retrieve inventory reports.');
+            return $this->errored('cannot retrieve ' . Str::lower($module->description()) . ' reports.');
         }
 
         return view('reports.index')->with('module', $module);
     }
+
 
     public function show(Request $request, Report $report): View|RedirectResponse
     {
@@ -40,11 +41,22 @@ trait ReportsTrait
             return redirect()->back()->with('fail', 'invalid report.');
         }
         //todo check permissions
+
         if ( $request->ajax()){
             try {
                 $service = new SSRSService();
-                $xmlResponse = $service->exportReport($report->Path, 'XML', content: true);
-            } catch (ConnectionException $e) {
+                $ssrsReport = $service->getReportByPath($report->Path);
+                if (!array_key_exists('Type', $ssrsReport) || $ssrsReport['Type'] !== "Report") {
+                    throw new ErroredException('invalid report.');
+                }
+
+                $parameters = $service->getReportParametersValidated($ssrsReport['Id'], $request->all());
+                $xmlResponse = $service->exportReport($report->Path, parameters: $parameters, format: 'XML', content: true);
+                if (!str_contains($xmlResponse, 'xml')) {
+                    throw new ErroredException('invalid report.');
+                }
+                $data = $service->parseReportXml($xmlResponse);
+            } catch (ConnectionException) {
                 return view('snippets.errors')->with('message', 'cannot connect to the report server.');
             } catch (ErroredException $e) {
                 return view('snippets.errors')->with('message', $e->getMessage() ?? 'cannot retrieve report data.');
@@ -52,22 +64,46 @@ trait ReportsTrait
                 return view('snippets.errors')->with('message', 'cannot retrieve report data.');
             }
 
-            return view('reports.table')
-                ->with('report', $report)->with('data', $service->parseReportXml($xmlResponse));
+            return ($data->isEmpty())
+                ? view('snippets.errors')->with('message', 'Report has no data. Please check your report parameters and try again..')
+                : view('reports.table', compact('report', 'data'))->with('params', SSRSService::queryParams(collect($parameters)->put('_key', md5($report->Path))->toArray()));
+
         }
 
-        return view('reports.show')->with('report', $report);
+        try {
+            $service = new SSRSService();
+            $ssrsReport = $service->getReportByPath($report->Path);
+            if (!array_key_exists('Type', $ssrsReport) || $ssrsReport['Type'] !== "Report") {
+                throw new ErroredException('invalid report.');
+            }
+            $parameters = (array_key_exists('HasParameters', $ssrsReport) && $ssrsReport['HasParameters'] === true) ?
+                $service->getReportParameters($ssrsReport['Id']) : [];
+        } catch (ConnectionException) {
+            return $this->errored('cannot connect to the report server.');
+        } catch (ErroredException $e) {
+            return $this->errored($e->getMessage() ?? 'cannot retrieve report data.');
+        } catch (\Throwable|Exception $e) {
+            return $this->errored('cannot retrieve report data.');
+        }
+
+        return view('reports.show', compact('report', 'parameters'));
     }
 
-
-    public function export(Report $report, string $format): StreamedResponse|RedirectResponse
+    public function export(Request $request, Report $report, string $format): StreamedResponse|RedirectResponse
     {
         if ($report->ModuleId !== self::Module->value) {
             return redirect()->back()->with('fail', 'invalid report.');
         }
         //todo check permissions
+
+        if (!$request->has('_key') || md5($report->Path) !== $request->get('_key')) {
+            return redirect()->back()->with('fail', 'download link expired. please refresh the report page and try again..');
+        }
+
         try {
-            return (new SSRSService())->exportReport($report->Path, $format);
+            $service = new SSRSService();
+            $ssrsReport = $service->getReportByPath($report->Path);
+            return $service->exportReport($report->Path, parameters: $service->getReportParametersValidated($ssrsReport['Id'], $request->all()), format: $format);
         } catch (ConnectionException $e) {
             return redirect()->back()->with('fail', 'cannot connect to the report server.');
         } catch (ErroredException $e) {

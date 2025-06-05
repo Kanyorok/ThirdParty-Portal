@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Services\Core\ModuleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -29,6 +30,8 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
 
+        ModuleService::clearNavbarCache($request->user());
+
         return redirect()->intended('/');
     }
 
@@ -41,6 +44,8 @@ class AuthenticatedSessionController extends Controller
     public function destroy(Request $request): RedirectResponse
     {
         activity()->causedBy($request->user())->performedOn($request->user())->event('authentication')->log('Signed Out from ' . $request->getClientIp());
+
+        ModuleService::clearNavbarCache($request->user());
 
         Auth::guard('web')->logout();
 
