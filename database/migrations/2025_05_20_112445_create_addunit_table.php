@@ -12,14 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('t_AddUnit', function (Blueprint $table) {
-            $table->id();
-            $table->string('PropertyID');
-            $table->string('BlockID');
-            $table->string('FloorID');
+            $table->id('Id');
+            $table->foreignId('PropertyID')->constrained('t_PropertyRegistry','Id');
+            $table->foreignId('BlockID')->constrained('t_AddBlock','Id');
+            $table->foreignId('FloorID')->constrained('t_AddFloor','Id');
             $table->string('UnitCode');
             $table->integer('UnitSize');
-            $table->string('IsRentable');
-            $table->string('CurrentStatus');
+            $table->boolean('IsRentable');
+            $table->boolean('CurrentStatus');
             $table->string('Remarks');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');

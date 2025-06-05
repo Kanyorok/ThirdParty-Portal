@@ -12,17 +12,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('t_PropertyRegistry', function (Blueprint $table){
-            $table->id();
+            $table->id('Id');
             $table->string('PropertyName');
             $table->string('PropertyCode');
             $table->string('PropertyType');
-            $table->string('Category');
+            $table->foreignId('Category')->constrained('t_PropertyCategory','Id');
             $table->string('Owner');
             $table->date('AcquisitionDate');
             $table->string('Country'); 
-            $table->string('TownCity');                                
+            $table->foreignId('TownCity')->constrained('t_Localities','ID');                                
             $table->string('AreaLocality');
-            $table->string('GPSCoordinates');
             $table->string('PropertyDescription');           
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
