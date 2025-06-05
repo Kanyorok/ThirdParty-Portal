@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\procurement;
+namespace App\Models\Procurement;
 
 use App\Models\ThirdParies\Supplier;
 use Illuminate\Database\Eloquent\Model;

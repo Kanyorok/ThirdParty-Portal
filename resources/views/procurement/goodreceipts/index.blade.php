@@ -188,7 +188,7 @@ function confirmDelete(grnId, poId) {
 
 <script>
     $(document).ready(function () {
-        $('#raisedneeds').DataTable({
+        $('#goodsreceipt').DataTable({
             pageLength: 10,
             ordering: true,
             searching: true,

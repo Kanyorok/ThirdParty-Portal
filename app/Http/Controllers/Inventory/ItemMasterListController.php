@@ -26,6 +26,11 @@ class ItemMasterListController extends Controller
                 ->addColumn('ItemType', fn($item) => optional($item->itemType)->TypeName ?? '—')
                 ->addColumn('InventoryType', fn($item) => optional($item->inventoryType)->Type ?? '—')
                 ->addColumn('UOM', fn($item) => optional($item->uom)->Code ?? '—')
+                ->addColumn('Status', function($item) {
+                    return $item->Status == 1
+                        ? '<span class="badge bg-success">Active</span>'
+                        : '<span class="badge bg-warning">Inactive</span>';
+                })
                 ->addColumn('Action', function ($item) {
                     return '
                         <a href="' . route('itemmasterlist.show', $item->Id) . '" class="btn btn-sm btn-primary">View</a>
@@ -36,7 +41,7 @@ class ItemMasterListController extends Controller
                             '.method_field('DELETE').'
                         </form>';
                 })
-                ->rawColumns(['Action'])
+                ->rawColumns(['Status', 'Action'])
                 ->make(true);
         }
 
@@ -65,11 +70,15 @@ class ItemMasterListController extends Controller
             'ItemType' => 'required|integer|exists:t_ItemTypes,Id',
             'Category' => 'required|integer|exists:t_ItemCategories,Id',
             'UOM' => 'required|integer|exists:t_UOM,Id',
+            'Status' => 'boolean',
             'InventoryType' => 'required|integer|exists:t_InventoryTypes,Id',
             'ImageUpload' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'DocumentUpload' => 'nullable|file|mimes:pdf,doc,docx,xlsx,xls|max:5120',
             'ItemDescription' => 'nullable|string',
         ]);
+
+        // Always set Status to the value from the request (0 if not checked)
+        $validatedData['Status'] = $request->input('Status', 0);
 
         DB::transaction(function () use ($validatedData, $request) {
             $item = new ItemMasterList();
@@ -147,11 +156,15 @@ class ItemMasterListController extends Controller
             'ItemType' => 'required|integer|exists:t_ItemTypes,Id',
             'Category' => 'required|integer|exists:t_ItemCategories,Id',
             'UOM' => 'required|integer|exists:t_UOM,Id',
+            'Status' => 'boolean',
             'InventoryType' => 'required|integer|exists:t_InventoryTypes,Id',
             'ImageUpload' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'DocumentUpload' => 'nullable|file|mimes:pdf,doc,docx,xlsx,xls|max:5120',
             'ItemDescription' => 'nullable|string',
         ]);
+
+       
+        $validatedData['Status'] = $request->input('Status', 0);
 
         $item->fill($validatedData);
         $item->ModifiedBy = Auth::id();

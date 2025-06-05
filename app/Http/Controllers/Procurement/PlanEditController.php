@@ -7,12 +7,14 @@ use Illuminate\Http\Request;
 use App\Models\Procurement\PlanLineItems;
 use App\Enums\ProcurementPlanStatusEnum;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
+use App\Policies\Procurement\PlanEditPolicy;
 
 class PlanEditController extends Controller
 {
     //
     public function index(Request $request)
     {
+        $this->authorize('viewAny', PlanLineItems::class);
         $planId = $request->input('PlanID');
 
     $availablePlans = ConsolidatedProcurementPlan::where('Status', ProcurementPlanStatusEnum::Draft)->get();
@@ -38,9 +40,10 @@ class PlanEditController extends Controller
         
         $user = auth()->user();
         $itemIds = $request->input('lineItemIds', []);
-       // $this->authorize('update', $itemIds);
 
         foreach ($itemIds as $id) {
+            $item = PlanLineItems::findOrFail($id);
+            $this->authorize('update', $item);
             $qty = $request->input("qty_$id");
             $cost = $request->input("unitCost_$id");
             $remarks = $request->input("remarks_$id");
@@ -71,7 +74,7 @@ class PlanEditController extends Controller
         $user = auth()->user();
 
         $item = PlanLineItems::find($id);
-       // $this->authorize('delete', $item);
+        $this->authorize('delete', $item);
         if ($item) {
             $item->update([
                 'DeletedBy' => $user->id,

@@ -41,6 +41,7 @@
                     <th>Item Type</th>
                     <th>Inventory Type</th>
                     <th>UOM</th>
+                    <th>Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -68,6 +69,12 @@ $(document).ready(function () {
             { data: 'ItemType', name: 'ItemType' },
             { data: 'InventoryType', name: 'InventoryType' },
             { data: 'UOM', name: 'UOM' },
+            {
+        data: 'Status',
+        name: 'Status',
+        orderable: false,
+        searchable: false
+    },
             {
                 data: 'Action',
                 name: 'Action',

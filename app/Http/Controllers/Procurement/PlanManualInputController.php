@@ -14,6 +14,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\Inventory\UnitOfMeasure;
 use App\Enums\ProcurementPlanStatusEnum;
+use App\Policies\Procurement\PlanManualInputPolicy;
 
 
 class PlanManualInputController extends Controller
@@ -21,8 +22,9 @@ class PlanManualInputController extends Controller
     //
     public function index(Request $request)
     {
+         $this->authorize('viewAny', PlanLineItems::class);
         $planId = $request->query('plan_id');//todo pass plan id from url
-        $plans = ConsolidatedProcurementPlan::all();
+        $plans = ConsolidatedProcurementPlan::where('Status', ProcurementPlanStatusEnum::Draft)->get();
 
         $lineItemsQuery = PlanLineItems::with(['item', 'item.category','item.uom']);
 
@@ -42,6 +44,7 @@ class PlanManualInputController extends Controller
 
     public function create()
     {
+        $this->authorize('create', PlanLineItems::class);
         $plans = ConsolidatedProcurementPlan::where('Status', ProcurementPlanStatusEnum::Draft)->get();
         $items = ItemMasterList::with('category','uom')->get();
         $budgetLines = BudgetMaster::all();
@@ -51,11 +54,11 @@ class PlanManualInputController extends Controller
 
     public function store(PlanManualInputRequest $request)
     {
+        $this->authorize('store', PlanLineItems::class);
 
         $validated = $request->validated();
         $user = $request->user();
 
-        // Fetch the related models (optional, can skip if you just want to save foreign keys)
         $item = $request->getItem();
         $category = $request->getCategory();//todo
 
@@ -91,6 +94,7 @@ class PlanManualInputController extends Controller
     public function edit($lineItemId)
     {
         $lineItem = PlanLineItems::with(['item', 'item.category'])->findOrFail($lineItemId);
+        $this->authorize('edit', $lineItem);
         $plans = ConsolidatedProcurementPlan::all();
         $items = ItemMasterList::all();
         $categories = ItemCategories::all();
@@ -102,9 +106,10 @@ class PlanManualInputController extends Controller
     public function update(PlanManualInputRequest $request, $lineItemId, User $user)
     {
         $validated = $request->validated();
+        $user = $request->user();
 
         $lineItem = PlanLineItems::findOrFail($lineItemId);
-
+        $this->authorize('update', $lineItem);
         $lineItem->PlanID = $validated['PlanID'];
         $lineItem->ItemID = $validated['ItemID'];
         $lineItem->CategoryID = $validated['CategoryID'];
@@ -124,10 +129,11 @@ class PlanManualInputController extends Controller
 
         return redirect()->route('procurement.procurementplan.planconsolidation.manualentry.index')->with('success', 'Line item updated successfully.');
     }
-
-    public function destroy($lineItemId, User $user)
+    public function destroy(Request $request, $lineItemId)
     {
+        $user = $request->user();
         $lineItem = PlanLineItems::findOrFail($lineItemId);
+        $this->authorize('delete', $lineItem);
         $lineItem->delete();
         activity()->causedBy($user)->performedOn($lineItem)->event('deleted')->log('deleted plan line item ' . $lineItem->ItemID);
 

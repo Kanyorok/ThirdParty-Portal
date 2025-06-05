@@ -14,13 +14,16 @@ class ModeTimelineController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'ProcurementModeId' => 'required|exists:t_ProcurementModes,Id',
             'Stage' => 'required|string|max:255',
             'DurationDays' => 'required|integer|min:1',
         ]);
 
-        ModeTimeline::create($request->all());
+        $validated['CreatedBy'] = auth()->user()->Id;
+        $validated['ModifiedBy'] = auth()->user()->Id;
+
+        ModeTimeline::create($validated);
 
         return redirect()->back()->with('success', 'Timeline added successfully.');
     }

@@ -75,18 +75,18 @@ class RFQLinesController extends Controller
     public function getCategories()
     {
         // Step 1: Get IDs of RequisitionLines already used in RFQ lines
-        $excludedLineIds = DB::table('t_rfqlines')->pluck('requisitionlineid');
-
+        $excludedLineIds = DB::table('t_RFQLines')->pluck('RequisitionLineId');
+        
         // Step 2: Eager-load item and category, filter out already-used lines
         $lines = RequisitionLine::with(['item.category'])
-            ->whereNotIn('id', $excludedLineIds)
+            ->whereNotIn('Id', $excludedLineIds)
             ->whereHas('item.category') // Ensure category exists to skip nulls early
             ->get();
 
         // Step 3: Extract and deduplicate categories
         $categories = $lines
             ->pluck('item.category')
-            ->unique('id') // Ensure correct key here, 'id' is default for most models
+            ->unique('Id') // Ensure correct key here, 'id' is default for most models
             ->values();
 
         return response()->json($categories);
