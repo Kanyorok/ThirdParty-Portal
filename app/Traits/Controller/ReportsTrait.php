@@ -79,11 +79,11 @@ trait ReportsTrait
             $parameters = (array_key_exists('HasParameters', $ssrsReport) && $ssrsReport['HasParameters'] === true) ?
                 $service->getReportParameters($ssrsReport['Id']) : [];
         } catch (ConnectionException) {
-            return $this->errored('cannot connect to the report server.');
+            return redirect()->back()->with('fail', 'cannot connect to the report server.');
         } catch (ErroredException $e) {
-            return $this->errored($e->getMessage() ?? 'cannot retrieve report data.');
+            return redirect()->back()->with('fail', $e->getMessage() ?? 'cannot retrieve report data.');
         } catch (\Throwable|Exception $e) {
-            return $this->errored('cannot retrieve report data.');
+            return redirect()->back()->with('fail', 'cannot retrieve report data.');
         }
 
         return view('reports.show', compact('report', 'parameters'));
