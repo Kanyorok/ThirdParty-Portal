@@ -27,6 +27,6 @@ class PropertyAttachments extends Model
         ];
 
     public function propertyid(){
-        return $this->belongsTo(PropertyRegistry::class ,'PropertyId','Id');
+        return $this->belongsTo(PropertyRegistry::class ,'PropertyID','Id');
     }
 }
