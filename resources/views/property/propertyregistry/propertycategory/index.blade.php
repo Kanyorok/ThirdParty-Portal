@@ -16,9 +16,9 @@
         </tr>
     </thead>
     <tbody>
-        @foreach ($categories as $category)
+        @foreach ($categories as $Index => $category)
             <tr>
-                <td>{{ $category->id }}</td>
+                <td>{{ $Index + 1 }}</td>
                 <td>{{ $category->PropertyCategoryName }}</td>
                 <td>{{ $category->Description }}</td>
             </tr>
