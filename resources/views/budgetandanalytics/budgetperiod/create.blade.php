@@ -14,10 +14,6 @@
                 <option>Quarterly</option>
             </select>
         </div>
-        <div class="form-check mb-3">
-            <input class="form-check-input" type="checkbox" id="lockPeriods">
-            <label class="form-check-label" for="lockPeriods">Lock Previous Periods</label>
-        </div>
         <div class="mb-3">
             <label for="notes" class="form-label">Notes</label>
             <textarea class="form-control" id="notes" rows="3"></textarea>
