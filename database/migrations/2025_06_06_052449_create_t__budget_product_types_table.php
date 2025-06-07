@@ -11,14 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('t_BudgetLines', function (Blueprint $table) {
+        Schema::create('t_BudgetProductTypes', function (Blueprint $table) {
             $table->id('Id');
-            $table->string('LineName');
-            $table->text('Description');
-            $table->boolean('IsDefault')->default(false);
+            $table->string('ProductCode', 10)->unique();     // Unique and not nullable
+            $table->string('Name', 100);                     // Not nullable
+            $table->string('Description', 255)->nullable();  // Nullable
+            $table->string('CBSCode', 10);                   // Not nullable   
+            $table->dateTime('LastSyncDate')->nullable();    // Nullable
             
+            $table->dateTime('CreatedOn')->useCurrent();     // Default to current datetime
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
-            $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
             $table->dateTime('ModifiedOn');
             $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
@@ -31,6 +33,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('t_BudgetLines');
+        Schema::dropIfExists('t_BudgetProductTypes');
     }
 };

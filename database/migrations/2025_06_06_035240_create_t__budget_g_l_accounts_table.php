@@ -11,12 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('t_BudgetLines', function (Blueprint $table) {
+        Schema::create('t_BudgetGLAccounts', function (Blueprint $table) {
             $table->id('Id');
-            $table->string('LineName');
+            $table->foreignId('CurrencyID')->constrained('t_Currencies','Id');
             $table->text('Description');
-            $table->boolean('IsDefault')->default(false);
-            
+            $table->string('GTType',20)->nullable();
+
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
@@ -31,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('t_BudgetLines');
+        Schema::dropIfExists('t_BudgetGLAccounts');
     }
 };
