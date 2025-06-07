@@ -2,7 +2,9 @@
 
 namespace App\Models\Budget;
 
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BudgetPeriodTypes extends Model
 {
