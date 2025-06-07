@@ -15,7 +15,7 @@
           <th>Line Name</th>
           <th>Description</th>
           <th>CBS GLs Mapped</th>
-          <th>ERP GLs Mapped</th>
+          {{-- <th>ERP GLs Mapped</th> --}}
           <th>Actions</th>
         </tr>
       </thead>
@@ -25,7 +25,7 @@
           <td>Loan Interest</td>
           <td>Projected income from interest on loans</td>
           <td>GL1001</td>
-          <td>ERP1001</td>
+          {{-- <td>ERP1001</td> --}}
           <td>
             <button class="btn btn-sm btn-warning">✏ Edit</button>
             <button class="btn btn-sm btn-danger">🗑 Delete</button>

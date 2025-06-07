@@ -31,14 +31,14 @@
       </div>
 
       <!-- 🔗 ERP GL Mapping -->
-      <div class="mb-3">
+      {{-- <div class="mb-3">
         <label class="form-label">ERP GL Account (Optional)</label>
         <select class="form-select">
           <option selected disabled>-- Select ERP GL --</option>
           <option value="ERP001">ERP001 - Interest Revenue</option>
           <option value="ERP002">ERP002 - Other Income</option>
         </select>
-      </div>
+      </div> --}}
 
       <!-- 🔘 Primary Flag -->
       <div class="form-check mb-3">

@@ -323,6 +323,15 @@ enum PermissionEnum: string
     case EmployeesDelete = 'employee-delete';
  
  
+        /*
+     *
+     * ========================================  Budget and Analytics  ========================================
+     */
+    case BudgetSetupView   = 'budgetSetup-view';
+    case BudgetSetupCreate = 'budgetSetup-create';
+    case BudgetSetupUpdate = 'budgetSetup-update';
+    case BudgetSetupDelete = 'budgetSetup-delete';
+ 
  
     public static function display(): Collection
     {
@@ -380,6 +389,9 @@ enum PermissionEnum: string
             [self::PlanMaintenanceRead, self::PlanMaintenanceWrite, self::PlanMaintenanceUpdate, self::PlanMaintenanceDelete],
             [self::PlanManualInputRead, self::PlanManualInputWrite, self::PlanManualInputUpdate, self::PlanManualInputDelete],
             [self::PlanEditRead, self::PlanEditWrite, self::PlanEditUpdate, self::PlanEditDelete],
+
+            /////////////////////////// Budget and Analytics  ///////////////////////
+            [self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate,self::BudgetSetupDelete],
         ]);
     }
  
@@ -447,6 +459,11 @@ enum PermissionEnum: string
             self::ItemTypeView, self::ItemTypeUpdate, self::ItemTypeCreate, self::ItemTypeDestroy,
             self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy,=> ModulesEnum::Inventory,
             default => throw new \LogicException("Unhandled PermissionEnum case: {$this->value}"),
+
+            ///////////////^*********** Budget and Analytics ******************/////////////////
+            self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate,self::BudgetSetupDelete,
+            =>ModulesEnum::BudgetLine
+
         };
     }
  
@@ -508,6 +525,10 @@ enum PermissionEnum: string
             self::InventoryTypeView, self::InventoryTypeUpdate, self::InventoryTypeCreate, self::InventoryTypeDestroy => 'Inventory Type',
             self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy => 'UOM',
             self::ItemTypeView, self::ItemTypeUpdate, self::ItemTypeCreate, self::ItemTypeDestroy => 'Item Type',
+
+            ////////////////////////// Budget and Analytics //////////////////////////////
+            self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate,self::BudgetSetupDelete =>'Budget Setup',
+
         };  
     }
 }
