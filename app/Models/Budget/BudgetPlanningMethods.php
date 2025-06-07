@@ -1,0 +1,29 @@
+<?php
+
+namespace App\Models\Budget;
+
+use Illuminate\Database\Eloquent\Model;
+
+class BudgetPlanningMethods extends Model
+{
+    use UserActorTrait,SoftDeletes;
+
+    const CREATED_AT = 'CreatedOn';
+    const UPDATED_AT = 'ModifiedOn';
+    const DELETED_AT = 'DeletedOn';
+
+    protected $table = 't_BudgetPlanningMethods';
+
+    protected $fillable = [
+        
+        'MethodName',
+        'Description',
+        'IsActive',
+        'CreatedBy',
+        'ModifiedBy',
+    ];
+
+    protected $cast=[
+        'IsActive' => 'boolean',
+    ];
+}
