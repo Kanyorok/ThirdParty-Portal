@@ -131,10 +131,12 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 301520, 'Name' => 'Pending Execution', 'Icon' => null, 'ParentID' => 301500, 'Route' => 'approvalinbox.index'],
             ['ModuleID' => 301530, 'Name' => 'Execution Calendar', 'Icon' => null, 'ParentID' => 301500, 'Route' => 'submitplan.index'],
             ['ModuleID' => 301540, 'Name' => 'Deviations', 'Icon' => null, 'ParentID' => 301500, 'Route' => 'approvalinbox.index'],
+
             ['ModuleID' => 302000, 'Name' => 'Purchase Requisition', 'Icon' => null, 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 302100, 'Name' => 'Requisition List', 'Icon' => null, 'ParentID' => 302000, 'Route' => 'requisition.create'],
             ['ModuleID' => 302200, 'Name' => 'Requisition Approval', 'Icon' => null, 'ParentID' => 302000, 'Route' => 'requisition.index'],
             ['ModuleID' => 302300, 'Name' => 'Priority List', 'Icon' => null, 'ParentID' => 302000, 'Route' => 'requisitionItem.index'],
+
             ['ModuleID' => 303000, 'Name' => 'Suppliers', 'Icon' => null, 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 303100, 'Name' => 'Suppliers List', 'Icon' => null, 'ParentID' => 303000, 'Route' => 'suppliers.index'],
             ['ModuleID' => 304000, 'Name' => 'Procurement Modes', 'Icon' => null, 'ParentID' => 300000, 'Route' => null],
@@ -177,6 +179,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 307100, 'Name' => 'View Purchase Orders', 'Icon' => null, 'ParentID' => 307000, 'Route' => 'purchaseOrder.index'],
             ['ModuleID' => 307200, 'Name' => 'Create Purchase Orders', 'Icon' => null, 'ParentID' => 307000, 'Route' => 'purchaseOrder.create'],
             ['ModuleID' => 307300, 'Name' => 'Link RFQ to Purchase Order', 'Icon' => null, 'ParentID' => 307000, 'Route' => 'purchaseOrder.linkRFQ'],
+            ['ModuleID' => 307400, 'Name' => 'Purchase Order Approval', 'Icon' => null, 'ParentID' => 307000, 'Route' => 'purchaseOrder.approval'],
 
             ['ModuleID' => 308000, 'Name' => 'Good Receipt', 'Icon' => null, 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 308100, 'Name' => 'View Good Receipt', 'Icon' => null, 'ParentID' => 308000, 'Route' => 'procurementreceipts.index'],
@@ -291,7 +294,7 @@ class ModuleSeeder extends Seeder
             // Business Intelligence & Deep Analytics
             ['ModuleID' => 1204000, 'Name' => 'Business Intelligence & Deep Analytics', 'Icon' => null, 'Description' => 'Performance, Risk, and Compliance Insights', 'Route' => null, 'ParentID' => 1200000],
             ['ModuleID' => 1204100, 'Name' => 'BI & Analytics Dashboard', 'Icon' => null, 'Description' => 'Analytics Dashboard', 'Route' => 'analyticsdashboard.index', 'ParentID' => 1204000],
-       
+
             // Admin & Integration
             ['ModuleID' => 1205000, 'Name' => 'Admin & Integration', 'Icon' => null, 'Description' => 'System Controls and CBS Integration', 'Route' => null, 'ParentID' => 1200000],
             ['ModuleID' => 1205100, 'Name' => 'CBS Data Sync', 'Icon' => null, 'Description' => 'CBS Product Auto Sync', 'Route' => 'cbssync.index', 'ParentID' => 1205000],

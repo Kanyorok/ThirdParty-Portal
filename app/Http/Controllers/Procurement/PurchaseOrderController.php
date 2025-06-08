@@ -5,17 +5,19 @@ namespace App\Http\Controllers\Procurement;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Orders\PurchaseOrderRequest;
 use App\Models\Procurement\Order;
+use App\Services\Core\ApprovalService;
 use App\Services\Procurement\Items\ItemService;
 use App\Services\Procurement\Orders\OrderService;
 use App\Services\Procurement\RFQ\RFQService;
 use App\Services\ThirdParty\SupplierService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class PurchaseOrderController extends Controller
 {
-    public function __construct(protected ItemService $itemService, protected SupplierService $supplierService, protected OrderService $orderService, protected RFQService $rfqService)
+    public function __construct(protected ItemService $itemService, protected SupplierService $supplierService, protected OrderService $orderService, protected RFQService $rfqService, protected ApprovalService $approvalService)
     {
 
         $this->middleware('ajax')->except(['index', 'create', 'show', 'linkRFQ', 'fetchRFQDetails']);
@@ -322,26 +324,46 @@ class PurchaseOrderController extends Controller
     }
 
 
+    public function approve(Request $request, $id, ApprovalService $approvalService)
+    {
+        $purchaseOrder = Order::findOrFail($id);
+        $actor = $request->user();
 
-//    public function fetchRFQDetails($id){
-////        dd($id);
-//        try {
-//
-//            $RFQData = $this->rfqService->RFQTOPO($id);
-//            return response()->json($RFQData);
-//
-//        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
-//            Log::warning("Unauthorized access attempt to view RFQ ID: {$id} by user ID: " . auth()->id());
-//            return redirect()->back()->with('error', 'Unauthorized access.');
-//        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-//            Log::error("RFQ ID {$id} not found. Exception: " . $e->getMessage());
-//            return redirect()->back()->with('error', 'RFQ not found.');
-//        } catch (\Exception $e) {
-//            Log::error("Failed to fetch RFQ ID {$id}. Exception: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-//            return redirect()->back()->with('error', 'Failed to fetch RFQ.');
-//        }
-//    }
-//
+        // Record the approval by the current user
+        DB::table('t_Approvals')->updateOrInsert(
+            [
+                'DocType' => 'purchase_order',
+                'DocumentId' => $purchaseOrder->Id,
+                'UserId' => $actor->Id,
+            ],
+            [
+                'CreatedBy' => $actor->Id,
+                'ModifiedBy' => $actor->Id,
+                'CreatedOn' => now(),
+                'ModifiedOn' => now(),
+            ]
+        );
+
+        // Check if the document is fully approved based on approval type (including ALL)
+        $isApproved = $approvalService->isDocumentApproved(
+            'purchase_order',
+            $purchaseOrder->total_amount,
+            $actor,
+            $purchaseOrder->Id
+        );
+
+        if ($isApproved) {
+            $purchaseOrder->status = 'approved';
+            $purchaseOrder->save();
+
+            return response()->json(['message' => 'Document approved']);
+        }
+
+
+        return response()->json(['message' => 'Approval recorded, but pending full approval']);
+    }
+
+
 
     public function fetchRFQDetails($id): JsonResponse
     {
