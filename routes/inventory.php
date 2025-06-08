@@ -126,8 +126,10 @@ Route::post('interbranchrequisitionapproval/submit', [InterBranchRequisitionAppr
     Route::resource('unitofmeasure', UOMController::class);
     Route::resource('itemtype', ItemTypeController::class);
     Route::resource('inventorytype', InventoryTypeController::class);
-    Route::resource('pricemanagement', PriceManagementController::class);  
 
+    Route::resource('pricemanagement', PriceManagementController::class);  
+    Route::get('/pricemanagement', [PriceManagementController::class, 'index'])->name('pricemanagement.index');
+    
     //Route::resource('itemtype', ItemTypeController::class);
     Route::get('/itemtype', [ItemTypeController::class, 'index'])->name('itemtype.index');
     Route::get('/itemtype/create', [ItemTypeController::class, 'create'])->name('itemtype.create');

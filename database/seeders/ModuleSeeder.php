@@ -232,6 +232,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 406000, 'Name' => 'Conversion Mapping', 'Icon' => null, 'Description' => 'Conversion Mapping Management', 'Route' => null, 'ParentID' => 400000],
             ['ModuleID' => 406100, 'Name' => 'Conversion Mapping', 'Icon' => null, 'Description' => 'UOM Conversion Mapping', 'Route' => 'uomconversion.index', 'ParentID' => 406000],
             ['ModuleID' => 408000, 'Name' => 'Stores', 'Icon' => null, 'Description' => 'List of Stores', 'Route' => 'stores.index', 'ParentID' => 400000],
+            ['ModuleID' => 407000, 'Name' => 'Price Management', 'Icon' => null, 'Description' => 'Items Prices', 'Route' => 'pricemanagement.index', 'ParentID' => 400000],
 
             ['ModuleID' => 499000, 'Name' => 'Reports', 'Icon' => null, 'Description' => 'Inventory Reports', 'Route' => 'inventory-reports.index', 'ParentID' => 400000],
 
