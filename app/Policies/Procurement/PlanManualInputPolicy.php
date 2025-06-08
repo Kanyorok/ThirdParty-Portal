@@ -1,0 +1,52 @@
+<?php
+
+namespace App\Policies\Procurement;
+
+use App\Models\Auth\User;
+use App\Models\Procurement\PlanLineItems;
+use App\Enums\Core\PermissionEnum;
+
+class PlanManualInputPolicy
+{
+    
+    public function viewAny(User $user): bool
+    {
+        return true;
+    }
+
+    
+    public function view(User $user, PlanLineItems $lineItem): bool
+    {
+        return $user->can(PermissionEnum::PlanManualInputRead->value);
+    }
+
+    
+    public function create(User $user): bool
+    {
+        return $user->can(PermissionEnum::PlanManualInputWrite->value);
+    }
+
+   
+    public function store(User $user): bool
+    {
+        return $user->can(PermissionEnum::PlanManualInputWrite->value);
+    }
+
+   
+    public function edit(User $user, PlanLineItems $lineItem): bool
+    {
+        return $user->can(PermissionEnum::PlanManualInputUpdate->value);
+    }
+
+    
+    public function update(User $user, PlanLineItems $lineItem): bool
+    {
+        return $user->can(PermissionEnum::PlanManualInputUpdate->value);
+    }
+
+    
+    public function delete(User $user, PlanLineItems $lineItem): bool
+    {
+        return $user->can(PermissionEnum::PlanManualInputDelete->value);
+    }
+}

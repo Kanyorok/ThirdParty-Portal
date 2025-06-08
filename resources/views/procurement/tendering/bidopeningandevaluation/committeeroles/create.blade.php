@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Assign Roles to Committee Members')
 @section('content')
 <div class="container mt-4">
     <h4 class="mb-4">🛠️ Assign Roles to Committee Members</h4>

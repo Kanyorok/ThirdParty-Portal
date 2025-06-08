@@ -1,12 +1,12 @@
 <?php
 
-use App\Http\Controllers\procurement\CriteriaController;
+use App\Http\Controllers\Procurement\CriteriaController;
 use App\Http\Controllers\Procurement\PurchaseOrderController;
 use App\Http\Controllers\Procurement\ReportsController;
 use App\Http\Controllers\Procurement\RequisitionItemsController;
 use App\Http\Controllers\Procurement\RequisitionsController;
-use App\Http\Controllers\procurement\SectionController;
-use App\Http\Controllers\procurement\TenderEvaluationsController;
+// use App\Http\Controllers\procurement\SectionController;
+use App\Http\Controllers\Procurement\TenderEvaluationsController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Procurement\ModeTimelineController;
 use App\Http\Controllers\Procurement\ProcurementModeController;
@@ -255,7 +255,7 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
 
 
     //Procurement Plan, Plan Consolidation
-    Route::resource('procurementplandetails', ProcurementPlanDetailController::class);
+    // Route::resource('procurementplandetails', ProcurementPlanDetailController::class);
     Route::resource('procurementplanmaintain', ProcurementPlanMaintainController::class);
     Route::resource('procurementplanapproval', ProcurementApprovalController::class);
     Route::resource('consolidated', ConsolidatedDashboardController::class);

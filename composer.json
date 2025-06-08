@@ -16,6 +16,7 @@
         "ext-pdo": "*",
         "ext-zlib": "*",
         "ext-simplexml": "*",
+        "ext-libxml": "*",
         "barryvdh/laravel-dompdf": "*",
         "chartblocks/php-ssrs": "^1.0",
         "clue/http-proxy-react": "^1.9",

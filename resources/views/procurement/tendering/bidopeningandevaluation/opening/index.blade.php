@@ -1,6 +1,6 @@
 
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Tender Bid Opening Ceremony')
 @section('content')
 <div class="container mt-4">
     <h4 class="mb-4">📜 Tender Bid Opening Ceremony</h4>

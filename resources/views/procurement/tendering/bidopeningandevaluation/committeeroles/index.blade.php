@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', ' Committee Roles Overview')
 @section('content')
 <div class="container mt-4">
      <a href="{{ route('assignrole.create') }}" class="btn btn-primary mb-3">Assign Role</a>
