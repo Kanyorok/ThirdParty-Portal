@@ -10,12 +10,14 @@ use App\Enums\ProcurementPlanStatusEnum;
 use App\Models\Procurement\PlanLineItem;
 use App\Models\Auth\User;
 use Illuminate\Support\Facades\Auth;
+use App\Policies\Procurement\ProcurementPlanMaintainPolicy;
 
 class ProcurementPlanMaintainController extends Controller
 {
     //
     public function index()
     {
+        $this->authorize('viewAny', ConsolidatedProcurementPlan::class);
         $plans = ConsolidatedProcurementPlan::with(['createdBy', 'lineItems'])->get();
 
         return view('procurement.procurementplan.procurementplanmaintenance.index', compact('plans'));
@@ -28,6 +30,7 @@ class ProcurementPlanMaintainController extends Controller
 
     public function store(Request $request)
     {
+         $this->authorize('store', ConsolidatedProcurementPlan::class);
         $request->validate([
             'Title' => 'required|string|max:255',
             'FiscalYear' => 'required|integer',
@@ -59,12 +62,14 @@ class ProcurementPlanMaintainController extends Controller
             ->with('success', 'Plan created successfully. You may now add line items.');
     }
     public function create(){
+        $this->authorize('create', ConsolidatedProcurementPlan::class);
         return view('procurement.procurementplan.procurementplanmaintenance.create');
 
     }
 
     public function editDraft($plan_id)
     {
+        $this->authorize('editDraft', ConsolidatedProcurementPlan::class);
         $draftItems = PlanLineItem::with(['item', 'branch'])
             ->where('PlanID', $plan_id)
             ->where('Status', PostingEnum::Draft)
@@ -77,6 +82,7 @@ class ProcurementPlanMaintainController extends Controller
 
     public function show($id)
     {
+        $this->authorize('view', ConsolidatedProcurementPlan::class);
         $plan = ConsolidatedProcurementPlan::with(['lineItems.item', 'createdBy'])->findOrFail($id);
 
         return view('procurement.procurementplan.procurementplanmaintenance.show', compact('plan'));

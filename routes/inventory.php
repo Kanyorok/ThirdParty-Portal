@@ -22,10 +22,12 @@ use App\Http\Controllers\Inventory\InventoryTypeController;
 use App\Http\Controllers\Inventory\StoreController;
 use App\Http\Controllers\Inventory\UOMController;
 use App\Http\Controllers\Inventory\ItemTypeController;
+
+use App\Http\Controllers\Inventory\PriceManagementController;
+
 use Illuminate\Support\Facades\Route;
 
 //use App\Http\Controllers\Inventory\ReceiptController;
-
 
 Route::namespace('Inventory')->prefix('inventory')->group(function () {
     // Route::resource('receipts', ReceiptController::class);
@@ -107,6 +109,10 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::put('/unitofmeasure/{Id}', [UOMController::class, 'update'])->name('unitofmeasure.update');
     Route::delete('/unitofmeasure/{Id}', [UOMController::class, 'destroy'])->name('unitofmeasure.destroy');
 
+    Route::resource('unitofmeasure', UOMController::class);
+    Route::resource('itemtype', ItemTypeController::class);
+    Route::resource('inventorytype', InventoryTypeController::class);
+    Route::resource('pricemanagement', PriceManagementController::class);  
 
     //Route::resource('itemtype', ItemTypeController::class);
     Route::get('/itemtype', [ItemTypeController::class, 'index'])->name('itemtype.index');

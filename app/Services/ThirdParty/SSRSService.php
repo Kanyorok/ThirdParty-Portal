@@ -18,7 +18,6 @@ use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Str;
-use Log;
 use Psr\Http\Message\ResponseInterface;
 use SensitiveParameter;
 use stdClass;
@@ -64,7 +63,7 @@ class SSRSService
         $this->_username = $username;
         $this->_password = (string)$password;
         $this->serverURL = $ssrsConfig->host;
-        $this->_serverAPIUrl = $this->serverURL . "/reports/api/v2.0/";
+        $this->_serverAPIUrl = Str::rtrim($this->serverURL, '/') . "/reports/api/v2.0/";
 
         $this->_query = Http::withCookies(request()->cookie(), parse_url($this->serverURL, PHP_URL_HOST))
             ->withHeaders(request()->header())->retry(3, 100)->timeout(60)
@@ -139,36 +138,40 @@ class SSRSService
         return null;
     }
 
+    public static function queryParams(array $parameters): string
+    {
+        $params = '';
+        foreach ($parameters as $index => $value) {
+            if (is_array($value)) {
+                foreach ($value as $val) {
+                    $params .= "&$index=$val";
+                }
+            } else {
+                $params .= "&$index=$value";
+            }
+        }
+        return Str::of($params)->trim()->ltrim('&')->toString();
+    }
     /**
-     * Export report in specified format
-     *
-     * @param string $path Report path
-     * @param array $parameters Report parameters
-     * @param string $format Output format (PDF, EXCEL, WORD, HTML4.0, etc.)
-     * @param string $deviceInfo Optional device info XML
-     * @return StreamedResponse
      * @throws ConnectionException
      */
-    public function exportReport(string $path, string $format = 'JSON', string $deviceInfo = '', bool $content = false)
+    public function exportReport(string $path, array $parameters = [], string $format = 'XML', bool $content = false): StreamedResponse|string
     {
-        #https://<YourServer>/ReportServer?/Finance/SalesReport&rs:Format=PDF
-
         $response = $this->_query
-            ->get($this->serverURL . "/ReportServer?" . $path . "&rs:Format=$format");
+            ->get(Str::rtrim($this->serverURL, '/') . "/ReportServer?" . $path . "&rs:Format=$format&" . self::queryParams($parameters));
 
         if (!$response->successful()) {
             throw new ConnectionException(
                 "Failed to export report. Status: {$response->status()}"
             );
         }
-
-        // Determine content type based on format
-        $contentType = $this->getContentType($format);
-        $extension = $this->getFileExtension($format);
         if ($content) {
             return $response->body();
         }
 
+        // Determine content type based on format
+        $contentType = $this->getContentType($format);
+        $extension = $this->getFileExtension($format);
 
         return response()->streamDownload(function () use ($response) {
             echo $response->body();
@@ -179,6 +182,9 @@ class SSRSService
     }
 
 
+    /**
+     * @throws ErroredException
+     */
     public function parseReportXml(string $xmlString): Collection
     {
         // Suppress XML errors and warnings
@@ -238,14 +244,10 @@ class SSRSService
 
             return $collection;
         } catch (Exception $e) {
-            // Log the error
-            Log::error('XML Parsing Error: ' . $e->getMessage());
-
-            // Clear XML errors
+            // Log::error('XML Parsing Error: ' . $e->getMessage());
             libxml_clear_errors();
-
-            // Return empty collection
-            return collect();
+            throw new ErroredException('Failed to parse report ');
+            // return collect();
         }
     }
 
@@ -322,26 +324,98 @@ class SSRSService
     }
 
     /**
-     * Get available parameters for a report
-     *
-     * @param string $path Report path
-     * @return array
      * @throws ConnectionException
      */
-    public function getReportParameters(string $path): array
+    public function getReportParameters(string $id): array
     {
-        $response = $this->_query
-            ->get($this->_serverAPIUrl . "Reports(Path='$path')/Parameters");
-
+        $response = $this->_query->get(Str::rtrim($this->_serverAPIUrl, '/') . "/Reports($id)/ParameterDefinitions");
         if (!$response->successful()) {
             throw new ConnectionException(
                 "Failed to fetch report parameters. Status: {$response->status()}"
             );
         }
-
         return $response->json()['value'] ?? [];
     }
 
+
+    /**
+     * @throws ConnectionException
+     * @throws ErroredException
+     */
+    public function getReportParametersValidated(string $id, array $requestParameters): array
+    {
+        $finalParameters = collect();
+        $parameters = $this->getReportParameters($id);
+        //dd($parameters, $requestParameters);
+        foreach ($parameters as $parameter) {
+            if (isset($requestParameters[$parameter['Name']])) {
+                $value = $requestParameters[$parameter['Name']];
+                if ($parameter['ParameterType'] === 'DateTime') {
+                    if (strtotime($value)) {
+                        $finalParameters->put($parameter['Name'], $value);
+                        continue;
+                    }
+                    throw new ErroredException("Parameter {$parameter['Name']} must be a valid date.");
+                }
+
+                if ($parameter['ParameterType'] === 'Boolean') {
+                    if (in_array(strtolower($value), ['true', 'false', '1', '0'], true)) {
+                        $finalParameters->put($parameter['Name'], in_array(strtolower($value), ['true', '1'], true) ? 'true' : 'false');;
+                        continue;
+                    }
+                    throw new ErroredException("Parameter {$parameter['Name']} must be a valid boolean value.");
+                }
+
+                if ($parameter['ParameterType'] === 'String') {
+                    if (!$parameter['ValidValuesIsNull'] && count($parameter['ValidValues']) > 0) {
+                        $validValues = collect($parameter['ValidValues'])->pluck('Value')->toArray();
+
+                        if (is_array($value)) {
+                            foreach ($value as $singleValue) {
+                                if (!in_array($singleValue, $validValues, true)) {
+                                    throw new ErroredException("Parameter {$parameter['Name']} must contain only allowed values.");
+                                }
+                            }
+                        } elseif (!in_array($value, $validValues, true)) {
+                            throw new ErroredException("Parameter {$parameter['Name']} must be one of the allowed values.");
+                        }
+
+                        $finalParameters->put($parameter['Name'], $value);
+                        continue;
+                    }
+
+                    if (is_string($value) && $value !== '') {
+                        $finalParameters->put($parameter['Name'], $value);
+                        continue;
+                    }
+                    throw new ErroredException("Parameter {$parameter['Name']} must be available.");
+                }
+
+                if ($parameter['ParameterType'] === 'Integer') {
+                    if (!is_numeric($value) || !ctype_digit((string)$value)) {
+                        throw new ErroredException("Parameter {$parameter['Name']} must be a valid integer.");
+                    }
+                    $finalParameters->put($parameter['Name'], (int)$value);
+                    continue;
+                }
+
+                if ($parameter['ParameterType'] === 'Float') {
+                    if (!is_numeric($value)) {
+                        throw new ErroredException("Parameter {$parameter['Name']} must be a valid number.");
+                    }
+                    $finalParameters->put($parameter['Name'], (float)$value);
+                    continue;
+                }
+
+                // todo Add more parameter type validations here as needed
+
+
+            } elseif (!$parameter['Nullable'] && !$parameter['AllowBlank']) {
+                throw new ErroredException("Parameter {$parameter['Name']} is required.");
+            }
+        }
+        return $finalParameters->toArray();
+    }
 
     /**
      * Execute report and get data
@@ -349,7 +423,7 @@ class SSRSService
      * @param string $path Report path
      * @param array $parameters Report parameters
      * @return array
-     * @throws ConnectionException
+     * @throws ConnectionException|ErroredException
      */
     public function executeReport(string $path, array $parameters = []): array
     {
@@ -467,7 +541,7 @@ class SSRSService
             );
         }
 
-        dd($response->json());
+        //dd($response->json());
         return collect($response->json()['value'] ?? []);
     }
 
