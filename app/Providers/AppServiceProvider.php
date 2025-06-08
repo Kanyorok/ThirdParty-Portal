@@ -61,6 +61,7 @@ use App\Policies\Inventory\StockItemPolicy;
 use App\Policies\Inventory\InventoryTypePolicy;
 use App\Policies\Inventory\StorePolicy;
 use App\Policies\Inventory\UnitOfMeasurePolicy;
+use App\Policies\Inventory\InterBranchRequisitionPolicy;
 use App\Models\Inventory\ItemType;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\ItemCategories;
@@ -68,20 +69,17 @@ use App\Models\Inventory\StockItem;
 use App\Models\Inventory\UnitOfMeasure;
 use App\Models\Inventory\Store;
 use App\Models\Inventory\InventoryType;
+use App\Models\Inventory\InterBranchRequisition;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
+    
     public function register(): void
     {
         //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
+   
     public function boot(): void
     {
         Relation::morphMap([
@@ -130,6 +128,7 @@ class AppServiceProvider extends ServiceProvider
             Store::getPrimaryKey() => Store::class,
             UnitOfMeasure::getPrimaryKey() => UnitOfMeasure::class,
             SchedulePlan::getPrimaryKey() => SchedulePlan::class,
+            InterBranchRequisition::getPrimaryKey() => InterBranchRequisition::class,
         ]);
 
         Gate::policy(Role::class, RolePolicy::class);
@@ -147,7 +146,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(InventoryType::class, InventoryTypePolicy::class);
         Gate::policy(Store::class, StorePolicy::class);
         Gate::policy(UnitOfMeasure::class, UnitOfMeasurePolicy::class);
-
+        Gate::policy(InterBranchRequisition::class, InterBranchRequisitionPolicy::class);
         Gate::policy(SchedulePlan::class, SchedulePlanPolicy::class);
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);

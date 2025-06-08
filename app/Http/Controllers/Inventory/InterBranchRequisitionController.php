@@ -1,7 +1,8 @@
 <?php
 
 namespace App\Http\Controllers\Inventory;
-
+use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\InterBranchRequisitionRequest;
 use App\Models\Inventory\InterBranchRequisition;
@@ -11,6 +12,8 @@ use App\Models\Inventory\ItemCategories;
 use App\Models\Core\Branch;
 use App\Services\Inventory\InterBranchRequisitionService;
 use Illuminate\Http\Request;
+use App\Providers\Inventory\InterBranchRequisitionPolicy;
+
 
 class InterBranchRequisitionController extends Controller
 {
@@ -35,6 +38,7 @@ public function index(Request $request) {
 
     public function create()
     {
+        $this->authorize('create', InterBranchRequisition::class);
         $categories = ItemCategories::whereNull('ParentId')->get();
         $branches = Branch::all();
         $uoms = UnitOfMeasure::all();
@@ -44,12 +48,12 @@ public function index(Request $request) {
 
     public function store(InterBranchRequisitionRequest $request)
     {
+        $this->authorize('create', InterBranchRequisition::class);
         $data = $request->validated();
 
         if (!isset($data['Status'])) {
             $data['Status'] = 'Pending Approval';
         }
-
         $this->service->create($data);
         return redirect()->route('interbranchrequisition.index')->with('success', 'Requisition submitted successfully.');
     }
@@ -70,6 +74,7 @@ public function index(Request $request) {
 
     public function edit($Id)
     {
+        $this->authorize('update', InterBranchRequisition::class);
         $item = InterBranchRequisition::with([
             'fromBranch',
             'toBranch',
@@ -88,6 +93,7 @@ public function index(Request $request) {
 
     public function update(InterBranchRequisitionRequest $request, $Id)
     {
+        $this->authorize('update', InterBranchRequisition::class);
         $item = InterBranchRequisition::with('items')->findOrFail($Id);
         $data = $request->validated();
 
@@ -105,7 +111,9 @@ public function index(Request $request) {
 
     public function destroy($Id)
     {
+        
         $item = InterBranchRequisition::findOrFail($Id);
+         $this->authorize('destroy', InterBranchRequisition::class);
         $this->service->delete($item);
         return redirect()->route('interbranchrequisition.index')->with('success', 'Requisition deleted successfully.');
     }

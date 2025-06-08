@@ -4,6 +4,8 @@ namespace App\Services\Inventory;
 
 use App\Models\Inventory\InterBranchRequisition;
 use App\Models\Inventory\InterBranchRequisitionItem;
+use App\Models\Core\Workflow;
+use App\Models\Core\PendingWorkflow;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
 
@@ -15,7 +17,7 @@ class InterBranchRequisitionService
         unset($data['items']);
 
         $requisition = new InterBranchRequisition($data);
-        $requisition->Status = 'Pending Approval'; // <-- Always set here!
+        $requisition->Status = 'Pending Approval';
         $requisition->CreatedBy = Auth::id();
         $requisition->ModifiedBy = Auth::id();
         $requisition->CreatedOn = Carbon::now();
@@ -33,6 +35,18 @@ class InterBranchRequisitionService
             $item['ModifiedOn'] = Carbon::now();
             InterBranchRequisitionItem::create($item);
         }
+
+       
+        PendingWorkflow::create([
+            'Source'     => 'InterBranchRequisition',
+            'SourceID'   => $requisition->Id,
+            'Stage'      => $this->getApprovalLevelFromStatus($requisition->Status),
+            'UserId' => $user->Id,
+            'CreatedBy'  => Auth::id(),
+            'CreatedOn'  => Carbon::now(),
+            'ModifiedBy' => Auth::id(),
+            'ModifiedOn' => Carbon::now(),
+        ]);
 
         activity()
             ->performedOn($requisition)
@@ -87,6 +101,91 @@ class InterBranchRequisitionService
             ->log('Deleted InterBranch Requisition');
 
         return true;
+    }
+
+    public function submitDecision(
+        InterBranchRequisition $requisition,
+        string $action,
+        string $comments,
+        array $approvedQty = [],
+        array $itemRemarks = [],
+        $user = null
+    ): void {
+        $user = $user ?: Auth::user();
+
+       
+        if (!empty($approvedQty)) {
+            foreach ($approvedQty as $itemId => $qty) {
+                $item = $requisition->items()->find($itemId);
+                if ($item) {
+                    $item->ApprovedQty = $qty;
+                    $item->Remarks = $itemRemarks[$itemId] ?? $item->Remarks;
+                    $item->ModifiedBy = $user->Id;
+                    $item->ModifiedOn = Carbon::now();
+                    $item->save();
+                }
+            }
+        }
+
+        switch ($action) {
+            case 'APPROVED':
+                $requisition->Status = 'Approved';
+                break;
+            case 'REJECTED':
+                $requisition->Status = 'Rejected';
+                break;
+           
+        }
+        $requisition->ModifiedBy = $user->Id;
+        $requisition->ModifiedOn = Carbon::now();
+        $requisition->save();
+
+        Workflow::create([
+            'Source' => 'InterBranchRequisition',
+            'SourceID' => $requisition->Id,
+            'Stage' => $this->getApprovalLevelFromStatus($requisition->Status),
+            'Status' => match ($action) {
+                'APPROVED' => 'Ap',
+                'REJECTED' => 'Re',
+               
+            },
+            'Notes' => $comments,
+            'CreatedBy' => $user->Id,
+            'CreatedOn' => Carbon::now(),
+            'ModifiedBy' => $user->Id,
+            'ModifiedOn' => Carbon::now(),
+        ]);
+
+        $pending = PendingWorkflow::where([
+            'Source'   => 'InterBranchRequisition',
+            'SourceID' => $requisition->Id,
+        ])->first();
+
+        if ($pending) {
+            $pending->UserId = $user->Id;
+            $pending->Stage = $this->getApprovalLevelFromStatus($requisition->Status);
+            $pending->ModifiedBy = $user->Id;
+            $pending->ModifiedOn = Carbon::now();
+            $pending->save();
+        } else {
+        
+        }
+
+        activity()
+            ->causedBy($user)
+            ->performedOn($requisition)
+            ->event(strtolower($action))
+            ->log("{$action} inter-branch requisition (ID: {$requisition->Id}) with comment: '{$comments}'");
+    }
+
+    public function getApprovalLevelFromStatus($status)
+    {
+        return match ($status) {
+            'Pending Approval' => 'Pending Approval',
+            'Approved' => 'Approved',
+            'Rejected' => 'Requisition Rejected',
+            default => 'N/A',
+        };
     }
 
     protected function generateReqNo(InterBranchRequisition $requisition): string
