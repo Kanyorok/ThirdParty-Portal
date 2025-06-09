@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', ' Item Price Management')
+@section('title', 'Item Price Management')
 @section('content')
 @stack('scripts')
 <div class="container mt-4">
@@ -23,44 +23,59 @@
 
     <!-- Add Price Tab -->
     <div class="tab-pane fade show active" id="addPrice">
-      <form>
+      <form method="POST" action="{{ route('pricemanagement.store') }}">
+        @csrf
         <div class="mb-3">
           <label class="form-label">Item</label>
-          <select class="form-select">
+          <select class="form-select" name="ItemID" required>
             <option selected disabled>Select Item</option>
+            @foreach($items ?? [] as $item)
+              <option value="{{ $item->Id }}">{{ $item->ItemName ?? $item->Name }}</option>
+            @endforeach
           </select>
         </div>
         <div class="mb-3">
           <label class="form-label">UOM</label>
-          <select class="form-select">
+          <select class="form-select" name="UOM" required>
             <option selected disabled>Select UOM</option>
+            @foreach($uoms ?? [] as $uom)
+              <option value="{{ $uom->Id }}">{{ $uom->Name }}</option>
+            @endforeach
           </select>
         </div>
-
         <div class="mb-3">
           <label class="form-label">SKUID</label>
-          <select class="form-select">
-            <option selected disabled>Select SKU</option>
-          </select>
+          <input type="text" class="form-control" name="PriceID" placeholder="Enter SKU/Price ID" required>
         </div>
-
         <div class="mb-3">
-          <label class="form-label">Price</label>
-          <input type="number" step="0.01" class="form-control">
+          <label class="form-label">Estimated Price</label>
+          <input type="number" step="0.01" class="form-control" name="EstimatedPrice" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Actual Price</label>
+          <input type="number" step="0.01" class="form-control" name="ActualPrice" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Currency</label>
+          <input type="text" class="form-control" name="CurrencyCode" value="KES" required>
         </div>
         <div class="row">
           <div class="col-md-6">
             <label class="form-label">Effective From</label>
-            <input type="date" class="form-control">
+            <input type="date" class="form-control" name="EffectiveFrom" required>
           </div>
           <div class="col-md-6">
             <label class="form-label">Effective To</label>
-            <input type="date" class="form-control">
+            <input type="date" class="form-control" name="EffectiveTo">
           </div>
         </div>
         <div class="form-check mt-3">
-          <input class="form-check-input" type="checkbox" id="isDefault">
+          <input class="form-check-input" type="checkbox" name="IsDefault" id="isDefault" value="1">
           <label class="form-check-label" for="isDefault">Mark as Default Price</label>
+        </div>
+        <div class="mb-3 mt-3">
+          <label class="form-label">Source</label>
+          <input type="text" class="form-control" name="Source" placeholder="Optional">
         </div>
         <button type="submit" class="btn btn-primary mt-3">Save Price</button>
       </form>
@@ -74,7 +89,9 @@
             <th>#</th>
             <th>Item</th>
             <th>UOM</th>
-            <th>Price</th>
+            <th>Estimated Price</th>
+            <th>Actual Price</th>
+            <th>Currency</th>
             <th>Effective From</th>
             <th>Effective To</th>
             <th>Default</th>
@@ -82,27 +99,39 @@
           </tr>
         </thead>
         <tbody>
-          <!-- Example Row -->
-          <tr>
-            <td>1</td>
-            <td>A4 Paper</td>
-            <td>PCS</td>
-            <td>500.00</td>
-            <td>2025-06-01</td>
-            <td>—</td>
-            <td>✔️</td>
-            <td>
-              <button class="btn btn-sm btn-info">Edit</button>
-              <button class="btn btn-sm btn-danger">Delete</button>
-            </td>
-          </tr>
+          @forelse($prices ?? [] as $index => $price)
+            <tr>
+              <td>{{ $index + 1 }}</td>
+              <td>{{ $price->item->ItemName ?? $price->item->Name ?? '-' }}</td>
+              <td>{{ $price->uom->Name ?? '-' }}</td>
+              <td>{{ number_format($price->EstimatedPrice, 2) }}</td>
+              <td>{{ number_format($price->ActualPrice, 2) }}</td>
+              <td>{{ $price->CurrencyCode }}</td>
+              <td>{{ optional($price->EffectiveFrom)->format('Y-m-d') }}</td>
+              <td>{{ $price->EffectiveTo ? \Carbon\Carbon::parse($price->EffectiveTo)->format('Y-m-d') : '—' }}</td>
+              <td>{!! $price->IsDefault ? '✔️' : '' !!}</td>
+              <td>
+                <a href="{{ route('pricemanagement.edit', $price->Id) }}" class="btn btn-sm btn-info">Edit</a>
+                <form action="{{ route('pricemanagement.destroy', $price->Id) }}" method="POST" style="display:inline;">
+                  @csrf
+                  @method('DELETE')
+                  <button class="btn btn-sm btn-danger" onclick="return confirm('Delete this price?')">Delete</button>
+                </form>
+              </td>
+            </tr>
+          @empty
+            <tr>
+              <td colspan="10" class="text-center">No prices found.</td>
+            </tr>
+          @endforelse
         </tbody>
       </table>
     </div>
 
     <!-- Upload Price List Tab -->
     <div class="tab-pane fade" id="uploadPrice">
-      <form action="/upload-price-list" method="POST" enctype="multipart/form-data">
+      <form action="{{ route('pricemanagement.upload') }}" method="POST" enctype="multipart/form-data">
+        @csrf
         <div class="mb-3">
           <label class="form-label">Upload Excel or CSV File</label>
           <input class="form-control" type="file" name="priceFile" accept=".csv,.xlsx,.xls" required>
@@ -116,6 +145,4 @@
 
   </div>
 </div>
-
-
 @endsection
