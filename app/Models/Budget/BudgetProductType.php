@@ -19,7 +19,7 @@ class BudgetProductType extends Model
 
     public static function getPrimaryKey(): string
     {
-        return 'Id';
+        return 'BudgetProductTypeId';
     }
 
     protected $fillable = [

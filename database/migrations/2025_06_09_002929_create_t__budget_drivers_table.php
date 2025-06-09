@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('t_BudgetLinesGLAccounts', function (Blueprint $table) {
+        Schema::create('t_BudgetDrivers', function (Blueprint $table) {
             $table->id('Id');
-            $table->foreignId('BudgetLineID')->constrained('t_BudgetLines','Id');
-            $table->foreignId('BudgetGLAccountID')->constrained('t_BudgetGLAccounts','Id');
+            $table->string('DriverName',30);
+            $table->boolean('IsActive')->default(true);
 
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
@@ -30,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('t_BudgetLinesGLAccounts');
+        Schema::dropIfExists('t_BudgetDrivers');
     }
 };

@@ -4,9 +4,10 @@ namespace App\Models\Budget;
 
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class BudgetLinesGLAccount extends Model
+class BudgetLinesGLAccount extends Pivot
 {
     use UserActorTrait,SoftDeletes;
 
@@ -19,12 +20,12 @@ class BudgetLinesGLAccount extends Model
 
     public static function getPrimaryKey(): string
     {
-        return 'Id';
+        return 'BudgetLinesGLAccountsId';
     }
 
     protected $fillable = [
         'BudgetLineID',
-        'BudgetGLAccount',
+        'BudgetGLAccountID',
         'CreatedBy',
         'CreatedOn',
         'ModifiedBy',

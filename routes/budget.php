@@ -32,6 +32,7 @@ use App\Http\Controllers\Budget\BusinessAnalyticsDashboardController;
 use App\Http\Controllers\Budget\KPIDashboardsController;
 use App\Http\Controllers\Budget\TrendAndGrowthController;
 use App\Http\Controllers\Budget\BranchPerformanceController;
+use App\Http\Controllers\Budget\BudgetDriversSetupController;
 use App\Http\Controllers\Budget\BudgetLinesController;
 use App\Http\Controllers\Budget\ProductProfitabilityController;
 use App\Http\Controllers\Budget\OfficerPerformanceController;
@@ -132,5 +133,11 @@ Route::namespace('Budget')->group(function () {
     Route::resource('cbssync', CBSSyncController::class);
     Route::resource('datasynclogs', DataSyncLogsController::class);
     Route::resource('systemsettings', SystemSettingsController::class);
+
+    //Budget Settings
+    Route::resource('rates', BudgetRatesController::class);
+    Route::resource('planningmethods', BudgetPlanningMethodsController::class);
+    Route::resource('periodtypes', BudgetPeriodTypesController::class);
+    Route::resource('budgetdriverssetup',BudgetDriversSetupController::class);
     
 });

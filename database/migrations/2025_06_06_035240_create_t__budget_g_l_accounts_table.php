@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('t_BudgetGLAccounts', function (Blueprint $table) {
             $table->id('Id');
             $table->foreignId('CurrencyID')->constrained('t_Currencies','Id');
+            $table->string('GLName',100);
             $table->text('Description');
             $table->string('GTType',20)->nullable();
 

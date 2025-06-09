@@ -19,12 +19,13 @@ class BudgetGLAccount extends Model
 
     public static function getPrimaryKey(): string
     {
-        return 'Id';
+        return 'BudgetGLAccountId';
     }
 
 
     protected $fillable = [
         'CurrencyID',
+        'GLName',
         'Description',
         'GTType',
         'CreatedBy',
@@ -40,5 +41,11 @@ class BudgetGLAccount extends Model
         'DeletedOn'  => 'datetime',
     ];
 
+    public function budgetLines()
+    {
+        return $this->belongsToMany(BudgetLine::class, 't_BudgetLinesGLAccounts', 'BudgetGLAccountID', 'BudgetLineID')
+                    ->withTimestamps()
+                    ->withPivot(['CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn', 'DeletedBy', 'DeletedOn']);
+    }
 
 }
