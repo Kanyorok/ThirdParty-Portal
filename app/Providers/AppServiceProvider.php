@@ -155,6 +155,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(ConsolidatedProcurementPlan::class, ProcurementPlanMaintainPolicy::class);
         Gate::policy(SchedulePlan::class, SchedulePlanPolicy::class);
         Gate::policy(PlanLineItems::class, PlanManualInputPolicy::class);
+         Gate::policy(InterBranchRequisition::class, InterBranchRequisitionPolicy::class);
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);
          Event::listen(SMSSendEvent::class, SMSSendListener::class);

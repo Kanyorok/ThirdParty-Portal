@@ -22,7 +22,6 @@
         <div class="alert alert-danger">{{ session('error') }}</div>
     @endif
 
-    
     <form method="GET" action="{{ route('interbranchrequisitionapproval.index') }}" id="requisition-selection-form">
         <div class="mb-3">
             <label for="ReqId" class="form-label">Select Pending Requisition</label>
@@ -50,12 +49,11 @@
             <div class="col-md-4"><strong>From Branch:</strong> {{ $requisition->fromBranch->Name ?? '-' }}</div>
             <div class="col-md-4"><strong>To Branch:</strong> {{ $requisition->toBranch->Name ?? '-' }}</div>
             <div class="col-md-4"><strong>Status:</strong>
-                @if($requisition->Status === 'Pending Approval' || $requisition->Status === 'Submitted')
-                    <span class="badge bg-warning text-dark">Pending Approval</span>
-                @elseif($requisition->Status === 'Approved')
-                    <span class="badge bg-success text-light">Approved</span>
-                @elseif($requisition->Status === 'Rejected')
-                    <span class="badge bg-danger text-light">Rejected</span>
+                @php
+                    $statusEnum = \App\Enums\Inventory\InterBranchRequisitionEnum::tryFrom($requisition->Status);
+                @endphp
+                @if($statusEnum)
+                    <span class="badge bg-{{ $statusEnum->badgeColor() }}{{ $statusEnum->badgeColor() === 'warning' ? ' text-dark' : ' text-light' }}">{{ $statusEnum->label() }}</span>
                 @else
                     <span class="badge bg-secondary">{{ $requisition->Status }}</span>
                 @endif
@@ -120,11 +118,8 @@
                         <option value="">-- Choose Action --</option>
                         <option value="APPROVED">Approve</option>
                         <option value="REJECTED">Reject</option>
-                        
                     </select>
                 </div>
-
-                
 
                 <div class="d-flex justify-content-end">
                     <button type="submit" class="btn btn-primary">Submit</button>
