@@ -11,18 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('t_PropertyRegistry', function (Blueprint $table){
+        Schema::create('t_CategoryMaster', function (Blueprint $table) {
             $table->id('Id');
-            $table->string('PropertyName');
-            $table->string('PropertyCode');
-            $table->foreignId('PropertyType')->constrained('t_PropertyType','Id');
-            $table->foreignId('Category')->constrained('t_PropertyCategory','Id');
-            $table->string('Owner');
-            $table->date('AcquisitionDate');
-            $table->string('Country'); 
-            $table->foreignId('TownCity')->constrained('t_Localities','ID');                                
-            $table->string('AreaLocality');
-            $table->string('PropertyDescription');           
+            $table->string('Name');
+            $table->string('Description');
+            $table->string('Type');
+            $table->integer('Code')->constrained('t_Modules','ModuleID');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
@@ -37,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('t_PropertyRegistry');
+        Schema::dropIfExists('t_CategoryMaster');
     }
 };
