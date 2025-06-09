@@ -66,7 +66,7 @@ class SSRSService
         $this->_serverAPIUrl = Str::rtrim($this->serverURL, '/') . "/reports/api/v2.0/";
 
         $this->_query = Http::withCookies(request()->cookie(), parse_url($this->serverURL, PHP_URL_HOST))
-            ->withHeaders(request()->header())->retry(3, 100)->timeout(60)
+            ->withHeaders(request()->header())->retry(3, 100)->timeout(15)
             ->withBasicAuth($username, $password)->withOptions(['auth' => [$username, $password, 'ntlm']]);
 
     }
@@ -150,7 +150,7 @@ class SSRSService
                 $params .= "&$index=$value";
             }
         }
-        return Str::of($params)->trim()->ltrim('&')->toString();
+        return Str::of($params)->trim()->toString();
     }
     /**
      * @throws ConnectionException
@@ -158,7 +158,7 @@ class SSRSService
     public function exportReport(string $path, array $parameters = [], string $format = 'XML', bool $content = false): StreamedResponse|string
     {
         $response = $this->_query
-            ->get(Str::rtrim($this->serverURL, '/') . "/ReportServer?" . $path . "&rs:Format=$format&" . self::queryParams($parameters));
+            ->get(Str::rtrim($this->serverURL, '/') . "/ReportServer?" . $path . "&rs:Format=$format" . self::queryParams($parameters));
 
         if (!$response->successful()) {
             throw new ConnectionException(
