@@ -52,7 +52,7 @@
             </td> 
             <td>
               <a href="{{ route('procurementplanmaintain.show', $plan->PlanID) }}" class="btn btn-sm btn-outline-primary">View</a>
-              <a href="{{ url('/planning/edit-draft/' . $plan->PlanID) }}" class="btn btn-sm btn-outline-success">Edit</a>
+              <a href="{{ url('/planning/edit-draft/' . $plan->PlanID) }}" class="btn btn-sm btn-outline-success" hidden>Edit</a>
             </td>
           </tr>
       @endforeach

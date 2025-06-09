@@ -89,6 +89,6 @@ class PlanLineItems extends Model
     }
     public function schedulePlan()
     {
-        return $this->belongsTo(SchedulePlan::class, 'PlanLineId', 'LineItemID');
+        return $this->belongsTo(SchedulePlan::class, 'LineItemID', 'PlanLineId');
     }
 }

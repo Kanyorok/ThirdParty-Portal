@@ -77,30 +77,20 @@
                         <form action="{{ route('requisition.store') }}" method="post" id="createRequisitionForm">
                             @csrf
 
-                            {{-- <div class="mb-3">
-                                <label class="form-label" for="RequisitionNo">Requisition No. </label>
+{{--                            <div class="mb-3">--}}
+{{--                                <label class="form-label" for="Category">Category <span class="text-danger">*</span></label>--}}
+{{--                                <select class="form-control" name="Category" id="Category" required>--}}
+{{--                                    <option selected disabled>Select Category</option>--}}
+{{--                                    <option>Purchase Requisition</option>--}}
+{{--                                    <option>Tender</option>--}}
 
-                                <input type="text" class="form-control" id="RequisitionNo" name="RequisitionNo" required
-                                    readonly placeholder="Auto Generated">
+{{--                                    --}}{{-- @foreach ($MarketingLists as $MarketingList)--}}
+{{--                                        <option value="{{ $MarketingList->slug }}">{{ $MarketingList->Label }}</option>--}}
+{{--                                    @endforeach --}}
+{{--                                </select>--}}
 
-                                <p id="RequisitionNo_error" class="invalid-feedback d-none error col-12" role="alert">
-                                </p>
-                            </div> --}}
-
-                            <div class="mb-3">
-                                <label class="form-label" for="Category">Category <span class="text-danger">*</span></label>
-                                <select class="form-control" name="Category" id="Category" required>
-                                    <option selected disabled>Select Category</option>
-                                    <option>Purchase Requisition</option>
-                                    <option>Tender</option>
-
-                                    {{-- @foreach ($MarketingLists as $MarketingList)
-                                        <option value="{{ $MarketingList->slug }}">{{ $MarketingList->Label }}</option>
-                                    @endforeach --}}
-                                </select>
-
-                                <p id="Category_error" class="invalid-feedback d-none error col-12" role="alert"></p>
-                            </div>
+{{--                                <p id="Category_error" class="invalid-feedback d-none error col-12" role="alert"></p>--}}
+{{--                            </div>--}}
 
 
                             <div class="mb-3">
@@ -133,7 +123,7 @@
                                 <label class="form-label" for="ProcurementPlan">Procurement Plan <span
                                         class="text-danger">*</span></label>
                                 <select class="form-control" name="ProcurementPlan" id="ProcurementPlan" >
-                                    <option selected disabled>Select Procurement Plan</option>
+                                    <option selected value="">Select Procurement Plan</option>
                                      @foreach ($procurementPlans  as $procurementPlan )
                                         <option value="{{ $procurementPlan->PlanID }}">{{ $procurementPlan->ReferenceNumber }}</option>
                                     @endforeach

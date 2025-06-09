@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Evaluation Criteria Setup')
 @section('content')
 <div class="container mt-4">
     <h4 class="mb-4">📊 Tender Evaluation Criteria Management</h4>

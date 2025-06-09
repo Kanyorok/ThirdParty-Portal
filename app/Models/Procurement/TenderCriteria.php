@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\procurement;
+namespace App\Models\Procurement;
 
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
@@ -17,10 +17,10 @@ class TenderCriteria extends Model
     protected $table = 't_TenderCriteria';
 
     protected $fillable = [
-        'TenderRef',
+        'TenderID',
         'CriteriaID',
         'SectionID',
-        'Weight',
+        'MaxScore',
         'IsActive',
         'CreatedBy',
         'ModifiedBy',

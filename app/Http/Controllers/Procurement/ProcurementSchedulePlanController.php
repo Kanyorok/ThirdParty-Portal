@@ -17,11 +17,6 @@ use Throwable;
 
 class ProcurementSchedulePlanController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('ajax')->only('fetchLinesByDPlan');
-    }
-
     public function index()
     {
         $draftedplans = ConsolidatedProcurementPlan::where('Status', ProcurementPlanStatusEnum::Draft)->get();
@@ -42,7 +37,7 @@ class ProcurementSchedulePlanController extends Controller
             ->where('PlanID', $planId)->get();
 
             $mappedLines = $Lines->map(function ($lineItem) {
-                $statusEnum = $lineItem->schedulePlan?->Status ?? SchedulePlanEnum::NotScheduled;
+            $statusEnum = $lineItem->schedulePlan?->Status ?? SchedulePlanEnum::NotScheduled;
 
                 return [
                     'LineItemID' => $lineItem->LineItemID,
@@ -50,7 +45,7 @@ class ProcurementSchedulePlanController extends Controller
                     'MergedQty' => $lineItem->MergedQty,
                     'ScheduleQTY' => $lineItem->schedulePlan?->ScheduleQTY,
                     'Status' => $statusEnum->label(),
-                    'Periods' => $lineItem->schedulePlan?->periods ?? [], // Optional: return schedule breakdown
+                    'Periods' => $lineItem->schedulePlan?->periods ?? [],
                 ];
             });
 

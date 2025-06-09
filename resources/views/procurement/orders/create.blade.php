@@ -190,6 +190,13 @@
 
 @endsection
 @section('scripts')
+
+    <script>
+        const itemTypeOptions = `{!! $itemTypes->map(function($type) {
+        return "<option value='{$type->Id}'>{$type->TypeName}</option>";
+    })->implode('') !!}`;
+    </script>
+
     <script>
         function fetchSuppliers() {
             const supplierUrl = "{{ route('purchaseOrder.getSuppliers') }}"
@@ -397,9 +404,7 @@
             <td class="text-start">
                 <select class="form-select form-select-sm type" name="type[]" id="Type">
                     <option disabled selected>Select Type</option>
-                    <option value="Stock">Stock</option>
-                    <option value="Asset">Asset</option>
-                    <option value="Non-Stock">Non-Stock</option>
+                    ${itemTypeOptions}
                 </select>
             </td>
             <td class="text-start">

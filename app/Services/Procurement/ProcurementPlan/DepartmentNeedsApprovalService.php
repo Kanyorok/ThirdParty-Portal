@@ -37,30 +37,33 @@ class DepartmentNeedsApprovalService
         return $this;
     }
 
-    public function workflowReject(User $actor, string $reason): static
-    {
-        $this->departmentNeeds->forceFill([
-            'Status' => DepartmentNeedsEnum::Pending,
-        ])->save(['timestamps' => false]);
+public function workflowReject(User $actor, string $reason): static
+{
+    // Update pending workflows
+    $this->departmentNeeds->pendingWorkflows()->where('Stage', DepartmentNeedsEnum::Rejected)->update([
+        'DeletedOn' => now(),
+        'DeletedBy' => $actor->Id,
+    ]);
 
+    // Update status using enum value, disable timestamps
+    $this->departmentNeeds->forceFill([
+        'Status' => DepartmentNeedsEnum::Rejected->value,
+    ])->save(['timestamps' => false]);
 
-        $this->departmentNeeds->pendingWorkflows()->where('Stage', DepartmentNeedsEnum::Approved)->update([
-            'DeletedOn' => now(),
-            'DeletedBy' => $actor->Id,
-        ]);
+    // Create workflow record
+    $this->departmentNeeds->workflows()->create([
+        'Stage' => DepartmentNeedsEnum::Rejected->name,
+        'Status' => WorkflowStatus::RejectReturn->value,
+        'Notes' => $reason,
+        'CreatedBy' => $actor->Id,
+        'ModifiedBy' => $actor->Id,
+    ]);
 
-        $this->departmentNeeds->workflows()->create([
-            'Stage' => DepartmentNeedsEnum::Approved->name,
-            'Status' => WorkflowStatus::RejectReturn->value,
-            'Notes' => $reason,
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
-        ]);
+    activity()->causedBy($actor)->performedOn($this->departmentNeeds)->event('reject')->log('Rejected Department Needs ' . $this->departmentNeeds->NeedID);
 
-        activity()->causedBy($actor)->performedOn($this->departmentNeeds)->event('reject')->log('Reject Department Needs ' . $this->departmentNeeds->NeedID);
+    return $this;
+}
 
-        return $this;
-    }
 
     public function submit(User $actor): static
     {

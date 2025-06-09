@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Http\Controllers\procurement;
+namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
-use App\Models\procurement\Criteria;
+use App\Models\Procurement\Criteria;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 

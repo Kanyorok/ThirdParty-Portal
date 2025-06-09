@@ -1,12 +1,12 @@
 <?php
 
-use App\Http\Controllers\procurement\CriteriaController;
+use App\Http\Controllers\Procurement\CriteriaController;
 use App\Http\Controllers\Procurement\PurchaseOrderController;
 use App\Http\Controllers\Procurement\ReportsController;
 use App\Http\Controllers\Procurement\RequisitionItemsController;
 use App\Http\Controllers\Procurement\RequisitionsController;
-use App\Http\Controllers\procurement\SectionController;
-use App\Http\Controllers\procurement\TenderEvaluationsController;
+// use App\Http\Controllers\procurement\SectionController;
+use App\Http\Controllers\Procurement\TenderEvaluationsController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Procurement\ModeTimelineController;
 use App\Http\Controllers\Procurement\ProcurementModeController;
@@ -183,6 +183,7 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::resource('tendersubmission', TenderSubmissionController::class);
     Route::resource('tenderdecrypt', TenderDecryptController::class);
     Route::resource('tendercommittee', TenderCommitteeController::class);
+    Route::post('/store-tender-committee', [TenderCommitteeController::class, 'membersAdd'])->name('tendercommittee.save');
     Route::resource('memberresponse', TenderAcceptController::class);
     Route::resource('assignrole', TenderAssignRoleController::class);
     Route::resource('evaluationcriteria', EvaluationCriteriaController::class);
@@ -198,7 +199,10 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::resource('sections',SectionController::class);
     Route::resource('criterias',CriteriaController::class);
     Route::resource('tenderevaluations',TenderEvaluationsController::class);
-
+    Route::post("/store-tender-sections",[TenderEvaluationsController::class,'tenderSections'])->name('store-tender-sections');
+    Route::get('/tender-criteria/{tenderId}', [TenderEvaluationsController::class, 'getTenderCriteria'])->name('tender-criteria');
+    Route::post('/tender-criteria', [TenderEvaluationsController::class, 'storeTenderCriteria'])->name('tender-criteria.store');
+    Route::post('/store-criteria-scores', [TenderEvaluationsController::class, 'criteriaScores'])->name('store-criteria-scores');
     Route::get('/criteria-sections', [EvaluationCriteriaController::class, 'viewCriteria'])->name('tender-criteria.index');
     //Route::get('/tenderevaluations', [EvaluationCriteriaController::class, 'tenderEvaluations'])->name('tenderevaluations.index');
 
@@ -251,7 +255,7 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
 
 
     //Procurement Plan, Plan Consolidation
-    Route::resource('procurementplandetails', ProcurementPlanDetailController::class);
+    // Route::resource('procurementplandetails', ProcurementPlanDetailController::class);
     Route::resource('procurementplanmaintain', ProcurementPlanMaintainController::class);
     Route::resource('procurementplanapproval', ProcurementApprovalController::class);
     Route::resource('consolidated', ConsolidatedDashboardController::class);

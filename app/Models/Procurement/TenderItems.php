@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\procurement;
+namespace App\Models\Procurement;
 
 use App\Models\Inventory\ItemCategories;
 use App\Models\Inventory\ItemMasterList;

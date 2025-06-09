@@ -1,39 +1,59 @@
 @extends('layouts.app')
-@section('title', 'CBS GL Mapping')
+@section('title', 'CBS GL Accounts')
 @section('content')
+<div class="card mb-4">
+  <div class="card-header bg-dark text-white">
+    🧾 CBS GL Accounts
+  </div>
+  <div class="card-body">
+    <p class="text-muted">Below is a list of General Ledger accounts synced from Core Banking System (CBS). You can monitor mapping status to budget lines and products.</p>
 
-    <div class="card p-3">
-        <h5>📊 CBS GL Mapping</h5>
-        <table class="table table-striped table-hover">
-            <thead class="table-light">
-            <tr>
-                <th>#</th>
-                <th>Budget Line</th>
-                <th>CBS GL Code</th>
-                <th>GL Description</th>
-                <th>Primary?</th>
-                <th>Notes</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-                <td>1</td>
-                <td>Interest Income – Loans</td>
-                <td>401001</td>
-                <td>Loan Interest Receivable</td>
-                <td><span class="badge bg-success">Yes</span></td>
-                <td>Main loan product line</td>
-            </tr>
-            <tr>
-                <td>2</td>
-                <td>Interest Expense – Deposits</td>
-                <td>502001</td>
-                <td>Deposit Interest Payable</td>
-                <td><span class="badge bg-secondary">No</span></td>
-                <td>Mapped for CBS cost tracking</td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
-
+    <table class="table table-bordered table-striped table-hover align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>#</th>
+          <th>GL Account No</th>
+          <th>GL Name</th>
+          <th>Description</th>
+          <th>GL Type</th>
+          <th>Mapped to Budget Line</th>
+          <th>Mapped to Product</th>
+          <th>Active</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td>GL1001</td>
+          <td>Interest Income</td>
+          <td>Income from all loan products</td>
+          <td>Income</td>
+          <td><span class="badge bg-success">✅ Yes</span></td>
+          <td><span class="badge bg-success">✅ Yes</span></td>
+          <td><span class="badge bg-success">✔</span></td>
+          <td>
+            <button class="btn btn-sm btn-info">🔍 View</button>
+            <button class="btn btn-sm btn-outline-primary">🔗 Map</button>
+          </td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>GL2005</td>
+          <td>Deposit Account Balance</td>
+          <td>Customer deposit liabilities</td>
+          <td>Liability</td>
+          <td><span class="badge bg-danger">❌ No</span></td>
+          <td><span class="badge bg-warning text-dark">⚠ Partial</span></td>
+          <td><span class="badge bg-success">✔</span></td>
+          <td>
+            <button class="btn btn-sm btn-info">🔍 View</button>
+            <button class="btn btn-sm btn-outline-primary">🔗 Map</button>
+          </td>
+        </tr>
+        <!-- Repeat rows as needed -->
+      </tbody>
+    </table>
+  </div>
+</div>
 @endsection
