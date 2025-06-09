@@ -33,4 +33,8 @@ class PropertyCategory extends Model
     {
         return $this->hasMany(PropertyType::class, 'PropertyCategoryId');
     }
+    public function property(): HasMany
+    {
+        return $this->hasMany(PropertyRegistry::class, 'Category', 'Id');
+    }
 }

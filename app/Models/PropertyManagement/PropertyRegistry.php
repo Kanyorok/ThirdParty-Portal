@@ -37,20 +37,21 @@ class PropertyRegistry extends Model
     {
         return 'PropertyRegistryId';
     }
-    public function propertycategory()
+   
+    public function propertyType()
+    {
+        return $this->belongsTo(PropertyType::class, 'PropertyType', 'Id');
+    }
+    public function propertyCategory()
     {
         return $this->belongsTo(PropertyCategory::class, 'Category', 'Id');
     }
-    public function propertylocality()
+    public function propertyLocality()
     {
-        return $this->belongsTo(Locality::class, 'TownCity', 'ID');
+        return $this->belongsTo(Locality::class, 'TownCity', 'Id');
     }
-    public function attchment()
+    public function attachment()
     {
         return $this->hasMany(PropertyAttachments::class,'PropertyID');
-    }
-    public function Block()
-    {
-        return $this->hasMany(PropertyBlock::class,'PropertyID');
     }
 }

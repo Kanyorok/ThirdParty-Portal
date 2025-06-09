@@ -15,12 +15,12 @@ return new class extends Migration
             $table->id('Id');
             $table->string('PropertyName');
             $table->string('PropertyCode');
-            $table->string('PropertyType');
+            $table->foreignId('PropertyType')->constrained('t_PropertyType','Id');
             $table->foreignId('Category')->constrained('t_PropertyCategory','Id');
             $table->string('Owner');
             $table->date('AcquisitionDate');
             $table->string('Country'); 
-            $table->foreignId('TownCity')->constrained('t_Localities','ID');                                
+            $table->foreignId('TownCity')->constrained('t_Localities','Id');                                
             $table->string('AreaLocality');
             $table->string('PropertyDescription');           
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');

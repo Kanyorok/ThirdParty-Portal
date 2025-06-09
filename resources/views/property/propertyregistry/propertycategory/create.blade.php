@@ -19,7 +19,9 @@
             <textarea name="Description" class="form-control" rows="3"></textarea>
           </div>
         </div>
-        <button type="submit" class="btn btn-success">➕ Add Category</button>
+        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
+            ➕ Add CATEGORY
+        </button>
       </div>
   </form>
 </div>

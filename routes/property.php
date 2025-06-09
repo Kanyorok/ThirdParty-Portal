@@ -1,11 +1,9 @@
 <?php
 
 use App\Http\Controllers\Property\PropertyRegistryController;
-Route::post('propertyregistry', [PropertyRegistryController::class,'store'])->name('propertyregistry.store');
 use App\Http\Controllers\Property\PropertyAttachmentsController;
 use App\Http\Controllers\Property\PropertyBlockController;
 use App\Http\Controllers\Property\PropertyCategoryController;
-Route::post('propercategory', [PropertyCategoryController::class,'store'])->name('propercategory.store');
 use App\Http\Controllers\Property\PropertyFloorController;
 use App\Http\Controllers\Property\PropertyInvoiceController;
 use App\Http\Controllers\Property\PropertyLeaseRenewalController;
@@ -23,7 +21,6 @@ use App\Http\Controllers\Property\PropertyReportsController;
 use App\Http\Controllers\Property\PropertyReportsVisualController;
 use App\Http\Controllers\Property\PropertyTenantClearanceController;
 use App\Http\Controllers\Property\PropertyTypeController;
-Route::post('propertytype', [PropertyTypeController::class,'store'])->name('propertytype.store');
 use App\Http\Controllers\Property\PropertyUnitController;
 use App\Http\Controllers\Property\RentDashboardController;
 use App\Http\Controllers\Property\TenantStatementController;
@@ -31,6 +28,9 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::namespace('Property')->prefix('property')->group(function () {
+    Route::post('propertytype', [PropertyTypeController::class,'store'])->name('propertytype.store');
+    Route::post('propercategory', [PropertyCategoryController::class,'store'])->name('propercategory.store');
+    Route::post('propertyregistry', [PropertyRegistryController::class,'store'])->name('propertyregistry.store');
     Route::resource('PropertyRegistry', PropertyRegistryController::class);
     Route::resource('propertytype', PropertyTypeController::class);
     Route::resource('propertycategory', PropertyCategoryController::class);

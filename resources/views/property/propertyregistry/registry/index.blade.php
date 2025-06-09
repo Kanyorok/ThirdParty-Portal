@@ -17,8 +17,10 @@
         <th>Type</th>
         <th>Category</th>
         <th>Owner</th>
-        <th>Location</th>
         <th>Acquisition Date</th>
+        <th>Country</th>
+        <th>Town/City</th>
+        <th>Area/Locality</th>
         <th>Property Description</th>
         <th>Status</th>
         <th>Action</th>
@@ -33,12 +35,14 @@
         <td>{{ $property->PropertyType?? '-' }}</td>
         <td>{{ $property->Category?? '-' }}</td>
         <td>{{ $property->Owner?? '-' }}</td>
-        <td>{{ $property->TownCity?? '-' }}, {{ $property->Country?? '-' }}, {{ $property->AreaLocality?? '-' }}, {{ $property->GPSCoordinates?? '-' }}</td>
         <td>{{ $property->AcquisitionDate?? '-' }}</td>
+        <td>{{ $property->Country?? '-' }}</td>
+        <td>{{ $property->TownCity?? '-' }}</td>
+        <td>{{ $property->AreaLocality ?? '-' }}</td>
         <td>{{ $property->PropertyDescription?? '-' }}</td>
         <td><span class="badge bg-success">Active</span></td>
         <td>
-          <a href="{{ route('PropertyRegistry.show', $property->id) }}" class="btn btn-sm btn-info">👁 View</a>
+          <a href="{{ route('PropertyRegistry.show', $property->Id) }}" class="btn btn-sm btn-info">👁 View</a>
           <button class="btn btn-sm btn-outline-warning">✏️ Edit</button>
         </td>
       </tr>

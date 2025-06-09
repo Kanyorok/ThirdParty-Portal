@@ -15,9 +15,6 @@
         <dt class="col-sm-4">Area/Locality</dt>
         <dd class="col-sm-8">{{ $property->AreaLocality ?? '-' }}</dd>
 
-        <dt class="col-sm-4">GPS Coordinates</dt>
-        <dd class="col-sm-8">{{ $property->GPSCoordinates ?? '-' }}</dd>
-
         <dt class="col-sm-4">Property Description</dt>
         <dd class="col-sm-8">{{ $property->PropertyDescription?? '-' }}</dd>
       </dl>
