@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Property Management')
 @section('content')
 <div class="container mt-4">
   <h4 class="fw-bold mb-3">🏷️ Add Property Category</h4>
@@ -12,7 +12,7 @@
         <div class="row g-3 mb-3">
           <div class="col-md-6">
             <label for="PropertyCategoryName" class="form-label">Category Name</label>
-            <input type="text" name="PropertyCategoryName" class="form-control" required>
+            <input type="text" name="Name" class="form-control" required>
           </div>
           <div class="col-md-6">
             <label for="Description" class="form-label">Description</label>

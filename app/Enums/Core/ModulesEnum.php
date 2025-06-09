@@ -38,7 +38,7 @@ enum ModulesEnum: int
             self::HRM => 'HRM - Human Resource',
             self::Finance => 'Finance',
             self::Settings => 'Settings',
-            self::BudgetLine => 'Budget Line',
+            self::BudgetLine => 'Budget & Analytics',
             self::MyAccount => 'My Account',
         };
     }

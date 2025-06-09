@@ -16,10 +16,11 @@
         </tr>
     </thead>
     <tbody>
-        @foreach ($categories as $Index => $category)
+        
+        @foreach ($categories as $category)
             <tr>
-                <td>{{ $Index + 1 }}</td>
-                <td>{{ $category->PropertyCategoryName }}</td>
+                <td>{{ $loop->iteration }}</td>
+                <td>{{ $category->Name }}</td>
                 <td>{{ $category->Description }}</td>
             </tr>
         @endforeach

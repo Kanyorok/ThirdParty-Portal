@@ -1,14 +1,14 @@
 <div class="card-header">
     <div class="float-end">
-        <a href="{{ route('inventory-reports.export',[$report->Id,'IMAGE'])}}" download target="_blank"
+        <a href="{{ route('inventory-reports.export',[$report->Id,'IMAGE'])."?".$params}}" target="_blank"
            class="btn btn-secondary">
             <i class="fas fa-file-image"></i> Image
         </a>
-        <a href="{{ route('inventory-reports.export',[$report->Id,'PDF']) }}" download target="_blank"
+        <a href="{{ route('inventory-reports.export',[$report->Id,'PDF'])."?".$params }}" target="_blank"
            class="btn btn-secondary">
             <i class="fas fa-file-pdf"></i> PDF
         </a>
-        <a href="{{ route('inventory-reports.export',[$report->Id,'EXCELOPENXML'])}}" download
+        <a href="{{ route('inventory-reports.export',[$report->Id,'EXCELOPENXML'])."?".$params}}"
            target="_blank" class="btn btn-secondary">
             <i class="fas fa-file-excel"></i> Excel
         </a>
@@ -29,8 +29,7 @@
 
     {{-- <iframe id="reportIframe" width="100%" height="600px" frameborder="0"
              src="{{ url('ReportServer/Pages/ReportViewer.aspx?/BRERP/Inventory/ItemCatalogue&rs:embed=true') }}"></iframe>--}}
-
-    <table class="table table-bordered table-responsive w-100">
+    <table class="table table-bordered table-responsive w-100" id="reports-table">
         <thead>
         <tr>
             @foreach(array_keys($data->first()) as $key)
@@ -48,5 +47,12 @@
         @endforeach
         </tbody>
     </table>
-
 </div>
+<script>
+    $(document).ready(function () {
+        $('#reports-table').DataTable({
+            dom: '<"row"<"col-12 mb-2"tr><"col-5 text-center"i><"col-7"p>>',
+        });
+    });
+
+</script>
