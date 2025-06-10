@@ -4,14 +4,13 @@ namespace App\Models\Budget;
 
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class BudgetLinesGLAccount extends Pivot
+class BudgetDriverMaster extends Model
 {
     use UserActorTrait,SoftDeletes;
 
-    protected $table='t_BudgetLinesGLAccounts';
+    protected $table='t_BudgetDriversMaster';
     protected $primaryKey = 'Id';
     
     const CREATED_AT = 'CreatedOn';
@@ -20,12 +19,17 @@ class BudgetLinesGLAccount extends Pivot
 
     public static function getPrimaryKey(): string
     {
-        return 'BudgetLinesGLAccountsId';
+        return 'BudgetDriversMasterId';
     }
 
-    protected $fillable = [
-        'BudgetLineID',
-        'BudgetGLAccountID',
+    protected $fillable =[
+        'DriverName',
+        //'DriverCode',
+        'DriverTypeID',
+        //'UOMID',
+        'IsActive',
+        'Frequency',
+
         'CreatedBy',
         'CreatedOn',
         'ModifiedBy',
@@ -34,9 +38,15 @@ class BudgetLinesGLAccount extends Pivot
     ];
 
     protected $casts = [
-        'CreatedOn'  => 'datetime',
+        'IsActive' => 'boolean',
+        
+        'CreatedOn' => 'datetime',
         'ModifiedOn' => 'datetime',
-        'DeletedOn'  => 'datetime',
+        'DeletedOn' => 'datetime',
     ];
+
+    public function driverType(){
+        return $this->belongsTo(BudgetDriver::class,'DriverTypeID','Id');
+    }
 
 }

@@ -7,6 +7,13 @@ use App\Models\Auth\User;
 use App\Models\BR\Account;
 use App\Models\BR\Client;
 use App\Models\BR\DebtProduct;
+use App\Models\Budget\BudgetDriver;
+use App\Models\Budget\BudgetDriverMaster;
+use App\Models\Budget\BudgetGLAccount;
+use App\Models\Budget\BudgetLine;
+use App\Models\Budget\BudgetLinesGLAccount;
+use App\Models\Budget\BudgetProduct;
+use App\Models\Budget\BudgetProductType;
 use App\Models\Communication\Call;
 use App\Models\Communication\Comment;
 use App\Models\Communication\Email;
@@ -136,6 +143,15 @@ class AppServiceProvider extends ServiceProvider
             SchedulePlan::getPrimaryKey() => SchedulePlan::class,
             ConsolidatedProcurementPlan::getPrimaryKey() => ConsolidatedProcurementPlan::class,
             PlanLineItems::getPrimaryKey() => PlanLineItems::class,
+
+            ///////// Budget and Analytics /////////
+            BudgetLinesGLAccount::getPrimaryKey()=>BudgetLinesGLAccount::class,
+            BudgetGLAccount::getPrimaryKey()=>BudgetGLAccount::class,
+            BudgetLine::getPrimaryKey()=>BudgetLine::class,
+            BudgetProduct::getPrimaryKey()=>BudgetProduct::class,
+            BudgetProductType::getPrimaryKey()=>BudgetProductType::class,
+            BudgetDriver::getPrimaryKey()=>BudgetDriver::class,
+            BudgetDriverMaster::getPrimaryKey()=>BudgetDriverMaster::class,
         ]);
 
         Gate::policy(Role::class, RolePolicy::class);

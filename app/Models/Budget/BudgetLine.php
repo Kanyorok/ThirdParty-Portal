@@ -19,13 +19,14 @@ class BudgetLine extends Model
 
     public static function getPrimaryKey(): string
     {
-        return 'Id';
+        return 'BudgetLineId';
     }
 
     protected $fillable = [
         'LineName',
         'Description',
         'IsDefault',
+
         'CreatedBy',
         'CreatedOn',
         'ModifiedBy',
@@ -35,9 +36,19 @@ class BudgetLine extends Model
 
     protected $casts = [
         'IsDefault'   => 'boolean',
+
         'CreatedOn'   => 'datetime',
         'ModifiedOn'  => 'datetime',
         'DeletedOn'   => 'datetime',
     ];
+
+    //relations
+    public function glAccounts()
+    {
+        return $this->belongsToMany(BudgetGLAccount::class, 't_BudgetLinesGLAccounts', 'BudgetLineID', 'BudgetGLAccountID')
+                    ->withTimestamps()
+                    ->withPivot(['CreatedBy', 'ModifiedBy', 'DeletedBy', 'DeletedOn'])
+                    ->wherePivot('DeletedOn', null); // Only fetch if DeletedOn is NULL
+    }
 
 }

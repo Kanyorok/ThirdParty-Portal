@@ -60,7 +60,7 @@ use App\Models\Procurement\Tender;
 
 use App\Http\Controllers\Procurement\ProcurementSchedulePlanController;
 use App\Http\Controllers\Procurement\ProcurementSubmitPlanController;
-
+use App\Http\Controllers\Procurement\SectionController;
 
 Route::namespace('Procurement')->prefix('procurement')->group(function () {
 
