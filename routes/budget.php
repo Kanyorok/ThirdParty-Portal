@@ -27,6 +27,10 @@ use App\Http\Controllers\Budget\BudgetVarianceAnalysisController;
 use App\Http\Controllers\Budget\BudgetKPIscorecardsController; 
 use App\Http\Controllers\Budget\BudgetKPIscorecardsOfficerController;
 
+use App\Http\Controllers\Budget\BudgetRatesController;
+use App\Http\Controllers\Budget\BudgetPeriodTypesController;
+use App\Http\Controllers\Budget\BudgetPlanningMethodsController;
+
 //TODO:Make Controllers
 use App\Http\Controllers\Budget\BusinessAnalyticsDashboardController;
 use App\Http\Controllers\Budget\KPIDashboardsController;
@@ -138,6 +142,6 @@ Route::namespace('Budget')->group(function () {
     Route::resource('rates', BudgetRatesController::class);
     Route::resource('planningmethods', BudgetPlanningMethodsController::class);
     Route::resource('periodtypes', BudgetPeriodTypesController::class);
+
     Route::resource('budgetdriverssetup',BudgetDriversSetupController::class);
-    
 });

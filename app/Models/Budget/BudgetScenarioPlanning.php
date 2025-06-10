@@ -28,7 +28,7 @@ class BudgetScenarioPlanning extends Model
     ];
 
     protected $casts = [
-    'IsDefault' => 'boolean',
+    'isDefault' => 'boolean',
 ];
 
 }

@@ -24,4 +24,8 @@ class BudgetPeriods extends Model
         'CreatedBy',
         'ModifiedBy',
     ];
+
+    public function periodType(){
+        return $this->belongsTo(BudgetPeriodTypes::class,'periodType','Id');
+    }
 }
