@@ -342,6 +342,15 @@ enum PermissionEnum: string
     case EmployeesDelete = 'employee-delete';
  
  
+        /*
+     *
+     * ========================================  Budget and Analytics  ========================================
+     */
+    case BudgetSetupView   = 'budgetSetup-view';
+    case BudgetSetupCreate = 'budgetSetup-create';
+    case BudgetSetupUpdate = 'budgetSetup-update';
+    case BudgetSetupDelete = 'budgetSetup-delete';
+ 
  
     public static function display(): Collection
     {
@@ -399,8 +408,12 @@ enum PermissionEnum: string
             [self::PlanMaintenanceRead, self::PlanMaintenanceWrite, self::PlanMaintenanceUpdate, self::PlanMaintenanceDelete],
             [self::PlanManualInputRead, self::PlanManualInputWrite, self::PlanManualInputUpdate, self::PlanManualInputDelete],
             [self::PlanEditRead, self::PlanEditWrite, self::PlanEditUpdate, self::PlanEditDelete],
+            /////////////////////////// Budget and Analytics  ///////////////////////
+            [self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate,self::BudgetSetupDelete],
+
             [self::PropertyCategoryView,self::PropertyCategoryCreate,self::PropertyCategoryUpdate,self::PropertyCategoryDelete],
             [self::PropertyTypeView,self::PropertyTypeCreate,self::PropertyTypeUpdate,self::PropertyTypeDelete],
+
         ]);
     }
  
@@ -472,6 +485,11 @@ enum PermissionEnum: string
             self::PropertyCategoryView,self::PropertyCategoryCreate,self::PropertyCategoryUpdate,self::PropertyCategoryDelete,
             self::PropertyTypeView,self::PropertyTypeCreate,self::PropertyTypeUpdate,self::PropertyTypeDelete,=> ModulesEnum::Property,
             default => throw new \LogicException("Unhandled PermissionEnum case: {$this->value}"),
+
+            ///////////////^*********** Budget and Analytics ******************/////////////////
+            self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate,self::BudgetSetupDelete,
+            =>ModulesEnum::BudgetLine
+
         };
     }
  
@@ -534,10 +552,13 @@ enum PermissionEnum: string
             self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy => 'UOM',
             self::ItemTypeView, self::ItemTypeUpdate, self::ItemTypeCreate, self::ItemTypeDestroy => 'Item Type',
 
+            ////////////////////////// Budget and Analytics //////////////////////////////
+            self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate,self::BudgetSetupDelete =>'Budget Setup',
 
             //Property Management
             self::PropertyCategoryView,self::PropertyCategoryCreate,self::PropertyCategoryUpdate,self::PropertyCategoryDelete => 'Property Category',
             self::PropertyTypeView,self::PropertyTypeCreate,self::PropertyTypeUpdate,self::PropertyTypeDelete => 'Property Type',
+
         };  
     }
 }
