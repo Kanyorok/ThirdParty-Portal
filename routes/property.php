@@ -41,6 +41,10 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::get('propertytype', [PropertyTypeController::class,'index'])->name('propertytype.index');
     Route::get('propertytype/create', [PropertyTypeController::class,'create'])->name('propertytype.create');
     Route::post('propertytype', [PropertyTypeController::class,'store'])->name('propertytype.store');
+    Route::delete('propertytype/delete/{Id}', [PropertyTypeController::class,'destroy'])->name('propertytype.destroy');
+    Route::get('propertytype/edit/{Id}',[PropertyTypeController::class,'edit'])->name('propertytype.edit');
+    Route::put('propertytype/edit/{Id}',[PropertyTypeController::class,'update'])->name('propertytype.update');
+
 
     //Property Registry
     Route::get('propertyregistry', [PropertyRegistryController::class,'index'])->name('PropertyRegistry.index');
