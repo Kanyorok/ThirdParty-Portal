@@ -8,6 +8,7 @@ use App\Http\Controllers\Budget\BudgetProductTypeController;
 use App\Http\Controllers\Budget\BudgetLineMappingController;
 use App\Http\Controllers\Budget\BudgetGLMappingController;
 use App\Http\Controllers\Budget\BudgetDriversController;
+use App\Http\Controllers\Budget\BudgetActivitiesController;
 
 use App\Http\Controllers\Budget\YieldRateController;
 use App\Http\Controllers\Budget\BudgetProjectionsController; 
@@ -75,6 +76,7 @@ Route::namespace('Budget')->group(function () {
     Route::resource('budgetlinemapping', BudgetLineMappingController::class);
     Route::resource('budgetglmapping', BudgetGLMappingController::class);
     Route::resource('budgetdrivers', BudgetDriversController::class);
+    Route::resource('budgetactivities', BudgetActivitiesController::class);
     Route::resource('yieldexpenserate', YieldRateController::class);
     Route::resource('budgetprojections', BudgetProjectionsController::class);
     Route::resource('entrybyproduct', BudgetProductEntryController::class);
