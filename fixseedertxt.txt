@@ -1,0 +1,49 @@
+        $values = collect([
+            // Main module
+            ['ModuleID' => 500000, 'Name' => ModulesEnum::Property->description(), 'Icon' => '<i data-feather="home"></i>', 'ParentID' => null, 'Route' => null],
+
+            // First level - Property Registry
+            ['ModuleID' => 501000, 'Name' => 'Property Registry', 'Icon' => '<i class="fas fa-building"></i>', 'ParentID' => 500000, 'Route' => null],
+            ['ModuleID' => 501100, 'Name' => 'Add Property', 'Icon' => null, 'Description' => '', 'ParentID' => 501000, 'Route' => 'PropertyRegistry.index'],
+            ['ModuleID' => 501200, 'Name' => 'Property Type', 'Icon' => null, 'Description' => '', 'ParentID' => 501000, 'Route' => 'propertytype.index'],
+            ['ModuleID' => 501300, 'Name' => 'Property Category', 'Icon' => null, 'Description' => '', 'ParentID' => 501000, 'Route' => 'propertycategory.index'],
+            ['ModuleID' => 501400, 'Name' => 'Property Attachments', 'Icon' => null, 'Description' => '', 'ParentID' => 501000, 'Route' => 'attachments.index'],
+
+            // Structural Mapping (under Property Registry)
+            ['ModuleID' => 501500, 'Name' => 'Structural Mapping', 'Icon' => '<i class="fas fa-sitemap"></i>', 'ParentID' => 501000, 'Route' => null],
+            ['ModuleID' => 501510, 'Name' => 'Add Block', 'Icon' => null, 'Description' => '', 'ParentID' => 501500, 'Route' => 'addblock.index'],
+            ['ModuleID' => 501520, 'Name' => 'Add Floor', 'Icon' => null, 'Description' => '', 'ParentID' => 501500, 'Route' => 'addfloor.index'],
+            ['ModuleID' => 501530, 'Name' => 'Add Unit', 'Icon' => null, 'Description' => '', 'ParentID' => 501500, 'Route' => 'addunit.index'],
+
+            // First level - Tenant & Lease
+            ['ModuleID' => 502000, 'Name' => 'Tenant & Lease', 'Icon' => '<i class="fas fa-users"></i>', 'ParentID' => 500000, 'Route' => null],
+            ['ModuleID' => 502100, 'Name' => 'Tenant Maintenance', 'Icon' => null, 'Description' => '', 'ParentID' => 502000, 'Route' => 'addtenant.index'],
+            ['ModuleID' => 502200, 'Name' => 'Tenant Clearance', 'Icon' => null, 'Description' => '', 'ParentID' => 502000, 'Route' => 'tenantclearance.index'],
+
+            // Lease Management (under Tenant & Lease)
+            ['ModuleID' => 502300, 'Name' => 'Lease Management', 'Icon' => '<i class="fas fa-file-contract"></i>', 'ParentID' => 502000, 'Route' => null],
+            ['ModuleID' => 502310, 'Name' => 'Lease Maintenance', 'Icon' => null, 'Description' => '', 'ParentID' => 502300, 'Route' => 'addlease.index'],
+            ['ModuleID' => 502320, 'Name' => 'Lease Schedule', 'Icon' => null, 'Description' => '', 'ParentID' => 502300, 'Route' => 'schedulelease.index'],
+            ['ModuleID' => 502330, 'Name' => 'Lease Renewal', 'Icon' => null, 'Description' => '', 'ParentID' => 502300, 'Route' => 'renewlease.index'],
+            ['ModuleID' => 502340, 'Name' => 'Lease Termination', 'Icon' => null, 'Description' => '', 'ParentID' => 502300, 'Route' => 'terminatelease.index'],
+            ['ModuleID' => 502350, 'Name' => 'Payment Frequency', 'Icon' => null, 'Description' => '', 'ParentID' => 502300, 'Route' => 'paymentfrequency.index'],
+
+            // First level - Billing & Receipting
+            ['ModuleID' => 503000, 'Name' => 'Billing & Receipting', 'Icon' => '<i class="fas fa-file-invoice-dollar"></i>', 'ParentID' => 500000, 'Route' => null],
+            ['ModuleID' => 503100, 'Name' => 'Invoicing', 'Icon' => null, 'Description' => '', 'ParentID' => 503000, 'Route' => 'rentinvoice.index'],
+            ['ModuleID' => 503200, 'Name' => 'Receipting', 'Icon' => null, 'Description' => '', 'ParentID' => 503000, 'Route' => 'rentreceipt.index'],
+            ['ModuleID' => 503300, 'Name' => 'Tenant Ledger', 'Icon' => null, 'Description' => '', 'ParentID' => 503000, 'Route' => 'tenantledger.index'],
+            ['ModuleID' => 503400, 'Name' => 'Rent Dashboard', 'Icon' => null, 'Description' => '', 'ParentID' => 503000, 'Route' => 'rentdashboard.index'],
+
+            // First level - Maintenance & Issues
+            ['ModuleID' => 504000, 'Name' => 'Maintenance & Issues', 'Icon' => '<i class="fas fa-tools"></i>', 'ParentID' => 500000, 'Route' => null],
+            ['ModuleID' => 504100, 'Name' => 'Maintenance request', 'Icon' => null, 'Description' => '', 'ParentID' => 504000, 'Route' => 'maintenancerequest.index'],
+            ['ModuleID' => 504200, 'Name' => 'Assign', 'Icon' => null, 'Description' => '', 'ParentID' => 504000, 'Route' => 'assignrequest.index'],
+            ['ModuleID' => 504300, 'Name' => 'Dashboard', 'Icon' => null, 'Description' => '', 'ParentID' => 504000, 'Route' => 'maintenancedashboard.index'],
+            ['ModuleID' => 504400, 'Name' => 'Work Completion', 'Icon' => null, 'Description' => '', 'ParentID' => 504000, 'Route' => 'workcompletion.index'],
+
+            // First level - Reports
+            ['ModuleID' => 599000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-chart-bar"></i>', 'ParentID' => 500000, 'Route' => 'propertyreports.index'],
+            /* ['ModuleID' => 50510, 'Name' => 'Reports', 'Icon' => null, 'Description' => '', 'ParentID' => 50500, 'Route' =>],
+             ['ModuleID' => 50520, 'Name' => 'Analytics', 'Icon' => null, 'Description' => '', 'ParentID' => 50500, 'Route' => 'propertyanalytics.index'],*/
+        ]);
