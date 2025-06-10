@@ -39,7 +39,9 @@
             <label for="Description" class="form-label">Description</label>
             <textarea name="Description" class="form-control" rows="3"></textarea>
           </div>
-          <button type="submit" class="btn btn-success">➕ Add Type</button>
+          <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
+            ➕ Add TYPE
+        </button>
         </div>
       </div>
     </div>

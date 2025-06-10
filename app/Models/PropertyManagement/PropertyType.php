@@ -34,5 +34,9 @@ class PropertyType extends Model
     {
         return $this->belongsTo(CategoryMaster::class, 'PropertyCategoryId', 'Id');
     }
+    public function property()
+    {
+        return $this->hasMany(PropertyRegistry::class, 'PropertyType', 'Id');
+    }
 
 }

@@ -1,11 +1,9 @@
 <?php
 
 use App\Http\Controllers\Property\PropertyRegistryController;
-Route::post('propertyregistry', [PropertyRegistryController::class,'store'])->name('propertyregistry.store');
 use App\Http\Controllers\Property\PropertyAttachmentsController;
 use App\Http\Controllers\Property\PropertyBlockController;
 use App\Http\Controllers\Property\PropertyCategoryController;
-Route::post('propercategory', [PropertyCategoryController::class,'store'])->name('propercategory.store');
 use App\Http\Controllers\Property\PropertyFloorController;
 use App\Http\Controllers\Property\PropertyInvoiceController;
 use App\Http\Controllers\Property\PropertyLeaseRenewalController;
@@ -23,7 +21,6 @@ use App\Http\Controllers\Property\PropertyReportsController;
 use App\Http\Controllers\Property\PropertyReportsVisualController;
 use App\Http\Controllers\Property\PropertyTenantClearanceController;
 use App\Http\Controllers\Property\PropertyTypeController;
-Route::post('propertytype', [PropertyTypeController::class,'store'])->name('propertytype.store');
 use App\Http\Controllers\Property\PropertyUnitController;
 use App\Http\Controllers\Property\RentDashboardController;
 use App\Http\Controllers\Property\TenantStatementController;
@@ -31,9 +28,25 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::namespace('Property')->prefix('property')->group(function () {
-    Route::resource('PropertyRegistry', PropertyRegistryController::class);
-    Route::resource('propertytype', PropertyTypeController::class);
-    Route::resource('propertycategory', PropertyCategoryController::class);
+
+    //category
+    Route::get('propercategory', [PropertyCategoryController::class,'index'])->name('propertycategory.index');
+    Route::get('propercategory/create', [PropertyCategoryController::class,'create'])->name('propertycategory.create');
+    Route::post('propercategory', [PropertyCategoryController::class,'store'])->name('propertycategory.store');
+    Route::delete('propercategory/delete/{Id}', [PropertyCategoryController::class,'destroy'])->name('propertycategory.destroy');
+    Route::get('propertycategory/edit/{Id}',[PropertyCategoryController::class,'edit'])->name('propertycategories.edit');
+    Route::put('propertycategory/edit/{Id}',[PropertyCategoryController::class,'update'])->name('propertycategories.update');
+
+    //Type
+    Route::get('propertytype', [PropertyTypeController::class,'index'])->name('propertytype.index');
+    Route::get('propertytype/create', [PropertyTypeController::class,'create'])->name('propertytype.create');
+    Route::post('propertytype', [PropertyTypeController::class,'store'])->name('propertytype.store');
+
+    //Property Registry
+    Route::get('propertyregistry', [PropertyRegistryController::class,'index'])->name('PropertyRegistry.index');
+    Route::get('propertyregistry/create', [PropertyRegistryController::class,'create'])->name('PropertyRegistry.create');
+    Route::post('propertyregistry', [PropertyRegistryController::class,'store'])->name('propertyregistry.store');
+
     Route::resource('addblock', PropertyBlockController::class);
     Route::resource('addfloor', PropertyFloorController::class);
     Route::resource('addunit', PropertyUnitController::class);

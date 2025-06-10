@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('Owner');
             $table->date('AcquisitionDate');
             $table->string('Country'); 
-            $table->foreignId('TownCity')->constrained('t_Localities','ID');                                
+            $table->foreignId('TownCity')->constrained('t_Localities','Id');                                
             $table->string('AreaLocality');
             $table->string('PropertyDescription');           
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
