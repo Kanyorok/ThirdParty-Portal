@@ -1,20 +1,28 @@
 @extends('layouts.app')
 @section('title', 'Item Price Management')
 @section('content')
-@stack('scripts')
+@if($errors->any())
+    <div class="alert alert-danger">
+        <ul>
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
 <div class="container mt-4">
-  <h4 class="mb-3">📦 Item Price Management</h4>
+  <h4 class="mb-3">Item Pricing</h4>
 
   <!-- Nav Tabs -->
   <ul class="nav nav-tabs" id="priceTabs" role="tablist">
     <li class="nav-item">
-      <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#addPrice" type="button">➕ Add Price</button>
+      <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#addPrice" type="button" role="tab">Add Price</button>
     </li>
     <li class="nav-item">
-      <button class="nav-link" data-bs-toggle="tab" data-bs-target="#viewPrices" type="button">📄 View Price List</button>
+      <button class="nav-link" data-bs-toggle="tab" data-bs-target="#viewPrices" type="button" role="tab">View Price List</button>
     </li>
     <li class="nav-item">
-      <button class="nav-link" data-bs-toggle="tab" data-bs-target="#uploadPrice" type="button">📁 Upload Price List</button>
+      <button class="nav-link" data-bs-toggle="tab" data-bs-target="#uploadPrice" type="button" role="tab">📁 Upload Price List</button>
     </li>
   </ul>
 
@@ -22,7 +30,7 @@
   <div class="tab-content border p-3">
 
     <!-- Add Price Tab -->
-    <div class="tab-pane fade show active" id="addPrice">
+    <div class="tab-pane fade show active" id="addPrice" role="tabpanel">
       <form method="POST" action="{{ route('pricemanagement.store') }}">
         @csrf
         <div class="mb-3">
@@ -30,7 +38,7 @@
           <select class="form-select" name="ItemID" required>
             <option selected disabled>Select Item</option>
             @foreach($items ?? [] as $item)
-              <option value="{{ $item->Id }}">{{ $item->ItemName ?? $item->Name }}</option>
+              <option value="{{ $item->Id }}">{{ $item->ItemName }}</option>
             @endforeach
           </select>
         </div>
@@ -39,13 +47,9 @@
           <select class="form-select" name="UOM" required>
             <option selected disabled>Select UOM</option>
             @foreach($uoms ?? [] as $uom)
-              <option value="{{ $uom->Id }}">{{ $uom->Name }}</option>
+              <option value="{{ $uom->Id }}">{{ $uom->Code }}</option>
             @endforeach
           </select>
-        </div>
-        <div class="mb-3">
-          <label class="form-label">SKUID</label>
-          <input type="text" class="form-control" name="PriceID" placeholder="Enter SKU/Price ID" required>
         </div>
         <div class="mb-3">
           <label class="form-label">Estimated Price</label>
@@ -82,11 +86,12 @@
     </div>
 
     <!-- View Prices Tab -->
-    <div class="tab-pane fade" id="viewPrices">
-      <table class="table table-bordered table-striped mt-3">
-        <thead>
+    <div class="tab-pane fade" id="viewPrices" role="tabpanel">
+      <table id="pricingTable" class="table table-bordered table-striped align-middle">
+        <thead class="table-light">
           <tr>
             <th>#</th>
+            <th>Price ID</th>
             <th>Item</th>
             <th>UOM</th>
             <th>Estimated Price</th>
@@ -102,12 +107,13 @@
           @forelse($prices ?? [] as $index => $price)
             <tr>
               <td>{{ $index + 1 }}</td>
-              <td>{{ $price->item->ItemName ?? $price->item->Name ?? '-' }}</td>
-              <td>{{ $price->uom->Name ?? '-' }}</td>
+              <td>{{ $price->PriceID }}</td>
+              <td>{{ $price->item->ItemName ?? $price->item->ItemCode ?? '-' }}</td>
+              <td>{{ $price->uom->Code ?? '-' }}</td>
               <td>{{ number_format($price->EstimatedPrice, 2) }}</td>
               <td>{{ number_format($price->ActualPrice, 2) }}</td>
               <td>{{ $price->CurrencyCode }}</td>
-              <td>{{ optional($price->EffectiveFrom)->format('Y-m-d') }}</td>
+              <td>{{ $price->EffectiveFrom ? \Carbon\Carbon::parse($price->EffectiveFrom)->format('Y-m-d') : '—' }}</td>
               <td>{{ $price->EffectiveTo ? \Carbon\Carbon::parse($price->EffectiveTo)->format('Y-m-d') : '—' }}</td>
               <td>{!! $price->IsDefault ? '✔️' : '' !!}</td>
               <td>
@@ -121,7 +127,7 @@
             </tr>
           @empty
             <tr>
-              <td colspan="10" class="text-center">No prices found.</td>
+              <td colspan="11" class="text-center">No prices found.</td>
             </tr>
           @endforelse
         </tbody>
@@ -129,7 +135,7 @@
     </div>
 
     <!-- Upload Price List Tab -->
-    <div class="tab-pane fade" id="uploadPrice">
+    <div class="tab-pane fade" id="uploadPrice" role="tabpanel">
       <form action="{{ route('pricemanagement.upload') }}" method="POST" enctype="multipart/form-data">
         @csrf
         <div class="mb-3">
@@ -145,4 +151,16 @@
 
   </div>
 </div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('#pricingTable').DataTable({
+            pageLength: 10,
+            ordering: true,
+            searching: true,
+            lengthChange: true
+        });
+    });
+</script>
 @endsection

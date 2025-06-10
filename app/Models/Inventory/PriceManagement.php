@@ -17,11 +17,10 @@ class PriceManagement extends Model
     const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Pricing';
-    protected $primaryKey = 'Id';
     protected $connection = 'sqlsrv';
+    protected $primaryKey = 'Id';
   
-    protected $dates = ['CreatedOn', 'ModifiedOn', 'DeletedOn', 'EffectiveFrom', 'EffectiveTo'];
-
+  
     protected $fillable = [
         'PriceID',
         'ItemID',
@@ -40,6 +39,11 @@ class PriceManagement extends Model
         'DeletedBy',
         'DeletedOn',
     ];
+
+    public static function getPrimaryKey(): string
+    {
+        return 'PriceManagementID';
+    }
 
     public function item()
     {
@@ -65,4 +69,5 @@ class PriceManagement extends Model
     {
         return $this->belongsTo(User::class, 'DeletedBy', 'Id');
     }
+    
 }

@@ -45,6 +45,7 @@ use App\Models\Inventory\InventoryType;
 use App\Models\Inventory\ItemType;
 use App\Models\Inventory\UnitOfMeasure;
 use App\Models\Inventory\InterBranchRequisition;
+use App\Models\Inventory\PriceManagement;
  
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\PlanLineItems;
@@ -315,6 +316,11 @@ enum PermissionEnum: string
     case InterBranchRequisitionUpdate = 'interBranchRequisition-update';
     case InterBranchRequisitionCreate = 'interBranchRequisition-create';
     case InterBranchRequisitionDestroy= 'interBranchRequisition-destroy';
+
+    case PriceManagementView = 'priceManagement-view';
+    case PriceManagementUpdate = 'priceManagement-update';
+    case PriceManagementCreate = 'priceManagement-create';
+    case PriceManagementDestroy= 'priceManagement-destroy';
    
  
  
@@ -381,7 +387,7 @@ enum PermissionEnum: string
             [self::ItemTypeView, self::ItemTypeUpdate, self::ItemTypeCreate, self::ItemTypeDestroy],
             [self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy],
             [self::InterBranchRequisitionView, self::InterBranchRequisitionUpdate, self::InterBranchRequisitionCreate, self::InterBranchRequisitionDestroy],
-
+            [self::PriceManagementView, self::PriceManagementUpdate, self::PriceManagementCreate, self::PriceManagementDestroy],
 
             [self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete],
             [self::PlanLineItemsRead, self::PlanLineItemsWrite, self::PlanLineItemsUpdate, self::PlanLineItemsDelete],
@@ -457,7 +463,8 @@ enum PermissionEnum: string
             self::InventoryTypeView, self::InventoryTypeUpdate, self::InventoryTypeCreate, self::InventoryTypeDestroy,
             self::ItemTypeView, self::ItemTypeUpdate, self::ItemTypeCreate, self::ItemTypeDestroy,
             self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy,
-            self::InterBranchRequisitionView, self::InterBranchRequisitionUpdate, self::InterBranchRequisitionCreate, self::InterBranchRequisitionDestroy,=> ModulesEnum::Inventory,
+            self::InterBranchRequisitionView, self::InterBranchRequisitionUpdate, self::InterBranchRequisitionCreate, self::InterBranchRequisitionDestroy,
+            self::PriceManagementView, self::PriceManagementUpdate, self::PriceManagementCreate, self::PriceManagementDestroy => ModulesEnum::Inventory,
             
             default => throw new \LogicException("Unhandled PermissionEnum case: {$this->value}"),
         };
@@ -522,7 +529,7 @@ enum PermissionEnum: string
             self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy => 'UOM',
             self::ItemTypeView, self::ItemTypeUpdate, self::ItemTypeCreate, self::ItemTypeDestroy => 'Item Type',
             self::InterBranchRequisitionView, self::InterBranchRequisitionUpdate, self::InterBranchRequisitionCreate, self::InterBranchRequisitionDestroy =>'InterBranch Requisition',
-
+            self::PriceManagementView, self::PriceManagementUpdate, self::PriceManagementCreate, self::PriceManagementDestroy=> 'Price Management',
         };  
     }
 }
