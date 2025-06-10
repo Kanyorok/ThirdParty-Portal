@@ -21,6 +21,11 @@ class Image extends Model
     protected $table = 't_Images';
     protected $primaryKey = 'ImageID';
 
+    public static function getPrimaryKey(): string
+    {
+        return 'ImageID';
+    }
+
     protected $fillable = [
         "Name", "ImageType", "ImageTypeID", "Image", "MIMEType", 'Notes',
         'CreatedBy', 'ModifiedBy', 'DeletedBy',

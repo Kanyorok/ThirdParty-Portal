@@ -20,6 +20,10 @@ class MarketingList extends Model
     protected $table = 't_MarketingLists';
     protected $primaryKey = 'MarketingListID';
 
+    public static function getPrimaryKey(): string
+    {
+        return 'MarketingListID';
+    }
     /**
      * The attributes that are mass assignable.
      */

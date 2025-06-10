@@ -21,6 +21,11 @@ class Team extends Model
     protected $table = 't_Teams';
     protected $primaryKey = 'TeamID';
 
+    public static function getPrimaryKey(): string
+    {
+        return 'TeamID';
+    }
+
     /**
      * The attributes that are mass assignable.
      */

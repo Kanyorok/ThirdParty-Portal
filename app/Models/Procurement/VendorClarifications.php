@@ -3,8 +3,8 @@
 namespace App\Models\Procurement;
 
 use App\Models\ThirdParies\Supplier;
-use Illuminate\Database\Eloquent\Model;
 use App\Traits\Model\UserActorTrait;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class VendorClarifications extends Model
@@ -18,6 +18,11 @@ class VendorClarifications extends Model
     protected $table = 't_VendorClarifications';
     protected $primaryKey = 'ClarificationID';
     public $incrementing = true;
+
+    public static function getPrimaryKey(): string
+    {
+        return 'VendorClarificationsId';
+    }
 
     protected $fillable = [
         'ClarificationID',
