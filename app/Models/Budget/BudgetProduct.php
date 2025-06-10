@@ -5,6 +5,7 @@ namespace App\Models\Budget;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Budget\BudgetProductType;
 
 class BudgetProduct extends Model
 {
@@ -41,5 +42,13 @@ class BudgetProduct extends Model
         'DeletedOn'  => 'datetime',
     ];
 
+    public function productType()
+    {
+        return $this->belongsTo(BudgetProductType::class, 'CBSProductID', 'Id');
+    }
+
+    public function glAccount(){
+        return $this->belongsTo(BudgetGLAccount::class,'GLAccountID','Id');
+    }
 
 }

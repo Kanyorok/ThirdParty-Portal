@@ -42,5 +42,9 @@ class BudgetProductType extends Model
         'DeletedOn'     => 'datetime',
     ];
 
+    public function products()
+    {
+        return $this->hasMany(BudgetProduct::class, 'CBSProductID', 'Id');
+    }
 
 }
