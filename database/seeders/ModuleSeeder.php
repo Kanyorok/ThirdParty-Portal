@@ -41,8 +41,8 @@ class ModuleSeeder extends Seeder
     protected function _thirdParty(bool $fresh): Collection
     {
         $values = collect([
-            ['ModuleID' => 100000, 'Name' => ModulesEnum::ThirdParty->description(), 'Icon' => '<i data-feather="users"></i>', 'Description' => '', 'ParentID' => null, 'Route' => null],
-            ['ModuleID' => 101000, 'Name' => 'Parties', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 100000],
+            ['ModuleID' => 100000, 'Name' => ModulesEnum::ThirdParty->description(), 'Icon' => '<i data-feather="users"></i>', 'ParentID' => null, 'Route' => null],
+            /*         ['ModuleID' => 101000, 'Name' => 'Parties', 'Icon' => null, 'Route' => null, 'ParentID' => 100000],*/
 
         ]);
         if ($fresh) {
@@ -64,10 +64,10 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 200000, 'Name' => ModulesEnum::CRM->description(), 'Icon' => '<i data-feather="share-2"></i>', 'ParentID' => null, 'Route' => null],
             ['ModuleID' => 201000, 'Name' => 'Mailbox', 'Icon' => '<i class="fas fa-envelope"></i>', 'ParentID' => 200000, 'Route' => 'email-conversations.index'],
 
-            ['ModuleID' => 200100, 'Name' => 'Third Parties', 'Icon' => '<i data-feather="users"></i>', 'ParentID' => 200000, 'Route' => null],
-            ['ModuleID' => 200110, 'Name' => 'Clients', 'Icon' => null, 'Description' => '', 'Route' => 'clients.index', 'ParentID' => 200100],
-            ['ModuleID' => 200120, 'Name' => 'Leads', 'Icon' => null, 'Description' => '', 'Route' => 'leads.index', 'ParentID' => 200100],
-            ['ModuleID' => 200130, 'Name' => 'Board', 'Icon' => null, 'Description' => '', 'Route' => 'board.index', 'ParentID' => 200100],
+            ['ModuleID' => 200100, 'Name' => 'Third Parties', 'Icon' => '<i data-feather="users"></i>', 'Description' => '', 'ParentID' => 200000, 'Route' => null],
+            ['ModuleID' => 200110, 'Name' => 'Clients', 'Icon' => null, 'Route' => 'clients.index', 'Description' => '', 'ParentID' => 200100],
+            ['ModuleID' => 200120, 'Name' => 'Leads', 'Icon' => null, 'Route' => 'leads.index', 'Description' => '', 'ParentID' => 200100],
+            ['ModuleID' => 200130, 'Name' => 'Board', 'Icon' => null, 'Route' => 'board.index', 'Description' => '', 'ParentID' => 200100],
 
             ['ModuleID' => 202000, 'Name' => 'Marketing Planner', 'Icon' => '<i class=" fa-solid fa-seedling"></i>', 'ParentID' => 200000, 'Route' => 'marketing-planner.index'],
             ['ModuleID' => 203000, 'Name' => 'Marketing Lists', 'Icon' => '<i class="fas fa-list-dots"></i>', 'ParentID' => 200000, 'Route' => 'marketing-list.index'],
@@ -266,45 +266,33 @@ class ModuleSeeder extends Seeder
     {
         $values = collect([
             // Root Module
-            ['ModuleID' => 1200000, 'Name' => ModulesEnum::BudgetLine->description(), 'Icon' => '<i data-feather="bar-chart-2"></i>', 'Description' => 'Budget Line Module', 'Route' => null, 'ParentID' => null],
+            ['ModuleID' => 1200000, 'Name' => ModulesEnum::BudgetLine->description(), 'Icon' => '<i data-feather="bar-chart-2"></i>', 'ParentID' => null, 'Route' => null],
 
             // Setup & Structure
-            ['ModuleID' => 1201000, 'Name' => 'Setup & Structure', 'Icon' => null, 'Description' => 'Setup Budget Line', 'Route' => null, 'ParentID' => 1200000],
-            ['ModuleID' => 1201100, 'Name' => 'Budget Period', 'Icon' => null, 'Description' => 'Budget Line Period', 'Route' => 'budgetperiod.index', 'ParentID' => 1201000],
-            ['ModuleID' => 1201200, 'Name' => 'Scenario Planning', 'Icon' => null, 'Description' => 'Scenario Planning Budget', 'Route' => 'budgetscenerios.index', 'ParentID' => 1201000],
-            ['ModuleID' => 1201300, 'Name' => 'CBS Product View', 'Icon' => null, 'Description' => 'Product Master Management', 'Route' => 'budgetproductmaster.index', 'ParentID' => 1201000],
-            ['ModuleID' => 1201400, 'Name' => 'CBS GL View', 'Icon' => null, 'Description' => 'GL Mapping Setup', 'Route' => 'budgetglmapping.index', 'ParentID' => 1201000],
-            ['ModuleID' => 1201500, 'Name' => 'Budget Lines', 'Icon' => null, 'Description' => 'Budget Lines Management', 'Route' => 'budgetlinemapping.index', 'ParentID' => 1201000],
-            ['ModuleID' => 1201700, 'Name' => 'Drivers Master', 'Icon' => null, 'Description' => 'Driver Setup', 'Route' => 'budgetdrivers.index', 'ParentID' => 1201000],
-            ['ModuleID' => 1201800, 'Name' => 'Driver Rates', 'Icon' => null, 'Description' => 'Driver Rates Setup', 'Route' => 'yieldexpenserate.index', 'ParentID' => 1201000],
-            ['ModuleID' => 1201900, 'Name' => 'Activities Master', 'Icon' => null, 'Description' => 'Budget Formula Setup', 'Route' => 'budgetactivities.index', 'ParentID' => 1201000],
+            ['ModuleID' => 1201000, 'Name' => 'Setup & Structure', 'Icon' => null, 'ParentID' => 1200000, 'Route' => null],
+            ['ModuleID' => 1201100, 'Name' => 'Budget Period', 'Icon' => null, 'ParentID' => 1201000, 'Route' => 'budgetperiod.index'],
+            ['ModuleID' => 1201200, 'Name' => 'Scenario Planning', 'Icon' => null, 'ParentID' => 1201000, 'Route' => 'budgetscenerios.index'],
+            ['ModuleID' => 1201300, 'Name' => 'CBS Product View', 'Icon' => null, 'ParentID' => 1201000, 'Route' => 'budgetproductmaster.index'],
+            ['ModuleID' => 1201400, 'Name' => 'CBS GL View', 'Icon' => null, 'ParentID' => 1201000, 'Route' => 'budgetglmapping.index'],
+            ['ModuleID' => 1201500, 'Name' => 'Budget Lines', 'Icon' => null, 'ParentID' => 1201000, 'Route' => 'budgetlinemapping.index'],
+            ['ModuleID' => 1201700, 'Name' => 'Drivers Master', 'Icon' => null, 'ParentID' => 1201000, 'Route' => 'budgetdrivers.index'],
+            ['ModuleID' => 1201800, 'Name' => 'Driver Rates', 'Icon' => null, 'ParentID' => 1201000, 'Route' => 'yieldexpenserate.index'],
+            ['ModuleID' => 1201900, 'Name' => 'Activities Master', 'Icon' => null, 'ParentID' => 1201000, 'Route' => 'budgetactivities.index'],
 
             // Budgeting Workspace
-            ['ModuleID' => 1202000, 'Name' => 'Budgeting Workspace', 'Icon' => null, 'Description' => 'Workspace for Budgeting Activities', 'Route' => null, 'ParentID' => 1200000],
-            ['ModuleID' => 1202100, 'Name' => 'Driver Projections', 'Icon' => null, 'Description' => 'Driver Projections', 'Route' => 'budgetprojections.index', 'ParentID' => 1202000],
-            ['ModuleID' => 1202200, 'Name' => 'Entry Productwise', 'Icon' => null, 'Description' => 'Entry by Product', 'Route' => 'entrybyproduct.index', 'ParentID' => 1202000],
-            ['ModuleID' => 1202300, 'Name' => 'Entry By Lines', 'Icon' => null, 'Description' => 'Entry by GL Lines', 'Route' => 'entrybyglline.index', 'ParentID' => 1202000],
-            ['ModuleID' => 1202400, 'Name' => 'Submit For Approval', 'Icon' => null, 'Description' => 'Submit Budget for Approval', 'Route' => 'submitapproval.index', 'ParentID' => 1202000],
-            ['ModuleID' => 1202500, 'Name' => 'Approve Branch Budgets', 'Icon' => null, 'Description' => 'Branch Budget Approval', 'Route' => 'budgetapproval.index', 'ParentID' => 1202000],
-            ['ModuleID' => 1202600, 'Name' => 'Top-Down Budget', 'Icon' => null, 'Description' => 'Top-Down Allocation Tool', 'Route' => 'topdownallocation.index', 'ParentID' => 1202000],
-            ['ModuleID' => 1202700, 'Name' => 'Budget Consolidation', 'Icon' => null, 'Description' => 'Consolidate Budgets', 'Route' => 'budgetconsolidation.index', 'ParentID' => 1202000],
+            ['ModuleID' => 1202000, 'Name' => 'Budgeting Workspace', 'Icon' => null, 'ParentID' => 1200000, 'Route' => null],
+            ['ModuleID' => 1202100, 'Name' => 'Driver Projections', 'Icon' => null, 'ParentID' => 1202000, 'Route' => 'budgetprojections.index'],
+            ['ModuleID' => 1202200, 'Name' => 'Entry Productwise', 'Icon' => null, 'ParentID' => 1202000, 'Route' => 'entrybyproduct.index'],
+            ['ModuleID' => 1202300, 'Name' => 'Entry By Lines', 'Icon' => null, 'ParentID' => 1202000, 'Route' => 'entrybyglline.index'],
+            ['ModuleID' => 1202400, 'Name' => 'Submit For Approval', 'Icon' => null, 'ParentID' => 1202000, 'Route' => 'submitapproval.index'],
+            ['ModuleID' => 1202500, 'Name' => 'Approve Branch Budgets', 'Icon' => null, 'ParentID' => 1202000, 'Route' => 'budgetapproval.index'],
+            ['ModuleID' => 1202600, 'Name' => 'Top-Down Budget', 'Icon' => null, 'ParentID' => 1202000, 'Route' => 'topdownallocation.index'],
+            ['ModuleID' => 1202700, 'Name' => 'Budget Consolidation', 'Icon' => null, 'ParentID' => 1202000, 'Route' => 'budgetconsolidation.index'],
 
             // Monitoring & Execution
-            ['ModuleID' => 1203000, 'Name' => 'Monitoring & Execution', 'Icon' => null, 'Description' => 'Monitor & Execute Budget', 'Route' => null, 'ParentID' => 1200000],
-            ['ModuleID' => 1203100, 'Name' => 'Plan vs Actual Monitoring', 'Icon' => null, 'Description' => 'Plan vs Actual Dashboard', 'Route' => 'budgetvsactualdashboard.index', 'ParentID' => 1203000],
-            ['ModuleID' => 1203200, 'Name' => 'Variance Analysis', 'Icon' => null, 'Description' => 'Analyse Variances', 'Route' => 'budgetvarianceanalysis.index', 'ParentID' => 1203000],
-            ['ModuleID' => 1203300, 'Name' => 'KPI Scorecards', 'Icon' => null, 'Description' => 'KPI Dashboard', 'Route' => 'kpiscorecards.index', 'ParentID' => 1203000],
-            ['ModuleID' => 1203400, 'Name' => 'Deviation Alerts', 'Icon' => null, 'Description' => 'Monitor Deviations', 'Route' => 'submitapproval.index', 'ParentID' => 1203000],
-            ['ModuleID' => 1203500, 'Name' => 'Completion Rate View', 'Icon' => null, 'Description' => 'View Completion Rates', 'Route' => 'submitapproval.index', 'ParentID' => 1203000],
-
-            // Business Intelligence & Deep Analytics
-            ['ModuleID' => 1204000, 'Name' => 'Business Intelligence & Deep Analytics', 'Icon' => null, 'Description' => 'Performance, Risk, and Compliance Insights', 'Route' => null, 'ParentID' => 1200000],
-            ['ModuleID' => 1204100, 'Name' => 'BI & Analytics Dashboard', 'Icon' => null, 'Description' => 'Analytics Dashboard', 'Route' => 'analyticsdashboard.index', 'ParentID' => 1204000],
-       
-            // Admin & Integration
-            ['ModuleID' => 1205000, 'Name' => 'Admin & Integration', 'Icon' => null, 'Description' => 'System Controls and CBS Integration', 'Route' => null, 'ParentID' => 1200000],
-            ['ModuleID' => 1205100, 'Name' => 'CBS Data Sync', 'Icon' => null, 'Description' => 'CBS Product Auto Sync', 'Route' => 'cbssync.index', 'ParentID' => 1205000],
-            ['ModuleID' => 1205200, 'Name' => 'Data Sync Logs', 'Icon' => null, 'Description' => 'CBS & System Sync Logs', 'Route' => 'datasynclogs.index', 'ParentID' => 1205000],
+            ['ModuleID' => 1203000, 'Name' => 'Monitoring & Execution', 'Icon' => null, 'ParentID' => 1200000, 'Route' => null],
+            ['ModuleID' => 1203100, 'Name' => 'Plan vs Actual Monitoring', 'Icon' => null, 'ParentID' => 1203000, 'Route' => 'budgetvsactualdashboard.index'],
+            ['ModuleID' => 1203200, 'Name' => 'Variance Analysis', 'Icon' => null, 'ParentID' => 1203000, 'Route' => 'budgetvarianceanalysis.index'],
         ]);
 
         if ($fresh) {
