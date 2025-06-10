@@ -40,6 +40,24 @@
             </table>
         @endif
 
-        <a href="{{ route('procurementplanmaintain.index') }}" class="btn btn-secondary mt-3">Back to List</a>
+        <div class="mt-4 d-flex gap-2">
+            <a href="{{ route('procurementplanmaintain.index') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i>
+                Back to List
+            </a>
+
+            @if($plan->Status->label() === 'Draft')
+                <a href="{{ route('planmanualinput.create', ['plan_id' => $plan->PlanID, 'title' => $plan->Title]) }}" class="btn btn-outline-primary">
+                    <i class="fas fa-plus me-1"></i>
+                    Add Items Manually
+                </a>
+
+                <a href="{{ route('planfromneeds.create', ['plan_id' => $plan->PlanID]) }}" class="btn btn-outline-success">
+                    <i class="fas fa-file-import me-1"></i>
+                    Generate Items from Needs
+                </a>
+            @endif
+        </div>
+
     </div>
 @endsection

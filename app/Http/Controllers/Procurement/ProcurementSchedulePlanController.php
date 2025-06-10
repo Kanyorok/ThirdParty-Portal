@@ -95,6 +95,15 @@ class ProcurementSchedulePlanController extends Controller
 
             $mergedQty = $planLineItem->MergedQty ?? 0;
 
+            if ($totalQty > $mergedQty) {
+                    return redirect()->back()
+                        ->withErrors([
+                            "The scheduled quantity for item '{$planLineItem->item->ItemName}' exceeds the available quantity of {$mergedQty}."
+                        ])
+                        ->withInput();
+                }
+
+
             if ($totalQty === 0) {
                 $status = SchedulePlanEnum::NotScheduled;
             } elseif ($totalQty < $mergedQty) {

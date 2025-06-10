@@ -7,7 +7,7 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4>📑 Tender Section Settings</h4>
         <a href="#" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#addSection1Modal">
-            + New Section</a>
+            + Tender Criteria</a>
     </div>
  
     <!-- Index Table -->
@@ -57,7 +57,7 @@
     <div class="modal-dialog">
         <div class="modal-content rounded-3 shadow">
             <div class="modal-header">
-                <h5 class="modal-title" id="addItemModalLabel">Add New Section</h5>
+                <h5 class="modal-title" id="addItemModalLabel">Add New Criteria</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
@@ -85,7 +85,7 @@
                         <thead class="table-light">
                             <tr>
                                 <th>Include</th>
-                                <th>Section</th>
+                                <th>Criteria</th>
                                 <th>Weight (%)</th>
                             </tr>
                         </thead>
@@ -120,7 +120,7 @@
                         class="btn btn-success" 
                         id="saveCriteriaBtn"
                     >
-                        Save Section
+                        Save Criteria
                     </button>
                 </div>
             </form>

@@ -25,6 +25,16 @@ class PlanManualInputRequest extends FormRequest
      */
     public function rules(): array
     {
+        if ($this->isMethod('put')) {
+        return [
+            'quantity' => 'sometimes|required|integer|min:1',
+            'estimated_cost' => 'sometimes|required|numeric|min:0',
+            'schedule_period' => 'sometimes|required|string|max:10',
+            'expected_delivery_date' => 'sometimes|required|date',
+            'budget_line_id' => 'sometimes|required|integer',
+            'notes' => 'nullable|string|max:1000',
+        ];
+    }
         return [
             'PlanID' => 'required|exists:t_ConsolidatedProcurementPlan,PlanID',
             'ItemID' => 'required|exists:t_items,Id',

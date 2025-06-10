@@ -33,31 +33,33 @@
 
         {{-- 🔹 Filter Fields --}}
         <div class="row mb-4">
-            <div class="col-md-6">
-                <label class="form-label">Target Plan</label>
-                <select class="form-select filter-input" name="plan_id" id="plan_id_selector" required
-                        onchange="updateFiscalYear()">
-                    <option disabled selected>Select Draft Plan</option>
-                    @foreach($plans as $plan)
-                        <option value="{{ $plan->PlanID }}" data-year="{{ $plan->FiscalYear }}"
-                            {{ old('plan_id', request('plan_id')) == $plan->PlanID ? 'selected' : '' }}>
-                            {{ $plan->Title }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">Planning Period</label>
-                <input type="text" name="fiscal_year" id="fiscal_year_input" class="form-control" readonly
-                       value="{{ old('fiscal_year', request('fiscal_year')) }}">
-            </div>
+        <div class="col-md-6">
+            <label class="form-label">Target Plan</label>
+            @php
+                $selectedPlanId = old('plan_id', request('plan_id'));
+                $selectedPlan = $plans->firstWhere('PlanID', $selectedPlanId);
+            @endphp
+
+            <select class="form-select" disabled>
+                <option selected>
+                    {{ $selectedPlan?->Title ?? 'No Plan Selected' }}
+                </option>
+            </select>
+            <input type="hidden" name="plan_id" id="plan_id_selector" value="{{ $selectedPlanId }}">
         </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Planning Period</label>
+            <input type="text" name="fiscal_year" id="fiscal_year_input" class="form-control" readonly
+                value="{{ old('fiscal_year', request('fiscal_year', $selectedPlan?->FiscalYear)) }}">
+        </div>
+    </div>
 
         <div class="row mb-3">
             <div class="col-md-3">
                 <label class="form-label">Branch</label>
                 <select class="form-select filter-input" name="branch_filter" id="branch_filter">
-                    <option value="">All</option>
+                    <option value="">Select Branch</option>
                     @foreach($branches as $branch)
                         <option
                             value="{{ $branch->Id }}" {{ request('branch_filter') == $branch->Id ? 'selected' : '' }}>
@@ -69,7 +71,7 @@
             <div class="col-md-3">
                 <label class="form-label">Department</label>
                 <select class="form-select filter-input" name="department_filter" id="department_filter">
-                    <option value="">All</option>
+                    <option value="">Select Department</option>
                     @foreach($departments as $dept)
                         <option
                             value="{{ $dept->Id }}" {{ request('department_filter') == $dept->Id ? 'selected' : '' }}>
@@ -81,7 +83,7 @@
             <div class="col-md-3">
                 <label class="form-label">Category</label>
                 <select class="form-select filter-input" name="category_id" id="category_id">
-                    <option value="">All</option>
+                    <option value="">Select Category</option>
                     @foreach($categories as $category)
                         <option
                             value="{{ $category->Id }}" {{ request('category_id') == $category->Id ? 'selected' : '' }}>

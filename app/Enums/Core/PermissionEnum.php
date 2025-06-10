@@ -497,9 +497,9 @@ enum PermissionEnum: string
 
             //Tendering
             self::TenderRead, self::TenderWrite, self::TenderUpdate, self::TenderDelete, self::TenderApproval => 'Tenders',
-            self::BidSubmissionRead, self::BidSubmissionWrite, self::BidSubmissionUpdate, self::BidSubmissionDelete, => 'Tender Suppliers',
-            self::TenderInvitationRead, self::TenderInvitationWrite, self::TenderInvitationUpdate, self::TenderInvitationDelete, => 'Tender Suppliers',
-            self::VendorClarificationsRead, self::VendorClarificationsWrite, self::VendorClarificationsUpdate, self::VendorClarificationsDelete, => 'Tender Suppliers',
+            self::BidSubmissionRead, self::BidSubmissionWrite, self::BidSubmissionUpdate, self::BidSubmissionDelete, => 'Tender Bid Submission',
+            self::TenderInvitationRead, self::TenderInvitationWrite, self::TenderInvitationUpdate, self::TenderInvitationDelete, => 'Tender Invitation',
+            self::VendorClarificationsRead, self::VendorClarificationsWrite, self::VendorClarificationsUpdate, self::VendorClarificationsDelete, => 'Vendor Clarifications',
             //Inventory
             self::MasterListView, self::MasterListUpdate, self::MasterListCreate, self::MasterListDestroy => 'Item Master',
             self::ItemCategoryView, self::ItemCategoryUpdate, self::ItemCategoryCreate, self::ItemCategoryDestroy => 'Item Category',

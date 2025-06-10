@@ -158,12 +158,12 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr>
+                            {{-- <tr>
                                 <td colspan="12" class="text-center py-4"> 
                                     <i class="fas fa-folder-open fa-2x text-muted mb-2"></i><br>
                                     No initiated tenders found. <a href="{{ route('initiatetender.create') }}">Create a new one?</a>
                                 </td>
-                            </tr>
+                            </tr> --}}
                         @endforelse
                         </tbody>
                     </table>

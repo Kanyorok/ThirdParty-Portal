@@ -58,8 +58,9 @@ class ProcurementPlanMaintainController extends Controller
 
         activity()->causedBy($user)->performedOn($plan)->event('create')->log('created plan ' . $plan->Id);
         // Redirect to manual entry page with the new plan ID
-        return redirect()->route('planmanualinput.index', ['plan_id' => $plan->PlanID])
-            ->with('success', 'Plan created successfully. You may now add line items.');
+ return redirect()->route('procurementplanmaintain.index')
+    ->with('success', 'Plan created successfully. You may now proceed to add line items.');
+
     }
     public function create(){
         $this->authorize('create', ConsolidatedProcurementPlan::class);
