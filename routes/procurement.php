@@ -61,6 +61,15 @@ use App\Models\Procurement\Tender;
 use App\Http\Controllers\Procurement\ProcurementSchedulePlanController;
 use App\Http\Controllers\Procurement\ProcurementSubmitPlanController;
 
+   //SupplierManagement
+use App\Http\Controllers\Procurement\SupplierListingController;
+use App\Http\Controllers\Procurement\PrequalificationRoundsController;
+use App\Http\Controllers\Procurement\PrequalificationCriteriaController;
+use App\Http\Controllers\Procurement\PrequalificationApplicationsController;
+use App\Http\Controllers\Procurement\PrequalificationEvaluationController;
+use App\Http\Controllers\Procurement\PrequalificationEvalAprovalController;
+use App\Http\Controllers\Procurement\PrequalifiedSuppliersController;
+
 
 Route::namespace('Procurement')->prefix('procurement')->group(function () {
 
@@ -341,3 +350,16 @@ Route::prefix('planning')->name('planning.')->group(function () {
    // ->name('planning.getPlanDetails');
 
 });
+
+ Route::resource('supplierslist', SupplierListingController::class);
+ Route::resource('preqrounds', PrequalificationRoundsController::class);
+ Route::resource('preqcriteria', PrequalificationCriteriaController::class);
+ Route::resource('preqapplications', PrequalificationApplicationsController::class);
+ Route::resource('preqevaluation', PrequalificationEvaluationController::class);
+ Route::resource('preqevalapproval', PrequalificationEvalAprovalController::class);
+ Route::resource('preqsuppliers', PrequalifiedSuppliersController::class);
+ 
+ 
+
+ 
+ 
