@@ -513,7 +513,7 @@
                                         Propery Registry
                                     </span> <span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
                             <ul class="pc-submenu">
-                                <li class="pc-item"><a class="pc-link" href="{{ route('addproperty.index') }}"
+                                <li class="pc-item"><a class="pc-link" href="{{ route('PropertyRegistry.index') }}"
                                                        data-i18n="Property List">Add Property</a></li>
                                 <li class="pc-item"><a class="pc-link" href="{{ route('propertytype.index') }}"
                                                        data-i18n="Property List">Property Type</a></li>

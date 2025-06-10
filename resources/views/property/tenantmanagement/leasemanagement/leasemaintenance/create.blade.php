@@ -1,44 +1,69 @@
 @extends('layouts.app')
-@section('title', 'New Lease Agreement')
+@section('title', 'Item Sub Category')
 @section('content')
 <div class="container mt-4">
   <h4 class="fw-bold mb-3">📄 New Lease Agreement</h4>
-
+<form method="POST" action="{{ route('addlease.store') }}">
+  @csrf
   <div class="card shadow">
     <div class="card-header bg-light fw-bold">📝 Lease Details</div>
     <div class="card-body">
-
       <!-- Tenant and Unit Selection -->
       <div class="row g-3 mb-3">
         <div class="col-md-6">
           <label class="form-label">Select Tenant</label>
-          <select class="form-select">
-            <option>Moses K. (Individual)</option>
-            <option>Acme Ltd. (Corporate)</option>
-          </select>
+            <select name="Tenant" class="form-select" required>
+              @foreach ($newtenants as $newtenant)
+                <option value="{{ $newtenant->id }}">{{ $newtenant->TenantName }}</option>
+              @endforeach
+            </select>
+        </div>
+        <div class="row g-3 mb-3">
+      <label class="form-label">Select Property</label>
+            <select name="PropertyID" class="form-select" required>
+              @foreach ($units as $unit)
+                <option value="{{ $unit->id }}">{{ $unit->PropertyID }}</option>
+              @endforeach
+            </select>
+        </div>
+      <div class="col-md-4">
+          <label class="form-label">Select Block</label>
+            <select name="BlockID" class="form-select" required>
+              @foreach ($units as $unit)
+                <option value="{{ $unit->id }}">{{ $unit->BlockID }}</option>
+              @endforeach
+            </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Select Floor</label>
+            <select name="FloorID" class="form-select" required>
+              @foreach ($units as $unit)
+                <option value="{{ $unit->id }}">{{ $unit->FloorID }}</option>
+              @endforeach
+            </select>
         </div>
         <div class="col-md-6">
           <label class="form-label">Select Unit(s)</label>
-          <select class="form-select" multiple>
-            <option>Unit 101 - Block A - Sunset Plaza</option>
-            <option>Unit B204 - Tower 1 - Mountain View Estate</option>
-          </select>
+            <select name="Unit" class="form-select" required>
+              @foreach ($units as $unit)
+                <option value="{{ $unit->id }}">{{ $unit->UnitCode }}</option>
+              @endforeach
+            </select>
         </div>
       </div>
-
       <!-- Lease Duration -->
       <div class="row g-3 mb-3">
         <div class="col-md-4">
           <label class="form-label">Start Date</label>
-          <input type="date" class="form-control">
+          <input type="date" class="form-control" name="StartDate">
         </div>
         <div class="col-md-4">
           <label class="form-label">End Date</label>
-          <input type="date" class="form-control">
+          <input type="date" class="form-control" name="EndDate">
         </div>
         <div class="col-md-4">
           <label class="form-label">Payment Frequency</label>
-          <select class="form-select">
+          <select class="form-select"name="PaymentFrequency">
             <option>Monthly</option>
             <option>Quarterly</option>
             <option>Bi-Annually</option>
@@ -46,37 +71,33 @@
           </select>
         </div>
       </div>
-
       <!-- Financials -->
       <div class="row g-3 mb-3">
         <div class="col-md-4">
           <label class="form-label">Monthly Rent (KES)</label>
-          <input type="number" class="form-control" placeholder="e.g. 25000">
+          <input type="number" class="form-control" placeholder="e.g. 25000" name="MonthlyRent">
         </div>
         <div class="col-md-4">
           <label class="form-label">Deposit (KES)</label>
-          <input type="number" class="form-control" placeholder="e.g. 25000">
+          <input type="number" class="form-control" placeholder="e.g. 25000" name="Deposit">
         </div>
         <div class="col-md-4">
           <label class="form-label">Due Day</label>
-          <input type="number" class="form-control" placeholder="e.g. 5 (for 5th of each month)">
+          <input type="number" class="form-control" placeholder="e.g. 5 (for 5th of each month)"name="DueDay">
         </div>
       </div>
 
       <!-- Terms and Documents -->
       <div class="mb-3">
         <label class="form-label">Special Terms & Conditions</label>
-        <textarea class="form-control" rows="3" placeholder="Optional terms or notes..."></textarea>
+        <textarea class="form-control" rows="3" placeholder="Optional terms or notes..." name="SpecialTerms"></textarea>
       </div>
-
       <div class="mb-3">
         <label class="form-label">Upload Lease Document</label>
         <input type="file" class="form-control" accept=".pdf,.docx">
       </div>
-
-      <div class="text-end">
-        <button class="btn btn-success">💾 Save Lease</button>
-      </div>
+      <button class="btn btn-success">💾 Save Lease</button>
+      </form>
     </div>
   </div>
 </div>
