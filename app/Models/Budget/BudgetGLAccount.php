@@ -19,7 +19,7 @@ class BudgetGLAccount extends Model
 
     public static function getPrimaryKey(): string
     {
-        return 'Id';
+        return 'BudgetGLAccountsId';
     }
 
 

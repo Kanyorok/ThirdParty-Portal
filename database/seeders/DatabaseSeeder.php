@@ -35,5 +35,10 @@ class DatabaseSeeder extends Seeder
         $this->call(DepartmentNeedsSeeder::class);
         $this->call(SupplierSeeder::class);
         $this->call(BudgetMasterSeeder::class);
+        $this->call(BudgetPeriodTypeSeeder::class);
+        $this->call(BudgetPeriodSeeder::class);
+        $this->call(BudgetPlanningMethodSeeder::class);
+        $this->call(BudgetScenarioPlanningSeeder::class);
+        $this->call(BudgetRatesSeeder::class);
     }
 }

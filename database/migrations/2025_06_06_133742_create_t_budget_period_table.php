@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('t_BudgetPeriods', function (Blueprint $table) {
             $table->id('Id');
             $table->string('fiscalYear');
-            $table->string('periodType');
+            $table->foreignId('periodType')->constrained('t_BudgetPeriodTypes','Id');
             $table->string('notes');
 
              $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
