@@ -25,6 +25,10 @@ class Email extends Model
     protected $table = 't_Emails';
     protected $primaryKey = 'EmailID';
 
+    public static function getPrimaryKey(): string
+    {
+        return 'EmailID';
+    }
     protected $fillable = [
         'MailID', 'Type', 'Status', 'Priority', 'From', 'To', 'CC', 'BCC', 'Subject', 'Body', 'Text', 'Party', 'PartyID',
         'Extra', 'Source', 'SourceID', 'EmailConversationId', 'ReferenceId', 'ReadBy', 'ReadOn', 'Dated',

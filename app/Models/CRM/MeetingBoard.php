@@ -16,6 +16,12 @@ class MeetingBoard extends Model
 
     protected $table = 't_MeetingBoard';
 
+
+    public static function getPrimaryKey(): string
+    {
+        return 'MeetingBoardId';
+    }
+
     protected $fillable = [
         'MeetingId', 'BoardMemberId',
         'CreatedBy', 'ModifiedBy',

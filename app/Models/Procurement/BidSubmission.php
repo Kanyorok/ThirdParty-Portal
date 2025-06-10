@@ -2,8 +2,8 @@
 
 namespace App\Models\Procurement;
 
-use App\Models\Core\CodeDetail;
 use App\Models\Auth\User;
+use App\Models\Core\CodeDetail;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -19,6 +19,11 @@ class BidSubmission extends Model
     protected $table = 't_BidSubmissions';
 
     protected $primaryKey = 'Id';
+
+    public static function getPrimaryKey(): string
+    {
+        return 'BidSubmissionsId';
+    }
 
     protected $fillable = [
         'TenderRef',

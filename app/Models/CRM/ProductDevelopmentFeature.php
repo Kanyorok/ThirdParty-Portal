@@ -17,8 +17,13 @@ class ProductDevelopmentFeature extends Model
 
     protected $connection = 'sqlsrv';
     protected $table = 't_ProductDevelopmentFeatures';
+
     protected $primaryKey = 'Id';
 
+    public static function getPrimaryKey(): string
+    {
+        return 'ProductDevelopmentFeaturesId';
+    }
 
     protected $fillable = [
                            'ProductDevelopmentId',

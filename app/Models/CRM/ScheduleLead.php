@@ -15,6 +15,11 @@ class ScheduleLead extends Model
 
     protected $table = 't_ScheduleLeads';
 
+    public static function getPrimaryKey(): string
+    {
+        return 'ScheduleLeadsId';
+    }
+
     protected $fillable = [
                            'ScheduleId',
                            'LeadId',
