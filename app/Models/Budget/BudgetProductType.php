@@ -19,7 +19,7 @@ class BudgetProductType extends Model
 
     public static function getPrimaryKey(): string
     {
-        return 'Id';
+        return 'BudgetProductTypeId';
     }
 
     protected $fillable = [
@@ -42,5 +42,9 @@ class BudgetProductType extends Model
         'DeletedOn'     => 'datetime',
     ];
 
+    public function products()
+    {
+        return $this->hasMany(BudgetProduct::class, 'CBSProductID', 'Id');
+    }
 
 }
