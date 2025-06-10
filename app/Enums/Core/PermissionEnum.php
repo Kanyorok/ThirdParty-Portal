@@ -308,8 +308,27 @@ enum PermissionEnum: string
     case UOMUpdate = 'uom-update';
     case UOMCreate = 'uom-create';
     case UOMDestroy= 'uom-destroy';
-   
- 
+
+    /*
+     *
+     * ========================================  Property Management  ========================================
+     */
+
+    //property category
+    case PropertyCategoryCreate = 'propertycategory-create';
+    case PropertyCategoryUpdate = 'propertycategory-update';
+    case PropertyCategoryDelete = 'propertycategory-delete';
+    case PropertyCategoryView = 'propertycategory-view';
+
+    //Property type
+    case PropertyTypeCreate = 'propertytype-create';
+    case PropertyTypeUpdate = 'propertytype-update';
+    case PropertyTypeDelete = 'propertytype-delete';
+    case PropertyTypeView = 'propertytype-view';
+
+
+
+
  
  
     /*
@@ -389,9 +408,12 @@ enum PermissionEnum: string
             [self::PlanMaintenanceRead, self::PlanMaintenanceWrite, self::PlanMaintenanceUpdate, self::PlanMaintenanceDelete],
             [self::PlanManualInputRead, self::PlanManualInputWrite, self::PlanManualInputUpdate, self::PlanManualInputDelete],
             [self::PlanEditRead, self::PlanEditWrite, self::PlanEditUpdate, self::PlanEditDelete],
-
             /////////////////////////// Budget and Analytics  ///////////////////////
             [self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate,self::BudgetSetupDelete],
+
+            [self::PropertyCategoryView,self::PropertyCategoryCreate,self::PropertyCategoryUpdate,self::PropertyCategoryDelete],
+            [self::PropertyTypeView,self::PropertyTypeCreate,self::PropertyTypeUpdate,self::PropertyTypeDelete],
+
         ]);
     }
  
@@ -458,6 +480,10 @@ enum PermissionEnum: string
             self::InventoryTypeView, self::InventoryTypeUpdate, self::InventoryTypeCreate, self::InventoryTypeDestroy,
             self::ItemTypeView, self::ItemTypeUpdate, self::ItemTypeCreate, self::ItemTypeDestroy,
             self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy,=> ModulesEnum::Inventory,
+
+            //Property Management
+            self::PropertyCategoryView,self::PropertyCategoryCreate,self::PropertyCategoryUpdate,self::PropertyCategoryDelete,
+            self::PropertyTypeView,self::PropertyTypeCreate,self::PropertyTypeUpdate,self::PropertyTypeDelete,=> ModulesEnum::Property,
             default => throw new \LogicException("Unhandled PermissionEnum case: {$this->value}"),
 
             ///////////////^*********** Budget and Analytics ******************/////////////////
@@ -528,6 +554,10 @@ enum PermissionEnum: string
 
             ////////////////////////// Budget and Analytics //////////////////////////////
             self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate,self::BudgetSetupDelete =>'Budget Setup',
+
+            //Property Management
+            self::PropertyCategoryView,self::PropertyCategoryCreate,self::PropertyCategoryUpdate,self::PropertyCategoryDelete => 'Property Category',
+            self::PropertyTypeView,self::PropertyTypeCreate,self::PropertyTypeUpdate,self::PropertyTypeDelete => 'Property Type',
 
         };  
     }

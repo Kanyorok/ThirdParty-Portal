@@ -24,6 +24,11 @@ class Schedule extends Model
     protected $table = 't_Schedule';
     protected $primaryKey = 'ScheduleID';
 
+    public static function getPrimaryKey(): string
+    {
+        return 'ScheduleID';
+    }
+
     protected $fillable = [
                            'Title',
                            'Notes',

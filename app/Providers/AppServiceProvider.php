@@ -18,6 +18,7 @@ use App\Models\Communication\Call;
 use App\Models\Communication\Comment;
 use App\Models\Communication\Email;
 use App\Models\Core\Branch;
+use App\Models\Core\CategoryMaster;
 use App\Models\Core\Report;
 use App\Models\Core\Task;
 use App\Models\CRM\Campaign;
@@ -45,6 +46,8 @@ use App\Models\Procurement\Requisitions;
 use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQLine;
 use App\Models\Procurement\SchedulePlan;
+use App\Models\PropertyManagement\PropertyCategory;
+use App\Models\PropertyManagement\PropertyType;
 use App\Models\Settings\APICredential;
 use App\Models\ThirdParies\Board;
 use App\Models\ThirdParies\Competitor;
@@ -56,6 +59,8 @@ use App\Policies\Procurement\RequisitionLinesPolicy;
 use App\Policies\Procurement\RequisitionPolicy;
 use App\Policies\Procurement\SchedulePlanPolicy;
 use App\Policies\ProductDevelopmentPolicy;
+use App\Policies\PropertyManagement\PropertyCategoryPolicy;
+use App\Policies\PropertyManagement\PropertyTypePolicy;
 use App\Policies\RolePolicy;
 use App\Policies\Procurement\ProcurementPlanMaintainPolicy;
 use App\Policies\Procurement\PlanManualInputPolicy;
@@ -143,7 +148,7 @@ class AppServiceProvider extends ServiceProvider
             SchedulePlan::getPrimaryKey() => SchedulePlan::class,
             ConsolidatedProcurementPlan::getPrimaryKey() => ConsolidatedProcurementPlan::class,
             PlanLineItems::getPrimaryKey() => PlanLineItems::class,
-
+          
             ///////// Budget and Analytics /////////
             BudgetLinesGLAccount::getPrimaryKey()=>BudgetLinesGLAccount::class,
             BudgetGLAccount::getPrimaryKey()=>BudgetGLAccount::class,
@@ -152,6 +157,10 @@ class AppServiceProvider extends ServiceProvider
             BudgetProductType::getPrimaryKey()=>BudgetProductType::class,
             BudgetDriver::getPrimaryKey()=>BudgetDriver::class,
             BudgetDriverMaster::getPrimaryKey()=>BudgetDriverMaster::class,
+
+          
+            CategoryMaster::getPrimaryKey() => CategoryMaster::class,
+            PropertyType::getPrimaryKey() => PropertyType::class,
         ]);
 
         Gate::policy(Role::class, RolePolicy::class);
@@ -172,6 +181,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(ConsolidatedProcurementPlan::class, ProcurementPlanMaintainPolicy::class);
         Gate::policy(SchedulePlan::class, SchedulePlanPolicy::class);
         Gate::policy(PlanLineItems::class, PlanManualInputPolicy::class);
+        Gate::policy(CategoryMaster::class, PropertyCategoryPolicy::class);
+        Gate::policy(PropertyType::class, PropertyTypePolicy::class);
+
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);
          Event::listen(SMSSendEvent::class, SMSSendListener::class);

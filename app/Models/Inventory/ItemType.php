@@ -2,11 +2,10 @@
 
 namespace App\Models\Inventory;
 
-use Illuminate\Database\Eloquent\Model;
-use App\Traits\Model\UserActorTrait;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\User;
 use App\Models\Procurement\Requisitions;
+use App\Traits\Model\UserActorTrait;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ItemType extends Model
 {
@@ -19,6 +18,11 @@ class ItemType extends Model
     protected $connection = 'sqlsrv';
     protected $table = 't_ItemTypes';
     protected $primaryKey = 'Id';
+
+    public static function getPrimaryKey(): string
+    {
+        return 'ItemTypesId';
+    }
 
     protected $fillable = [
         'TypeName',
@@ -43,21 +47,6 @@ class ItemType extends Model
         'CreatedOn'     => 'datetime',
         'ModifiedOn'    => 'datetime',
     ];
-
-    public function creator()
-    {
-        return $this->belongsTo(User::class, 'CreatedBy', 'Id');
-    }
-
-    public function modifier()
-    {
-        return $this->belongsTo(User::class, 'ModifiedBy', 'Id');
-    }
-
-    public function deleter()
-    {
-        return $this->belongsTo(User::class, 'DeletedBy', 'Id');
-    }
 
     public function requisitionitems()
     {

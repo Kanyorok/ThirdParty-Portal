@@ -20,6 +20,11 @@ class MeetingRoom extends Model
     protected $table = 't_MeetingRooms';
     protected $primaryKey = 'Id';
 
+    public static function getPrimaryKey(): string
+    {
+        return 'MeetingRoomsId';
+    }
+
     /**
      * The attributes that are mass assignable.
      */

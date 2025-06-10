@@ -3,8 +3,8 @@
 namespace App\Models\Inventory;
 
 use App\Models\Auth\User;
-use Illuminate\Database\Eloquent\Model;
 use App\Traits\Model\UserActorTrait;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ItemCategories extends Model
@@ -18,6 +18,11 @@ class ItemCategories extends Model
     protected $connection = 'sqlsrv';
     protected $table = 't_ItemCategories';
     protected $primaryKey = 'Id';
+
+    public static function getPrimaryKey(): string
+    {
+        return 'ItemCategoriesId';
+    }
 
     protected $fillable = [
         'CategoryCode',
@@ -58,20 +63,20 @@ class ItemCategories extends Model
         return $this->belongsTo(User::class, 'DeletedBy', 'Id');
     }
 
-    
-public function parent()
+
+    public function parent()
 {
     return $this->belongsTo(ItemCategories::class, 'ParentId');
 }
 
-    
+
     public function children()
     {
         return $this->hasMany(self::class, 'ParentId');
     }
 
-    
-   protected static function booted()
+
+    protected static function booted()
 {
     static::creating(function ($category) {
         // Generate top-level CategoryCode

@@ -17,6 +17,11 @@ class BoardCommittee extends Pivot
     protected $table = 't_BoardCommittee';
     protected $primaryKey = 'Id';
 
+    public static function getPrimaryKey(): string
+    {
+        return 'BoardCommitteeId';
+    }
+
     protected $fillable = [
                            'BoardId',
                            'CommitteeId',

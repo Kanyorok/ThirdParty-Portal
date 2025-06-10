@@ -1,10 +1,9 @@
 <?php
 
 namespace App\Models\Inventory;
-use Illuminate\Database\Eloquent\Model;
 use App\Traits\Model\UserActorTrait;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\User;
 
 
 class InventoryType extends Model
@@ -35,25 +34,10 @@ class InventoryType extends Model
         'CreatedBy'     => 'integer',
         'ModifiedBy'    => 'integer',
         'DeletedBy'     => 'integer',
-        'CreatedOn'     => 'datetime',
-        'ModifiedOn'    => 'datetime',
     ];
 
-    public function creator()
+    public static function getPrimaryKey(): string
     {
-        return $this->belongsTo(User::class, 'CreatedBy', 'Id');
+        return 'InventoryTypesId';
     }
-
-    public function modifier()
-    {
-        return $this->belongsTo(User::class, 'ModifiedBy', 'Id');
-    }
-
-    public function deleter()
-    {
-        return $this->belongsTo(User::class, 'DeletedBy', 'Id');
-    }
-
-
-
 }

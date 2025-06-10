@@ -2,10 +2,9 @@
 
 namespace App\Models\Inventory;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Traits\Model\UserActorTrait;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\User;
 
 class UnitOfMeasure extends Model
 {
@@ -18,6 +17,11 @@ class UnitOfMeasure extends Model
     protected $connection = 'sqlsrv';
     protected $table = 't_UOM';
     protected $primaryKey = 'Id';
+
+    public static function getPrimaryKey(): string
+    {
+        return 'UOMId';
+    }
 
     protected $fillable = [
         'Code',
@@ -42,22 +46,5 @@ class UnitOfMeasure extends Model
         'CreatedOn'     => 'datetime',
         'ModifiedOn'    => 'datetime',
     ];
-
-    public function creator()
-    {
-        return $this->belongsTo(User::class, 'CreatedBy', 'Id');
-    }
-
-    public function modifier()
-    {
-        return $this->belongsTo(User::class, 'ModifiedBy', 'Id');
-    }
-
-    public function deleter()
-    {
-        return $this->belongsTo(User::class, 'DeletedBy', 'Id');
-    }
-
-
 
 }

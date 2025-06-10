@@ -56,7 +56,7 @@ trait ReportsTrait
                     throw new ErroredException('invalid report.');
                 }
                 $data = $service->parseReportXml($xmlResponse);
-            } catch (ConnectionException) {
+            } catch (ConnectionException $e) {
                 return view('snippets.errors')->with('message', 'cannot connect to the report server.');
             } catch (ErroredException $e) {
                 return view('snippets.errors')->with('message', $e->getMessage() ?? 'cannot retrieve report data.');
@@ -79,11 +79,11 @@ trait ReportsTrait
             $parameters = (array_key_exists('HasParameters', $ssrsReport) && $ssrsReport['HasParameters'] === true) ?
                 $service->getReportParameters($ssrsReport['Id']) : [];
         } catch (ConnectionException) {
-            return $this->errored('cannot connect to the report server.');
+            return redirect()->back()->with('fail', 'cannot connect to the report server.');
         } catch (ErroredException $e) {
-            return $this->errored($e->getMessage() ?? 'cannot retrieve report data.');
+            return redirect()->back()->with('fail', $e->getMessage() ?? 'cannot retrieve report data.');
         } catch (\Throwable|Exception $e) {
-            return $this->errored('cannot retrieve report data.');
+            return redirect()->back()->with('fail', 'cannot retrieve report data.');
         }
 
         return view('reports.show', compact('report', 'parameters'));

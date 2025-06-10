@@ -20,6 +20,11 @@ class TicketUsers extends Model
     protected $table = 't_TicketUsers';
     protected $primaryKey = 'Id';
 
+    public static function getPrimaryKey(): string
+    {
+        return 'TicketUsersId';
+    }
+
     protected $fillable = [
                            'Party',
                            'PartyID',

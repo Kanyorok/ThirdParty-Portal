@@ -20,6 +20,11 @@ class EmailConversation extends Model
     protected $table = 't_EmailsConversations';
     protected $primaryKey = 'Id';
 
+    public static function getPrimaryKey(): string
+    {
+        return 'EmailsConversationsId';
+    }
+
     protected $fillable = [
                            'Emails',
                            'EmailId',

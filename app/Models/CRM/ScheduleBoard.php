@@ -17,6 +17,11 @@ class ScheduleBoard extends Pivot
 
     protected $table = 't_ScheduleBoard';
 
+    public static function getPrimaryKey(): string
+    {
+        return 'ScheduleBoardId';
+    }
+
     protected $fillable = [
                            'ScheduleId',
                            'BoardMemberId',
