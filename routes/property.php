@@ -46,6 +46,9 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::get('propertyregistry', [PropertyRegistryController::class,'index'])->name('PropertyRegistry.index');
     Route::get('propertyregistry/create', [PropertyRegistryController::class,'create'])->name('PropertyRegistry.create');
     Route::post('propertyregistry', [PropertyRegistryController::class,'store'])->name('propertyregistry.store');
+    Route::get('propertyregistry/show', [PropertyRegistryController::class,'show'])->name('PropertyRegistry.show');
+    Route::get('/propertyregistry/types/{categoryId}', [PropertyRegistryController::class, 'getTypesByCategory'])->name('gettypes');
+
 
     Route::resource('addblock', PropertyBlockController::class);
     Route::resource('addfloor', PropertyFloorController::class);

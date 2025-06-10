@@ -42,7 +42,7 @@
         <td>{{ $property->PropertyDescription?? '-' }}</td>
         <td><span class="badge bg-success">Active</span></td>
         <td>
-          <a href="{{ route('PropertyRegistry.show', $property->Id) }}" class="btn btn-sm btn-info">👁 View</a>
+          <a href="{{ route('PropertyRegistry.index', $property->Id) }}" class="btn btn-sm btn-info">👁 View</a>
           <button class="btn btn-sm btn-outline-warning">✏️ Edit</button>
         </td>
       </tr>
