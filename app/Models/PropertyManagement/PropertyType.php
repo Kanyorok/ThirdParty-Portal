@@ -2,6 +2,7 @@
 
 namespace App\Models\PropertyManagement;
 
+use App\Models\Core\CategoryMaster;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -31,7 +32,7 @@ class PropertyType extends Model
     }
     public function propertycategory()
     {
-        return $this->belongsTo(PropertyCategory::class, 'PropertyCategoryId', 'Id');
+        return $this->belongsTo(CategoryMaster::class, 'PropertyCategoryId', 'Id');
     }
 
 }

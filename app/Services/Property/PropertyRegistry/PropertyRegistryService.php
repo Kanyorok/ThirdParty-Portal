@@ -2,8 +2,8 @@
 
 namespace App\Services\Property\PropertyRegistry;
 
+use App\Models\Core\CategoryMaster;
 use App\Models\Core\Locality;
-use App\Models\PropertyManagement\PropertyCategory;
 use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyType;
 use Illuminate\Support\Carbon;
@@ -20,7 +20,7 @@ class PropertyRegistryService
     String $PropertyName,
     String $PropertyCode,
     PropertyType $PropertyType,
-    PropertyCategory $Category,
+    CategoryMaster $Category,
     String $Owner,
     Carbon $AcquisitionDate,
     String $Country,

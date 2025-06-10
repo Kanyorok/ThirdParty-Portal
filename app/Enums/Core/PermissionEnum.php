@@ -313,10 +313,18 @@ enum PermissionEnum: string
      *
      * ========================================  Property Management  ========================================
      */
+
+    //property category
     case PropertyCategoryCreate = 'propertycategory-create';
     case PropertyCategoryUpdate = 'propertycategory-update';
     case PropertyCategoryDelete = 'propertycategory-delete';
     case PropertyCategoryView = 'propertycategory-view';
+
+    //Property type
+    case PropertyTypeCreate = 'propertytype-create';
+    case PropertyTypeUpdate = 'propertytype-update';
+    case PropertyTypeDelete = 'propertytype-delete';
+    case PropertyTypeView = 'propertytype-view';
 
 
 
@@ -392,6 +400,7 @@ enum PermissionEnum: string
             [self::PlanManualInputRead, self::PlanManualInputWrite, self::PlanManualInputUpdate, self::PlanManualInputDelete],
             [self::PlanEditRead, self::PlanEditWrite, self::PlanEditUpdate, self::PlanEditDelete],
             [self::PropertyCategoryView,self::PropertyCategoryCreate,self::PropertyCategoryUpdate,self::PropertyCategoryDelete],
+            [self::PropertyTypeView,self::PropertyTypeCreate,self::PropertyTypeUpdate,self::PropertyTypeDelete],
         ]);
     }
  
@@ -460,7 +469,8 @@ enum PermissionEnum: string
             self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy,=> ModulesEnum::Inventory,
 
             //Property Management
-            self::PropertyCategoryView,self::PropertyCategoryCreate,self::PropertyCategoryUpdate,self::PropertyCategoryDelete,=> ModulesEnum::Property,
+            self::PropertyCategoryView,self::PropertyCategoryCreate,self::PropertyCategoryUpdate,self::PropertyCategoryDelete,
+            self::PropertyTypeView,self::PropertyTypeCreate,self::PropertyTypeUpdate,self::PropertyTypeDelete,=> ModulesEnum::Property,
             default => throw new \LogicException("Unhandled PermissionEnum case: {$this->value}"),
         };
     }
@@ -527,6 +537,7 @@ enum PermissionEnum: string
 
             //Property Management
             self::PropertyCategoryView,self::PropertyCategoryCreate,self::PropertyCategoryUpdate,self::PropertyCategoryDelete => 'Property Category',
+            self::PropertyTypeView,self::PropertyTypeCreate,self::PropertyTypeUpdate,self::PropertyTypeDelete => 'Property Type',
         };  
     }
 }

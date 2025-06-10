@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('PropertyName');
             $table->string('PropertyCode');
             $table->foreignId('PropertyType')->constrained('t_PropertyType','Id');
-            $table->foreignId('Category')->constrained('t_PropertyCategory','Id');
+            $table->foreignId('Category')->constrained('t_CategoryMaster','Id');
             $table->string('Owner');
             $table->date('AcquisitionDate');
             $table->string('Country'); 

@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('t_PropertyType', function (Blueprint $table) {
             $table->id('Id');
             $table->string('PropertyTypeName');
-            $table->foreignId('PropertyCategoryId')->constrained('t_PropertyCategory', 'Id');
+            $table->foreignId('PropertyCategoryId')->constrained('t_CategoryMaster', 'Id');
             $table->string('Description');           
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');

@@ -40,6 +40,7 @@ use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQLine;
 use App\Models\Procurement\SchedulePlan;
 use App\Models\PropertyManagement\PropertyCategory;
+use App\Models\PropertyManagement\PropertyType;
 use App\Models\Settings\APICredential;
 use App\Models\ThirdParies\Board;
 use App\Models\ThirdParies\Competitor;
@@ -52,6 +53,7 @@ use App\Policies\Procurement\RequisitionPolicy;
 use App\Policies\Procurement\SchedulePlanPolicy;
 use App\Policies\ProductDevelopmentPolicy;
 use App\Policies\PropertyManagement\PropertyCategoryPolicy;
+use App\Policies\PropertyManagement\PropertyTypePolicy;
 use App\Policies\RolePolicy;
 use App\Policies\Procurement\ProcurementPlanMaintainPolicy;
 use App\Policies\Procurement\PlanManualInputPolicy;
@@ -140,6 +142,7 @@ class AppServiceProvider extends ServiceProvider
             ConsolidatedProcurementPlan::getPrimaryKey() => ConsolidatedProcurementPlan::class,
             PlanLineItems::getPrimaryKey() => PlanLineItems::class,
             CategoryMaster::getPrimaryKey() => CategoryMaster::class,
+            PropertyType::getPrimaryKey() => PropertyType::class,
         ]);
 
         Gate::policy(Role::class, RolePolicy::class);
@@ -160,7 +163,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(ConsolidatedProcurementPlan::class, ProcurementPlanMaintainPolicy::class);
         Gate::policy(SchedulePlan::class, SchedulePlanPolicy::class);
         Gate::policy(PlanLineItems::class, PlanManualInputPolicy::class);
-        gate::policy(CategoryMaster::class, PropertyCategoryPolicy::class);
+        Gate::policy(CategoryMaster::class, PropertyCategoryPolicy::class);
+        Gate::policy(PropertyType::class, PropertyTypePolicy::class);
+
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);
          Event::listen(SMSSendEvent::class, SMSSendListener::class);

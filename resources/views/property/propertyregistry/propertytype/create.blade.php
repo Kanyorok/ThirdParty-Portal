@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Property Registry')
 @section('content')
 @if ($errors->any())
         <div class="alert alert-danger">
@@ -28,7 +28,8 @@
             <label for="PropertyCategoryId" class="form-label">Category</label>
             <select name="PropertyCategoryId" class="form-select" required>
               @foreach ($categories as $category)
-                <option value="{{ $category->Id }}">{{ $category->PropertyCategoryName }}</option>
+                <option value="">-- Select Category --</option>
+                <option value="{{ $category->Id }}">{{ $category->Name }}</option>
               @endforeach
             </select>
           </div>
