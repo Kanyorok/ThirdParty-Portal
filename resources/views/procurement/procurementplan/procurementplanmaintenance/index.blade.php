@@ -1,38 +1,19 @@
 @extends('layouts.app')
 @section('title', 'Consolidated Procurement Plans')
+@section('styles')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+@endsection
 @section('content')
 
-<div class="container mt-4">
+    <div class="container mt-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h4>📄 Consolidated Procurement Plans</h4>
     <a href="{{ route('procurementplanmaintain.create') }}" class="btn btn-success btn-sm">+ New Plan</a>
   </div>
 
-  <!-- Optional: Filter Controls -->
-  <div class="row mb-3">
-    <div class="col-md-4">
-      <select class="form-select">
-        <option selected>All Years</option>
-        <option>2025</option>
-        <option>2026</option>
-      </select>
-    </div>
-    <div class="col-md-4">
-      <select class="form-select">
-        <option selected>All Statuses</option>
-        <option>Draft</option>
-        <option>Pending Approval</option>
-        <option>Approved</option>
-      </select>
-    </div>
-    <div class="col-md-4">
-      <button class="btn btn-outline-primary w-100">Apply Filters</button>
-    </div>
-  </div>
-
   <!-- Table -->
   <div class="table-responsive">
-    <table class="table table-striped table-bordered align-middle">
+      <table id="procplanmaintainTable" class="table table-bordered table-striped align-middle">
       <thead class="table-light">
         <tr>
           <th>#</th>
@@ -48,10 +29,10 @@
         </tr>
       </thead>
       <tbody>
-        @foreach($plans as $key => $plan)
+      @foreach($plans as $key => $plan)
           @php
-            $itemsCount = $plan->lineItems->count();
-            $estimatedCost = $plan->lineItems->sum(fn($item) => $item->MergedQty * $item->EstimatedUnitCost);
+              $itemsCount = $plan->lineItems->count();
+              $estimatedCost = $plan->lineItems->sum(fn($item) => $item->MergedQty * $item->EstimatedUnitCost);
           @endphp
           <tr>
             <td>{{ $key + 1 }}</td>
@@ -60,17 +41,7 @@
             <td>{{ $plan->FiscalYear }}</td>
             <td>{{ $itemsCount }}</td>
             <td>{{ number_format($estimatedCost, 2) }}</td> <!-- Use $estimatedCost, not $plan->estimatedCost -->
-            <td>
-              @php
-                $badgeClass = match($plan->Status) {
-                  'Approved' => 'bg-success',
-                  'Pending Approval' => 'bg-warning',
-                  'Draft' => 'bg-secondary',
-                  default => 'bg-light'
-                };
-              @endphp
-              <span class="badge {{ $badgeClass }}">{{ $plan->Status }}</span>
-            </td>
+              <td><span class="badge bg-{{ $plan->Status->badgeColor() }}">{{ $plan->Status->label() }}</span></td>
             <td>{{ $plan->createdBy->Name ?? 'N/A' }}</td>
             <td>
               @if($plan->CreatedDate)
@@ -78,16 +49,35 @@
               @else
                 N/A
               @endif
-            </td> 
+            </td>
             <td>
-              <a href="#" class="btn btn-sm btn-outline-primary">View</a>
-              <a href="#" class="btn btn-sm btn-outline-success">Edit</a>
+                <a href="{{ route('procurementplanmaintain.show', $plan->PlanID) }}"
+                   class="btn btn-sm btn-outline-primary">View</a>
+                <a href="{{ url('/planning/edit-draft/' . $plan->PlanID) }}" class="btn btn-sm btn-outline-success"
+                   hidden>Edit</a>
             </td>
           </tr>
-        @endforeach
+      @endforeach
       </tbody>
     </table>
   </div>
 </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
+    <script>
+        $(document).ready(function () {
+            @if(!$plans->isEmpty())
+            $('#procplanmaintainTable').DataTable({
+                pageLength: 10,
+                ordering: true,
+                searching: true,
+                lengthChange: true,
+                language: {
+                    emptyTable: ""
+                }
+            });
+            @endif
+        });
+    </script>
 @endsection

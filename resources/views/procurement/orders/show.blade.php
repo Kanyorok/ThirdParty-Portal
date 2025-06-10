@@ -148,8 +148,9 @@
                         {{--                    <td><input type="text" class="form-control" name="itemCode[]"></td> --}}
                         <td class="text-start">
                                 <textarea class="form-control form-control-sm itemDescription" name="itemDescription[]"
-                                          id="Description" cols="30"
-                                          rows="5" readonly style="display: flex; align-items: center; justify-content: center; text-align: center; padding: 0; resize: none;">{{$line ->Description}}</textarea>
+                                          id="Description"
+                                          readonly
+                                          style="display: flex; align-items: center; justify-content: center; text-align: center; padding: 0; resize: none;">{{$line ->Description}}</textarea>
                             {{--                            <input type="text" class="form-control form-control-sm itemDescription" --}}
                             {{--                                name="itemDescription[]" id="Description" readonly> --}}
                         </td>
@@ -351,7 +352,7 @@
     </script>
 
     <script>
-        let rowCount = 0;
+        let rowCount = 1;
 
         document.getElementById('add-row').addEventListener('click', function () {
             rowCount++;

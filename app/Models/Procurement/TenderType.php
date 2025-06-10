@@ -5,36 +5,42 @@ namespace App\Models\Procurement;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Enums\TenderTypeEnum;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
-class TenderType extends Model 
+class TenderType extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $primaryKey = 'Id';
     protected $table = 't_TenderTypes';
     public $incrementing = true;
 
-    
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    const string DELETED_AT = 'DeletedOn';
+
 
     protected $fillable = [
         'TypeCode',
         'TenderType',
         'Description',
+        'CreatedBy',
+        'ModifiedBy',
     ];
 
-    protected $casts = [
-        'TenderType' => TenderTypeEnum::class,
-    ];
+    // protected $casts = [
+    //     'TenderType' => TenderTypeEnum::class,
+    // ];
 
     public static function generateTypeCode(string $tenderTypeValue = null)
     {
         $prefix = match($tenderTypeValue) {
-            TenderTypeEnum::Open->value => 'OPT-',  
+            TenderTypeEnum::Open->value => 'OPT-',
             TenderTypeEnum::Restricted->value => 'RST-',
-            default => 'TYP-' 
+            default => 'TYP-'
         };
 
-        $lastType = self::where('TypeCode', 'like', $prefix.'%')
+        $lastType = self::withTrashed()->where('TypeCode', 'like', $prefix . '%')
                        ->orderBy('Id', 'desc')
                        ->first();
 

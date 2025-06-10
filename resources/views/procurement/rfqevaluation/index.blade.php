@@ -23,25 +23,25 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse ($rfqEvaluations as $index => $evaluation)
-                    @foreach ($evaluation->evaluations as $supplierEvaluation)
-                        <tr>
-                            <td>{{ $index + 1 }}</td>
-                            <td>{{ $evaluation->CommitteeMemberName }}</td>
-                            <td>{{ $evaluation->rfq->RFQNumber ?? 'N/A' }}</td>
-                            <td>{{ $supplierEvaluation->evaluation->SupplierId ?? 'N/A' }}</td>
-                            <td>{{ number_format($supplierEvaluation->QuotedPrice ?? 0, 2) }}</td>
-                            <td>{{ $supplierEvaluation->DeliveryTime }} Days</td>
-                            <td>
-                                Actions
-                            </td>
-                        </tr>
-                    @endforeach
-                @empty
+            @forelse ($rfqEvaluations as $index => $evaluation)
+                @foreach ($evaluation->evaluations as $supplierEvaluation)
                     <tr>
-                        <td colspan="7" class="text-center">No evaluations found.</td>
+                        <td>{{ $index + 1 }}</td>
+                        <td>{{ $evaluation->CommitteeMemberName }}</td>
+                        <td>{{ $evaluation->rfq->RFQNumber ?? 'N/A' }}</td>
+                        <td>{{ $supplierEvaluation->evaluation->SupplierId ?? 'N/A' }}</td>
+                        <td>{{ number_format($supplierEvaluation->QuotedPrice ?? 0, 2) }}</td>
+                        <td>{{ $supplierEvaluation->DeliveryTime }} Days</td>
+                        <td>
+                            Actions
+                        </td>
                     </tr>
-                @endforelse
+                @endforeach
+            @empty
+                <tr>
+                    <td colspan="7" class="text-center">No evaluations found.</td>
+                </tr>
+            @endforelse
             </tbody>
         </table>
     </div>

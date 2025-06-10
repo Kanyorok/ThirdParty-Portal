@@ -8,12 +8,13 @@ use Illuminate\Http\Request;
 class BudgetGLLineEntryController extends Controller
 {
     //
-   public function index()
+    public function index()
     {
         return view('budgetandanalytics.budgetworkspace.entrybyglline.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('budgetandanalytics.budgetworkspace.entrybyglline.create');
     }
 }

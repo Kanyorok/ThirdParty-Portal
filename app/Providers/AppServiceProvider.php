@@ -7,10 +7,19 @@ use App\Models\Auth\User;
 use App\Models\BR\Account;
 use App\Models\BR\Client;
 use App\Models\BR\DebtProduct;
+use App\Models\Budget\BudgetDriver;
+use App\Models\Budget\BudgetDriverMaster;
+use App\Models\Budget\BudgetGLAccount;
+use App\Models\Budget\BudgetLine;
+use App\Models\Budget\BudgetLinesGLAccount;
+use App\Models\Budget\BudgetProduct;
+use App\Models\Budget\BudgetProductType;
 use App\Models\Communication\Call;
 use App\Models\Communication\Comment;
 use App\Models\Communication\Email;
 use App\Models\Core\Branch;
+use App\Models\Core\CategoryMaster;
+use App\Models\Core\Report;
 use App\Models\Core\Task;
 use App\Models\CRM\Campaign;
 use App\Models\CRM\CampaignParty;
@@ -36,6 +45,9 @@ use App\Models\Procurement\RequisitionLines;
 use App\Models\Procurement\Requisitions;
 use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQLine;
+use App\Models\Procurement\SchedulePlan;
+use App\Models\PropertyManagement\PropertyCategory;
+use App\Models\PropertyManagement\PropertyType;
 use App\Models\Settings\APICredential;
 use App\Models\ThirdParies\Board;
 use App\Models\ThirdParies\Competitor;
@@ -45,12 +57,33 @@ use App\Policies\Procurement\OrderPolicy;
 use App\Policies\Procurement\ProcurementMethodPolicy;
 use App\Policies\Procurement\RequisitionLinesPolicy;
 use App\Policies\Procurement\RequisitionPolicy;
+use App\Policies\Procurement\SchedulePlanPolicy;
 use App\Policies\ProductDevelopmentPolicy;
+use App\Policies\PropertyManagement\PropertyCategoryPolicy;
+use App\Policies\PropertyManagement\PropertyTypePolicy;
 use App\Policies\RolePolicy;
+use App\Policies\Procurement\ProcurementPlanMaintainPolicy;
+use App\Policies\Procurement\PlanManualInputPolicy;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Permission\Models\Role;
+use App\Policies\Inventory\ItemMasterListPolicy;
+use App\Policies\Inventory\ItemCategoryPolicy;
+use App\Policies\Inventory\ItemTypePolicy;
+use App\Policies\Inventory\StockItemPolicy;
+use App\Policies\Inventory\InventoryTypePolicy;
+use App\Policies\Inventory\StorePolicy;
+use App\Policies\Inventory\UnitOfMeasurePolicy;
+use App\Models\Inventory\ItemType;
+use App\Models\Inventory\ItemMasterList;
+use App\Models\Inventory\ItemCategories;
+use App\Models\Inventory\StockItem;
+use App\Models\Inventory\UnitOfMeasure;
+use App\Models\Inventory\Store;
+use App\Models\Inventory\InventoryType;
+use App\Models\Procurement\ConsolidatedProcurementPlan;
+use App\Models\Procurement\PlanLineItems;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -89,6 +122,7 @@ class AppServiceProvider extends ServiceProvider
             Meeting::getPrimaryKey() => Meeting::class,
             Notes::getPrimaryKey() => Notes::class,
             ProductDevelopment::getPrimaryKey() => ProductDevelopment::class,
+            Report::getPrimaryKey() => Report::class,
             RFQ::getPrimaryKey() => RFQ::class,
             RFQLine::getPrimaryKey() => RFQLine::class,
             Review::getPrimaryKey() => Review::class,
@@ -104,6 +138,29 @@ class AppServiceProvider extends ServiceProvider
             Order::getPrimaryKey() => Order::class,
             DepartmentNeeds::getPrimaryKey() => DepartmentNeeds::class,
             ProcurementMethod::getPrimaryKey() => ProcurementMethod::class,
+            ItemMasterList::getPrimaryKey() => ItemMasterList::class,
+            ItemCategories::getPrimaryKey() => ItemCategories::class,
+            ItemType::getPrimaryKey() => ItemType::class,
+            InventoryType::getPrimaryKey() => InventoryType::class,
+            StockItem::getPrimaryKey() => StockItem::class,
+            Store::getPrimaryKey() => Store::class,
+            UnitOfMeasure::getPrimaryKey() => UnitOfMeasure::class,
+            SchedulePlan::getPrimaryKey() => SchedulePlan::class,
+            ConsolidatedProcurementPlan::getPrimaryKey() => ConsolidatedProcurementPlan::class,
+            PlanLineItems::getPrimaryKey() => PlanLineItems::class,
+
+            ///////// Budget and Analytics /////////
+            BudgetLinesGLAccount::getPrimaryKey() => BudgetLinesGLAccount::class,
+            BudgetGLAccount::getPrimaryKey() => BudgetGLAccount::class,
+            BudgetLine::getPrimaryKey() => BudgetLine::class,
+            BudgetProduct::getPrimaryKey() => BudgetProduct::class,
+            BudgetProductType::getPrimaryKey() => BudgetProductType::class,
+            BudgetDriver::getPrimaryKey() => BudgetDriver::class,
+            BudgetDriverMaster::getPrimaryKey() => BudgetDriverMaster::class,
+
+
+            CategoryMaster::getPrimaryKey() => CategoryMaster::class,
+            PropertyType::getPrimaryKey() => PropertyType::class,
         ]);
 
         Gate::policy(Role::class, RolePolicy::class);
@@ -114,6 +171,19 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Order::class, OrderPolicy::class);
         Gate::policy(DepartmentNeeds::class, DepartmentNeedsPolicy::class);
         Gate::policy(ProcurementMethod::class, ProcurementMethodPolicy::class);
+        Gate::policy(ItemMasterList::class, ItemMasterListPolicy::class);
+        Gate::policy(ItemCategories::class, ItemCategoryPolicy::class);
+        Gate::policy(ItemType::class, ItemTypePolicy::class);
+        Gate::policy(StockItem::class, StockItemPolicy::class);
+        Gate::policy(InventoryType::class, InventoryTypePolicy::class);
+        Gate::policy(Store::class, StorePolicy::class);
+        Gate::policy(UnitOfMeasure::class, UnitOfMeasurePolicy::class);
+        Gate::policy(ConsolidatedProcurementPlan::class, ProcurementPlanMaintainPolicy::class);
+        Gate::policy(SchedulePlan::class, SchedulePlanPolicy::class);
+        Gate::policy(PlanLineItems::class, PlanManualInputPolicy::class);
+        Gate::policy(CategoryMaster::class, PropertyCategoryPolicy::class);
+        Gate::policy(PropertyType::class, PropertyTypePolicy::class);
+
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);
          Event::listen(SMSSendEvent::class, SMSSendListener::class);

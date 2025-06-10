@@ -1,42 +1,51 @@
 @extends('layouts.app')
-@section('title', 'Property Type')
+@section('title', 'Property Registry')
 @section('content')
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 <div class="container mt-4">
   <h4 class="fw-bold mb-3">🏷️ Add Property Type</h4>
 
-  <div class="card shadow">
-    <div class="card-header bg-light fw-bold">➕ Property Type Setup</div>
-    <div class="card-body">
-      <div class="row g-3 mb-3">
-        <div class="col-md-4">
-          <label class="form-label">Type Name</label>
-          <input type="text" class="form-control" placeholder="e.g. Building">
-        </div>
-        <div class="col-md-4">
-          <label class="form-label">Is Rentable?</label>
-          <select class="form-select">
-            <option value="1">Yes</option>
-            <option value="0">No</option>
-          </select>
-        </div>
-        <div class="col-md-4">
-          <label class="form-label">Can Contain Units?</label>
-          <select class="form-select">
-            <option value="1">Yes</option>
-            <option value="0">No</option>
-          </select>
-        </div>
-      </div>
+    <form action="{{ route('propertytype.store') }}" method="POST">
+        @csrf
+        <div class="card shadow">
+            <div class="card-header bg-light fw-bold">➕ Property Details</div>
+            <div class="card-body">
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label for="PropertyTypeName" class="form-label">Type Name</label>
+                        <input type="text" name="PropertyTypeName" class="form-control" required>
+                    </div>
 
-      <div class="mb-3">
-        <label class="form-label">Description (Optional)</label>
-        <textarea class="form-control" rows="2" placeholder="Add any notes..."></textarea>
-      </div>
-
-      <div class="text-end">
-        <button class="btn btn-success">💾 Save Type</button>
-      </div>
-    </div>
-  </div>
+                    <div class="col-md-6">
+                        <label for="PropertyCategoryId" class="form-label">Category</label>
+                        <select name="PropertyCategoryId" class="form-select" required>
+                            @foreach ($categories as $category)
+                                <option value="">-- Select Category --</option>
+                                <option value="{{ $category->Id }}">{{ $category->Name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label for="Description" class="form-label">Description</label>
+                        <textarea name="Description" class="form-control" rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-success"
+                            onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
+                        ➕ Add TYPE
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
 </div>
 @endsection

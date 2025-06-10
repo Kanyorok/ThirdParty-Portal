@@ -4,9 +4,9 @@
 
 @section('content')
     <div class="container mt-4">
-    
+
         <div class="card shadow-sm">
-            
+
             <div class="card-header bg-info text-white">
                 <h4 class="mb-0">Committee Details</h4>
             </div>
@@ -45,7 +45,9 @@
                     <a href="{{ route('hrms.committees.edit', $committee->CommitteeID) }}" class="btn btn-primary">
                         ✏️ Edit
                     </a>
-                    <form action="{{ route('hrms.committees.destroy', $committee->CommitteeID) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this committee?');">
+                    <form action="{{ route('hrms.committees.destroy', $committee->CommitteeID) }}" method="POST"
+                          class="d-inline"
+                          onsubmit="return confirm('Are you sure you want to delete this committee?');">
                         @csrf
                         @method('DELETE')
                         <button class="btn btn-danger">🗑️ Delete</button>
@@ -63,10 +65,10 @@
         </div>
     </div>
     @if($committee->employees && $committee->employees->count())
-    <h5 class="mb-3">Committee Members</h5>
-    <div class="table-responsive">
-        <table class="table table-bordered table-hover align-middle">
-            <thead class="table-light">
+        <h5 class="mb-3">Committee Members</h5>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle">
+                <thead class="table-light">
                 <tr>
                     <th>#</th>
                     <th>Employee Name</th>
@@ -76,8 +78,8 @@
                     <th>Appointed On</th>
                     <th>Action</th>
                 </tr>
-            </thead>
-            <tbody>
+                </thead>
+                <tbody>
                 @foreach($committee->employees as $index => $employee)
                     <tr>
                         <td>{{ $index + 1 }}</td>
@@ -86,8 +88,8 @@
                         <td>{{ $employee->Email }}</td>
                         <td>{{ $employee->Phone }}</td>
                         <td>
-                            {{ optional($employee->pivot)->CreatedOn 
-                                ? \Carbon\Carbon::parse($employee->pivot->CreatedOn)->format('d-M-Y H:i') 
+                            {{ optional($employee->pivot)->CreatedOn
+                                ? \Carbon\Carbon::parse($employee->pivot->CreatedOn)->format('d-M-Y H:i')
                                 : '—' }}
                         </td>
                         <td>
@@ -101,11 +103,11 @@
                         </td>
                     </tr>
                 @endforeach
-            </tbody>
-        </table>
-    </div>
-@else
-    <p class="text-muted mt-4">No members have been appointed to this committee yet.</p>
-@endif
+                </tbody>
+            </table>
+        </div>
+    @else
+        <p class="text-muted mt-4">No members have been appointed to this committee yet.</p>
+    @endif
 
 @endsection

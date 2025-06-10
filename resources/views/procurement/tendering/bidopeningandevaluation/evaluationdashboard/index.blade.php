@@ -12,36 +12,34 @@
                     <th>#</th>
                     <th>Tender</th>
                     <th>Supplier</th>
-                    <th>Role</th>
-                    <th>Status</th>
-                    <th>Assigned On</th>
+                    {{-- <th>Role</th> --}}
+                    {{-- <th>Status</th> --}}
+                    {{-- <th>Assigned On</th> --}}
                     <th>Action</th>
                 </tr>
             </thead>
             <tbody>
                 <!-- Sample task -->
+                @forelse ($data as $item)
                 <tr>
-                    <td>1</td>
-                    <td>TND/PROC/2025/001</td>
-                    <td>Tech Supplies Ltd</td>
-                    <td>Technical Evaluator</td>
-                    <td><span class="badge bg-warning">Pending</span></td>
-                    <td>2025-05-10</td>
+                    <td>{{$loop->index+1}}</td>
+                    <td>{{$item['tender']}}</td>
+                    <td>{{$item['supplier']}}</td>
+                    {{-- <td>{{$item['Role']}}</td> --}}
+                    {{-- <td><span class="badge bg-warning">Pending</span></td> --}}
+                    {{-- <td>2025-05-10</td> --}}
                     <td>
-                        <a href="{{ route('bidevaluation.index') }}" class="btn btn-sm btn-outline-primary">Evaluate</a>
+                        @if ($item['HasEvaluated'])
+                            <a href="#" class="btn btn-sm btn-outline-secondary">Evaluated</a>
+                        @else
+                            <a href="{{ route('bidevaluation.index',['sID'=>$item['supplierID'],'tenderId'=>$item['tenderID']]) }}"
+                               class="btn btn-sm btn-outline-primary">Evaluate</a>
+                        @endif
                     </td>
                 </tr>
-                <tr>
-                    <td>2</td>
-                    <td>TND/PROC/2025/001</td>
-                    <td>Nova Systems</td>
-                    <td>Technical Evaluator</td>
-                    <td><span class="badge bg-success">Submitted</span></td>
-                    <td>2025-05-10</td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-secondary" disabled>Done</button>
-                    </td>
-                </tr>
+                @empty
+
+                @endforelse
                 <!-- Additional tasks -->
             </tbody>
         </table>

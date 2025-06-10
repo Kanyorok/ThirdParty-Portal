@@ -21,6 +21,11 @@ class Discussion extends Pivot
     protected $table = 't_Discussions';
     protected $primaryKey = 'DiscussionID';
 
+    public static function getPrimaryKey(): string
+    {
+        return 'DiscussionID';
+    }
+
     /**
      * The attributes that are mass assignable.
      */

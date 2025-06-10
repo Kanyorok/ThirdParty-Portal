@@ -2,9 +2,9 @@
 
 namespace App\Models\Procurement;
 
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\Model\UserActorTrait;
 
 class BudgetMaster extends Model
 {
@@ -14,7 +14,7 @@ class BudgetMaster extends Model
     const string UPDATED_AT = 'ModifiedOn';
     const string DELETED_AT = 'DeletedOn';
 
-    protected $table = 't_BudgetMaster'; 
+    protected $table = 't_BudgetMaster';
     protected $primaryKey = 'BudgetLineID';
 
     protected $fillable = [
@@ -27,10 +27,15 @@ class BudgetMaster extends Model
         'ModifiedBy',
         'DeletedBy',
     ];
+
+    public static function getPrimaryKey(): string
+    {
+        return 'BudgetLineID';
+    }
     public function budgetLineLinks()
-{
-    return $this->hasMany(BudgetLineLink::class, 'BudgetLineID', 'BudgetLineID');
-}
+    {
+        return $this->hasMany(BudgetLineLink::class, 'BudgetLineID', 'BudgetLineID');
+    }
 
 }
 

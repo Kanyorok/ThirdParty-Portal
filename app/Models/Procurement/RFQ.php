@@ -2,6 +2,7 @@
 
 namespace App\Models\Procurement;
 
+use App\Models\Inventory\ItemCategories;
 use App\Models\ThirdParies\Supplier;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
@@ -18,14 +19,14 @@ class RFQ extends Model
     public const UPDATED_AT = 'ModifiedOn';
     const string DELETED_AT = 'DeletedOn';
 
-    
+
     public static function getPrimaryKey(): string
     {
         return 'RFQId';
     }
 
     protected $fillable = [
-        'RFQNumber', 'Comments', 'Status', 'SubmissionDeadline',  'CreatedBy', 'ModifiedBy'
+        'RFQNumber', 'Comments', 'Status', 'SubmissionDeadline', 'CreatedBy', 'ModifiedBy'
     ];
 
     public function rfqLines()
@@ -36,7 +37,7 @@ class RFQ extends Model
 
     public function category()
     {
-        return $this->belongsTo(ItemCategory::class, 'ItemCategoryId');
+        return $this->belongsTo(ItemCategories::class, 'ItemCategoryId');
     }
 
     public function rfqResponses()

@@ -97,6 +97,9 @@ RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache && \
 # Expose port 80 for Apache
 EXPOSE 80
 
+# Create logs directory
+RUN mkdir -p /var/www/logs && chown -R www-data:www-data /var/www/logs
+
 # Create the startup script to run both PHP-FPM and Apache
 RUN echo '#!/bin/sh' > /start.sh && \
     echo 'php-fpm -D' >> /start.sh && \

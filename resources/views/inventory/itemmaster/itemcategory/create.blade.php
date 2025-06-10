@@ -14,10 +14,10 @@
 
 <div class="container">
     <h2>Add New Category</h2>
-    
+
     <form action="{{ route('itemcategory.store') }}" method="POST">
         @csrf
-        
+
         <div class="mb-3">
             <label for="Name" class="form-label">Category Name:</label>
             <input type="text" class="form-control" name="Name" required>
@@ -38,8 +38,13 @@
             </select>
         </div>
 
+        <div class="mb-3">
+
+            <div class="d-flex justify-content-end mt-4">
         <button type="submit" class="btn btn-success">Save Category</button>
         <a href="{{ route('itemcategory.index') }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </div>
     </form>
 </div>
 @endsection

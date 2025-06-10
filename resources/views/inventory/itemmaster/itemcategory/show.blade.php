@@ -15,24 +15,23 @@
 
     <div class="card">
         <div class="card-body">
-            <h5 class="card-title">{{ $item->Name }}</h5>
-            <p class="card-text"><strong>Category Code:</strong> {{ $item->CategoryCode }}</p>
-            <p class="card-text"><strong>Description:</strong> {{ $item->Description }}</p>
+            <h5 class="card-title">{{ $category->Name }}</h5>
+            <p class="card-text"><strong>Category Code:</strong> {{ $category->CategoryCode }}</p>
+            <p class="card-text"><strong>Description:</strong> {{ $category->Description }}</p>
 
             <p class="card-text">
-                <strong>Parent Category:</strong> 
-                {{ $item->parent ? $item->parent->Name : 'None (Top-Level Category)' }}
+                <strong>Parent Category:</strong>
+                {{ $category->parent ? $category->parent->Name : 'None (Top-Level Category)' }}
             </p>
 
-            <p class="card-text"><strong>Status:</strong> {{ $item->Status ? 'Active' : 'Inactive' }}</p>
-            
-            <a href="{{ route('itemcategory.edit', $item->Id) }}" class="btn btn-warning">Edit</a>
-            <a href="{{ route('itemcategory.destroy', $item->Id) }}" class="btn btn-danger">Delete</a>
+            <p class="card-text"><strong>Status:</strong> {{ $category->Status ? 'Active' : 'Inactive' }}</p>
+
+            <a href="{{ route('itemcategory.edit', $category->Id) }}" class="btn btn-warning">Edit</a>
             <a href="{{ route('itemcategory.index') }}" class="btn btn-secondary">Back to List</a>
         </div>
     </div>
 
-    @if($item->children->count() > 0)
+    @if($category->children->count() > 0)
         <h3 class="mt-4">Subcategories</h3>
         <table class="table table-bordered">
             <thead>
@@ -45,7 +44,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($item->children as $subcategory)
+            @foreach($category->children as $subcategory)
                     <tr>
                         <td>{{ $loop->iteration }}</td>
                         <td>{{ $subcategory->CategoryCode }}</td>
@@ -54,10 +53,24 @@
                         <td>
                             <a href="{{ route('itemcategory.show', $subcategory->Id) }}" class="btn btn-sm btn-primary">View</a>
                             <a href="{{ route('itemcategory.edit', $subcategory->Id) }}" class="btn btn-sm btn-warning">Edit</a>
-                            <a href="{{ route('itemcategory.destroy', $subcategory->Id) }}" class="btn btn-sm btn-danger">Delete</a>
+                            <a href="#" class="btn btn-danger btn-sm" onclick="confirmDelete('{{ $subcategory->Id }}')">Delete</a>
+                            <form id="delete-form-{{ $subcategory->Id }}"
+                                  action="{{ route('itemcategory.destroy', $subcategory->Id) }}" method="POST"
+                                  style="display:none;">
+                                @csrf
+                                @method('DELETE')
+                            </form>
                         </td>
                     </tr>
                 @endforeach
+            <script>
+                function confirmDelete(Id) {
+                    if (confirm('⚠️ Are you sure you want to delete this subcategory?')) {
+                        document.getElementById('delete-form-' + Id).submit();
+                    }
+                }
+            </script>
+
             </tbody>
         </table>
     @else

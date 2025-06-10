@@ -28,7 +28,7 @@
 
     <div class="row mb-3">
         <div class="col-md-6">
-            <p><strong>Item Type:</strong> {{ $item->ItemType }}</p>
+            <p><strong>Item Type:</strong> {{ $item->itemType?->TypeName ?? 'N/A' }}</p>
         </div>
         <div class="col-md-6">
             <p><strong>Category:</strong> {{ $item->category?->Name ?? 'N/A' }}</p>
@@ -37,28 +37,29 @@
 
     <div class="row mb-3">
         <div class="col-md-6">
-            <p><strong>Subcategory:</strong> {{ $item->subcategory?->Name ?? 'N/A' }}</p>
+            <p><strong>Parent Category:</strong> {{ $item->category->parent?->Name ?? 'N/A' }}</p>
         </div>
         <div class="col-md-6">
-            <p><strong>Unit of Measure (UOM):</strong> {{ $item->UOM }}</p>
+            <p><strong>Unit of Measure (UOM):</strong> {{ $item->uom?->Code ?? 'N/A' }}</p>
         </div>
     </div>
 
     <div class="row mb-3">
         <div class="col-md-6">
-            <p><strong>Inventory Type:</strong> {{ $item->InventoryType }}</p>
+            <p><strong>Inventory Type:</strong> {{ $item->inventoryType?->Type ?? 'N/A' }}</p>
         </div>
         <div class="col-md-6">
             <p><strong>Item Image:</strong></p>
-            @if($item->ImageUpload)
-                <img src="{{ asset('storage/' . $item->ImageUpload) }}" class="img-thumbnail" width="150" alt="Item Image">
-            @else
-                <p>No image available</p>
+            @if($item->image)
+                <img src="data:{{ $item->image->MIMEType }};base64,{{ $item->image->Image }}" alt="Item Image"
+                     style="max-width:200px;">
             @endif
+
         </div>
     </div>
 
     <div class="row mb-3">
+
         <div class="col-md-6">
             <p><strong>Item Description:</strong> {{ $item->ItemDescription ?? 'N/A' }}</p>
         </div>
@@ -70,16 +71,27 @@
                 <p>No document uploaded</p>
             @endif
         </div>
+        <div class="col-md-6">
+            <strong>Status:</strong>
+            @if($item->Status == 1)
+                <span class="badge bg-success">Active</span>
+            @else
+                <span class="badge bg-warning">Inactive</span>
+            @endif
+        </div>
     </div>
 
     <div class="d-flex gap-2 mt-3">
-        <a href="{{ route('itemmaster.index') }}" class="btn btn-secondary">🔙 Back</a>
-        <a href="{{ route('itemmasterlist.edit', $item->Id) }}" class="btn btn-warning">✏️ Edit Item</a>
-        <form action="{{ route('itemmasterlist.destroy', $item->Id) }}" method="POST" onsubmit="return confirm('⚠️ Are you sure you want to delete this item?');">
+        <a href="{{ route('itemmaster.index') }}" class="btn btn-secondary">Back</a>
+
+        <a href="{{ route('itemmasterlist.edit', $item->Id) }}" class="btn btn-warning">Edit Item</a>
+        <form action="{{ route('itemmasterlist.destroy', $item->Id) }}" method="POST"
+              onsubmit="return confirm('⚠️ Are you sure you want to delete this Item?');">
             @csrf
             @method('DELETE')
-            <button type="submit" class="btn btn-danger">🗑️ Delete Item</button>
+            <button type="submit" class="btn btn-danger">Delete Item</button>
         </form>
+
     </div>
 </div>
 

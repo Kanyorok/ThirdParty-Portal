@@ -53,12 +53,13 @@
                             <th>Title</th>
                             <th>Type</th>
                             <th>Category</th>
-                            <th>Est. Value</th>
+                            {{-- <th>Est. Value</th> --}}
                             <th>Currency</th>
-                            <th>PR No.</th>
+                            {{-- <th>PR No.</th> --}}
                             <th>Deadline</th>
                             <th>Opening Date</th>
                             <th>Status</th>
+                            <th>Approval</th>
                             <th style="min-width: 180px;">Actions</th>
                         </tr>
                         </thead>
@@ -75,28 +76,28 @@
                                 <td>
                                     @if($tender->TenderType)
                                         <span class="badge
-                                    @if($tender->TenderType == \App\Enums\TenderTypeEnum::Restricted) bg-warning text-dark
-                                    @elseif($tender->TenderType == \App\Enums\TenderTypeEnum::Open) bg-success
-                                    @else bg-info text-dark
-                                    @endif">
-                                    {{ $tender->TenderType->displayName() }}
-                                </span>
+                                        @if($tender->TenderType === \App\Enums\TenderTypeEnum::Restricted) bg-warning text-dark
+                                        @elseif($tender->TenderType === \App\Enums\TenderTypeEnum::Open) bg-success
+                                        @else bg-info text-dark
+                                        @endif">
+                                        {{ $tender->TenderType?->name ?? 'Unknown' }}
+                                    </span>
                                     @else
                                         N/A
                                     @endif
                                 </td>
                                 <td>
                                     @if($tender->TenderCategory)
-                                        {{ $tender->TenderCategory->displayName() }}
+                                        {{ $tender->tenderCategory?->TenderCategory }}
                                     @else
                                         N/A
                                     @endif
                                 </td>
-                                <td>{{ $tender->EstimatedValue ? number_format($tender->EstimatedValue, 2) : 'N/A' }}</td>
+                                {{-- <td>{{ $tender->EstimatedValue ? number_format($tender->EstimatedValue, 2) : 'N/A' }}</td> --}}
                                 <td>
                                     {{ $tender->currency ? $tender->currency->Code : 'N/A' }}
                                 </td>
-                                <td>{{ $tender->RelatedPRID ? 'PR/' . $tender->RelatedPRID : 'N/A' }}</td>
+                                {{-- <td>{{ $tender->RelatedPRID ? 'PR/' . $tender->RelatedPRID : 'N/A' }}</td> --}}
                                 <td>{{ $tender->SubmissionDeadline ? $tender->SubmissionDeadline->format('M d, Y H:i') : 'N/A' }}</td>
                                 <td>{{ $tender->OpeningDate ? $tender->OpeningDate->format('M d, Y H:i') : 'N/A' }}</td>
                                 <td>
@@ -114,13 +115,40 @@
                                         N/A
                                     @endif
                                 </td>
+                                <td>
+                                    @if ($tender->ApprovalStatus== \App\Enums\TenderApprovalStatusEnum::APPROVED)
+                                        <span class="badge rounded-pill bg-success text-white">
+                                            Approved
+                                         </span>
+                                    @endif
+                                    @if ($tender->ApprovalStatus== \App\Enums\TenderApprovalStatusEnum::REJECTED)
+                                        <span class="badge rounded-pill bg-danger text-white">
+                                            Rejected
+                                         </span>
+                                    @endif
+                                    @if ($tender->ApprovalStatus== \App\Enums\TenderApprovalStatusEnum::PENDING)
+                                        <span class="badge rounded-pill bg-warning text-dark">
+                                            Pending
+                                         </span>
+                                    @endif
+                                </td>
                                 <td class="action-buttons">
                                     <a href="{{ route('initiatetender.show', $tender->Id) }}" class="btn btn-sm btn-outline-info" title="View">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <a href="{{ route('initiatetender.edit', $tender->Id) }}" class="btn btn-sm btn-outline-primary" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
+
+                                    @if ($tender->ApprovalStatus === \App\Enums\TenderApprovalStatusEnum::APPROVED || $tender->ApprovalStatus === \App\Enums\TenderApprovalStatusEnum::REJECTED)
+                                        {{-- If tender is approved or rejected, disable edit button --}}
+                                        <a href="{{ route('initiatetender.edit', $tender->Id) }}"
+                                           class="btn btn-sm btn-outline-primary disabled" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    @else
+                                        <a href="{{ route('initiatetender.edit', $tender->Id) }}"
+                                           class="btn btn-sm btn-outline-primary" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    @endif
                                     <form action="{{ route('initiatetender.destroy', $tender->Id) }}" method="POST" style="display: inline;">
                                         @csrf
                                         @method('DELETE')
@@ -134,7 +162,7 @@
                         @empty
                             <tr>
                                 <td colspan="12" class="text-center py-4">
-                                    <i class="fas fa-folder-open fa-2x text-muted mb-2"></i><br>
+                                <i class="fas fa-folder-open fa-2x text-muted mb-2"></i><br>
                                     No initiated tenders found. <a href="{{ route('initiatetender.create') }}">Create a new one?</a>
                                 </td>
                             </tr>

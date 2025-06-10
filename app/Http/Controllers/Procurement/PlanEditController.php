@@ -5,60 +5,95 @@ namespace App\Http\Controllers\Procurement;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Procurement\PlanLineItems;
+use App\Enums\ProcurementPlanStatusEnum;
+use App\Models\Procurement\ConsolidatedProcurementPlan;
+use App\Policies\Procurement\PlanEditPolicy;
 
 class PlanEditController extends Controller
 {
     //
     public function index(Request $request)
-{
-    $planId = $request->input('PlanID');
-    $draftItems = PlanLineItems::whereHas('consolidatedProcurementPlan', function ($query) {
-        $query->where('Status', 'Draft');
-    })->get();
+    {
+        $this->authorize('viewAny', PlanLineItems::class);
+        $planId = $request->input('PlanID');
 
+        $availablePlans = ConsolidatedProcurementPlan::where('Status', ProcurementPlanStatusEnum::Draft)->get();
 
-    // dd($request->all());
-    return view('procurement.procurementplan.planapproval.ammendplan.index', [
-        'draftItems' => $draftItems,
-        'PlanID' => $planId,
-    ]);
-}
+        $draftItems = collect();
+        if ($planId) {
+            $draftItems = PlanLineItems::where('PlanID', $planId)
+                ->whereHas('consolidatedProcurementPlan', function ($query) {
+                    $query->where('Status', ProcurementPlanStatusEnum::Draft);
+                })
+                ->get();
+        }
 
-public function updateDraftItems(Request $request)
-{
-    $itemIds = $request->input('lineItemIds', []);
-
-    foreach ($itemIds as $id) {
-        $qty = $request->input("qty_$id");
-        $cost = $request->input("unitCost_$id");
-        $remarks = $request->input("remarks_$id");
-
-        PlanLineItems::where('LineItemID', $id)->update([
-            'MergedQty' => $qty,
-            'EstimatedUnitCost' => $cost,
-            'ChangeRemarks' => $remarks,
-            'ModifiedOn' => now(),
-            'ModifiedBy' => auth()->id(),
+        return view('procurement.procurementplan.planapproval.ammendplan.index', [
+            'draftItems' => $draftItems,
+            'PlanID' => $planId,
+            'availablePlans' => $availablePlans,
         ]);
     }
 
-    return redirect()->back()->with('success', 'Draft items updated successfully.');
-}
-public function deleteDraftItem($id)
+    public function updateDraftItems(Request $request)
     {
-        PlanLineItems::where('LineItemID', $id)->update([
-            'DeletedBy' => auth()->id(),
-            'DeletedOn' => now(),
-        ]);
 
-        PlanLineItems::where('LineItemID', $id)->delete();
+        $user = auth()->user();
+        $itemIds = $request->input('lineItemIds', []);
+
+        foreach ($itemIds as $id) {
+            $item = PlanLineItems::findOrFail($id);
+            $this->authorize('update', $item);
+            $qty = $request->input("qty_$id");
+            $cost = $request->input("unitCost_$id");
+            $remarks = $request->input("remarks_$id");
+
+            $qty = (int)$qty;
+            $cost = (float)$cost;
+
+            PlanLineItems::where('LineItemID', $id)->update([
+                'MergedQty' => $qty,
+                'EstimatedUnitCost' => $cost,
+                'ChangeRemarks' => $remarks,
+                'ModifiedOn' => now(),
+                'ModifiedBy' => auth()->id(),
+            ]);
+            $updatedItem = PlanLineItems::find($id);
+            activity()
+                ->causedBy($user)
+                ->performedOn($updatedItem)
+                ->event('update')
+                ->log("Updated draft item: LineItemID {$id}");
+    }
+
+        return redirect()->back()->with('success', 'Draft plan items updated successfully.');
+    }
+
+    public function deleteDraftItem($id)
+    {
+        $user = auth()->user();
+
+        $item = PlanLineItems::find($id);
+        $this->authorize('delete', $item);
+        if ($item) {
+            $item->update([
+                'DeletedBy' => $user->id,
+                'DeletedOn' => now(),
+            ]);
+
+            $item->delete();
+
+            activity()
+                ->causedBy($user)
+                ->performedOn($item)
+                ->event('delete')
+                ->log("Deleted draft item: LineItemID {$id}");
+        }
 
         return redirect()->back()->with('success', 'Item removed successfully.');
     }
-
 
     public function create(){
         return view('procurement.procurementplan.planapproval.ammendplan.create');
     }
 }
-

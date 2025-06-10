@@ -1,20 +1,32 @@
+
 @extends('layouts.app')
 @section('title', 'Add Inventory Type')
 @section('content')
+    @if($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
- 
-  <h4>Add Inventory Type</h4>
-  <form>
+
+    <h4>Add Inventory Type</h4>
+    <form action="{{ route('inventorytype.store') }}" method="POST" enctype="multipart/form-data">
+        @csrf
     <div class="mb-3">
-      <label for="invTypeName" class="form-label">Inventory Type</label>
-      <input type="text" class="form-control" id="invTypeName" placeholder="e.g., Asset">
+        <label for="Type" class="form-label">Inventory Type</label>
+        <input type="text" class="form-control" id="Type" name="Type" placeholder="e.g., Asset">
     </div>
-    <div class="form-check mb-3">
-      <input class="form-check-input" type="checkbox" id="invActive" checked>
-      <label class="form-check-label" for="invActive">Active</label>
-    </div>
+        <div class="form-check mb-3">
+            <input type="hidden" name="Status" value="0">
+            <input class="form-check-input" type="checkbox" name="Status" value="1" id="Status" checked>
+            <label class="form-check-label" for="Status">Is Active</label>
+        </div>
     <button type="submit" class="btn btn-primary">Save</button>
-  </form>
+    </form>
 </div>
 
 @endsection

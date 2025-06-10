@@ -12,15 +12,16 @@ class ItemMasterListSeeder extends Seeder
 {
     public function run()
     {
-        // Optional: Clear table before seeding
-        ItemMasterList::query()->delete();
-        DB::statement("DBCC CHECKIDENT ('t_Items', RESEED, 0)");
-
         $now = Carbon::now();
         $createdBy = 1;
 
-        // Fetch subcategories (where ParentId is not null)
+        // Foreign keys
+        $itemTypeId = DB::table('t_ItemTypes')->where('TypeName', 'Stock')->value('Id');
+        $inventoryTypeId = DB::table('t_InventoryTypes')->where('Type', 'Consumable')->value('Id');
+
+        // Preload categories and UOMs
         $categories = ItemCategories::with('parent')->whereNotNull('ParentId')->get();
+        $uoms = DB::table('t_UOM')->pluck('Id', 'Code'); // ['PCS' => 1, ...]
 
         $items = [
             ['HP Laser Printer', 'PCS', 'Electronics > Printers'],
@@ -41,37 +42,62 @@ class ItemMasterListSeeder extends Seeder
             ['Adjustable Chair Armrest', 'PCS', 'Furniture > Chairs'],
             ['Printer Stand', 'PCS', 'Furniture > Cabinets'],
             ['Correction Pen', 'BOX', 'Office Supplies > Pens & Pencils'],
-            ['Plastic Folder', 'PACK', 'Office Supplies > Binders & Folders'],
+            ['Plastic Folder', 'PACK', 'Office Supplies > Pens & Pencils'],
+            ['Desk Organizer', 'PCS', 'Furniture > Desks'],
+            ['Cable Management Sleeve', 'PCS', 'Electronics > Monitors'],
+            ['Wireless Keyboard', 'PCS', 'Electronics > Laptops'],
+            ['HDMI Cable', 'PCS', 'Electronics > Monitors'],
+            ['Document Shredder', 'PCS', 'Office Supplies > Binders & Folders'],
+            ['Whiteboard Markers', 'BOX', 'Office Supplies > Pens & Pencils'],
+            ['Mouse Pad', 'PCS', 'Electronics > Monitors'],
+            ['Laptop Stand', 'PCS', 'Electronics > Laptops'],
+            ['Portable External Hard Drive', 'PCS', 'Electronics > Laptops'],
+            ['Network Switch', 'PCS', 'Electronics > Networking'],
+            ['Wireless Router', 'PCS', 'Electronics > Networking'],
+            ['HD Webcam', 'PCS', 'Electronics > Monitors'],
+            ['Bluetooth Speaker', 'PCS', 'Electronics > Audio'],
+            ['Smartphone Stand', 'PCS', 'Electronics > Laptops'],
+            ['Document Scanner', 'PCS', 'Office Supplies > Binders & Folders'],
+            ['Cable Ties', 'PACK', 'Office Supplies > Miscellaneous'],
             ['Monitor Riser', 'PCS', 'Furniture > Desks'],
         ];
 
         $barcodeCounter = 1;
 
-        foreach ($items as [$name, $uom, $categoryPath]) {
+        foreach ($items as [$name, $uomCode, $categoryPath]) {
             [$parentName, $childName] = explode(' > ', $categoryPath);
 
             $category = $categories->first(function ($cat) use ($childName, $parentName) {
-                return $cat->Name === $childName && $cat->parent && $cat->parent->Name === $parentName;
+                return $cat->Name === $childName && optional($cat->parent)->Name === $parentName;
             });
 
-            if (!$category) {
-                continue; // Skip if matching category not found
+            $uomId = $uoms[$uomCode] ?? null;
+
+            if (!$category || !$uomId) {
+                echo "Skipping item '$name': category or UOM not found.\n";
+                continue;
             }
 
             $barCode = 'BAR-' . str_pad($barcodeCounter++, 4, '0', STR_PAD_LEFT);
 
-            ItemMasterList::create([
-                'ItemName'        => $name,
-                'UOM'             => $uom,
-                'ItemType'        => 'Stock',
-                'InventoryType'   => 'Consumable',
-                'Category'        => $category->Id,
-                'ItemDescription' => $name . ' for office use',
-                'BarCode'         => $barCode,
-                'CreatedBy'       => $createdBy,
-                'ModifiedBy'      => $createdBy,
-                'CreatedOn'       => $now,
-                'ModifiedOn'      => $now,
+            // Create item first to get the ID
+            $item = ItemMasterList::create([
+                'ItemName' => $name,
+                'UOM' => $uomId,
+                'ItemType' => $itemTypeId,
+                'InventoryType' => $inventoryTypeId,
+                'Category' => $category->Id,
+                'ItemDescription' => "$name for office use",
+                'BarCode' => $barCode,
+                'CreatedBy' => $createdBy,
+                'ModifiedBy' => $createdBy,
+                'CreatedOn' => $now,
+                'ModifiedOn' => $now,
+            ]);
+
+            // Then update the ItemCode based on the newly created ID
+            $item->update([
+                'ItemCode' => 'ITM-' . str_pad($item->Id, 5, '0', STR_PAD_LEFT)
             ]);
         }
     }

@@ -1,10 +1,14 @@
 <?php
 
+use App\Http\Controllers\Procurement\CriteriaController;
 use App\Http\Controllers\Procurement\PurchaseOrderController;
+use App\Http\Controllers\Procurement\ReportsController;
 use App\Http\Controllers\Procurement\RequisitionItemsController;
 use App\Http\Controllers\Procurement\RequisitionsController;
+
+// use App\Http\Controllers\procurement\SectionController;
+use App\Http\Controllers\Procurement\TenderEvaluationsController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Procurement\ItemController;
 use App\Http\Controllers\Procurement\ModeTimelineController;
 use App\Http\Controllers\Procurement\ProcurementModeController;
 use App\Http\Controllers\Procurement\TenderController;
@@ -38,8 +42,6 @@ use App\Http\Controllers\Procurement\ProcurementReportsController;
 use App\Http\Controllers\Procurement\ProcurementPlanMaintainController;
 use App\Http\Controllers\Procurement\ProcurementApprovalController;
 use App\Http\Controllers\Procurement\ConsolidatedDashboardController;
-use App\Http\Controllers\Procurement\ProcurementPlanDetailController;
-use App\Http\Controllers\Procurement\ProcurementquaterlyController;
 use App\Http\Controllers\Procurement\ProcurementSetMethodController;
 use App\Http\Controllers\Procurement\MapToBudgetController;
 use App\Http\Controllers\Procurement\RFQLinesController;
@@ -55,15 +57,29 @@ use App\Http\Controllers\Procurement\PlanEditController;
 use App\Http\Controllers\Procurement\PlanApprovalInboxController;
 use App\Http\Controllers\Procurement\PlanExectionDashboardController;
 use App\Http\Controllers\Procurement\DepartmentNeedApprovalController;
+use App\Models\Procurement\Tender;
+
+use App\Http\Controllers\Procurement\ProcurementSchedulePlanController;
+use App\Http\Controllers\Procurement\ProcurementSubmitPlanController;
+use App\Http\Controllers\Procurement\SectionController;
+
+
+//SupplierManagement
+use App\Http\Controllers\Procurement\SupplierListingController;
+use App\Http\Controllers\Procurement\PrequalificationRoundsController;
+use App\Http\Controllers\Procurement\PrequalificationCriteriaController;
+use App\Http\Controllers\Procurement\PrequalificationApplicationsController;
+use App\Http\Controllers\Procurement\PrequalificationEvaluationController;
+use App\Http\Controllers\Procurement\PrequalificationEvalAprovalController;
+use App\Http\Controllers\Procurement\PrequalifiedSuppliersController;
+
 
 Route::namespace('Procurement')->prefix('procurement')->group(function () {
-
 
 
     //Requisitions
     Route::resource('requisition', 'RequisitionsController');
     Route::resource('requisitionItem', 'RequisitionItemsController');
-    Route::get('items/download', [ItemController::class, 'download'])->name('items.download');
 
     //this route is static affecting orders\create.blade.php & requisitions\show
     Route::get('requisitionItem/getItem/{type}', [RequisitionItemsController::class, 'getItems'])->name('requisitionItem.getItems');
@@ -77,17 +93,16 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
 
     //Purchase Order
     Route::get('purchaseOrder/getSuppliers', [PurchaseOrderController::class, 'getSuppliers'])->name('purchaseOrder.getSuppliers');
+    Route::get('purchaseOrder/linkRFQ', [PurchaseOrderController::class, 'linkRFQ'])->name('purchaseOrder.linkRFQ');
+    //Route::get('purchaseOrder/getRFQs', [PurchaseOrderController::class, 'fetchRFQ'])->name('purchaseOrder.getRFQ');
+    //this route is static affecting orders/rfqLink
+    Route::get('purchaseOrder/rqfDetails/{id}', [PurchaseOrderController::class, 'fetchRFQDetails'])->name('purchaseOrder.RFQ');
     Route::resource('purchaseOrder', 'PurchaseOrderController');
 
 
 
     //Sales Order
     Route::resource('salesOrder', 'SalesOrderController');
-
-
-    //Items
-    Route::resource('items', 'ItemController');
-    Route::resource('categories', 'ItemCategoryController');
 
     // Procurement Modes
     Route::resource('procurement-modes', ProcurementModeController::class);
@@ -169,15 +184,18 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::resource('initiatetender', TenderController::class);
     Route::resource('tendercategory', TenderCategoryController::class);
     Route::resource('tendertype', TenderTypeController::class);
+    //Route for tender approval and Reject
+    Route::post('/tenderapproval', [TenderController::class, 'approveTender'])->name('tender.approve');
+    Route::post('/tenderRejection', [TenderController::class, 'rejectTender'])->name('tender.reject');
     Route::resource('initiateapprove', TenderInitiationApproveController::class);
     Route::resource('tenderresponse', TenderResponseController::class);
     Route::resource('tenderclarification', TenderclarificationController::class);
     Route::resource('tendersubmission', TenderSubmissionController::class);
     Route::resource('tenderopening', TenderOpeningController::class);
     Route::resource('tendersubmission', TenderSubmissionController::class);
-    Route::resource('tenderopening', TenderOpeningController::class);
     Route::resource('tenderdecrypt', TenderDecryptController::class);
     Route::resource('tendercommittee', TenderCommitteeController::class);
+    Route::post('/store-tender-committee', [TenderCommitteeController::class, 'membersAdd'])->name('tendercommittee.save');
     Route::resource('memberresponse', TenderAcceptController::class);
     Route::resource('assignrole', TenderAssignRoleController::class);
     Route::resource('evaluationcriteria', EvaluationCriteriaController::class);
@@ -189,42 +207,70 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::resource('bidscores', BidScoreConsolidationController::class);
     Route::resource('procurementreports', ProcurementReportsController::class);
 
+    //Tender Creteria setup
+    Route::resource('sections', SectionController::class);
+    Route::resource('criterias', CriteriaController::class);
+    Route::resource('tenderevaluations', TenderEvaluationsController::class);
+    Route::post("/store-tender-sections", [TenderEvaluationsController::class, 'tenderSections'])->name('store-tender-sections');
+    Route::get('/tender-criteria/{tenderId}', [TenderEvaluationsController::class, 'getTenderCriteria'])->name('tender-criteria');
+    Route::post('/tender-criteria', [TenderEvaluationsController::class, 'storeTenderCriteria'])->name('tender-criteria.store');
+    Route::post('/store-criteria-scores', [TenderEvaluationsController::class, 'criteriaScores'])->name('store-criteria-scores');
+    Route::get('/criteria-sections', [EvaluationCriteriaController::class, 'viewCriteria'])->name('tender-criteria.index');
+    //Route::get('/tenderevaluations', [EvaluationCriteriaController::class, 'tenderEvaluations'])->name('tenderevaluations.index');
+
 
     //Procurementplan
     Route::resource('procurementplanmaintain', ProcurementPlanMaintainController::class);
 
     //Procurement plan Approval
     Route::resource('approvals/department-need', DepartmentNeedApprovalController::class)->only([
-        'index','show','update','destroy'
+        'index', 'show', 'update', 'destroy'
     ])->names([
-       'index' => 'department-need-approval.index','show' => 'department-need-approval.show','update' => 'department-need-approval.update',
-       'destroy' => 'department-need-approval.destroy'
+        'index' => 'department-need-approval.index', 'show' => 'department-need-approval.show', 'update' => 'department-need-approval.update',
+        'destroy' => 'department-need-approval.destroy'
     ]);
 
 
     //Procurement plan set Method
-    Route::get('/Procurement-Set-Method', [ProcurementSetMethodController::class,'index'])->name('procurement-set-method.index');
-    Route::get('/procurement/set-method/plan-items/{PlanId}', [ProcurementSetMethodController::class, 'getPlanItems']); 
-    Route::get('/Procurement-Set-Method/create', [ProcurementSetMethodController::class,'create'])->name(name: 'procurement-set-method.create');
-    Route::post('/Procurement-Set-Method', [ProcurementSetMethodController::class,'store'])->name('procurement-set-method.store');
+    Route::get('/Procurement-Set-Method', [ProcurementSetMethodController::class, 'index'])->name('procurement-set-method.index');
+    Route::get('/procurement/set-method/plan-items/{PlanId}', [ProcurementSetMethodController::class, 'getPlanItems']);
+    Route::get('/Procurement-Set-Method/create', [ProcurementSetMethodController::class, 'create'])->name(name: 'procurement-set-method.create');
+    Route::post('/Procurement-Set-Method', [ProcurementSetMethodController::class, 'store'])->name('procurement-set-method.store');
 
 
     //Procurement Plan Department Needs
-    Route::get('/departmentalplan', [DepartmentNeedsController::class,'index'])->name('procurementdepartmentalplan.index'); 
-    Route::get('/procurementdepartmentalplan/create', [DepartmentNeedsController::class,'create'])->name('procurementdepartmentalplan.create');
-    Route::post('/procurementdepartmentalplan', [DepartmentNeedsController::class,'store'])->name('procurementdepartmentalplan.store');
+    Route::get('/departmentalplan', [DepartmentNeedsController::class, 'index'])->name('procurementdepartmentalplan.index');
+    Route::get('/procurementdepartmentalplan/create', [DepartmentNeedsController::class, 'create'])->name('procurementdepartmentalplan.create');
+    Route::post('/procurementdepartmentalplan', [DepartmentNeedsController::class, 'store'])->name('procurementdepartmentalplan.store');
     Route::get('/procurementdepartmentalplan/lines/{NeedID}', [DepartmentNeedsController::class, 'fetchLinesByDPlan'])->name('procurementdepartmentalplan.view');
     Route::put('/procurementdepartmentalplan/update-line', [DepartmentNeedsController::class, 'update'])->name('procurementdepartmentalplan.updateLine');
     Route::delete('/procurementdepartmentalplan/delete/{NeedID}', [DepartmentNeedsController::class, 'destroy'])->name('procurementdepartmentalplan.destroy');
     Route::get('/procurementdepartmentalplan/data', [DepartmentNeedsController::class, 'getDepartmentNeeds'])->name('procurementdepartmentalplan.data');
 
+    //Procurement Schedule Plan
+    //Route::resource('procurementplanquaterly', ProcurementquaterlyController::class);
+    Route::get('/Procurement-Plan-Schedule', [ProcurementSchedulePlanController::class, 'index'])->name('Procurement-Plan-Schedule.index');
+    Route::get('/Procurement-Plan-Schedule/create/{PlanId}', [ProcurementSchedulePlanController::class, 'create'])->name('Procurement-Plan-Schedule.create');
+    Route::get('/Procurement-Plan-Schedule/lines/{PlanId}', [ProcurementSchedulePlanController::class, 'fetchLinesByDPlan'])->name('Procurement-Plan-Schedule.view');
+    Route::post('/Procurement-Plan-Schedule', [ProcurementSchedulePlanController::class, 'store'])->name('Procurement-Plan-Schedule.store');
+    Route::get('/Procurement-Plan-Schedule/edit/{lineItemId}', [ProcurementSchedulePlanController::class, 'edit'])->name('Procurement-Plan-Schedule.edit');
+
+    //Procurement Plan Approval Submission
+    //Route::resource('procurementplandetails', ProcurementPlanDetailController::class);
+    Route::get('/Procurement-Plan-Submission', [ProcurementSubmitPlanController::class, 'index'])->name('Procurement-Plan-Submission.index');
+    Route::get('/Procurement-Plan-Submission/create/{PlanId}', [ProcurementSubmitPlanController::class, 'create'])->name('Procurement-Plan-Submission.create');
+    //Route::put('/Procurement-Plan-Submission', [ProcurementSubmitPlanController::class, 'store'])->name('Procurement-Plan-Submission.store');
+    Route::put('/Procurement-Plan-Submission/{plan}', [ProcurementSubmitPlanController::class, 'update'])->name('Procurement-Plan-Submission.update');
+
+
+
+
 
     //Procurement Plan, Plan Consolidation
+    // Route::resource('procurementplandetails', ProcurementPlanDetailController::class);
     Route::resource('procurementplanmaintain', ProcurementPlanMaintainController::class);
     Route::resource('procurementplanapproval', ProcurementApprovalController::class);
     Route::resource('consolidated', ConsolidatedDashboardController::class);
-    Route::resource('procurementplandetails', ProcurementPlanDetailController::class);
-    Route::resource('procurementplanquaterly', ProcurementquaterlyController::class);
     Route::resource('procurementitemsdashboard', ConsolidatedDashboardController::class);
     Route::resource('maptobudget', MapToBudgetController::class);
     Route::resource('plantimeline', TimelineController::class);
@@ -234,9 +280,9 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::resource('planfromneeds', PlanFromNeedsController::class);
     Route::resource('planmanualinput', PlanManualInputController::class);
     Route::resource('submitplan', SubmitForApprovalController::class);
-    Route::resource('editplan', PlanEditController::class);
+    Route::resource('ammendplan', PlanEditController::class);
     Route::resource('approvalinbox', PlanApprovalInboxController::class);
-    Route::resource('exectiondashboard', PlanExectionDashboardController::class);
+    Route::resource('executiondashboard', PlanExectionDashboardController::class);
 
     //Tendering
     Route::get('/tenderresponse', [TenderResponseController::class, 'index'])->name('tenderresponse.index');
@@ -259,25 +305,63 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
 
     //procurement Consolidation
     Route::get('/dashboard', [ConsolidatedDashboardController::class, 'index'])->name('dashboard.index');
-    Route::get('/dashboard/show/{id}', [ConsolidatedDashboardController::class, 'show'])->name('dashboard.show');
+    Route::get('/dashboard/show/{needId}', [ConsolidatedDashboardController::class, 'show'])->name('dashboard.show');
 
     Route::post('/procurement-plans', [ProcurementPlanMaintainController::class, 'store'])->name('procurementplanmaintain.store');
+    Route::get('/planning/edit-draft/{plan_id}', [ProcurementPlanMaintainController::class, 'editDraft'])
+        ->name('planning.editDraft');
+    Route::get('/procurementplanmaintain/{id}', [ProcurementPlanMaintainController::class, 'show'])->name('procurementplanmaintain.show');
+
 
     Route::prefix('procurement')->group(function () {
-    Route::get('plan-manual-input/create', [PlanManualInputController::class, 'create'])->name('plan.manual-input.create');
-    Route::post('plan-manual-input', [PlanManualInputController::class, 'store'])->name('plan.manual-input.store');
-        });
+
+        Route::get('plan-manual-input', [PlanManualInputController::class, 'index'])->name('procurement.procurementplan.planconsolidation.manualentry.index');
+        Route::get('plan-manual-input/create', [PlanManualInputController::class, 'create'])->name('plan.manual-input.create');
+        Route::post('plan-manual-input', [PlanManualInputController::class, 'store'])->name('plan.manual-input.store');
+
+        Route::get('/edit/{lineItem}', [PlanManualInputController::class, 'edit'])->name('edit');
+        Route::put('/update/{lineItem}', [PlanManualInputController::class, 'update'])->name('update');
+        Route::delete('/destroy/{lineItem}', [PlanManualInputController::class, 'destroy'])->name('destroy');
+    });
     Route::prefix('procurement/plan')->name('plan-from-needs.')->group(function () {
-    Route::get('/select-approved-needs', [PlanFromNeedsController::class, 'create'])->name('create');
-    Route::post('/store-from-needs', [PlanFromNeedsController::class, 'store'])->name('store');
-        });
+        Route::get('/create', [PlanFromNeedsController::class, 'create'])->name('create');
+        Route::post('/store', [PlanFromNeedsController::class, 'store'])->name('store');
+        Route::get('/planning/filter-needs', [PlanFromNeedsController::class, 'filterNeeds'])->name('planning.filterNeeds');
+        Route::get('/departments/{branchId}', [PlanFromNeedsController::class, 'getDepartments']);
+        Route::get('/categories', [PlanFromNeedsController::class, 'getCategories']);
+    });
+    Route::get('/planning/edit', [PlanEditController::class, 'index'])->name('planning.editDraftItems');
     Route::get('/planning/edit-draft/{plan_id}', [PlanEditController::class, 'index']);
     Route::post('/planning/update-draft-items', [PlanEditController::class, 'updateDraftItems'])->name('planning.updateDraftItems');
     Route::delete('procurement/planning/delete-draft-item/{id}', [PlanEditController::class, 'deleteDraftItem'])->name('procurement.planning.deleteDraftItem');
 
-Route::get('/planning/assign-methods', [MapToBudgetController::class, 'index'])->name('planning.assign.methods');
-Route::post('/planning/assign-methods', [MapToBudgetController::class, 'store'])->name('planning.assign.methods.store');
+    Route::get('/planning/assign-methods', [MapToBudgetController::class, 'index'])->name('planning.assign.methods');
+    Route::post('/planning/assign-methods', [MapToBudgetController::class, 'store'])->name('planning.assign.methods.store');
+//Plan Approval
+    Route::prefix('planning')->name('planning.')->group(function () {
+        Route::get('/approval', [ProcurementApprovalController::class, 'index'])->name('approval.index');
+        Route::get('/approval/plan-details', [ProcurementApprovalController::class, 'getPlanDetails'])->name('getPlanDetails');
+        Route::post('/approval/submit-decision', [ProcurementApprovalController::class, 'submitDecision'])->name('submitDecision');
+    });
 
-
+    Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('procurement-reports.export');
+    Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
+        'index' => 'procurement-reports.index',
+        'show' => 'procurement-reports.show'
+    ]);
+    // Route::get('/planning/get-plan-details', [ProcurementApprovalController::class, 'getPlanDetails'])
+    // ->name('planning.getPlanDetails');
 
 });
+
+Route::resource('supplierslist', SupplierListingController::class);
+Route::resource('preqrounds', PrequalificationRoundsController::class);
+Route::resource('preqcriteria', PrequalificationCriteriaController::class);
+Route::resource('preqapplications', PrequalificationApplicationsController::class);
+Route::resource('preqevaluation', PrequalificationEvaluationController::class);
+Route::resource('preqevalapproval', PrequalificationEvalAprovalController::class);
+Route::resource('preqsuppliers', PrequalifiedSuppliersController::class);
+
+
+
+

@@ -17,16 +17,10 @@ class RequisitionRequest extends FormRequest
     {
         return [
 
-            'Category' => ['required'],
-            'Branch' => ['required'],
-            'Department' =>   ['required'],
-            'Remarks' =>    ['nullable'],
-//            'Quantity' =>   ['required'],
-//            'Urgency' =>    ['required'],
-//            'UOM' =>    ['nullable'],
-//            'ExpectedPrice' =>  ['nullable'],
-//            'ActualPrice' =>    ['nullable'],
-//            'CategoryId' =>    ['nullable'],
+            'ProcurementPlan' => ['nullable'],
+            'Branch' => ['required', 'numeric'],
+            'Department' => ['required', 'numeric'],
+            'Remarks' => ['nullable', 'string'],
 
             //
                ];

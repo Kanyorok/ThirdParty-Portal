@@ -36,7 +36,19 @@ use App\Models\ThirdParies\Competitor;
 use App\Traits\UsefulEnumTrait;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use App\Models\Inventory\ItemMasterList;
+use App\Models\Inventory\ItemCategories;
+use App\Models\Inventory\StockItem;
+use App\Models\Inventory\Store;
+use App\Models\Inventory\InventoryType;
+use App\Models\Inventory\ItemType;
+use App\Models\Inventory\UnitOfMeasure;
+
 use App\Models\Procurement\ConsolidatedProcurementPlan;
+use App\Models\Procurement\PlanLineItems;
+use App\Models\Procurement\BidSubmission;
+use App\Models\Procurement\TenderInvitation;
+use App\Models\Procurement\VendorClarifications;
 
 enum PermissionEnum: string
 {
@@ -197,20 +209,127 @@ enum PermissionEnum: string
     case DepartmentNeedsDelete = 'departmentneeds-delete';
     case DepartmentNeedsApproval = 'departmentneeds-approval';
 
-    //Procument Plan- Plan Consolidation
-    case PlanConsolidationRead = 'panconsolidation-read';
-    case PlanConsolidationWrite = 'panconsolidation-write';
-    case PlanConsolidationUpdate = 'panconsolidation-update';
-    case PlanConsolidationDelete = 'panconsolidation-delete';
+    //Tender
+    case TenderRead = 'tender-read';
+    case TenderWrite = 'tender-create';
+    case TenderUpdate = 'tender-update';
+    case TenderDelete = 'tender-delete';
+    case TenderApproval = 'tender-approval';
 
-        //ProcurementPlan ProcurementMethod
+    //Tender Suppliers
+    case BidSubmissionRead = 'BidSubmission-read';
+    case BidSubmissionWrite = 'BidSubmission-create';
+    case BidSubmissionUpdate = 'BidSubmission-update';
+    case BidSubmissionDelete = 'BidSubmission-delete';
+
+    case TenderInvitationRead = 'TenderInvitation-read';
+    case TenderInvitationWrite = 'TenderInvitation-create';
+    case TenderInvitationUpdate = 'TenderInvitation-update';
+    case TenderInvitationDelete = 'TenderInvitation-delete';
+
+    case VendorClarificationsRead = 'VendorClarifications-read';
+    case VendorClarificationsWrite = 'VendorClarifications-create';
+    case VendorClarificationsUpdate = 'VendorClarifications-update';
+    case VendorClarificationsDelete = 'VendorClarifications-delete';
+
+    //Procument Plan- Plan Consolidation
+    case PlanConsolidationRead = 'planconsolidation-read';
+    case PlanConsolidationWrite = 'planconsolidation-write';
+    case PlanConsolidationUpdate = 'planconsolidation-update';
+    case PlanConsolidationDelete = 'planconsolidation-delete';
+
+    //Procument Plan- Plan Maintain
+    case PlanMaintenanceRead = 'planmaintenance-read';
+    case PlanMaintenanceWrite = 'planmaintenance-write';
+    case PlanMaintenanceUpdate = 'planmaintenance-update';
+    case PlanMaintenanceDelete = 'planmaintenance-delete';
+
+    //Procument Plan- Plan Manual Input
+    case PlanManualInputRead = 'planmanualinput-read';
+    case PlanManualInputWrite = 'planmanualinput-write';
+    case PlanManualInputUpdate = 'planmanualinput-update';
+    case PlanManualInputDelete = 'planmanualinput-delete';
+
+    //Procument Plan- Plan Amend
+    case PlanEditRead = 'planedit-read';
+    case PlanEditWrite = 'planedit-write';
+    case PlanEditUpdate = 'planedit-update';
+    case PlanEditDelete = 'planedit-delete';
+
+    //Procument Plan- Plan Line Items
+    case PlanLineItemsRead = 'planlineitems-read';
+    case PlanLineItemsWrite = 'planlineitems-write';
+    case PlanLineItemsUpdate = 'planlineitems-update';
+    case PlanLineItemsDelete = 'planlineitems-delete';
+
+    //ProcurementPlan ProcurementMethod
     case ProcurementMethodRead = 'procurementmethod-read';
     case ProcurementMethodWrite = 'procurementmethod-create';
+
+    //ProcurementPlan Procurement Schedule
+    //case SchedulePlanRead = 'scheduleplan-read';
+    //case SchedulePlanWrite = 'scheduleplan-create';
+    //case SchedulePlanUpdate = 'scheduleplan-update';
     /*
     *
     * ========================================  Inventory  ========================================
     */
     case MasterListView = 'masterList-view';
+    case MasterListUpdate = 'masterList-update';
+    case MasterListCreate = 'masterList-create';
+    case MasterListDestroy = 'masterList-destroy';
+
+    case ItemCategoryView = 'itemCategory-view';
+    case ItemCategoryUpdate = 'itemCategory-update';
+    case ItemCategoryCreate = 'itemCategory-create';
+    case ItemCategoryDestroy = 'itemCategory-destroy';
+
+    case StockItemView = 'stockItem-view';
+    case StockItemUpdate = 'stockItem-update';
+    case StockItemCreate = 'stockItem-create';
+    case StockItemDestroy = 'stockItem-destroy';
+
+    case StoreView = 'storeItem-view';
+    case StoreUpdate = 'storeItem-update';
+    case StoreCreate = 'storeItem-create';
+    case StoreDestroy = 'storeItem-destroy';
+
+    case InventoryTypeView = 'inventoryType-view';
+    case InventoryTypeUpdate = 'inventoryType-update';
+    case InventoryTypeCreate = 'inventoryType-create';
+    case InventoryTypeDestroy = 'inventoryType-destroy';
+
+    case ItemTypeView = 'itemType-view';
+    case ItemTypeUpdate = 'itemType-update';
+    case ItemTypeCreate = 'itemType-create';
+    case ItemTypeDestroy = 'itemType-destroy';
+
+    case UOMView = 'uom-view';
+    case UOMUpdate = 'uom-update';
+    case UOMCreate = 'uom-create';
+    case UOMDestroy = 'uom-destroy';
+
+    /*
+     *
+     * ========================================  Property Management  ========================================
+     */
+
+    //property category
+    case PropertyCategoryCreate = 'propertycategory-create';
+    case PropertyCategoryUpdate = 'propertycategory-update';
+    case PropertyCategoryDelete = 'propertycategory-delete';
+    case PropertyCategoryView = 'propertycategory-view';
+
+    //Property type
+    case PropertyTypeCreate = 'propertytype-create';
+    case PropertyTypeUpdate = 'propertytype-update';
+    case PropertyTypeDelete = 'propertytype-delete';
+    case PropertyTypeView = 'propertytype-view';
+
+
+
+
+
 
     /*
      *
@@ -222,6 +341,15 @@ enum PermissionEnum: string
     case EmployeesUpdate = 'employee-update';
     case EmployeesDelete = 'employee-delete';
 
+
+    /*
+ *
+ * ========================================  Budget and Analytics  ========================================
+ */
+    case BudgetSetupView = 'budgetSetup-view';
+    case BudgetSetupCreate = 'budgetSetup-create';
+    case BudgetSetupUpdate = 'budgetSetup-update';
+    case BudgetSetupDelete = 'budgetSetup-delete';
 
 
     public static function display(): Collection
@@ -262,7 +390,29 @@ enum PermissionEnum: string
             [self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval, self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval],
             [self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval],
 
+            //Tenders
+            [self::TenderRead, self::TenderWrite, self::TenderUpdate, self::TenderDelete, self::TenderApproval],
+
+            [self::MasterListView, self::MasterListUpdate, self::MasterListCreate, self::MasterListDestroy],
+            [self::ItemCategoryView, self::ItemCategoryUpdate, self::ItemCategoryCreate, self::ItemCategoryDestroy],
+            [self::StockItemView, self::StockItemUpdate, self::StockItemCreate, self::StockItemDestroy],
+            [self::StoreView, self::StoreUpdate, self::StoreCreate, self::StoreDestroy],
+            [self::InventoryTypeView, self::InventoryTypeUpdate, self::InventoryTypeCreate, self::InventoryTypeDestroy],
+            [self::ItemTypeView, self::ItemTypeUpdate, self::ItemTypeCreate, self::ItemTypeDestroy],
+            [self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy],
             [self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete],
+            [self::PlanLineItemsRead, self::PlanLineItemsWrite, self::PlanLineItemsUpdate, self::PlanLineItemsDelete],
+            [self::BidSubmissionRead, self::BidSubmissionWrite, self::BidSubmissionUpdate, self::BidSubmissionDelete],
+            [self::TenderInvitationRead, self::TenderInvitationWrite, self::TenderInvitationUpdate, self::TenderInvitationDelete],
+            [self::VendorClarificationsRead, self::VendorClarificationsWrite, self::VendorClarificationsUpdate, self::VendorClarificationsDelete],
+            [self::PlanMaintenanceRead, self::PlanMaintenanceWrite, self::PlanMaintenanceUpdate, self::PlanMaintenanceDelete],
+            [self::PlanManualInputRead, self::PlanManualInputWrite, self::PlanManualInputUpdate, self::PlanManualInputDelete],
+            [self::PlanEditRead, self::PlanEditWrite, self::PlanEditUpdate, self::PlanEditDelete],
+            /////////////////////////// Budget and Analytics  ///////////////////////
+            [self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate, self::BudgetSetupDelete],
+
+            [self::PropertyCategoryView, self::PropertyCategoryCreate, self::PropertyCategoryUpdate, self::PropertyCategoryDelete],
+            [self::PropertyTypeView, self::PropertyTypeCreate, self::PropertyTypeUpdate, self::PropertyTypeDelete],
 
         ]);
     }
@@ -270,7 +420,9 @@ enum PermissionEnum: string
     public static function approvals(): Collection
     {
         return collect([self::MarketingPlannerApproval, /* self::MarketingListApproval,*/ self::TicketApproval, self::CampaignApproval, self::SurveyApproval, self::Ceo, self::MarketingManager,
+            self::PurchaseOrderApproval, self::RequisitionApproval, self::RequisitionItemsApproval, self::DepartmentNeedsApproval, self::TenderApproval,
             self::PurchaseOrderApproval, self::RequisitionApproval,self::RequisitionItemsApproval]);
+
     }
 
 
@@ -299,19 +451,45 @@ enum PermissionEnum: string
             self::MeetingRooms, self::Roles, self::Ceo, self::Managers, self::MarketingManager, self::ListsView, self::ListsUpdate
             => ModulesEnum::Settings,
 
-            //Requisition
+            //Procurement
             self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval,
             self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval,
             self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval,
             self::RfqRead, self::RfqWrite, self::RfqUpdate, self::RfqApproval, self::RfqDelete,
-             self::DepartmentNeedsRead, self::DepartmentNeedsWrite, self::DepartmentNeedsUpdate, self::DepartmentNeedsDelete, self::DepartmentNeedsApproval,
-             self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete,
-            self::ProcurementMethodRead, self::ProcurementMethodWrite
+            self::DepartmentNeedsRead, self::DepartmentNeedsWrite, self::DepartmentNeedsUpdate, self::DepartmentNeedsDelete, self::DepartmentNeedsApproval,
+            self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete,
+            self::ProcurementMethodRead, self::ProcurementMethodWrite,
+            self::TenderRead, self::TenderWrite, self::TenderUpdate, self::TenderDelete, self::TenderApproval,
+            self::PlanLineItemsRead, self::PlanLineItemsWrite, self::PlanLineItemsUpdate, self::PlanLineItemsDelete,
+            self::BidSubmissionRead, self::BidSubmissionWrite, self::BidSubmissionUpdate, self::BidSubmissionDelete,
+            self::TenderInvitationRead, self::TenderInvitationWrite, self::TenderInvitationUpdate, self::TenderInvitationDelete,
+            self::VendorClarificationsRead, self::VendorClarificationsWrite, self::VendorClarificationsUpdate, self::VendorClarificationsDelete,
+            self::PlanMaintenanceRead, self::PlanMaintenanceWrite, self::PlanMaintenanceUpdate, self::PlanMaintenanceDelete,
+            self::PlanManualInputRead, self::PlanManualInputWrite, self::PlanManualInputUpdate, self::PlanManualInputDelete,
+            self::PlanEditRead, self::PlanEditWrite, self::PlanEditUpdate, self::PlanEditDelete,
             => ModulesEnum::Procurement,
-        
+
+            //Human Resource Management
             self::Departments, self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete => ModulesEnum::HRM,
-            
-            self::MasterListView => ModulesEnum::Inventory,
+
+            //Inventory
+            self::MasterListView, self::MasterListUpdate, self::MasterListCreate, self::MasterListDestroy,
+            self::ItemCategoryView, self::ItemCategoryUpdate, self::ItemCategoryCreate, self::ItemCategoryDestroy,
+            self::StockItemView, self::StockItemUpdate, self::StockItemCreate, self::StockItemDestroy,
+            self::StoreView, self::StoreUpdate, self::StoreCreate, self::StoreDestroy,
+            self::InventoryTypeView, self::InventoryTypeUpdate, self::InventoryTypeCreate, self::InventoryTypeDestroy,
+            self::ItemTypeView, self::ItemTypeUpdate, self::ItemTypeCreate, self::ItemTypeDestroy,
+            self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy, => ModulesEnum::Inventory,
+
+            //Property Management
+            self::PropertyCategoryView, self::PropertyCategoryCreate, self::PropertyCategoryUpdate, self::PropertyCategoryDelete,
+            self::PropertyTypeView, self::PropertyTypeCreate, self::PropertyTypeUpdate, self::PropertyTypeDelete, => ModulesEnum::Property,
+            default => throw new \LogicException("Unhandled PermissionEnum case: {$this->value}"),
+
+            ///////////////^*********** Budget and Analytics ******************/////////////////
+            self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate, self::BudgetSetupDelete,
+            => ModulesEnum::BudgetLine
+
         };
     }
 
@@ -349,13 +527,38 @@ enum PermissionEnum: string
             self::Departments, self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete => 'Employees',
             self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete, => 'Consolodidated Needs',
             self::ProcurementMethodRead, self::ProcurementMethodWrite => 'Procurement Method',
-
+            self::PlanLineItemsRead, self::PlanLineItemsWrite, self::PlanLineItemsUpdate, self::PlanLineItemsDelete, => 'Plan Line Items',
+            self::PlanMaintenanceRead, self::PlanMaintenanceWrite, self::PlanMaintenanceUpdate, self::PlanMaintenanceDelete, => 'Plan Maintenance',
+            self::PlanManualInputRead, self::PlanManualInputWrite, self::PlanManualInputUpdate, self::PlanManualInputDelete, => 'Plan Manual Input',
+            self::PlanEditRead, self::PlanEditWrite, self::PlanEditUpdate, self::PlanEditDelete, => 'Plan amendmend',
             //Requisition
             self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval, self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval =>'Requisitions',
 
 
             //PurchaseOrder
             self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval => 'Purchase Order',
+
+            //Tendering
+            self::TenderRead, self::TenderWrite, self::TenderUpdate, self::TenderDelete, self::TenderApproval => 'Tenders',
+            self::BidSubmissionRead, self::BidSubmissionWrite, self::BidSubmissionUpdate, self::BidSubmissionDelete, => 'Tender Suppliers',
+            self::TenderInvitationRead, self::TenderInvitationWrite, self::TenderInvitationUpdate, self::TenderInvitationDelete, => 'Tender Suppliers',
+            self::VendorClarificationsRead, self::VendorClarificationsWrite, self::VendorClarificationsUpdate, self::VendorClarificationsDelete, => 'Tender Suppliers',
+            //Inventory
+            self::MasterListView, self::MasterListUpdate, self::MasterListCreate, self::MasterListDestroy => 'Item Master',
+            self::ItemCategoryView, self::ItemCategoryUpdate, self::ItemCategoryCreate, self::ItemCategoryDestroy => 'Item Category',
+            self::StockItemView, self::StockItemUpdate, self::StockItemCreate, self::StockItemDestroy => 'Stock Item',
+            self::StoreView, self::StoreUpdate, self::StoreCreate, self::StoreDestroy => 'Store',
+            self::InventoryTypeView, self::InventoryTypeUpdate, self::InventoryTypeCreate, self::InventoryTypeDestroy => 'Inventory Type',
+            self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy => 'UOM',
+            self::ItemTypeView, self::ItemTypeUpdate, self::ItemTypeCreate, self::ItemTypeDestroy => 'Item Type',
+
+            ////////////////////////// Budget and Analytics //////////////////////////////
+            self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate, self::BudgetSetupDelete => 'Budget Setup',
+
+            //Property Management
+            self::PropertyCategoryView, self::PropertyCategoryCreate, self::PropertyCategoryUpdate, self::PropertyCategoryDelete => 'Property Category',
+            self::PropertyTypeView, self::PropertyTypeCreate, self::PropertyTypeUpdate, self::PropertyTypeDelete => 'Property Type',
+
         };
     }
 }

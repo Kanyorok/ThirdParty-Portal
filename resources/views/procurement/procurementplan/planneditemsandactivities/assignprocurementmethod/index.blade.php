@@ -1,9 +1,9 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Plan Consolidation')
 @section('content')
 
 <div class="container mt-4">
-    <h4 class="mb-4"> Assign Procurement Method</h4> 
+    <h4 class="mb-4"> Assign Procurement Method</h4>
 
     <!-- Plan Selection -->
     <div class="card shadow-sm mb-4">
@@ -14,7 +14,8 @@
                     <select class="form-select" id="approved-plan-select">
                         <option selected disabled>-- Choose Plan --</option>
                         @foreach ($approvedPlans as $plan)
-                            <option value="{{ $plan->PlanID }}">{{ $plan->ReferenceNumber }} – {{ $plan->Title }}</option>
+                            <option value="{{ $plan->PlanID }}">{{ $plan->ReferenceNumber }}
+                                – {{ $plan->Title }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -36,17 +37,17 @@
                 <div class="table-responsive">
                     <table class="table table-bordered align-middle">
                         <thead class="table-light">
-                            <tr>
-                                <th>Item</th>
-                                <th>Qty</th>
-                                <th>Est. Cost</th>
-                                <th>Suggested Method</th>
-                                <th>Assign Method</th>
-                                <th>Justification (if override)</th>
-                            </tr>
+                        <tr>
+                            <th>Item</th>
+                            <th>Qty</th>
+                            <th>Est. Cost</th>
+                            <th>Suggested Method</th>
+                            <th>Assign Method</th>
+                            <th>Justification (if override)</th>
+                        </tr>
                         </thead>
                         <tbody id="items-table-body">
-                            <!-- Items will load here dynamically -->
+                        <!-- Items will load here dynamically -->
                         </tbody>
                     </table>
                 </div>
@@ -62,28 +63,28 @@
 </div>
 
 @push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const loadBtn = document.getElementById('load-items-btn');
-        const planSelect = document.getElementById('approved-plan-select');
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const loadBtn = document.getElementById('load-items-btn');
+            const planSelect = document.getElementById('approved-plan-select');
 
-        loadBtn.addEventListener('click', function () {
-            const planId = planSelect.value;
-            if (!planId) {
-                alert('Please select a plan.');
-                return;
-            }
+            loadBtn.addEventListener('click', function () {
+                const planId = planSelect.value;
+                if (!planId) {
+                    alert('Please select a plan.');
+                    return;
+                }
 
-            document.getElementById('approved-plan-id-hidden').value = planId;
+                document.getElementById('approved-plan-id-hidden').value = planId;
 
-            fetch(`/procurement/procurement/set-method/plan-items/${planId}`)
-                .then(response => response.json())
-                .then(data => {
-                    const tbody = document.getElementById('items-table-body');
-                    tbody.innerHTML = '';
+                fetch(`/procurement/procurement/set-method/plan-items/${planId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const tbody = document.getElementById('items-table-body');
+                        tbody.innerHTML = '';
 
-                    data.forEach(line => {
-                        const row = `
+                        data.forEach(line => {
+                            const row = `
                             <tr>
                                 <td>${line.item_name}</td>
                                 <td>${line.MergedQty}</td>
@@ -102,16 +103,16 @@
                                 </td>
                             </tr>
                         `;
-                        tbody.insertAdjacentHTML('beforeend', row);
+                            tbody.insertAdjacentHTML('beforeend', row);
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error loading items:', error);
+                        alert('An error occurred while loading items.');
                     });
-                })
-                .catch(error => {
-                    console.error('Error loading items:', error);
-                    alert('An error occurred while loading items.');
-                });
+            });
         });
-    });
-</script>
+    </script>
 @endpush
 
 @endsection

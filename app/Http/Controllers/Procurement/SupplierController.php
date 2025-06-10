@@ -17,7 +17,9 @@ class SupplierController extends Controller
     {
         // Fetch all suppliers from the database
         $suppliers = Supplier::with('category')->orderBy('CreatedOn', 'desc')->paginate(20);
+
         $categories = ItemCategories::all();
+
         // Return the view with the suppliers data
         return view('procurement.suppliers.index', compact('suppliers', 'categories'));
     }
@@ -41,7 +43,8 @@ class SupplierController extends Controller
         $validated = $request->validate([
             'SupplierName' => 'required|string|max:255',
             'ContactEmail' => 'required|email|max:255|unique:t_Suppliers,ContactEmail',
-            'CategoryId' => 'required|exists:t_ItemCategories,Id',
+            'CategoryId' => 'required',
+
             'ContactPhone' => 'nullable|string|max:20',
             'Address' => 'nullable|string|max:255',
             'IsPrequalified' => 'boolean',

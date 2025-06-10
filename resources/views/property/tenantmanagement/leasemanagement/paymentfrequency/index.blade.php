@@ -5,6 +5,7 @@
 <a href="{{ route('paymentfrequency.create') }}" class="btn btn-primary mb-3">New Payment Frequency</a>
   <h4 class="fw-bold mb-3">📋 Payment Frequencies</h4>
 
+    @if($properties->count())
   <table class="table table-bordered table-striped align-middle">
     <thead class="table-light">
       <tr>
@@ -17,37 +18,22 @@
       </tr>
     </thead>
     <tbody>
+    @foreach ($properties as $property)
       <tr>
-        <td>1</td>
-        <td>Monthly</td>
-        <td>MTH</td>
-        <td>1</td>
-        <td>Bills every calendar month</td>
+          <td>{{ $loop->iteration ?? '-' }}</td>
+          <td>{{ $property->FrequencyName ?? '-' }}</td>
+          <td>{{ $property->FrequencyCode ?? '-' }}</td>
+          <td>{{ $property->NumberOfMonths ?? '-' }}</td>
+          <td>{{ $property->Description ?? '-' }}</td>
         <td>
           <button class="btn btn-sm btn-outline-warning">✏️ Edit</button>
         </td>
       </tr>
-      <tr>
-        <td>2</td>
-        <td>Quarterly</td>
-        <td>QTR</td>
-        <td>3</td>
-        <td>Bills every 3 months</td>
-        <td>
-          <button class="btn btn-sm btn-outline-warning">✏️ Edit</button>
-        </td>
-      </tr>
-      <tr>
-        <td>3</td>
-        <td>Annually</td>
-        <td>ANL</td>
-        <td>12</td>
-        <td>Bills once every year</td>
-        <td>
-          <button class="btn btn-sm btn-outline-warning">✏️ Edit</button>
-        </td>
-      </tr>
+    @endforeach
     </tbody>
   </table>
+    @else
+        <p>No payment frequency records registered yet.</p>
+    @endif
 </div>
 @endsection

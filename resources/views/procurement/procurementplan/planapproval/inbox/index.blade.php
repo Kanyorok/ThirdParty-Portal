@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Approval Inbox')
 @section('content')
 
 <div class="container mt-4">

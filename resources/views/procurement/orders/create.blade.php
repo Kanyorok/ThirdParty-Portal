@@ -42,11 +42,11 @@
                     <label>Supplier</label>
                     <select class="form-control supplier" id="supplier" name="supplier">
                         <option selected disabled>Select supplier</option>
-{{--                        <option value="01">Supplier 1</option>--}}
-{{--                        <option value="02">Supplier 2</option>--}}
-                                             @foreach ($suppliers as $vendor)
-                                        <option value="{{ $vendor->Id }}">{{ $vendor->Name }}</option>
-                                            @endforeach
+                        {{--                        <option value="01">Supplier 1</option>--}}
+                        {{--                        <option value="02">Supplier 2</option>--}}
+                        @foreach ($suppliers as $vendor)
+                            <option value="{{ $vendor->Id }}">{{ $vendor->Name }}</option>
+                        @endforeach
 
                         <!-- Loop suppliers here -->
                     </select>
@@ -114,9 +114,12 @@
                         <td class="text-start">
                             <select class="form-select form-select-sm type" name="type[]" id="Type">
                                 <option disabled selected>Select Type</option>
-                                <option value="Stock">Stock</option>
-                                <option value="Asset">Asset</option>
-                                <option value="Non-Stock">Non-Stock</option>
+                                @foreach ($itemTypes as $type)
+                                    <option value="{{ $type->Id }}">{{ $type->TypeName }}</option>
+                                @endforeach
+                                {{--                                <option value="Stock">Stock</option>--}}
+                                {{--                                <option value="Asset">Asset</option>--}}
+                                {{--                                <option value="Non-Stock">Non-Stock</option>--}}
                             </select>
                         </td>
                         <td class="text-start">
@@ -131,7 +134,8 @@
                         <td class="text-start">
                                 <textarea class="form-control form-control-sm itemDescription" name="itemDescription[]"
                                           id="Description" cols="30"
-                                          rows="5" readonly   style="display: flex; align-items: center; justify-content: center; text-align: center; padding: 0; resize: none;"></textarea>
+                                          rows="5" readonly
+                                          style="display: flex; align-items: center; justify-content: center; text-align: center; padding: 0; resize: none;"></textarea>
                             {{--                            <input type="text" class="form-control form-control-sm itemDescription" --}}
                             {{--                                name="itemDescription[]" id="Description" readonly> --}}
                         </td>
@@ -186,12 +190,19 @@
 
 @endsection
 @section('scripts')
+
+    <script>
+        const itemTypeOptions = `{!! $itemTypes->map(function($type) {
+        return "<option value='{$type->Id}'>{$type->TypeName}</option>";
+    })->implode('') !!}`;
+    </script>
+
     <script>
         function fetchSuppliers() {
             const supplierUrl = "{{ route('purchaseOrder.getSuppliers') }}"
 
 
-            console.log(supplierUrl);
+            // console.log(supplierUrl);
 
             $.ajax({
                 url: supplierUrl,
@@ -331,12 +342,13 @@
             });
 
 
+
             function calculateSummaryTotals() {
                 let exclusiveTotal = 0;
                 let totalTax = 0;
 
                 // Loop through each row to calculate totals
-                $('#po-items tr').each(function() {
+                $('#po-items tr').each(function () {
                     let row = $(this);
                     let qty = parseFloat(row.find('.quantity').val()) || 0;
                     let price = parseFloat(row.find('.unit-price').val()) || 0;
@@ -369,50 +381,7 @@
             }
 
 
-            $(document).ready(function() {
-                calculateSummaryTotals();
-            });
-
-
-            function calculateSummaryTotals() {
-                let exclusiveTotal = 0;
-                let totalTax = 0;
-
-                // Loop through each row to calculate totals
-                $('#po-items tr').each(function() {
-                    let row = $(this);
-                    let qty = parseFloat(row.find('.quantity').val()) || 0;
-                    let price = parseFloat(row.find('.unit-price').val()) || 0;
-                    let tax = parseFloat(row.find('.tax').val()) || 0;
-                    let discount = parseFloat(row.find('.discount').val()) || 0;
-
-                    // Calculate line total before tax and discount
-                    let lineTotalBeforeTax = qty * price;
-
-                    // Apply discount
-                    if (discount > 0) {
-                        lineTotalBeforeTax -= lineTotalBeforeTax * (discount / 100);
-                    }
-
-                    // Calculate tax for this line
-                    let lineTax = lineTotalBeforeTax * (tax / 100);
-
-                    // Add to totals
-                    exclusiveTotal += lineTotalBeforeTax;
-                    totalTax += lineTax;
-                });
-
-                // Calculate inclusive total
-                let inclusiveTotal = exclusiveTotal + totalTax;
-
-                // Update the summary fields
-                $('input[name="exclusiveTotal"]').val(exclusiveTotal.toFixed(2));
-                $('input[name="taxAmount"]').val(totalTax.toFixed(2));
-                $('input[name="inclusiveTotal"]').val(inclusiveTotal.toFixed(2));
-            }
-
-
-            $(document).ready(function() {
+            $(document).ready(function () {
                 calculateSummaryTotals();
             });
 
@@ -429,17 +398,13 @@
             rowCount++;
 
 
-
-
             const row = `
         <tr>
             <td class="line-no">${rowCount}.</td>
             <td class="text-start">
                 <select class="form-select form-select-sm type" name="type[]" id="Type">
                     <option disabled selected>Select Type</option>
-                    <option value="Stock">Stock</option>
-                    <option value="Asset">Asset</option>
-                    <option value="Non-Stock">Non-Stock</option>
+                    ${itemTypeOptions}
                 </select>
             </td>
             <td class="text-start">

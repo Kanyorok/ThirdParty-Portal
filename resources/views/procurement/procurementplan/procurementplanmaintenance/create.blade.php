@@ -5,36 +5,36 @@
 <div class="card p-4 shadow rounded-4">
   <h4 class="mb-4">🧾 Create Head Office Procurement Plan</h4>
 
-  <form method="POST" action="{{ route('procurementplanmaintain.store') }}">
-  @csrf
+    <form method="POST" action="{{ route('procurementplanmaintain.store') }}">
+        @csrf
     <div class="mb-3">
       <label class="form-label">Plan Title</label>
-      <input type="text" class="form-control" name="Title" placeholder="e.g. Annual Procurement Plan - 2025">
+        <input type="text" class="form-control" name="Title" placeholder="e.g. Annual Procurement Plan - 2025">
     </div>
 
     <div class="row mb-3">
       <div class="col-md-4">
         <label class="form-label">Plan Year</label>
-        <select class="form-select" name="FiscalYear">
+          <select class="form-select" name="FiscalYear">
           <option>2025</option>
           <option>2026</option>
           <option>2027</option>
-        </select> 
+          </select>
       </div>
-      <div class="col-md-4">
+        <div class="col-md-4 d-none">
         <label class="form-label">Created By</label>
-        <input type="text" class="form-control" value="{{ auth()->user()->name }}" readonly>
-        <input type="hidden" name="CreatedBy" value="{{ auth()->user()->Id }}">
+            <input type="text" class="form-control" value="{{ auth()->user()->name }}" readonly>
+            <input type="hidden" name="CreatedBy" value="{{ auth()->user()->Id }}">
       </div>
 
       <div class="col-md-4">
         <label class="form-label">Status</label>
-        <input type="text" class="form-control" value="Draft" readonly>
-        <input type="hidden" name="Status" value="Draft">
+          <input type="text" class="form-control" value="Draft" readonly>
+          <input type="hidden" name="Status" value="Draft">
       </div>
-<div class="col-md-4 d-flex align-items-end">
-    <button type="submit" class="btn btn-primary w-100">Save Plan</button>
-  </div>
+        <div class="col-md-4 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary w-100">Save Plan</button>
+        </div>
 
     <!-- Selection Mode -->
     <div class="mb-4">

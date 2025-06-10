@@ -4,21 +4,28 @@ namespace App\Models\ThirdParies;
 
 use App\Models\Inventory\ItemCategories;
 use App\Models\Procurement\ProcurementPeriod;
-use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQEvaluation;
 use App\Models\Procurement\RFQLine;
+use App\Models\Procurement\Tender;
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Supplier extends Model
 {
+    use SoftDeletes, UserActorTrait;
 
+    const string CREATED_AT = 'CreatedOn';
+    const string UPDATED_AT = 'ModifiedOn';
+    const string DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Suppliers';
     protected $primaryKey = 'Id';
 
-    public const CREATED_AT = 'CreatedOn';
-    public const UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    public static function getPrimaryKey(): string
+    {
+        return 'SuppliersId';
+    }
 
     protected $fillable = [
         'SupplierName',
@@ -65,6 +72,12 @@ class Supplier extends Model
     {
         return $this->belongsToMany(Supplier::class, 't_RFQ_Supplier', 'RFQId', 'SupplierId')
             ->withPivot('Status')
+            ->withTimestamps();
+    }
+
+    public function tenders()
+    {
+        return $this->belongsToMany(Tender::class, 'TenderSupplier', 'SupplierID', 'TenderID')
             ->withTimestamps();
     }
 

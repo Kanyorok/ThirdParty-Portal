@@ -19,9 +19,9 @@ enum ModulesEnum: int
     case Insurance = 900000;
     case HRM = 1000000;
     case Finance = 1100000;
+    case BudgetLine = 1200000;
     case Settings = 9800000;
     case MyAccount = 9900000;
-    case BudgetLine = 9700000;
 
     public function description(): string
     {
@@ -38,7 +38,7 @@ enum ModulesEnum: int
             self::HRM => 'HRM - Human Resource',
             self::Finance => 'Finance',
             self::Settings => 'Settings',
-            self::BudgetLine => 'Budget Line',
+            self::BudgetLine => 'Budget & Analytics',
             self::MyAccount => 'My Account',
         };
     }

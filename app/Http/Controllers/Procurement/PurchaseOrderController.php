@@ -5,10 +5,9 @@ namespace App\Http\Controllers\Procurement;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Orders\PurchaseOrderRequest;
 use App\Models\Procurement\Order;
-use App\Models\Procurement\RequisitionLines;
-use App\Models\Procurement\Requisitions;
-use App\Services\Orders\OrderService;
 use App\Services\Procurement\Items\ItemService;
+use App\Services\Procurement\Orders\OrderService;
+use App\Services\Procurement\RFQ\RFQService;
 use App\Services\ThirdParty\SupplierService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,10 +15,10 @@ use Illuminate\Support\Facades\Log;
 
 class PurchaseOrderController extends Controller
 {
-    public function __construct(protected ItemService $itemService, protected SupplierService $supplierService, protected OrderService $orderService)
+    public function __construct(protected ItemService $itemService, protected SupplierService $supplierService, protected OrderService $orderService, protected RFQService $rfqService)
     {
 
-        $this->middleware('ajax')->except(['index', 'create','show']);
+        $this->middleware('ajax')->except(['index', 'create', 'show', 'linkRFQ', 'fetchRFQDetails']);
 //        $this->authorizeResource(Order::class);
     }
 
@@ -61,10 +60,7 @@ class PurchaseOrderController extends Controller
 
     {
 
-        \Log::info('getSuppliers() was triggered.');
-
-
-        try{
+        try {
             $suppliers = $this->supplierService->getSuppliers();
             \Log::info('Suppliers data:', $suppliers->toArray());
             return response()->json([
@@ -111,16 +107,27 @@ class PurchaseOrderController extends Controller
 
         try {
             $suppliers = $this->supplierService->getSuppliers();
-            \Log::info('Suppliers loaded in create():', $suppliers->toArray());
+            $itemTypes = $this->itemService->getTypes();
+
+            if (!$suppliers || !$itemTypes) {
+
+                return view('procurement.orders.create', [
+                    'suppliers' => $suppliers ?? [],
+                    'itemTypes' => $itemTypes ?? [],
+                ]);
+
+            }
+            return view("procurement.orders.create", compact('suppliers', 'itemTypes'));
+
+//            \Log::info('Suppliers loaded in create():', $suppliers->toArray());
         } catch (\Exception $e) {
-            \Log::error('Error fetching suppliers in create(): ' . $e->getMessage());
-            $suppliers = collect(); // fallback to empty collection
+            Log::error('Data fetch failed: ' . $e->getMessage());
+            return view('procurement.orders.create', [
+                'suppliers' => [],
+                'itemTypes' => [],
+            ])->with('error', 'An error occurred: ' . $e->getMessage());
         }
-        //
 
-
-        return view("procurement.orders.create", compact('suppliers'));
-//        return view("procurement.orders.create");
     }
 
     /**
@@ -300,4 +307,77 @@ class PurchaseOrderController extends Controller
     {
         //
     }
+
+    public function linkRFQ()
+    {
+        try {
+            $RFQ = $this->rfqService->fetchRFQ();
+//            \Log::info('RFQ loaded in create():', $RFQ->toArray());
+        } catch (\Exception $e) {
+            \Log::error('Error fetching RFQS: ' . $e->getMessage());
+            $RFQ = collect(); // fallback to empty collection
+        }
+
+        return view("procurement.orders.rfqlink", compact('RFQ'));
+    }
+
+
+
+//    public function fetchRFQDetails($id){
+////        dd($id);
+//        try {
+//
+//            $RFQData = $this->rfqService->RFQTOPO($id);
+//            return response()->json($RFQData);
+//
+//        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+//            Log::warning("Unauthorized access attempt to view RFQ ID: {$id} by user ID: " . auth()->id());
+//            return redirect()->back()->with('error', 'Unauthorized access.');
+//        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+//            Log::error("RFQ ID {$id} not found. Exception: " . $e->getMessage());
+//            return redirect()->back()->with('error', 'RFQ not found.');
+//        } catch (\Exception $e) {
+//            Log::error("Failed to fetch RFQ ID {$id}. Exception: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+//            return redirect()->back()->with('error', 'Failed to fetch RFQ.');
+//        }
+//    }
+//
+
+    public function fetchRFQDetails($id): JsonResponse
+    {
+        try {
+            $RFQData = $this->rfqService->RFQTOPO($id);
+
+            return response()->json([
+                'success' => true,
+                'data' => $RFQData,
+            ]);
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            Log::warning("Unauthorized access attempt to view RFQ ID: {$id} by user ID: " . auth()->id());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized access.',
+            ], 403);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::error("RFQ ID {$id} not found. Exception: " . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'RFQ not found.',
+            ], 404);
+        } catch (\Exception $e) {
+            Log::error("Failed to fetch RFQ ID {$id}. Exception: " . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch RFQ.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+
 }

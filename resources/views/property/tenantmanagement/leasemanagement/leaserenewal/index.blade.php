@@ -5,31 +5,40 @@
 <a href="{{ route('renewlease.create') }}" class="btn btn-primary mb-3">Renew Lease</a>
   <h4 class="fw-bold mb-3">📋 Lease Renewals</h4>
 
+    @if($leaserenewals->count())
   <table class="table table-bordered table-striped align-middle">
     <thead class="table-light">
       <tr>
         <th>#</th>
-        <th>Tenant</th>
-        <th>Old Lease</th>
-        <th>New Lease</th>
-        <th>Unit</th>
-        <th>New Period</th>
-        <th>New Rent</th>
+          <th>Current Lease</th>
+          <th>End Date of Current Lease</th>
+          <th>New Start Date</th>
+          <th>New End Date</th>
+          <th>New Monthly Rent</th>
+          <th>Payment Frequency</th>
+          <th>Remarks or Changes</th>
         <th>Action</th>
       </tr>
     </thead>
     <tbody>
+    @foreach($leaserenewals as $leaserenewal)
       <tr>
-        <td>1</td>
-        <td>Moses K.</td>
-        <td>#L-2025-001</td>
-        <td>#L-2025-008</td>
-        <td>Unit 101 - Sunset Plaza</td>
-        <td>Sep 2025 – Aug 2026</td>
-        <td>KES 27,500</td>
-        <td><button class="btn btn-sm btn-outline-secondary">📄 View</button></td>
+          <td>{{ $loop->iteration ?? '-' }}</td>
+          <td>{{ $leaserenewal->CurrentLease ?? '-' }}</td>
+          <td>{{ $leaserenewal->EndDateCurrentLease ?? '-' }}</td>
+          <td>{{ $leaserenewal->NewStartDate ?? '-' }}</td>
+          <td>{{ $leaserenewal->NewEndDate ?? '-' }}</td>
+          <td>{{ $leaserenewal->NewMonthlyRent ?? '-' }}</td>
+          <td>{{ $leaserenewal->PaymentFrequency ?? '-' }}</td>
+          <td>{{ $leaserenewal->Remarks ?? '-' }}</td>
+          <td><a href="{{ route('renewlease.show', $leaserenewal->id) }}" class="btn btn-sm btn-outline-secondary">📄
+                  View</a></td>
       </tr>
+    @endforeach
     </tbody>
   </table>
+    @else
+        <p>No lease renewals registered yet.</p>
+    @endif
 </div>
 @endsection
