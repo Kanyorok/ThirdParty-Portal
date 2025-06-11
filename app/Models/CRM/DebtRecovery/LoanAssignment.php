@@ -19,6 +19,11 @@ class LoanAssignment extends Model
     protected $table = 't_LoanAssignments';
     protected $primaryKey = 'Id';
 
+    public static function getPrimaryKey(): string
+    {
+        return 'LoanAssignmentsId';
+    }
+
     protected $fillable = [
                            'AccountID',
                            'StartOn',

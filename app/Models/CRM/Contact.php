@@ -22,6 +22,10 @@ class Contact extends Model
     protected $table = 't_Contacts';
     protected $primaryKey = 'ContactID';
 
+    public static function getPrimaryKey(): string
+    {
+        return 'ContactId';
+    }
     /**
      * The attributes that are mass assignable.
      */

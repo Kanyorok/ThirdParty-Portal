@@ -14,6 +14,11 @@ class MeetingLead extends Model
     const string UPDATED_AT = 'ModifiedOn';
     protected $table = 't_MeetingLeads';
 
+    public static function getPrimaryKey(): string
+    {
+        return 'MeetingLeadsId';
+    }
+
     protected $fillable = [
                            'MeetingId',
                            'LeadId',

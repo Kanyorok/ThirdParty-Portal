@@ -17,6 +17,10 @@ class CompetitorProduct extends Model
     protected $table = 't_CompetitorProducts';
     protected $primaryKey = 'Id';
 
+    public static function getPrimaryKey(): string
+    {
+        return 'CompetitorProductsId';
+    }
     protected $fillable = [
                            "CompetitorId",
                            "Name",

@@ -36,6 +36,7 @@ use App\Models\ThirdParies\Competitor;
 use App\Traits\UsefulEnumTrait;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\ItemCategories;
 use App\Models\Inventory\StockItem;
@@ -43,6 +44,8 @@ use App\Models\Inventory\Store;
 use App\Models\Inventory\InventoryType;
 use App\Models\Inventory\ItemType;
 use App\Models\Inventory\UnitOfMeasure;
+use App\Models\Inventory\InterBranchRequisition;
+use App\Models\Inventory\PriceManagement;
  
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\PlanLineItems;
@@ -309,6 +312,15 @@ enum PermissionEnum: string
     case UOMCreate = 'uom-create';
     case UOMDestroy= 'uom-destroy';
 
+    case InterBranchRequisitionView = 'interBranchRequisition-view';
+    case InterBranchRequisitionUpdate = 'interBranchRequisition-update';
+    case InterBranchRequisitionCreate = 'interBranchRequisition-create';
+    case InterBranchRequisitionDestroy= 'interBranchRequisition-destroy';
+    case InterBranchRequisitionApproval= 'interBranchRequisition-approval';
+    case PriceManagementView = 'priceManagement-view';
+    case PriceManagementUpdate = 'priceManagement-update';
+    case PriceManagementCreate = 'priceManagement-create';
+    case PriceManagementDestroy= 'priceManagement-destroy';
     /*
      *
      * ========================================  Property Management  ========================================
@@ -356,6 +368,15 @@ enum PermissionEnum: string
     case EmployeesDelete = 'employee-delete';
  
  
+        /*
+     *
+     * ========================================  Budget and Analytics  ========================================
+     */
+    case BudgetSetupView   = 'budgetSetup-view';
+    case BudgetSetupCreate = 'budgetSetup-create';
+    case BudgetSetupUpdate = 'budgetSetup-update';
+    case BudgetSetupDelete = 'budgetSetup-delete';
+ 
  
     public static function display(): Collection
     {
@@ -398,6 +419,7 @@ enum PermissionEnum: string
             //Tenders
             [self::TenderRead, self::TenderWrite, self::TenderUpdate, self::TenderDelete, self::TenderApproval],
  
+            //Inventory
             [self::MasterListView, self::MasterListUpdate, self::MasterListCreate, self::MasterListDestroy],
             [self::ItemCategoryView, self::ItemCategoryUpdate, self::ItemCategoryCreate, self::ItemCategoryDestroy],
             [self::StockItemView, self::StockItemUpdate, self::StockItemCreate, self::StockItemDestroy],
@@ -405,6 +427,9 @@ enum PermissionEnum: string
             [self::InventoryTypeView, self::InventoryTypeUpdate, self::InventoryTypeCreate, self::InventoryTypeDestroy],
             [self::ItemTypeView, self::ItemTypeUpdate, self::ItemTypeCreate, self::ItemTypeDestroy],
             [self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy],
+            [self::InterBranchRequisitionView, self::InterBranchRequisitionUpdate, self::InterBranchRequisitionCreate, self::InterBranchRequisitionDestroy, self::InterBranchRequisitionApproval],
+            [self::PriceManagementView, self::PriceManagementUpdate, self::PriceManagementCreate, self::PriceManagementDestroy],
+
             [self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete],
             [self::PlanLineItemsRead, self::PlanLineItemsWrite, self::PlanLineItemsUpdate, self::PlanLineItemsDelete],
             [self::BidSubmissionRead, self::BidSubmissionWrite, self::BidSubmissionUpdate, self::BidSubmissionDelete],
@@ -413,12 +438,16 @@ enum PermissionEnum: string
             [self::PlanMaintenanceRead, self::PlanMaintenanceWrite, self::PlanMaintenanceUpdate, self::PlanMaintenanceDelete],
             [self::PlanManualInputRead, self::PlanManualInputWrite, self::PlanManualInputUpdate, self::PlanManualInputDelete],
             [self::PlanEditRead, self::PlanEditWrite, self::PlanEditUpdate, self::PlanEditDelete],
+            /////////////////////////// Budget and Analytics  ///////////////////////
+            [self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate,self::BudgetSetupDelete],
+
             
             //Property Management
             [self::PropertyCategoryView,self::PropertyCategoryCreate,self::PropertyCategoryUpdate,self::PropertyCategoryDelete],
             [self::PropertyTypeView,self::PropertyTypeCreate,self::PropertyTypeUpdate,self::PropertyTypeDelete],
             [self::PropertyRegistryView,self::PropertyRegistryCreate,self::PropertyRegistryUpdate,self::PropertyRegistryDelete],
             [self::PropertyStructuralView,self::PropertyStructuralCreate,self::PropertyStructuralUpdate,self::PropertyStructuralDelete],
+
         ]);
     }
  
@@ -484,14 +513,21 @@ enum PermissionEnum: string
             self::StoreView, self::StoreUpdate, self::StoreCreate, self::StoreDestroy,
             self::InventoryTypeView, self::InventoryTypeUpdate, self::InventoryTypeCreate, self::InventoryTypeDestroy,
             self::ItemTypeView, self::ItemTypeUpdate, self::ItemTypeCreate, self::ItemTypeDestroy,
-            self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy,=> ModulesEnum::Inventory,
-
+            self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy,
+            self::InterBranchRequisitionView, self::InterBranchRequisitionUpdate, self::InterBranchRequisitionCreate, self::InterBranchRequisitionDestroy,self::InterBranchRequisitionApproval,
+            self::PriceManagementView, self::PriceManagementUpdate, self::PriceManagementCreate, self::PriceManagementDestroy => ModulesEnum::Inventory,
+            
             //Property Management
             self::PropertyCategoryView,self::PropertyCategoryCreate,self::PropertyCategoryUpdate,self::PropertyCategoryDelete,
             self::PropertyTypeView,self::PropertyTypeCreate,self::PropertyTypeUpdate,self::PropertyTypeDelete,
             self::PropertyRegistryView,self::PropertyRegistryCreate,self::PropertyRegistryUpdate,self::PropertyRegistryDelete,
             self::PropertyStructuralView,self::PropertyStructuralCreate,self::PropertyStructuralUpdate,self::PropertyStructuralDelete,=> ModulesEnum::Property,
             default => throw new \LogicException("Unhandled PermissionEnum case: {$this->value}"),
+
+            ///////////////^*********** Budget and Analytics ******************/////////////////
+            self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate,self::BudgetSetupDelete,
+            =>ModulesEnum::BudgetLine
+
         };
     }
  
@@ -542,10 +578,9 @@ enum PermissionEnum: string
 
             //Tendering
             self::TenderRead, self::TenderWrite, self::TenderUpdate, self::TenderDelete, self::TenderApproval => 'Tenders',
-            self::BidSubmissionRead, self::BidSubmissionWrite, self::BidSubmissionUpdate, self::BidSubmissionDelete, => 'Tender Suppliers',
-            self::TenderInvitationRead, self::TenderInvitationWrite, self::TenderInvitationUpdate, self::TenderInvitationDelete, => 'Tender Suppliers',
-            self::VendorClarificationsRead, self::VendorClarificationsWrite, self::VendorClarificationsUpdate, self::VendorClarificationsDelete, => 'Tender Suppliers',
-            
+            self::BidSubmissionRead, self::BidSubmissionWrite, self::BidSubmissionUpdate, self::BidSubmissionDelete, => 'Tender Bid Submission',
+            self::TenderInvitationRead, self::TenderInvitationWrite, self::TenderInvitationUpdate, self::TenderInvitationDelete, => 'Tender Invitation',
+            self::VendorClarificationsRead, self::VendorClarificationsWrite, self::VendorClarificationsUpdate, self::VendorClarificationsDelete, => 'Vendor Clarifications',
             //Inventory
             self::MasterListView, self::MasterListUpdate, self::MasterListCreate, self::MasterListDestroy => 'Item Master',
             self::ItemCategoryView, self::ItemCategoryUpdate, self::ItemCategoryCreate, self::ItemCategoryDestroy => 'Item Category',
@@ -554,7 +589,11 @@ enum PermissionEnum: string
             self::InventoryTypeView, self::InventoryTypeUpdate, self::InventoryTypeCreate, self::InventoryTypeDestroy => 'Inventory Type',
             self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy => 'UOM',
             self::ItemTypeView, self::ItemTypeUpdate, self::ItemTypeCreate, self::ItemTypeDestroy => 'Item Type',
+            self::InterBranchRequisitionView, self::InterBranchRequisitionUpdate, self::InterBranchRequisitionCreate, self::InterBranchRequisitionDestroy,self::InterBranchRequisitionApproval =>'InterBranch Requisition',
+            self::PriceManagementView, self::PriceManagementUpdate, self::PriceManagementCreate, self::PriceManagementDestroy=> 'Price Management',
 
+            ////////////////////////// Budget and Analytics //////////////////////////////
+            self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate,self::BudgetSetupDelete =>'Budget Setup',
 
             //Property Management
             self::PropertyCategoryView,self::PropertyCategoryCreate,self::PropertyCategoryUpdate,self::PropertyCategoryDelete => 'Property Category',

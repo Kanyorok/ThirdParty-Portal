@@ -2,12 +2,12 @@
 
 namespace App\Models\Procurement;
 
+use App\Enums\ProcurementPlanStatusEnum;
+use App\Models\Auth\User;
 use App\Models\Core\Workflow;
 use App\Models\Inventory\ItemMasterList;
-use Illuminate\Database\Eloquent\Model;
 use App\Traits\Model\UserActorTrait;
-use App\Models\Auth\User;
-use App\Enums\ProcurementPlanStatusEnum;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ConsolidatedProcurementPlan extends Model
@@ -35,6 +35,10 @@ class ConsolidatedProcurementPlan extends Model
         'DeletedBy'
     ];
 
+    public static function getPrimaryKey(): string
+    {
+        return 'ConsolidatedProcurementPlanID';
+    }
     protected $dates = [
         'CreatedDate',
         'SubmittedDate'
@@ -43,7 +47,7 @@ class ConsolidatedProcurementPlan extends Model
     protected $casts = [
         'Status' => ProcurementPlanStatusEnum::class,
     ];
-  
+
     public function workflows()
     {
         return $this->morphMany(Workflow::class, 'source', 'Source', 'SourceID');
@@ -56,7 +60,7 @@ class ConsolidatedProcurementPlan extends Model
     }
     public function submittedBy()
     {
-        return $this->belongsTo(User::class, 'SubmittedBy', 'Id'); 
+        return $this->belongsTo(User::class, 'SubmittedBy', 'Id');
     }
     public function modifiedBy()
     {

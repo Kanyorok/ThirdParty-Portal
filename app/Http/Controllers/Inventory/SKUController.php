@@ -97,7 +97,7 @@ class SKUController extends Controller
     public function destroy($id)
     {
         $item = StockItem::findOrFail($id);
-        $this->authorize('destroy', $item); // Laravel convention uses 'delete'
+        $this->authorize('destroy', $item); 
 
         try {
             $this->stockItemService->delete($item);

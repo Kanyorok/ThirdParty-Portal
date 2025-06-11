@@ -5,12 +5,11 @@ namespace App\Models\ThirdParies;
 use App\Models\Inventory\ItemCategories;
 use App\Models\Procurement\ProcurementPeriod;
 use App\Models\Procurement\RFQEvaluation;
-use App\Models\Procurement\Tender;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Procurement\RFQLine;
+use App\Models\Procurement\Tender;
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\Model\UserActorTrait;
 
 class Supplier extends Model
 {
@@ -23,12 +22,17 @@ class Supplier extends Model
     protected $table = 't_Suppliers';
     protected $primaryKey = 'Id';
 
+    public static function getPrimaryKey(): string
+    {
+        return 'SuppliersId';
+    }
+
     protected $fillable = [
         'SupplierName',
         'ContactEmail',
         'ContactPhone',
         'Address',
-        'IsPrequalified', 
+        'IsPrequalified',
         'CategoryId',
         'CreatedBy',
         'ModifiedBy',

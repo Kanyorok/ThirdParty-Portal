@@ -8,6 +8,7 @@
 
         </div>
         <h5>📋 Budget Scenarios</h5>
+        @if($scenarios->count())
         <table class="table table-hover table-bordered">
             <thead class="table-light">
             <tr>
@@ -21,19 +22,37 @@
             </tr>
             </thead>
             <tbody>
+              @foreach($scenarios as $scenario)
             <tr>
-                <td>1</td>
-                <td>Base Case</td>
-                <td>Standard conservative growth assumptions</td>
-                <td>2025</td>
-                <td>Bottom-Up</td>
-                <td><span class="badge bg-success">Yes</span></td>
+                <td>{{$loop->iteration}}</td>
+                <td>{{$scenario->scenarioName ?? '-'}}</td>
+                <td>{{$scenario->description ?? '-'}}</td>
+                <td>{{$scenario->budgetPeriod ?? '-'}}</td>
+                <td>{{$scenario->planningMethod ?? '-'}}</td>
+                    @if ($scenario->isDefault)
+                            <td><span class="badge bg-success">Default</span></td>
+                        @else
+                            <td><span class="badge bg-danger">Not Default</span></td>
+                        @endif
                 <td>
-                    <button class="btn btn-sm btn-outline-primary">✏️ Edit</button>
-                    <button class="btn btn-sm btn-outline-danger">🗑 Delete</button>
+                    <div class="d-flex gap-2">
+                    <a href="{{route('budgetscenerios.edit', $scenario->Id)}}" class="btn btn-sm btn-outline-primary">✏️ Edit</a>
+
+                    <form action="{{ route('budgetscenerios.destroy', $scenario->Id) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Are you sure you want to delete this scenario?');">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger btn-sm">🗑 Delete</button>
+                    </form>
+                    </div>
                 </td>
             </tr>
+            @endforeach
             </tbody>
         </table>
+        @else
+        <div class="alert alert-info">
+            No Scenarios Created
+        </div>
+        @endif
     </div>
 @endsection
