@@ -57,7 +57,7 @@ use App\Http\Controllers\Procurement\PlanApprovalInboxController;
 use App\Http\Controllers\Procurement\PlanExectionDashboardController;
 use App\Http\Controllers\Procurement\DepartmentNeedApprovalController;
 use App\Models\Procurement\Tender;
-
+use App\Http\Controllers\Procurement\SectionController;
 use App\Http\Controllers\Procurement\ProcurementSchedulePlanController;
 use App\Http\Controllers\Procurement\ProcurementSubmitPlanController;
 use App\Http\Controllers\Procurement\SectionController;
@@ -215,6 +215,17 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::post('/tender-criteria', [TenderEvaluationsController::class, 'storeTenderCriteria'])->name('tender-criteria.store');
     Route::post('/store-criteria-scores', [TenderEvaluationsController::class, 'criteriaScores'])->name('store-criteria-scores');
     Route::get('/criteria-sections', [EvaluationCriteriaController::class, 'viewCriteria'])->name('tender-criteria.index');
+    //Route::prefix('procurement')->group(function () {
+    Route::put('/criterias/{id}', [CriteriaController::class, 'update'])->name('criterias.update');
+    Route::delete('/criterias/{id}', [CriteriaController::class, 'destroy'])->name('criterias.destroy');
+    Route::put('/sections/{id}', [SectionController::class, 'update'])->name('sections.update');
+    Route::delete('/sections/{id}', [SectionController::class, 'destroy'])->name('sections.destroy');
+    Route::post('/sections', [SectionController::class, 'store'])->name('sections.store');
+
+
+//});
+
+
     //Route::get('/tenderevaluations', [EvaluationCriteriaController::class, 'tenderEvaluations'])->name('tenderevaluations.index');
 
 
@@ -318,9 +329,10 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
         Route::get('plan-manual-input/create', [PlanManualInputController::class, 'create'])->name('plan.manual-input.create');
         Route::post('plan-manual-input', [PlanManualInputController::class, 'store'])->name('plan.manual-input.store');
 
-        Route::get('/edit/{lineItem}', [PlanManualInputController::class, 'edit'])->name('edit');
-        Route::put('/update/{lineItem}', [PlanManualInputController::class, 'update'])->name('update');
-        Route::delete('/destroy/{lineItem}', [PlanManualInputController::class, 'destroy'])->name('destroy');
+        Route::get('plan-manual-input/edit/{lineItem}', [PlanManualInputController::class, 'edit'])->name('plan.manual-input.edit');
+        Route::put('plan-manual-input/{lineItem}', [PlanManualInputController::class, 'update'])->name('plan.manual-input.update');
+        Route::delete('plan-manual-input/destroy/{lineItem}', [PlanManualInputController::class, 'destroy'])->name('plan.manual-input.destroy');
+
     });
     Route::prefix('procurement/plan')->name('plan-from-needs.')->group(function () {
         Route::get('/create', [PlanFromNeedsController::class, 'create'])->name('create');
