@@ -35,6 +35,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('t_StockItems');
+        Schema::dropIfExists('t_InterBranchRequisition');
     }
 };

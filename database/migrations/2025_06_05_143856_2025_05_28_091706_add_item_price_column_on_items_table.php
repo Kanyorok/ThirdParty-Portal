@@ -20,7 +20,6 @@ return new class extends Migration {
      * Reverse the migrations.
      */
     public function down(): void
-
     {
         Schema::table('t_Items', function (Blueprint $table) {
             $table->dropForeign(['ItemPrice']);

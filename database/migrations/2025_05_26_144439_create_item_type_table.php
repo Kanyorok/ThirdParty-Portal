@@ -11,7 +11,6 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('t_ItemTypes', function (Blueprint $table) {
-            //
             $table->id('Id');
             $table->string('TypeName');
             $table->string('StockTracked')->default(false)->comment('StockTracked: true or false');
@@ -31,8 +30,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::table('t_ItemTypes', function (Blueprint $table) {
-            //
-        });
+        Schema::dropIfExists('t_ItemTypes');
     }
 };

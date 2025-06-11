@@ -14,8 +14,6 @@ return new class extends Migration {
 
     public function down(): void
     {
-        Schema::table('t_Items', function (Blueprint $table) {
-            $table->string('ItemCode')->nullable(false)->change();
-        });
+
     }
 };

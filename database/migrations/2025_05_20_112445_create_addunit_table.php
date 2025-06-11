@@ -35,6 +35,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('t_AddUnit');
+        Schema::dropIfExists('t_PropertyUnit');
     }
 };

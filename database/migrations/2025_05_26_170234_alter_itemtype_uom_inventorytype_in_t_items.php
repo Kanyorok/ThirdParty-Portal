@@ -23,15 +23,14 @@ return new class extends Migration {
     public function down(): void
     {
         Schema::table('t_Items', function (Blueprint $table) {
-            $table->dropForeign(['ItemType']);
-            $table->dropForeign(['UOM']);
-            $table->dropForeign(['InventoryType']);
-            $table->dropColumn(['ItemType', 'UOM', 'InventoryType']);
+            $table->dropConstrainedForeignId('ItemType');
+            $table->dropConstrainedForeignId('UOM');
+            $table->dropConstrainedForeignId('InventoryType');
 
             // Revert to string columns if rolling back
-            $table->string('ItemType');
-            $table->string('UOM');
-            $table->string('InventoryType');
+            $table->string('ItemType')->nullable();
+            $table->string('UOM')->nullable();
+            $table->string('InventoryType')->nullable();
         });
     }
 };
