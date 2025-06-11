@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
+use Throwable;
 use Yajra\DataTables\DataTables;
 
 class CompetitorController extends Controller
@@ -34,10 +35,10 @@ class CompetitorController extends Controller
                 })->editColumn('CompetitorName', function (Competitor $competitor) {
                     return '<a href="' . route('competitors.show', $competitor->CompetitorID) . '">' . $competitor->CompetitorName . '</a>';
                 })->setRowClass('mouse_pointer user-select-none dbl-click-redirect-data')->setRowData([
-                                                                                                       'dbl_click_url' => function (Competitor $competitor) {
-                                                                                                        return route('competitors.show', $competitor->CompetitorID);
-                                                                                                       },
-                                                                                                      ])->rawColumns(['CompetitorName', 'photo'])->make();
+                    'dbl_click_url' => function (Competitor $competitor) {
+                        return route('competitors.show', $competitor->CompetitorID);
+                    },
+                ])->rawColumns(['CompetitorName', 'photo'])->make();
         }
 
         return view('crm.marketing.competitors.index');
@@ -77,7 +78,7 @@ class CompetitorController extends Controller
         $actor = $request->user();
         try {
             $request->save($actor, $competitor);
-        } catch (\Throwable | Exception $e) {
+        } catch (Throwable|Exception $e) {
             Log::error('Error adding a competitor ' . $e->getMessage());
             return $this->errored('unexpected error updating competitor, try again latter');
         }
@@ -92,12 +93,12 @@ class CompetitorController extends Controller
     {
         try {
             $competitor->forceFill([
-                                    'DeletedBy' => $request->user()->Id,
-                                    'DeletedOn' => now(),
-                                   ])->save();
+                'DeletedBy' => $request->user()->Id,
+                'DeletedOn' => now(),
+            ])->save();
 
             activity()->causedBy($request->user())->performedOn($competitor)->event('delete')->log('Deleted  competitor (' . $competitor->CompetitorID . ').');
-        } catch (\Throwable | Exception $e) {
+        } catch (Throwable|Exception $e) {
             Log::error('Error adding a competitor ' . $e->getMessage());
             return $this->errored('unexpected error updating competitor, try again latter');
         }
