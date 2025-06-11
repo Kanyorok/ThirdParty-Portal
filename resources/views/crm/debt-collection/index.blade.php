@@ -1,3 +1,4 @@
+@php use App\Models\BR\DebtProduct; @endphp
 @extends('layouts.app')
 
 @section('title','Debt Collection')
@@ -9,10 +10,13 @@
         }
     </style>
 @endsection
+@section('breadcrumbs')
+    <li class="breadcrumb-item"><a href="#">CRM</a></li>
+@endsection
 @section('content')
     <div class="row">
         <div class="col-12">
-            <h1 class="h3 d-inline align-middle">@yield('title') <span class="small float-end">Dated:
+            <h1 class="h3 d-inline align-middle"> <span class="small float-end">Dated:
                 <span
                     class="text-decoration-underline">{{ ($dated instanceof Carbon\Carbon)? $dated->format('M d, Y'):'?' }}</span>
                 </span>
@@ -20,58 +24,62 @@
             <div class="clearfix"></div>
         </div>
     </div>
-    <form class="row" id="searchForm">
-        <div class="col-sm-2 col-12">
-            <div class="mx-1 mb-2">
-                <input type="number" class="form-control w-100 search-form-item"
-                       name="arrears" autocomplete="off" min="1"
-                       id="arrears"
-                       placeholder="arrears Days : 1" value="1">
-            </div>
-        </div>
-        <div class="col-sm-2 col-12">
-            <div class="mx-1 mb-2">
-                <select name="status" id="status" class="form-control w-100 search-form-item" required>
-                    <option value="all" selected>All - Status</option>
-                    @foreach($LoanSubClasses as $status)
-                        <option value="{{ $status->SubCodeID }}">{{ $status->Description }}</option>
-                    @endforeach
-                </select>
-            </div>
-        </div>
-        <div class="col-sm-2 col-6">
-            <div class="mx-1 mb-2">
-                <input type="number" class="form-control w-100 search-form-item"
-                       name="balance" autocomplete="off" maxlength="50" id="balance"
-                       placeholder="balance > Greater Than" min="1">
-            </div>
-        </div>
-        <div class="col-sm-2 col-6">
-            <div class="mx-1 mb-2">
-                <input type="search" class="form-control w-100 search-form-item"
-                       name="member_no" autocomplete="off" maxlength="50"
-                       id="member_no" placeholder="member no">
-            </div>
-        </div>
-        <div class="col-sm-2 col-6">
-            <div class="mx-1 mb-2">
+    <form id="searchForm" class="card">
+        <div class="card-body row">
+            <div class="col-sm-2 col-12">
                 <div class="mx-1 mb-2">
-                    <select class="form-control w-100 filter-field" name="assignee" id="assignee">
-                        @can('assign', \App\Models\BR\DebtProduct::class)
-                            <option value="all">Assigned: Any</option>
-                            <option value="none">Assigned: None</option>
-                        @endcan
-                        <option selected value="{{ auth()->user()->UserID }}">
-                            Assigned: {{ auth()->user()->UserID }}</option>
+                    <input type="number" class="form-control w-100 search-form-item"
+                           name="arrears" autocomplete="off" min="1"
+                           id="arrears"
+                           placeholder="arrears Days : 1" value="1">
+                </div>
+            </div>
+            <div class="col-sm-2 col-12">
+                <div class="mx-1 mb-2">
+                    <select name="status" id="status" class="form-control w-100 search-form-item" required>
+                        <option value="all" selected>All - Status</option>
+                        @foreach($LoanSubClasses as $status)
+                            <option value="{{ $status->SubCodeID }}">{{ $status->Description }}</option>
+                        @endforeach
                     </select>
                 </div>
             </div>
+            <div class="col-sm-2 col-6">
+                <div class="mx-1 mb-2">
+                    <input type="number" class="form-control w-100 search-form-item"
+                           name="balance" autocomplete="off" maxlength="50" id="balance"
+                           placeholder="balance > Greater Than" min="1">
+                </div>
+            </div>
+            <div class="col-sm-2 col-6">
+                <div class="mx-1 mb-2">
+                    <input type="search" class="form-control w-100 search-form-item"
+                           name="member_no" autocomplete="off" maxlength="50"
+                           id="member_no" placeholder="member no">
+                </div>
+            </div>
+            <div class="col-sm-2 col-6">
+                <div class="mx-1 mb-2">
+                    <div class="mx-1 mb-2">
+                        <select class="form-control w-100 filter-field" name="assignee" id="assignee">
+                            @can('assign', DebtProduct::class)
+                                <option value="all">Assigned: Any</option>
+                                <option value="none">Assigned: None</option>
+                            @endcan
+                            <option selected value="{{ auth()->user()->UserID }}">
+                                Assigned: {{ auth()->user()->UserID }}</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-2 col-6">
+                <button class="btn btn-primary w-100" id="searchFormBtn" type="submit"><i
+                        class="fas fa-magnifying-glass"></i>
+                </button>
+            </div>
         </div>
-        <div class="col-sm-2 col-6">
-            <button class="btn btn-primary w-100" id="searchFormBtn" type="submit"><i
-                    class="fas fa-magnifying-glass"></i>
-            </button>
-        </div>
+
+
     </form>
     <div class="row">
         <div class="col-12">
