@@ -12,7 +12,7 @@ class ItemMasterListRequest extends FormRequest
 {
     public function authorize()
     {
-        // Adjust based on action
+        
         if ($this->isMethod('post')) {
             return $this->user()->can('create', \App\Models\Inventory\ItemMasterList::class);
         }
@@ -44,6 +44,7 @@ class ItemMasterListRequest extends FormRequest
             'DocumentUpload' => 'nullable|file|mimes:pdf,doc,docx,xlsx,xls|max:5120',
             'ItemDescription' => 'nullable|string',
             'Status' => 'required|boolean',
+            'ItemPrice' => 'nullable|string',
             'remove_image' => 'nullable|in:1',
         ];
     }

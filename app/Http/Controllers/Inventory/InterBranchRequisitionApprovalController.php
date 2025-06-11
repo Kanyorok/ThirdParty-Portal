@@ -4,16 +4,69 @@ namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Inventory\InterBranchRequisition;
+use App\Services\Inventory\InterBranchRequisitionService;
+use Illuminate\Support\Facades\Auth;
 
 class InterBranchRequisitionApprovalController extends Controller
 {
-    //
-    public function index()
+    protected InterBranchRequisitionService $service;
+
+    public function __construct(InterBranchRequisitionService $service)
     {
-        return view('inventory.interbranchrequisition.approval.index');
+        $this->service = $service;
     }
 
-    public function create(){
+    public function index(Request $request)
+    {
+        $pendingRequisitions = InterBranchRequisition::where('Status', 'Pending Approval')->get();
+
+        $requisition = null;
+        if ($request->has('ReqId') && !empty($request->ReqId)) {
+            $requisition = InterBranchRequisition::where('Id', $request->ReqId)->first();
+
+            if ($requisition) {
+                $requisition->load(['fromBranch', 'toBranch', 'creator', 'items', 'items.item', 'items.uom']);
+                $requisition->CurrentApprLevel = $this->service->getApprovalLevelFromStatus($requisition->Status);
+            } else {
+                return redirect()->back()->with('error', 'Selected requisition not found.');
+            }
+        }
+
+        return view('inventory.interbranchrequisition.approval.index', [
+            'pendingRequisitions' => $pendingRequisitions,
+            'requisition' => $requisition,
+        ]);
+    }
+
+    public function submitDecision(Request $request)
+    {
+        $request->validate([
+            'ReqId' => 'required|numeric',
+            'action' => 'required|in:APPROVED,REJECTED,COMMENTED',
+            'comments' => 'required|string|max:1000',
+            'approved_qty' => 'array',
+            'item_remarks' => 'array',
+        ]);
+
+        $user = Auth::user();
+        $requisition = InterBranchRequisition::findOrFail($request->ReqId);
+
+        $this->service->submitDecision(
+            $requisition,
+            $request->action,
+            $request->comments,
+            $request->approved_qty ?? [],
+            $request->item_remarks ?? [],
+            $user
+        );
+
+        return redirect()->route('interbranchrequisitionapproval.index')
+            ->with('success', 'Your decision has been recorded.');
+    }
+
+    public function create()
+    {
         return view('inventory.interbranchrequisition.approval.create');
     }
 }
