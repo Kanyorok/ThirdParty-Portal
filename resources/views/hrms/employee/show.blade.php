@@ -5,6 +5,7 @@
     {{ \Illuminate\Support\Str::upper($employee->EmployeeID) }}
 @endsection
 @section('breadcrumbs')
+    <li class="breadcrumb-item"><a href="#">HRM</a></li>
     <li class="breadcrumb-item"><a href="{{ route('employees.index') }}">Employees</a></li>
 @endsection
 @section('styles')
