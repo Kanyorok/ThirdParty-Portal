@@ -25,7 +25,7 @@
             <tr>
                 <td>{{ $Index + 1 }}</td>
                 <td>{{ $type->PropertyTypeName }}</td>
-                <td>{{ $type->PropertyCategoryId ?? '--' }}</td>
+                <td>{{ $type->propertycategory->Name ?? '--' }}</td>
                 <td>{{ $type->Description }}</td>
                 <td>
                     <a href="{{ route('propertytype.edit', $type->Id) }}" class="btn btn-sm btn-warning">Edit</a>

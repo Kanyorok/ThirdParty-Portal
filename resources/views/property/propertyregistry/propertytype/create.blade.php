@@ -41,6 +41,7 @@
           <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
             ➕ Add TYPE
         </button>
+        <a href="{{ route('propertytype.index') }}" class="btn btn-secondary">Cancel</a>
         </div>
       </div>
     </div>

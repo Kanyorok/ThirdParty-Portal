@@ -39,7 +39,7 @@ class PropertyRegistry extends Model
         return 'PropertyRegistryId';
     }
    
-    public function propertyType()
+    public function type()
     {
         return $this->belongsTo(PropertyType::class, 'PropertyType', 'Id');
     }
