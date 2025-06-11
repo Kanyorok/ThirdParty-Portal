@@ -9,7 +9,6 @@ use App\Enums\WorkflowStatus;
 use App\Exceptions\ErroredException;
 use App\Helpers\SystemHelper;
 use App\Models\Auth\User;
-use App\Models\BR\Branch;
 use App\Models\Core\Branch;
 use App\Models\Core\CodeDetail;
 use App\Models\Core\PendingWorkflow;
@@ -22,10 +21,38 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
+#use App\Models\BR\Branch;
+
 class PlannerService
 {
     public function __construct(public MarketingPlanner $planner)
     {
+    }
+
+    public static function createMaster(string $Name, Collection $plansIds, string $Notes, User $actor): PlannerService
+    {
+        $planner = new MarketingPlanner();
+        $planner->fill([
+            'PlannerID' => self::_ID(),
+            'Name' => $Name,
+            'Notes' => $Notes,
+            'Status' => PlannerStatus::Draft->value,
+            'Type' => PlannerTypeEnum::MasterPlanner->value,
+            'OwnerId' => $actor->Id,
+            'CreatedBy' => $actor->Id,
+            'ModifiedBy' => $actor->Id,
+        ])->save();
+
+        MarketingPlanner::query()->whereIn('Id', $plansIds->toArray())->update([
+            'MasterPlannerId' => $planner->Id,
+            'Status' => PlannerStatus::Merged->value,
+        ]);
+
+        MarketingPlannerActivity::query()->whereIn('PlannerId', $plansIds->toArray())->update([
+            'MasterPlannerId' => $planner->Id,
+        ]);
+
+        return (new self($planner->refresh()));
     }
 
     /**
@@ -38,8 +65,8 @@ class PlannerService
         }
 
         $this->planner->fill([
-                              'Status' => ($this->planner->Type->value === PlannerTypeEnum::MasterPlanner->value) ? PlannerStatus::Draft->value : PlannerStatus::MarketingManager->value,
-                             ])->save(['timestamps' => false]);
+            'Status' => ($this->planner->Type->value === PlannerTypeEnum::MasterPlanner->value) ? PlannerStatus::Draft->value : PlannerStatus::MarketingManager->value,
+        ])->save(['timestamps' => false]);
 
 
         $pending = $this->planner->pendingWorkflows()->where('UserId', $actor->Id)->first();
@@ -49,17 +76,17 @@ class PlannerService
             $marketingManager = null;
         }
         $this->planner->pendingWorkflows()->update([
-                                                    'DeletedOn' => now(),
-                                                    'DeletedBy' => $actor->Id,
-                                                   ]);
+            'DeletedOn' => now(),
+            'DeletedBy' => $actor->Id,
+        ]);
 
         $this->planner->workflows()->create([
-                                             'Stage'      => PlannerStatus::Ceo->name,
-                                             'Status'     => WorkflowStatus::RejectReturn->value,
-                                             'Notes'      => $reason,
-                                             'CreatedBy'  => $actor->Id,
-                                             'ModifiedBy' => $actor->Id,
-                                            ]);
+            'Stage' => PlannerStatus::Ceo->name,
+            'Status' => WorkflowStatus::RejectReturn->value,
+            'Notes' => $reason,
+            'CreatedBy' => $actor->Id,
+            'ModifiedBy' => $actor->Id,
+        ]);
 
         if ($marketingManager instanceof User) {
             (new UserService($marketingManager))->sendEmail(
@@ -76,6 +103,53 @@ class PlannerService
         return $this;
     }
 
+    public function canApprove(User $actor): bool
+    {
+        return in_array($actor->Id, $this->planner->pendingWorkflows()->get('t_PendingWorkflows.UserId')->pluck('UserId')->toArray(), true) || $actor->can(PermissionEnum::MarketingPlannerApproval->value);
+    }
+
+    public function update(Branch $branch, CodeDetail $Mode, string $Name, string $Notes, User $actor): static
+    {
+        $this->planner->update([
+            'Name' => $Name,
+            'BranchId' => $branch->BranchID,
+            'Notes' => $Notes,
+            'Status' => PlannerStatus::Draft->value,
+            'Modes' => $Mode->ID,
+            'ModifiedBy' => $actor->Id,
+        ]);
+        return $this;
+    }
+
+    public static function create(Branch $branch, CodeDetail $Mode, string $Name, string $Notes, User $actor): PlannerService
+    {
+        $planner = new MarketingPlanner();
+        $planner->fill([
+            'PlannerID' => self::_ID(),
+            'Name' => $Name,
+            'BranchId' => $branch->BranchID,
+            'Notes' => $Notes,
+            'Status' => PlannerStatus::Draft->value,
+            'Type' => PlannerTypeEnum::BranchPlanner->value,
+            'Modes' => $Mode->ID,
+            'OwnerId' => $actor->Id,
+            'CreatedBy' => $actor->Id,
+            'ModifiedBy' => $actor->Id,
+        ])->save();
+
+        return (new self($planner->refresh()));
+    }
+
+    private static function _ID(): string
+    {
+        $number = MarketingPlanner::query()->withTrashed()->count();
+        do {
+            $number++;
+            $slug = Str::slug('P' . Str::padLeft(($number), 5, '0'));
+        } while (MarketingPlanner::where('PlannerID', $slug)->withTrashed()->exists());
+
+        return $slug;
+    }
 
     /**
      * @throws ErroredException
@@ -87,8 +161,8 @@ class PlannerService
         }
 
         $this->planner->fill([
-                              'Status' => PlannerStatus::Active->value,
-                             ])->save(['timestamps' => false]);
+            'Status' => PlannerStatus::Active->value,
+        ])->save(['timestamps' => false]);
 
         $pending = $this->planner->pendingWorkflows()->where('UserId', $actor->Id)->first();
         if ($pending instanceof PendingWorkflow) {
@@ -98,62 +172,15 @@ class PlannerService
         }
 
         $this->planner->pendingWorkflows()->update([
-                                                    'DeletedOn' => now(),
-                                                    'DeletedBy' => $actor->Id,
-                                                   ]);
+            'DeletedOn' => now(),
+            'DeletedBy' => $actor->Id,
+        ]);
 
         if ($marketingManager instanceof User) {
             (new UserService($marketingManager))->sendEmail(
                 'Marketing Plan has been approval',
                 '<p>Hello</p><p>A marketing plan <b>' . $this->planner->PlannerID . '</b> has been prepared and submitted for your review. Click the link below to review</p>
                 <p><a href="' . route('marketing-planner.show', [$this->planner->PlannerID]) . '"> planner details</a></p><p>Kindly review and approve the plan at your earliest convenience.</p>'
-            );
-        }
-
-        activity()->causedBy($actor)->performedOn($this->planner)->event('approve')->log('Approved marketing plan ' . $this->planner->PlannerID);
-
-        return $this;
-    }
-
-
-    /**
-     * @throws ErroredException
-     */
-    public function branchWorkflowApprove(User $actor): static
-    {
-        if (!$this->canApprove($actor)) {
-            throw new ErroredException('cannot approve, no permission');
-        }
-
-        $this->planner->fill([//change status to BM &&
-                              'Status' => PlannerStatus::MarketingManager->value,
-                             ])->save(['timestamps' => false]);
-
-        $this->planner->pendingWorkflows()->where('Stage', PlannerStatus::BranchManager->name)/*->where('UserId', $actor->Id)*/ ->update([
-                                                                                                                                          'DeletedOn' => now(),
-                                                                                                                                          'DeletedBy' => $actor->Id,
-                                                                                                                                         ]);
-
-        $this->planner->workflows()->create([
-                                             'Stage'      => PlannerStatus::BranchManager->name,
-                                             'Status'     => WorkflowStatus::Accepted->value,
-                                             'Notes'      => 'Branch Manager Approval',
-                                             'CreatedBy'  => $actor->Id,
-                                             'ModifiedBy' => $actor->Id,
-                                            ]);
-        $marketingManagers = UserService::marketingManagers(true)->get(["Id", "UserID", "Name", "Email"]);
-        foreach ($marketingManagers as $marketingManager) {
-            $this->planner->pendingWorkflows()->create([
-                                                        'Stage'      => PlannerStatus::MarketingManager->name,
-                                                        'UserId'     => $marketingManager->Id,
-                                                        'CreatedBy'  => $actor->Id,
-                                                        'ModifiedBy' => $actor->Id,
-                                                       ]);
-
-            (new UserService($marketingManager))->sendEmail(
-                'Marketing Plan Submission for Your Review and Approval',
-                '<p>Hello</p><p>A marketing plan <b>' . $this->planner->PlannerID . '</b> has been prepared and submitted for your review. Click the link below to review</p>
-                    <p><a href="' . route('marketing-planner.show', [$this->planner->PlannerID]) . '">' . $this->planner->PlannerID . ' details</a></p><p>Kindly review and approve the plan at your earliest convenience.</p>'
             );
         }
 
@@ -172,24 +199,24 @@ class PlannerService
         }
 
         $this->planner->fill([//change status to BM &&
-                              'Status' => PlannerStatus::Draft->value,
-                             ])->save(['timestamps' => false]);
+            'Status' => PlannerStatus::Draft->value,
+        ])->save(['timestamps' => false]);
 
         $pending = $this->planner->pendingWorkflows()->where('Stage', PlannerStatus::BranchManager->name)->where('UserId', $actor->Id)->first();
         if ($pending instanceof PendingWorkflow) {
             $pending->forceFill([
-                                 'DeletedOn' => now(),
-                                 'DeletedBy' => $actor->Id,
-                                ])->save();
+                'DeletedOn' => now(),
+                'DeletedBy' => $actor->Id,
+            ])->save();
         }
 
         $this->planner->workflows()->create([
-                                             'Stage'      => PlannerStatus::BranchManager->name,
-                                             'Status'     => WorkflowStatus::RejectReturn->value,
-                                             'Notes'      => $reason,
-                                             'CreatedBy'  => $actor->Id,
-                                             'ModifiedBy' => $actor->Id,
-                                            ]);
+            'Stage' => PlannerStatus::BranchManager->name,
+            'Status' => WorkflowStatus::RejectReturn->value,
+            'Notes' => $reason,
+            'CreatedBy' => $actor->Id,
+            'ModifiedBy' => $actor->Id,
+        ]);
 
         $owner = $this->planner->owner;
         if ($owner instanceof User) {
@@ -216,8 +243,8 @@ class PlannerService
         }
 
         $this->planner->fill([
-                              'Status' => PlannerStatus::Ceo->value,
-                             ])->save(['timestamps' => false]);
+            'Status' => PlannerStatus::Ceo->value,
+        ])->save(['timestamps' => false]);
 
 
         if ($this->planner->Type->value === PlannerTypeEnum::MasterPlanner->value) {
@@ -227,16 +254,16 @@ class PlannerService
 
             foreach ($this->planner->plans as $plan) {
                 $Workflows->add([
-                                 'Source'     => MarketingPlanner::getPrimaryKey(),
-                                 'SourceID'   => $plan->Id,
-                                 'Stage'      => PlannerStatus::MarketingManager->name,
-                                 'Status'     => WorkflowStatus::Accepted->value,
-                                 'Notes'      => 'Marketing Manager Approval',
-                                 'CreatedBy'  => $actor->Id,
-                                 'ModifiedBy' => $actor->Id,
-                                 'CreatedOn'  => $date,
-                                 'ModifiedOn' => $date,
-                                ]);
+                    'Source' => MarketingPlanner::getPrimaryKey(),
+                    'SourceID' => $plan->Id,
+                    'Stage' => PlannerStatus::MarketingManager->name,
+                    'Status' => WorkflowStatus::Accepted->value,
+                    'Notes' => 'Marketing Manager Approval',
+                    'CreatedBy' => $actor->Id,
+                    'ModifiedBy' => $actor->Id,
+                    'CreatedOn' => $date,
+                    'ModifiedOn' => $date,
+                ]);
                 $planIDs->add($plan->Id);
             }
             if ($Workflows->count() === 0) {
@@ -246,17 +273,17 @@ class PlannerService
             DB::table('t_Workflows')->insert($Workflows->toArray());
 
             PendingWorkflow::query()->where('t_PendingWorkflows.Source', MarketingPlanner::getPrimaryKey())->whereIn('t_PendingWorkflows.SourceID', $planIDs->toArray())->update([
-                                                                                                                                                                                  'DeletedOn' => now(),
-                                                                                                                                                                                  'DeletedBy' => $actor->Id,
-                                                                                                                                                                                 ]);
+                'DeletedOn' => now(),
+                'DeletedBy' => $actor->Id,
+            ]);
 
             $this->planner->workflows()->create([
-                                                 'Stage'      => PlannerStatus::MarketingManager->name,
-                                                 'Status'     => WorkflowStatus::Accepted->value,
-                                                 'Notes'      => 'Submitted Master Plan',
-                                                 'CreatedBy'  => $actor->Id,
-                                                 'ModifiedBy' => $actor->Id,
-                                                ]);
+                'Stage' => PlannerStatus::MarketingManager->name,
+                'Status' => WorkflowStatus::Accepted->value,
+                'Notes' => 'Submitted Master Plan',
+                'CreatedBy' => $actor->Id,
+                'ModifiedBy' => $actor->Id,
+            ]);
 
             $this->_notifyCeo($actor);
 
@@ -267,17 +294,17 @@ class PlannerService
 
         if ($this->planner->Type->value === PlannerTypeEnum::BranchPlanner->value) {
             $this->planner->pendingWorkflows()->where('Stage', PlannerStatus::MarketingManager->name)->update([
-                                                                                                               'DeletedOn' => now(),
-                                                                                                               'DeletedBy' => $actor->Id,
-                                                                                                              ]);
+                'DeletedOn' => now(),
+                'DeletedBy' => $actor->Id,
+            ]);
 
             $this->planner->workflows()->create([
-                                                 'Stage'      => PlannerStatus::MarketingManager->name,
-                                                 'Status'     => WorkflowStatus::Accepted->value,
-                                                 'Notes'      => 'Marketing Manager Approval',
-                                                 'CreatedBy'  => $actor->Id,
-                                                 'ModifiedBy' => $actor->Id,
-                                                ]);
+                'Stage' => PlannerStatus::MarketingManager->name,
+                'Status' => WorkflowStatus::Accepted->value,
+                'Notes' => 'Marketing Manager Approval',
+                'CreatedBy' => $actor->Id,
+                'ModifiedBy' => $actor->Id,
+            ]);
 
             $this->_notifyCeo($actor);
 
@@ -301,11 +328,11 @@ class PlannerService
             }
 
             $this->planner->pendingWorkflows()->create([
-                                                        'Stage'      => PlannerStatus::Ceo->name,
-                                                        'UserId'     => $user->Id,
-                                                        'CreatedBy'  => $actor->Id,
-                                                        'ModifiedBy' => $actor->Id,
-                                                       ]);
+                'Stage' => PlannerStatus::Ceo->name,
+                'UserId' => $user->Id,
+                'CreatedBy' => $actor->Id,
+                'ModifiedBy' => $actor->Id,
+            ]);
 
             //$this->_sendMail($user);
             (new UserService($user))->sendEmail(
@@ -327,24 +354,24 @@ class PlannerService
         }
 
         $this->planner->fill([//change status to BM &&
-                              'Status' => PlannerStatus::Draft->value,
-                             ])->save(['timestamps' => false]);
+            'Status' => PlannerStatus::Draft->value,
+        ])->save(['timestamps' => false]);
 
         $pending = $this->planner->pendingWorkflows()->where('Stage', PlannerStatus::MarketingManager->name)->where('UserId', $actor->Id)->first();
         if ($pending instanceof PendingWorkflow) {
             $pending->forceFill([
-                                 'DeletedOn' => now(),
-                                 'DeletedBy' => $actor->Id,
-                                ])->save();
+                'DeletedOn' => now(),
+                'DeletedBy' => $actor->Id,
+            ])->save();
         }
 
         $this->planner->workflows()->create([
-                                             'Stage'      => PlannerStatus::MarketingManager->name,
-                                             'Status'     => WorkflowStatus::RejectReturn->value,
-                                             'Notes'      => $reason,
-                                             'CreatedBy'  => $actor->Id,
-                                             'ModifiedBy' => $actor->Id,
-                                            ]);
+            'Stage' => PlannerStatus::MarketingManager->name,
+            'Status' => WorkflowStatus::RejectReturn->value,
+            'Notes' => $reason,
+            'CreatedBy' => $actor->Id,
+            'ModifiedBy' => $actor->Id,
+        ]);
 
         $owner = $this->planner->owner;
         if ($owner instanceof User) {
@@ -369,19 +396,19 @@ class PlannerService
     {
         $this->syncDates();
 
-        if ((!$branch->manager instanceof User || !$branch->operation instanceof User)) {
+        if ((!$branch->manager instanceof User) && (!$branch->operation instanceof User)) {
             throw new ErroredException('cannot submit, no branch manager');
         }
         // add to pending workflow
         if ($branch->manager instanceof User) {
             PendingWorkflow::create([
-                                     'Source'     => MarketingPlanner::getPrimaryKey(),
-                                     'SourceID'   => $this->planner->Id,
-                                     'Stage'      => PlannerStatus::BranchManager->name,
-                                     'UserId'     => $branch->manager->Id,
-                                     'CreatedBy'  => $actor->Id,
-                                     'ModifiedBy' => $actor->Id,
-                                    ]);
+                'Source' => MarketingPlanner::getPrimaryKey(),
+                'SourceID' => $this->planner->Id,
+                'Stage' => PlannerStatus::BranchManager->name,
+                'UserId' => $branch->manager->Id,
+                'CreatedBy' => $actor->Id,
+                'ModifiedBy' => $actor->Id,
+            ]);
             if ($branch->manager->Id === $actor->Id) {
                 return $this->branchWorkflowApprove($actor);
             }
@@ -394,13 +421,13 @@ class PlannerService
 
         if ($branch->operation instanceof User) {
             PendingWorkflow::create([
-                                     'Source'     => MarketingPlanner::getPrimaryKey(),
-                                     'SourceID'   => $this->planner->Id,
-                                     'Stage'      => PlannerStatus::BranchManager->name,
-                                     'UserId'     => $branch->operation->Id,
-                                     'CreatedBy'  => $actor->Id,
-                                     'ModifiedBy' => $actor->Id,
-                                    ]);
+                'Source' => MarketingPlanner::getPrimaryKey(),
+                'SourceID' => $this->planner->Id,
+                'Stage' => PlannerStatus::BranchManager->name,
+                'UserId' => $branch->operation->Id,
+                'CreatedBy' => $actor->Id,
+                'ModifiedBy' => $actor->Id,
+            ]);
 
             if ($branch->operation->Id === $actor->Id) {
                 return $this->branchWorkflowApprove($actor);
@@ -415,105 +442,21 @@ class PlannerService
 
 
         $this->planner->fill([//change status to BM &&
-                              'Status' => PlannerStatus::BranchManager->value,
-                             ])->save(['timestamps' => false]);
+            'Status' => PlannerStatus::BranchManager->value,
+        ])->save(['timestamps' => false]);
         //add workflow
         Workflow::create([
-                          'Source'     => MarketingPlanner::getPrimaryKey(),
-                          'SourceID'   => $this->planner->Id,
-                          'Stage'      => PlannerStatus::Draft->name,
-                          'Status'     => WorkflowStatus::Submitted->value,
-                          'Notes'      => 'User Submitted',
-                          'CreatedBy'  => $actor->Id,
-                          'ModifiedBy' => $actor->Id,
-                         ]);
+            'Source' => MarketingPlanner::getPrimaryKey(),
+            'SourceID' => $this->planner->Id,
+            'Stage' => PlannerStatus::Draft->name,
+            'Status' => WorkflowStatus::Submitted->value,
+            'Notes' => 'User Submitted',
+            'CreatedBy' => $actor->Id,
+            'ModifiedBy' => $actor->Id,
+        ]);
 
         activity()->causedBy($actor)->performedOn($this->planner)->event('submit')->log('Submitted ' . $this->planner->PlannerID . ' for approval.');
         return $this;
-    }
-
-    public function canApprove(User $actor): bool
-    {
-        return in_array($actor->Id, $this->planner->pendingWorkflows()->get('t_PendingWorkflows.UserId')->pluck('UserId')->toArray(), true);
-    }
-
-    public static function create(Branch $branch, CodeDetail $Mode, string $Name, string $Notes, User $actor): PlannerService
-    {
-        $planner = new MarketingPlanner();
-        $planner->fill([
-                        'PlannerID'  => self::_ID(),
-                        'Name'       => $Name,
-                        'BranchId'   => $branch->BranchID,
-                        'Notes'      => $Notes,
-                        'Status'     => PlannerStatus::Draft->value,
-                        'Type'       => PlannerTypeEnum::BranchPlanner->value,
-                        'Modes'      => $Mode->ID,
-                        'OwnerId'    => $actor->Id,
-                        'CreatedBy'  => $actor->Id,
-                        'ModifiedBy' => $actor->Id,
-                       ])->save();
-
-        return (new self($planner->refresh()));
-    }
-
-    /**
-     * @throws ErroredException
-     */
-    public function trash(User $actor): void
-    {
-        if ($this->planner->Type->value === PlannerTypeEnum::BranchPlanner->value) {
-            $this->planner->forceFill([
-                                       'DeletedBy' => $actor->id,
-                                       'DeletedOn' => now(),
-                                      ])->save();
-            activity()->causedBy($actor)->performedOn($this->planner)->event('delete')->log('Deleted draft  plan ' . $this->planner->PlannerID);
-            return;
-        }
-
-        if ($this->planner->Type->value === PlannerTypeEnum::MasterPlanner->value) {
-            $this->planner->forceFill([
-                                       'DeletedBy' => $actor->id,
-                                       'DeletedOn' => now(),
-                                      ])->save();
-
-            $this->planner->plans()->update([
-                                             'MasterPlannerId' => null,
-                                             'Status'          => PlannerStatus::MarketingManager->value,
-                                            ]);
-
-            $this->planner->activities()->update(['MasterPlannerId' => null]);
-
-            activity()->causedBy($actor)->performedOn($this->planner)->event('delete')->log('Deleted draft master  plan ' . $this->planner->PlannerID);
-            return;
-        }
-
-        throw new ErroredException('unknown planer type');
-    }
-
-    public static function createMaster(string $Name, Collection $plansIds, string $Notes, User $actor): PlannerService
-    {
-        $planner = new MarketingPlanner();
-        $planner->fill([
-                        'PlannerID'  => self::_ID(),
-                        'Name'       => $Name,
-                        'Notes'      => $Notes,
-                        'Status'     => PlannerStatus::Draft->value,
-                        'Type'       => PlannerTypeEnum::MasterPlanner->value,
-                        'OwnerId'    => $actor->Id,
-                        'CreatedBy'  => $actor->Id,
-                        'ModifiedBy' => $actor->Id,
-                       ])->save();
-
-        MarketingPlanner::query()->whereIn('Id', $plansIds->toArray())->update([
-                                                                                'MasterPlannerId' => $planner->Id,
-                                                                                'Status'          => PlannerStatus::Merged->value,
-                                                                               ]);
-
-        MarketingPlannerActivity::query()->whereIn('PlannerId', $plansIds->toArray())->update([
-                                                                                               'MasterPlannerId' => $planner->Id,
-                                                                                              ]);
-
-        return (new self($planner->refresh()));
     }
 
     public function syncDates(): static
@@ -529,77 +472,115 @@ class PlannerService
             $end = $endActivity->EndOn;
         }
         $this->planner->fill([
-                              'StartOn' => $start,
-                              'EndOn'   => $end,
-                             ])->save(['timestamps' => false]);
+            'StartOn' => $start,
+            'EndOn' => $end,
+        ])->save(['timestamps' => false]);
         return $this;
     }
 
-    private static function _ID(): string
+    /**
+     * @throws ErroredException
+     */
+    public function branchWorkflowApprove(User $actor): static
     {
-        $number = MarketingPlanner::query()->withTrashed()->count();
-        do {
-            $number++;
-            $slug = Str::slug('P' . Str::padLeft(($number), 5, '0'));
-        } while (MarketingPlanner::where('PlannerID', $slug)->withTrashed()->exists());
+        if (!$this->canApprove($actor)) {
+            throw new ErroredException('cannot approve, no permission');
+        }
 
-        return $slug;
+        $this->planner->fill([//change status to BM &&
+            'Status' => PlannerStatus::MarketingManager->value,
+        ])->save(['timestamps' => false]);
+
+        $this->planner->pendingWorkflows()->where('Stage', PlannerStatus::BranchManager->name)/*->where('UserId', $actor->Id)*/ ->update([
+            'DeletedOn' => now(),
+            'DeletedBy' => $actor->Id,
+        ]);
+
+        $this->planner->workflows()->create([
+            'Stage' => PlannerStatus::BranchManager->name,
+            'Status' => WorkflowStatus::Accepted->value,
+            'Notes' => 'Branch Manager Approval',
+            'CreatedBy' => $actor->Id,
+            'ModifiedBy' => $actor->Id,
+        ]);
+        $marketingManagers = UserService::marketingManagers(true)->get(["Id", "UserID", "Name", "Email"]);
+        foreach ($marketingManagers as $marketingManager) {
+            $this->planner->pendingWorkflows()->create([
+                'Stage' => PlannerStatus::MarketingManager->name,
+                'UserId' => $marketingManager->Id,
+                'CreatedBy' => $actor->Id,
+                'ModifiedBy' => $actor->Id,
+            ]);
+
+            (new UserService($marketingManager))->sendEmail(
+                'Marketing Plan Submission for Your Review and Approval',
+                '<p>Hello</p><p>A marketing plan <b>' . $this->planner->PlannerID . '</b> has been prepared and submitted for your review. Click the link below to review</p>
+                    <p><a href="' . route('marketing-planner.show', [$this->planner->PlannerID]) . '">' . $this->planner->PlannerID . ' details</a></p><p>Kindly review and approve the plan at your earliest convenience.</p>'
+            );
+        }
+
+        activity()->causedBy($actor)->performedOn($this->planner)->event('approve')->log('Approved marketing plan ' . $this->planner->PlannerID);
+
+        return $this;
     }
 
-    public function update(Branch $branch, CodeDetail $Mode, string $Name, string $Notes, User $actor): static
+    /**
+     * @throws ErroredException
+     */
+    public function trash(User $actor): void
     {
-        $this->planner->update([
-                                'Name'       => $Name,
-                                'BranchId'   => $branch->BranchID,
-                                'Notes'      => $Notes,
-                                'Status'     => PlannerStatus::Draft->value,
-                                'Modes'      => $Mode->ID,
-                                'ModifiedBy' => $actor->Id,
-                               ]);
-        return $this;
+        if ($this->planner->Type->value === PlannerTypeEnum::BranchPlanner->value) {
+            $this->planner->forceFill([
+                'DeletedBy' => $actor->id,
+                'DeletedOn' => now(),
+            ])->save();
+            activity()->causedBy($actor)->performedOn($this->planner)->event('delete')->log('Deleted draft  plan ' . $this->planner->PlannerID);
+            return;
+        }
+
+        if ($this->planner->Type->value === PlannerTypeEnum::MasterPlanner->value) {
+            $this->planner->forceFill([
+                'DeletedBy' => $actor->id,
+                'DeletedOn' => now(),
+            ])->save();
+
+            $this->planner->plans()->update([
+                'MasterPlannerId' => null,
+                'Status' => PlannerStatus::MarketingManager->value,
+            ]);
+
+            $this->planner->activities()->update(['MasterPlannerId' => null]);
+
+            activity()->causedBy($actor)->performedOn($this->planner)->event('delete')->log('Deleted draft master  plan ' . $this->planner->PlannerID);
+            return;
+        }
+
+        throw new ErroredException('unknown planer type');
     }
 
     public function addActivity(string $Name, string $Location, Carbon $start, Carbon $end, float $budget, string $Notes, User $actor, Collection $users, Branch $branch = null, string $Materials = ''): static
     {
         $activity = new MarketingPlannerActivity();
         $activity->fill([
-                         'PlannerActivityID' => $this->_activityID(),
-                         'Name'              => $Name,
-                         'PlannerId'         => $this->planner->Id,
-                         'MasterPlannerId'   => ($this->planner->Type->value === PlannerTypeEnum::MasterPlanner->value) ? $this->planner->Id : null,
-                         'Location'          => $Location,
-                         'Notes'             => $Notes,
-                         'Materials'         => $Materials,
-                         'BranchId'          => ($branch instanceof Branch) ? $branch->OurBranchID : $this->planner->BranchId,
-                         'StartOn'           => $start,
-                         'EndOn'             => $end,
-                         'Budget'            => $budget,
-                         'CreatedBy'         => $actor->Id,
-                         'ModifiedBy'        => $actor->Id,
-                        ])->save();
+            'PlannerActivityID' => $this->_activityID(),
+            'Name' => $Name,
+            'PlannerId' => $this->planner->Id,
+            'MasterPlannerId' => ($this->planner->Type->value === PlannerTypeEnum::MasterPlanner->value) ? $this->planner->Id : null,
+            'Location' => $Location,
+            'Notes' => $Notes,
+            'Materials' => $Materials,
+            'BranchId' => ($branch instanceof Branch) ? $branch->OurBranchID : $this->planner->BranchId,
+            'StartOn' => $start,
+            'EndOn' => $end,
+            'Budget' => $budget,
+            'CreatedBy' => $actor->Id,
+            'ModifiedBy' => $actor->Id,
+        ])->save();
 
         $activity->refresh();
 
 
         $activity->users()->syncWithPivotValues($users->pluck('Id')->toArray(), ['CreatedBy' => $actor->Id, 'ModifiedBy' => $actor->Id], false);
-
-        return $this->syncDates();
-    }
-
-    public function updateActivity(MarketingPlannerActivity $activity, string $Name, string $Location, Carbon $start, Carbon $end, float $budget, string $Notes, User $actor, Collection $users, string $branchId): static
-    {
-        $activity->fill([
-                         'Name'       => $Name,
-                         'Location'   => $Location,
-                         'Notes'      => $Notes,
-                         'BranchId'   => $branchId,
-                         'StartOn'    => $start,
-                         'EndOn'      => $end,
-                         'Budget'     => $budget,
-                         'ModifiedBy' => $actor->Id,
-                        ])->save();
-
-        $activity->users()->syncWithPivotValues($users->pluck('Id')->toArray(), ['CreatedBy' => $actor->Id, 'ModifiedBy' => $actor->Id], true);
 
         return $this->syncDates();
     }
@@ -613,5 +594,23 @@ class PlannerService
         } while (MarketingPlannerActivity::where('PlannerActivityID', $slug)->withTrashed()->exists());
 
         return $slug;
+    }
+
+    public function updateActivity(MarketingPlannerActivity $activity, string $Name, string $Location, Carbon $start, Carbon $end, float $budget, string $Notes, User $actor, Collection $users, string $branchId): static
+    {
+        $activity->fill([
+            'Name' => $Name,
+            'Location' => $Location,
+            'Notes' => $Notes,
+            'BranchId' => $branchId,
+            'StartOn' => $start,
+            'EndOn' => $end,
+            'Budget' => $budget,
+            'ModifiedBy' => $actor->Id,
+        ])->save();
+
+        $activity->users()->syncWithPivotValues($users->pluck('Id')->toArray(), ['CreatedBy' => $actor->Id, 'ModifiedBy' => $actor->Id], true);
+
+        return $this->syncDates();
     }
 }

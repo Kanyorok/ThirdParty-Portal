@@ -12,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class SurveyApprovalController extends Controller
 {
@@ -35,7 +36,7 @@ class SurveyApprovalController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception $e) {
+        } catch (Exception|Throwable $e) {
             Log::error('Error approve survey failed: ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }

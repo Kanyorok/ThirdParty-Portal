@@ -94,13 +94,17 @@ use App\Models\Procurement\PlanLineItems;
 
 class AppServiceProvider extends ServiceProvider
 {
-    
+    /**
+     * Register any application services.
+     */
     public function register(): void
     {
         //
     }
 
-   
+    /**
+     * Bootstrap any application services.
+     */
     public function boot(): void
     {
         Relation::morphMap([
@@ -153,17 +157,17 @@ class AppServiceProvider extends ServiceProvider
             InterBranchRequisition::getPrimaryKey() => InterBranchRequisition::class,
             ConsolidatedProcurementPlan::getPrimaryKey() => ConsolidatedProcurementPlan::class,
             PlanLineItems::getPrimaryKey() => PlanLineItems::class,
-          
-            ///////// Budget and Analytics /////////
-            BudgetLinesGLAccount::getPrimaryKey()=>BudgetLinesGLAccount::class,
-            BudgetGLAccount::getPrimaryKey()=>BudgetGLAccount::class,
-            BudgetLine::getPrimaryKey()=>BudgetLine::class,
-            BudgetProduct::getPrimaryKey()=>BudgetProduct::class,
-            BudgetProductType::getPrimaryKey()=>BudgetProductType::class,
-            BudgetDriver::getPrimaryKey()=>BudgetDriver::class,
-            BudgetDriverMaster::getPrimaryKey()=>BudgetDriverMaster::class,
 
-          
+            ///////// Budget and Analytics /////////
+            BudgetLinesGLAccount::getPrimaryKey() => BudgetLinesGLAccount::class,
+            BudgetGLAccount::getPrimaryKey() => BudgetGLAccount::class,
+            BudgetLine::getPrimaryKey() => BudgetLine::class,
+            BudgetProduct::getPrimaryKey() => BudgetProduct::class,
+            BudgetProductType::getPrimaryKey() => BudgetProductType::class,
+            BudgetDriver::getPrimaryKey() => BudgetDriver::class,
+            BudgetDriverMaster::getPrimaryKey() => BudgetDriverMaster::class,
+
+
             CategoryMaster::getPrimaryKey() => CategoryMaster::class,
             PropertyType::getPrimaryKey() => PropertyType::class,
             PropertyRegistry::getPrimaryKey() => PropertyRegistry::class,
@@ -189,7 +193,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(ConsolidatedProcurementPlan::class, ProcurementPlanMaintainPolicy::class);
         Gate::policy(SchedulePlan::class, SchedulePlanPolicy::class);
         Gate::policy(PlanLineItems::class, PlanManualInputPolicy::class);
-         Gate::policy(InterBranchRequisition::class, InterBranchRequisitionPolicy::class);
+        Gate::policy(InterBranchRequisition::class, InterBranchRequisitionPolicy::class);
         Gate::policy(CategoryMaster::class, PropertyCategoryPolicy::class);
         Gate::policy(PropertyType::class, PropertyTypePolicy::class);
         Gate::policy(PropertyRegistry::class, PropertyRegistryPolicy::class);

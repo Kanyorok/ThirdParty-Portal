@@ -1,3 +1,4 @@
+@php use App\Enums\Feedback\SurveyQuestionTypeEnum; @endphp
 @extends('layouts.app')
 
 @section('title')
@@ -5,6 +6,10 @@
 @endsection
 @section('styles')
 
+@endsection
+@section('breadcrumbs')
+    <li class="breadcrumb-item"><a href="#">CRM</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('surveys.index') }}">Surveys</a></li>
 @endsection
 @section('content')
     <div class="row">
@@ -81,7 +86,7 @@
                                     <i class="align-middle" data-feather="more-horizontal"></i>
                                 </a>
                                 <div class="dropdown-menu dropdown-menu-end">
-                                    @if($question->Type->value === \App\Enums\Feedback\SurveyQuestionTypeEnum::Closed->value)
+                                    @if($question->Type->value === SurveyQuestionTypeEnum::Closed->value)
                                         <a class="dropdown-item add-question-option" href="javascript: void(0)"
                                            data-info="{{ route('survey-question-answer.store',[$question->SurveyQuestionId]) }}~{{ $question->Question }}">
                                             Add option</a>
@@ -112,7 +117,7 @@
                             @endif</h5>
                     </div>
                     <div class="card-body pt-1 border-top">
-                        @if($question->Type->value === \App\Enums\Feedback\SurveyQuestionTypeEnum::Closed->value)
+                        @if($question->Type->value === SurveyQuestionTypeEnum::Closed->value)
                             <table id="{{ $question->SurveyQuestionId }}AnswersTable"
                                    class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
                                 <thead>
@@ -174,7 +179,7 @@
                             </div>
                             <div class="mb-3">
                                 <label class="form-label" for="Start">Start <span
-                                            class="text-danger">*</span></label>
+                                        class="text-danger">*</span></label>
                                 <input type="text" class="form-control flatpickr-datetime" id="Start"
                                        name="Start" placeholder="Select start."
                                        value="{{ $survey->StartOn?->format('Y-m-d') }}">
@@ -183,7 +188,7 @@
                             </div>
                             <div class="mb-3">
                                 <label class="form-label" for="End">End <span
-                                            class="text-danger">*</span></label>
+                                        class="text-danger">*</span></label>
                                 <input type="text" class="form-control flatpickr-datetime " id="End"
                                        name="End" placeholder="Select end."
                                        value="{{ $survey->EndOn?->format('Y-m-d') }}">
@@ -203,7 +208,7 @@
                                     cancel
                                 </button>
                                 <button class="btn btn-primary float-end" id="updateSurveyBtn" type="submit"><i
-                                            class="fas fa-save"></i>
+                                        class="fas fa-save"></i>
                                     update {{ $survey->SurveyID }}
                                 </button>
                             </div>
@@ -222,7 +227,7 @@
                                 </button>
                                 <button class="btn btn-danger float-end" id="trashSurveyBtn"
                                         type="submit"><i
-                                            class="fas fa-trash"></i> yes, trash
+                                        class="fas fa-trash"></i> yes, trash
                                 </button>
                             </div>
                         </form>
@@ -594,7 +599,7 @@
             });
 
             @foreach($questions as $question)
-            @if($question->Type->value === \App\Enums\Feedback\SurveyQuestionTypeEnum::Closed->value)
+            @if($question->Type->value === SurveyQuestionTypeEnum::Closed->value)
             fetchQuestions('{{ $question->SurveyQuestionId }}');
             @endif
             @endforeach

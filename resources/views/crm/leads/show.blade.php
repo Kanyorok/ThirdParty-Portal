@@ -1,3 +1,16 @@
+@php use App\Models\Auth\User; @endphp
+@php use App\Helpers\SystemHelper; @endphp
+@php use App\Models\CRM\Discussion; @endphp
+@php use App\Enums\LeadTypeEnum; @endphp
+@php use App\Enums\CallStatusEnum; @endphp
+@php use Carbon\Carbon; @endphp
+@php use App\Http\Requests\Call\StartCallRequest; @endphp
+@php use App\Http\Requests\Call\StartMeetingRequest; @endphp
+@php use App\Enums\Core\RoleEnum; @endphp
+@php use App\Enums\LeadStatusEnum; @endphp
+@php use App\Enums\LocalityTypeEnum; @endphp
+@php use App\Models\Communication\Call; @endphp
+@php use App\Models\CRM\Meeting; @endphp
 @extends('layouts.app')
 
 @section('title')
@@ -11,6 +24,11 @@
             width: 100% !important;
         }
     </style>
+@endsection
+
+@section('breadcrumbs')
+    <li class="breadcrumb-item"><a href="#">CRM</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('leads.index') }}">Leads</a></li>
 @endsection
 @section('content')
     <div class="row">
@@ -191,7 +209,7 @@
                             @endif
                         </div>
                         <div class="card-body align-items-start py-1 px-3 row">
-                            @if($lead->RelationshipManager instanceof  \App\Models\Auth\User && ($lead->RelationshipManager->UserID !== \App\Helpers\SystemHelper::ID) && (!$lead->RelationshipManager->trashed()))
+                            @if($lead->RelationshipManager instanceof  User && ($lead->RelationshipManager->UserID !== SystemHelper::ID) && (!$lead->RelationshipManager->trashed()))
                                 <div class="col-4">
                                     {!! $lead->RelationshipManager->getImage('width="42" height="42" class="rounded-circle me-2" alt=".."') !!}
                                 </div>
@@ -207,7 +225,7 @@
                         </div>
                     </div>
                 </div>
-                    @if($call instanceof \App\Models\Communication\Call)
+                    @if($call instanceof Call)
                     <div class="col-12">
                         <div class="card">
                             <div class="card-body row ">
@@ -236,7 +254,7 @@
                                                     class="text-danger">*</span> </label>
                                             <textarea name="call_discussion" id="call_discussion" class="form-control"
                                                       rows="5" maxlength="5000" minlength="5">
-                                               {{($call->discussion instanceof \App\Models\CRM\Discussion)?$call->discussion->Discussion:''}}
+                                               {{($call->discussion instanceof Discussion)?$call->discussion->Discussion:''}}
                                            </textarea>
                                             <p id="call_discussion_error" class="invalid-feedback d-none error col-12"
                                                role="alert"></p>
@@ -272,7 +290,7 @@
                             </div>
                         </div>
                     </div>
-                    @elseif($meeting instanceof \App\Models\CRM\Meeting)
+                    @elseif($meeting instanceof Meeting)
                     <div class="col-12">
                         <div class="card">
                             <div class="card-header border border-bottom pb-0">
@@ -339,7 +357,7 @@
                                                     class="text-danger">*</span> </label>
                                             <textarea name="ongoing_meeting_discussion" id="ongoing_meeting_discussion"
                                                       class="form-control" rows="5" maxlength="5000" minlength="5"
-                                            >{{($meeting->discussion instanceof \App\Models\CRM\Discussion)?$meeting->discussion->Discussion:''}}</textarea>
+                                            >{{($meeting->discussion instanceof Discussion)?$meeting->discussion->Discussion:''}}</textarea>
                                             <p id="ongoing_meeting_discussion_error"
                                                class="invalid-feedback d-none error col-12"
                                                role="alert"></p>
@@ -369,7 +387,7 @@
                     @elseif($schedule instanceof \App\Models\CRM\Schedule)
                     <div class="col-12">
                         <div class="card">
-                            @if($schedule->ScheduledType === \App\Models\Communication\Call::getPrimaryKey())
+                            @if($schedule->ScheduledType === Call::getPrimaryKey())
                                 <div class="card-header border border-bottom pb-0">
                                     <h3 class="card-title">Scheduled Call </h3>
                                 </div>
@@ -405,7 +423,7 @@
                                         </button>
                                     </div>
                                 </div>
-                            @elseif($schedule->scheduled instanceof \App\Models\CRM\Meeting)
+                            @elseif($schedule->scheduled instanceof Meeting)
                                 <div class="card-header border border-bottom pb-0">
                                     <h3 class="card-title">Scheduled Meeting : {{ $schedule->scheduled->Title }} </h3>
                                 </div>
@@ -444,230 +462,325 @@
                 @endif
             </div>
 
-            <div class="tab">
-                <ul class="nav nav-tabs" role="tablist">
-                    <li class="nav-item"><a class="nav-link active" href="#tab-0" data-bs-toggle="tab" role="tab"
-                                            aria-selected="false">Activities</a></li>
-                    <li class="nav-item"><a class="nav-link " href="#tab-7" data-bs-toggle="tab" role="tab"
-                                            aria-selected="false" onclick="fetchTasksTable()">Open Tasks</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#tab-6" data-bs-toggle="tab" role="tab"
-                                            aria-selected="false" onclick="fetchScheduleTable()">Schedule</a></li>
-                    <li class="nav-item"><a class="nav-link " href="#tab-8" data-bs-toggle="tab" role="tab"
-                                            aria-selected="false" onclick="fetchContactsTable()">Contacts</a></li>
-                    <li class="nav-item"><a class="nav-link " href="#tab-2" data-bs-toggle="tab" role="tab"
-                                            aria-selected="false" onclick="fetchProductsTable()">Products Interested</a>
-                    </li>
-                    <li class="nav-item"><a class="nav-link" href="#tab-4" data-bs-toggle="tab" role="tab"
-                                            aria-selected="false" onclick="fetchDiscussionsTable()">Discussions</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#tab-5" data-bs-toggle="tab" role="tab"
-                                            aria-selected="false" onclick="fetchCallsTable()">Calls</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#tab-3" data-bs-toggle="tab" role="tab"
-                                            aria-selected="false" onclick="fetchNotesTable()">Private Notes</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#tab-9" data-bs-toggle="tab" role="tab"
-                                            aria-selected="false" onclick="fetchTicketsTable()">Tickets</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#tab-10" data-bs-toggle="tab" role="tab"
-                                            aria-selected="false" onclick="fetchMailsTable()">Emails</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#tab-11" data-bs-toggle="tab" role="tab"
-                                            aria-selected="false" onclick="fetchSMSTable()">Messages</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#tab-12" data-bs-toggle="tab"
-                                            role="tab" aria-selected="false" onclick="fetchWatchersTable()"
-                        >users & teams</a></li>
-                </ul>
-                <div class="tab-content">
-                    <div class="tab-pane active m-2" id="tab-0" role="tabpanel">
-                        <div id="activitiesMain"></div>
-                        <div class="d-grid">
-                            <button type="button" class="btn btn-primary d-none" id="loadMoreBtn"
-                                    onclick="fetchActivities()">Load more
-                            </button>
+            <div class="card">
+                <div class="card-body py-0">
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li class="nav-item"><a class="nav-link active" href="#tab-0" data-bs-toggle="tab" role="tab"
+                                                aria-selected="false">Activities</a></li>
+                        <li class="nav-item"><a class="nav-link " href="#tab-7" data-bs-toggle="tab" role="tab"
+                                                aria-selected="false" onclick="fetchTasksTable()">Open Tasks</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#tab-6" data-bs-toggle="tab" role="tab"
+                                                aria-selected="false" onclick="fetchScheduleTable()">Schedule</a></li>
+                        <li class="nav-item"><a class="nav-link " href="#tab-8" data-bs-toggle="tab" role="tab"
+                                                aria-selected="false" onclick="fetchContactsTable()">Contacts</a></li>
+                        <li class="nav-item"><a class="nav-link " href="#tab-2" data-bs-toggle="tab" role="tab"
+                                                aria-selected="false" onclick="fetchProductsTable()">Products
+                                Interested</a>
+                        </li>
+                        <li class="nav-item"><a class="nav-link" href="#tab-4" data-bs-toggle="tab" role="tab"
+                                                aria-selected="false" onclick="fetchDiscussionsTable()">Discussions</a>
+                        </li>
+                        <li class="nav-item"><a class="nav-link" href="#tab-5" data-bs-toggle="tab" role="tab"
+                                                aria-selected="false" onclick="fetchCallsTable()">Calls</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#tab-3" data-bs-toggle="tab" role="tab"
+                                                aria-selected="false" onclick="fetchNotesTable()">Private Notes</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#tab-9" data-bs-toggle="tab" role="tab"
+                                                aria-selected="false" onclick="fetchTicketsTable()">Tickets</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#tab-10" data-bs-toggle="tab" role="tab"
+                                                aria-selected="false" onclick="fetchMailsTable()">Emails</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#tab-11" data-bs-toggle="tab" role="tab"
+                                                aria-selected="false" onclick="fetchSMSTable()">Messages</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#tab-12" data-bs-toggle="tab"
+                                                role="tab" aria-selected="false" onclick="fetchWatchersTable()"
+                            >users & teams</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="tab-content">
+                <div class="tab-pane active show" id="tab-0" role="tabpanel" aria-labelledby="profile-tab-1">
+                    <div class="card">
+                        <div class="card-header"><h5>Activities</h5></div>
+                        <div class="card-body">
+                            <div id="activitiesMain"></div>
+                            <div class="d-grid">
+                                <button type="button" class="btn btn-primary d-none" id="loadMoreBtn"
+                                        onclick="fetchActivities()">Load more
+                                </button>
+                            </div>
                         </div>
                     </div>
-                    <div class="tab-pane m-2" id="tab-2" role="tabpanel">
-                        <div class="float-end">
-                            <button class="btn btn-primary add-lead-product" type="button"><i
-                                    class="fas fa-plus-circle"></i> add product
-                            </button>
+                </div>
+                <div class="tab-pane m-2" id="tab-2" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="row">
+                                <div class="col-md-6 col-12"><h5>Products Intrested</h5></div>
+                                <div class="col-md-6 col-12">
+                                    <div class="float-end">
+                                        <button class="btn btn-primary add-lead-product" type="button"><i
+                                                class="fas fa-plus-circle"></i> add product
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="clearfix mb-2"></div>
-                        <table id="productsTable"
-                               class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                            <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Name</th>
-                                <th>Dated</th>
-                                <th>action</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                    <div class="tab-pane m-2" id="tab-3" role="tabpanel">
-                        <table id="notesTable"
-                               class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                            <thead>
-                            <tr>
-                                <th>#</th>
-                                <th class="w-50">Note</th>
-                                <th>On</th>
-                                <th>actions</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                    <div class="tab-pane m-2" id="tab-4" role="tabpanel">
-                        <table id="discussionsTable"
-                               class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                            <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>From</th>
-                                <th>Discussion</th>
-                                <th>Dated</th>
-                                <th>actions</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                    <div class="tab-pane m-2" id="tab-5" role="tabpanel">
-                        <table id="callsTable"
-                               class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                            <thead>
-                            <tr>
-                                <th>User</th>
-                                <th>Status</th>
-                                <th>Start</th>
-                                <th>End</th>
-                                <th>Duration</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                    <div class="tab-pane m-2" id="tab-6" role="tabpanel">
-                        <table id="scheduleTable"
-                               class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                            <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Type</th>
-                                <th>Start</th>
-                                <th>End</th>
-                                <th>actions</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                    <div class="tab-pane m-2" id="tab-7" role="tabpanel">
-                        <table id="tasksTable"
-                               class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                            <thead>
-                            <tr>
-                                <th>#</th>
-                                <th class="w-50">Task</th>
-                                <th>Due On</th>
-                                <th>actions</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                    <div class="tab-pane m-2" id="tab-8" role="tabpanel">
-                        <div class="float-end">
-                            <button class="btn btn-primary click-summary-data" type="button"
-                                    data-click_url="{{ route('lead-contacts.create',[$lead->LeadID]) }}"
-                                    data-summary_title="Add Contact">
-                                <i class="fas fa-plus-circle"></i> add contact
-                            </button>
+                        <div class="card-body">
+                            <table id="productsTable"
+                                   class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Name</th>
+                                    <th>Dated</th>
+                                    <th>action</th>
+                                </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
                         </div>
-                        <div class="clearfix mb-2"></div>
-                        <table id="contactsTable"
-                               class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                            <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Label</th>
-                                <th>Phone</th>
-                                <th>Email</th>
-                                <th>action</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
                     </div>
-                    <div class="tab-pane m-2" id="tab-9" role="tabpanel">
-                        <div class="float-end">
-                            <button type="button" class="btn btn-primary add-party-ticket-btn"
-                                    data-action="{{ route('lead-tickets.store',[$lead->LeadID]) }}">
-                                <i class="align-middle" data-feather="check-square"></i> add a ticket
-                            </button>
+                </div>
+                <div class="tab-pane m-2" id="tab-3" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header"><h5>Private Notes</h5></div>
+                        <div class="card-body">
+                            <table id="notesTable"
+                                   class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th class="w-50">Note</th>
+                                    <th>On</th>
+                                    <th>actions</th>
+                                </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
                         </div>
-                        <div class="clearfix mb-2"></div>
-                        <table id="ticketsTable"
-                               class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                            <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Title</th>
-                                <th>Category</th>
-                                <th>Priority</th>
-                                <th>Dated</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
                     </div>
-                    <div class="tab-pane m-2" id="tab-10" role="tabpanel">
-                        <table id="EmailsTable"
-                               class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                            <thead>
-                            <tr>
-                                <th>Type</th>
-                                <th>Subject</th>
-                                <th>Dated</th>
-                                <th>actions</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                    <div class="tab-pane m-2" id="tab-11" role="tabpanel">
-                        <table id="MessagesTable"
-                               class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                            <thead>
-                            <tr>
-                                <th>Type</th>
-                                <th>Source</th>
-                                <th>Dated</th>
-                                <th>actions</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                    <div class="tab-pane m-0" id="tab-12" role="tabpanel">
-                        <div class="float-end">
-                            <button type="button" class="btn btn-primary add-watcher-btn">
-                                <i class="align-middle" data-feather="share-2"></i> share
-                            </button>
+
+                </div>
+                <div class="tab-pane m-2" id="tab-4" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header"><h5>Discusions</h5></div>
+                        <div class="card-body">
+                            <table id="discussionsTable"
+                                   class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>From</th>
+                                    <th>Discussion</th>
+                                    <th>Dated</th>
+                                    <th>actions</th>
+                                </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
                         </div>
-                        <div class="clearfix mb-2"></div>
-                        <table id="leadWatchersTable"
-                               class="table table-striped no-footer dtr-inline w-100 table-responsive">
-                            <thead>
-                            <tr>
-                                <th>No.</th>
-                                <th>Party</th>
-                                <th>Role</th>
-                                <th>Dated</th>
-                                <th>action</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+                    </div>
+
+                </div>
+                <div class="tab-pane m-2" id="tab-5" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header"><h5>Calls <small>Incoming & Outgoing</small></h5></div>
+                        <div class="card-body">
+                            <table id="callsTable"
+                                   class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Status</th>
+                                    <th>Start</th>
+                                    <th>End</th>
+                                    <th>Duration</th>
+                                </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane m-2" id="tab-6" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header"><h5>Schedule <small>Appointments & Calls</small></h5></div>
+                        <div class="card-body">
+                            <table id="scheduleTable"
+                                   class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Type</th>
+                                    <th>Start</th>
+                                    <th>End</th>
+                                    <th>actions</th>
+                                </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="tab-pane m-2" id="tab-7" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header"><h5>Task associated</h5></div>
+                        <div class="card-body">
+                            <table id="tasksTable"
+                                   class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th class="w-50">Task</th>
+                                    <th>Due On</th>
+                                    <th>actions</th>
+                                </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane m-2" id="tab-8" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="row">
+                                <div class="col-md-6 col-12"><h5>Contacts <small>Other Contacts</small></h5></div>
+                                <div class="col-md-6 col-12">
+                                    <div class="float-end">
+                                        <button class="btn btn-primary click-summary-data" type="button"
+                                                data-click_url="{{ route('lead-contacts.create',[$lead->LeadID]) }}"
+                                                data-summary_title="Add Contact">
+                                            <i class="fas fa-plus-circle"></i> add contact
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <table id="contactsTable"
+                                   class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Label</th>
+                                    <th>Phone</th>
+                                    <th>Email</th>
+                                    <th>action</th>
+                                </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane m-2" id="tab-9" role="tabpanel">
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="row">
+                                <div class="col-md-6 col-12">
+
+                                </div>
+                                <div class="col-md-6 col-12">
+                                    <button type="button" class="btn btn-primary add-party-ticket-btn"
+                                            data-action="{{ route('lead-tickets.store',[$lead->LeadID]) }}">
+                                        <i class="align-middle" data-feather="check-square"></i> add a ticket
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <table id="ticketsTable"
+                                   class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Title</th>
+                                    <th>Category</th>
+                                    <th>Priority</th>
+                                    <th>Dated</th>
+                                </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane m-2" id="tab-10" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header"><h5>Emails <small>Incoming & outgoing</small></h5></div>
+                        <div class="card-body">
+                            <table id="EmailsTable"
+                                   class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Subject</th>
+                                    <th>Dated</th>
+                                    <th>actions</th>
+                                </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="tab-pane m-2" id="tab-11" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header"><h5>SMS Messages <small>Incoming & Outgoing</small></h5></div>
+                        <div class="card-body">
+                            <table id="MessagesTable"
+                                   class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Source</th>
+                                    <th>Dated</th>
+                                    <th>actions</th>
+                                </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="tab-pane m-0" id="tab-12" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="row">
+                                <div class="col-md-6 col-12">
+                                    <h5>Users and Teams Permissions</h5>
+                                </div>
+                                <div class="col-md-6 col-12">
+                                    <div class="float-end">
+                                        <button type="button" class="btn btn-primary btn-sm  add-watcher-btn">
+                                            <i class="align-middle" data-feather="share-2"></i> share
+                                        </button>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <table id="leadWatchersTable"
+                                   class="table table-striped no-footer dtr-inline w-100 table-responsive">
+                                <thead>
+                                <tr>
+                                    <th>No.</th>
+                                    <th>Party</th>
+                                    <th>Role</th>
+                                    <th>Dated</th>
+                                    <th>action</th>
+                                </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -723,8 +836,8 @@
                                             class="text-danger">*</span></label>
                                     <select class="form-control text-center" name="Status" id="e_Status" required
                                             readonly="">
-                                        <option value="{{ \App\Enums\LeadStatusEnum::Cold->value }}"
-                                                selected>{{ \App\Enums\LeadStatusEnum::Cold->description() }}</option>
+                                        <option value="{{ LeadStatusEnum::Cold->value }}"
+                                                selected>{{ LeadStatusEnum::Cold->description() }}</option>
                                     </select>
                                     <p id="e_Status_error" class="invalid-feedback d-none error col-12"
                                        role="alert"></p>
@@ -811,7 +924,7 @@
                                         <p id="Name_error" class="invalid-feedback d-none error col-12"
                                            role="alert"></p>
                                     </div>
-                                    @if($lead->Type->value === \App\Enums\LeadTypeEnum::Individual->value)
+                                    @if($lead->Type->value === LeadTypeEnum::Individual->value)
                                         <div class="col-sm-6 col-12 mb-3">
                                             <label class="form-label" for="Surname">Surname <span
                                                     class="text-danger">*</span></label>
@@ -840,7 +953,7 @@
                                             <p id="Gender_error" class="invalid-feedback d-none error col-12"
                                                role="alert"></p>
                                         </div>
-                                    @elseif($lead->Type->value === \App\Enums\LeadTypeEnum::Company->value)
+                                    @elseif($lead->Type->value === LeadTypeEnum::Company->value)
                                         <div class="col-sm-6 col-12 mb-3">
                                             <label class="form-label" for="Website">Website </label>
                                             <input type="url" class="form-control" id="Website" name="Website"
@@ -917,7 +1030,7 @@
                                                 class="text-danger">*</span></label>
                                         <select class="form-control" required name="type" id="type">
                                             <option disabled selected>Select a Type</option>
-                                            @foreach(\App\Enums\CallStatusEnum::unreachable() as $option)
+                                            @foreach(CallStatusEnum::unreachable() as $option)
                                                 <option
                                                     value="{{ $option->value }}">{{ $option->description() }}</option>
                                             @endforeach
@@ -971,7 +1084,7 @@
                                         <label class="form-label" for="schedule_start">Next Start <span
                                                 class="text-danger">*</span></label>
                                         <input type="text" class="form-control flatpickr-datetime"
-                                               value="{{ \Carbon\Carbon::now()->addDay()->setHour(8)->setMinute(0)->format('Y-m-d H:i') }}"
+                                               value="{{ Carbon::now()->addDay()->setHour(8)->setMinute(0)->format('Y-m-d H:i') }}"
                                                id="schedule_start" name="schedule_start" placeholder="Select start..">
                                         <p id="schedule_start_error" class="invalid-feedback d-none error col-12"
                                            role="alert"></p>
@@ -1019,7 +1132,7 @@
                                        role="alert"></p>
                                 </div>
                                 <input type="hidden" class="d-none" id="schedule" name="schedule" readonly
-                                       value="{{ ($schedule instanceof \App\Models\CRM\Schedule)?$schedule->ScheduleID:\App\Http\Requests\Call\StartCallRequest::NoSchedule }}">
+                                       value="{{ ($schedule instanceof \App\Models\CRM\Schedule)?$schedule->ScheduleID:StartCallRequest::NoSchedule }}">
                                 <p id="schedule_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                                 <hr>
                                 <div class="mt-4">
@@ -1053,7 +1166,7 @@
                                     <input type="text" class="form-control" id="meeting_initiated_location"
                                            name="meeting_initiated_location"
                                            placeholder="Location"
-                                           value="{{ ($schedule instanceof \App\Models\CRM\Schedule && $schedule->scheduled instanceof \App\Models\CRM\Meeting)?$schedule->scheduled->Location:'' }}">
+                                           value="{{ ($schedule instanceof \App\Models\CRM\Schedule && $schedule->scheduled instanceof Meeting)?$schedule->scheduled->Location:'' }}">
                                     <p id="meeting_location_error" class="invalid-feedback d-none error col-12"
                                        role="alert"></p>
                                 </div>
@@ -1068,7 +1181,7 @@
                                 </div>
                                 <input type="hidden" class="d-none" id="meeting_schedule" name="meeting_schedule"
                                        readonly
-                                       value="{{ ($schedule instanceof \App\Models\CRM\Schedule)?$schedule->ScheduleID:\App\Http\Requests\Call\StartMeetingRequest::NoSchedule }}">
+                                       value="{{ ($schedule instanceof \App\Models\CRM\Schedule)?$schedule->ScheduleID:StartMeetingRequest::NoSchedule }}">
                                 <p id="meeting_schedule_error" class="invalid-feedback d-none error col-12"
                                    role="alert"></p>
                                 <hr>
@@ -1114,7 +1227,7 @@
                                             class="text-danger">*</span></label>
                                     <select class="form-control " name="share_role" id="share_role" required>
                                         <option selected disabled>select a role.</option>
-                                        @foreach(\App\Enums\Core\RoleEnum::getAll() as $role)
+                                        @foreach(RoleEnum::getAll() as $role)
                                             <option value="{{ $role->value }}">{{ $role->name }}</option>
                                         @endforeach
                                     </select>
@@ -1181,7 +1294,7 @@
     @include('snippets.actions.sms')
     <script src="{{asset('assets/libs/jquery-form/jquery.form.min.js')}}"></script>
     <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
-    
+
     <script>const $Modal = $('#leadActionsModal');
         let productsTable = null, relationsTable = null, callsTable = null, discussionsTable = null, notesTable = null,
             tasksTable = null, contactsTable = null, ticketsTable = null, EmailsTable = null, MessagesTable = null,
@@ -1274,8 +1387,8 @@
                     return;
                 }
                 switch (this.value) {
-                    case '{{ \App\Enums\LeadStatusEnum::Hot->value }}':
-                    case '{{ \App\Enums\LeadStatusEnum::Warm->value }}':
+                    case '{{ LeadStatusEnum::Hot->value }}':
+                    case '{{ LeadStatusEnum::Warm->value }}':
                         let msg = $('#StatusMsg');
                         msg.removeClass('d-none');
                         $('.form-control').addClass('disabled');
@@ -1284,11 +1397,11 @@
                             $('#Status').val(window.currentStatus).change();
                         }
                         break;
-                    case '{{ \App\Enums\LeadStatusEnum::Won->value }}':
+                    case '{{ LeadStatusEnum::Won->value }}':
                         showOffCanvasMain('Lead -> Client (won)', '{{ route('leads.edit',[$lead->LeadID]) }}');
                         $('#Status').val(window.currentStatus).change();
                         break;
-                    case '{{ \App\Enums\LeadStatusEnum::Cold->value }}':
+                    case '{{ LeadStatusEnum::Cold->value }}':
                         $(".modal-item").addClass('d-none');
                         $('#statusLeadLossModal').removeClass('d-none');
                         $('.modal-title').html('change lead status.');
@@ -1312,7 +1425,7 @@
                 placeholder: "Select a Town/City", minimumInputLength: 2,
                 dropdownParent: $Modal,
                 ajax: {
-                    url: "{{ route('locality.select2') }}?type={{ \App\Enums\LocalityTypeEnum::City->value }}",
+                    url: "{{ route('locality.select2') }}?type={{ LocalityTypeEnum::City->value }}",
                     dataType: 'json',
                     delay: 250,
                     data: function (params) {
@@ -1424,7 +1537,7 @@
             });
 
             //Initiated
-            @if($call instanceof \App\Models\Communication\Call)
+            @if($call instanceof Call)
             durationTimer(document.getElementById("callTimer"), '{{ $call->StartOn->toDateTimeString() }}')
 
             $('form#OngoingCallForm').submit(async function (e) {
@@ -1432,7 +1545,7 @@
                 await saveForm($(this), $('#OngoingCallBtn'), true, false, true);
             });
 
-            @elseif($meeting instanceof \App\Models\CRM\Meeting)
+            @elseif($meeting instanceof Meeting)
             durationTimer(document.getElementById("meetingTimer"), '{{ $meeting->StartOn->toDateTimeString() }}')
 
             $('form#OngoingMeetingForm').submit(async function (e) {

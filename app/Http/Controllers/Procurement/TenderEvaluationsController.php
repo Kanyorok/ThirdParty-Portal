@@ -25,7 +25,7 @@ class TenderEvaluationsController extends Controller
     public function index()
     {
         //return Tender::all();
-        $sections=Section::select('id','SectionName')->get();
+        $sections = Section::select('id', 'SectionName')->get();
         //Get unique tenderID form the TenderSection table
         $tenderSections = TenderSection::select('TenderID')->distinct()->get();
         //Get tender that are not in the TenderSection table
@@ -36,20 +36,20 @@ class TenderEvaluationsController extends Controller
         //Get tender that are have sections
         $tenderswithsections = Tender::whereIn('Id', $tenderIds)->get();
 
-        $data=[];
+        $data = [];
         foreach ($tenderswithsections as $key => $value) {
-            array_push($data,[
-                'id'=>$value->Id,
-                'TenderNo'=>$value->TenderNo,
-                'Title'=>$value->Title,
-                'sectionsNumber'=>TenderSection::where('TenderID',$value->Id)->count(),
-                'criteriaNumber'=>TenderCriteria::where('TenderID',$value->Id)
-                    ->where('IsActive',true)
+            array_push($data, [
+                'id' => $value->Id,
+                'TenderNo' => $value->TenderNo,
+                'Title' => $value->Title,
+                'sectionsNumber' => TenderSection::where('TenderID', $value->Id)->count(),
+                'criteriaNumber' => TenderCriteria::where('TenderID', $value->Id)
+                    ->where('IsActive', true)
                     ->count(),
             ]);
         }
         //return$data;
-        return view('procurement.tendering.tendersetup.evaluationcriteriasetup.tenderevaluations',compact(
+        return view('procurement.tendering.tendersetup.evaluationcriteriasetup.tenderevaluations', compact(
             'tenders',
             'sections',
             'data'
@@ -77,7 +77,7 @@ class TenderEvaluationsController extends Controller
      */
     public function show(string $id)
     {
-        
+
     }
 
     /**
@@ -105,7 +105,8 @@ class TenderEvaluationsController extends Controller
     }
 
     //Store Sections associated to a tender
-    public function tenderSections(Request $request){
+    public function tenderSections(Request $request)
+    {
         //check if user has permission to create tender sections
         $this->authorize(PermissionEnum::TenderWrite, Tender::class);
         // Validate the request data
@@ -115,61 +116,61 @@ class TenderEvaluationsController extends Controller
             'weights' => 'required|array',
             'weights.*' => 'numeric|min:0|max:100',
         ]);
-        $tenderTitle=$request->tender_id;
-        $sections=$request->sections;
-        $weights=$request->weights;
+        $tenderTitle = $request->tender_id;
+        $sections = $request->sections;
+        $weights = $request->weights;
         // Check if the total weight is 100
         $totalWeight = array_sum($weights);
         // if ($totalWeight !== 100) {
         //     return back()->with('error', 'The total weight must be 100.');
         // }
-        DB::beginTransaction();  
+        DB::beginTransaction();
         try {
-        // Loop through each section and add with its weight
-        foreach ($sections as $index => $sectionId) {
-            // Check if the section exists
-            $section = Section::find($sectionId);
-            if (!$section) {
-                return back()->with('error', 'Section with ID ' . $sectionId . ' does not exist.');
-            }
-            // Create or update the tender section
-             TenderSection::create([
-                'TenderID' => $request->tender_id, // Assuming tender_id is passed in the request
-                'SectionID' => $sectionId,
-                'Weight' => $weights[$index],
-                'IsActive' => true, // Assuming sections are active by default
-                'Comments' => $request->comments[$index] ?? null, // Optional comments
-                'CreatedBy' => auth()->id(),
-                'ModifiedBy' => auth()->id(),
-            ]);
-            //Store the criteria
-            // $criterias=Criteria::all();
-            // foreach($criterias as $c){
-            //     TenderCriteria::updateOrCreate(
-            //         [
-            //             'TenderID' => $request->tender_id,
-            //             'CriteriaID' => $c->id,
-            //         ],
-            //         [
-            //             'SectionID' => $sectionId,
-            //             'MaxScore' => 10, // Set weight if selected, otherwise 0
-            //             'IsActive' => true,
-            //             'CreatedBy' => Auth::id(),
-            //             'ModifiedBy' => Auth::id(),
-            //             'ModifiedOn' => now(),
-            //         ]
-            //     );
-            // }
+            // Loop through each section and add with its weight
+            foreach ($sections as $index => $sectionId) {
+                // Check if the section exists
+                $section = Section::find($sectionId);
+                if (!$section) {
+                    return back()->with('error', 'Section with ID ' . $sectionId . ' does not exist.');
+                }
+                // Create or update the tender section
+                TenderSection::create([
+                    'TenderID' => $request->tender_id, // Assuming tender_id is passed in the request
+                    'SectionID' => $sectionId,
+                    'Weight' => $weights[$index],
+                    'IsActive' => true, // Assuming sections are active by default
+                    'Comments' => $request->comments[$index] ?? null, // Optional comments
+                    'CreatedBy' => auth()->id(),
+                    'ModifiedBy' => auth()->id(),
+                ]);
+                //Store the criteria
+                // $criterias=Criteria::all();
+                // foreach($criterias as $c){
+                //     TenderCriteria::updateOrCreate(
+                //         [
+                //             'TenderID' => $request->tender_id,
+                //             'CriteriaID' => $c->id,
+                //         ],
+                //         [
+                //             'SectionID' => $sectionId,
+                //             'MaxScore' => 10, // Set weight if selected, otherwise 0
+                //             'IsActive' => true,
+                //             'CreatedBy' => Auth::id(),
+                //             'ModifiedBy' => Auth::id(),
+                //             'ModifiedOn' => now(),
+                //         ]
+                //     );
+                // }
 
-        }
-        DB::commit();
-        // Log the action
-        activity()
-            ->performedOn(new Tender())
-            ->causedBy(auth()->id())
-            ->log('Created or updated tender sections for tender: ' . $tenderTitle);
-        // Return a success response
-        return back()->with('success', 'Tender sections created successfully.');
+            }
+            DB::commit();
+            // Log the action
+            activity()
+                ->performedOn(new Tender())
+                ->causedBy(auth()->id())
+                ->log('Created or updated tender sections for tender: ' . $tenderTitle);
+            // Return a success response
+            return back()->with('success', 'Tender sections created successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
             return $th->getMessage();
@@ -286,7 +287,7 @@ class TenderEvaluationsController extends Controller
     public function criteriaScores(Request $request)
     {
         // ✅ Validate incoming request
-         $validated = $request->validate([
+        $validated = $request->validate([
             'TenderId' => 'required|integer|exists:t_Tenders,id',
             'selected_criteria' => 'required|array',
             'selected_criteria.*' => 'integer',
@@ -315,24 +316,24 @@ class TenderEvaluationsController extends Controller
                     ->where('TenderID', $request->TenderId)
                     ->where('UserID', Auth::id())
                     ->value('CommitteeID'); // Assuming `id` is the PK of the committee table
-                    if ($sectionId !== null) {
-                        DB::table('t_TenderCommitteeEvaluations')->updateOrInsert(
-                            [
-                                'TenderID'    => (int) $tenderId,
-                                'MemberID'    => (int) $memberId,
-                                'SectionID'   => (int) $sectionId,
-                                'CommitteeID' => (int) $committeeId,
-                                'CriteriaID'  => (int) $criteriaId,
-                            ],
-                            [
-                                'MaxScore'    => (float) $score,
-                                'CreatedBy'   => (string) $createdBy,
-                                'CreatedOn'   => now(),
-                                'ModifiedOn'  => now(),
-                                'ModifiedBy'  => Auth::id(),
-                            ]
-                        );
-                    }
+                if ($sectionId !== null) {
+                    DB::table('t_TenderCommitteeEvaluations')->updateOrInsert(
+                        [
+                            'TenderID' => (int)$tenderId,
+                            'MemberID' => (int)$memberId,
+                            'SectionID' => (int)$sectionId,
+                            'CommitteeID' => (int)$committeeId,
+                            'CriteriaID' => (int)$criteriaId,
+                        ],
+                        [
+                            'MaxScore' => (float)$score,
+                            'CreatedBy' => (string)$createdBy,
+                            'CreatedOn' => now(),
+                            'ModifiedOn' => now(),
+                            'ModifiedBy' => Auth::id(),
+                        ]
+                    );
+                }
             }
             //Update HasEvaluated field in the tender
             DB::table('t_TenderCommitteeMembers')

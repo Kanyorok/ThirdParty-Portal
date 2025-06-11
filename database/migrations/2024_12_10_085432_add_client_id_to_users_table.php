@@ -20,7 +20,8 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::table('t_Users', function (Blueprint $table) {
+        Schema::table('t_Users', static function (Blueprint $table) {
+            $table->dropIndex('t_Users_ClientID_index');//t_users_clientid_index
             $table->dropColumn('ClientID');
         });
     }

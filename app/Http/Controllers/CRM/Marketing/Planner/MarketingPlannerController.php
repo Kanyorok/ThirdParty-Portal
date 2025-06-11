@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Throwable;
 use Yajra\DataTables\DataTables;
 
 class MarketingPlannerController extends Controller
@@ -134,7 +135,7 @@ class MarketingPlannerController extends Controller
                 activity()->causedBy($request->user())->performedOn($planner)->event('create')->log('created  marketing plan ' . $planner->PlannerID);
                 return $planner;
             });
-        } catch (Exception $e) {
+        } catch (Throwable|Exception $e) {
             Log::error('Error creating planner failed: ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }
@@ -195,7 +196,7 @@ class MarketingPlannerController extends Controller
                 (new PlannerService($planner))->update($branch, $mode, $request->validated('Name'), ($request->validated('Notes')) ?? "", $actor);
                 activity()->causedBy($actor)->performedOn($planner)->event('update')->log('updated  marketing plan ' . $planner->PlannerID);
             });
-        } catch (Exception $e) {
+        } catch (Exception|Throwable $e) {
             Log::error('Error updating planner failed: ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }

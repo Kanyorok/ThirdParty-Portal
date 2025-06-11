@@ -165,7 +165,7 @@
     </div>
 @endsection
 @section('scripts')
-    <script src="{{asset('assets/plugins/jquery-form/jquery.form.min.js')}}"></script>
+    <script src="{{asset('assets/libs/jquery-form/jquery.form.min.js')}}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.20/summernote-bs5.min.js"
             integrity="sha512-6F1RVfnxCprKJmfulcxxym1Dar5FsT/V2jiEUvABiaEiFWoQ8yHvqRM/Slf0qJKiwin6IDQucjXuolCfCKnaJQ=="
             crossorigin="anonymous" referrerpolicy="no-referrer"></script>

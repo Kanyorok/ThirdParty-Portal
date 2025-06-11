@@ -49,7 +49,9 @@
 
 
         <div class="mb-2 d-flex justify-content-between">
-            <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();" >💾 Save</button>
+            <button type="submit" class="btn btn-success"
+                    onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">💾 Save
+            </button>
             <button class="btn btn-secondary">🔄 Reset</button>
         </div>
 

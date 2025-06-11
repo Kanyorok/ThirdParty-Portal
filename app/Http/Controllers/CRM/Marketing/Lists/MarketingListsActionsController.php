@@ -64,7 +64,7 @@ class MarketingListsActionsController extends Controller
                 return $this->errored('list is processing');
             }
 
-            if (in_array($list->Source, [Lead::getPrimaryKey(), null], true)) {
+            if (!in_array($list->Source, [Lead::getPrimaryKey(), null], true)) {
                 return $this->errored('list does not support leads.');
             }
 
@@ -107,8 +107,8 @@ class MarketingListsActionsController extends Controller
             return ClientService::dt($query, ['type']);
         }
 
-        if ($list->Type === MarketingListEnum::Dynamic->value) {
-            return $this->errored('maybe dynamic cannot be changed');
+        if ($list->Type->value !== MarketingListEnum::Static->value) {
+            return $this->errored('only static lists can be processed.');
         }
 
         if ($request->isMethod('post')) {
@@ -116,7 +116,7 @@ class MarketingListsActionsController extends Controller
             if (is_array($list->Processing)) {
                 return $this->errored('list is processing');
             }
-            if (in_array($list->Source, [Client::getPrimaryKey(), null], true)) {
+            if (!in_array($list->Source, [Client::getPrimaryKey(), null], true)) {
                 return $this->errored('list does not support clients.');
             }
             if ($request->has('clients')) {

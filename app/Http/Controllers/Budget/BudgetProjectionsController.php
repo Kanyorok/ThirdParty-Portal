@@ -13,7 +13,8 @@ class BudgetProjectionsController extends Controller
         return view('budgetandanalytics.budgetprojections.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('budgetandanalytics.budgetprojections.create');
     }
 }

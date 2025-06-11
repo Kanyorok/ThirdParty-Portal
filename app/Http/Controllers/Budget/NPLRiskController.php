@@ -8,13 +8,14 @@ use Illuminate\Http\Request;
 class NPLRiskController extends Controller
 {
     //
-   public function index()
+    public function index()
     {
         return view('budgetandanalytics.businessintelligenceandanalytics.kpidashboards.loanperfomance.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('budgetandanalytics.businessintelligenceandanalytics.kpidashboards.loanperfomance.create');
-    }  
+    }
 
 }

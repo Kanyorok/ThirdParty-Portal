@@ -1,8 +1,9 @@
+@php use App\Models\Auth\User; @endphp
 @extends('layouts.app')
 
 @section('title','My Schedule')
 @section('styles')
-    {{--<link rel="stylesheet" href="{{ asset('assets/plugins/fullcalendar/fullcalendar.min.css') }}">
+    {{--<link rel="stylesheet" href="{{ asset('assets/libs/fullcalendar/fullcalendar.min.css') }}">
     <link href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css' rel='stylesheet'>--}}
     <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
     <style>
@@ -78,7 +79,7 @@
             <div class="float-end">
                 {{--<button type="button" class="btn btn-outline-primary modal-create-call-schedule"><i class="fas fa-calendar-plus"></i>&nbsp; add scheduled call</button>
                 <button type="button" class="btn btn-outline-primary modal-create-meeting-schedule"><i class="fas fa-calendar-plus"></i>&nbsp; add scheduled meeting</button>--}}
-                @can('meetings',\App\Models\Auth\User::class)
+                @can('meetings',User::class)
                     <button type="button" class="btn btn-outline-primary m-1" id="triggerStaffMeetingBtn"><i
                             class="fas fa-calendar-plus"></i>&nbsp; Staff Meeting
                     </button>
@@ -102,7 +103,7 @@
                             aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    @can('meetings',\App\Models\Auth\User::class)
+                    @can('meetings',User::class)
                         <div class="onboarding-content with-gradient d-none modal-item" id="createStaffMeetingModal">
                             <form action="{{ route('user-meetings.store') }}" method="post"
                                   id="createStaffMeetingForm" class="row">
@@ -265,11 +266,13 @@
 @endsection
 @section('scripts')
     <script src="{{ asset('assets/libs/rangePlugin.js') }}"></script>
-    <script src='{{ asset('assets/js/fullcalendar-6.1.14.js') }}'></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.14/index.global.min.js"
+            integrity="sha512-JEbmnyttAbEkbkpvW1vRqBzY3Otrp0DFwux9+JQ6kXe2mQfUmBpImuREMZS0advTaaCMotaYB5gIng/uPw3r6w=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src='{{ asset('assets/libs/moment/moment-with-locales.js') }}'></script>
     <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
     <script>
-        $Modal = $('#scheduleActionsModal');
+        let $Modal = $('#scheduleActionsModal');
         const _type = $('#scheduleType'), windowLocation = window.location.toString();
         let start = null, end = null, client = null;
         $(function () {

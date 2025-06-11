@@ -13,7 +13,8 @@ class PrequalificationRoundsController extends Controller
         return view('procurement.suppliers.prequalification.roundmanagement.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('procurement.suppliers.prequalification.roundmanagement.create');
     }
 

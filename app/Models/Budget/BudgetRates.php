@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BudgetRates extends Model
 {
-     use UserActorTrait,SoftDeletes;
+    use UserActorTrait, SoftDeletes;
 
     protected $primaryKey = 'Id';
     
@@ -24,7 +24,7 @@ class BudgetRates extends Model
     protected $table = 't_BudgetRates';
 
     protected $fillable = [
-        
+
         'RateTypeCode',
         'RateTypeName',
         'Description',
@@ -33,7 +33,7 @@ class BudgetRates extends Model
         'ModifiedBy',
     ];
 
-    protected $cast=[
+    protected $cast = [
         'IsDefault' => 'boolean',
     ];
 

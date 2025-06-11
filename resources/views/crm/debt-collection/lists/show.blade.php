@@ -8,6 +8,10 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/2.1.5/css/dataTables.dataTables.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/select/2.0.5/css/select.dataTables.css">
 @endsection
+@section('breadcrumbs')
+    <li class="breadcrumb-item"><a href="#">CRM</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('loans-list.index') }}">Loans List</a></li>
+@endsection
 @section('content')
     <div class="row">
         <div class="col-12">
@@ -107,7 +111,7 @@
                 </div>
                 <div class="modal-body">
                     <div class="onboarding-content with-gradient d-none modal-item" id="createLoansCampaignModal">
-                        @include('debt-collection.help.communication')
+                        @include('crm.debt-collection.help.communication')
                         <form action="{{ route('loans-campaigns.store',[$list->slug]) }}" method="post"
                               id="createLoansCampaignForm">
                             <div class="mb-3"> @csrf
@@ -150,7 +154,7 @@
     </div>
 @endsection
 @section('scripts')
-    <script src="{{ asset('assets/js/datatables.js') }}"></script>
+
     <script>const $Modal = $('#LoansActionsModal');
         $(function () {
             $.fn.dataTable.ext.errMode = 'none';

@@ -1,4 +1,4 @@
-@php use App\Enums\LeadTypeEnum; use App\Enums\LocalityTypeEnum; @endphp
+@php use App\Enums\LeadStatusEnum;use App\Enums\LeadTypeEnum; use App\Enums\LocalityTypeEnum; @endphp
 @extends('layouts.app')
 
 @section('title','Leads')
@@ -9,6 +9,9 @@
             width: 100% !important;
         }
     </style>
+@endsection
+@section('breadcrumbs')
+    <li class="breadcrumb-item"><a href="#">CRM</a></li>
 @endsection
 @section('content')
     <div class="row">
@@ -31,7 +34,7 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col mt-0">
-                            <h5 class="card-title">Hot {{ \App\Enums\LeadStatusEnum::Hot->getIcon() }}</h5>
+                            <h5 class="card-title">Hot {{ LeadStatusEnum::Hot->getIcon() }}</h5>
                         </div>
                     </div>
                     <h1 class="mt-1 mb-3 text-center lead-counter cursor-pointer" id="hotLeads"><i
@@ -44,7 +47,7 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col mt-0">
-                            <h5 class="card-title">Warm {{ \App\Enums\LeadStatusEnum::Warm->getIcon() }}</h5>
+                            <h5 class="card-title">Warm {{ LeadStatusEnum::Warm->getIcon() }}</h5>
                         </div>
                     </div>
                     <h1 class="mt-1 mb-3 text-center lead-counter cursor-pointer" id="warmLeads"><i
@@ -57,7 +60,7 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col mt-0">
-                            <h5 class="card-title">Won {{ \App\Enums\LeadStatusEnum::Won->getIcon() }}</h5>
+                            <h5 class="card-title">Won {{ LeadStatusEnum::Won->getIcon() }}</h5>
                         </div>
                     </div>
                     <h1 class="mt-1 mb-3 text-center lead-counter cursor-pointer" id="wonLeads"
@@ -105,7 +108,8 @@
                                 <span class="h3">Active Leads</span>
                             </div>
                             <div class="col-sm-12 col-md-4">
-                                <button class="btn btn-outline-primary text-center w-100 mx-1 click-summary-data" type="button"
+                                <button class="btn btn-outline-primary text-center w-100 mx-1 click-summary-data"
+                                        type="button"
                                         data-click_url="{{ route('leads.create',['type'=>LeadTypeEnum::Individual->name]) }}"
                                         data-summary_title="Add Individual Lead">
                                     <i class="fas fa-user"></i>&nbsp;<i class="fas fa-plus"></i>
@@ -113,7 +117,8 @@
                                 </button>
                             </div>
                             <div class="col-sm-12 col-md-4">
-                                <button class="btn btn-outline-primary text-center w-100 mx-1 click-summary-data" type="button"
+                                <button class="btn btn-outline-primary text-center w-100 mx-1 click-summary-data"
+                                        type="button"
                                         data-click_url="{{ route('leads.create',['type'=>LeadTypeEnum::Company->name]) }}"
                                         data-summary_title="Add Corporate Lead">
                                     <i class="fas fa-briefcase"></i>&nbsp;<i class="fas fa-plus"></i>

@@ -21,10 +21,10 @@ class TenderCategory extends Model {
     protected $fillable = [
         'CategoryCode',
         'TenderCategory',
-        'Description', 
-        'CreatedBy', 
+        'Description',
+        'CreatedBy',
         'ModifiedBy',
-    ];  
+    ];
 
     // protected $casts = [
     //     'TenderCategory' => TenderCategoryEnum::class,

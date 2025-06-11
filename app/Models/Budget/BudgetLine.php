@@ -8,11 +8,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BudgetLine extends Model
 {
-    use UserActorTrait,SoftDeletes;
+    use UserActorTrait, SoftDeletes;
 
-    protected $table='t_BudgetLines';
+    protected $table = 't_BudgetLines';
     protected $primaryKey = 'Id';
-    
+
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
@@ -35,20 +35,20 @@ class BudgetLine extends Model
     ];
 
     protected $casts = [
-        'IsDefault'   => 'boolean',
+        'IsDefault' => 'boolean',
 
-        'CreatedOn'   => 'datetime',
-        'ModifiedOn'  => 'datetime',
-        'DeletedOn'   => 'datetime',
+        'CreatedOn' => 'datetime',
+        'ModifiedOn' => 'datetime',
+        'DeletedOn' => 'datetime',
     ];
 
     //relations
     public function glAccounts()
     {
         return $this->belongsToMany(BudgetGLAccount::class, 't_BudgetLinesGLAccounts', 'BudgetLineID', 'BudgetGLAccountID')
-                    ->withTimestamps()
-                    ->withPivot(['CreatedBy', 'ModifiedBy', 'DeletedBy', 'DeletedOn'])
-                    ->wherePivot('DeletedOn', null); // Only fetch if DeletedOn is NULL
+            ->withTimestamps()
+            ->withPivot(['CreatedBy', 'ModifiedBy', 'DeletedBy', 'DeletedOn'])
+            ->wherePivot('DeletedOn', null); // Only fetch if DeletedOn is NULL
     }
 
 }

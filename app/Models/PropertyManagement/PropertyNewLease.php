@@ -29,6 +29,6 @@ class PropertyNewLease extends Model
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy'
-        ];
+    ];
 
 }

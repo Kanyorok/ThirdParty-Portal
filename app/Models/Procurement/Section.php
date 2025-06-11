@@ -30,7 +30,7 @@ class Section extends Model
     ];
     protected $primaryKey = 'id';
 
-        public static function getPrimaryKey(): string
+    public static function getPrimaryKey(): string
     {
         return (new self())->getRouteKeyName();
     }

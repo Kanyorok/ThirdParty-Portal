@@ -9,11 +9,13 @@ use App\Models\Auth\User;
 use App\Models\BR\DebtProduct;
 use App\Models\CRM\MarketingList;
 use App\Services\Marketing\ListService;
+use Exception;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Throwable;
 use Yajra\DataTables\DataTables;
 
 trait MarketingListTrait
@@ -55,7 +57,7 @@ trait MarketingListTrait
                                                                                                         return ($list->Source === DebtProduct::getPrimaryKey()) ? route('loans-list.show', $list->slug) : route('marketing-list.show', $list->slug);
                                                                                                        },
                                                                                                       ])->rawColumns(['Label'])->make();
-        } catch (\Exception) {
+        } catch (Exception) {
         }
 
         return $this->errored('fetching data failed, try again later');
@@ -72,7 +74,7 @@ trait MarketingListTrait
             });
         } catch (ErroredException $e) {
             throw new ErroredException($e->getMessage());
-        } catch (\Exception | \Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('Error create list :  ' . $e->getMessage());
             throw new ErroredException('unexpected error, try again later');
         }
@@ -90,11 +92,11 @@ trait MarketingListTrait
 
         try {
             return DB::transaction(static function () use ($service, $visibility, $notes, $label, $actor) {
-                return $service->update($label, $actor, $visibility, $notes);
+                return $service->update($label, $actor, $visibility, $notes)->list;
             });
         } catch (ErroredException $e) {
             throw new ErroredException($e->getMessage());
-        } catch (\Exception | \Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('Error update list :  ' . $e->getMessage());
             throw new ErroredException('unexpected error, try again later');
         }
@@ -121,7 +123,7 @@ trait MarketingListTrait
             });
         } catch (ErroredException $e) {
             throw new ErroredException($e->getMessage());
-        } catch (\Exception | \Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('Error delete list :  ' . $e->getMessage());
             throw new ErroredException('unexpected error, try again later');
         }
