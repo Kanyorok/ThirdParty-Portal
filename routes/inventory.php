@@ -129,7 +129,14 @@ Route::post('interbranchrequisitionapproval/submit', [InterBranchRequisitionAppr
 
     Route::resource('pricemanagement', PriceManagementController::class);  
     Route::get('/pricemanagement', [PriceManagementController::class, 'index'])->name('pricemanagement.index');
-    
+    Route::get('/pricemanagement/create', [PriceManagementController::class, 'create'])->name('pricemanagement.create');
+    Route::post('/pricemanagement', [PriceManagementController::class, 'store'])->name('pricemanagement.store');
+    Route::get('/pricemanagement/{Id}', [PriceManagementController::class, 'show'])->name('pricemanagement.show');
+    Route::get('/pricemanagement/{Id}/edit', [PriceManagementController::class, 'edit'])->name('pricemanagement.edit');
+    Route::put('/pricemanagement/{Id}', [PriceManagementController::class, 'update'])->name('pricemanagement.update');
+    Route::delete('/pricemanagement/{Id}', [PriceManagementController::class, 'destroy'])->name('pricemanagement.destroy');
+    Route::post('/pricemanagement/upload', [PriceManagementController::class, 'upload'])->name('pricemanagement.upload');
+
     //Route::resource('itemtype', ItemTypeController::class);
     Route::get('/itemtype', [ItemTypeController::class, 'index'])->name('itemtype.index');
     Route::get('/itemtype/create', [ItemTypeController::class, 'create'])->name('itemtype.create');

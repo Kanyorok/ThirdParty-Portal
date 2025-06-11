@@ -15,6 +15,11 @@ class MeetingClient extends Pivot
     const string UPDATED_AT = 'ModifiedOn';
     protected $table = 't_MeetingClients';
 
+    public static function getPrimaryKey(): string
+    {
+        return 'MeetingClientsId';
+    }
+
     protected $fillable = [
                            'MeetingId',
                            'ClientID',

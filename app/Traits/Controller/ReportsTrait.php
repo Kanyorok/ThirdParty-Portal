@@ -56,7 +56,7 @@ trait ReportsTrait
                     throw new ErroredException('invalid report.');
                 }
                 $data = $service->parseReportXml($xmlResponse);
-            } catch (ConnectionException) {
+            } catch (ConnectionException $e) {
                 return view('snippets.errors')->with('message', 'cannot connect to the report server.');
             } catch (ErroredException $e) {
                 return view('snippets.errors')->with('message', $e->getMessage() ?? 'cannot retrieve report data.');

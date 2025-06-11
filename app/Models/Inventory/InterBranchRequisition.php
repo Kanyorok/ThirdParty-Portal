@@ -67,4 +67,9 @@ class InterBranchRequisition extends Model
     {
         return $this->hasMany(InterBranchRequisitionItem::class, 'RequisitionId', 'Id');
     }
+
+    public static function getPrimaryKey(): string
+    {
+        return 'RequisitionId';
+    }
 }

@@ -173,7 +173,6 @@ class TenderController extends Controller
 
         // ]);
 
-
         //return $request->tender_type.' Tender';
 
         DB::beginTransaction();
@@ -284,7 +283,7 @@ class TenderController extends Controller
             // ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            //return $e->getMessage();
+            return $e->getMessage();
             Log::error("--- CREATE TENDER ERROR --- " . $e->getMessage());
             Log::error($e);
             //return $e->getMessage();

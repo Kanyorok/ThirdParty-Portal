@@ -20,6 +20,11 @@ class Task extends Model
     protected $table = 't_Tasks';
     protected $primaryKey = 'TaskID';
 
+    public static function getPrimaryKey(): string
+    {
+        return 'TaskId';
+    }
+
     /**
      * The attributes that are mass assignable.
      */

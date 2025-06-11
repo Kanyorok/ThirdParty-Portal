@@ -18,6 +18,11 @@ class MarketingPlannerActivityUser extends Model
 
     protected $table = 't_MarketingPlannerActivityUsers';
 
+    public static function getPrimaryKey(): string
+    {
+        return 'MarketingPlannerActivityUsersId';
+    }
+
     protected $fillable = [
                            'ActivityId',
                            'UserID',
