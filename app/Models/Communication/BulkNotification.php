@@ -18,6 +18,10 @@ class BulkNotification extends Model
     protected $table = 't_BulkNotifications';
     protected $primaryKey = 'BulkNotificationID';
 
+    public static function getPrimaryKey(): string
+    {
+        return 'BulkNotificationID';
+    }
     protected $fillable = [
                            'Label',
                            'Module',

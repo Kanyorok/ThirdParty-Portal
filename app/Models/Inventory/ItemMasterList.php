@@ -2,14 +2,15 @@
 
 namespace App\Models\Inventory;
 
+use App\Models\DMS\Image;
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\Model\UserActorTrait;
-
 use App\Models\Inventory\ItemCategories;
 use App\Models\Inventory\InventoryType;
 use App\Models\Inventory\ItemType;
 use App\Models\Inventory\UnitOfMeasure;
+use App\Models\Inventory\PriceManagement;
 
 class ItemMasterList extends Model
 {
@@ -23,6 +24,11 @@ class ItemMasterList extends Model
     protected $table = 't_Items';
     protected $primaryKey = 'Id';
 
+    public static function getPrimaryKey(): string
+    {
+        return 'ItemsId';
+    }
+
     protected $fillable = [
         'BarCode',
         'ItemName',
@@ -30,10 +36,11 @@ class ItemMasterList extends Model
         'UOM',
         'InventoryType',
         'Category',
+        'Status',
         'ImageId',
         'ItemDescription',
         'DocumentUpload',
-        'Status',
+        'ItemPrice',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy',
@@ -45,14 +52,15 @@ class ItemMasterList extends Model
         'ItemCode'        => 'string',
         'BarCode'         => 'string',
         'ItemName'        => 'string',
-        'ItemType'        => 'integer',  
-        'UOM'             => 'integer',  
-        'InventoryType'   => 'integer',  
+        'ItemType' => 'integer',
+        'UOM' => 'integer',
+        'InventoryType' => 'integer',
         'Category'        => 'integer',
+        'Status'  => 'boolean',
         'ImageId'         => 'integer',
         'ItemDescription' => 'string',
         'DocumentUpload'  => 'string',
-        'Status' => 'boolean',
+        'ItemPrice' => 'string',
         'CreatedBy'       => 'integer',
         'ModifiedBy'      => 'integer',
         'DeletedBy'       => 'integer',
@@ -73,7 +81,7 @@ class ItemMasterList extends Model
 
     public function image()
     {
-        return $this->belongsTo(\App\Models\DMS\Image::class, 'ImageId', 'ImageID');
+        return $this->belongsTo(Image::class, 'ImageId', 'ImageID');
     }
 
     public function itemType()
@@ -85,6 +93,12 @@ class ItemMasterList extends Model
     {
         return $this->belongsTo(UnitOfMeasure::class, 'UOM', 'Id');
     }
+
+     public function price()
+    {
+        return $this->belongsTo(PriceManagement::class, 'ItemPrice', 'Id');
+    }
+
 
     public function inventoryType()
     {

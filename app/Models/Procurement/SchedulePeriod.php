@@ -17,6 +17,11 @@ class SchedulePeriod extends Model
     protected $primaryKey = 'Id';
     public $timestamps = false;
 
+    public static function getPrimaryKey(): string
+    {
+        return 'SchedulePeriodId';
+    }
+
     protected $fillable = [
         'ScheduleId',
         'SchedulePeriod',

@@ -17,6 +17,11 @@ class CodeDetail extends Model
     protected $table = 't_CodeDetails';
     protected $primaryKey = 'ID';
 
+    public static function getPrimaryKey(): string
+    {
+        return 'CodeDetailsId';
+    }
+
     protected $fillable = [
         'CodeID', 'Description', 'DisplayOrder', 'IsActive',
         'CreatedBy', 'ModifiedBy', 'DeletedBy',

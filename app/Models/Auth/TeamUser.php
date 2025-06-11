@@ -5,7 +5,6 @@ namespace App\Models\Auth;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class TeamUser extends Model
 {
@@ -16,6 +15,11 @@ class TeamUser extends Model
 
     protected $table = 't_TeamUser';
     protected $primaryKey = 'Id';
+
+    public static function getPrimaryKey(): string
+    {
+        return 'TeamUserId';
+    }
 
     /**
      * The attributes that are mass assignable.

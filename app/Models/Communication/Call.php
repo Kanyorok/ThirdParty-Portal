@@ -25,6 +25,11 @@ class Call extends Model
     protected $table = 't_Calls';
     protected $primaryKey = 'CallID';
 
+    public static function getPrimaryKey(): string
+    {
+        return 'CallId';
+    }
+
     /**
      * The attributes that are mass assignable.
      */

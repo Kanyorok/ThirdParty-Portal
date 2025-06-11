@@ -17,6 +17,11 @@ class Notes extends Model
     protected $table = 't_Notes';
     protected $primaryKey = 'NoteID';
 
+    public static function getPrimaryKey(): string
+    {
+        return 'NoteID';
+    }
+
     /**
      * The attributes that are mass assignable.
      */
