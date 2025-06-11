@@ -9,6 +9,7 @@ use App\Models\BR\Client;
 use App\Models\BR\DebtProduct;
 use App\Models\Budget\BudgetDriver;
 use App\Models\Budget\BudgetDriverMaster;
+use App\Models\Budget\BudgetDriverProjections;
 use App\Models\Budget\BudgetGLAccount;
 use App\Models\Budget\BudgetLine;
 use App\Models\Budget\BudgetLinesGLAccount;
@@ -159,6 +160,7 @@ class AppServiceProvider extends ServiceProvider
             BudgetProductType::getPrimaryKey()=>BudgetProductType::class,
             BudgetDriver::getPrimaryKey()=>BudgetDriver::class,
             BudgetDriverMaster::getPrimaryKey()=>BudgetDriverMaster::class,
+            BudgetDriverProjections::getPrimaryKey()=>BudgetDriverProjections::class,
 
           
             CategoryMaster::getPrimaryKey() => CategoryMaster::class,
