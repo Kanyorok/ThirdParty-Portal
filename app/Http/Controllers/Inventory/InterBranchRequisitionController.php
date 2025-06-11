@@ -45,7 +45,7 @@ class InterBranchRequisitionController extends Controller
 
     public function create()
     {
-        $this->authorize('create', InterBranchRequisition::class);
+        // $this->authorize('create', InterBranchRequisition::class);
         $categories = ItemCategories::whereNull('ParentId')->get();
         $branches = Branch::all();
         $uoms = UnitOfMeasure::all();
@@ -55,7 +55,7 @@ class InterBranchRequisitionController extends Controller
 
     public function store(InterBranchRequisitionRequest $request)
     {
-        $this->authorize('create', InterBranchRequisition::class);
+        // $this->authorize('create', InterBranchRequisition::class);
         $data = $request->validated();
 
         if (!isset($data['Status'])) {
