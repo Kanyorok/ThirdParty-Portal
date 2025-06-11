@@ -54,7 +54,16 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::get('/propertyregistry/types/{categoryId}', [PropertyRegistryController::class, 'getTypesByCategory'])->name('gettypes');
 
 
-    Route::resource('addblock', PropertyBlockController::class);
+    //Property Block
+    //Route::resource('addblock', PropertyBlockController::class);
+    Route::get('propertyaddblock', [PropertyBlockController::class,'index'])->name('addblock.index');
+    Route::get('propertyaddblock/create', [PropertyBlockController::class,'create'])->name('addblock.create');
+    Route::post('propertyaddblock', [PropertyBlockController::class,'store'])->name('addblock.store');
+    Route::get('propertyaddblock/show', [PropertyBlockController::class,'show'])->name('addblock.show');
+
+
+
+
     Route::resource('addfloor', PropertyFloorController::class);
     Route::resource('addunit', PropertyUnitController::class);
     Route::resource('attachments', PropertyAttachmentsController::class);
