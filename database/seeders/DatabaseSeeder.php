@@ -47,5 +47,6 @@ class DatabaseSeeder extends Seeder
         $this->call(BudgetProductTypeSeeder::class);
         $this->call(BudgetProductsSeeder::class);
         $this->call(BudgetDriversMasterSeeder::class);
+        $this->call(BudgetDriverRatesSeeder::class);
     }
 }
