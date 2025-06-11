@@ -2,10 +2,14 @@
 @extends('layouts.app')
 
 @section('title')
-    {{ Str::upper($planner->PlannerID) }}
+    Plan :  {{ Str::upper($planner->PlannerID) }}
 @endsection
 @section('styles')
 
+@endsection
+@section('breadcrumbs')
+    <li class="breadcrumb-item"><a href="#">CRM</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('marketing-planner.index') }}">Marketing Plans</a></li>
 @endsection
 @section('content')
     <div class="row">
@@ -20,7 +24,7 @@
                     <ul class="list-group list-group-flush">
                         @if(PlannerTypeEnum::BranchPlanner->value === $planner->Type->value)
                             <li class="list-group-item">Branch: <span
-                                    class="float-end">{{ $planner->branch->BranchName }}</span></li>
+                                    class="float-end">{{ $planner->branch?->BranchName }}</span></li>
                             <li class="list-group-item">Mode : <span
                                     class="float-end">{{ $planner->mode?->Description }}</span></li>
                         @endif
@@ -367,7 +371,9 @@
     </div>
 @endsection
 @section('scripts')
-    <script src='{{ asset('assets/js/fullcalendar-6.1.14.js') }}'></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.14/index.global.min.js"
+            integrity="sha512-JEbmnyttAbEkbkpvW1vRqBzY3Otrp0DFwux9+JQ6kXe2mQfUmBpImuREMZS0advTaaCMotaYB5gIng/uPw3r6w=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src='{{ asset('assets/libs/moment/moment-with-locales.js') }}'></script>
 
     <script>   const $Modal = $('#PlannerActionsModal');

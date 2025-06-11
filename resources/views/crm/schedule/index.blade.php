@@ -266,11 +266,13 @@
 @endsection
 @section('scripts')
     <script src="{{ asset('assets/libs/rangePlugin.js') }}"></script>
-    <script src='{{ asset('assets/js/fullcalendar-6.1.14.js') }}'></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.14/index.global.min.js"
+            integrity="sha512-JEbmnyttAbEkbkpvW1vRqBzY3Otrp0DFwux9+JQ6kXe2mQfUmBpImuREMZS0advTaaCMotaYB5gIng/uPw3r6w=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src='{{ asset('assets/libs/moment/moment-with-locales.js') }}'></script>
     <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
     <script>
-        $Modal = $('#scheduleActionsModal');
+        let $Modal = $('#scheduleActionsModal');
         const _type = $('#scheduleType'), windowLocation = window.location.toString();
         let start = null, end = null, client = null;
         $(function () {
