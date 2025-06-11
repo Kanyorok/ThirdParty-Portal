@@ -1,3 +1,6 @@
+@php use App\Enums\Core\ComparisonOperatorsEnum; @endphp
+@php use App\Models\BR\Client; @endphp
+@php use App\Models\CRM\Lead; @endphp
 @extends('layouts.app')
 
 @section('title','Create Dynamic Lists')
@@ -23,8 +26,8 @@
                         <label class="form-label" for="Party">Party <span class="text-danger">*</span></label>
                         <select class="form-control" name="Party" id="Party" required>
                             <option disabled selected>Select a Party</option>
-                            <option value="{{ \App\Models\BR\Client::getPrimaryKey() }}">Members</option>
-                            <option value="{{ \App\Models\CRM\Lead::getPrimaryKey() }}">Leads</option>
+                            <option value="{{ Client::getPrimaryKey() }}">Members</option>
+                            <option value="{{ Lead::getPrimaryKey() }}">Leads</option>
                         </select>
                         <p id="Party_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                     </div>
@@ -43,7 +46,7 @@
                             <label class="form-label col-12" for="CreatedOn">Created On </label>
                             <div class="col-4">
                                 <select class="form-control" name="CreatedOnType" id="CreatedOnType">
-                                    @foreach(\App\Enums\Core\ComparisonOperatorsEnum::getAll() as $comparison)
+                                    @foreach(ComparisonOperatorsEnum::getAll() as $comparison)
                                         <option value="{{ $comparison->value }}">{{ $comparison->name }}</option>
                                     @endforeach
                                 </select>
@@ -60,7 +63,7 @@
                             <label class="form-label" for="DateOfBirth">Date of Birth </label>
                             <div class="col-4">
                                 <select class="form-control" name="DateOfBirthType" id="DateOfBirthType">
-                                    @foreach(\App\Enums\Core\ComparisonOperatorsEnum::getAll() as $comparison)
+                                    @foreach(ComparisonOperatorsEnum::getAll() as $comparison)
                                         <option value="{{ $comparison->value }}">{{ $comparison->name }}</option>
                                     @endforeach
                                 </select>
@@ -78,7 +81,7 @@
                             <div class="col-4">
                                 <select class="form-control" readonly="">
                                     <option
-                                        selected>{{ \App\Enums\Core\ComparisonOperatorsEnum::EqualTo->name }}</option>
+                                        selected>{{ ComparisonOperatorsEnum::EqualTo->name }}</option>
                                 </select>
                             </div>
                             <div class="col-8">
@@ -110,14 +113,14 @@
     </div>
 @endsection
 @section('scripts')
-    <script src='{{ asset('assets/plugins/moment/moment-with-locales.js') }}'></script>
+    <script src='{{ asset('assets/libs/moment/moment-with-locales.js') }}'></script>
     <script>
         $(function () {
             $('#Party').on('change', function () {
-                if (this.value === '{{ \App\Models\BR\Client::getPrimaryKey() }}') {
+                if (this.value === '{{ Client::getPrimaryKey() }}') {
                     $('.leads-fields').addClass('d-none');
                     $('.client-fields').removeClass('d-none');
-                } else if (this.value === '{{ \App\Models\CRM\Lead::getPrimaryKey() }}') {
+                } else if (this.value === '{{ Lead::getPrimaryKey() }}') {
                     $('.leads-fields').removeClass('d-none');
                     $('.client-fields').addClass('d-none');
                 }

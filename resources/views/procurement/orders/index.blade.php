@@ -1,7 +1,8 @@
+@php use Carbon\Carbon; @endphp
 @extends('layouts.app')
 @section('title', 'Purchase Orders')
 @section('styles')
-    <link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
     <style>
         .select2-container {
             width: 100% !important;
@@ -38,14 +39,14 @@
                             <tr>
                                 <td>{{ $item->Id }}</td>
                                 <td>{{ $item->OrderNo }}</td>
-                                <td>{{ \Carbon\Carbon::parse($item->OrderDate)->format('d-m-Y') }}</td>
+                                <td>{{ Carbon::parse($item->OrderDate)->format('d-m-Y') }}</td>
                                 <td>{{ $item->ExtOrdNum }}</td>
                                 <td>{{ $item->Priority }}</td>
                                 <td>{{ $item->BranchID }}</td>
                                 <td>{{ number_format($item->UnitPrice, 2) }}</td>
                                 <td>{{ $item->ordercount }}</td>
                                 <td>{{ $item->CreatedBy }}</td>
-                                <td>{{ \Carbon\Carbon::parse($item->CreatedOn)->format('d-m-Y H:i') }}</td>
+                                <td>{{ Carbon::parse($item->CreatedOn)->format('d-m-Y H:i') }}</td>
                                 <td><a href="{{ route('purchaseOrder.show', $item->Id) }}" class="btn btn-info">View</a>
                                 </td>
                             </tr>
@@ -63,7 +64,7 @@
 
 @endsection
 @section('scripts')
-    <script src="{{ asset('assets/plugins/select2/js/select2.full.min.js') }}"></script>
+    <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
     <script src="{{ asset('assets/js/datatables.js') }}"></script>
 
 @endsection

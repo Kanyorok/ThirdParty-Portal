@@ -1,3 +1,16 @@
+@php use App\Enums\EmailPriorityEnum; @endphp
+@php use App\Services\PartyService; @endphp
+@php use App\Enums\EmailTypeEnum; @endphp
+@php use App\Enums\EmailStatusEnum; @endphp
+@php use App\Models\BR\Client; @endphp
+@php use App\Models\CRM\Lead; @endphp
+@php use App\Models\Communication\Email; @endphp
+@php use App\Models\CRM\Ticket; @endphp
+@php use App\Models\Auth\User; @endphp
+@php use App\Enums\LeadTypeEnum; @endphp
+@php use App\Services\CRMEmailService; @endphp
+@php use App\Enums\Core\RoleEnum; @endphp
+@php use App\Enums\TicketSourceEnum; @endphp
 @extends('layouts.app')
 
 @section('title')
@@ -5,9 +18,9 @@
 @endsection
 
 @section('styles')
-    <link rel="stylesheet" href="{{ asset('assets/plugins/summernote/summernote-bs5.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/plugins/dropzone/dropzone.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/libs/summernote/summernote-bs5.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/libs/dropzone/dropzone.min.css') }}">
     <style>
         .select2-container {
             width: 100% !important;
@@ -57,28 +70,28 @@
                                          data-bs-toggle="collapse" data-bs-target="#Content{{ $email->EmailID }}"
                                          aria-expanded="{{-- ($loop->first)?'true':'false' --}}false"
                                          aria-controls="Content{{ $email->EmailID }}">
-                                        @if($email->Type->value === \App\Enums\EmailTypeEnum::Incoming->value)
+                                        @if($email->Type->value === EmailTypeEnum::Incoming->value)
                                             <div
-                                                class="row {{ ($email->Status->value===\App\Enums\EmailStatusEnum::Unread->value)?'fw-bold':'' }}">
+                                                class="row {{ ($email->Status->value===EmailStatusEnum::Unread->value)?'fw-bold':'' }}">
                                                 <div
-                                                    class="col-1 p-0">{!! (new \App\Services\PartyService($email->party))->getImage('class="img-thumbnail me-2 p-0" width="40" height="40" style="max-width: none;"') !!}</div>
+                                                    class="col-1 p-0">{!! (new PartyService($email->party))->getImage('class="img-thumbnail me-2 p-0" width="40" height="40" style="max-width: none;"') !!}</div>
                                                 <div class="col-11">
-                                                    <p class="m-0"> {!! (new \App\Services\PartyService($email->party))->simplified(true,true, $email->From) !!}
+                                                    <p class="m-0"> {!! (new PartyService($email->party))->simplified(true,true, $email->From) !!}
                                                         <span
                                                             class='float-end'>{{ $email->Dated->format('M d, Y H:i') }}</span>
                                                     </p>
-                                                    <p class="m-0 {{ ($email->Priority?->value === \App\Enums\EmailPriorityEnum::Important->value)?'text-warning':'' }}">@if($email->attachments()->count()>0)
+                                                    <p class="m-0 {{ ($email->Priority?->value === EmailPriorityEnum::Important->value)?'text-warning':'' }}">@if($email->attachments()->count()>0)
                                                             <span class="text-info " title="has attachments"><i
                                                                     class="fas fa-paperclip"></i></span>
                                                         @endif {{ $email->Subject }} </p>
                                                 </div>
                                             </div>
-                                        @elseif($email->Type->value === \App\Enums\EmailTypeEnum::Outgoing->value)
+                                        @elseif($email->Type->value === EmailTypeEnum::Outgoing->value)
                                             <div class="row">
                                                 <div
-                                                    class="col-1 p-0">{!! (new \App\Services\PartyService($email->creator))->getImage('class="img-thumbnail me-2 p-0" width="40" height="40" style="max-width: none;"') !!}</div>
+                                                    class="col-1 p-0">{!! (new PartyService($email->creator))->getImage('class="img-thumbnail me-2 p-0" width="40" height="40" style="max-width: none;"') !!}</div>
                                                 <div class="col-11">
-                                                    <p class="m-0">{{ (new \App\Services\PartyService($email->creator))->getName(true) }}
+                                                    <p class="m-0">{{ (new PartyService($email->creator))->getName(true) }}
                                                         &nbsp; {!! $email->Status->badge() !!}
                                                         @if(is_null($email->Dated))
                                                             <span
@@ -106,13 +119,13 @@
                                                 class="fas fa-trash-alt"></i> trash
                                         </button>
 
-                                        @if($email->Type->value === \App\Enums\EmailTypeEnum::Incoming->value)
+                                        @if($email->Type->value === EmailTypeEnum::Incoming->value)
                                             <button
                                                 class="btn btn-sm btn-outline-primary btn-pill float-end mx-2 reply-mail-to-action"
                                                 data-info="{{ route('email.reply-draft', [$email->EmailID]) }}"
                                                 type="button"><i class="fas fa-reply"></i> reply
                                             </button>
-                                        @elseif($email->Status->value === \App\Enums\EmailStatusEnum::Draft->value)
+                                        @elseif($email->Status->value === EmailStatusEnum::Draft->value)
                                             <button
                                                 class="btn btn-sm btn-outline-primary btn-pill float-end mx-2 edit-draft-action"
                                                 data-info="{{ $email->EmailID }}"
@@ -178,12 +191,12 @@
         <div class="col-md-5 col-lg-4">
             <div class="card">
                 <div class="card-body">
-                    @if($party instanceof \App\Models\BR\Client)
+                    @if($party instanceof Client)
                         @include('snippets.client_summary', ['client'=>$party,'show_summary'=>true])
                         @php
-                            $ticket = $party->tickets()->where('Source', \App\Models\Communication\Email::getPrimaryKey())->whereIn('SourceID',$conversation->emails()->select('t_Emails.EmailID'))->first()
+                            $ticket = $party->tickets()->where('Source', Email::getPrimaryKey())->whereIn('SourceID',$conversation->emails()->select('t_Emails.EmailID'))->first()
                         @endphp
-                        @if($ticket instanceof \App\Models\CRM\Ticket)
+                        @if($ticket instanceof Ticket)
                             <hr>
                             <h4 class="text-center">Ticket : <a href="javascript:void(0)"
                                                                 data-click_url="{{ route('tickets.edit',[$ticket->TicketID]) }}"
@@ -203,12 +216,12 @@
                             </div>
                         @endif
 
-                    @elseif($party instanceof \App\Models\CRM\Lead)
+                    @elseif($party instanceof Lead)
                         @include('snippets.lead_summary', ['lead'=>$party, 'show_summary'=>true])
                         @php
-                            $ticket = $party->tickets()->where('Source', \App\Models\Communication\Email::getPrimaryKey())->whereIn('SourceID',$conversation->emails()->select('t_Emails.EmailID'))->first()
+                            $ticket = $party->tickets()->where('Source', Email::getPrimaryKey())->whereIn('SourceID',$conversation->emails()->select('t_Emails.EmailID'))->first()
                         @endphp
-                        @if($ticket instanceof \App\Models\CRM\Ticket)
+                        @if($ticket instanceof Ticket)
                             <hr>
                             <h4 class="text-center">Ticket : <a href="javascript:void(0)"
                                                                 data-click_url="{{ route('tickets.edit',[$ticket->TicketID]) }}"
@@ -227,10 +240,10 @@
                                 </div>
                             </div>
                         @endif
-                    @elseif($party instanceof \App\Models\Auth\User)
+                    @elseif($party instanceof User)
                         @include('snippets.user_summary', ['user'=>$party, 'show_summary'=>true])
                     @else
-                        <h3>{{ (new \App\Services\CRMEmailService($conversation->email))->getParty() }}</h3>
+                        <h3>{{ (new CRMEmailService($conversation->email))->getParty() }}</h3>
 
                         <div class="mt-1 border-top border-1 py-3">
                             <div class="row">
@@ -242,11 +255,11 @@
                                         </button>
                                         <div class="dropdown-menu" style="">
                                             <a class="dropdown-item  click-summary-data" href="javascript:void(0)"
-                                               data-click_url="{{ route('leads.create',['type'=>\App\Enums\LeadTypeEnum::Individual->name,'conversation'=>$conversation->Id]) }}"
+                                               data-click_url="{{ route('leads.create',['type'=>LeadTypeEnum::Individual->name,'conversation'=>$conversation->Id]) }}"
                                                data-summary_title="Add Individual Lead"
                                             ><i class="fas fa-plus-circle"></i> New Individual Lead</a>
                                             <a class="dropdown-item  click-summary-data" href="javascript:void(0)"
-                                               data-click_url="{{ route('leads.create',['type'=>\App\Enums\LeadTypeEnum::Company->name, 'conversation'=>$conversation->Id]) }}"
+                                               data-click_url="{{ route('leads.create',['type'=>LeadTypeEnum::Company->name, 'conversation'=>$conversation->Id]) }}"
                                                data-summary_title="Add Corporate Lead"
                                             ><i class="fas fa-plus-circle"></i> New Corporate Lead</a>
                                             <div class="dropdown-divider"></div>
@@ -308,7 +321,7 @@
                                 <label class="form-label" for="contact_email">Email </label>
                                 <input type="text" class="form-control" id="contact_email" name="contact_email"
                                        placeholder="contact email" readonly
-                                       value="{{ (new \App\Services\CRMEmailService($conversation->email))->getParty() }}">
+                                       value="{{ (new CRMEmailService($conversation->email))->getParty() }}">
                                 <p id="contact_email_error" class="invalid-feedback d-none error col-12"
                                    role="alert"></p>
                             </div>
@@ -346,7 +359,7 @@
                                 <label class="form-label" for="contact_email">Email </label>
                                 <input type="text" class="form-control" id="contact_email" name="contact_email"
                                        placeholder="contact email" readonly
-                                       value="{{ (new \App\Services\CRMEmailService($conversation->email))->getParty() }}">
+                                       value="{{ (new CRMEmailService($conversation->email))->getParty() }}">
                                 <p id="contact_email_error" class="invalid-feedback d-none error col-12"
                                    role="alert"></p>
                             </div>
@@ -393,7 +406,7 @@
                                         class="text-danger">*</span></label>
                                 <select class="form-control " name="share_role" id="share_role" required>
                                     <option selected disabled>select a role.</option>
-                                    @foreach(\App\Enums\Core\RoleEnum::getAll() as $role)
+                                    @foreach(RoleEnum::getAll() as $role)
                                         <option value="{{ $role->value }}">{{ $role->name }}</option>
                                     @endforeach
                                 </select>
@@ -425,12 +438,12 @@
     </div>
 @endsection
 @section('scripts')
-    <script src="{{ asset('assets/plugins/dropzone/dropzone.min.js') }}"></script>
-    <script src="{{ asset('assets/plugins/summernote/summernote-bs5.min.js') }}"></script>
-    <script src="{{ asset('assets/plugins/select2/js/select2.full.min.js') }}"></script>
-    <script src="{{ asset('assets/js/datatables.js') }}"></script>
+    <script src="{{ asset('assets/libs/dropzone/dropzone.min.js') }}"></script>
+    <script src="{{ asset('assets/libs/summernote/summernote-bs5.min.js') }}"></script>
+    <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
+
     @include('snippets.actions.preview-files')
-    @include('snippets.actions.tickets',['source'=>\App\Enums\TicketSourceEnum::Email,'hidden'=> '<input type="hidden" name="conversation" class="d-none" value="'. $conversation->Id.'">', 'content' => $conversation->email?->Body])
+    @include('snippets.actions.tickets',['source'=>TicketSourceEnum::Email,'hidden'=> '<input type="hidden" name="conversation" class="d-none" value="'. $conversation->Id.'">', 'content' => $conversation->email?->Body])
     <script>const $Modal = $('#emailConversationModel');
 
         $(function () {

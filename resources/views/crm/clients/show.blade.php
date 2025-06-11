@@ -1,7 +1,16 @@
+@php use App\Services\BR\ClientService; @endphp
+@php use App\Models\BR\Client; @endphp
+@php use App\Models\CRM\Discussion; @endphp
+@php use App\Enums\CallStatusEnum; @endphp
+@php use Carbon\Carbon; @endphp
+@php use App\Http\Requests\Call\StartCallRequest; @endphp
+@php use App\Http\Requests\Call\StartMeetingRequest; @endphp
+@php use App\Models\Communication\Call; @endphp
+@php use App\Models\CRM\Meeting; @endphp
 @extends('layouts.app')
 
 @section('title')
-    {{ $client->ClientID }}
+    Client: {{ $client->ClientID }}
 @endsection
 
 @section('styles')
@@ -22,6 +31,10 @@
 
     </style>
 @endsection
+@section('breadcrumbs')
+    <li class="breadcrumb-item"><a href="#">CRM</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('clients.index') }}">Clients</a></li>
+@endsection
 @section('content')
     <div class="row">
         <div class="col-md-4 col-xxl-3">
@@ -34,7 +47,7 @@
                     <h5 class="h6 card-title">Contacts</h5>
                     <div class="text center">
                         @php
-                            $phone = (new \App\Services\BR\ClientService($client))->phoneNo();
+                            $phone = (new ClientService($client))->phoneNo();
                         @endphp
                         @if(is_string($phone))
                             <div class="btn-group">
@@ -122,19 +135,21 @@
                                 </button>
                             </div>
                             <div class="col-4">
-                                <div class="btn-group w-100">
+                                <div class="btn-group w-100" data-action="">
                                     <button type="button"
-                                            class="btn btn-outline-primary text-center dropdown-toggle"
+                                            class="btn btn-outline-primary w-100 text-center dropdown-toggle"
                                             data-bs-toggle="dropdown" aria-expanded="false">
                                         <i class="fas fa-calendar-plus"></i> <br> others
                                     </button>
                                     <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item add-party-appointment-btn"
+                                        <li>
+                                            <a class="dropdown-item add-party-appointment-btn"
                                                href="javascript:void(0);"
                                                data-action="{{ route('client-schedule.meeting',[$client->ClientID]) }}"><i
                                                     class="fas fa-calendar-plus"></i> schedule an appointment</a>
                                         </li>
-                                        <li><a class="dropdown-item add-party-scheduled-call-btn"
+                                        <li>
+                                            <a class="dropdown-item add-party-scheduled-call-btn"
                                                href="javascript:void(0);"
                                                data-action="{{ route('client-schedule.call',[$client->ClientID]) }}"> <i
                                                     class="align-middle" data-feather="phone-forwarded"></i>
@@ -156,7 +171,7 @@
                 </div>
                 <div class="col-lg-3 col-md-6 col-12">
                     <div class="card">
-                        @if($introducer instanceof \App\Models\BR\Client)
+                        @if($introducer instanceof Client)
                             <a class="card-body d-flex align-items-start text-decoration-none"
                                href="{{ route('clients.show',$introducer->ClientID) }}">
                                 {!! $introducer->getImage('width="42" height="42" class="rounded-circle me-2" alt=".."') !!}
@@ -186,7 +201,7 @@
                         </div>
                     </div>
                 </div>
-                @if($call instanceof \App\Models\Communication\Call)
+                @if($call instanceof Call)
                     <div class="col-12">
                         <div class="card">
                             <div class="card-body row ">
@@ -221,7 +236,7 @@
                                                     class="text-danger">*</span> </label>
                                             <textarea name="call_discussion" id="call_discussion" class="form-control"
                                                       rows="5" maxlength="5000" minlength="5">
-                                               {{($call->discussion instanceof \App\Models\CRM\Discussion)?$call->discussion->Discussion:''}}
+                                               {{($call->discussion instanceof Discussion)?$call->discussion->Discussion:''}}
                                            </textarea>
                                             <p id="call_discussion_error" class="invalid-feedback d-none error col-12"
                                                role="alert"></p>
@@ -257,7 +272,7 @@
                             </div>
                         </div>
                     </div>
-                @elseif($meeting instanceof \App\Models\CRM\Meeting)
+                @elseif($meeting instanceof Meeting)
                     <div class="col-12">
                         <div class="card">
                             <div class="card-header border border-bottom pb-0">
@@ -324,7 +339,7 @@
                                                     class="text-danger">*</span> </label>
                                             <textarea name="ongoing_meeting_discussion" id="ongoing_meeting_discussion"
                                                       class="form-control" rows="5" maxlength="5000" minlength="5"
-                                            >{{($meeting->discussion instanceof \App\Models\CRM\Discussion)?$meeting->discussion->Discussion:''}}</textarea>
+                                            >{{($meeting->discussion instanceof Discussion)?$meeting->discussion->Discussion:''}}</textarea>
                                             <p id="ongoing_meeting_discussion_error"
                                                class="invalid-feedback d-none error col-12"
                                                role="alert"></p>
@@ -354,7 +369,7 @@
                 @elseif($schedule instanceof \App\Models\CRM\Schedule)
                     <div class="col-12">
                         <div class="card">
-                            @if($schedule->ScheduledType === \App\Models\Communication\Call::getPrimaryKey())
+                            @if($schedule->ScheduledType === Call::getPrimaryKey())
                                 <div class="card-header border border-bottom pb-0">
                                     <h3 class="card-title">Scheduled Call </h3>
                                 </div>
@@ -390,7 +405,7 @@
                                         </button>
                                     </div>
                                 </div>
-                            @elseif($schedule->scheduled instanceof \App\Models\CRM\Meeting)
+                            @elseif($schedule->scheduled instanceof Meeting)
                                 <div class="card-header border border-bottom pb-0">
                                     <h3 class="card-title">Scheduled Meeting : {{ $schedule->scheduled->Title }} </h3>
                                 </div>
@@ -428,255 +443,341 @@
                     </div>
                 @endif
             </div>
-            <div class="tab">
-                <ul class="nav nav-tabs" role="tablist">
-                    <li class="nav-item"><a class="nav-link active" href="#tab-0" data-bs-toggle="tab" role="tab"
-                                            aria-selected="false">Activities</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#tab-4" data-bs-toggle="tab" role="tab"
-                                            aria-selected="false" onclick="fetchDiscussionsTable()">Discussions</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#tab-6" data-bs-toggle="tab" role="tab"
-                                            aria-selected="false" onclick="fetchScheduleTable()">Schedule</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#tab-5" data-bs-toggle="tab" role="tab"
-                                            aria-selected="false" onclick="fetchCallsTable()">Calls</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#tab-10" data-bs-toggle="tab" role="tab"
-                                            aria-selected="false" onclick="fetchAppointmentsTable()">Appointments</a>
-                    </li>
-                    <li class="nav-item"><a class="nav-link" href="#tab-3" data-bs-toggle="tab" role="tab"
-                                            aria-selected="false" onclick="fetchNotesTable()">Private Notes</a></li>
-                    <li class="nav-item"><a class="nav-link " href="#tab-2" data-bs-toggle="tab" role="tab"
-                                            aria-selected="false" onclick="fetchAccountsTable()">Portfolio</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#tab-1" data-bs-toggle="tab" role="tab"
-                                            aria-selected="false" onclick="fetchRelationsTable()">Relations</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#tab-7" data-bs-toggle="tab" role="tab"
-                                            aria-selected="false" onclick="fetchTicketsTable()">Tickets</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#tab-8" data-bs-toggle="tab" role="tab"
-                                            aria-selected="false" onclick="fetchMailsTable()">Emails</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#tab-9" data-bs-toggle="tab" role="tab"
-                                            aria-selected="false" onclick="fetchSMSTable()">Messages</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#tab-12" data-bs-toggle="tab" role="tab"
-                                            aria-selected="false" onclick="fetchContactsTable()">Contacts</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#tab-11" data-bs-toggle="tab" role="tab"
-                                            aria-selected="false" onclick="fetchReviewsTable()">Feedback</a></li>
-                </ul>
+
+            <div class="col-sm-12">
+                <div class="card">
+                    <div class="card-body py-0">
+                        <ul class="nav nav-tabs profile-tabs" id="employeeTab" role="tablist">
+                            <li class="nav-item"><a class="nav-link active" href="#tab-0" data-bs-toggle="tab"
+                                                    role="tab"
+                                                    aria-selected="false">Activities</a></li>
+                            <li class="nav-item"><a class="nav-link" href="#tab-4" data-bs-toggle="tab" role="tab"
+                                                    aria-selected="false"
+                                                    onclick="fetchDiscussionsTable()">Discussions</a></li>
+                            <li class="nav-item"><a class="nav-link" href="#tab-6" data-bs-toggle="tab" role="tab"
+                                                    aria-selected="false" onclick="fetchScheduleTable()">Schedule</a>
+                            </li>
+                            <li class="nav-item"><a class="nav-link" href="#tab-5" data-bs-toggle="tab" role="tab"
+                                                    aria-selected="false" onclick="fetchCallsTable()">Calls</a></li>
+                            <li class="nav-item"><a class="nav-link" href="#tab-10" data-bs-toggle="tab" role="tab"
+                                                    aria-selected="false" onclick="fetchAppointmentsTable()">Appointments</a>
+                            </li>
+                            <li class="nav-item"><a class="nav-link" href="#tab-3" data-bs-toggle="tab" role="tab"
+                                                    aria-selected="false" onclick="fetchNotesTable()">Private Notes</a>
+                            </li>
+                            <li class="nav-item"><a class="nav-link " href="#tab-2" data-bs-toggle="tab" role="tab"
+                                                    aria-selected="false" onclick="fetchAccountsTable()">Portfolio</a>
+                            </li>
+                            <li class="nav-item"><a class="nav-link" href="#tab-1" data-bs-toggle="tab" role="tab"
+                                                    aria-selected="false" onclick="fetchRelationsTable()">Relations</a>
+                            </li>
+                            <li class="nav-item"><a class="nav-link" href="#tab-7" data-bs-toggle="tab" role="tab"
+                                                    aria-selected="false" onclick="fetchTicketsTable()">Tickets</a></li>
+                            <li class="nav-item"><a class="nav-link" href="#tab-8" data-bs-toggle="tab" role="tab"
+                                                    aria-selected="false" onclick="fetchMailsTable()">Emails</a></li>
+                            <li class="nav-item"><a class="nav-link" href="#tab-9" data-bs-toggle="tab" role="tab"
+                                                    aria-selected="false" onclick="fetchSMSTable()">Messages</a></li>
+                            <li class="nav-item"><a class="nav-link" href="#tab-12" data-bs-toggle="tab" role="tab"
+                                                    aria-selected="false" onclick="fetchContactsTable()">Contacts</a>
+                            </li>
+                            <li class="nav-item"><a class="nav-link" href="#tab-11" data-bs-toggle="tab" role="tab"
+                                                    aria-selected="false" onclick="fetchReviewsTable()">Feedback</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
                 <div class="tab-content">
-                    <div class="tab-pane active m-2" id="tab-0" role="tabpanel">
-                        <div id="activitiesMain"></div>
-                        <div class="d-grid">
-                            <button type="button" class="btn btn-primary d-none" id="loadMoreBtn"
-                                    onclick="fetchActivities()">Load more
-                            </button>
-                        </div>
-                    </div>
-                    <div class="tab-pane m-2" id="tab-1" role="tabpanel">
-                        <table id="relationsTable"
-                               class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                            <thead>
-                            <tr>
-                                <th>ClientID</th>
-                                <th>Name</th>
-                                <th>Relation</th>
-                                <th>Type</th>
-                                <th>Phone</th>
-                                <th>Status</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                    <div class="tab-pane m-2" id="tab-2" role="tabpanel">
-                        <table id="accountsTable"
-                               class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                            <thead>
-                            <tr>
-                                <th>Product</th>
-                                <th>Account ID</th>
-                                <th>ClearBalance</th>
-                                <th>Status</th>
-                                <th>Last</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                    <div class="tab-pane m-2" id="tab-3" role="tabpanel">
-                        <table id="notesTable"
-                               class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                            <thead>
-                            <tr>
-                                <th>#</th>
-                                <th class="w-50">Note</th>
-                                <th>On</th>
-                                <th>actions</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                    <div class="tab-pane m-2" id="tab-4" role="tabpanel">
-                        <table id="discussionsTable"
-                               class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                            <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>From</th>
-                                <th>Discussion</th>
-                                <th>Dated</th>
-                                <th>actions</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                    <div class="tab-pane m-2" id="tab-5" role="tabpanel">
-                        <table id="callsTable"
-                               class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                            <thead>
-                            <tr>
-                                <th>User</th>
-                                <th>Status</th>
-                                <th>Start</th>
-                                <th>End</th>
-                                <th>Duration</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                    <div class="tab-pane m-2" id="tab-6" role="tabpanel">
-                        <table id="scheduleTable"
-                               class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                            <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Type</th>
-                                <th>Start</th>
-                                <th>End</th>
-                                <th>actions</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                    <div class="tab-pane m-2" id="tab-7" role="tabpanel">
-                        <div class="row">
-                            <div class="col-md-6 col-12">
-                                <div class="mx-1 mb-2">
-                                    <select class="form-control w-100 filter-field" name="TicketStatus"
-                                            id="TicketStatus">
-                                        <option value="all">Status: Any & All</option>
-                                        @foreach(App\Enums\TicketStatusEnum::class::cases() as $status)
-                                            <option value="{{ $status->value }}"
-                                                {{ (App\Enums\TicketStatusEnum::Active->value === $status->value)?'selected':'' }}>
-                                                Status: {{ $status->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-6 col-12">
-                                <div class="float-end">
-                                    <button type="button" class="btn btn-primary add-party-ticket-btn"
-                                            data-action="{{ route('client-tickets.store',[$client->ClientID]) }}">
-                                        <i class="align-middle" data-feather="check-square"></i> add a ticket
+                    <div class="tab-pane active show" id="tab-0" role="tabpanel" aria-labelledby="profile-tab-1">
+                        <div class="card">
+                            <div class="card-header"><h5>Activities</h5></div>
+                            <div class="card-body">
+                                <div id="activitiesMain"></div>
+                                <div class="d-grid">
+                                    <button type="button" class="btn btn-primary d-none" id="loadMoreBtn"
+                                            onclick="fetchActivities()">Load more
                                     </button>
                                 </div>
                             </div>
                         </div>
+                    </div>
+                    <div class="tab-pane m-2" id="tab-1" role="tabpanel">
+                        <div class="card">
+                            <div class="card-header"><h5>Relations - Next of Kin</h5></div>
+                            <div class="card-body">
+                                <table id="relationsTable"
+                                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                    <thead>
+                                    <tr>
+                                        <th>ClientID</th>
+                                        <th>Name</th>
+                                        <th>Relation</th>
+                                        <th>Type</th>
+                                        <th>Phone</th>
+                                        <th>Status</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
 
-                        <div class="clearfix mb-2"></div>
-                        <table id="ticketsTable"
-                               class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                            <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Title</th>
-                                <th>Category</th>
-                                <th>Priority</th>
-                                <th>Dated</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+                    </div>
+                    <div class="tab-pane m-2" id="tab-2" role="tabpanel">
+                        <div class="card">
+                            <div class="card-header"><h5>Portfolio: Client Accounts</h5></div>
+                            <div class="card-body">
+                                <table id="accountsTable"
+                                       +
+                                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                    <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Account ID</th>
+                                        <th>ClearBalance</th>
+                                        <th>Status</th>
+                                        <th>Last</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane m-2" id="tab-3" role="tabpanel">
+                        <div class="card">
+                            <div class="card-header"><h5>Private Notes</h5></div>
+                            <div class="card-body">
+                                <table id="notesTable"
+                                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                    <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th class="w-50">Note</th>
+                                        <th>On</th>
+                                        <th>actions</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane m-2" id="tab-4" role="tabpanel">
+                        <div class="card">
+                            <div class="card-header"><h5>discussions</h5></div>
+                            <div class="card-body">
+                                <table id="discussionsTable"
+                                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                    <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>From</th>
+                                        <th>Discussion</th>
+                                        <th>Dated</th>
+                                        <th>actions</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane m-2" id="tab-5" role="tabpanel">
+                        <div class="card">
+                            <div class="card-header"><h5>Call Logs</h5></div>
+                            <div class="card-body">
+                                <table id="callsTable"
+                                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                    <thead>
+                                    <tr>
+                                        <th>User</th>
+                                        <th>Status</th>
+                                        <th>Start</th>
+                                        <th>End</th>
+                                        <th>Duration</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane m-2" id="tab-6" role="tabpanel">
+                        <div class="card">
+                            <div class="card-header"><h5>Schedule <small>Calls/Meetings ...</small></h5></div>
+                            <div class="card-body">
+                                <table id="scheduleTable"
+                                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                    <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Type</th>
+                                        <th>Start</th>
+                                        <th>End</th>
+                                        <th>actions</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane m-2" id="tab-7" role="tabpanel">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="row">
+                                    <div class="col-md-6 col-12">
+                                        <div class="mx-1 mb-2">
+                                            <select class="form-control w-100 filter-field" name="TicketStatus"
+                                                    id="TicketStatus">
+                                                <option value="all">Status: Any & All</option>
+                                                @foreach(App\Enums\TicketStatusEnum::class::cases() as $status)
+                                                    <option value="{{ $status->value }}"
+                                                        {{ (App\Enums\TicketStatusEnum::Active->value === $status->value)?'selected':'' }}>
+                                                        Status: {{ $status->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-12">
+                                        <div class="float-end">
+                                            <button type="button" class="btn btn-primary add-party-ticket-btn"
+                                                    data-action="{{ route('client-tickets.store',[$client->ClientID]) }}">
+                                                <i class="align-middle" data-feather="check-square"></i> add a ticket
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <table id="ticketsTable"
+                                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                    <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Title</th>
+                                        <th>Category</th>
+                                        <th>Priority</th>
+                                        <th>Dated</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                     <div class="tab-pane m-2" id="tab-8" role="tabpanel">
-                        <table id="EmailsTable"
-                               class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                            <thead>
-                            <tr>
-                                <th>Type</th>
-                                <th>Subject</th>
-                                <th>Dated</th>
-                                <th>actions</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+                        <div class="card">
+                            <div class="card-header"><h5>Emails <small>Incoming & Outgoing</small></h5></div>
+                            <div class="card-body">
+                                <table id="EmailsTable"
+                                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                    <thead>
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>Subject</th>
+                                        <th>Dated</th>
+                                        <th>actions</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                     <div class="tab-pane m-2" id="tab-9" role="tabpanel">
-                        <table id="MessagesTable"
-                               class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                            <thead>
-                            <tr>
-                                <th>Type</th>
-                                <th>Source</th>
-                                <th>Dated</th>
-                                <th>actions</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+                        <div class="card">
+                            <div class="card-header"><h5>Messages <small>Incoming & Outgoing</small></h5></div>
+                            <div class="card-body">
+                                <table id="MessagesTable"
+                                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                    <thead>
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>Source</th>
+                                        <th>Dated</th>
+                                        <th>actions</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+
                     </div>
                     <div class="tab-pane m-2" id="tab-10" role="tabpanel">
-                        <table id="AppointmentsTable"
-                               class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                            <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Title</th>
-                                <th>Start</th>
-                                <th>End</th>
-                                <th>Status</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+                        <div class="card">
+                            <div class="card-header"><h5>Meeting Appointments</h5></div>
+                            <div class="card-body">
+                                <table id="AppointmentsTable"
+                                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                    <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Title</th>
+                                        <th>Start</th>
+                                        <th>End</th>
+                                        <th>Status</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                     <div class="tab-pane m-2" id="tab-11" role="tabpanel">
-                        <table id="reviewsTable"
-                               class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                            <thead>
-                            <tr>
-                                <th>No.</th>
-                                <th>Rate</th>
-                                <th>Sentiment</th>
-                                <th>Source</th>
-                                <th>Dated</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+                        <div class="card">
+                            <div class="card-header"><h5>Reviews</h5></div>
+                            <div class="card-body">
+                                <table id="reviewsTable"
+                                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                    <thead>
+                                    <tr>
+                                        <th>No.</th>
+                                        <th>Rate</th>
+                                        <th>Sentiment</th>
+                                        <th>Source</th>
+                                        <th>Dated</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+
                     </div>
                     <div class="tab-pane m-2" id="tab-12" role="tabpanel">
-                        <div class="float-end">
-                            <button class="btn btn-primary click-summary-data" type="button"
-                                    data-click_url="{{ route('client-contacts.create',[$client->ClientID]) }}"
-                                    data-summary_title="Add Contact">
-                                <i class="fas fa-plus-circle"></i> add contact
-                            </button>
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="row">
+                                    <div class="col-md-6 col-12"><h5>Contacts <small>Other Contacts</small></h5></div>
+                                    <div class="col-md-6 col-12">
+                                        <div class="float-end">
+                                            <button class="btn btn-primary click-summary-data" type="button"
+                                                    data-click_url="{{ route('client-contacts.create',[$client->ClientID]) }}"
+                                                    data-summary_title="Add Contact">
+                                                <i class="fas fa-plus-circle"></i> add contact
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <table id="contactsTable"
+                                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                    <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Label</th>
+                                        <th>Phone</th>
+                                        <th>Email</th>
+                                        <th>action</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
                         </div>
-                        <div class="clearfix mb-2"></div>
-                        <table id="contactsTable"
-                               class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                            <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Label</th>
-                                <th>Phone</th>
-                                <th>Email</th>
-                                <th>action</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
                     </div>
                 </div>
             </div>
@@ -704,7 +805,7 @@
                                     <label for="type" class="form-label">Type <span class="text-danger">*</span></label>
                                     <select class="form-control" required name="type" id="type">
                                         <option disabled selected>Select a Type</option>
-                                        @foreach(\App\Enums\CallStatusEnum::unreachable() as $option)
+                                        @foreach(CallStatusEnum::unreachable() as $option)
                                             <option value="{{ $option->value }}">{{ $option->description() }}</option>
                                         @endforeach
                                     </select>
@@ -752,7 +853,7 @@
                                 <div class="mb-3">
                                     <label class="form-label" for="schedule_start">Next Start <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control flatpickr-datetime"
-                                           value="{{ \Carbon\Carbon::now()->addDay()->setHour(8)->setMinute(0)->format('Y-m-d H:i') }}"
+                                           value="{{ Carbon::now()->addDay()->setHour(8)->setMinute(0)->format('Y-m-d H:i') }}"
                                            id="schedule_start" name="schedule_start" placeholder="Select start..">
                                     <p id="schedule_start_error" class="invalid-feedback d-none error col-12"
                                        role="alert"></p>
@@ -798,7 +899,7 @@
                                    role="alert"></p>
                             </div>
                             <input type="hidden" class="d-none" id="schedule" name="schedule" readonly
-                                   value="{{ ($schedule instanceof \App\Models\CRM\Schedule)?$schedule->ScheduleID:\App\Http\Requests\Call\StartCallRequest::NoSchedule }}">
+                                   value="{{ ($schedule instanceof \App\Models\CRM\Schedule)?$schedule->ScheduleID:StartCallRequest::NoSchedule }}">
                             <p id="schedule_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             <hr>
                             <div class="mt-4">
@@ -832,7 +933,7 @@
                                 <input type="text" class="form-control" id="meeting_initiated_location"
                                        name="meeting_initiated_location"
                                        placeholder="Location"
-                                       value="{{ ($schedule instanceof \App\Models\CRM\Schedule && $schedule->scheduled instanceof \App\Models\CRM\Meeting)?$schedule->scheduled->Location:'' }}">
+                                       value="{{ ($schedule instanceof \App\Models\CRM\Schedule && $schedule->scheduled instanceof Meeting)?$schedule->scheduled->Location:'' }}">
                                 <p id="meeting_location_error" class="invalid-feedback d-none error col-12"
                                    role="alert"></p>
                             </div>
@@ -846,7 +947,7 @@
                                    role="alert"></p>
                             </div>
                             <input type="hidden" class="d-none" id="meeting_schedule" name="meeting_schedule" readonly
-                                   value="{{ ($schedule instanceof \App\Models\CRM\Schedule)?$schedule->ScheduleID:\App\Http\Requests\Call\StartMeetingRequest::NoSchedule }}">
+                                   value="{{ ($schedule instanceof \App\Models\CRM\Schedule)?$schedule->ScheduleID:StartMeetingRequest::NoSchedule }}">
                             <p id="meeting_schedule_error" class="invalid-feedback d-none error col-12"
                                role="alert"></p>
                             <hr>
@@ -873,7 +974,6 @@
     @include('snippets.actions.schedule')
     @include('snippets.actions.sms')
     <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
-    <script src="{{ asset('assets/js/datatables.js') }}"></script>
     <script> const $Modal = $('#clientsActionsModal');
         let accountsTable = null, relationsTable = null, callsTable = null, discussionsTable = null, notesTable = null,
             scheduleTable = null, ticketsTable = null, unreachable_start = null, reschedule_start = null,
@@ -895,7 +995,7 @@
                 $Modal.modal('show');
             });
 
-            @if($call instanceof \App\Models\Communication\Call)
+            @if($call instanceof Call)
             durationTimer(document.getElementById("callTimer"), '{{ $call->StartOn->toDateTimeString() }}')
 
             $('form#OngoingCallForm').submit(async function (e) {
@@ -903,7 +1003,7 @@
                 await saveForm($(this), $('#OngoingCallBtn'), true, false, true);
             });
 
-            @elseif($meeting instanceof \App\Models\CRM\Meeting)
+            @elseif($meeting instanceof Meeting)
             durationTimer(document.getElementById("meetingTimer"), '{{ $meeting->StartOn->toDateTimeString() }}')
 
             $('form#OngoingMeetingForm').submit(async function (e) {

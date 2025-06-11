@@ -1,4 +1,4 @@
-@php use Illuminate\Support\Str; @endphp
+@php use App\Enums\Core\ExtensionsEnum;use App\Models\BR\Client;use App\Models\CRM\Lead;use Illuminate\Support\Str; @endphp
 @extends('layouts.app')
 
 @section('title')
@@ -63,7 +63,7 @@
                     </div>
                 </div>
                 <div class="card-body ">
-                    <input type="hidden" name="Type" value="{{ \App\Models\BR\Client::getPrimaryKey() }}">
+                    <input type="hidden" name="Type" value="{{ Client::getPrimaryKey() }}">
                     <div class="alert alert-info " role="alert">
                         <div class="alert-icon">
                             <i class="far fa-fw fa-bell"></i>
@@ -77,7 +77,7 @@
                     <div class="mb-3 ">
                         <label for="file">CSV File</label>
                         <input type="file" name="file" class="form-control"
-                               accept="{{ \App\Enums\Core\ExtensionsEnum::Csv->getMimeType() }}" id="file">
+                               accept="{{ ExtensionsEnum::Csv->getMimeType() }}" id="file">
                         <p id="file_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                     </div>
                 </div>
@@ -105,17 +105,17 @@
                                                 aria-selected="false" onclick="fetchLeadsTable()">Leads</a></li>
                         <li class="nav-item"><a class="nav-link" href="#tab-0" data-bs-toggle="tab" role="tab"
                                                 aria-selected="false" onclick="fetchMembersTable()">Members </a></li>
-                    @elseif($list->Source === \App\Models\CRM\Lead::getPrimaryKey())
+                    @elseif($list->Source === Lead::getPrimaryKey())
                         <li class="nav-item"><a class="nav-link active" href="#tab-1" data-bs-toggle="tab" role="tab"
                                                 aria-selected="false" onclick="fetchLeadsTable()">Leads</a></li>
-                    @elseif($list->Source === \App\Models\BR\Client::getPrimaryKey())
+                    @elseif($list->Source === Client::getPrimaryKey())
                         <li class="nav-item"><a class="nav-link active" href="#tab-0" data-bs-toggle="tab" role="tab"
                                                 aria-selected="false" onclick="fetchMembersTable()">Members </a></li>
                     @endif
                 </ul>
                 <div class="tab-content">
                     <div
-                        class="tab-pane  {{ ($list->Source === \App\Models\BR\Client::getPrimaryKey())?'active':'' }} m-2"
+                        class="tab-pane  {{ ($list->Source === Client::getPrimaryKey())?'active':'' }} m-2"
                         id="tab-0" role="tabpanel">
                         <div class="row mb-0">
                             <div class="col-8 mb-0">
@@ -151,7 +151,7 @@
                         </table>
                     </div>
                     <div
-                        class="tab-pane  {{ ($list->Source === \App\Models\BR\Client::getPrimaryKey())?'':'active' }}   m-2"
+                        class="tab-pane  {{ ($list->Source === Client::getPrimaryKey())?'':'active' }}   m-2"
                         id="tab-1" role="tabpanel">
                         <div class="row mb-0">
                             <div class="col-8 mb-0">
@@ -252,9 +252,9 @@
     </div>
 @endsection
 @section('scripts')
-    {{--<script src="{{ asset('assets/plugins/dataTables.checkboxes/dataTables.checkboxes.min.js') }}"></script>--}}
-    {{-- <script src="{{ asset('assets/js/datatables.js') }}"></script>--}}
-    <script src="{{asset('assets/plugins/jquery-form/jquery.form.min.js')}}"></script>
+    {{--<script src="{{ asset('assets/libs/dataTables.checkboxes/dataTables.checkboxes.min.js') }}"></script>--}}
+    {{----}}
+    <script src="{{asset('assets/libs/jquery-form/jquery.form.min.js')}}"></script>
     <script src="https://cdn.datatables.net/2.1.5/js/dataTables.js"></script>
     <script src="https://cdn.datatables.net/select/2.0.5/js/dataTables.select.js"></script>
     <script src="https://cdn.datatables.net/select/2.0.5/js/select.dataTables.js"></script>
@@ -262,7 +262,7 @@
         const leadsBtn = $("#saveLeadsToList"), clientsBtn = $("#saveMembersToList"), $Modal = $('#ListActionsModal');
         $(function () {
             $.fn.dataTable.ext.errMode = 'none';
-            @if($list->Source === \App\Models\BR\Client::getPrimaryKey())
+            @if($list->Source === Client::getPrimaryKey())
             fetchMembersTable();
             @else
             fetchLeadsTable();

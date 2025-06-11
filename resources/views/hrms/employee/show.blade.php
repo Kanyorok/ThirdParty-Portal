@@ -332,90 +332,11 @@
             </div>
         </div>
     </div>
-    {{-- <div class="row">
-         <div class="col-md-4 col-xxl-3">
-             <div class="card">
-                 <div class="card-body mx-1 mb-0 mt-1">
-                     @include('snippets.employee_summary', ['employee'=>$employee])
-                     <hr>
-                     <h5 class="h6 card-title">Contacts</h5>
-                     <div class="text center">
-                         <div class="btn-group">
-                             <button type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
-                                     class="btn btn-link dropdown-toggle">
-                                 {{ $employee->Phone }}
-                             </button>
-                             <div class="dropdown-menu" style="">
-                                 <a class="dropdown-item disabled text-decoration-line-through"
-                                    href="javascript:void(0)"><i class="fas fa-phone-alt"></i> Call</a>
-                                 <div class="dropdown-divider"></div>
-                                 <a class="dropdown-item send-message-to-action" href="javascript:void(0)"
-                                    data-info="{{ route('employees.store', [$employee->EmployeeID]) }}~{{ $employee->full_name }}~{{ $employee->Phone }}">
-                                     <i class="fas fa-message"></i> Message</a>
-                             </div>
-                         </div>
-                         @if(!empty($employee->Email))
-                             <a href="javascript:void(0)"
-                                data-info="{{ route('employees.store', [$employee->EmployeeID]) }}~{{ $employee->full_name }}~{{ $employee->Email }}"
-                                class="btn btn-lg btn-link me-1 my-1 send-mail-to-action">{{ $employee->Email }}</a>
-                         @endif
-                     </div>
-                 </div>
-                 <hr class="my-0">
-                 <ul class="list-group list-group-flush">
-                     <li class="list-group-item"><b>Join Date</b><span class="float-end">{{ $employee->JoinDate?->format('m d, Y') }} </span></li>
-                     <li class="list-group-item"><b>Gender</b><span class="float-end">{{ $employee->Gender->name }} </span></li>
-                     <li class="list-group-item"><b>Date of Birth</b><span class="float-end">{{ $employee->DateOfBirth?->format('m d, Y') }} </span></li>
-                     <li class="list-group-item"><b>Department</b><span
-                             class="float-end">{{ $employee->department?->Name }} </span></li>
-                    <li class="list-group-item"><b>Branch</b><span
-                             class="float-end">{{ $employee->branch?->Name }} </span></li>
-
-                 </ul>
-
-             </div>
-             <div class="card">
-                 <div class="card-body">
-                     @include('snippets.behind_scenes',['model' => $employee])
-                 </div>
-             </div>
-         </div>
-         <div class="col-md-8 col-xxl-9">
-             <div class="tab">
-                 <ul class="nav nav-tabs" role="tablist">
-                     <li class="nav-item"><a class="nav-link active" href="#tab-0" data-bs-toggle="tab" role="tab"
-                                             aria-selected="false">Basic Details</a></li>
-                     <li class="nav-item"><a class="nav-link " href="#tab-1" data-bs-toggle="tab" role="tab"
-                                             aria-selected="false" >Payroll Details</a></li>
-                     <li class="nav-item"><a class="nav-link" href="#tab-2" data-bs-toggle="tab" role="tab"
-                                             aria-selected="false" >Leaves</a></li>
-                     <li class="nav-item"><a class="nav-link " href="#tab-3" data-bs-toggle="tab" role="tab"
-                                             aria-selected="false">Next of Kin</a></li>
-                     <li class="nav-item"><a class="nav-link " href="#tab-4" data-bs-toggle="tab" role="tab"
-                                             aria-selected="false">Documents Related</a></li>
-                     <li class="nav-item"><a class="nav-link " href="#tab-5" data-bs-toggle="tab" role="tab"
-                                             aria-selected="false">Attrition</a>
-                     </li>
-                 </ul>
-                 <div class="tab-content">
-                     <div class="tab-pane active m-2" id="tab-0" role="tabpanel"></div>
-                     <div class="tab-pane active m-2" id="tab-1" role="tabpanel">
-                         <h3>Payroll Details</h3>
-
-                     </div>
-                     <div class="tab-pane active m-2" id="tab-2" role="tabpanel"></div>
-                     <div class="tab-pane active m-2" id="tab-3" role="tabpanel"></div>
-                     <div class="tab-pane active m-2" id="tab-4" role="tabpanel"></div>
-                     <div class="tab-pane active m-2" id="tab-5" role="tabpanel"></div>
-                 </div>
-             </div>
-         </div>
-     </div>--}}
 @endsection
 @section('scripts')
     @include('snippets.actions.mailto')
     @include('snippets.actions.sms')
-    <script src='{{ asset('assets/libs/flatpickr/flatpickr.min.js.js') }}'></script>
+    <script src='{{ asset('assets/libs/flatpickr/flatpickr.min.js') }}'></script>
     <script src='{{ asset('assets/libs/moment/moment-with-locales.js') }}'></script>
     <script src="{{asset('assets/libs/jquery-form/jquery.form.min.js')}}"></script>
     <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>

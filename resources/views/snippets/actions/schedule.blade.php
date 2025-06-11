@@ -1,5 +1,6 @@
-<link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
-<script src="{{ asset('assets/plugins/select2/js/select2.full.min.js') }}"></script>
+@php use App\Services\MeetingService; @endphp
+<link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
+<script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
 <style>
     .select2-container {
         width: 100% !important;
@@ -31,7 +32,7 @@
                             <select class="form-control" name="meeting_location" required
                                     id="meeting_location">
                                 <option selected disabled>Select or Type Location/Link</option>
-                                @foreach(\App\Services\MeetingService::rooms() as $room)
+                                @foreach(MeetingService::rooms() as $room)
                                     <option value="{{ $room->RoomID }}">{{ $room->Name }} - {{ $room->RoomID }}
                                         ({{ $room->Capacity }})
                                     </option>
@@ -142,8 +143,8 @@
         </div>
     </div>
 </div>
-<script src="{{ asset('assets/plugins/rangePlugin.js') }}"></script>
-<script src='{{ asset('assets/plugins/moment/moment-with-locales.js') }}'></script>
+<script src="{{ asset('assets/libs/rangePlugin.js') }}"></script>
+<script src='{{ asset('assets/libs/moment/moment-with-locales.js') }}'></script>
 <script>
     let schedule_call_start = null, schedule_call_end = null, schedule_meeting_start = null,
         schedule_meeting_end = null;
@@ -262,7 +263,6 @@
                 $("#meeting_end").on("change", function () {
                     validateDates('meeting_start', 'meeting_end', false, schedule_meeting_end);
                 });*/
-
 
 
         $(document).on('click', '.add-party-scheduled-call-btn', function () {

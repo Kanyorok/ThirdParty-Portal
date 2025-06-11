@@ -3,7 +3,7 @@
 use App\Http\Controllers\CRM\ReportsController;
 use Illuminate\Support\Facades\Route;
 
-Route::namespace('CRM')->group(function () {
+Route::namespace('CRM')->prefix('crm')->group(function () {
 
     Route::namespace('Call')->group(function () {
         Route::get('start-call', 'CallController@index')->name('call.incoming.start');

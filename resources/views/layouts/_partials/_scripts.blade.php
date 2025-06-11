@@ -7,28 +7,17 @@
     <div class="offcanvas-body" id="offcanvasMainBody"></div>
 </div>
 <script src="{{ asset('assets/js/jquery.min.js') }}"></script>
-{{--<script src="../assets/js/plugins/apexcharts.min.js"></script>
-<script src="../assets/js/widgets/all-earnings-graph.js"></script>
-<script src="../assets/js/widgets/page-views-graph.js"></script>
-<script src="../assets/js/widgets/total-task-graph.js"></script>
-<script src="../assets/js/widgets/download-graph.js"></script>
-<script src="../assets/js/widgets/customer-rate-graph.js"></script>
-<script src="../assets/js/widgets/tasks-graph.js"></script>
-<script src="../assets/js/widgets/total-income-graph.js"></script>--}}
-<!-- [Page Specific JS] end --><!-- Required Js -->
 <script src="{{ asset('assets/js/plugins/popper.min.js') }}"></script>
 <script src="{{ asset('assets/js/plugins/simplebar.min.js') }}"></script>
 <script src="{{ asset('assets/js/plugins/bootstrap.min.js') }}"></script>
 <script src="{{ asset('assets/js/plugins/i18next.min.js') }}"></script>
-{{--<script src="{{ asset('assets/js/plugins/i18nextHttpBackend.min.js') }}"></script>--}}
 <script src="{{ asset('assets/js/icon/custom-font.js') }}"></script>
 <script src="{{ asset('assets/js/script.js') }}"></script>
 <script src="{{ asset('assets/js/theme.js') }}"></script>
-{{--<script src="../assets/js/multi-lang.js') }}"></script>--}}
 <script src="{{ asset('assets/js/plugins/feather.min.js') }}"></script>
 <script src="{{ asset('assets/libs/dataTables/dataTables.min.js') }}"></script>
 <script src="{{ asset('assets/libs/dataTables/bootstrap5.min.js') }}"></script>
-
+<script src="{{ asset('assets/libs/flatpickr/flatpickr.min.js') }}"></script>
 <script src="{{ asset('assets/libs/notyf/notyf.min.js') }}"></script>
 {{--<script>layout_change('light');</script>
 <script>change_box_container('false');</script>

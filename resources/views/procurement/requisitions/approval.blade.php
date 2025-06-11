@@ -1,7 +1,8 @@
+@php use Carbon\Carbon; @endphp
 @extends('layouts.app')
 @section('title', 'Requisition Approval')
 @section('styles')
-    <link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
     <style>
         .select2-container {
             width: 100% !important;
@@ -39,7 +40,7 @@
                             <tr>
                                 <td>{{$loop->iteration }}</td>
                                 <td>{{ $item->RequisitionNo }}</td>
-                                <td>{{ \Carbon\Carbon::parse($item->CreatedOn)->format('d-m-Y') }}</td>
+                                <td>{{ Carbon::parse($item->CreatedOn)->format('d-m-Y') }}</td>
                                 <td>{{ $item->BranchID }}</td>
                                 <td>{{ $item->DepartmentID }}</td>
                                 <td>{{ $item->Category }}</td>
@@ -47,7 +48,8 @@
                                 <td>{{ $item->itemcount }}</td>
                                 <td>{{ number_format($item->ExpectedPrice, 2) }}</td>
                                 <td>{{ $item->Status }}</td>
-                                <td><a href="{{ route('requisitionItem.show',['id' => $item->Id]) }}" class="btn btn-info">View</a></td>
+                                <td><a href="{{ route('requisitionItem.show',['id' => $item->Id]) }}"
+                                       class="btn btn-info">View</a></td>
                             </tr>
                         @empty
                             <tr>

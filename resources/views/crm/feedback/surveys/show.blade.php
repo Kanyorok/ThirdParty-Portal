@@ -1,3 +1,5 @@
+@php use App\Enums\Feedback\SurveyQuestionTypeEnum; @endphp
+@php use App\Enums\Feedback\SurveyStatusEnum; @endphp
 @extends('layouts.app')
 
 @section('title')
@@ -23,12 +25,12 @@
                     <p class="text-center">{{ $survey->Notes }}</p>
                     @include('snippets.behind_scenes',['model'=>$survey])
 
-                    @if( $survey->Status->value === \App\Enums\Feedback\SurveyStatusEnum::Draft->value)
+                    @if( $survey->Status->value === SurveyStatusEnum::Draft->value)
                         <hr>
                         <a href="{{ route('surveys.edit',[$survey->SurveyID]) }}" class="btn btn-info w-100">
                             <i class="fas fa-edit"></i> update survey
                         </a>
-                    @elseif($survey->Status->value === \App\Enums\Feedback\SurveyStatusEnum::Approval->value)
+                    @elseif($survey->Status->value === SurveyStatusEnum::Approval->value)
                         @if($canApprove)
                             <hr>
                             <button type="button" class="btn btn-success survey-approve m-2 w-100">
@@ -58,7 +60,7 @@
                                     @if(!empty($question->Notes))
                                         <span class="text-muted fs-6">({{ $question->Notes }})</span>
                                     @endif</h4>
-                                @if($question->Type->value === \App\Enums\Feedback\SurveyQuestionTypeEnum::Closed->value)
+                                @if($question->Type->value === SurveyQuestionTypeEnum::Closed->value)
                                     @if($question->answers->isEmpty())
                                         <div class="mx-2 mt-2">
                                             <div class="alert alert-primary" role="alert">
@@ -74,7 +76,7 @@
                                             @endforeach
                                         </ol>
                                     @endif
-                                @elseif($question->Type->value === \App\Enums\Feedback\SurveyQuestionTypeEnum::Open->value)
+                                @elseif($question->Type->value === SurveyQuestionTypeEnum::Open->value)
                                     <p class="m-2">Open ended question.</p>
                                 @endif
                             </div>
@@ -127,7 +129,7 @@
                             aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    @if($survey->Status->value === \App\Enums\Feedback\SurveyStatusEnum::Approval->value && $canApprove)
+                    @if($survey->Status->value === SurveyStatusEnum::Approval->value && $canApprove)
                         <div class="onboarding-content with-gradient d-none modal-item text-center"
                              id="approveSurveyModal">
                             <h4 class="text-success">
@@ -194,14 +196,14 @@
     </div>
 @endsection
 @section('scripts')
-    <script src="{{ asset('assets/js/datatables.js') }}"></script>
+
     <script>
         const $Modal = $('#surveyActionsModel');
         let surveyWorkflowTable = null;
 
         $(function () {
             $.fn.dataTable.ext.errMode = 'none';
-            @if($survey->Status->value === \App\Enums\Feedback\SurveyStatusEnum::Approval->value && $canApprove)
+            @if($survey->Status->value === SurveyStatusEnum::Approval->value && $canApprove)
             $(document).on('click', '.survey-approve', function () {
                 $(".modal-title").html('<b class="text-success">APPROVE</b> Survey');
                 $(".modal-item").addClass('d-none');

@@ -29,7 +29,7 @@
     </div>
 @endsection
 @section('scripts')
-    <script src="{{ asset('assets/js/datatables.js') }}"></script>
+
     <script>
         let reviewsTable = null;
         $(function () {
