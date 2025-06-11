@@ -183,7 +183,6 @@ Route::namespace('CRM')->prefix('crm')->group(function () {
     });
 
     Route::namespace('Feedback')->group(function () {
-
         Route::resource('approve-surveys', 'SurveyApprovalController')->parameters(['approve-surveys' => 'survey'])->only(['update', 'destroy']);
 
         Route::get('surveys/{survey}workflows', 'SurveyActionController@workflow')->name('surveys.workflows');
