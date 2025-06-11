@@ -14,8 +14,10 @@
     <div class="alert alert-danger">{{ session('error') }}</div>
 @endif
 <div class="container bg-white shadow rounded p-4">
-    <h4 class="mb-4">Stock Transfer Form</h4>
+    <h4 class="mb-4">Select a Requisition to Transfer</h4>
     <!-- Requisition select triggers page reload -->
+
+    
     <form method="GET" action="{{ route('transactionstransfers.create') }}" class="mb-3">
         <div class="row">
             <div class="col-md-4">
@@ -50,6 +52,12 @@
                 <input type="text" class="form-control" id="toBranch" value="{{ $requisition->toBranch->Name ?? '' }}" readonly>
                 <input type="hidden" name="ToBranch" value="{{ $requisition->ToBranch }}">
             </div>
+            
+             <div class="col-md-4">
+              <label for="transferredBy" class="form-label"> TransferredBy</label>
+             <input type="text" class="form-control" id="transferredBy" name="TransferredBy">
+
+            </div>
             <input type="hidden" name="RequisitionId" value="{{ $requisition->Id }}">
             @endif
         </div>
@@ -74,7 +82,7 @@
                             <td>{{ $index + 1 }}</td>
                             <td>
                                 {{ $item->item->ItemName ?? 'N/A' }}
-                                <input type="hidden" name="items[{{ $index }}][item_id]" value="{{ $item->Item }}">
+                                <input type="hidden" name="items[{{ $index }}][item]" value="{{ $item->Item }}">
                             </td>
                             <td>
                                 <input type="number" class="form-control" name="items[{{ $index }}][approved_qty]" value="{{ $item->ApprovedQty }}" min="1" required>
@@ -98,7 +106,11 @@
             </div>
         </div>
         @endif
-        <button type="submit" class="btn btn-primary" id="submitBtn" {{ isset($requisition) ? '' : 'disabled' }}>✅ Submit Transfer</button>
+        @if(isset($requisition))
+    <button type="submit" class="btn btn-primary" id="submitBtn">✅ Submit Transfer</button>
+@else
+    <button type="submit" class="btn btn-primary d-none" id="submitBtn" disabled>✅ Submit Transfer</button>
+@endif
     </form>
 </div>
 @endsection

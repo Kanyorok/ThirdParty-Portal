@@ -9,14 +9,24 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('t_Items', function (Blueprint $table) {
+            $table->dropUnique('t_items_itemcode_unique'); // Drop the unique index first
+        });
+
+        Schema::table('t_Items', function (Blueprint $table) {
             $table->string('ItemCode')->nullable()->change();
+            $table->unique('ItemCode'); // Re-add the unique index if needed
         });
     }
 
     public function down(): void
     {
         Schema::table('t_Items', function (Blueprint $table) {
-            $table->string('ItemCode')->nullable(false)->change();
+            $table->dropUnique('t_items_itemcode_unique'); // Drop unique index first
+        });
+
+        Schema::table('t_Items', function (Blueprint $table) {
+            $table->string('ItemCode')->nullable(false)->change(); // Change to not nullable
+            $table->unique('ItemCode'); // Re-add the unique constraint
         });
     }
 };

@@ -11,7 +11,9 @@ return new class extends Migration
         Schema::create('t_Transfers', function (Blueprint $table) {
             $table->id('Id');
             $table->string('TransferID')->nullable();
-            $table->date('TransferDate');
+            $table->date('TransferDate')->nullable();
+            $table->string('TransferredBy')->nullable();
+            $table->boolean('Status')->nullable();
             $table->foreignId('RequisitionId')->constrained('t_InterBranchRequisition', 'Id');
             $table->foreignId('FromBranch')->constrained('t_Branches', 'Id');
             $table->foreignId('ToBranch')->constrained('t_Branches', 'Id');

@@ -3,7 +3,7 @@
 @section('content')
 <div class="container bg-white shadow-sm rounded p-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4>🔁 Goods Transfer List</h4>
+        <h4>Goods Transfer List</h4>
         <a href="{{ route('transactionstransfers.create') }}" class="btn btn-success">➕ New Transfer</a>
     </div>
 
@@ -18,8 +18,8 @@
                     <th>#</th>
                     <th>Transfer ID</th>
                     <th>Date</th>
-                    <th>From Store</th>
-                    <th>To Store</th>
+                    <th>From Branch</th>
+                    <th>To Branch</th>
                     <th>Transferred By</th>
                     <th>Status</th>
                     <th>Actions</th>
@@ -29,17 +29,18 @@
                 @forelse($transfers as $i => $transfer)
                     <tr>
                         <td>{{ $i+1 }}</td>
-                        <td>{{ $transfer->TransferNo ?? '-' }}</td>
+                        <td>{{ $transfer->TransferID ?? '-' }}</td>
                         <td>{{ $transfer->TransferDate ?? '-' }}</td>
+                        
                         <td>{{ optional($transfer->fromBranch)->Name ?? '-' }}</td>
                         <td>{{ optional($transfer->toBranch)->Name ?? '-' }}</td>
-                        <td>{{ optional($transfer->creator)->name ?? '-' }}</td>
+                        <td>{{ $transfer->TransferredBy ?? '-' }}</td>
                         <td>
                             @if(isset($transfer->Status))
                                 @if($transfer->Status === 'Completed')
                                     <span class="badge bg-success">Completed</span>
                                 @elseif($transfer->Status === 'Pending')
-                                    <span class="badge bg-warning text-dark">Pending</span>
+                                    <span class="badge bg-warning">Pending</span>
                                 @else
                                     <span class="badge bg-secondary">{{ $transfer->Status }}</span>
                                 @endif

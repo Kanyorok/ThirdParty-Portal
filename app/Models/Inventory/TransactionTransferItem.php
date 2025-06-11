@@ -16,12 +16,13 @@ class TransactionTransferItem extends Model
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
 
-    protected $table = 't_Transfers';
+    protected $table = 't_TransferItems';
     protected $connection = 'sqlsrv';
     protected $primaryKey = 'Id';
   
   
     protected $fillable = [
+        'TransferId',
            'Item',
            'ApprovedQty',
            'UOM',

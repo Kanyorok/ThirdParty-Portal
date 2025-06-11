@@ -47,19 +47,14 @@ class TransactionTransfersController extends Controller
 
     public function store(TransactionTransferRequest $request)
 {
-    //dd($request->validated());
-    // Validate input data
+   
     $validatedData = $request->validated();
-
-    // Extract items separately
     $items = $validatedData['items'] ?? [];
-    unset($validatedData['items']); // Remove items from main data array
-
-    // Create the transfer first
+    unset($validatedData['items']); 
     $transfer = $this->service->createTransfer($validatedData);
 
-    // Then create items separately
-    //$this->service->createTransferItems($transfer, $items);
+
+
     $transferitem = $this->service->createTransferItems($transfer, $items);
 
     return redirect()

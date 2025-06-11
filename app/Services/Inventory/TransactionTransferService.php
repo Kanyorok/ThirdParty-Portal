@@ -15,12 +15,14 @@ class TransactionTransferService
     {
         $requisition = InterBranchRequisition::findOrFail($data['RequisitionId']);
 
-        if (!isset($data['TransferDate']) || empty($data['TransferDate'])) {
-        throw new \Exception('TransferDate is required.');}
+       if (empty($data['TransferDate'])) {
+        throw new \Exception('TransferDate is required.');
+    }
 
-        // Create the transfer first
-        $transfer = new TransactionTransfer($data);
-        $transfer->TransferDate = $data['TransferDate'] ?? Carbon::now();
+        $transfer = new TransactionTransfer();
+        $transfer->TransferDate = $data['TransferDate'];
+        $transfer->TransferredBy = $data['TransferredBy'];
+        $transfer->RequisitionId = $data['RequisitionId'];
         $transfer->FromBranch = $requisition->FromBranch;
         $transfer->ToBranch = $requisition->ToBranch;
         $transfer->CreatedBy = Auth::id();
@@ -32,25 +34,26 @@ class TransactionTransferService
         $transfer->TransferId = $this->generateTransferId($transfer);
         $transfer->save();
 
-        return $transfer; // Return the transfer ID for item processing
+        return $transfer; 
     }
 
-    public function createTransferItems(TransactionTransfer $transfer, array $items): void
-    {
-        //$requisition = TransactionTransfer::findOrFail($data['TransferId']);
-        foreach ($items as $item) {
-            $item['TransferId'] = $transfer->Id;
-            $item['CreatedBy'] = Auth::id();
-            $item['ModifiedBy'] = Auth::id();
-            $item['CreatedOn'] = Carbon::now();
-            $item['ModifiedOn'] = Carbon::now();
-            //$items->save();
 
-            TransactionTransferItem::create($item);
-            $item->save(); //  Insert into t_TransferItems
-        }
+public function createTransferItems(TransactionTransfer $transfer, array $items): void
+{
+    foreach ($items as $item) {
+        TransactionTransferItem::create([
+            'TransferId'   => $transfer->Id,
+            'Item'         => $item['item'],          
+            'ApprovedQty'  => $item['approved_qty'],
+            'UOM'          => $item['uom_id'],
+            'Remarks'      => $item['remarks'] ?? null,
+            'CreatedBy'    => Auth::id(),
+            'ModifiedBy'   => Auth::id(),
+            'CreatedOn'    => Carbon::now(),
+            'ModifiedOn'   => Carbon::now(),
+        ]);
     }
-
+}
 
     public function update(TransactionTransfer $transfer, array $data): TransactionTransfer
     {
