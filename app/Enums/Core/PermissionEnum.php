@@ -316,7 +316,7 @@ enum PermissionEnum: string
     case InterBranchRequisitionUpdate = 'interBranchRequisition-update';
     case InterBranchRequisitionCreate = 'interBranchRequisition-create';
     case InterBranchRequisitionDestroy= 'interBranchRequisition-destroy';
-
+    case InterBranchRequisitionApproval= 'interBranchRequisition-approval';
     case PriceManagementView = 'priceManagement-view';
     case PriceManagementUpdate = 'priceManagement-update';
     case PriceManagementCreate = 'priceManagement-create';
@@ -336,7 +336,7 @@ enum PermissionEnum: string
     case PropertyTypeCreate = 'propertytype-create';
     case PropertyTypeUpdate = 'propertytype-update';
     case PropertyTypeDelete = 'propertytype-delete';
-    case PropertyTypeView = 'propertytype-view'; 
+    case PropertyTypeView = 'propertytype-view';
  
     /*
      *
@@ -408,7 +408,7 @@ enum PermissionEnum: string
             [self::InventoryTypeView, self::InventoryTypeUpdate, self::InventoryTypeCreate, self::InventoryTypeDestroy],
             [self::ItemTypeView, self::ItemTypeUpdate, self::ItemTypeCreate, self::ItemTypeDestroy],
             [self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy],
-            [self::InterBranchRequisitionView, self::InterBranchRequisitionUpdate, self::InterBranchRequisitionCreate, self::InterBranchRequisitionDestroy],
+            [self::InterBranchRequisitionView, self::InterBranchRequisitionUpdate, self::InterBranchRequisitionCreate, self::InterBranchRequisitionDestroy, self::InterBranchRequisitionApproval],
             [self::PriceManagementView, self::PriceManagementUpdate, self::PriceManagementCreate, self::PriceManagementDestroy],
 
             [self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete],
@@ -491,7 +491,7 @@ enum PermissionEnum: string
             self::InventoryTypeView, self::InventoryTypeUpdate, self::InventoryTypeCreate, self::InventoryTypeDestroy,
             self::ItemTypeView, self::ItemTypeUpdate, self::ItemTypeCreate, self::ItemTypeDestroy,
             self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy,
-            self::InterBranchRequisitionView, self::InterBranchRequisitionUpdate, self::InterBranchRequisitionCreate, self::InterBranchRequisitionDestroy,
+            self::InterBranchRequisitionView, self::InterBranchRequisitionUpdate, self::InterBranchRequisitionCreate, self::InterBranchRequisitionDestroy,self::InterBranchRequisitionApproval,
             self::PriceManagementView, self::PriceManagementUpdate, self::PriceManagementCreate, self::PriceManagementDestroy => ModulesEnum::Inventory,
             
             //Property Management
@@ -564,7 +564,7 @@ enum PermissionEnum: string
             self::InventoryTypeView, self::InventoryTypeUpdate, self::InventoryTypeCreate, self::InventoryTypeDestroy => 'Inventory Type',
             self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy => 'UOM',
             self::ItemTypeView, self::ItemTypeUpdate, self::ItemTypeCreate, self::ItemTypeDestroy => 'Item Type',
-            self::InterBranchRequisitionView, self::InterBranchRequisitionUpdate, self::InterBranchRequisitionCreate, self::InterBranchRequisitionDestroy =>'InterBranch Requisition',
+            self::InterBranchRequisitionView, self::InterBranchRequisitionUpdate, self::InterBranchRequisitionCreate, self::InterBranchRequisitionDestroy,self::InterBranchRequisitionApproval =>'InterBranch Requisition',
             self::PriceManagementView, self::PriceManagementUpdate, self::PriceManagementCreate, self::PriceManagementDestroy=> 'Price Management',
 
             ////////////////////////// Budget and Analytics //////////////////////////////

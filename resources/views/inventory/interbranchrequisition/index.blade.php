@@ -27,10 +27,8 @@
     </div>
 @endif
 
-
 <div id="customErrorContainer" style="display:none;">
     <div class="alert alert-danger alert-dismissible fade show" role="alert" id="customErrorMessage">
-       
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"
             onclick="hideCustomError()"></button>
     </div>
@@ -45,12 +43,12 @@
           <label for="filterStatus" class="me-2 fw-bold">Filter by status:</label>
           <select id="filterStatus" name="status" class="form-select form-select-sm me-2" style="width: 170px;">
               <option value="">Show All</option>
-              <option value="Approved" {{ request('status') == 'Approved' ? 'selected' : '' }}>Approved</option>
-              <option value="Pending Approval" {{ request('status') == 'PendingApproval' ? 'selected' : '' }}>Pending Approval</option>
-              <option value="Rejected" {{ request('status') == 'Rejected' ? 'selected' : '' }}>Rejected</option>
+              <option value="Ap" {{ request('status') == 'Ap' ? 'selected' : '' }}>Approved</option>
+              <option value="su" {{ request('status') == 'su' ? 'selected' : '' }}>Pending Approval</option>
+              <option value="Re" {{ request('status') == 'Re' ? 'selected' : '' }}>Rejected</option>
           </select>
           <button type="submit" class="btn btn-primary btn-sm">Filter</button>
-          @if(request()->has('Status') && request('Status') !== null && request('Status') !== "")
+          @if(request()->has('status') && request('status') !== null && request('status') !== "")
               <a href="{{ route('interbranchrequisition.index') }}" class="btn btn-link btn-sm ms-2">Reset</a>
           @endif
       </form>
@@ -80,28 +78,27 @@
                 <td>{{ $requisition->fromBranch->Name ?? '-' }}</td>
                 <td>{{ $requisition->toBranch->Name ?? '-' }}</td>
                 <td>{{ \Carbon\Carbon::parse($requisition->CreatedOn)->format('Y-m-d') }}</td>
-                <td>
-                  @if($requisition->Status === 'Approved')
-                    <span class="badge text-bg-success">Approved</span>
-                  @elseif($requisition->Status === 'Pending Approval')
-                    <span class="badge bg-warning">Pending Approval</span>
-                  @elseif($requisition->Status === 'Rejected')
-                    <span class="badge bg-danger">Rejected</span>
-                  @else
-                    <span class="badge bg-secondary">{{ $requisition->Status }}</span>
-                  @endif
-                </td>
+<td>
+  @php
+    $statusEnum = \App\Enums\Inventory\InterBranchRequisitionEnum::tryFrom($requisition->Status);
+  @endphp
+  @if($statusEnum)
+    <span class="badge bg-{{ $statusEnum->badgeColor() }}">{{ $statusEnum->label() }}</span>
+  @else
+    <span class="badge bg-warning">{{ $requisition->Status }}</span>
+  @endif
+</td>
                 <td>{{ $requisition->items->count() }}</td>
                 <td>
                   <a href="{{ route('interbranchrequisition.show', $requisition->Id) }}" class="btn btn-secondary btn-sm">View</a>
                   <a href="{{ route('interbranchrequisition.edit', $requisition->Id) }}"
                      class="btn btn-warning btn-sm"
-                     onclick="@if($requisition->Status !== 'Pending Approval' && $requisition->Status !== 'Submitted') return showCustomError('You cannot edit this requisition because a decision has already been made.'); @endif">
+                     onclick="@if($requisition->Status !== 'su') return showCustomError('You cannot edit this requisition because a decision has already been made.'); @endif">
                     Edit
                   </a>
                   <a href="#"
                      class="btn btn-danger btn-sm"
-                     onclick="@if($requisition->Status !== 'Pending Approval' && $requisition->Status !== 'Submitted') return showCustomError('You cannot delete this requisition because a decision has already been made.'); @else confirmDelete('{{ $requisition->Id }}'); return false; @endif">
+                     onclick="@if($requisition->Status !== 'su') return showCustomError('You cannot delete this requisition because a decision has already been made.'); @else confirmDelete('{{ $requisition->Id }}'); return false; @endif">
                     Delete
                   </a>
                   <form id="delete-form-{{ $requisition->Id }}" action="{{ route('interbranchrequisition.destroy', $requisition->Id) }}" method="POST" style="display:none;">

@@ -3,10 +3,9 @@
 @section('title', 'Inter-Branch Requisition')
 
 @section('content')
-<!-- Custom error alert for client-side (JS) errors -->
+
 <div id="customErrorContainer" style="display:none;">
     <div class="alert alert-danger alert-dismissible fade show" role="alert" id="customErrorMessage">
-        <!-- Error message will be injected here -->
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"
             onclick="hideCustomError()"></button>
     </div>
@@ -15,19 +14,21 @@
 <div class="container mt-4">
     <h4 class="mb-3">Inter-Branch Requisition Details</h4>
 
-    <a href="{{ route('interbranchrequisition.index') }}" class="btn btn-sm btn-secondary mb-3">Back to List</a>
-    <a href="{{ route('interbranchrequisition.edit', $item->Id) }}" class="btn btn-sm btn-warning mb-3"
-       onclick="@if($item->Status !== 'Pending Approval' && $item->Status !== 'Submitted') return showCustomError('You cannot edit this requisition because a decision has already been made.'); @endif">
-       Edit Requisition
-    </a>
-    <form action="{{ route('interbranchrequisition.destroy', $item->Id) }}" method="POST" class="d-inline">
-        @csrf
-        @method('DELETE')
-        <button class="btn btn-sm btn-danger mb-3"
-            onclick="@if($item->Status !== 'Pending Approval' && $item->Status !== 'Submitted') return showCustomError('You cannot delete this requisition because a decision has already been made.'); @else return confirm('Are you sure you want to delete this requisition?'); @endif">
-            Delete Requisition
-        </button>
-    </form>
+    <a href="{{ route('interbranchrequisition.index', $item->Id) }}" class="btn btn-secondary btn-sm">Back To List</a>
+                  <a href="{{ route('interbranchrequisition.edit', $item->Id) }}"
+                     class="btn btn-warning btn-sm"
+                     onclick="@if($item->Status !== 'su') return showCustomError('You cannot edit this requisition because a decision has already been made.'); @endif">
+                    Edit
+                  </a>
+                  <a href="#"
+                     class="btn btn-danger btn-sm"
+                     onclick="@if($item->Status !== 'su') return showCustomError('You cannot delete this requisition because a decision has already been made.'); @else confirmDelete('{{ $item->Id }}'); return false; @endif">
+                    Delete
+                  </a>
+                  <form id="delete-form-{{ $item->Id }}" action="{{ route('interbranchrequisition.destroy', $item->Id) }}" method="POST" style="display:none;">
+                    @csrf
+                    @method('DELETE')
+                  </form>
 
     <div class="card shadow">
         <div class="card-header bg-light fw-bold">
@@ -52,14 +53,13 @@
                 <div class="col-md-4">
                     <strong>Status:</strong>
                     <div>
-                        @if($item->Status === 'Approved')
-                            <span class="badge text-bg-success">Approved</span>
-                        @elseif($item->Status === 'Pending Approval' || $item->Status === 'Submitted')
-                            <span class="badge bg-warning">Pending Approval</span>
-                        @elseif($item->Status === 'Rejected')
-                            <span class="badge bg-danger">Rejected</span>
+                        @php
+                            $statusEnum = \App\Enums\Inventory\InterBranchRequisitionEnum::tryFrom($item->Status);
+                        @endphp
+                        @if($statusEnum)
+                            <span class="badge bg-{{ $statusEnum->badgeColor() }}">{{ $statusEnum->label() }}</span>
                         @else
-                            <span class="badge bg-secondary">{{ $item->Status }}</span>
+                            <span class="badge bg-warning">{{ $item->Status }}</span>
                         @endif
                     </div>
                 </div>
@@ -83,7 +83,7 @@
                                 <th>Qty</th>
                                 <th>ApprovedQty</th>
                                 <th>Remarks</th>
-                                <th>Actions</th>
+                              
                             </tr>
                         </thead>
                         <tbody>
@@ -97,20 +97,6 @@
                                     <td>{{ $requisitionItem->RequestedQty ?? '-' }}</td>
                                     <td>{{ $requisitionItem->ApprovedQty ?? '-' }}</td>
                                     <td>{{ $requisitionItem->Remarks ?? '-' }}</td>
-                                    <td>
-                                        <a href="{{ route('interbranchrequisition.edit', $item->Id) }}" class="btn btn-sm btn-warning" title="Edit Requisition"
-                                           onclick="@if($item->Status !== 'Pending Approval' && $item->Status !== 'Submitted') return showCustomError('You cannot edit this requisition because a decision has already been made.'); @endif">
-                                            <i class="bi bi-pencil"></i> Edit
-                                        </a>
-                                        <form action="{{ route('interbranchrequisition.destroy', $item->Id) }}" method="POST" class="d-inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button class="btn btn-sm btn-danger" title="Delete Requisition"
-                                                onclick="@if($item->Status !== 'Pending Approval' && $item->Status !== 'Submitted') return showCustomError('You cannot delete this requisition because a decision has already been made.'); @else return confirm('Are you sure you want to delete this requisition?'); @endif">
-                                                <i class="bi bi-trash"></i> Delete
-                                            </button>
-                                        </form>
-                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -148,6 +134,11 @@
     </div>
 </div>
 <script>
+function confirmDelete(Id) {
+    if (confirm('Are you sure you want to delete this requisition?')) {
+        document.getElementById('delete-form-' + Id).submit();
+    }
+}
 function showCustomError(message) {
     document.getElementById('customErrorMessage').childNodes[0].nodeValue = message;
     document.getElementById('customErrorContainer').style.display = 'block';
