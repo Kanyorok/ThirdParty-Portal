@@ -60,7 +60,6 @@ use App\Models\Procurement\Tender;
 use App\Http\Controllers\Procurement\SectionController;
 use App\Http\Controllers\Procurement\ProcurementSchedulePlanController;
 use App\Http\Controllers\Procurement\ProcurementSubmitPlanController;
-//SupplierManagement
 use App\Http\Controllers\Procurement\SupplierListingController;
 use App\Http\Controllers\Procurement\PrequalificationRoundsController;
 use App\Http\Controllers\Procurement\PrequalificationCriteriaController;
