@@ -89,7 +89,7 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     //Purchase Order
     Route::get('purchaseOrder/getSuppliers', [PurchaseOrderController::class, 'getSuppliers'])->name('purchaseOrder.getSuppliers');
     Route::get('purchaseOrder/linkRFQ', [PurchaseOrderController::class, 'linkRFQ'])->name('purchaseOrder.linkRFQ');
-    //Route::get('purchaseOrder/getRFQs', [PurchaseOrderController::class, 'fetchRFQ'])->name('purchaseOrder.getRFQ');
+    Route::get('purchaseOrder/approve/{id}', [PurchaseOrderController::class, 'approve'])->name('purchaseOrder.approve');
     //this route is static affecting orders/rfqLink
     Route::get('purchaseOrder/rqfDetails/{id}', [PurchaseOrderController::class, 'fetchRFQDetails'])->name('purchaseOrder.RFQ');
     Route::resource('purchaseOrder', 'PurchaseOrderController');
@@ -203,10 +203,10 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::resource('procurementreports', ProcurementReportsController::class);
 
     //Tender Creteria setup
-    Route::resource('sections', SectionController::class);
-    Route::resource('criterias', CriteriaController::class);
-    Route::resource('tenderevaluations', TenderEvaluationsController::class);
-    Route::post("/store-tender-sections", [TenderEvaluationsController::class, 'tenderSections'])->name('store-tender-sections');
+    Route::resource('sections',SectionController::class);
+    Route::resource('criterias',CriteriaController::class);
+    Route::resource('tenderevaluations',TenderEvaluationsController::class);
+    Route::post("/store-tender-sections",[TenderEvaluationsController::class,'tenderSections'])->name('store-tender-sections');
     Route::get('/tender-criteria/{tenderId}', [TenderEvaluationsController::class, 'getTenderCriteria'])->name('tender-criteria');
     Route::post('/tender-criteria', [TenderEvaluationsController::class, 'storeTenderCriteria'])->name('tender-criteria.store');
     Route::post('/store-criteria-scores', [TenderEvaluationsController::class, 'criteriaScores'])->name('store-criteria-scores');
@@ -263,10 +263,13 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
 
     //Procurement Plan Approval Submission
     //Route::resource('procurementplandetails', ProcurementPlanDetailController::class);
-    Route::get('/Procurement-Plan-Submission', [ProcurementSubmitPlanController::class, 'index'])->name('Procurement-Plan-Submission.index');
+    Route::get('/Procurement-Plan-Submission', [ProcurementSubmitPlanController::class,'index'])->name('Procurement-Plan-Submission.index');
     Route::get('/Procurement-Plan-Submission/create/{PlanId}', [ProcurementSubmitPlanController::class, 'create'])->name('Procurement-Plan-Submission.create');
     //Route::put('/Procurement-Plan-Submission', [ProcurementSubmitPlanController::class, 'store'])->name('Procurement-Plan-Submission.store');
     Route::put('/Procurement-Plan-Submission/{plan}', [ProcurementSubmitPlanController::class, 'update'])->name('Procurement-Plan-Submission.update');
+
+
+
 
 
     //Procurement Plan, Plan Consolidation
@@ -342,30 +345,31 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::get('/planning/assign-methods', [MapToBudgetController::class, 'index'])->name('planning.assign.methods');
     Route::post('/planning/assign-methods', [MapToBudgetController::class, 'store'])->name('planning.assign.methods.store');
 //Plan Approval
-    Route::prefix('planning')->name('planning.')->group(function () {
-        Route::get('/approval', [ProcurementApprovalController::class, 'index'])->name('approval.index');
-        Route::get('/approval/plan-details', [ProcurementApprovalController::class, 'getPlanDetails'])->name('getPlanDetails');
-        Route::post('/approval/submit-decision', [ProcurementApprovalController::class, 'submitDecision'])->name('submitDecision');
-    });
+Route::prefix('planning')->name('planning.')->group(function () {
+    Route::get('/approval', [ProcurementApprovalController::class, 'index'])->name('approval.index');
+    Route::get('/approval/plan-details', [ProcurementApprovalController::class, 'getPlanDetails'])->name('getPlanDetails');
+    Route::post('/approval/submit-decision', [ProcurementApprovalController::class, 'submitDecision'])->name('submitDecision');
+});
 
     Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('procurement-reports.export');
     Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
         'index' => 'procurement-reports.index',
         'show' => 'procurement-reports.show'
     ]);
-    // Route::get('/planning/get-plan-details', [ProcurementApprovalController::class, 'getPlanDetails'])
-    // ->name('planning.getPlanDetails');
+   // Route::get('/planning/get-plan-details', [ProcurementApprovalController::class, 'getPlanDetails'])
+   // ->name('planning.getPlanDetails');
 
 });
 
-Route::resource('supplierslist', SupplierListingController::class);
-Route::resource('preqrounds', PrequalificationRoundsController::class);
-Route::resource('preqcriteria', PrequalificationCriteriaController::class);
-Route::resource('preqapplications', PrequalificationApplicationsController::class);
-Route::resource('preqevaluation', PrequalificationEvaluationController::class);
-Route::resource('preqevalapproval', PrequalificationEvalAprovalController::class);
-Route::resource('preqsuppliers', PrequalifiedSuppliersController::class);
+ Route::resource('supplierslist', SupplierListingController::class);
+ Route::resource('preqrounds', PrequalificationRoundsController::class);
+ Route::resource('preqcriteria', PrequalificationCriteriaController::class);
+ Route::resource('preqapplications', PrequalificationApplicationsController::class);
+ Route::resource('preqevaluation', PrequalificationEvaluationController::class);
+ Route::resource('preqevalapproval', PrequalificationEvalAprovalController::class);
+ Route::resource('preqsuppliers', PrequalifiedSuppliersController::class);
+ 
+ 
 
-
-
-
+ 
+ 

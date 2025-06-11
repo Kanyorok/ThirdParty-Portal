@@ -11,7 +11,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class PropertyRegistry extends Model
 {
     use SoftDeletes, UserActorTrait;
-
     //
     protected $table = 't_PropertyRegistry';
     const string CREATED_AT = 'CreatedOn';
@@ -33,30 +32,27 @@ class PropertyRegistry extends Model
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy'
-    ];
-
+        ];
+    
     public static function getPrimaryKey(): string
     {
         return 'PropertyRegistryId';
     }
-
-    public function propertyType()
+   
+    public function type()
     {
         return $this->belongsTo(PropertyType::class, 'PropertyType', 'Id');
     }
-
     public function propertyCategory()
     {
         return $this->belongsTo(CategoryMaster::class, 'Category', 'Id');
     }
-
     public function propertyLocality()
     {
         return $this->belongsTo(Locality::class, 'TownCity', 'Id');
     }
-
     public function attachment()
     {
-        return $this->hasMany(PropertyAttachments::class, 'PropertyID');
+        return $this->hasMany(PropertyAttachments::class,'PropertyID');
     }
 }

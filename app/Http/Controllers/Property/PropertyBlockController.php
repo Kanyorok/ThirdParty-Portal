@@ -3,7 +3,8 @@
 namespace App\Http\Controllers\Property;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\Property\PropertyRegistry\PropertyBlockRequest;
+use App\Services\Property\PropertyRegistry\PropertyBlockService;
 use App\Models\PropertyManagement\PropertyBlock;
 use App\Models\PropertyManagement\PropertyRegistry;
 
@@ -12,37 +13,32 @@ class PropertyBlockController extends Controller
     //
     public function index()
     {
-        $blocks = PropertyBlock::all();
-        //dd($properties);
-        return view('property.propertyregistry.structuralmapping.addblock.index', compact('blocks'));
+         $blocks = PropertyBlock::with('property')->get();
+        return view('property.propertyregistry.structuralmapping.addblock.index',compact('blocks'));
     }
     public function create(){
         $properties = PropertyRegistry::all();
         return view('property.propertyregistry.structuralmapping.addblock.create', compact('properties'));
     }
-
-    public function show($id)
-    {
+    public function show($id){
         $block = PropertyBlock::find($id);
-        return view('property.propertyregistry.structuralmapping.addblock.show', compact('block'));
+        return view('property.propertyregistry.structuralmapping.addblock.show',compact('block'));
     }
-
-    public function store(Request $request)
+    public function store(PropertyBlockRequest $request)
     {
-        //dd($request->all());
-        $request->validate([
-            'PropertyID' => 'required|string|max:50',
-            'BlockName' => 'required|string|max:50',
-            'Description' => 'required|string|max:100',
-        ]);
+        
+        $validated = $request->validated();
 
-        $block = PropertyBlock::create([
-            'PropertyID' => $request->PropertyID,
-            'BlockName' => $request->BlockName,
-            'Description' => $request->Description,
-            'CreatedBy' => auth()->user()->Id,
-            'ModifiedBy' => auth()->user()->Id,
-        ]);
-        return redirect()->route('addblock.index')->with('success', 'property block created successfully');
+        $propertyregistry = PropertyRegistry::findOrFail($validated['PropertyID']);
+
+        $propertyblock = PropertyBlockService::create(
+            $propertyregistry,
+            $validated['BlockName'] ?? '--',
+            $validated['Description'] ?? '--',
+            auth()->user()
+        );
+
+           return redirect()->route('addblock.index')->with('success','property block created successfully');
     }
 }
+          

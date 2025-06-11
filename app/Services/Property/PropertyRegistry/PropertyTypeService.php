@@ -14,15 +14,13 @@ class PropertyTypeService
     public function __construct(PropertyType $propertyType)
     {
     }
-
     public static function create(
-        string         $PropertyTypeName,
+        string $PropertyTypeName,
         CategoryMaster $PropertyCategoryId,
-        string         $Description,
-        User           $user
-    ): self
-    {
-        $propetytype = PropertyType::create([
+        string $Description,
+        User $user
+    ):self{
+        $propertytype = PropertyType::create([
             'PropertyTypeName' => $PropertyTypeName,
             'PropertyCategoryId' => $PropertyCategoryId->Id,
             'Description' => $Description,
@@ -30,8 +28,8 @@ class PropertyTypeService
             'ModifiedBy' => $user->Id,
         ]);
 
-        activity()->causedBy($user->Id)->performedOn($propetytype)->event('create')->log("Added Property type {$propetytype->Id}.");
-        return new self($propetytype);
+        activity()->causedBy($user->Id)->performedOn($propertytype)->event('create')->log("Added Property type {$propertytype->Id}.");
+        return new self($propertytype);
     }
 
 }

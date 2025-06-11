@@ -30,22 +30,33 @@ use Illuminate\Support\Facades\Route;
 Route::namespace('Property')->prefix('property')->group(function () {
 
     //category
-    Route::get('propercategory', [PropertyCategoryController::class, 'index'])->name('propertycategory.index');
-    Route::get('propercategory/create', [PropertyCategoryController::class, 'create'])->name('propertycategory.create');
-    Route::post('propercategory', [PropertyCategoryController::class, 'store'])->name('propertycategory.store');
-    Route::delete('propercategory/delete/{Id}', [PropertyCategoryController::class, 'destroy'])->name('propertycategory.destroy');
-    Route::get('propertycategory/edit/{Id}', [PropertyCategoryController::class, 'edit'])->name('propertycategories.edit');
-    Route::put('propertycategory/edit/{Id}', [PropertyCategoryController::class, 'update'])->name('propertycategories.update');
+    Route::get('propercategory', [PropertyCategoryController::class,'index'])->name('propertycategory.index');
+    Route::get('propercategory/create', [PropertyCategoryController::class,'create'])->name('propertycategory.create');
+    Route::post('propercategory', [PropertyCategoryController::class,'store'])->name('propertycategory.store');
+    Route::delete('propercategory/delete/{Id}', [PropertyCategoryController::class,'destroy'])->name('propertycategory.destroy');
+    Route::get('propertycategory/edit/{Id}',[PropertyCategoryController::class,'edit'])->name('propertycategories.edit');
+    Route::put('propertycategory/edit/{Id}',[PropertyCategoryController::class,'update'])->name('propertycategories.update');
 
     //Type
-    Route::get('propertytype', [PropertyTypeController::class, 'index'])->name('propertytype.index');
-    Route::get('propertytype/create', [PropertyTypeController::class, 'create'])->name('propertytype.create');
-    Route::post('propertytype', [PropertyTypeController::class, 'store'])->name('propertytype.store');
+    Route::get('propertytype', [PropertyTypeController::class,'index'])->name('propertytype.index');
+    Route::get('propertytype/create', [PropertyTypeController::class,'create'])->name('propertytype.create');
+    Route::post('propertytype', [PropertyTypeController::class,'store'])->name('propertytype.store');
+    Route::delete('propertytype/delete/{Id}', [PropertyTypeController::class,'destroy'])->name('propertytype.destroy');
+    Route::get('propertytype/edit/{Id}',[PropertyTypeController::class,'edit'])->name('propertytype.edit');
+    Route::put('propertytype/edit/{Id}',[PropertyTypeController::class,'update'])->name('propertytype.update');
+
 
     //Property Registry
-    Route::get('propertyregistry', [PropertyRegistryController::class, 'index'])->name('PropertyRegistry.index');
-    Route::get('propertyregistry/create', [PropertyRegistryController::class, 'create'])->name('PropertyRegistry.create');
-    Route::post('propertyregistry', [PropertyRegistryController::class, 'store'])->name('propertyregistry.store');
+    Route::get('propertyregistry/index', [PropertyRegistryController::class,'index'])->name('PropertyRegistry.index');
+    Route::get('propertyregistry/create', [PropertyRegistryController::class,'create'])->name('PropertyRegistry.create');
+    Route::post('propertyregistry', [PropertyRegistryController::class,'store'])->name('propertyregistry.store');
+    Route::get('propertyregistry/show/{id}', [PropertyRegistryController::class,'show'])->name('PropertyRegistry.show');
+    Route::get('/propertyregistry/types/{categoryId}', [PropertyRegistryController::class, 'getTypesByCategory'])->name('gettypes');
+    Route::delete('propertyregistry/delete/{Id}', [PropertyRegistryController::class,'destroy'])->name('PropertyRegistry.destroy');
+    Route::get('propertyregistry/edit/{Id}',[PropertyRegistryController::class,'edit'])->name('PropertyRegistry.edit');
+    Route::put('propertyregistry/edit/{Id}',[PropertyRegistryController::class,'update'])->name('PropertyRegistry.update');
+
+
 
     //Property Block
     //Route::resource('addblock', PropertyBlockController::class);

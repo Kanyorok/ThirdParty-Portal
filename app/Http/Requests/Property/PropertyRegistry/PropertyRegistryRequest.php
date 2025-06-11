@@ -17,17 +17,17 @@ class PropertyRegistryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            [
-                'PropertyName' => 'required|string',
-                'PropertyCode' => 'required|string',
-                'PropertyType' => 'required|integer',
-                'Category' => 'required|integer',
-                'Owner' => 'required|string',
-                'AcquisitionDate' => 'required|date',
-                'TownCity' => 'required|integer',
-                'AreaLocality' => 'required|string',
-                'PropertyDescription' => 'required|string',
-            ]
+            'PropertyName' => 'required|string|max:255',
+            'PropertyCode' => 'required|string|max:100',
+            'PropertyType' => 'required|exists:t_PropertyType,Id',
+            'Category' => 'required|exists:t_CategoryMaster,Id',
+            'Owner' => 'required|string|max:255',
+            'AcquisitionDate' => 'required|date',
+            'Country' => 'required|string|max:100',
+            'TownCity' => 'required|exists:t_Localities,ID',
+            'AreaLocality' => 'required|string|max:100',
+            'PropertyDescription' => 'nullable|string|max:1000',
         ];
     }
+
 }
