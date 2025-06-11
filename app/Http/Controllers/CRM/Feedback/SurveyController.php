@@ -61,10 +61,10 @@ class SurveyController extends Controller
                 })->editColumn('Notes', function (Survey $survey) {
                     return Str::limit($survey->Notes);
                 })->setRowClass('mouse_pointer user-select-none dbl-click-redirect-data')->setRowData([
-                                                                                                       'dbl_click_url' => function (Survey $survey) {
-                                                                                                        return route('surveys.show', $survey->SurveyID);
-                                                                                                       },
-                                                                                                      ])->rawColumns(['action'])->make();
+                    'dbl_click_url' => function (Survey $survey) {
+                        return route('surveys.show', $survey->SurveyID);
+                    },
+                ])->rawColumns(['action'])->make();
         }
 
         return view('crm.feedback.surveys.index');

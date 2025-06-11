@@ -9,16 +9,20 @@
         }
     </style>
 @endsection
+@section('breadcrumbs')
+    <li class="breadcrumb-item"><a href="#">CRM</a></li>
+@endsection
 @section('content')
-    <div class="mb-3">
-        <h1 class="h3 d-inline align-middle">@yield('title')</h1>
-        <button class="btn btn-primary float-end ms-2 modal-create-survey" type="button"><i
-                class="fas fa-plus-circle"></i> Add a Survey
-        </button>
-    </div>
     <div class="row">
         <div class="col-12">
             <div class="card mb-3">
+                <div class="card-header">
+                    <div class="float-end">
+                        <button class="btn btn-primary float-end ms-2 modal-create-survey btn-sm" type="button"><i
+                                class="fas fa-plus-circle"></i> Add a Survey
+                        </button>
+                    </div>
+                </div>
                 <div class="card-body">
                     <table id="surveyTable"
                            class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
@@ -97,7 +101,7 @@
 @endsection
 @section('scripts')
     <script src='{{ asset('assets/libs/moment/moment-with-locales.js') }}'></script>
-    
+
     <script> const $Modal = $('#SurveyActionsModal');
         let surveyTable = null;
         $(function () {
