@@ -1004,7 +1004,7 @@
             <div class="page-block">
                 <div class="row align-items-center">
                     <div class="col-12 col-sm-6">
-                        <div class="page-header-title"><h2 class="mb-0">@yield('title')</h2></div>
+                        <div class="page-header-title"><h3 class="mb-0">@yield('title')</h3></div>
                     </div>
                     <div class="col-12 col-sm-6">
                         <ul class="breadcrumb float-end">

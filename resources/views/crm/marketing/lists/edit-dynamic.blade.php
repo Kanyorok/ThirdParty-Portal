@@ -1,4 +1,4 @@
-@php use App\Models\BR\Client;use App\Models\CRM\Lead;use Illuminate\Support\Str; @endphp
+@php use App\Enums\Core\VisibilityEnum;use App\Models\BR\Client;use App\Models\CRM\Lead;use Illuminate\Support\Str; @endphp
 @extends('layouts.app')
 
 @section('title')
@@ -139,6 +139,16 @@
                                 <input type="text" class="form-control" id="Label" name="Label" required
                                        placeholder="Label" value="{{ $list->Label }}">
                                 <p id="Label_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" for="Visibility">Visibility <span class="text-danger">*</span></label>
+                                <select class="form-control" name="Visibility" id="Visibility" required>
+                                    @foreach(VisibilityEnum::cases() as $Visibility)
+                                        <option
+                                            value="{{ $Visibility->value }}" {{ ($Visibility->value===$list->Visibility->value)?'selected':'' }}>{!! $Visibility->icon() !!} {{ $Visibility->description() }}</option>
+                                    @endforeach
+                                </select>
+                                <p id="Visibility_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label" for="Notes">Notes </label>
