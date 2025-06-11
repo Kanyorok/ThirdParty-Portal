@@ -29,11 +29,9 @@
                                 <th>Category</th>
                                 <th>Item</th>
                                 <th>Description</th>
-                                <th>UOM</th>
                                 <th>Quantity</th>
                                 <th>Estimated Cost</th>
 {{--                                <th>Actual Price</th>--}}
-                                <th>Needed By</th>
                                 <th>Urgency</th>
                                 <th>Status</th>
                                 <th>Created By</th>
@@ -53,10 +51,8 @@
                                     <td>{{ $item->Category }}</td>
                                     <td>{{ $item->ItemName }}</td>
                                     <td>{{ $item->Description }}</td>
-                                    <td>{{ $item->UOMx }}</td>
                                     <td>{{ $item->Quantity }}</td>
                                     <td>{{ number_format($item->ExpectedPrice, 2) }}</td>
-                                    <td>{{ $item->NeededBy }}</td>
                                     <td>{{ $item->Urgency }}</td>
                                     <td>{{ $item->Status }}</td>
                                     <td>{{ $item->UserName }}</td>
