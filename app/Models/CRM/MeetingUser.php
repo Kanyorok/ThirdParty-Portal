@@ -16,6 +16,11 @@ class MeetingUser extends Model
 
     protected $table = 't_MeetingUsers';
 
+    public static function getPrimaryKey(): string
+    {
+        return 'MeetingUsersId';
+    }
+
     protected $fillable = [
                            'MeetingId',
                            'UserID',

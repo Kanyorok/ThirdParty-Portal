@@ -17,6 +17,11 @@ class ScheduleUser extends Pivot
 
     protected $table = 't_ScheduleUsers';
 
+    public static function getPrimaryKey(): string
+    {
+        return 'ScheduleUsersId';
+    }
+
     protected $fillable = [
                            'ScheduleId',
                            'UserID',

@@ -20,6 +20,11 @@ class Activity extends Model
     protected $table = 't_PartyActivities';
     protected $primaryKey = 'ActivityID';
 
+    public static function getPrimaryKey(): string
+    {
+        return 'ActivityID';
+    }
+
     protected $fillable = [
                            "Party",
                            "PartyID",

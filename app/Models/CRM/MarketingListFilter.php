@@ -18,6 +18,10 @@ class MarketingListFilter extends Model
     protected $table = 't_MarketingListsFilters';
     protected $primaryKey = 'Id';
 
+    public static function getPrimaryKey(): string
+    {
+        return 'MarketingListsFiltersId';
+    }
     /**
      * The attributes that are mass assignable.
      */

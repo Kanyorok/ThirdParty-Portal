@@ -34,6 +34,10 @@ class Lead extends Model
     protected $table = 't_Leads';
     protected $primaryKey = 'LeadID';
 
+    public static function getPrimaryKey(): string
+    {
+        return 'LeadID';
+    }
     protected $fillable = [
         "Name", "Email", "Phone", "Website", "Gender", "Status", "RelationshipManagerID", "LocationID", "ImageId",
         "LeadLossReason", "Industry", "Source", "JobTitle", "OtherNames", "LastContacted", "CustomerType", "Type", "Website", 'Notes', 'ApplicationID',

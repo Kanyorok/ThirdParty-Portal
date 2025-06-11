@@ -19,6 +19,10 @@ class RFQEvaluation extends Model
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
 
+    public static function getPrimaryKey(): string
+    {
+        return 'RFQEvaluationsId';
+    }
     protected $fillable = [
         'CommitteeMemberName',
         'UserCode',

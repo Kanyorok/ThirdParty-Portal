@@ -8,18 +8,70 @@ use App\Http\Controllers\Budget\BudgetProductTypeController;
 use App\Http\Controllers\Budget\BudgetLineMappingController;
 use App\Http\Controllers\Budget\BudgetGLMappingController;
 use App\Http\Controllers\Budget\BudgetDriversController;
-use App\Http\Controllers\Budget\BudgetProductEntryController;
+use App\Http\Controllers\Budget\BudgetActivitiesController;
+
+use App\Http\Controllers\Budget\YieldRateController;
+use App\Http\Controllers\Budget\BudgetProjectionsController; 
+use App\Http\Controllers\Budget\BudgetProductEntryController; 
+
+
 use App\Http\Controllers\Budget\BudgetGLLineEntryController;
 use App\Http\Controllers\Budget\BudgetSubmitController;
 use App\Http\Controllers\Budget\BudgetApprovalController;
 use App\Http\Controllers\Budget\BudgetTopDownAllocationController;
 use App\Http\Controllers\Budget\BudgetSceneriosController;
 use App\Http\Controllers\Budget\BudgetFormulaController;
-use App\Http\Controllers\Budget\BudgetConsolidationController;
-use App\Http\Controllers\Budget\BudgetvsActualDashboardController;
-use App\Http\Controllers\Budget\BudgetVarianceAnalysisController;
-use App\Http\Controllers\Budget\BudgetKPIscorecardsController;
 
+use App\Http\Controllers\Budget\BudgetConsolidationController;  
+use App\Http\Controllers\Budget\BudgetvsActualDashboardController; 
+use App\Http\Controllers\Budget\BudgetVarianceAnalysisController; 
+use App\Http\Controllers\Budget\BudgetKPIscorecardsController; 
+use App\Http\Controllers\Budget\BudgetKPIscorecardsOfficerController;
+
+use App\Http\Controllers\Budget\BudgetRatesController;
+use App\Http\Controllers\Budget\BudgetPeriodTypesController;
+use App\Http\Controllers\Budget\BudgetPlanningMethodsController;
+
+//TODO:Make Controllers
+use App\Http\Controllers\Budget\BusinessAnalyticsDashboardController;
+use App\Http\Controllers\Budget\KPIDashboardsController;
+use App\Http\Controllers\Budget\TrendAndGrowthController;
+use App\Http\Controllers\Budget\BranchPerformanceController;
+use App\Http\Controllers\Budget\BudgetDriversSetupController;
+use App\Http\Controllers\Budget\BudgetLinesController;
+use App\Http\Controllers\Budget\ProductProfitabilityController;
+use App\Http\Controllers\Budget\OfficerPerformanceController;
+use App\Http\Controllers\Budget\LoanBookTrendsController;
+use App\Http\Controllers\Budget\DepositBookTrendsController;
+use App\Http\Controllers\Budget\TopDepositorsController;
+use App\Http\Controllers\Budget\TopLoansController;
+use App\Http\Controllers\Budget\DormantCASAController;
+use App\Http\Controllers\Budget\NPLRiskController;
+use App\Http\Controllers\Budget\ECLProvisioningController;
+use App\Http\Controllers\Budget\CBKRegulatoryRatiosController;
+use App\Http\Controllers\Budget\TopContibutorsController;
+use App\Http\Controllers\Budget\TopCurrentAccountsController;
+use App\Http\Controllers\Budget\TopSavingAccountsController;
+use App\Http\Controllers\Budget\RegulatoryRatiosController;
+use App\Http\Controllers\Budget\CapitalAdequacyController;
+use App\Http\Controllers\Budget\LiquidityController;
+use App\Http\Controllers\Budget\LoanToDepositController;
+use App\Http\Controllers\Budget\CostToIncomeController;
+use App\Http\Controllers\Budget\ReturnOnAssetsController;
+use App\Http\Controllers\Budget\ReturnOnEquityController;
+use App\Http\Controllers\Budget\MultidimensionalStatisticsController;
+use App\Http\Controllers\Budget\IncomeByBranchStatisticsController;
+use App\Http\Controllers\Budget\ExpenseByGLStatisticsController;
+use App\Http\Controllers\Budget\NPLTrendByProductController;
+use App\Http\Controllers\Budget\DepositGrowthByOfficerController;
+use App\Http\Controllers\Budget\BudgetvsActualbyBranchController;
+use App\Http\Controllers\Budget\LoanYieldbyProductController;
+use App\Http\Controllers\Budget\DataExportToolsProductController;
+
+
+use App\Http\Controllers\Budget\CBSSyncController;
+use App\Http\Controllers\Budget\DataSyncLogsController;
+use App\Http\Controllers\Budget\SystemSettingsController;
 
 Route::namespace('Budget')->group(function () {
     Route::resource('budgetline', BudgetLinesController::class);
@@ -29,6 +81,9 @@ Route::namespace('Budget')->group(function () {
     Route::resource('budgetlinemapping', BudgetLineMappingController::class);
     Route::resource('budgetglmapping', BudgetGLMappingController::class);
     Route::resource('budgetdrivers', BudgetDriversController::class);
+    Route::resource('budgetactivities', BudgetActivitiesController::class);
+    Route::resource('yieldexpenserate', YieldRateController::class);
+    Route::resource('budgetprojections', BudgetProjectionsController::class);
     Route::resource('entrybyproduct', BudgetProductEntryController::class);
     Route::resource('entrybyglline', BudgetGLLineEntryController::class);
     Route::resource('submitapproval', BudgetSubmitController::class);
@@ -40,6 +95,55 @@ Route::namespace('Budget')->group(function () {
     Route::resource('budgetvsactualdashboard', BudgetvsActualDashboardController::class);
     Route::resource('budgetvarianceanalysis', BudgetVarianceAnalysisController::class);
     Route::resource('kpiscorecards', BudgetKPIscorecardsController::class);
+    Route::resource('kpiscorecardsofficer', BudgetKPIscorecardsOfficerController::class);
+    Route::resource('topcontributors', TopContibutorsController::class);
+    Route::resource('regulatoryratios', RegulatoryRatiosController::class);
+    Route::resource('liquidityratio', LiquidityController::class);
+    
+    
+    
+    // Business Intelligence & Deep Analytics
+    Route::resource('analyticsdashboard', BusinessAnalyticsDashboardController::class);
+    Route::resource('kpidashboards', KPIDashboardsController::class);
+    Route::resource('trendsdashboards', TrendAndGrowthController::class);
+    
+    Route::resource('branchperformance', BranchPerformanceController::class);
+    Route::resource('productprofitability', ProductProfitabilityController::class);
+    Route::resource('officerperformance', OfficerPerformanceController::class);
+    Route::resource('loanbooktrends', LoanBookTrendsController::class);
+    Route::resource('depositbooktrends', DepositBookTrendsController::class);
+    Route::resource('topdepositors', TopDepositorsController::class);
+    Route::resource('toploans', TopLoansController::class);
+    Route::resource('dormantcasa', DormantCASAController::class);
+    Route::resource('nplrisk', NPLRiskController::class);
+    Route::resource('eclprovisioning', ECLProvisioningController::class);
+    Route::resource('cbkratios', CBKRegulatoryRatiosController::class);
+    Route::resource('topcurrentaccounts', TopCurrentAccountsController::class);
+    Route::resource('topsavingaccounts', TopSavingAccountsController::class);
+    Route::resource('capitaladequacyratio', CapitalAdequacyController::class);
+    Route::resource('loantodepositratio', LoanToDepositController::class);
+    Route::resource('costtoincomeratio', CostToIncomeController::class);
+    Route::resource('returnonassetsratio', ReturnOnAssetsController::class);
+    Route::resource('returnonequityratio', ReturnOnEquityController::class);
+    Route::resource('multidimensional', MultidimensionalStatisticsController::class);
+    Route::resource('incomebybranch', IncomeByBranchStatisticsController::class);
+    Route::resource('expensebygl', ExpenseByGLStatisticsController::class);
+    Route::resource('npltrendbyproduct', NPLTrendByProductController::class);
+    Route::resource('depositgrowthbyofficer', DepositGrowthByOfficerController::class);
+    Route::resource('budgetvsactualbybranch', BudgetvsActualbyBranchController::class);
+    Route::resource('loanyieldbybranch', LoanYieldbyProductController::class);
+    Route::resource('analyticsdataexport', DataExportToolsProductController::class);
+    
 
+    // Admin & Integration
+    Route::resource('cbssync', CBSSyncController::class);
+    Route::resource('datasynclogs', DataSyncLogsController::class);
+    Route::resource('systemsettings', SystemSettingsController::class);
 
+    //Budget Settings
+    Route::resource('rates', BudgetRatesController::class);
+    Route::resource('planningmethods', BudgetPlanningMethodsController::class);
+    Route::resource('periodtypes', BudgetPeriodTypesController::class);
+
+    Route::resource('budgetdriverssetup',BudgetDriversSetupController::class);
 });
