@@ -17,7 +17,7 @@ class ApprovalService
         return $this->isApproved($docType, $amount, $actor, $documentId);
     }
 
-    public function isApproved(string $docType, float $amount, User $actor): bool
+    public function isApproved(string $docType, float $amount, User $actor, $documentId ): bool
     {
         $group = DB::table('t_ApprovalGroups')->where('DocType', $docType)->first();
 
@@ -33,7 +33,7 @@ class ApprovalService
             case 'MAJ':
                 return $this->isMajorityApproved($docType, [$actor]); // Only 1 actor for now
             case 'ALL':
-                // For ALL, you must check if all approvers approved this document
+
                 return $this->isAllApproved($docType, $documentId);
             default:
                 return false;

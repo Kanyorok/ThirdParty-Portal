@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Procurement;
 
+use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Orders\PurchaseOrderRequest;
+use App\Models\Auth\User;
 use App\Models\Procurement\Order;
 use App\Services\Core\ApprovalService;
 use App\Services\Procurement\Items\ItemService;
@@ -64,13 +66,13 @@ class PurchaseOrderController extends Controller
 
         try {
             $suppliers = $this->supplierService->getSuppliers();
-            \Log::info('Suppliers data:', $suppliers->toArray());
+            Log::info('Suppliers data:', $suppliers->toArray());
             return response()->json([
                 'success' => true,
                 'data' => $suppliers,
             ]);}
         catch(\Exception $e){
-            \Log::error('Error fetching suppliers: ' . $e->getMessage());
+            Log::error('Error fetching suppliers: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
@@ -86,6 +88,8 @@ class PurchaseOrderController extends Controller
     public function index()
 
     {
+
+//        User::query()->hasPermission(PermissionEnum::Users->value)->dd();
 
         try {
             $details = $this->orderService->fetchOrders();
@@ -157,7 +161,7 @@ class PurchaseOrderController extends Controller
             );
 
             if ($POAdd['status'] !== 'success') {
-                \Log::error('Failed to create PO.', [
+                Log::error('Failed to create PO.', [
                     'input' => $validatedData,
                     'user_id' => $actor->id ?? null,
                     'service_response' => $POAdd,
@@ -172,7 +176,7 @@ class PurchaseOrderController extends Controller
             $poId = $POAdd['po_id'] ?? null;
 
             if (!$poId) {
-                \Log::error('PO created but no ID returned.', [
+                Log::error('PO created but no ID returned.', [
                     'response' => $POAdd
                 ]);
 
@@ -196,7 +200,7 @@ class PurchaseOrderController extends Controller
                 );
 
                 if ($POLinesAdd['status'] !== 'success') {
-                    \Log::error('Failed to add PO line.', [
+                    Log::error('Failed to add PO line.', [
                         'index' => $index,
                         'item' => $itemCode,
                         'response' => $POLinesAdd,
@@ -214,7 +218,7 @@ class PurchaseOrderController extends Controller
                 $poId
             );
             if ($POSum['status'] !== 'success') {
-                \Log::error('Failed to calculate POs sum.', [
+                Log::error('Failed to calculate POs sum.', [
                     'po_id' => $poId,
                     'response' => $POSum,
                 ]);
@@ -234,7 +238,7 @@ class PurchaseOrderController extends Controller
             ], 200);
 
         } catch (\Throwable $e) {
-            \Log::error('Exception occurred while creating order.', [
+            Log::error('Exception occurred while creating order.', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
@@ -280,6 +284,8 @@ class PurchaseOrderController extends Controller
 
     public function relatedPO()
     {
+
+
 //        $this->authorize('view', Order::query()->findOrFail($id));
 //        dd($id);
         return view('procurement.orders.index');
@@ -324,7 +330,7 @@ class PurchaseOrderController extends Controller
     }
 
 
-    public function approve(Request $request, $id, ApprovalService $approvalService)
+    public function approve(Request $request, $id)
     {
         $purchaseOrder = Order::findOrFail($id);
         $actor = $request->user();
@@ -345,7 +351,8 @@ class PurchaseOrderController extends Controller
         );
 
         // Check if the document is fully approved based on approval type (including ALL)
-        $isApproved = $approvalService->isDocumentApproved(
+
+        $isApproved = $this->approvalService->isDocumentApproved(
             'purchase_order',
             $purchaseOrder->total_amount,
             $actor,
