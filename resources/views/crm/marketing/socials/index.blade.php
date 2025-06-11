@@ -2,58 +2,76 @@
 
 @section('title','Socials')
 @section('styles')
-
+@endsection
+@section('breadcrumbs')
+    <li class="breadcrumb-item"><a href="#">CRM</a></li>
 @endsection
 @section('content')
-    <div class="mb-3">
-        <h1 class="h3 d-inline align-middle">@yield('title')</h1>
-        <a class="btn btn-primary float-end ms-2 modal-create-competitor" href="{{ route('socials.create') }}"><i
-                class="fas fa-plus-circle"></i> Schedule a Post
-        </a>
-    </div>
     <div class="row">
         <div class="col-12">
-            <div class="tab">
-                <ul class="nav nav-tabs" role="tablist">
-                    <li class="nav-item"><a class="nav-link active" href="#tab-0" data-bs-toggle="tab" role="tab"
-                                            aria-selected="false" onclick="fetchScheduledPostsTableTable()">Scheduled
-                            Posts</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#tab-1" data-bs-toggle="tab" role="tab"
-                                            aria-selected="false" onclick="fetchPublishedPostsTableTable()">Published
-                            Posts</a></li>
-                </ul>
-                <div class="tab-content">
-                    <div class="tab-pane active" id="tab-0" role="tabpanel">
-                        <table id="ScheduledPostsTable"
-                               class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                            <thead>
-                            <tr>
-                                <th class="py-1">Image</th>
-                                <th class="py-1">Type</th>
-                                <th class="py-1 w-50">Content</th>
-                                <th class="py-1">By</th>
-                                <th class="py-1">Dated</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+            <div class="card">
+                <div class="card-body py-0 row">
+                    <div class="col-10">
+                        <ul class="nav nav-tabs profile-tabs" id="employeeTab" role="tablist">
+                            <li class="nav-item"><a class="nav-link active" href="#tab-0" data-bs-toggle="tab"
+                                                    role="tab"
+                                                    aria-selected="false" onclick="fetchScheduledPostsTableTable()">Scheduled
+                                    Posts</a></li>
+                            <li class="nav-item"><a class="nav-link" href="#tab-1" data-bs-toggle="tab" role="tab"
+                                                    aria-selected="false" onclick="fetchPublishedPostsTableTable()">Published
+                                    Posts</a></li>
+                        </ul>
                     </div>
-                    <div class="tab-pane" id="tab-1" role="tabpanel">
-                        <table id="PublishedPostsTable"
-                               class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                            <thead>
-                            <tr>
-                                <th class="py-1">Image</th>
-                                <th class="py-1">Type</th>
-                                <th class="py-1">Content</th>
-                                <th class="py-1">Likes</th>
-                                <th class="py-1">Views</th>
-                                <th class="py-1">By</th>
-                                <th class="py-1">Dated</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+                    <div class="col-2">
+                        <div class="float-end mt-3">
+                            <a class="btn btn-primary float-end ms-2 btn-sm modal-create-competitor"
+                               href="{{ route('socials.create') }}"><i
+                                    class="fas fa-plus-circle"></i> Schedule a Post
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content">
+                <div class="tab-pane active" id="tab-0" role="tabpanel">
+                    <div class="card">
+                        <div class="card-body">
+                            <table id="ScheduledPostsTable"
+                                   class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                <thead>
+                                <tr>
+                                    <th class="py-1">Image</th>
+                                    <th class="py-1">Type</th>
+                                    <th class="py-1 w-50">Content</th>
+                                    <th class="py-1">By</th>
+                                    <th class="py-1">Dated</th>
+                                </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane" id="tab-1" role="tabpanel">
+                    <div class="card">
+                        <div class="card-body">
+                            <table id="PublishedPostsTable"
+                                   class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                <thead>
+                                <tr>
+                                    <th class="py-1">Image</th>
+                                    <th class="py-1">Type</th>
+                                    <th class="py-1">Content</th>
+                                    <th class="py-1">Likes</th>
+                                    <th class="py-1">Views</th>
+                                    <th class="py-1">By</th>
+                                    <th class="py-1">Dated</th>
+                                </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
