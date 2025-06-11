@@ -6,7 +6,6 @@ use App\Models\DMS\Image;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\Model\UserActorTrait;
 use App\Models\Inventory\ItemCategories;
 use App\Models\Inventory\InventoryType;
 use App\Models\Inventory\ItemType;
