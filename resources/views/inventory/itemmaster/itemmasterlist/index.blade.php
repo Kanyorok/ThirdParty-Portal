@@ -36,6 +36,7 @@
                     <th>Item Code</th>
                     <th>Bar Code</th>
                     <th>Item Name</th>
+                    <th>Item Price</th>
                     <th>Category</th>
                     <th>Parent Category</th>
                     <th>Item Type</th>
@@ -64,6 +65,7 @@ $(document).ready(function () {
             { data: 'ItemCode', name: 'ItemCode' },
             { data: 'BarCode', name: 'BarCode' },
             { data: 'ItemName', name: 'ItemName' },
+            {data: 'ItemPrice', name: 'ItemPrice'},
             {data: 'Category', name: 'Category', defaultContent: 'Uncategorized'},
             {data: 'ParentCategory', name: 'ParentCategory', defaultContent: '—'},
             {data: 'ItemType', name: 'ItemType'},

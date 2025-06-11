@@ -134,9 +134,10 @@ class RequisitionService {
     {
         return DB::table(DB::raw('t_ConsolidatedProcurementPlan WITH (NOLOCK)'))
             ->select('PlanID', 'Title', 'ReferenceNumber')
-//            ->where('Status', '=', 'a')
+            ->where('Status', '=', 'Ap')
             ->whereNull('DeletedBy')
             ->whereNull('DeletedOn')
             ->get();
     }
+
 }

@@ -33,39 +33,39 @@
           <input type="hidden" name="Status" value="Draft">
       </div>
         <div class="col-md-4 d-flex align-items-end">
-            <button type="submit" class="btn btn-primary w-100">Save Plan</button>
+            <button type="submit" class="btn btn-outline-primary w-100">Save Plan</button>
         </div>
+        {{--
+            <!-- Selection Mode -->
+            <div class="mb-4">
+              <label class="form-label">How would you like to create this plan?</label>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="planSource" id="manualOption" value="manual" checked>
+                <label class="form-check-label" for="manualOption">
+                  Create Manually (Enter line items yourself)
+                </label>
+              </div>
+              <div class="form-check mt-2">
+                <input class="form-check-input" type="radio" name="planSource" id="fromNeedsOption" value="needs">
+                <label class="form-check-label" for="fromNeedsOption">
+                  Generate From Approved Needs (Raised by Branches)
+                </label>
+              </div>
+            </div>
 
-    <!-- Selection Mode -->
-    <div class="mb-4">
-      <label class="form-label">How would you like to create this plan?</label>
-      <div class="form-check">
-        <input class="form-check-input" type="radio" name="planSource" id="manualOption" checked>
-        <label class="form-check-label" for="manualOption">
-          Create Manually (Enter line items yourself)
-        </label>
-      </div>
-      <div class="form-check mt-2">
-        <input class="form-check-input" type="radio" name="planSource" id="fromNeedsOption">
-        <label class="form-check-label" for="fromNeedsOption">
-          Generate From Approved Needs (Raised by Branches)
-        </label>
-      </div>
-    </div>
+            <!-- Manual Entry Button -->
+            <div id="manualActions" class="mt-4">
+               <a href="{{ route('planmanualinput.index') }}" type="button" onclick="location.href='/planning/manual-entry'">
+                Proceed to Manual Entry
+        </a>
+            </div>
 
-    <!-- Manual Entry Button -->
-    <div id="manualActions" class="mt-4">
-       <a href="{{ route('planmanualinput.index') }}" type="button" onclick="location.href='/planning/manual-entry'">
-        Proceed to Manual Entry
-</a>
-    </div>
-
-    <!-- From Needs Button -->
-    <div id="autoActions" class="mt-4 d-none">
-      <a href="{{ route('planfromneeds.create') }}" type="button" onclick="location.href='/planning/generate-from-needs'">
-        Generate Plan from Approved Needs
-</a>
-    </div>
+            <!-- From Needs Button -->
+            <div id="autoActions" class="mt-4 d-none">
+              <a href="{{ route('planfromneeds.create') }}" type="button" onclick="location.href='/planning/generate-from-needs'">
+                Generate Plan from Approved Needs
+        </a>
+            </div>--}}
   </form>
 </div>
 <script>

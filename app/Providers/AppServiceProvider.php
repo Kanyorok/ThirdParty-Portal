@@ -75,6 +75,8 @@ use App\Policies\Inventory\StockItemPolicy;
 use App\Policies\Inventory\InventoryTypePolicy;
 use App\Policies\Inventory\StorePolicy;
 use App\Policies\Inventory\UnitOfMeasurePolicy;
+use App\Policies\Inventory\InterBranchRequisitionPolicy;
+use App\Policies\Inventory\PriceManagementPolicy;
 use App\Models\Inventory\ItemType;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\ItemCategories;
@@ -82,6 +84,8 @@ use App\Models\Inventory\StockItem;
 use App\Models\Inventory\UnitOfMeasure;
 use App\Models\Inventory\Store;
 use App\Models\Inventory\InventoryType;
+use App\Models\Inventory\PriceManagement;
+use App\Models\Inventory\InterBranchRequisition;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\PlanLineItems;
 
@@ -145,7 +149,9 @@ class AppServiceProvider extends ServiceProvider
             StockItem::getPrimaryKey() => StockItem::class,
             Store::getPrimaryKey() => Store::class,
             UnitOfMeasure::getPrimaryKey() => UnitOfMeasure::class,
+            PriceManagement::getPrimaryKey() => PriceManagement::class,
             SchedulePlan::getPrimaryKey() => SchedulePlan::class,
+            InterBranchRequisition::getPrimaryKey() => InterBranchRequisition::class,
             ConsolidatedProcurementPlan::getPrimaryKey() => ConsolidatedProcurementPlan::class,
             PlanLineItems::getPrimaryKey() => PlanLineItems::class,
 
@@ -178,12 +184,13 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(InventoryType::class, InventoryTypePolicy::class);
         Gate::policy(Store::class, StorePolicy::class);
         Gate::policy(UnitOfMeasure::class, UnitOfMeasurePolicy::class);
+        Gate::policy(PriceManagement::class, PriceManagementPolicy::class);
         Gate::policy(ConsolidatedProcurementPlan::class, ProcurementPlanMaintainPolicy::class);
         Gate::policy(SchedulePlan::class, SchedulePlanPolicy::class);
         Gate::policy(PlanLineItems::class, PlanManualInputPolicy::class);
+        Gate::policy(InterBranchRequisition::class, InterBranchRequisitionPolicy::class);
         Gate::policy(CategoryMaster::class, PropertyCategoryPolicy::class);
         Gate::policy(PropertyType::class, PropertyTypePolicy::class);
-
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);
          Event::listen(SMSSendEvent::class, SMSSendListener::class);

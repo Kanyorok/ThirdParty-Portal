@@ -6,6 +6,11 @@ use App\Models\DMS\Image;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Inventory\ItemCategories;
+use App\Models\Inventory\InventoryType;
+use App\Models\Inventory\ItemType;
+use App\Models\Inventory\UnitOfMeasure;
+use App\Models\Inventory\PriceManagement;
 
 class ItemMasterList extends Model
 {
@@ -31,10 +36,11 @@ class ItemMasterList extends Model
         'UOM',
         'InventoryType',
         'Category',
+        'Status',
         'ImageId',
         'ItemDescription',
         'DocumentUpload',
-        'Status',
+        'ItemPrice',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy',
@@ -50,10 +56,11 @@ class ItemMasterList extends Model
         'UOM' => 'integer',
         'InventoryType' => 'integer',
         'Category' => 'integer',
+        'Status' => 'boolean',
         'ImageId' => 'integer',
         'ItemDescription' => 'string',
         'DocumentUpload' => 'string',
-        'Status' => 'boolean',
+        'ItemPrice' => 'string',
         'CreatedBy' => 'integer',
         'ModifiedBy' => 'integer',
         'DeletedBy' => 'integer',
@@ -86,6 +93,12 @@ class ItemMasterList extends Model
     {
         return $this->belongsTo(UnitOfMeasure::class, 'UOM', 'Id');
     }
+
+    public function price()
+    {
+        return $this->belongsTo(PriceManagement::class, 'ItemPrice', 'Id');
+    }
+
 
     public function inventoryType()
     {

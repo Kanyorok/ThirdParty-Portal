@@ -121,7 +121,7 @@
                   class="d-inline">
                 @csrf
                 @method('PUT')
-                <button type="submit" class="btn btn-success">Approve</button>
+                <button type="submit" class="btn btn-success">Submit</button>
             </form>
         </div>
     </div>

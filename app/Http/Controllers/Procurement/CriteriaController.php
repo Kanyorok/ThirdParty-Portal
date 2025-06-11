@@ -88,7 +88,29 @@ class CriteriaController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'desc' => 'nullable|string',
+        ]);
+
+        $criteria = Criteria::findOrFail($id);
+        $oldValues = $criteria->getOriginal();
+        $criteria->CriteriaName = $request->name;
+        $criteria->Description = $request->desc;
+        $criteria->ModifiedBy = auth()->id();
+        $criteria->ModifiedOn = now();
+        $criteria->save();
+
+        activity()
+            ->performedOn($criteria)
+            ->causedBy(auth()->user())
+            ->withProperties([
+                'old' => $oldValues,
+                'new' => $criteria->getChanges()
+            ])
+            ->log('Updated criteria: ' . $criteria->CriteriaName);
+
+        return redirect()->back()->with('success', 'Criteria updated successfully!');
     }
 
     /**
@@ -96,6 +118,18 @@ class CriteriaController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $criteria = Criteria::findOrFail($id);
+        $criteriaName = $criteria->CriteriaName;
+        $criteria->DeletedBy = auth()->id();
+
+        activity()
+            ->performedOn($criteria)
+            ->causedBy(auth()->user())
+            ->withProperties(['criteria_name' => $criteriaName])
+            ->log('Deleted criteria: ' . $criteriaName);
+
+        $criteria->delete();
+
+        return redirect()->back()->with('success', 'Criteria deleted successfully.');
     }
 }

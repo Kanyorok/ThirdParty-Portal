@@ -111,7 +111,7 @@ class LeadController extends Controller
 
             $StaticLists = StaticListsService::getList([StaticListsService::Industries, StaticListsService::MarketingModes, StaticListsService::CustomerType]);
 
-            $view = ($request->type === LeadTypeEnum::Individual->name ) ? 'leads.create-individual' : 'leads.create-corporate';
+            $view = ($request->type === LeadTypeEnum::Individual->name) ? 'crm.leads.create-individual' : 'crm.leads.create-corporate';
 
             return view($view, compact('contact', 'email'))
                 ->with('conversation', $emailConversation instanceof EmailConversation ? $emailConversation->Id : 0)
