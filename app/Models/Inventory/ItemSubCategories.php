@@ -2,9 +2,8 @@
 
 namespace App\Models\Inventory;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Traits\Model\UserActorTrait;
-use App\Models\Inventory\ItemCategories;
+use Illuminate\Database\Eloquent\Model;
 
 class ItemSubCategories extends Model
 {
@@ -17,6 +16,11 @@ class ItemSubCategories extends Model
     protected $connection = 'sqlsrv';
     protected $table = 't_ItemSubCategories';
     protected $primaryKey = 'Id';
+
+    public static function getPrimaryKey(): string
+    {
+        return 'ItemSubCategoriesId';
+    }
 
     protected $fillable = [
                            'SubCategoryCode',
@@ -33,10 +37,10 @@ class ItemSubCategories extends Model
                             'Description'      => 'string',
                             'Status'      => 'boolean',
 
-                        ];   
+    ];
 
     public function parentCategory()
     {
         return $this->belongsTo(ItemCategories::class, 'ParentCategory', 'id');
     }
-}      
+}

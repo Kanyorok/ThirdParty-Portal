@@ -10,6 +10,7 @@
 
     <table class="table table-bordered table-striped table-hover align-middle">
       <thead class="table-light">
+        @if($gls->count())
         <tr>
           <th>#</th>
           <th>GL Account No</th>
@@ -17,18 +18,19 @@
           <th>Description</th>
           <th>GL Type</th>
           <th>Mapped to Budget Line</th>
-          <th>Mapped to Product</th>
+          <th>Mapped to Product</th> 
           <th>Active</th>
           <th>Actions</th>
         </tr>
       </thead>
       <tbody>
+        @foreach($gls as $gls)
         <tr>
-          <td>1</td>
-          <td>GL1001</td>
-          <td>Interest Income</td>
-          <td>Income from all loan products</td>
-          <td>Income</td>
+          <td>{{$loop->iteration}}</td>
+          <td>GL00{{$gls->Id}}</td>
+          <td>{{$gls->Description}}</td>
+          <td>{{$gls->Description}}</td>
+          <td>{{$gls->GTType}}</td>
           <td><span class="badge bg-success">✅ Yes</span></td>
           <td><span class="badge bg-success">✅ Yes</span></td>
           <td><span class="badge bg-success">✔</span></td>
@@ -37,23 +39,15 @@
             <button class="btn btn-sm btn-outline-primary">🔗 Map</button>
           </td>
         </tr>
-        <tr>
-          <td>2</td>
-          <td>GL2005</td>
-          <td>Deposit Account Balance</td>
-          <td>Customer deposit liabilities</td>
-          <td>Liability</td>
-          <td><span class="badge bg-danger">❌ No</span></td>
-          <td><span class="badge bg-warning text-dark">⚠ Partial</span></td>
-          <td><span class="badge bg-success">✔</span></td>
-          <td>
-            <button class="btn btn-sm btn-info">🔍 View</button>
-            <button class="btn btn-sm btn-outline-primary">🔗 Map</button>
-          </td>
-        </tr>
+        @endforeach
         <!-- Repeat rows as needed -->
       </tbody>
     </table>
+    @else
+        <div class="alert alert-info">
+          No General Ledger Accounts to vview
+        </div>
+    @endif
   </div>
 </div>
 @endsection

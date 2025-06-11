@@ -2,9 +2,9 @@
 
 namespace App\Models\Procurement;
 
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\Model\UserActorTrait;
 
 class BudgetLineLink extends Model
 {
@@ -27,10 +27,12 @@ class BudgetLineLink extends Model
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy',
-
-
     ];
 
+    public static function getPrimaryKey(): string
+    {
+        return 'BudgetLineLinkID';
+    }
     public function budgetMaster()
     {
         return $this->belongsTo(BudgetMaster::class, 'BudgetLineID', 'BudgetLineID');

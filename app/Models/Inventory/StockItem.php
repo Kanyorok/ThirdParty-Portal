@@ -2,12 +2,10 @@
 
 namespace App\Models\Inventory;
 
-use Illuminate\Database\Eloquent\Model;
-use App\Traits\Model\UserActorTrait;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\User;
 use App\Models\Core\Branch;
-use App\Models\Inventory\Store;
+use App\Traits\Model\UserActorTrait;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class StockItem extends Model
 {
@@ -16,10 +14,13 @@ class StockItem extends Model
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
-
-    protected $connection = 'sqlsrv';
     protected $table = 't_StockItems';
     protected $primaryKey = 'Id';
+
+    public static function getPrimaryKey(): string
+    {
+        return 'StockItemsId';
+    }
 
     protected $fillable = [
         'SKUCode',
@@ -67,31 +68,18 @@ class StockItem extends Model
         'ModifiedOn'    => 'datetime',
     ];
 
-    public function creator()
-    {
-        return $this->belongsTo(User::class, 'CreatedBy', 'Id');
-    }
 
-    public function modifier()
-    {
-        return $this->belongsTo(User::class, 'ModifiedBy', 'Id');
-    }
-
-    public function deleter()
-    {
-        return $this->belongsTo(User::class, 'DeletedBy', 'Id');
-    }
     public function store()
    {
-    return $this->belongsTo(\App\Models\Inventory\Store::class, 'Store', 'Id');
+       return $this->belongsTo(Store::class, 'Store', 'Id');
    }
    public function branch()
 {
-    return $this->belongsTo(\App\Models\Core\Branch::class, 'Branch', 'Id');
+    return $this->belongsTo(Branch::class, 'Branch', 'Id');
 }
 public function item()
 {
-    return $this->belongsTo(\App\Models\Inventory\ItemMasterList::class, 'ItemID', 'Id');
+    return $this->belongsTo(ItemMasterList::class, 'ItemID', 'Id');
 }
 
 

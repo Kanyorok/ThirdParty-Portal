@@ -8,6 +8,7 @@ use App\Http\Controllers\Budget\BudgetProductTypeController;
 use App\Http\Controllers\Budget\BudgetLineMappingController;
 use App\Http\Controllers\Budget\BudgetGLMappingController;
 use App\Http\Controllers\Budget\BudgetDriversController;
+use App\Http\Controllers\Budget\BudgetActivitiesController;
 
 use App\Http\Controllers\Budget\YieldRateController;
 use App\Http\Controllers\Budget\BudgetProjectionsController; 
@@ -27,11 +28,16 @@ use App\Http\Controllers\Budget\BudgetVarianceAnalysisController;
 use App\Http\Controllers\Budget\BudgetKPIscorecardsController; 
 use App\Http\Controllers\Budget\BudgetKPIscorecardsOfficerController;
 
+use App\Http\Controllers\Budget\BudgetRatesController;
+use App\Http\Controllers\Budget\BudgetPeriodTypesController;
+use App\Http\Controllers\Budget\BudgetPlanningMethodsController;
+
 //TODO:Make Controllers
 use App\Http\Controllers\Budget\BusinessAnalyticsDashboardController;
 use App\Http\Controllers\Budget\KPIDashboardsController;
 use App\Http\Controllers\Budget\TrendAndGrowthController;
 use App\Http\Controllers\Budget\BranchPerformanceController;
+use App\Http\Controllers\Budget\BudgetDriversSetupController;
 use App\Http\Controllers\Budget\BudgetLinesController;
 use App\Http\Controllers\Budget\ProductProfitabilityController;
 use App\Http\Controllers\Budget\OfficerPerformanceController;
@@ -75,6 +81,7 @@ Route::namespace('Budget')->group(function () {
     Route::resource('budgetlinemapping', BudgetLineMappingController::class);
     Route::resource('budgetglmapping', BudgetGLMappingController::class);
     Route::resource('budgetdrivers', BudgetDriversController::class);
+    Route::resource('budgetactivities', BudgetActivitiesController::class);
     Route::resource('yieldexpenserate', YieldRateController::class);
     Route::resource('budgetprojections', BudgetProjectionsController::class);
     Route::resource('entrybyproduct', BudgetProductEntryController::class);
@@ -132,5 +139,11 @@ Route::namespace('Budget')->group(function () {
     Route::resource('cbssync', CBSSyncController::class);
     Route::resource('datasynclogs', DataSyncLogsController::class);
     Route::resource('systemsettings', SystemSettingsController::class);
-    
+
+    //Budget Settings
+    Route::resource('rates', BudgetRatesController::class);
+    Route::resource('planningmethods', BudgetPlanningMethodsController::class);
+    Route::resource('periodtypes', BudgetPeriodTypesController::class);
+
+    Route::resource('budgetdriverssetup',BudgetDriversSetupController::class);
 });

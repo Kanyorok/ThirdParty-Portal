@@ -2,10 +2,11 @@
 
 namespace App\Models\Inventory;
 
+use App\Models\DMS\Image;
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Model\UserActorTrait;
-
 use App\Models\Inventory\ItemCategories;
 use App\Models\Inventory\InventoryType;
 use App\Models\Inventory\ItemType;
@@ -23,6 +24,11 @@ class ItemMasterList extends Model
     protected $connection = 'sqlsrv';
     protected $table = 't_Items';
     protected $primaryKey = 'Id';
+
+    public static function getPrimaryKey(): string
+    {
+        return 'ItemsId';
+    }
 
     protected $fillable = [
         'BarCode',
@@ -47,9 +53,9 @@ class ItemMasterList extends Model
         'ItemCode'        => 'string',
         'BarCode'         => 'string',
         'ItemName'        => 'string',
-        'ItemType'        => 'integer',  
-        'UOM'             => 'integer',  
-        'InventoryType'   => 'integer',  
+        'ItemType' => 'integer',
+        'UOM' => 'integer',
+        'InventoryType' => 'integer',
         'Category'        => 'integer',
         'Status'  => 'boolean',
         'ImageId'         => 'integer',
@@ -76,7 +82,7 @@ class ItemMasterList extends Model
 
     public function image()
     {
-        return $this->belongsTo(\App\Models\DMS\Image::class, 'ImageId', 'ImageID');
+        return $this->belongsTo(Image::class, 'ImageId', 'ImageID');
     }
 
     public function itemType()

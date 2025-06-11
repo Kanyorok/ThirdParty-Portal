@@ -18,6 +18,10 @@ class TenderInvitation extends Model
     protected $table = 't_TenderInvitations';
     protected $primaryKey = 'InvitationID';
 
+    public static function getPrimaryKey(): string
+    {
+        return 'InvitationID';
+    }
 
     // Mass assignable attributes
     protected $fillable = [
