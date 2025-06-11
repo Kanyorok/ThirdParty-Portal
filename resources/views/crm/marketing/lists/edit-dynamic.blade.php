@@ -12,6 +12,10 @@
         }
     </style>
 @endsection
+@section('breadcrumbs')
+    <li class="breadcrumb-item"><a href="#">CRM</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('marketing-list.index') }}">Marketing Lists</a></li>
+@endsection
 @section('content')
     <div class="row">
         <div class="col-12">

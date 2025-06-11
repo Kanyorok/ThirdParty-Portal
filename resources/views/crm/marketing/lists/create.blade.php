@@ -7,6 +7,9 @@
 @section('styles')
 
 @endsection
+@section('breadcrumbs')
+    <li class="breadcrumb-item"><a href="#">CRM</a></li>
+@endsection
 @section('content')
     <div class="row">
         <div class="col-12">

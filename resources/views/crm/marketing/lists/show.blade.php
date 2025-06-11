@@ -8,6 +8,10 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/2.1.5/css/dataTables.dataTables.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/select/2.0.5/css/select.dataTables.css">
 @endsection
+@section('breadcrumbs')
+    <li class="breadcrumb-item"><a href="#">CRM</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('marketing-list.index') }}">Marketing Lists</a></li>
+@endsection
 @section('content')
     <div class="row">
         <div class="col-md-4 ">
