@@ -447,7 +447,7 @@
             <div class="col-sm-12">
                 <div class="card">
                     <div class="card-body py-0">
-                        <ul class="nav nav-tabs profile-tabs" id="employeeTab" role="tablist">
+                        <ul class="nav nav-tabs" role="tablist">
                             <li class="nav-item"><a class="nav-link active" href="#tab-0" data-bs-toggle="tab"
                                                     role="tab"
                                                     aria-selected="false">Activities</a></li>
@@ -527,7 +527,6 @@
                             <div class="card-header"><h5>Portfolio: Client Accounts</h5></div>
                             <div class="card-body">
                                 <table id="accountsTable"
-                                       +
                                        class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
                                     <thead>
                                     <tr>
