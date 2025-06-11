@@ -20,16 +20,16 @@ class PropertyTypeService
         string $Description,
         User $user
     ):self{
-        $propetytype = PropertyType::create([
-        'PropertyTypeName' => $PropertyTypeName, 
-        'PropertyCategoryId' => $PropertyCategoryId->Id,
-        'Description' => $Description,
-        'CreatedBy' => $user->Id,
-        'ModifiedBy' => $user->Id,
+        $propertytype = PropertyType::create([
+            'PropertyTypeName' => $PropertyTypeName,
+            'PropertyCategoryId' => $PropertyCategoryId->Id,
+            'Description' => $Description,
+            'CreatedBy' => $user->Id,
+            'ModifiedBy' => $user->Id,
         ]);
 
-        activity()->causedBy($user->Id)->performedOn($propetytype)->event('create')->log("Added Property type {$propetytype->Id}.");
-        return new self($propetytype); 
+        activity()->causedBy($user->Id)->performedOn($propertytype)->event('create')->log("Added Property type {$propertytype->Id}.");
+        return new self($propertytype);
     }
 
 }

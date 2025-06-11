@@ -30,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('t_AddBlock');
+        Schema::dropIfExists('t_PropertyBlock');
     }
 };
