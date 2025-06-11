@@ -1,75 +1,104 @@
 @extends('layouts.app')
-@section('title', 'Create Tranfer')
+@section('title', 'Create Transfer')
 @section('content')
+@if($errors->any())
+    <div class="alert alert-danger">
+        <ul>
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+@if(session('error'))
+    <div class="alert alert-danger">{{ session('error') }}</div>
+@endif
 <div class="container bg-white shadow rounded p-4">
-    <h4 class="mb-4">🔁 Stock Transfer Form</h4>
-
-    <form>
-      <div class="row mb-3">
-        <div class="col-md-4">
-          <label for="transferDate" class="form-label">Transfer Date</label>
-          <input type="date" class="form-control" id="transferDate" required>
-        </div>
-        <div class="col-md-4">
-          <label for="fromStore" class="form-label">From Store</label>
-          <select class="form-select" id="fromStore" required>
-            <option selected disabled>Select Source Store</option>
-            <option>Central Warehouse</option>
-            <option>Branch A</option>
-            <option>Branch B</option>
-          </select>
-        </div>
-        <div class="col-md-4">
-          <label for="toStore" class="form-label">To Store</label>
-          <select class="form-select" id="toStore" required>
-            <option selected disabled>Select Destination Store</option>
-            <option>Branch A</option>
-            <option>Branch B</option>
-            <option>Central Warehouse</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="table-responsive mb-3">
-        <table class="table table-bordered align-middle">
-          <thead class="table-light">
-            <tr>
-              <th>#</th>
-              <th>Item Code</th>
-              <th>Item Name</th>
-              <th>Quantity</th>
-              <th>UOM</th>
-              <th>Remarks</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>1</td>
-              <td><input type="text" class="form-control" placeholder="ITM-001"></td>
-              <td><input type="text" class="form-control" placeholder="Item Name"></td>
-              <td><input type="number" class="form-control" placeholder="0"></td>
-              <td>
-                <select class="form-select">
-                  <option>pcs</option>
-                  <option>kg</option>
-                  <option>litres</option>
+    <h4 class="mb-4">Stock Transfer Form</h4>
+    <!-- Requisition select triggers page reload -->
+    <form method="GET" action="{{ route('transactionstransfers.create') }}" class="mb-3">
+        <div class="row">
+            <div class="col-md-4">
+                <label for="requisition_id" class="form-label">Requisition Number</label>
+                <select class="form-select" id="requisition_id" name="requisition_id" onchange="this.form.submit()" required>
+                    <option value="">Select Approved Requisition</option>
+                    @foreach($approvedRequisitions as $req)
+                        <option value="{{ $req->Id }}" {{ (isset($requisition) && $requisition->Id == $req->Id) ? 'selected' : '' }}>
+                            {{ $req->ReqNo }}
+                        </option>
+                    @endforeach
                 </select>
-              </td>
-              <td><input type="text" class="form-control" placeholder="Optional"></td>
-            </tr>
-            <!-- Add JS to dynamically insert more rows -->
-          </tbody>
-        </table>
-      </div>
-
-      <div class="mb-3">
-        <label for="transferredBy" class="form-label">Transferred By</label>
-        <input type="text" class="form-control" id="transferredBy" placeholder="e.g. Daniel Mbugua" required>
-      </div>
-
-      <button type="submit" class="btn btn-primary">✅ Submit Transfer</button>
+            </div>
+        </div>
     </form>
-  </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-@endSection
+    <form method="POST" action="{{ route('transactionstransfers.store') }}" id="transferForm">
+        @csrf
+            @if(isset($requisition))
+            <div class="row mb-3">
+            <div class="col-md-4">
+                <label for="transferDate" class="form-label">Transfer Date</label>
+                <input type="date" class="form-control" id="transferDate" name="TransferDate" required>
+            </div>
+            <div class="col-md-2">
+                <label for="fromBranch" class="form-label">From Branch</label>
+                <input type="text" class="form-control" id="fromBranch" value="{{ $requisition->fromBranch->Name ?? '' }}" readonly>
+                <input type="hidden" name="FromBranch" value="{{ $requisition->FromBranch }}">
+            </div>
+            <div class="col-md-2">
+                <label for="toBranch" class="form-label">To Branch</label>
+                <input type="text" class="form-control" id="toBranch" value="{{ $requisition->toBranch->Name ?? '' }}" readonly>
+                <input type="hidden" name="ToBranch" value="{{ $requisition->ToBranch }}">
+            </div>
+            <input type="hidden" name="RequisitionId" value="{{ $requisition->Id }}">
+            @endif
+        </div>
+
+        @if(isset($requisition))
+        <div id="itemsSection">
+            <div class="mb-3">
+                <h5>Requisition Items</h5>
+                <table class="table table-bordered align-middle" id="itemsTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Item Name</th>
+                            <th>Approved Qty</th>
+                            <th>UOM</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($requisition->items as $index => $item)
+                        <tr>
+                            <td>{{ $index + 1 }}</td>
+                            <td>
+                                {{ $item->item->ItemName ?? 'N/A' }}
+                                <input type="hidden" name="items[{{ $index }}][item_id]" value="{{ $item->Item }}">
+                            </td>
+                            <td>
+                                <input type="number" class="form-control" name="items[{{ $index }}][approved_qty]" value="{{ $item->ApprovedQty }}" min="1" required>
+                            </td>
+                            <td>
+                                {{ $item->uom->Code ?? '' }}
+                                <input type="hidden" name="items[{{ $index }}][uom_id]" value="{{ $item->UOM }}">
+                            </td>
+                            <td>
+                                <input type="text" class="form-control" name="items[{{ $index }}][remarks]" value="{{ $item->Remarks ?? '' }}" maxlength="255">
+                            </td>
+                        </tr>
+                        @endforeach
+                        @if(count($requisition->items) == 0)
+                        <tr>
+                            <td colspan="5" class="text-center">No items found for this requisition.</td>
+                        </tr>
+                        @endif
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        @endif
+        <button type="submit" class="btn btn-primary" id="submitBtn" {{ isset($requisition) ? '' : 'disabled' }}>✅ Submit Transfer</button>
+    </form>
+</div>
+@endsection
