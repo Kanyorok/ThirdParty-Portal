@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Inventory;
+
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use App\Http\Controllers\Controller;
@@ -13,7 +14,7 @@ use App\Models\Core\Branch;
 use App\Services\Inventory\InterBranchRequisitionService;
 use Illuminate\Http\Request;
 use App\Providers\Inventory\InterBranchRequisitionPolicy;
-
+use App\Enums\Inventory\InterBranchRequisitionEnum;
 
 class InterBranchRequisitionController extends Controller
 {
@@ -24,17 +25,23 @@ class InterBranchRequisitionController extends Controller
         $this->service = $service;
     }
 
+    public function index(Request $request) {
+        $query = InterBranchRequisition::with(['fromBranch', 'toBranch', 'items']);
+        if ($request->filled('status')) {
+
+            $enum = InterBranchRequisitionEnum::tryFrom($request->status);
+            $status = $enum ? $enum->value : $request->status;
+            $query->where('Status', $status);
+        }
+        if ($request->filled('status')) {
    
-public function index(Request $request) {
-    $query = InterBranchRequisition::with(['fromBranch', 'toBranch', 'items']);
-    if ($request->filled('status')) {
-        $query->where('Status', $request->status);
-    }
-    $groupedRequisitions = $query->latest()->take(10)->get();
-    return view('inventory.interbranchrequisition.index', compact('groupedRequisitions'));
+    $groupedRequisitions = $query->latest()->get();
+} else {
+  
+    $groupedRequisitions = $query->latest()->get();
 }
-        
-    
+        return view('inventory.interbranchrequisition.index', compact('groupedRequisitions'));
+    }
 
     public function create()
     {
@@ -52,7 +59,7 @@ public function index(Request $request) {
         $data = $request->validated();
 
         if (!isset($data['Status'])) {
-            $data['Status'] = 'Pending Approval';
+            $data['Status'] = InterBranchRequisitionEnum::Submitted->value;
         }
         $this->service->create($data);
         return redirect()->route('interbranchrequisition.index')->with('success', 'Requisition submitted successfully.');
@@ -97,6 +104,7 @@ public function index(Request $request) {
         $item = InterBranchRequisition::with('items')->findOrFail($Id);
         $data = $request->validated();
 
+     
         if (!isset($data['Status']) && $item->Status) {
             $data['Status'] = $item->Status;
         }
@@ -111,9 +119,8 @@ public function index(Request $request) {
 
     public function destroy($Id)
     {
-        
         $item = InterBranchRequisition::findOrFail($Id);
-         $this->authorize('destroy', InterBranchRequisition::class);
+        $this->authorize('destroy', InterBranchRequisition::class);
         $this->service->delete($item);
         return redirect()->route('interbranchrequisition.index')->with('success', 'Requisition deleted successfully.');
     }
@@ -137,7 +144,6 @@ public function index(Request $request) {
         $categoryId = $request->get('category_id');
         $subcategoryId = $request->get('subcategory_id');
 
-        
         if ((!is_null($subcategoryId) && !is_numeric($subcategoryId)) ||
             (!is_null($categoryId) && !is_numeric($categoryId))) {
             return response()->json([]);

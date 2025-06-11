@@ -1,56 +1,49 @@
 @extends('layouts.app')
-@section('title', 'Property Units')
+@section('title', 'Item Sub Category')
 @section('content')
 <div class="container mt-4">
 
 <a href="{{ route('addunit.create') }}" class="btn btn-primary mb-3">Add Unit</a>
 
   <h4 class="fw-bold mb-3">📋 Property Units</h4>
-
+  @if($units->count())
   <table class="table table-bordered table-striped align-middle">
     <thead class="table-light">
       <tr>
         <th>#</th>
-        <th>Unit Code</th>
-        <th>Floor</th>
-        <th>Block</th>
         <th>Property</th>
+        <th>Block</th>
+        <th>Floor</th>
+        <th>Unit Code</th>  
         <th>Size (sq.ft)</th>
-        <th>Status</th>
         <th>Rentable?</th>
+        <th>Status</th>
+        <th>Remarks</th>
         <th>Action</th>
       </tr>
     </thead>
     <tbody>
+      @foreach($units as $unit)
       <tr>
-        <td>1</td>
-        <td>Unit 101</td>
-        <td>1st Floor</td>
-        <td>Block A</td>
-        <td>Sunset Plaza</td>
-        <td>1200</td>
-        <td><span class="badge bg-success">Vacant</span></td>
-        <td>Yes</td>
+        <td>{{ $loop->iteration }}</td>
+        <td>{{ $unit->PropertyID }}</td>
+        <td>{{ $unit->BlockID }}</td>
+        <td>{{ $unit->FloorID }}</td>
+        <td>{{ $unit->UnitCode }}</td>
+        <td>{{ $unit->UnitSize }}</td>
+        <td>{{ $unit->IsRentable? 'Yes' : 'No' }}</td>
+        <td>{{ $unit->CurrentStatus }}</td> 
+        <td>{{ $unit->Remarks }}</td>
         <td>
-          <button class="btn btn-sm btn-outline-primary">👁 View</button>
+          <a href="{{ route('addunit.show', $unit->id) }}" class="btn btn-sm btn-info">👁 View</a>
           <button class="btn btn-sm btn-outline-warning">✏️ Edit</button>
         </td>
       </tr>
-      <tr>
-        <td>2</td>
-        <td>Unit B204</td>
-        <td>2nd Floor</td>
-        <td>Tower 1</td>
-        <td>Mountain View Estate</td>
-        <td>900</td>
-        <td><span class="badge bg-danger">Occupied</span></td>
-        <td>Yes</td>
-        <td>
-          <button class="btn btn-sm btn-outline-primary">👁 View</button>
-          <button class="btn btn-sm btn-outline-warning">✏️ Edit</button>
-        </td>
-      </tr>
+      @endforeach
     </tbody>
   </table>
+  @else
+<p>No property unit registered yet.</p>
+@endif
 </div>
 @endsection

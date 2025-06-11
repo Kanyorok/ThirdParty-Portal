@@ -18,6 +18,11 @@ class SurveyQuestionResponse extends Model
     protected $table = 't_SurveyQuestionResponses';
     protected $primaryKey = 'Id';
 
+    public static function getPrimaryKey(): string
+    {
+        return 'SurveyQuestionResponsesId';
+    }
+
     /**
      * The attributes that are mass assignable.
      */

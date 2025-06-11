@@ -27,6 +27,11 @@ class Meeting extends Model
     protected $table = 't_Meetings';
     protected $primaryKey = 'MeetingID';
 
+    public static function getPrimaryKey(): string
+    {
+        return 'MeetingID';
+    }
+
     protected $fillable = [
                            'Title',
                            'StartOn',

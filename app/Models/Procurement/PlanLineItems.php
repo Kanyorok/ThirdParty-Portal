@@ -6,8 +6,8 @@ use App\Models\Auth\User;
 use App\Models\Core\Branch;
 use App\Models\HRM\Department;
 use App\Models\Inventory\ItemMasterList;
-use Illuminate\Database\Eloquent\Model;
 use App\Traits\Model\UserActorTrait;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PlanLineItems extends Model
@@ -21,6 +21,10 @@ class PlanLineItems extends Model
     protected $table = 't_PlanLineItem';
     protected $primaryKey = 'LineItemID';
 
+    public static function getPrimaryKey(): string
+    {
+        return 'LineItemId';
+    }
     protected $fillable = [
         'PlanID',
         'ItemID',

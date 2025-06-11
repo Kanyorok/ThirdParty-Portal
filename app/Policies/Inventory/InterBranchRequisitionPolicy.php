@@ -4,6 +4,7 @@ namespace App\Policies\Inventory;
 
 use App\Enums\Core\PermissionEnum;
 use App\Models\Inventory\InterBranchRequisition;
+use App\Enums\Inventory\InterBranchRequisitionEnum;
 use App\Models\Auth\User;
 use Illuminate\Auth\Access\Response;
 
@@ -57,4 +58,22 @@ class InterBranchRequisitionPolicy
         return $user->can(PermissionEnum::InterBranchRequisitionDestroy->value);
     }
 
+    public function approve(User $user, InterBranchRequisition $requisition): bool
+{
+    // Don't allow approving if already approved or rejected
+    if (
+        $requisition->Status === InterBranchRequisitionEnum::Approved->value ||
+        $requisition->Status === InterBranchRequisitionEnum::Rejected->value
+    ) {
+        return false;
+    }
+
+    // Don't allow approving your own requisition
+   // if ($requisition->CreatedBy === $user->Id) {
+    //    return false;
+   // }
+
+    // Must have the approval permission
+    return $user->can(PermissionEnum::InterBranchRequisitionApproval->value);
+}
 }

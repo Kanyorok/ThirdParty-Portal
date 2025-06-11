@@ -19,6 +19,11 @@ class SysFilter extends Model
     protected $table = 't_SysFilters';
     protected $primaryKey = 'Id';
 
+    public static function getPrimaryKey(): string
+    {
+        return 'SysFiltersId';
+    }
+
     /**
      * The attributes that are mass assignable.
      */

@@ -19,6 +19,10 @@ class MarketingListParty extends Pivot
     protected $table = 't_MarketingListParties';
     protected $primaryKey = 'Id';
 
+    public static function getPrimaryKey(): string
+    {
+        return 'MarketingListPartiesId';
+    }
     /**
      * The attributes that are mass assignable.
      */
