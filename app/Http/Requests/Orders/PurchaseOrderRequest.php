@@ -23,29 +23,29 @@ class PurchaseOrderRequest extends FormRequest
     {
         return [
 
-            'supplier'      => ['required'],
-            'pODate'  => ['required'],
-            'priority'      => ['nullable'],
-            'refNo'     => ['nullable'],
-            'terms'         => ['nullable'],
+            'supplier' => ['required'],
+            'pODate' => ['required', 'date'],
+            'priority' => ['nullable'],
+            'refNo' => ['nullable'],
+            'terms' => ['nullable'],
 
+            'itemCode' => 'required|array|min:1',
+            // 'itemCode.*'  => 'required|integer|exists:items,id',
 
-            'itemCode'    => 'required|array|min:1',
-//            'itemCode.*'  => 'required|integer|exists:items,id',
-            'quantity'    => 'required|array',
-            'quantity.*'  => 'required|numeric|min:1',
-            'unitPrice'   => 'required|array',
-            'unitPrice.*' => 'required|numeric|min:0',
-            'tax'         => 'nullable|array',
-            'tax.*'       => 'nullable|numeric|min:0',
-            'discount'    => 'nullable|array',
-            'discount.*'  => 'nullable|numeric|min:0',
-            'lineTotal'   => 'required|array',
-            'lineTotal.*' => 'required|numeric|min:0',
+            'quantity' => 'required|array',
+            'quantity.*' => ['required', 'numeric', 'min:1'],
 
-//            'ItemId' =>    ['required','array'],
-//            'ItemId.*' =>    ['required','exists:items,id'],
+            'unitPrice' => 'required|array',
+            'unitPrice.*' => ['required', 'numeric', 'min:0'],
 
+            'tax' => 'nullable|array',
+            'tax.*' => ['nullable', 'numeric', 'min:0'],
+
+            'discount' => 'nullable|array',
+            'discount.*' => ['nullable', 'numeric', 'min:0'],
+
+            'lineTotal' => 'required|array',
+            'lineTotal.*' => ['required', 'numeric', 'min:0'],
         ];
     }
 }
