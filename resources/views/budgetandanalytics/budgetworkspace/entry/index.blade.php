@@ -9,19 +9,13 @@
         <a href="{{ route('entrybyproduct.create') }}" class="btn btn-success">➕ Add Entries</a>
     </div>
 
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
-    @if(session('error'))
-        <div class="alert alert-danger">{{ session('error') }}</div>
-    @endif
-
     <div class="table-responsive">
         <table class="table table-bordered table-hover align-middle">
             <thead class="table-light">
                 <tr>
                     <th>#</th>
                     <th>Scenario</th>
+                    <th>Currency</th>
                     <th>Product</th>
                     <th>Period</th>
                     <th>Volume</th>
@@ -31,30 +25,40 @@
                 </tr>
             </thead>
             <tbody>
-                @if($projections->count())
-                    @foreach($projections as $index => $projection)
-                        <tr>
-                            <td>{{ $loop->iteration }}</td>
-                            <td>{{ $projection->scenario->scenarioName ?? '—' }}</td>
-                            <td>{{ $projection->product->Name ?? '—' }}</td>
-                            <td>{{ $projection->period->fiscalYear ?? '—' }}</td>
-                            <td>{{ number_format($projection->Volume) }}</td>
-                            <td>{{ number_format($projection->Value, 2) }}</td>
-                            <td><span class="badge bg-warning">Pending</span></td>
-                            <td>
-                                <a href="#" class="btn btn-sm btn-outline-info">👁 View</a>
-                                <form action="#" method="POST" class="d-inline">
-                                    @csrf @method('DELETE')
-                                    <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this entry?')">🗑 Delete</button>
-                                </form>
-                            </td>
-                        </tr>
-                    @endforeach
-                @else
-                    <tr>
-                        <td colspan="8" class="text-center text-muted">No budget entries found.</td>
-                    </tr>
-                @endif
+                <tr>
+                    <td>1</td>
+                    <td>Base Case</td>
+                    <td>KES</td>
+                    <td>Product A</td>
+                    <td>2025</td>
+                    <td>1,000</td>
+                    <td>250,000.00</td>
+                    <td><span class="badge bg-warning">Pending</span></td>
+                    <td>
+                        <a href="#" class="btn btn-sm btn-outline-info">👁 View</a>
+                        <form action="#" method="POST" class="d-inline">
+                            @csrf @method('DELETE')
+                            <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this entry?')">🗑 Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>Optimistic</td>
+                    <td>USD</td>
+                    <td>Product B</td>
+                    <td>2026</td>
+                    <td>2,500</td>
+                    <td>1,200,000.00</td>
+                    <td><span class="badge bg-success">Approved</span></td>
+                    <td>
+                        <a href="#" class="btn btn-sm btn-outline-info">👁 View</a>
+                        <form action="#" method="POST" class="d-inline">
+                            @csrf @method('DELETE')
+                            <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this entry?')">🗑 Delete</button>
+                        </form>
+                    </td>
+                </tr>
             </tbody>
         </table>
     </div>

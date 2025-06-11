@@ -51,14 +51,23 @@
             </div>
         </div>
 
+         <div class="mt-3">
+                <label for="period" class="form-label">Period</label>
+                <select class="form-select" name="PeriodID" required>
+                    <option disabled selected>-- Select Period --</option>
+                        @foreach($periods as $period)
+                             <option value="{{ $period->Id }}">{{ $period->fiscalYear }}</option>
+                        @endforeach
+                </select>
+            </div>        
+
         <div class="table-responsive">
             <table class="table table-bordered table-hover align-middle">
                 <thead class="table-light">
                     <tr>
                         <th>Product</th>
-                        <th>Period</th>
                         <th>Volume</th>
-                        <th>Projected Value (KES)</th>
+                        <th>Projected Value</th>
                     </tr>
                 </thead>
                 <tbody id="BudgetProducts">
@@ -67,13 +76,6 @@
                             <select class="form-select" name="Products[0][ProductID]" required>
                                 @foreach($products as $product)
                                     <option value="{{ $product->Id }}">{{ $product->Name }}</option>
-                                @endforeach
-                            </select>
-                        </td>
-                        <td>
-                            <select class="form-select" name="Products[0][PeriodID]" required>
-                                @foreach($periods as $period)
-                                    <option value="{{ $period->Id }}">{{ $period->fiscalYear }}</option>
                                 @endforeach
                             </select>
                         </td>
@@ -97,7 +99,6 @@
 
 <script>
     const products = @json($products);
-    const periods = @json($periods);
 
     document.addEventListener('DOMContentLoaded', function () {
         let rowCount = 1;
@@ -107,7 +108,6 @@
         }
 
         const productOptions = createOptions(products, 'Id', 'Name');
-        const periodOptions = createOptions(periods, 'Id', 'fiscalYear');
 
         document.getElementById('addRow').addEventListener('click', function () {
             const newRow = document.createElement('tr');
@@ -115,11 +115,6 @@
                 <td>
                     <select class="form-select" name="Products[${rowCount}][ProductID]" required>
                         ${productOptions}
-                    </select>
-                </td>
-                <td>
-                    <select class="form-select" name="Products[${rowCount}][PeriodID]" required>
-                        ${periodOptions}
                     </select>
                 </td>
                 <td>

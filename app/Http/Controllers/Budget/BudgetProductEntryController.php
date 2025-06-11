@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Budget;
 
 use App\Http\Controllers\Controller;
 use App\Models\Budget\BudgetDriverProjections;
+use App\Models\Budget\BudgetDriverProjectionsData;
 use App\Models\Budget\BudgetPeriods;
 use App\Models\Budget\BudgetProductType;
 use App\Models\Budget\BudgetScenarioPlanning;
@@ -44,9 +45,9 @@ class BudgetProductEntryController extends Controller
         $validated = $request->validate([
             'ScenarioID' => 'required|exists:t_BudgetScenarioPlanning,Id',
             'CurrencyID' => 'required|exists:t_Currencies,Id',
+            'PeriodID'  => 'required|exists:t_BudgetPeriods,Id',
             'Products'   => 'required|array|min:1',
             'Products.*.ProductID' => 'required|exists:t_BudgetProductTypes,Id',
-            'Products.*.PeriodID'  => 'required|exists:t_BudgetPeriods,Id',
             'Products.*.Volume'    => 'required|integer|min:0',
             'Products.*.Value'     => 'required|numeric|min:0',
         ]);
@@ -56,33 +57,24 @@ class BudgetProductEntryController extends Controller
         try {
             $ScenarioId = $validated['ScenarioID'];
             $CurrencyId = $validated['CurrencyID'];
-            //$periodID=
+            $PeriodId   = $validated['PeriodID'];
 
             //Store T1
-            //$t1=T1::create([
-              //  $ScenarioId = $validated['ScenarioID'];
-                //$CurrencyId = $validated['CurrencyID'];
-                //$periodID=
-           // ]);
+            $projection =BudgetDriverProjections::create([
+                'ScenarioID' => $ScenarioId,
+                'CurrencyID' => $CurrencyId,
+                'PeriodID' => $PeriodId,
+                'CreatedBy'  => Auth::id(),
+                'ModifiedBy'  => Auth::id(),
+            ]);
 
 
 
             foreach ($validated['Products'] as $product) {
                 //Store t2
-                //$t2=T2::create([
-                 //   'T1ID'=>$t1->Id,
-                   // 'ProductID'  => $product['ProductID'],
-                   // 'Volume'     => $product['Volume'],
-                    //'Value'      => $product['Value'], // fixed casing
-                    //'CreatedBy'  => Auth::id(),
-                    //'ModifiedBy'  => Auth::id(),
-               // ])
-
-                $projection=BudgetDriverProjections::create([
-                    'ScenarioID' => $ScenarioId,
-                    'CurrencyID' => $CurrencyId,
+                $projectiondata=BudgetDriverProjectionsData::create([
+                    'BudgetDriverProjectionsID'=>$projection->Id,
                     'ProductID'  => $product['ProductID'],
-                    'PeriodID'   => $product['PeriodID'],
                     'Volume'     => $product['Volume'],
                     'Value'      => $product['Value'], // fixed casing
                     'CreatedBy'  => Auth::id(),
