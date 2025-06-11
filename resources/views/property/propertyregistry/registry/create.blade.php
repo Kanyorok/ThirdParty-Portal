@@ -27,7 +27,7 @@
           <input type="text" class="form-control" name="PropertyCode">
         </div>
         <div class="col-md-4">
-          <label for="Category"class="form-label">ProprtyCategory</label>
+          <label for="Category"class="form-label">Property Category</label>
             <select name="Category" id="category-select" class="form-select" required>
                 <option value="">-- Select a category --</option>
                 @foreach ($lineentries as $category)
@@ -85,6 +85,7 @@
         <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
             💾 Save Property
         </button>
+        <a href="{{ route('PropertyRegistry.index') }}" class="btn btn-secondary">Cancel</a>
         </form>
     </div>
   </div>
