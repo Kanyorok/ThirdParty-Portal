@@ -180,7 +180,11 @@
     function populateSubcategories(categorySelect, subcategorySelect, selectedSubcat = null, callback = null) {
         const categoryId = categorySelect.value;
         subcategorySelect.innerHTML = '<option value="">-- Select Subcategory --</option>';
-        if (!categoryId) return callback?.();
+        subcategorySelect.disabled = false; // Enable subcategory select
+        if (!categoryId) {
+            subcategorySelect.disabled = true; // Disable if no category selected
+            return callback?.();
+        }
 
         fetch(`/inventory/get-subcategories?category_id=${categoryId}`)
             .then(response => response.json())
@@ -191,32 +195,60 @@
                     subcategorySelect.add(option);
                 });
                 callback?.();
+            })
+            .catch(error => {
+                console.error('Error fetching subcategories:', error);
+                subcategorySelect.disabled = true; // Disable on error
             });
     }
 
-    function populateItems(subcategorySelect, itemSelect, selectedItem = null) {
-        const subcatId = subcategorySelect.value;
-        itemSelect.innerHTML = '<option value="">-- Select Item --</option>';
-        if (!subcatId) return;
+    function populateItems(entry, selectedItem = null) {
+        const categorySelect = entry.querySelector('.category-select');
+        const subcategorySelect = entry.querySelector('.subcategory-select');
+        const itemSelect = entry.querySelector('.item-select');
 
-        fetch(`/inventory/get-items?subcategory_id=${subcatId}`)
+        const categoryId = categorySelect.value;
+        const subcategoryId = subcategorySelect.value;
+
+        itemSelect.innerHTML = '<option value="">-- Select Item --</option>';
+        itemSelect.disabled = false; // Enable item select
+
+        let fetchUrl = '';
+        if (subcategoryId) {
+            fetchUrl = `/inventory/get-items?subcategory_id=${subcategoryId}`;
+        } else if (categoryId) {
+            fetchUrl = `/inventory/get-items?category_id=${categoryId}`;
+        } else {
+            itemSelect.disabled = true; // Disable if no category/subcategory selected
+            return;
+        }
+
+        fetch(fetchUrl)
             .then(response => response.json())
             .then(data => {
                 const currentItem = selectedItem || itemSelect.getAttribute('data-initial');
                 const hasCurrent = data.some(item => item.Id == currentItem);
+
                 data.forEach(item => {
                     const option = new Option(item.ItemName, item.Id);
                     if (item.Id == currentItem) option.selected = true;
                     itemSelect.add(option);
                 });
+
                 if (currentItem && !hasCurrent) {
+                    // If the initial item is not in the fetched list (e.g., due to category change),
+                    // add it as a selected option.
                     const option = new Option('[Original Item]', currentItem, true, true);
                     itemSelect.add(option);
                 }
+            })
+            .catch(error => {
+                console.error('Error fetching items:', error);
+                itemSelect.disabled = true; // Disable on error
             });
     }
-   
-    function fetchItemCode(itemId, entry) {
+
+    function fetchItemCodeAndUOM(itemId, entry) {
         if (!itemId) {
             entry.querySelector('.item-code').value = '';
             entry.querySelector('.uom').value = '';
@@ -226,8 +258,14 @@
         fetch(`/inventory/items/code/${itemId}`)
             .then(response => response.json())
             .then(data => {
-                entry.querySelector('.item-code').value = data.ItemCode || '';
-                entry.querySelector('.uom').value = data.UOM || '';
+                // Corrected property names
+                entry.querySelector('.item-code').value = data.item_code ?? 'N/A';
+                entry.querySelector('.uom').value = data.item_uom ?? 'N/A';
+            })
+            .catch(error => {
+                console.error('Error fetching item data:', error);
+                entry.querySelector('.item-code').value = 'Error';
+                entry.querySelector('.uom').value = 'Error';
             });
     }
 
@@ -236,52 +274,81 @@
             const categorySelect = entry.querySelector('.category-select');
             const subcategorySelect = entry.querySelector('.subcategory-select');
             const itemSelect = entry.querySelector('.item-select');
+
             const selectedCategory = categorySelect.value;
             const selectedSubcategory = subcategorySelect.getAttribute('data-initial');
             const selectedItem = itemSelect.getAttribute('data-initial');
 
+            // Populate subcategories and then items on load for each existing entry
             if (selectedCategory) {
                 populateSubcategories(categorySelect, subcategorySelect, selectedSubcategory, () => {
-                    if (selectedSubcategory) {
-                        populateItems(subcategorySelect, itemSelect, selectedItem);
-                    }
+                    populateItems(entry, selectedItem);
                 });
+            } else {
+                // If no parent category is selected, disable subcategory and item selects
+                subcategorySelect.disabled = true;
+                itemSelect.disabled = true;
+            }
+
+            // Also fetch Item Code and UOM for initially selected items
+            if (selectedItem) {
+                fetchItemCodeAndUOM(selectedItem, entry);
             }
         });
 
         document.getElementById('addItemBtn').addEventListener('click', () => {
             const template = document.getElementById('itemTemplate');
             const clone = template.content.cloneNode(true);
-            clone.querySelectorAll('[name]').forEach(el => {
+            const newEntry = clone.firstElementChild; // Get the .item-entry div
+
+            // Replace __INDEX__ in all names
+            newEntry.querySelectorAll('[name]').forEach(el => {
                 el.name = el.name.replace('__INDEX__', itemCounter);
             });
-            clone.querySelector('.remove-item-btn').addEventListener('click', function () {
+
+            // Add event listener for remove button
+            newEntry.querySelector('.remove-item-btn').addEventListener('click', function () {
                 this.closest('.item-entry').remove();
             });
-            document.getElementById('itemsContainer').appendChild(clone);
+
+            // Disable subcategory and item dropdowns for newly added rows initially
+            newEntry.querySelector('.subcategory-select').disabled = true;
+            newEntry.querySelector('.item-select').disabled = true;
+            newEntry.querySelector('.item-code').value = '';
+            newEntry.querySelector('.uom').value = '';
+
+
+            document.getElementById('itemsContainer').appendChild(newEntry);
             itemCounter++;
         });
 
+        // Event delegation for dynamically added elements
         document.addEventListener('change', function (e) {
             const entry = e.target.closest('.item-entry');
-            if (!entry) return;
+            if (!entry) return; // Not an event from an item entry
 
             if (e.target.classList.contains('category-select')) {
-                populateSubcategories(e.target, entry.querySelector('.subcategory-select'), null, () => {
-                    entry.querySelector('.item-select').innerHTML = '<option value="">-- Select Item --</option>';
+                const subcategorySelect = entry.querySelector('.subcategory-select');
+                const itemSelect = entry.querySelector('.item-select');
+                populateSubcategories(e.target, subcategorySelect, null, () => {
+                    itemSelect.innerHTML = '<option value="">-- Select Item --</option>';
+                    itemSelect.disabled = true; // Disable items until subcategory or category is selected
                     entry.querySelector('.item-code').value = '';
                     entry.querySelector('.uom').value = '';
                 });
+                // After category changes, repopulate items directly if no subcategory is chosen
+                populateItems(entry); // This will load items based on the category if no subcategory is selected
             }
 
             if (e.target.classList.contains('subcategory-select')) {
-                populateItems(e.target, entry.querySelector('.item-select'));
+                const itemSelect = entry.querySelector('.item-select');
+                populateItems(entry); // Pass the entire entry to populateItems
                 entry.querySelector('.item-code').value = '';
                 entry.querySelector('.uom').value = '';
             }
 
             if (e.target.classList.contains('item-select')) {
-                fetchItemCode(e.target.value, entry);
+                fetchItemCodeAndUOM(e.target.value, entry);
             }
         });
     });
