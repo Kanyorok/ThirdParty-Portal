@@ -4,7 +4,8 @@
 <div class="container">
     <h2>Edit Transfer - {{ $transferitem->TransferID }}</h2>
 
-    <form method="POST" action="{{ route('transactionstransfers.update', '$transferitem->Id') }}">
+    {{-- Fix for the action URL: Use $transferitem->Id directly without quotes --}}
+    <form method="POST" action="{{ route('transactionstransfers.update', $transferitem->Id) }}">
         @csrf
         @method('PUT')
 
@@ -13,18 +14,19 @@
             <input type="date" name="TransferDate" class="form-control" value="{{ old('TransferDate', $transferitem->TransferDate) }}">
         </div>
 
-         <div class="mb-3">
+        <div class="mb-3">
             <label for="transferredBy" class="form-label">Transferred By</label>
-            <input type="text" name="transferredBy" class="form-control" value="{{ old('TransferredBy', $transferitem->TransferredBy) }}">
+            <input type="text" name="TransferredBy" class="form-control" value="{{ old('TransferredBy', $transferitem->TransferredBy) }}">
         </div>
 
-         <h5 class="mb-3">Transferred Items</h5>
+        <h5 class="mb-3">Transferred Items</h5>
         <div class="table-responsive">
             <table class="table table-bordered align-middle">
                 <thead class="table-light">
                     <tr>
                         <th>#</th>
                         <th>Item</th>
+                        <th>Item Code</th> {{-- New: Added Item Code column --}}
                         <th>Approved Qty</th>
                         <th>Dispatched Qty</th>
                         <th>UOM</th>
@@ -36,21 +38,27 @@
                         <tr>
                             <td>{{ $index + 1 }}</td>
                             <td>
+                                {{-- Display Item Name --}}
                                 <input type="hidden" name="items[{{ $index }}][item]" value="{{ $item->Item }}">
                                 <input type="text" class="form-control" value="{{ $item->item->ItemName ?? 'N/A' }}" readonly>
                             </td>
                             <td>
-                                <input type="number" name="items[{{ $index }}][approved_qty]" class="form-control" value="{{ old("items.$index.approved_qty", $item->ApprovedQty) }}" required>
+                                {{-- Display Item Code --}}
+                                <input type="text" class="form-control" value="{{ $item->item->ItemCode ?? 'N/A' }}" readonly>
                             </td>
                             <td>
-                                <input type="number" name="items[{{ $index }}][dispatched_qty]" class="form-control" value="{{ old("items.$index.dispatched_qty", $item->DispatchedQty) }}" required>
+                                <input type="number" name="items[{{ $index }}][ApprovedQty]" class="form-control" value="{{ old("items.$index.ApprovedQty", $item->ApprovedQty) }}" required>
                             </td>
                             <td>
-                                <input type="hidden" name="items[{{ $index }}][uom_id]" value="{{ $item->UOM }}">
+                                <input type="number" name="items[{{ $index }}][DispatchedQty]" class="form-control" value="{{ old("items.$index.DispatchedQty", $item->DispatchedQty) }}" required>
+                            </td>
+                            <td>
+                                {{-- Display UOM Code --}}
+                                <input type="hidden" name="items[{{ $index }}][UOM]" value="{{ $item->UOM }}">
                                 <input type="text" class="form-control" value="{{ $item->uom->Code ?? 'N/A' }}" readonly>
                             </td>
                             <td>
-                                <input type="text" name="items[{{ $index }}][remarks]" class="form-control" value="{{ old("items.$index.remarks", $item->Remarks) }}">
+                                <input type="text" name="items[{{ $index }}][Remarks]" class="form-control" value="{{ old("items.$index.Remarks", $item->Remarks) }}">
                             </td>
                         </tr>
                     @endforeach

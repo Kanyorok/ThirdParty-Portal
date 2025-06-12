@@ -1,5 +1,7 @@
 @extends('layouts.app')
+
 @section('title', 'Create Transfer')
+
 @section('content')
 @if($errors->any())
     <div class="alert alert-danger">
@@ -15,9 +17,7 @@
 @endif
 <div class="container bg-white shadow rounded p-4">
     <h4 class="mb-4">Select a Requisition to Transfer</h4>
-    <!-- Requisition select triggers page reload -->
 
-    
     <form method="GET" action="{{ route('transactionstransfers.create') }}" class="mb-3">
         <div class="row">
             <div class="col-md-4">
@@ -36,8 +36,8 @@
 
     <form method="POST" action="{{ route('transactionstransfers.store') }}" id="transferForm">
         @csrf
-            @if(isset($requisition))
-            <div class="row mb-3">
+        @if(isset($requisition))
+        <div class="row mb-3">
             <div class="col-md-4">
                 <label for="transferDate" class="form-label">Transfer Date</label>
                 <input type="date" class="form-control" id="transferDate" name="TransferDate" required>
@@ -52,17 +52,14 @@
                 <input type="text" class="form-control" id="toBranch" value="{{ $requisition->toBranch->Name ?? '' }}" readonly>
                 <input type="hidden" name="ToBranch" value="{{ $requisition->ToBranch }}">
             </div>
-            
-             <div class="col-md-4">
-              <label for="transferredBy" class="form-label"> TransferredBy</label>
-             <input type="text" class="form-control" id="transferredBy" name="TransferredBy">
 
+            <div class="col-md-4">
+                <label for="transferredBy" class="form-label">Transferred By</label>
+                <input type="text" class="form-control" id="transferredBy" name="TransferredBy" value="{{ old('TransferredBy', Auth::user()->name ?? '') }}"> {{-- Pre-fill with current user's name --}}
             </div>
             <input type="hidden" name="RequisitionId" value="{{ $requisition->Id }}">
-            @endif
         </div>
 
-        @if(isset($requisition))
         <div id="itemsSection">
             <div class="mb-3">
                 <h5>Requisition Items</h5>
@@ -71,6 +68,7 @@
                         <tr>
                             <th>#</th>
                             <th>Item Name</th>
+                            <th>Item Code</th> {{-- New: Added Item Code column --}}
                             <th>Approved Qty</th>
                             <th>Dispatched Qty</th>
                             <th>UOM</th>
@@ -85,27 +83,29 @@
                                 {{ $item->item->ItemName ?? 'N/A' }}
                                 <input type="hidden" name="items[{{ $index }}][item]" value="{{ $item->Item }}">
                             </td>
-                              
+                            <td>
+                                {{-- Display Item Code (assuming it's loaded with item relation) --}}
+                                {{ $item->item->ItemCode ?? 'N/A' }}
+                            </td>
                             <td>
                                 <input type="number" class="form-control" name="items[{{ $index }}][approved_qty]" value="{{ $item->ApprovedQty }}" min="1" readonly>
                             </td>
                             <td>
-                              <input type="number" class="form-control" name="items[{{ $index }}][dispatched_qty]" value="{{ $item->DispatchedQty }}"  min="0" required>
-
+                                <input type="number" class="form-control" name="items[{{ $index }}][dispatched_qty]" value="{{ old('items.'.$index.'.dispatched_qty', $item->ApprovedQty) }}" min="0" max="{{ $item->ApprovedQty }}" required> {{-- Default to approved qty, cap at approved qty --}}
                             </td>
                             <td>
                                 {{ $item->uom->Code ?? '' }}
-                                <input type="hidden" name="items[{{ $index }}][uom_id]" value="{{ $item->UOM }}">
+                                <input type="hidden" name="items[{{ $index }}][uom]" value="{{ $item->UOM }}">
                             </td>
-                            
+
                             <td>
-                                <input type="text" class="form-control" name="items[{{ $index }}][remarks]" value="{{ $item->Remarks ?? '' }}" maxlength="255">
+                                <input type="text" class="form-control" name="items[{{ $index }}][remarks]" value="{{ old('items.'.$index.'.remarks', $item->Remarks ?? '') }}" maxlength="255">
                             </td>
                         </tr>
                         @endforeach
                         @if(count($requisition->items) == 0)
                         <tr>
-                            <td colspan="5" class="text-center">No items found for this requisition.</td>
+                            <td colspan="7" class="text-center">No items found for this requisition.</td> {{-- Adjusted colspan --}}
                         </tr>
                         @endif
                     </tbody>
@@ -114,10 +114,10 @@
         </div>
         @endif
         @if(isset($requisition))
-    <button type="submit" class="btn btn-primary" id="submitBtn">✅ Submit Transfer</button>
-@else
-    <button type="submit" class="btn btn-primary d-none" id="submitBtn" disabled>✅ Submit Transfer</button>
-@endif
+        <button type="submit" class="btn btn-primary" id="submitBtn">✅ Submit Transfer</button>
+        @else
+        <button type="submit" class="btn btn-primary d-none" id="submitBtn" disabled>✅ Submit Transfer</button>
+        @endif
     </form>
 </div>
 @endsection

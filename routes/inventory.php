@@ -115,6 +115,7 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::put('/transactionstransfers/{Id}', [TransactionTransfersController::class, 'update'])->name('transactionstransfers.update');
     Route::delete('/transactionstransfers/{Id}', [TransactionTransfersController::class, 'destroy'])->name('transactionstransfers.destroy');
     Route::get('/interbranchrequisition/{id}', [TransactionTransfersController::class, 'getRequisitionDetails']);
+    
     Route::resource('transactionsreceipts', TransactionReceiptsController::class);
     Route::resource('stockissue', StockIssueController::class);
     Route::resource('transactionsapproval', TransactionApprovalController::class);
