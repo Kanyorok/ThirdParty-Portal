@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Create Tranfer')
+@section('title', 'Stock Adjustments list')
 @section('content')
 <body class="bg-light p-4">
 

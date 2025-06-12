@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Create Tranfer')
+@section('title', 'Stock Adjustment')
 @section('content')
 <div class="container bg-white shadow rounded p-4">
     <h4 class="mb-4">🛠️ Stock Adjustment Form</h4>

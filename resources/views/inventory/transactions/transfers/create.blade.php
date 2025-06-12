@@ -1,75 +1,60 @@
 @extends('layouts.app')
 @section('title', 'Create Tranfer')
 @section('content')
-<div class="container bg-white shadow rounded p-4">
-    <h4 class="mb-4">🔁 Stock Transfer Form</h4>
-
+<div class="card mb-4">
+  <div class="card-header bg-warning text-dark">🚚 Dispatch Stock Transfer</div>
+  <div class="card-body">
     <form>
       <div class="row mb-3">
-        <div class="col-md-4">
-          <label for="transferDate" class="form-label">Transfer Date</label>
-          <input type="date" class="form-control" id="transferDate" required>
-        </div>
-        <div class="col-md-4">
-          <label for="fromStore" class="form-label">From Store</label>
-          <select class="form-select" id="fromStore" required>
-            <option selected disabled>Select Source Store</option>
-            <option>Central Warehouse</option>
-            <option>Branch A</option>
-            <option>Branch B</option>
+        <div class="col">
+          <label class="form-label">Requisition Ref</label>
+          <select class="form-select">
+            <option>Select Requisition</option>
           </select>
         </div>
-        <div class="col-md-4">
-          <label for="toStore" class="form-label">To Store</label>
-          <select class="form-select" id="toStore" required>
-            <option selected disabled>Select Destination Store</option>
-            <option>Branch A</option>
-            <option>Branch B</option>
-            <option>Central Warehouse</option>
-          </select>
+        <div class="col">
+          <label class="form-label">From Branch</label>
+          <input type="text" class="form-control" readonly value="Warehouse A" />
+        </div>
+        <div class="col">
+          <label class="form-label">To Branch</label>
+          <input type="text" class="form-control" readonly value="Branch X" />
         </div>
       </div>
 
-      <div class="table-responsive mb-3">
-        <table class="table table-bordered align-middle">
+      <div class="mb-3">
+        <label class="form-label">Dispatch Date</label>
+        <input type="date" class="form-control" />
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Items to Transfer</label>
+        <table class="table table-bordered">
           <thead class="table-light">
             <tr>
-              <th>#</th>
-              <th>Item Code</th>
-              <th>Item Name</th>
-              <th>Quantity</th>
-              <th>UOM</th>
-              <th>Remarks</th>
+              <th>Product</th>
+              <th>Qty Dispatched</th>
+              <th>Batch No</th>
+              <th>Expiry Date</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td>1</td>
-              <td><input type="text" class="form-control" placeholder="ITM-001"></td>
-              <td><input type="text" class="form-control" placeholder="Item Name"></td>
-              <td><input type="number" class="form-control" placeholder="0"></td>
-              <td>
-                <select class="form-select">
-                  <option>pcs</option>
-                  <option>kg</option>
-                  <option>litres</option>
-                </select>
-              </td>
-              <td><input type="text" class="form-control" placeholder="Optional"></td>
+              <td><input class="form-control" /></td>
+              <td><input class="form-control" /></td>
+              <td><input class="form-control" /></td>
+              <td><input type="date" class="form-control" /></td>
+              <td><button class="btn btn-danger btn-sm">Remove</button></td>
             </tr>
-            <!-- Add JS to dynamically insert more rows -->
           </tbody>
         </table>
+        <button class="btn btn-secondary btn-sm">➕ Add Item</button>
       </div>
 
-      <div class="mb-3">
-        <label for="transferredBy" class="form-label">Transferred By</label>
-        <input type="text" class="form-control" id="transferredBy" placeholder="e.g. Daniel Mbugua" required>
-      </div>
-
-      <button type="submit" class="btn btn-primary">✅ Submit Transfer</button>
+      <button class="btn btn-success">Dispatch Stock</button>
     </form>
   </div>
+</div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 @endSection

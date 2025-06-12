@@ -16,6 +16,8 @@ use App\Http\Controllers\Inventory\StockTakeController;
 use App\Http\Controllers\Inventory\StockValuationHistoryController;
 use App\Http\Controllers\Inventory\TransactionAdjustmentController;
 use App\Http\Controllers\Inventory\TransactionReceiptsController;
+use App\Http\Controllers\Inventory\StockIssueController;
+use App\Http\Controllers\Inventory\TransactionApprovalController;
 use App\Http\Controllers\Inventory\TransactionTransfersController;
 use App\Http\Controllers\Inventory\UOMConversionController;
 use App\Http\Controllers\Inventory\InventoryTypeController;
@@ -35,8 +37,10 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/itemmaster', [ItemMasterListController::class, 'index'])->name('itemmaster.index');
 
     Route::resource('transactionsreceipts', TransactionReceiptsController::class);
+    Route::resource('stockissue', StockIssueController::class);
     Route::resource('transactionstransfers', TransactionTransfersController::class);
     Route::resource('transactionsadjustment', TransactionAdjustmentController::class);
+    Route::resource('transactionsapproval', TransactionApprovalController::class);
 
     //Route::resource('itemmaster', ItemMasterController::class);
     Route::get('/itemmaster', [ItemMasterListController::class, 'index'])->name('itemmaster.index');
