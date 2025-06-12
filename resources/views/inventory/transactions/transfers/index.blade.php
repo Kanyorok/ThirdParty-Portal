@@ -7,13 +7,9 @@
         <a href="{{ route('transactionstransfers.create') }}" class="btn btn-success">➕ New Transfer</a>
     </div>
 
-    <div class="mb-3">
-        <input type="text" class="form-control" placeholder="🔍 Search by Store, Date or Transfer ID" id="searchInput">
-    </div>
-
     <div class="table-responsive">
-        <table class="table table-bordered table-hover align-middle" id="transfersTable">
-            <thead class="table-light">
+         <table id="transfersTable" class="table table-bordered table-striped align-middle">
+        <thead class="table-light">
                 <tr>
                     <th>#</th>
                     <th>Transfer ID</th>
@@ -49,8 +45,13 @@
                             @endif
                         </td>
                         <td>
-                            <a href="{{ route('transactionstransfers.show', $transfer->Id) }}" class="btn btn-sm btn-primary">🔍 View</a>
-                            <a href="{{ route('transactionstransfers.edit', $transfer->Id) }}" class="btn btn-sm btn-secondary">✏️ Edit</a>
+                            <a href="{{ route('transactionstransfers.show', $transfer->Id) }}" class="btn btn-sm btn-primary">View</a>
+                            <a href="{{ route('transactionstransfers.edit', $transfer->Id) }}" class="btn btn-sm btn-warning">Edit</a>
+                            <form action="{{ route('transactionstransfers.destroy', $transfer->Id) }}" method="POST" style="display:inline;">
+                  @csrf
+                  @method('DELETE')
+                  <button class="btn btn-sm btn-danger" onclick="return confirm('Delete this transfer?')">Delete</button>
+                </form>
                         </td>
                     </tr>
                 @empty
@@ -62,15 +63,15 @@
         </table>
     </div>
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script>
-    document.getElementById('searchInput').addEventListener('keyup', function() {
-        let val = this.value.toLowerCase();
-        let rows = document.querySelectorAll('#transfersTable tbody tr');
-        rows.forEach(row => {
-            let text = row.textContent.toLowerCase();
-            row.style.display = text.includes(val) ? '' : 'none';
+    $(document).ready(function () {
+        $('#transfersTable').DataTable({
+            pageLength: 10,
+            ordering: true,
+            searching: true,
+            lengthChange: true
         });
     });
 </script>

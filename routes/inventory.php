@@ -36,17 +36,7 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
 
     Route::resource('transactionsreceipts', TransactionReceiptsController::class);
 
-    //Route::resource('transactionstransfers', TransactionTransfersController::class);
-    Route::get('/transactionstransfers', [TransactionTransfersController::class, 'index'])->name('transactionstransfers.index');
-    Route::get('/transactionstransfers/create', [TransactionTransfersController::class, 'create'])->name('transactionstransfers.create');
-    Route::post('/transactionstransfers', [TransactionTransfersController::class, 'store'])->name('transactionstransfers.store');
-    Route::get('/transactionstransfers/{Id}', [TransactionTransfersController::class, 'show'])->name('transactionstransfers.show');
-    Route::get('/transactionstransfers/{Id}/edit', [TransactionTransfersController::class, 'edit'])->name('transactionstransfers.edit');
-    Route::put('/transactionstransfers/{Id}', [TransactionTransfersController::class, 'update'])->name('transactionstransfers.update');
-    Route::delete('/transactionstransfers/{Id}', [TransactionTransfersController::class, 'destroy'])->name('transactionstransfers.destroy');
 
-Route::get('/interbranchrequisition/{id}', [TransactionTransfersController::class, 'getRequisitionDetails']);
-    Route::resource('transactionsadjustment', TransactionAdjustmentController::class);
 
     //Route::resource('itemmaster', ItemMasterController::class);
     Route::get('/itemmaster', [ItemMasterListController::class, 'index'])->name('itemmaster.index');
@@ -115,11 +105,20 @@ Route::get('/interbranchrequisition/{id}', [TransactionTransfersController::clas
     Route::put('/interbranchrequisition/{Id}', [InterBranchRequisitionController::class, 'update'])->name('interbranchrequisition.update');
     Route::delete('/interbranchrequisition/{Id}', [InterBranchRequisitionController::class, 'destroy'])->name('interbranchrequisition.destroy');
     Route::get('/interbranchrequisition/get-items', [InterBranchRequisitionController::class, 'getItemsByCategoryOrSubcategory'])->name('interbranchrequisition.getItemsByCategoryOrSubcategory');
-
-
     Route::get('/inventory/get-subcategories', [InterBranchRequisitionController::class, 'getSubcategories'])->name('inventory.getSubcategories');
 
+        //Route::resource('transactionstransfers', TransactionTransfersController::class);
+    Route::get('/transactionstransfers', [TransactionTransfersController::class, 'index'])->name('transactionstransfers.index');
+    Route::get('/transactionstransfers/create', [TransactionTransfersController::class, 'create'])->name('transactionstransfers.create');
+    Route::post('/transactionstransfers', [TransactionTransfersController::class, 'store'])->name('transactionstransfers.store');
+    Route::get('/transactionstransfers/{Id}', [TransactionTransfersController::class, 'show'])->name('transactionstransfers.show');
+    Route::get('/transactionstransfers/{Id}/edit', [TransactionTransfersController::class, 'edit'])->name('transactionstransfers.edit');
+    Route::put('/transactionstransfers/{Id}', [TransactionTransfersController::class, 'update'])->name('transactionstransfers.update');
+    Route::delete('/transactionstransfers/{Id}', [TransactionTransfersController::class, 'destroy'])->name('transactionstransfers.destroy');
+    Route::get('/interbranchrequisition/{id}', [TransactionTransfersController::class, 'getRequisitionDetails']);
     
+    Route::resource('transactionsadjustment', TransactionAdjustmentController::class);
+
     //Route::resource('interbranchrequisitionapproval', InterBranchRequisitionApprovalController::class);
     Route::get('/interbranchrequisitionapproval', [InterBranchRequisitionApprovalController::class, 'index'])->name('interbranchrequisitionapproval.index');
 Route::post('interbranchrequisitionapproval/submit', [InterBranchRequisitionApprovalController::class, 'submitDecision'])->name('interbranchrequisitionapproval.submit');    //Route::resource('rentdashboard', RentDashboardController::class);

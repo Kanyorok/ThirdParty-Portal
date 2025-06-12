@@ -41,10 +41,12 @@ class TransactionTransferService
 public function createTransferItems(TransactionTransfer $transfer, array $items): void
 {
     foreach ($items as $item) {
+        
         TransactionTransferItem::create([
             'TransferId'   => $transfer->Id,
             'Item'         => $item['item'],          
             'ApprovedQty'  => $item['approved_qty'],
+            'DispatchedQty' => $item['dispatched_qty'],
             'UOM'          => $item['uom_id'],
             'Remarks'      => $item['remarks'] ?? null,
             'CreatedBy'    => Auth::id(),
@@ -85,22 +87,23 @@ public function createTransferItems(TransactionTransfer $transfer, array $items)
 
         return $transfer;
     }
+public function delete(TransactionTransfer $transfer): bool
+{
+    $transfer->DeletedBy = Auth::id();
+    $transfer->save();
+    $transfer->items()->delete();
+    $transfer->delete();
 
-    public function delete(TransactionTransfer $transfer): bool
-    {
-        $transfer->DeletedBy = Auth::id();
-        $transfer->save();
-        $transfer->delete();
+    activity()
+        ->performedOn($transfer)
+        ->causedBy(Auth::user())
+        ->log('Deleted Transaction Transfer');
 
-        $transfer->items()->delete();
+    return true;
+}
 
-        activity()
-            ->performedOn($transfer)
-            ->causedBy(Auth::user())
-            ->log('Deleted Transaction Transfer');
 
-        return true;
-    }
+    
 
     protected function generateTransferId(TransactionTransfer $transfer): string
     {

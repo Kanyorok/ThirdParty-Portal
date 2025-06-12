@@ -72,6 +72,7 @@
                             <th>#</th>
                             <th>Item Name</th>
                             <th>Approved Qty</th>
+                            <th>Dispatched Qty</th>
                             <th>UOM</th>
                             <th>Remarks</th>
                         </tr>
@@ -84,13 +85,19 @@
                                 {{ $item->item->ItemName ?? 'N/A' }}
                                 <input type="hidden" name="items[{{ $index }}][item]" value="{{ $item->Item }}">
                             </td>
+                              
                             <td>
-                                <input type="number" class="form-control" name="items[{{ $index }}][approved_qty]" value="{{ $item->ApprovedQty }}" min="1" required>
+                                <input type="number" class="form-control" name="items[{{ $index }}][approved_qty]" value="{{ $item->ApprovedQty }}" min="1" readonly>
+                            </td>
+                            <td>
+                              <input type="number" class="form-control" name="items[{{ $index }}][dispatched_qty]" value="{{ $item->DispatchedQty }}"  min="0" required>
+
                             </td>
                             <td>
                                 {{ $item->uom->Code ?? '' }}
                                 <input type="hidden" name="items[{{ $index }}][uom_id]" value="{{ $item->UOM }}">
                             </td>
+                            
                             <td>
                                 <input type="text" class="form-control" name="items[{{ $index }}][remarks]" value="{{ $item->Remarks ?? '' }}" maxlength="255">
                             </td>

@@ -30,7 +30,7 @@ class TransactionTransfersController extends Controller
 
     public function create(Request $request)
     {
-        $approvedRequisitions = InterBranchRequisition::where('Status', 'Approved')->get();
+        $approvedRequisitions = InterBranchRequisition::where('Status', 'Ap')->get();
         $requisition = null;
 
         if ($request->has('requisition_id')) {
@@ -53,9 +53,8 @@ class TransactionTransfersController extends Controller
     unset($validatedData['items']); 
     $transfer = $this->service->createTransfer($validatedData);
 
+    $this->service->createTransferItems($transfer, $items);
 
-
-    $transferitem = $this->service->createTransferItems($transfer, $items);
 
     return redirect()
         ->route('transactionstransfers.index', $transfer->Id)
@@ -63,19 +62,34 @@ class TransactionTransfersController extends Controller
 }
 
 
-    public function show(TransactionTransfer $transactionTransfer)
+
+    public function show($Id)
     {
-        $transactionTransfer->load('items');
-        return view('inventory.transactions.transfers.show', compact('transactionTransfer'));
+        $transferitem = TransactionTransfer::with([
+            'fromBranch',
+            'toBranch',
+            'creator',
+            'items.item',
+            'items.uom',
+        ])->findOrFail($Id);
+
+        return view('inventory.transactions.transfers.show', compact('transferitem'));
+
     }
 
-    public function edit(TransactionTransfer $transactionTransfer)
+    public function edit($Id)
     {
         $branches = Branch::all();
         $requisitions = InterBranchRequisition::all();
         $items = ItemMasterList::all();
-        $transactionTransfer->load('items');
-        return view('inventory.transactions.transfers.edit', compact('transactionTransfer'));
+        $transferitem = TransactionTransfer::with([
+            'fromBranch',
+            'toBranch',
+            'creator',
+            'items.item',
+            'items.uom',
+        ])->findOrFail($Id);
+        return view('inventory.transactions.transfers.edit', compact('transferitem'));
     }
 
     public function update(TransactionTransferRequest $request, TransactionTransfer $transactionTransfer)
@@ -84,15 +98,17 @@ class TransactionTransfersController extends Controller
 
         return redirect()
             ->route('transactiontransfers.show', $transfer->Id)
-            ->with('success', 'Inter-branch transfer updated successfully.');
+            ->with('success', ' transfer updated successfully.');
     }
 
-    public function destroy(TransactionTransfer $transactionTransfer)
-    {
-        $this->service->delete($transactionTransfer);
 
-        return redirect()
-            ->route('transactiontransfers.index')
+       public function destroy($Id)
+    {
+        $transfer = TransactionTransfer::findOrFail($Id);
+        $this->service->delete($transfer);
+        return redirect()->route('transactionstransfers.index')
             ->with('success', 'Inter-branch transfer deleted successfully.');
     }
+
+    
 }

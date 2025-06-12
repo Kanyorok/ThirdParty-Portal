@@ -22,9 +22,10 @@ class TransactionTransferItem extends Model
   
   
     protected $fillable = [
-        'TransferId',
+           'TransferId',
            'Item',
            'ApprovedQty',
+           'DispatchedQty',
            'UOM',
            'Remarks',
            'CreatedBy',
@@ -55,11 +56,16 @@ class TransactionTransferItem extends Model
     {
         return $this->belongsTo(InterBranchRequisition::class, 'RequisitionId', 'Id');
     }
-
-    public function items()
+    public function item()
     {
-        return $this->hasMany(InterBranchTransferItem::class, 'TransferId', 'Id');
+        return $this->belongsTo(ItemMasterList::class, 'Item', 'Id');
     }
+    public function uom()
+    {
+        return $this->belongsTo(UnitOfMeasure::class, 'UOM', 'Id');
+    }
+
+
 
  
 }

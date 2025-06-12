@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Model\UserActorTrait;
 use App\Models\Auth\User;
 use App\Models\Core\Branch;
+use App\Models\Inventory\TransactionTransferItem;
 
 class TransactionTransfer extends Model
 {
@@ -24,6 +25,8 @@ class TransactionTransfer extends Model
     protected $fillable = [
             'TransferDate',
             'RequisitionId',
+            'DispatchedQty',
+             'Status',
             'FromBranch',
             'ToBranch',
             'CreatedBy',
@@ -55,10 +58,11 @@ class TransactionTransfer extends Model
         return $this->belongsTo(InterBranchRequisition::class, 'RequisitionId', 'Id');
     }
 
-    public function items()
-    {
-        return $this->hasMany(InterBranchTransferItem::class, 'TransferId', 'Id');
-    }
+  public function items()
+{
+    return $this->hasMany(TransactionTransferItem::class, 'TransferId', 'Id');
+}
+
        public function fromBranch()
     {
     return $this->belongsTo(Branch::class, 'FromBranch', 'Id');
