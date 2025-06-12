@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class PropertyAttachments extends Model
 {
     use SoftDeletes, UserActorTrait;
+
     //
     protected $table = 't_propertyattachments';
     const string CREATED_AT = 'CreatedOn';
@@ -24,9 +25,10 @@ class PropertyAttachments extends Model
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy'
-        ];
+    ];
 
-    public function propertyid(){
-        return $this->belongsTo(PropertyRegistry::class ,'PropertyID','Id');
+    public function propertyid()
+    {
+        return $this->belongsTo(PropertyRegistry::class, 'PropertyID', 'Id');
     }
 }

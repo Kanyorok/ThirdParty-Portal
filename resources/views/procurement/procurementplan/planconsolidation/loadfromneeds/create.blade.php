@@ -33,27 +33,27 @@
 
         {{-- 🔹 Filter Fields --}}
         <div class="row mb-4">
-        <div class="col-md-6">
-            <label class="form-label">Target Plan</label>
-            @php
-                $selectedPlanId = old('plan_id', request('plan_id'));
-                $selectedPlan = $plans->firstWhere('PlanID', $selectedPlanId);
-            @endphp
+            <div class="col-md-6">
+                <label class="form-label">Target Plan</label>
+                @php
+                    $selectedPlanId = old('plan_id', request('plan_id'));
+                    $selectedPlan = $plans->firstWhere('PlanID', $selectedPlanId);
+                @endphp
 
-            <select class="form-select" disabled>
-                <option selected>
-                    {{ $selectedPlan?->Title ?? 'No Plan Selected' }}
-                </option>
-            </select>
-            <input type="hidden" name="plan_id" id="plan_id_selector" value="{{ $selectedPlanId }}">
-        </div>
+                <select class="form-select" disabled>
+                    <option selected>
+                        {{ $selectedPlan?->Title ?? 'No Plan Selected' }}
+                    </option>
+                </select>
+                <input type="hidden" name="plan_id" id="plan_id_selector" value="{{ $selectedPlanId }}">
+            </div>
 
-        <div class="col-md-6">
-            <label class="form-label">Planning Period</label>
-            <input type="text" name="fiscal_year" id="fiscal_year_input" class="form-control" readonly
-                value="{{ old('fiscal_year', request('fiscal_year', $selectedPlan?->FiscalYear)) }}">
+            <div class="col-md-6">
+                <label class="form-label">Planning Period</label>
+                <input type="text" name="fiscal_year" id="fiscal_year_input" class="form-control" readonly
+                       value="{{ old('fiscal_year', request('fiscal_year', $selectedPlan?->FiscalYear)) }}">
+            </div>
         </div>
-    </div>
 
         <div class="row mb-3">
             <div class="col-md-3">

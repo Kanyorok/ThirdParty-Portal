@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models\Inventory;
+
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -29,11 +30,11 @@ class InventoryType extends Model
     ];
 
     protected $casts = [
-        'Type'  => 'string',
-        'Status'  => 'boolean',
-        'CreatedBy'     => 'integer',
-        'ModifiedBy'    => 'integer',
-        'DeletedBy'     => 'integer',
+        'Type' => 'string',
+        'Status' => 'boolean',
+        'CreatedBy' => 'integer',
+        'ModifiedBy' => 'integer',
+        'DeletedBy' => 'integer',
     ];
 
     public static function getPrimaryKey(): string

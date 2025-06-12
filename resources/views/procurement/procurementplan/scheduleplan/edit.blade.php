@@ -10,13 +10,13 @@
             </a>
         </div>
         @if ($errors->any())
-        <div class="alert alert-danger mb-3">
-            <ul class="mb-0">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
+            <div class="alert alert-danger mb-3">
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
         @endif
         <form action="{{ route('Procurement-Plan-Schedule.store') }}" method="POST"
               class="border rounded p-4 bg-white shadow-sm">

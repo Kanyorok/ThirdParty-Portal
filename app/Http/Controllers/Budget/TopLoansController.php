@@ -8,12 +8,13 @@ use Illuminate\Http\Request;
 class TopLoansController extends Controller
 {
     //
-   public function index()
+    public function index()
     {
         return view('budgetandanalytics.businessintelligenceandanalytics.topcontributors.toploans.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('budgetandanalytics.businessintelligenceandanalytics.topcontributors.toploans.create');
-    }  
+    }
 }

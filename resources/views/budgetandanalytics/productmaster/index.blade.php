@@ -13,11 +13,11 @@
                 <th>GL Code (CBS)</th>
                 <th>Is Budgeted</th>
                 <th>Status</th>
-                <th>Actions</th> 
+                <th>Actions</th>
             </tr>
             </thead>
             <tbody>
-                @foreach ($data as $item)
+            @foreach ($data as $item)
                 <tr>
                     <td>{{ $loop->iteration }}.</td>
                     <td>{{ $item['Code'] }}</td>
@@ -30,8 +30,8 @@
                         <button class="btn btn-sm btn-outline-info">👁 View</button>
                     </td>
                 </tr>
-                    
-                @endforeach
+
+            @endforeach
             </tbody>
         </table>
     </div>

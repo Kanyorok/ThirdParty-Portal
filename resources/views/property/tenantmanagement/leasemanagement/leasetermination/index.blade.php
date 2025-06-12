@@ -5,7 +5,7 @@
 <a href="{{ route('terminatelease.create') }}" class="btn btn-primary mb-3">Terminate Lease</a>
   <h4 class="fw-bold mb-3">📋 Lease Terminations</h4>
 
-@if($leaseterminations->count())
+    @if($leaseterminations->count())
   <table class="table table-bordered table-striped align-middle">
     <thead class="table-light">
       <tr>
@@ -18,20 +18,21 @@
       </tr>
     </thead>
     <tbody>
-      @foreach($leaseterminations as $leasetermination)
+    @foreach($leaseterminations as $leasetermination)
       <tr>
-        <td>{{ $loop->iteration ?? '-' }}</td>
-        <td>{{ $leasetermination->LeaseID ?? '-' }}</td>
-        <td>{{ $leasetermination->TerminationDate ?? '-' }}</td>
-        <td>{{ $leasetermination->TerminationReason ?? '-' }}</td>
-        <td>{{ $leasetermination->Remarks ?? '-' }}</td>
-        <td><a href="{{ route('terminatelease.show', $leasetermination->id) }}" class="btn btn-sm btn-outline-secondary">📄 View</a></td>
+          <td>{{ $loop->iteration ?? '-' }}</td>
+          <td>{{ $leasetermination->LeaseID ?? '-' }}</td>
+          <td>{{ $leasetermination->TerminationDate ?? '-' }}</td>
+          <td>{{ $leasetermination->TerminationReason ?? '-' }}</td>
+          <td>{{ $leasetermination->Remarks ?? '-' }}</td>
+          <td><a href="{{ route('terminatelease.show', $leasetermination->id) }}"
+                 class="btn btn-sm btn-outline-secondary">📄 View</a></td>
       </tr>
-      @endforeach
+    @endforeach
     </tbody>
   </table>
-@else
-  <p>No termination record registered yet.</p>
-@endif
+    @else
+        <p>No termination record registered yet.</p>
+    @endif
 </div>
 @endsection

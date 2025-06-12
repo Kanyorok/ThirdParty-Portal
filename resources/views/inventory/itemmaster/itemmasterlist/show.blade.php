@@ -50,15 +50,16 @@
         </div>
         <div class="col-md-6">
             <p><strong>Item Image:</strong></p>
-               @if($item->image)
-              <img src="data:{{ $item->image->MIMEType }};base64,{{ $item->image->Image }}" alt="Item Image" style="max-width:200px;">
-              @endif
-           
+            @if($item->image)
+                <img src="data:{{ $item->image->MIMEType }};base64,{{ $item->image->Image }}" alt="Item Image"
+                     style="max-width:200px;">
+            @endif
+
         </div>
     </div>
 
     <div class="row mb-3">
-        
+
         <div class="col-md-6">
             <p><strong>Item Description:</strong> {{ $item->ItemDescription ?? 'N/A' }}</p>
         </div>
@@ -72,11 +73,11 @@
         </div>
         <div class="col-md-6">
             <strong>Status:</strong>
-                @if($item->Status == 1)
-                    <span class="badge bg-success">Active</span>
-                @else
-                    <span class="badge bg-warning">Inactive</span>
-                @endif
+            @if($item->Status == 1)
+                <span class="badge bg-success">Active</span>
+            @else
+                <span class="badge bg-warning">Inactive</span>
+            @endif
         </div>
     </div>
 
@@ -84,7 +85,8 @@
         <a href="{{ route('itemmaster.index') }}" class="btn btn-secondary">Back</a>
 
         <a href="{{ route('itemmasterlist.edit', $item->Id) }}" class="btn btn-warning">Edit Item</a>
-        <form action="{{ route('itemmasterlist.destroy', $item->Id) }}" method="POST" onsubmit="return confirm('⚠️ Are you sure you want to delete this Item?');">
+        <form action="{{ route('itemmasterlist.destroy', $item->Id) }}" method="POST"
+              onsubmit="return confirm('⚠️ Are you sure you want to delete this Item?');">
             @csrf
             @method('DELETE')
             <button type="submit" class="btn btn-danger">Delete Item</button>

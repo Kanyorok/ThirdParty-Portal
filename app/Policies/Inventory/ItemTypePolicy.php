@@ -23,7 +23,7 @@ class ItemTypePolicy
      */
     public function view(User $user, ItemType $itemType): bool
     {
-       return $user->can(PermissionEnum::ItemTypeView->value);
+        return $user->can(PermissionEnum::ItemTypeView->value);
     }
 
     /**

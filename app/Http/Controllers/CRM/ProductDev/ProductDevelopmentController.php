@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Number;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Throwable;
 use Yajra\DataTables\DataTables;
 
 class ProductDevelopmentController extends Controller
@@ -57,10 +58,10 @@ class ProductDevelopmentController extends Controller
                 })->editColumn('CreatedOn', function (ProductDevelopment $product) {
                     return $product->CreatedOn->format('d M, Y h:i A');
                 })->setRowClass('mouse_pointer user-select-none dbl-click-redirect-data')->setRowData([
-                                                                                                       'dbl_click_url' => function (ProductDevelopment $product) {
-                                                                                                        return route('product-development.show', $product->ProductID);
-                                                                                                       },
-                                                                                                      ])->rawColumns(['ProductID'])->make();
+                    'dbl_click_url' => function (ProductDevelopment $product) {
+                        return route('product-development.show', $product->ProductID);
+                    },
+                ])->rawColumns(['ProductID'])->make();
         }
 
 
@@ -74,28 +75,28 @@ class ProductDevelopmentController extends Controller
     {
         $this->authorize('create', ProductDevelopment::class);
         $data = $request->validate([
-                                    'Name'        => [
-                                                      'required',
-                                                      'string',
-                                                      'max:250',
-                                                     ],
-                                    'TargetGroup' => [
-                                                      'required',
-                                                      'string',
-                                                      'max:250',
-                                                     ],
-                                    'Notes'       => [
-                                                      'nullable',
-                                                      'string',
-                                                      'max:2000',
-                                                     ],
-                                   ]);
+            'Name' => [
+                'required',
+                'string',
+                'max:250',
+            ],
+            'TargetGroup' => [
+                'required',
+                'string',
+                'max:250',
+            ],
+            'Notes' => [
+                'nullable',
+                'string',
+                'max:2000',
+            ],
+        ]);
 
         try {
             $product = DB::transaction(static function () use ($data, $request) {
-                return ProductDevService::create($data['Name'], $data['TargetGroup'], $data['Notes'], $request->user())->product;
+                return ProductDevService::create($data['Name'], $data['TargetGroup'], $data['Notes'] ?? "", $request->user())->product;
             });
-        } catch (Exception $e) {
+        } catch (Exception|Throwable $e) {
             Log::error('Error adding product dev: ' . $e->getMessage());
             return $this->errored('unexpected error adding, try again latter');
         }
@@ -137,8 +138,8 @@ class ProductDevelopmentController extends Controller
                 $data = $request->getData();
 
                 $data = $data->merge([
-                                      'ModifiedBy' => $request->user()->Id,
-                                     ]);
+                    'ModifiedBy' => $request->user()->Id,
+                ]);
 
                 $product->fill($data->toArray())->save();
 
@@ -176,9 +177,9 @@ class ProductDevelopmentController extends Controller
 
         $user = $request->user();
         $product->forceFill([
-                             'DeletedOn' => now(),
-                             'DeletedBy' => $user->Id,
-                            ])->save();
+            'DeletedOn' => now(),
+            'DeletedBy' => $user->Id,
+        ])->save();
 
         activity()->causedBy($user)->performedOn($product)->event('delete')->log('Trashed Product Development ' . Str::upper($product->ProductID) . '.');
 

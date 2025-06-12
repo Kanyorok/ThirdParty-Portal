@@ -1,3 +1,4 @@
+@php use App\Models\BR\Client; @endphp
 @extends('layouts.app')
 
 @section('title')
@@ -19,7 +20,7 @@
 
                 </div>
                 <hr class="my-0">
-                @if($account->client instanceof \App\Models\BR\Client)
+                @if($account->client instanceof Client)
                     <a class="card-body d-flex align-items-start text-decoration-none"
                        href="{{ route('clients.show',$account->client->ClientID) }}">
                         {!! $account->client->getImage('width="72" height="72" class="rounded-circle me-2" alt=".."') !!}
@@ -62,7 +63,7 @@
     </div>
 @endsection
 @section('scripts')
-    <script src="{{ asset('assets/js/datatables.js') }}"></script>
+
     <script>let trxAccountTable = null;
         $(function () {
             $.fn.dataTable.ext.errMode = 'none';

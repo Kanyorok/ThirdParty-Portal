@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BudgetPeriods extends Model
 {
-     use UserActorTrait,SoftDeletes;
+    use UserActorTrait, SoftDeletes;
 
     protected $primaryKey = 'Id';
     
@@ -24,7 +24,7 @@ class BudgetPeriods extends Model
     protected $table = 't_BudgetPeriods';
 
     protected $fillable = [
-        
+
         'fiscalYear',
         'periodType',
         'notes',
@@ -32,7 +32,8 @@ class BudgetPeriods extends Model
         'ModifiedBy',
     ];
 
-    public function periodType(){
-        return $this->belongsTo(BudgetPeriodTypes::class,'periodType','Id');
+    public function periodType()
+    {
+        return $this->belongsTo(BudgetPeriodTypes::class, 'periodType', 'Id');
     }
 }

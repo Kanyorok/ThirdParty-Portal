@@ -3,50 +3,52 @@
 
 @section('content')
 
-@if ($errors->any())
-  <div class="alert alert-danger">
-    <ul>
-      @foreach ($errors->all() as $error)
-        <li>{{ $error }}</li>
-      @endforeach
-    </ul>
-  </div>
-@endif
-
-@if(session('error'))
-  <div class="alert alert-danger">{{ session('error') }}</div>
-@endif
-@if(session('success'))
-  <div class="alert alert-success">{{ session('success') }}</div>
-@endif
-
-<div class="card p-4">
-    <h5>✏️ Edit Budget Period Type</h5>
-
-    <form action="{{ route('periodtypes.update', $type->Id) }}" method="POST">
-        @csrf
-        @method('PUT')
-
-        <div class="mb-3">
-            <label for="PeriodType" class="form-label">Period Type</label>
-            <input type="text" name="PeriodType" id="PeriodType" class="form-control"
-                   value="{{ old('PeriodType', $type->PeriodType) }}" required>
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
         </div>
+    @endif
 
-        <div class="mb-3">
-            <label for="Code" class="form-label">Code</label>
-            <input type="text" name="Code" id="Code" class="form-control"
-                   value="{{ old('Code', $type->Code) }}" required>
-        </div>
+    @if(session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
+    @endif
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
 
-        <div class="form-check mb-3">
-            <input type="checkbox" name="IsActive" id="IsActive" class="form-check-input" value="1"
-                   {{ old('IsActive', $type->IsActive) ? 'checked' : '' }}>
-            <label class="form-check-label" for="IsActive">Mark as Active</label>
-        </div>
+    <div class="card p-4">
+        <h5>✏️ Edit Budget Period Type</h5>
 
-        <button type="submit" class="btn btn-primary" onclick="this.disabled=true; this.innerText='Updating...'; this.form.submit();">💾 Update</button>
-        <a href="{{ route('periodtypes.index') }}" class="btn btn-secondary">🔙 Back</a>
-    </form>
-</div>
+        <form action="{{ route('periodtypes.update', $type->Id) }}" method="POST">
+            @csrf
+            @method('PUT')
+
+            <div class="mb-3">
+                <label for="PeriodType" class="form-label">Period Type</label>
+                <input type="text" name="PeriodType" id="PeriodType" class="form-control"
+                       value="{{ old('PeriodType', $type->PeriodType) }}" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="Code" class="form-label">Code</label>
+                <input type="text" name="Code" id="Code" class="form-control"
+                       value="{{ old('Code', $type->Code) }}" required>
+            </div>
+
+            <div class="form-check mb-3">
+                <input type="checkbox" name="IsActive" id="IsActive" class="form-check-input" value="1"
+                    {{ old('IsActive', $type->IsActive) ? 'checked' : '' }}>
+                <label class="form-check-label" for="IsActive">Mark as Active</label>
+            </div>
+
+            <button type="submit" class="btn btn-primary"
+                    onclick="this.disabled=true; this.innerText='Updating...'; this.form.submit();">💾 Update
+            </button>
+            <a href="{{ route('periodtypes.index') }}" class="btn btn-secondary">🔙 Back</a>
+        </form>
+    </div>
 @endsection

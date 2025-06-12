@@ -6,35 +6,29 @@ use Illuminate\Support\Facades\Schema;
 
 class MoveRequisitionidToRfqLines extends Migration
 {
-    public function up()
+    public function up(): void
     {
         // Remove foreign key and column from t_RFQ
-        Schema::table('t_RFQ', function (Blueprint $table) {
-            $table->dropForeign(['RequisitionId']);
-            $table->dropColumn('RequisitionId');
+        Schema::table('t_RFQ', static function (Blueprint $table) {
+            $table->dropConstrainedForeignId('RequisitionId');
         });
 
         // Add foreign key to t_RFQLines
-        Schema::table('t_RFQLines', function (Blueprint $table) {
-            $table->foreignId('RequisitionId')
-                ->constrained('t_Requisitions')
-                ->cascadeOnDelete(); // Optional: use depending on your FK policy
+        Schema::table('t_RFQLines', static function (Blueprint $table) {
+            $table->foreignId('RequisitionId')->constrained('t_Requisitions')->cascadeOnDelete();
         });
     }
 
-    public function down()
+    public function down(): void
     {
         // Reverse: Add back to t_RFQ
-        Schema::table('t_RFQ', function (Blueprint $table) {
-            $table->foreignId('RequisitionId')
-                ->constrained('t_Requisitions')
-                ->cascadeOnDelete(); // match your original constraint
+        Schema::table('t_RFQ', static function (Blueprint $table) {
+            $table->foreignId('RequisitionId')->nullable()->constrained('t_Requisitions');
         });
 
         // Remove from t_RFQLines
-        Schema::table('t_RFQLines', function (Blueprint $table) {
-            $table->dropForeign(['RequisitionId']);
-            $table->dropColumn('RequisitionId');
+        Schema::table('t_RFQLines', static function (Blueprint $table) {
+            $table->dropConstrainedForeignId('RequisitionId');
         });
     }
 }

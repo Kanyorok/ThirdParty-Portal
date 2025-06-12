@@ -28,20 +28,23 @@ class Board extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-                           'BoardMemberID',
-                           'Name',
-                           'ClientID',
-                           'Role',
-                           'Phone',
-                           'Email',
-                           'Extra',
-                           'Notes',
-                           'CreatedBy',
-                           'ModifiedBy',
-                           'DeletedBy',
-                          ];
+        'BoardMemberID', 'Name', 'ClientID', 'Role', 'Phone', 'Email', 'Extra', 'Notes', 'CreatedBy', 'ModifiedBy', 'DeletedBy',
+    ];
 
     protected $casts = ['Extra' => 'object'];
+
+    public static function getPrimaryKey(): string
+    {
+        return (new self())->getRouteKeyName();
+    }
+
+    /**
+     * Get the route key for the model.
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'BoardMemberID';
+    }
 
     public function client(): BelongsTo
     {
@@ -62,19 +65,5 @@ class Board extends Model
     {
         return $this->belongsToMany(Committee::class, 't_BoardCommittee', 'BoardId', 'CommitteeId', 'Id', 'Id')
             ->withTimestamps('CreatedOn', 'ModifiedOn')->withPivot(['CreatedBy', 'ModifiedBy'])->using(BoardCommittee::class);
-    }
-
-
-    /**
-     * Get the route key for the model.
-     */
-    public function getRouteKeyName(): string
-    {
-        return 'BoardMemberID';
-    }
-
-    public static function getPrimaryKey(): string
-    {
-        return (new self())->getRouteKeyName();
     }
 }

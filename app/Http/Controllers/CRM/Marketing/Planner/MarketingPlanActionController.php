@@ -16,6 +16,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class MarketingPlanActionController extends Controller
 {
@@ -67,7 +68,7 @@ class MarketingPlanActionController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception $e) {
+        } catch (Throwable|Exception $e) {
             Log::error('Error submitting planner failed: ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }

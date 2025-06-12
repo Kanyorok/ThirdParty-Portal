@@ -17,16 +17,16 @@ class PlanEditController extends Controller
         $this->authorize('viewAny', PlanLineItems::class);
         $planId = $request->input('PlanID');
 
-    $availablePlans = ConsolidatedProcurementPlan::where('Status', ProcurementPlanStatusEnum::Draft)->get();
+        $availablePlans = ConsolidatedProcurementPlan::where('Status', ProcurementPlanStatusEnum::Draft)->get();
 
-    $draftItems = collect();
-    if ($planId) {
-        $draftItems = PlanLineItems::where('PlanID', $planId)
-            ->whereHas('consolidatedProcurementPlan', function ($query) {
-                $query->where('Status', ProcurementPlanStatusEnum::Draft);
-            })
-            ->get();
-    }
+        $draftItems = collect();
+        if ($planId) {
+            $draftItems = PlanLineItems::where('PlanID', $planId)
+                ->whereHas('consolidatedProcurementPlan', function ($query) {
+                    $query->where('Status', ProcurementPlanStatusEnum::Draft);
+                })
+                ->get();
+        }
 
         return view('procurement.procurementplan.planapproval.ammendplan.index', [
             'draftItems' => $draftItems,
@@ -37,7 +37,7 @@ class PlanEditController extends Controller
 
     public function updateDraftItems(Request $request)
     {
-        
+
         $user = auth()->user();
         $itemIds = $request->input('lineItemIds', []);
 

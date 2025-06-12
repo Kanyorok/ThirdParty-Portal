@@ -1,85 +1,114 @@
 @extends('layouts.app')
 
-@section('title','Mail')
+@section('title','Mailbox')
 @section('styles')
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.20/summernote-bs5.min.css"
-          integrity="sha512-ngQ4IGzHQ3s/Hh8kMyG4FC74wzitukRMIcTOoKT3EyzFZCILOPF0twiXOQn75eDINUfKBYmzYn2AA8DkAk8veQ=="
-          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+    <link rel="stylesheet" href="{{ asset('assets/libs/summernote/summernote-bs5.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
 @endsection
+
+@section('breadcrumbs')
+    <li class="breadcrumb-item"><a href="#">CRM</a></li>
+@endsection
 @section('content')
+
     <div class="row">
         <div class="col-12" id="MailListMainContent">
-            <div class="tab">
-                <ul class="nav nav-tabs" role="tablist">
-                    <li class="nav-item"><a class="nav-link active" href="#tab-inbox" data-bs-toggle="tab" role="tab"
-                                            aria-selected="true" onclick="fetchConversations(true)">INBOX</a>
-                    </li>
-                    <li class="nav-item"><a class="nav-link" href="#tab-drafts" data-bs-toggle="tab" role="tab"
-                                            aria-selected="false" onclick="fetchDrafts(true);">DRAFTS</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#tab-sent" data-bs-toggle="tab" role="tab"
-                                            aria-selected="false" onclick="fetchSent(true)">SENT</a></li>
-                </ul>
-                <div class="tab-content">
-                    <div class="tab-pane active" id="tab-inbox" role="tabpanel">
-                        <div class="row">
-                            <div class="col-sm-4 col-md-3 col-6">
-                                <select name="searchByType" id="searchByType" class="form-control">
-                                    <option value="UNREAD" selected>UNREAD</option>
-                                    <option value="INBOX">INBOX</option>
-                                </select>
-                            </div>
-                            <div class="col-sm-8 col-md-9 col-6">
-                                   <span class="float-end"><button class="btn btn-link p-1 pt-0" type="button"
-                                                                   onclick="fetchConversations()"><i
-                                               class="fas fa-refresh"></i></button></span>
+            <div class="card">
+                <div class="card-body py-0">
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link active" data-bs-toggle="tab" href="#tab-inbox" role="tab"
+                               aria-selected="false" tabindex="-1" onclick="fetchConversations(true)">
+                                <span><i class="ti ti-inbox"></i> Inbox </span>
+                                {{--<span class="avtar avtar-xs">4</span> todo add unread--}}</a>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link " href="#tab-drafts" data-bs-toggle="tab" role="tab"
+                               aria-selected="false" onclick="fetchDrafts(true);">
+                                <i class="ti ti-file-text"></i> Drafts</a>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link" id="profile-tab-3" href="#tab-sent" data-bs-toggle="tab" role="tab"
+                               aria-selected="false" onclick="fetchSent(true)">
+                                <i class="ti ti-send"></i> Sent</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="tab-content">
+                <div class="tab-pane active" id="tab-inbox" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="row">
+                                <div class="col-sm-6 col-12">
+                                    <select name="searchByType" id="searchByType" class=" form-control-sm">
+                                        <option value="UNREAD" selected>UNREAD</option>
+                                        <option value="INBOX">INBOX</option>
+                                    </select></div>
+                                <div class="col-sm-6 col-12"> <span class="float-end"><button
+                                            class="btn btn-link p-1 pt-0" type="button"
+                                            onclick="fetchConversations()"><i
+                                                class="fas fa-refresh"></i></button></span></div>
                             </div>
                         </div>
-                        <table id="conversationsTable"
-                               class="table dataTable no-footer dtr-inline w-100 table-responsive">
-                            <thead class="d-none">
-                            <tr>
-                                <th>Party</th>
-                                <th>Subject</th>
-                                <th>Dated</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+                        <div class="card-body">
+                            <table id="conversationsTable"
+                                   class="table dataTable no-footer dtr-inline w-100 table-responsive">
+                                <thead class="d-none">
+                                <tr>
+                                    <th>Party</th>
+                                    <th>Subject</th>
+                                    <th>Dated</th>
+                                </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
                     </div>
-                    <div class="tab-pane" id="tab-drafts" role="tabpanel">
-                        <h4 class="tab-title border-bottom border-1">Drafts <span class="float-end"><button
-                                    class="btn btn-link p-1 pt-0" type="button" onclick="fetchDrafts()"><i
-                                        class="fas fa-refresh"></i></button></span></h4>
-                        <div class="clearfix"></div>
-                        <table id="DRAFTSTable"
-                               class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                            <thead class="d-none">
-                            <tr>
-                                <th>Party</th>
-                                <th>Subject</th>
-                                <th>Dated</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+                </div>
+                <div class="tab-pane" id="tab-drafts" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="tab-title border-bottom border-1">Drafts <span class="float-end"><button
+                                        class="btn btn-link p-1 pt-0" type="button" onclick="fetchDrafts()"><i
+                                            class="fas fa-refresh"></i></button></span></h4>
+                        </div>
+                        <div class="card-body">
+                            <table id="DRAFTSTable"
+                                   class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                <thead class="d-none">
+                                <tr>
+                                    <th>Party</th>
+                                    <th>Subject</th>
+                                    <th>Dated</th>
+                                </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
                     </div>
-                    <div class="tab-pane" id="tab-sent" role="tabpanel">
-                        <h4 class="tab-title border-bottom border-1">Sent Emails <span class="float-end"><button
-                                    class="btn btn-link p-1 pt-0" type="button" onclick="fetchSent()"><i
-                                        class="fas fa-refresh"></i></button></span></h4>
-                        <div class="clearfix"></div>
-                        <table id="SENTTable"
-                               class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                            <thead class="d-none">
-                            <tr>
-                                <th>Party</th>
-                                <th>Subject</th>
-                                <th>Dated</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+                </div>
+                <div class="tab-pane" id="tab-sent" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="tab-title border-bottom border-1">Sent Emails <span class="float-end"><button
+                                        class="btn btn-link p-1 pt-0" type="button" onclick="fetchSent()"><i
+                                            class="fas fa-refresh"></i></button></span></h4>
+                        </div>
+                        <div class="card-body">
+                            <table id="SENTTable"
+                                   class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                <thead class="d-none">
+                                <tr>
+                                    <th>Party</th>
+                                    <th>Subject</th>
+                                    <th>Dated</th>
+                                </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -178,7 +207,7 @@
                         {data: 'email.Subject', name: 'email.Subject'},
                         {data: 'ModifiedOn', name: 'ModifiedOn'},
                     ], "oLanguage": {
-                        "sEmptyTable": "<span class='text-center'>There are no Emails Found</span>"
+                        "sEmptyTable": '<div class="row g-0 justify-content-center align-items-center h-100"><div class="col-md-8 col-sm-10 text-center"><img src="{{ asset('assets/img/img-empty-mail.png')}}" alt="img" class="img-fluid mb-4"><h2><b>There is No Mail</b></h2><p class="mb-0 text-muted">When You have message that will Display here</p></div></div>'
                     }
                 }).on('error', function () {
                     nWarning("an issue occurred while loading emails.");
@@ -241,7 +270,7 @@
                     {data: 'Subject', name: 'Subject'},
                     {data: 'Dated', name: 'CreatedOn'},
                 ], "oLanguage": {
-                    "sEmptyTable": "<span class='text-center'>No emails found here</span>"
+                    "sEmptyTable": '<div class="row g-0 justify-content-center align-items-center h-100"><div class="col-md-8 col-sm-10 text-center"><img src="{{ asset('assets/img/img-empty-mail.png')}}" alt="img" class="img-fluid mb-4"><h2><b>There is No Mail</b></h2><p class="mb-0 text-muted">When You have message that will Display here</p></div></div>'
                 }
             });
 

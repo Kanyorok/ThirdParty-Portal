@@ -9,6 +9,7 @@ use App\Models\Communication\EmailConversation;
 use App\Services\CRMEmailService;
 use App\Services\PartyService;
 use App\Services\StaticListsService;
+use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use RuntimeException;
@@ -24,7 +25,7 @@ class EmailConversationController extends Controller
 
     /**
      * Display a listing of the resource.
-     * @throws \Exception
+     * @throws Exception
      */
     public function index(Request $request)
     {
@@ -32,7 +33,7 @@ class EmailConversationController extends Controller
             $query = EmailConversation::query()->with(['party', 'email'])->withCount(['emails', 'emails as unread_emails_count' => function (Builder $builder) {
                 $builder->where('t_Emails.Type', EmailTypeEnum::Incoming)->where('t_Emails.Status', EmailStatusEnum::Unread);
             }
-                                                                                     ]);
+            ]);
             if ($request->searchByType === 'UNREAD') {
                 $query->whereHas('emails', function (Builder $builder) {
                     $builder->where('t_Emails.Type', EmailTypeEnum::Incoming)->where('t_Emails.Status', EmailStatusEnum::Unread);
@@ -57,7 +58,7 @@ class EmailConversationController extends Controller
                 })->editColumn('ModifiedOn', function (EmailConversation $conversation) {
                     return $conversation->ModifiedOn?->format('M d, Y H:i');
                 })->editColumn('emails_count', function ($conversation) {
-                    return (int) $conversation->emails_count;
+                    return (int)$conversation->emails_count;
                 })->editColumn('email.Subject', function (EmailConversation $conversation) {
                     return $conversation->email?->Subject;
                 })->setRowClass(function ($conversation) {
@@ -66,11 +67,11 @@ class EmailConversationController extends Controller
                     }
                     return 'mouse_pointer user-select-none click-email-details';
                 })->setRowData([
-                                'click_url'     => function (EmailConversation $conversation) {
-                                    return route('email-conversations.summary', [$conversation->Id]);
-                                },
-                                'summary_title' => 'email summary',
-                               ])->rawColumns(['party', 'action'])->make();
+                    'click_url' => function (EmailConversation $conversation) {
+                        return route('email-conversations.summary', [$conversation->Id]);
+                    },
+                    'summary_title' => 'email summary',
+                ])->rawColumns(['party', 'action'])->make();
         }
 
         return view('crm.emails.conversations.index');

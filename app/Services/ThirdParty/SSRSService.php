@@ -152,6 +152,7 @@ class SSRSService
         }
         return Str::of($params)->trim()->toString();
     }
+
     /**
      * @throws ConnectionException
      */

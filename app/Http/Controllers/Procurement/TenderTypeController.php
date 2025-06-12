@@ -16,7 +16,7 @@ class TenderTypeController extends Controller {
         return view('procurement.tendering.tendersetup.tendertype.index', compact('tenderTypes'));
     }
 
-    
+
     /**
      * Show the form for creating a new resource.
      */
@@ -24,7 +24,7 @@ class TenderTypeController extends Controller {
     {
         $defaultType = TenderTypeEnum::cases()[0]->value;
         $newTypeCode = TenderType::generateTypeCode($defaultType);
-        
+
         return view('procurement.tendering.tendersetup.tendertype.create', [
             'newTypeCode' => $newTypeCode,
             'tenderTypeOptions' => TenderTypeEnum::cases(),
@@ -34,7 +34,7 @@ class TenderTypeController extends Controller {
 
     public function store(Request $request)
     {
-         $validated = $request->validate([
+        $validated = $request->validate([
             'TenderType' => 'required',
             'Description' => 'nullable|string',
             'TypeCode' => 'required|string|max:20|unique:t_TenderTypes,TypeCode',

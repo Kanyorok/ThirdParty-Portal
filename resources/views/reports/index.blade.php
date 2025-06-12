@@ -57,7 +57,7 @@
                         {data: 'Description', name: 'Description'},
                         {data: 'action', name: 'action', orderable: false, searchable: false},
                     ], "language": {
-                        emptyTable: function() {
+                        emptyTable: function () {
                             return table.ready() ? "no reports found, under current filter" : "Loading..."
                         },
                     }

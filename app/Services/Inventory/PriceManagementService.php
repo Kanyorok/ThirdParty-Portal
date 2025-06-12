@@ -42,7 +42,7 @@ class PriceManagementService
         $pricing->PriceID = 'PR-' . str_pad($pricing->Id, 5, '0', STR_PAD_LEFT);
         $pricing->save();
 
-        
+
         $item = ItemMasterList::find($pricing->ItemID);
         if ($item) {
             $item->ItemPrice = $pricing->Id;
@@ -70,7 +70,7 @@ class PriceManagementService
         $pricing->ModifiedOn = Carbon::now();
         $pricing->save();
 
-        
+
         $item = ItemMasterList::find($pricing->ItemID);
         if ($item && $item->ItemPrice != $pricing->Id) {
             $item->ItemPrice = $pricing->Id;
@@ -109,7 +109,7 @@ class PriceManagementService
     public function list($filters = [])
     {
         $query = PriceManagement::with(['item', 'uom']);
-     
+
         return $query->orderBy('CreatedOn', 'asc')->get();
     }
 }

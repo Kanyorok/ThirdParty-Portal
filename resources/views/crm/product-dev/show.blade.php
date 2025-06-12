@@ -18,6 +18,10 @@
         }
     </style>
 @endsection
+@section('breadcrumbs')
+    <li class="breadcrumb-item"><a href="#">CRM</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('product-development.index') }}">Product Dev</a></li>
+@endsection
 @section('content')
     <div class="row">
         <div class="col-md-8 col-xxl-9">
@@ -624,7 +628,7 @@
     <script src="{{ asset('assets/libs/dropzone/dropzone.min.js') }}"></script>
     <script src="{{ asset('assets/libs/summernote/summernote-bs5.min.js') }}"></script>
     <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
-   
+
     <script>const $Modal = $('#productActionsModal');
         window._commentPage = '{{ route('product-development-comment.index',[$product->ProductID]) }}';
         Dropzone.options.uploadForm = {

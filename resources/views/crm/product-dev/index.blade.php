@@ -1,3 +1,5 @@
+@php use App\Enums\Core\PermissionEnum; @endphp
+@php use App\Models\CRM\ProductDevelopment; @endphp
 @extends('layouts.app')
 
 @section('title','Product Development')
@@ -9,18 +11,22 @@
         }
     </style>
 @endsection
+@section('breadcrumbs')
+    <li class="breadcrumb-item"><a href="#">CRM</a></li>
+@endsection
 @section('content')
-    <div class="mb-3">
-        <h1 class="h3 d-inline align-middle">@yield('title')</h1>
-        @can(\App\Enums\Core\PermissionEnum::ProductDevelopmentWrite->value, \App\Models\CRM\ProductDevelopment::class)
-            <button class="btn btn-primary float-end ms-2 modal-create-product" type="button"><i
-                    class="fas fa-plus-circle"></i> Add a New Product
-            </button>
-        @endcan
-    </div>
     <div class="row">
         <div class="col-12">
             <div class="card mb-3">
+                <div class="card-header">
+                    <div class="float-end">
+                        @can(PermissionEnum::ProductDevelopmentWrite->value, ProductDevelopment::class)
+                            <button class="btn btn-primary float-end ms-2 modal-create-product btn-sm" type="button"><i
+                                    class="fas fa-plus-circle"></i> Add a New Product
+                            </button>
+                        @endcan
+                    </div>
+                </div>
                 <div class="card-body">
                     <table id="productsTable"
                            class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">

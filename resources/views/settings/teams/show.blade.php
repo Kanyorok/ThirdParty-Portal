@@ -1,10 +1,11 @@
+@php use App\Models\Auth\User; @endphp
 @extends('layouts.app')
 
 @section('title')
     Team details
 @endsection
 @section('styles')
-    <link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
     <style>
         .select2-container {
             width: 100% !important;
@@ -23,7 +24,7 @@
                 </div>
                 <div class=" border-top card-body">
                     <h5 class="h6 card-title">Team Lead</h5>
-                    @if($team->lead instanceof \App\Models\Auth\User)
+                    @if($team->lead instanceof User)
                         @include('snippets.user_summary', ['user'=>$team->lead])
                     @else
                         <h3 class="h3 text-center">No Lead</h3>
@@ -104,7 +105,7 @@
                             <div class="mb-3">
                                 <label for="team_lead" class="form-label">Team Lead</label>
                                 <select class="form-control " name="team_lead" id="team_lead">
-                                    @if($team->lead instanceof \App\Models\Auth\User)
+                                    @if($team->lead instanceof User)
                                         <option value="{{ $team->lead->UserID }}">{{ $team->lead->Name }}</option>
                                     @endif
                                 </select>
@@ -251,7 +252,7 @@
 @endsection
 @section('scripts')
     <script src="{{ asset('assets/js/datatables.js') }}"></script>
-    <script src="{{ asset('assets/plugins/select2/js/select2.full.min.js') }}"></script>
+    <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
     <script> const $Modal = $('#TeamActionsModal');
         let usersTable = null;
         $(function () {

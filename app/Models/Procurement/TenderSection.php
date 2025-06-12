@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class TenderSection extends Model
 {
-    use UserActorTrait,SoftDeletes;
+    use UserActorTrait, SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -45,18 +45,22 @@ class TenderSection extends Model
     {
         return $this->belongsTo(Tender::class, 'TenderRef', 'TenderRef');
     }
+
     public function criteria()
     {
         return $this->hasMany(Criteria::class, 'SectionID', 'id');
     }
+
     public function TenderCriteria()
     {
         return $this->hasMany(TenderCriteria::class, 'TenderID', 'id');
     }
+
     public function sections()
     {
         return $this->belongsTo(Section::class, 'SectionID', 'id');
     }
+
     public function bids()
     {
         return $this->hasMany(BidSubmission::class, 'TenderRef', 'TenderRef');

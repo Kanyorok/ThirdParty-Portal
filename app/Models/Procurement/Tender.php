@@ -21,7 +21,7 @@ use App\Traits\Model\UserActorTrait;
 
 class Tender extends Model
 {
-    use SoftDeletes,UserActorTrait;
+    use SoftDeletes, UserActorTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -78,7 +78,7 @@ class Tender extends Model
             ->withPivot('InvitationStatus', 'CreatedOn', 'ModifiedOn', 'DeletedOn');
     }
 
-    //TODO: with tenderinvitations 
+    //TODO: with tenderinvitations
     // public function suppliers(): BelongsToMany
     // {
     //     return $this->belongsToMany(Supplier::class, 't_TenderVendors', 'TenderID', 'SupplierID')
@@ -196,6 +196,7 @@ class Tender extends Model
     {
         return $this->hasMany(TenderItems::class, 'TenderID', 'Id');
     }
+
     public function items()
     {
         return $this->hasMany(TenderItems::class, 'TenderID', 'Id');

@@ -22,6 +22,7 @@ use App\Models\CRM\Contact;
 use App\Models\CRM\Lead;
 use App\Models\CRM\Meeting;
 use App\Models\CRM\Schedule;
+use App\Services\CRMEmailService;
 use App\Services\LeadService;
 use App\Services\LocalityService;
 use App\Services\StaticListsService;
@@ -35,6 +36,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
+use Throwable;
 
 class LeadController extends Controller
 {
@@ -97,7 +99,7 @@ class LeadController extends Controller
             if ($request->has('conversation')) {
                 $emailConversation = EmailConversation::query()->where('Id', $request->conversation)->first();
                 if ($emailConversation instanceof EmailConversation) {
-                    $email = (new \App\Services\CRMEmailService($emailConversation->email))->getParty();
+                    $email = (new CRMEmailService($emailConversation->email))->getParty();
                 }
             }
 
@@ -111,7 +113,7 @@ class LeadController extends Controller
 
             $StaticLists = StaticListsService::getList([StaticListsService::Industries, StaticListsService::MarketingModes, StaticListsService::CustomerType]);
 
-            $view = ($request->type === LeadTypeEnum::Individual->name ) ? 'crm.leads.create-individual' : 'crm.leads.create-corporate';
+            $view = ($request->type === LeadTypeEnum::Individual->name) ? 'crm.leads.create-individual' : 'crm.leads.create-corporate';
 
             return view($view, compact('contact', 'email'))
                 ->with('conversation', $emailConversation instanceof EmailConversation ? $emailConversation->Id : 0)
@@ -119,7 +121,6 @@ class LeadController extends Controller
                 ->with('CustomerTypes', $StaticLists->where('CodeID', StaticListsService::CustomerType))
                 ->with('MarketingModes', $StaticLists->where('CodeID', StaticListsService::MarketingModes));
         }
-
 
 
         return $this->errored('unknown lead type');
@@ -151,37 +152,9 @@ class LeadController extends Controller
         try {
             $lead = DB::transaction(static function () use ($request, $gender, $contact, $contacted, $CustomerType, $Source, $Industry, $location, $assignee, $emailConversation) {
                 if ($request->validated('Type') === LeadTypeEnum::Company->value) {
-                    $service = LeadService::company(
-                        $request->validated('Name'),
-                        $request->validated('Email') ?? '',
-                        $request->validated('Phone') ?? '',
-                        $request->validated('Website') ?? '',
-                        $contacted,
-                        $assignee,
-                        $request->user(),
-                        $location,
-                        $Industry,
-                        $Source,
-                        $CustomerType,
-                        $request->validated('Notes') ?? ''
-                    );
+                    $service = LeadService::company($request->validated('Name'), $request->validated('Email') ?? '', $request->validated('Phone') ?? '', $request->validated('Website') ?? '', $contacted, $assignee, $request->user(), $location, $Industry, $Source, $CustomerType, $request->validated('Notes') ?? '');
                 } elseif ($request->validated('Type') === LeadTypeEnum::Individual->value) {
-                    $service = LeadService::individual(
-                        $request->validated('Name'),
-                        $request->validated('Surname'),
-                        $request->validated('Email') ?? '',
-                        $request->validated('Phone') ?? '',
-                        $request->validated('JobTitle') ?? '',
-                        $contacted,
-                        $gender,
-                        $assignee,
-                        $request->user(),
-                        $location,
-                        $Industry,
-                        $Source,
-                        $CustomerType,
-                        $request->validated('Notes') ?? ''
-                    );
+                    $service = LeadService::individual($request->validated('Name'), $request->validated('Surname'), $request->validated('Email') ?? '', $request->validated('Phone') ?? '', $request->validated('JobTitle') ?? '', $contacted, $gender, $assignee, $request->user(), $location, $Industry, $Source, $CustomerType, $request->validated('Notes') ?? '');
                 } else {
                     throw new ErroredException();
                 }
@@ -191,50 +164,62 @@ class LeadController extends Controller
                     $service->lead->setImage($image, $request->user(), 'ImageId');
                 }
 
-                if ($emailConversation instanceof  EmailConversation) {
+                if ($emailConversation instanceof EmailConversation) {
                     $emailConversation->update([
-                                                'Party'   => Lead::getPrimaryKey(),
-                                                'PartyID' => $service->lead->LeadID,
-                                               ]);
+                        'Party' => Lead::getPrimaryKey(),
+                        'PartyID' => $service->lead->LeadID,
+                    ]);
                     $emailConversation->emails()->update([
-                                                          'Party'   => Lead::getPrimaryKey(),
-                                                          'PartyID' => $service->lead->LeadID,
-                                                         ]);
+                        'Party' => Lead::getPrimaryKey(),
+                        'PartyID' => $service->lead->LeadID,
+                    ]);
                 }
 
                 if ($contact instanceof Contact) {
                     $contact->crmmails()->update([
-                                                  'Party'   => Lead::getPrimaryKey(),
-                                                  'PartyID' => $service->lead->LeadID,
-                                                 ]);
+                        'Party' => Lead::getPrimaryKey(),
+                        'PartyID' => $service->lead->LeadID,
+                    ]);
 
                     $contact->crmsms()->update([
-                                                'Party'   => Lead::getPrimaryKey(),
-                                                'PartyID' => $service->lead->LeadID,
-                                               ]);
+                        'Party' => Lead::getPrimaryKey(),
+                        'PartyID' => $service->lead->LeadID,
+                    ]);
 
                     $contact->calls()->update([
-                                               'Party'   => Lead::getPrimaryKey(),
-                                               'PartyID' => $service->lead->LeadID,
-                                              ]);
+                        'Party' => Lead::getPrimaryKey(),
+                        'PartyID' => $service->lead->LeadID,
+                    ]);
 
                     $contact->update([
-                                      'Party'   => Lead::getPrimaryKey(),
-                                      'PartyID' => $service->lead->LeadID,
-                                     ]);
+                        'Party' => Lead::getPrimaryKey(),
+                        'PartyID' => $service->lead->LeadID,
+                    ]);
                     $contact->delete();
                 }
 
-                  return $service->lead;
+                return $service->lead;
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (\Throwable | Exception $e) {
+        } catch (Throwable|Exception $e) {
             Log::error('Error adding lead ' . $e->getMessage());
             return $this->errored('unexpected error adding lead, try again latter');
         }
 
         return $this->succeeded('lead created', route('leads.show', $lead->LeadID));
+    }
+
+    public function update(NewLeadRequest $request, Lead $lead): JsonResponse
+    {
+        try {
+            $request->save($request->user(), $lead);
+        } catch (Exception $e) {
+            Log::error('Error updating lead ' . $e->getMessage());
+            return $this->errored('unexpected error, try again latter');
+        }
+
+        return $this->succeeded('updated successfully', route('leads.show', $lead->LeadID));
     }
 
     /**
@@ -317,18 +302,6 @@ class LeadController extends Controller
             ->with('branches', Branch::query()->select(['OurBranchID as value', 'BranchName as name'])->get())
             ->with('memberClasses', SystemCodeDetail::query()->where('ID', 'MemberClassID')->select(['SubCodeID as value', 'Description as name'])->get())
             ->with('countries', DB::connection('brcbs')->table('t_Country')->select(['CountryID', 'CountryName'])->get())*/
-    }
-
-    public function update(NewLeadRequest $request, Lead $lead): JsonResponse
-    {
-        try {
-            $request->save($request->user(), $lead);
-        } catch (Exception $e) {
-            Log::error('Error updating lead ' . $e->getMessage());
-            return $this->errored('unexpected error, try again latter');
-        }
-
-        return $this->succeeded('updated successfully', route('leads.show', $lead->LeadID));
     }
 
     public function summary($lead_id): View|JsonResponse

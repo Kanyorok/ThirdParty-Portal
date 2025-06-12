@@ -14,9 +14,10 @@ class PropertyTypePolicy
     public function __construct()
     {
     }
+
     public function viewAny(User $user): bool
     {
-        return $user->can(PermissionEnum::PropertyTypeView->value);
+       return $user->can(PermissionEnum::PropertyTypeView->value);
     }
 
     public function store(User $user): bool

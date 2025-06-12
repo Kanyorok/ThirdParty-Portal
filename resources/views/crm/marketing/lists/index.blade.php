@@ -1,6 +1,4 @@
-@php use App\Enums\MarketingListEnum;use App\Models\BR\Client;use App\Models\CRM\Lead; @endphp
-@php @endphp
-@php @endphp
+@php use App\Enums\Core\VisibilityEnum;use App\Enums\MarketingListEnum;use App\Models\BR\Client;use App\Models\CRM\Lead; @endphp
 @extends('layouts.app')
 
 @section('title','Marketing Lists')
@@ -12,24 +10,25 @@
         }
     </style>
 @endsection
+
+@section('breadcrumbs')
+    <li class="breadcrumb-item"><a href="#">CRM</a></li>
+@endsection
 @section('content')
     <div class="row">
-        <div class="col-12 col-md-3">
-            <h1 class="h3 d-inline align-middle">@yield('title')</h1>
-        </div>
-        <div class="col-12 col-md-9 ">
-            <div class="float-end">
-                <button class="btn btn-primary ms-2 modal-create-static-list" type="button">
-                    <i class="fas fa-plus-circle"></i> Add a Static List
-                </button>
-
-                <button class="btn btn-primary ms-2 modal-create-dynamic-list" type="button">
-                    <i class="fas fa-plus-circle"></i> Add a Dynamic List
-                </button>
-            </div>
-        </div>
         <div class="col-12 mt-3">
             <div class="card mb-3">
+                <div class="card-header">
+                    <div class="float-end">
+                        <button class="btn btn-primary ms-2 btn-sm modal-create-static-list" type="button">
+                            <i class="fas fa-plus-circle"></i> Add a Static List
+                        </button>
+
+                        <button class="btn btn-primary ms-2 btn-sm modal-create-dynamic-list" type="button">
+                            <i class="fas fa-plus-circle"></i> Add a Dynamic List
+                        </button>
+                    </div>
+                </div>
                 <div class="card-body">
                     <table id="marketingListsTable"
                            class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
@@ -80,12 +79,12 @@
                             <div class="mb-3">
                                 <label class="form-label" for="Visibility">Visibility <span class="text-danger">*</span></label>
                                 <select class="form-control" name="Visibility" id="Visibility" required>
-                                    @foreach(\App\Enums\Core\VisibilityEnum::cases() as $Visibility)
+                                    @foreach(VisibilityEnum::cases() as $Visibility)
                                         <option
-                                            value="{{ $Visibility->value }}" {{ ($Visibility->value===\App\Enums\Core\VisibilityEnum::Private->value)?'selected':'' }}>{!! $Visibility->icon() !!} {{ $Visibility->description() }}</option>
+                                            value="{{ $Visibility->value }}" {{ ($Visibility->value===VisibilityEnum::Private->value)?'selected':'' }}>{!! $Visibility->icon() !!} {{ $Visibility->description() }}</option>
                                     @endforeach
                                 </select>
-                                <p id="Party_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                                <p id="Visibility_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label" for="Notes">Notes </label>
@@ -128,9 +127,9 @@
                             <div class="mb-3">
                                 <label class="form-label" for="Visibility">Visibility <span class="text-danger">*</span></label>
                                 <select class="form-control" name="Visibility" id="Visibility" required>
-                                    @foreach(\App\Enums\Core\VisibilityEnum::cases() as $Visibility)
+                                    @foreach(VisibilityEnum::cases() as $Visibility)
                                         <option
-                                            value="{{ $Visibility->value }}" {{ ($Visibility->value===\App\Enums\Core\VisibilityEnum::Private->value)?'selected':'' }}>{!! $Visibility->icon() !!} {{ $Visibility->description() }}</option>
+                                            value="{{ $Visibility->value }}" {{ ($Visibility->value===VisibilityEnum::Private->value)?'selected':'' }}>{!! $Visibility->icon() !!} {{ $Visibility->description() }}</option>
                                     @endforeach
                                 </select>
                                 <p id="Party_error" class="invalid-feedback d-none error col-12" role="alert"></p>

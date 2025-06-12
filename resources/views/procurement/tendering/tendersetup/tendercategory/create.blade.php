@@ -15,21 +15,22 @@
         <div class="card-body">
             <form action="{{ route('tendercategory.store') }}" method="POST" id="tenderCategoryForm">
                 @csrf
-                
+
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label for="TenderCategory" class="form-label">Category Type <span class="text-danger">*</span></label>
-                        <input type="text" name="TenderCategory" id="TenderCategory" class="form-control bg-light" placeholder="Enter category type" 
+                        <input type="text" name="TenderCategory" id="TenderCategory" class="form-control bg-light"
+                               placeholder="Enter category type"
                                value="{{ old('TenderCategory') }}" required>
                         @error('TenderCategory')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-                    
+
                     <div class="col-md-6">
                         <label for="CategoryCode" class="form-label">Category Code</label>
                         <div class="input-group">
-                            <input type="text" class="form-control bg-light" id="CategoryCode" 
+                            <input type="text" class="form-control bg-light" id="CategoryCode"
                                    name="CategoryCode" value="{{ $newCatCode }}" readonly>
                             <span class="input-group-text bg-light">
                                 <i class="fas fa-hashtag"></i>
@@ -41,7 +42,7 @@
 
                 <div class="mt-3">
                     <label for="Description" class="form-label">Description</label>
-                    <textarea class="form-control @error('Description') is-invalid @enderror" 
+                    <textarea class="form-control @error('Description') is-invalid @enderror"
                               id="Description" name="Description" rows="4"
                               placeholder="Enter a detailed description of this tender category...">{{ old('Description') }}</textarea>
                     @error('Description')
@@ -68,7 +69,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         const categorySelect = document.getElementById('TenderCategory');
         const codeInput = document.getElementById('CategoryCode');
-        
+
         // Update code when category changes
         categorySelect.addEventListener('change', function() {
             fetch(`/tendercategory/generate-code?category=${this.value}`)
@@ -88,7 +89,7 @@
                 categorySelect.focus();
             }
         });
-        
+
         categorySelect.addEventListener('change', function() {
             if (this.value) {
                 this.classList.remove('is-invalid');

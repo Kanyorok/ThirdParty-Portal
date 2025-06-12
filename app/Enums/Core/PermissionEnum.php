@@ -337,6 +337,25 @@ enum PermissionEnum: string
     case PropertyTypeUpdate = 'propertytype-update';
     case PropertyTypeDelete = 'propertytype-delete';
     case PropertyTypeView = 'propertytype-view';
+
+
+    //Property Registry
+    case PropertyRegistryCreate = 'propertyregistry-create';
+    case PropertyRegistryUpdate = 'propertyregistry-update';
+    case PropertyRegistryDelete = 'propertyregistry-delete';
+    case PropertyRegistryView = 'propertyregistry-view';
+
+
+    //Property Block
+    case PropertyStructuralCreate = 'propertyblock-create';
+    case PropertyStructuralUpdate = 'propertyblock-update';
+    case PropertyStructuralDelete = 'propertyblock-delete';
+    case PropertyStructuralView = 'propertyblock-view';
+
+
+
+
+ 
  
     /*
      *
@@ -422,8 +441,12 @@ enum PermissionEnum: string
             /////////////////////////// Budget and Analytics  ///////////////////////
             [self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate,self::BudgetSetupDelete],
 
+            
+            //Property Management
             [self::PropertyCategoryView,self::PropertyCategoryCreate,self::PropertyCategoryUpdate,self::PropertyCategoryDelete],
             [self::PropertyTypeView,self::PropertyTypeCreate,self::PropertyTypeUpdate,self::PropertyTypeDelete],
+            [self::PropertyRegistryView,self::PropertyRegistryCreate,self::PropertyRegistryUpdate,self::PropertyRegistryDelete],
+            [self::PropertyStructuralView,self::PropertyStructuralCreate,self::PropertyStructuralUpdate,self::PropertyStructuralDelete],
 
         ]);
     }
@@ -496,7 +519,9 @@ enum PermissionEnum: string
             
             //Property Management
             self::PropertyCategoryView,self::PropertyCategoryCreate,self::PropertyCategoryUpdate,self::PropertyCategoryDelete,
-            self::PropertyTypeView,self::PropertyTypeCreate,self::PropertyTypeUpdate,self::PropertyTypeDelete,=> ModulesEnum::Property,
+            self::PropertyTypeView,self::PropertyTypeCreate,self::PropertyTypeUpdate,self::PropertyTypeDelete,
+            self::PropertyRegistryView,self::PropertyRegistryCreate,self::PropertyRegistryUpdate,self::PropertyRegistryDelete,
+            self::PropertyStructuralView,self::PropertyStructuralCreate,self::PropertyStructuralUpdate,self::PropertyStructuralDelete,=> ModulesEnum::Property,
             default => throw new \LogicException("Unhandled PermissionEnum case: {$this->value}"),
 
             ///////////////^*********** Budget and Analytics ******************/////////////////
@@ -573,6 +598,8 @@ enum PermissionEnum: string
             //Property Management
             self::PropertyCategoryView,self::PropertyCategoryCreate,self::PropertyCategoryUpdate,self::PropertyCategoryDelete => 'Property Category',
             self::PropertyTypeView,self::PropertyTypeCreate,self::PropertyTypeUpdate,self::PropertyTypeDelete => 'Property Type',
+            self::PropertyRegistryView,self::PropertyRegistryCreate,self::PropertyRegistryUpdate,self::PropertyRegistryDelete => 'Property Registry',
+            self::PropertyStructuralView,self::PropertyStructuralCreate,self::PropertyStructuralUpdate,self::PropertyStructuralDelete => 'Property Structural Mapping',
         };  
     }
 }

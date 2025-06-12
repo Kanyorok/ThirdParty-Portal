@@ -48,7 +48,6 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::delete('/itemmasterlist/{Id}', [ItemMasterListController::class, 'destroy'])->name('itemmasterlist.destroy');
     Route::get('/get-subcategories', [ItemMasterListController::class, 'getSubcategories'])->name('get.subcategories');
     
-
     Route::get('/stores', [StoreController::class, 'index'])->name('stores.index');
     Route::get('/stores/create', [StoreController::class, 'create'])->name('stores.create');
     Route::post('/stores', [StoreController::class, 'store'])->name('stores.store');
@@ -56,7 +55,6 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/stores/{Id}/edit', [StoreController::class, 'edit'])->name('stores.edit');
     Route::put('/stores/{Id}', [StoreController::class, 'update'])->name('stores.update');
     Route::delete('/stores/{Id}', [StoreController::class, 'destroy'])->name('stores.destroy');
-
 
     //Route::resource('sku', SKUController::class);
     Route::get('/sku', [SKUController::class, 'index'])->name('sku.index');
@@ -77,7 +75,6 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/itemcategory/edit/{id}', [ItemCategoryController::class, 'edit'])->name('itemcategory.edit');
     Route::put('/itemcategory/{id}', [ItemCategoryController::class, 'update'])->name('itemcategory.update');
     Route::delete('/itemcategory/{id}', [ItemCategoryController::class, 'destroy'])->name('itemcategory.destroy');
-
 
     //Route::resource('itemsubcategory', ItemSubCategoryController::class);
     Route::get('/itemsubcategory', [ItemSubCategoryController::class, 'index'])->name('itemsubcategory.index');
@@ -106,13 +103,11 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::delete('/interbranchrequisition/{Id}', [InterBranchRequisitionController::class, 'destroy'])->name('interbranchrequisition.destroy');
     Route::get('/interbranchrequisition/get-items', [InterBranchRequisitionController::class, 'getItemsByCategoryOrSubcategory'])->name('interbranchrequisition.getItemsByCategoryOrSubcategory');
 
-
     Route::get('/inventory/get-subcategories', [InterBranchRequisitionController::class, 'getSubcategories'])->name('inventory.getSubcategories');
 
-    
     //Route::resource('interbranchrequisitionapproval', InterBranchRequisitionApprovalController::class);
     Route::get('/interbranchrequisitionapproval', [InterBranchRequisitionApprovalController::class, 'index'])->name('interbranchrequisitionapproval.index');
-Route::post('interbranchrequisitionapproval/submit', [InterBranchRequisitionApprovalController::class, 'submitDecision'])->name('interbranchrequisitionapproval.submit');    //Route::resource('rentdashboard', RentDashboardController::class);
+    Route::post('interbranchrequisitionapproval/submit', [InterBranchRequisitionApprovalController::class, 'submitDecision'])->name('interbranchrequisitionapproval.submit');    //Route::resource('rentdashboard', RentDashboardController::class);
 
    // Route::resource('unitofmeasure', UOMController::class);
     Route::get('/unitofmeasure', [UOMController::class, 'index'])->name('unitofmeasure.index');
@@ -123,11 +118,6 @@ Route::post('interbranchrequisitionapproval/submit', [InterBranchRequisitionAppr
     Route::put('/unitofmeasure/{Id}', [UOMController::class, 'update'])->name('unitofmeasure.update');
     Route::delete('/unitofmeasure/{Id}', [UOMController::class, 'destroy'])->name('unitofmeasure.destroy');
 
-    Route::resource('unitofmeasure', UOMController::class);
-    Route::resource('itemtype', ItemTypeController::class);
-    Route::resource('inventorytype', InventoryTypeController::class);
-
-    Route::resource('pricemanagement', PriceManagementController::class);  
     Route::get('/pricemanagement', [PriceManagementController::class, 'index'])->name('pricemanagement.index');
     Route::get('/pricemanagement/create', [PriceManagementController::class, 'create'])->name('pricemanagement.create');
     Route::post('/pricemanagement', [PriceManagementController::class, 'store'])->name('pricemanagement.store');

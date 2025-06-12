@@ -28,7 +28,7 @@
     </div>
 @endsection
 @section('scripts')
-    <script src="{{ asset('assets/js/datatables.js') }}"></script>
+
     <script>const searchBtn =  $('#searchFormBtn'), searchQuery =  $('#searchFormQ');
         let discussionsTable = null;
         $(function () {

@@ -19,11 +19,11 @@ class BudgetDriversSetupController extends Controller
     public function index()
     {
         //Check permissions
-        $this->authorize(PermissionEnum::BudgetSetupView,BudgetDriver::class);
+        $this->authorize(PermissionEnum::BudgetSetupView, BudgetDriver::class);
 
-        $drivers=BudgetDriver::all();
+        $drivers = BudgetDriver::all();
 
-        return view('budgetandanalytics.settings.budgetdrivers',compact('drivers'));
+        return view('budgetandanalytics.settings.budgetdrivers', compact('drivers'));
     }
 
     /**
@@ -40,7 +40,7 @@ class BudgetDriversSetupController extends Controller
     public function store(Request $request)
     {
         //Check Perm
-        $this->authorize(PermissionEnum::BudgetSetupCreate,BudgetLine::class);
+        $this->authorize(PermissionEnum::BudgetSetupCreate, BudgetLine::class);
 
         $validated = $request->validate([
             'DriverName' => 'required|string|max:255',
@@ -49,13 +49,13 @@ class BudgetDriversSetupController extends Controller
         try {
             DB::beginTransaction();
 
-            $driver=BudgetDriver::create([
-                'DriverName'=>$validated['DriverName'],
-                'IsActive'   => $request->has('IsActive') ? 1 : 0,
+            $driver = BudgetDriver::create([
+                'DriverName' => $validated['DriverName'],
+                'IsActive' => $request->has('IsActive') ? 1 : 0,
 
                 'CreatedBy' => Auth::id(),
-                'ModifiedBy'=>Auth::id()
-                
+                'ModifiedBy' => Auth::id()
+
             ]);
 
             DB::commit();
@@ -67,16 +67,16 @@ class BudgetDriversSetupController extends Controller
                 ->withProperties(['action' => 'create'])
                 ->log('Create a Budget Driver');
 
-            return back()->with('success','Budget driver created successfully.');
+            return back()->with('success', 'Budget driver created successfully.');
 
         } catch (\Throwable $th) {
             DB::rollBack();
-           
+
             Log::error('Failed to store budget line mapping.', [
                 'error' => $th->getMessage(),
                 'stack' => $th->getTraceAsString()
             ]);
-            return back()->with('error','An Error Occurred. Please try again');
+            return back()->with('error', 'An Error Occurred. Please try again');
         }
 
     }
@@ -103,7 +103,7 @@ class BudgetDriversSetupController extends Controller
     public function update(Request $request, string $id)
     {
         //Check Permissions
-        $this->authorize(PermissionEnum::BudgetSetupUpdate,BudgetLine::class);
+        $this->authorize(PermissionEnum::BudgetSetupUpdate, BudgetLine::class);
 
         $validated = $request->validate([
             'DriverName' => 'required|string|max:255',
@@ -112,9 +112,9 @@ class BudgetDriversSetupController extends Controller
         try {
             DB::beginTransaction();
 
-            $driver=BudgetDriver::where('Id',$id)->update([
-                'DriverName'=>$validated['DriverName'],
-                'IsActive'   => $request->has('IsActive') ? 1 : 0,
+            $driver = BudgetDriver::where('Id', $id)->update([
+                'DriverName' => $validated['DriverName'],
+                'IsActive' => $request->has('IsActive') ? 1 : 0,
             ]);
 
             DB::commit();
@@ -125,7 +125,7 @@ class BudgetDriversSetupController extends Controller
                 ->withProperties(['action' => 'update'])
                 ->log('Updated a Budget Driver');
 
-            return back()->with('success','Budget driver Updated successfully.');
+            return back()->with('success', 'Budget driver Updated successfully.');
 
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -133,7 +133,7 @@ class BudgetDriversSetupController extends Controller
                 'error' => $th->getMessage(),
                 'stack' => $th->getTraceAsString()
             ]);
-            return back()->with('error','An Error Occurred. Please try again');
+            return back()->with('error', 'An Error Occurred. Please try again');
         }
     }
 
@@ -143,11 +143,11 @@ class BudgetDriversSetupController extends Controller
     public function destroy(string $id)
     {
         // check Perm
-        $this->authorize(PermissionEnum::BudgetSetupDelete,BudgetLine::class);
+        $this->authorize(PermissionEnum::BudgetSetupDelete, BudgetLine::class);
 
         try {
-            $driver=BudgetDriver::find($id);
-            $dr=$driver;
+            $driver = BudgetDriver::find($id);
+            $dr = $driver;
             $driver->delete();
             //LOG Activity
             activity()
@@ -155,14 +155,14 @@ class BudgetDriversSetupController extends Controller
                 ->causedBy(Auth::user())
                 ->withProperties(['action' => 'delete'])
                 ->log('Deleted a Budget Driver');
-            return back()->with('success','Driver deleted Successfully.');
+            return back()->with('success', 'Driver deleted Successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
             Log::error('Failed to delete budget line mapping.', [
                 'error' => $th->getMessage(),
                 'stack' => $th->getTraceAsString()
             ]);
-            return back()->with('error','An Error Occurred. Please try again');
+            return back()->with('error', 'An Error Occurred. Please try again');
         }
     }
 }
