@@ -10,12 +10,15 @@ use App\Models\BR\DebtProduct;
 use App\Models\Budget\BudgetActivity;
 use App\Models\Budget\BudgetDriver;
 use App\Models\Budget\BudgetDriverMaster;
+use App\Models\Budget\BudgetDriverProjections;
 use App\Models\Budget\BudgetGLAccount;
 use App\Models\Budget\BudgetLine;
 use App\Models\Budget\BudgetLinesGLAccount;
 use App\Models\Budget\BudgetMonthlyAllocation;
 use App\Models\Budget\BudgetProduct;
 use App\Models\Budget\BudgetProductType;
+use App\Models\Budget\BudgetTopDown;
+use App\Models\Budget\BudgetTopDownData;
 use App\Models\Communication\Call;
 use App\Models\Communication\Comment;
 use App\Models\Communication\Email;
@@ -161,6 +164,9 @@ class AppServiceProvider extends ServiceProvider
             BudgetProductType::getPrimaryKey()=>BudgetProductType::class,
             BudgetDriver::getPrimaryKey()=>BudgetDriver::class,
             BudgetDriverMaster::getPrimaryKey()=>BudgetDriverMaster::class,
+            BudgetDriverProjections::getPrimaryKey()=>BudgetDriverProjections::class,
+            BudgetTopDown::getPrimaryKey()=>BudgetTopDown::class,
+            BudgetTopDownData::getPrimaryKey()=>BudgetTopDownData::class,
             BudgetActivity::getPrimaryKey()=>BudgetActivity::class,
             BudgetMonthlyAllocation::getPrimaryKey()=>BudgetMonthlyAllocation::class,
 
