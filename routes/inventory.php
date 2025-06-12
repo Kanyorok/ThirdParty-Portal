@@ -88,10 +88,17 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::put('/itemsubcategory/{Id}', [ItemSubCategoryController::class, 'update'])->name('itemsubcategory.update');
     Route::delete('/itemsubcategory/{Id}', [ItemSubCategoryController::class, 'destroy'])->name('itemsubcategory.destroy');
 
+
+    //Route::resource('openingstock', OpeningStockController::class);
+    Route::get('/openingstock', [OpeningStockController::class, 'index'])->name('openingstock.index');
+    Route::get('/openingstock/create', [OpeningStockController::class, 'create'])->name('openingstock.create');
+    Route::post('/openingstock', [OpeningStockController::class, 'store'])->name('openingstock.store');
+
+
+
     Route::resource('inventorydashboard', InventoryDashboardController::class);
     Route::resource('movementdashboard', MovementDashboardController::class);
     Route::resource('stocktake', StockTakeController::class);
-    Route::resource('openingstock', OpeningStockController::class);
     Route::resource('uomconversion', UOMConversionController::class);
     Route::resource('bintracking', BinTrackingController::class);
     Route::resource('stockvaluationhistory', StockValuationHistoryController::class);

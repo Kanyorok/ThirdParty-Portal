@@ -4,24 +4,25 @@ namespace App\Http\Controllers\Property;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\PropertyRegistry\PropertyRegistryRequest;
+use App\Models\Core\CategoryMaster;
 use App\Services\Property\PropertyRegistry\PropertyRegistryService;
 use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyType;
-use App\Models\PropertyManagement\PropertyCategory;
+
 
 class PropertyRegistryController extends Controller
 {
     //
     public function index()
     {
-         $properties = PropertyRegistry::all();
+        $properties = PropertyRegistry::all();
         return view('property.propertyregistry.registry.index', compact('properties'));
     }
 
     public function create(){
-        $types = PropertyType::all();
-        $categories = PropertyCategory::all();
-        return view('property.propertyregistry.registry.create', compact('types', 'categories'));
+        $lineentries = PropertyType::all();
+        $categories = CategoryMaster::all();
+        return view('property.propertyregistry.registry.create', compact('lineentries', 'categories'));
     }
 
     public function show($id){
