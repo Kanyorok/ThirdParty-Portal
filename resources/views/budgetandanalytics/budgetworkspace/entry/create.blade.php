@@ -92,7 +92,7 @@
 
         <div class="d-flex gap-2">
             <button type="button" id="addRow" class="btn btn-secondary">➕ Add Row</button>
-            <button type="submit" class="btn btn-primary">💾 Save Entry</button>
+            <button type="submit" class="btn btn-primary" onclick="this.disabled=true; this.innerText='Saving...'; this.form.submit();">💾 Save Entry</button>
         </div>
     </form>
 </div>
