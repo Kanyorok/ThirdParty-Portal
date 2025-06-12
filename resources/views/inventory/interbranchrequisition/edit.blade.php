@@ -14,7 +14,7 @@
 @endif
 
 <div class="container mt-4">
-    <h4 class="fw-bold mb-3"> Edit Inter-Branch Requisition</h4>
+    <h4 class="fw-bold mb-3">Edit Inter-Branch Requisition</h4>
 
     <form action="{{ route('interbranchrequisition.update', $item->Id) }}" method="POST">
         @csrf
@@ -91,12 +91,19 @@
                                             <option value="">-- Select Item --</option>
                                         </select>
                                     </div>
-                               
                                     <div class="col-md-1">
-                                        <label class="form-label">Requested Qty</label>
+                                        <label class="form-label">Code</label>
+                                        <input type="text" name="items[{{ $index }}][ItemCode]" class="form-control item-code" value="{{ $selectedItem->ItemCode ?? '' }}" readonly>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <label class="form-label">UOM</label>
+                                        <input type="text" name="items[{{ $index }}][UOM]" class="form-control uom" value="{{ $selectedItem->uom->Name ?? '' }}" readonly>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <label class="form-label">Qty</label>
                                         <input type="number" name="items[{{ $index }}][RequestedQty]" class="form-control" value="{{ $line->RequestedQty }}" min="1" required>
                                     </div>
-                                    <div class="col-md-2">
+                                    <div class="col-md-1">
                                         <label class="form-label">Remarks</label>
                                         <input type="text" name="items[{{ $index }}][Remarks]" class="form-control" value="{{ $line->Remarks }}">
                                     </div>
@@ -142,12 +149,19 @@
                         <option value="">-- Select Item --</option>
                     </select>
                 </div>
-            
                 <div class="col-md-1">
-                    <label class="form-label">Requested Qty</label>
+                    <label class="form-label">Code</label>
+                    <input type="text" name="items[__INDEX__][ItemCode]" class="form-control item-code" readonly>
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">UOM</label>
+                    <input type="text" name="items[__INDEX__][UOM]" class="form-control uom" readonly>
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">Qty</label>
                     <input type="number" name="items[__INDEX__][RequestedQty]" class="form-control" value="1" min="1" required>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-1">
                     <label class="form-label">Remarks</label>
                     <input type="text" name="items[__INDEX__][Remarks]" class="form-control">
                 </div>
@@ -165,126 +179,111 @@
 
     function populateSubcategories(categorySelect, subcategorySelect, selectedSubcat = null, callback = null) {
         const categoryId = categorySelect.value;
-        if (!categoryId) {
-            subcategorySelect.innerHTML = '<option value="">-- Select Subcategory --</option>';
-            if (callback) callback();
-            return;
-        }
+        subcategorySelect.innerHTML = '<option value="">-- Select Subcategory --</option>';
+        if (!categoryId) return callback?.();
+
         fetch(`/inventory/get-subcategories?category_id=${categoryId}`)
             .then(response => response.json())
             .then(data => {
-                subcategorySelect.innerHTML = '<option value="">-- Select Subcategory --</option>';
                 data.forEach(subcat => {
-                    const option = document.createElement('option');
-                    option.value = subcat.Id;
-                    option.text = subcat.Name;
-                    if (selectedSubcat && selectedSubcat == subcat.Id) {
-                        option.selected = true;
-                    }
-                    subcategorySelect.appendChild(option);
+                    const option = new Option(subcat.Name, subcat.Id);
+                    if (selectedSubcat == subcat.Id) option.selected = true;
+                    subcategorySelect.add(option);
                 });
-                if (callback) callback();
+                callback?.();
             });
     }
 
     function populateItems(subcategorySelect, itemSelect, selectedItem = null) {
         const subcatId = subcategorySelect.value;
-        if (!subcatId) {
-            itemSelect.innerHTML = '<option value="">-- Select Item --</option>';
-            return;
-        }
+        itemSelect.innerHTML = '<option value="">-- Select Item --</option>';
+        if (!subcatId) return;
+
         fetch(`/inventory/get-items?subcategory_id=${subcatId}`)
             .then(response => response.json())
             .then(data => {
-                // Always include the originally selected item if not present in the new list
-                let currentItem = selectedItem || itemSelect.getAttribute('data-initial');
-                let hasCurrent = data.some(item => item.Id == currentItem);
-
-                itemSelect.innerHTML = '<option value="">-- Select Item --</option>';
+                const currentItem = selectedItem || itemSelect.getAttribute('data-initial');
+                const hasCurrent = data.some(item => item.Id == currentItem);
                 data.forEach(item => {
-                    const option = document.createElement('option');
-                    option.value = item.Id;
-                    option.text = item.ItemName;
-                    if (currentItem && currentItem == item.Id) {
-                        option.selected = true;
-                    }
-                    itemSelect.appendChild(option);
+                    const option = new Option(item.ItemName, item.Id);
+                    if (item.Id == currentItem) option.selected = true;
+                    itemSelect.add(option);
                 });
-
-                // If initial/current item is not in data, add it as an option (retain it)
                 if (currentItem && !hasCurrent) {
-                    const option = document.createElement('option');
-                    option.value = currentItem;
-                    option.text = '[Original Item]';
-                    option.selected = true;
-                    itemSelect.appendChild(option);
+                    const option = new Option('[Original Item]', currentItem, true, true);
+                    itemSelect.add(option);
                 }
             });
     }
+   
+    function fetchItemCode(itemId, entry) {
+        if (!itemId) {
+            entry.querySelector('.item-code').value = '';
+            entry.querySelector('.uom').value = '';
+            return;
+        }
 
-    // Initial population for subcategory and item selects for existing rows
-    document.addEventListener('DOMContentLoaded', function () {
-        document.querySelectorAll('.item-entry').forEach(function(entry) {
+        fetch(`/inventory/items/code/${itemId}`)
+            .then(response => response.json())
+            .then(data => {
+                entry.querySelector('.item-code').value = data.ItemCode || '';
+                entry.querySelector('.uom').value = data.UOM || '';
+            });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.item-entry').forEach(entry => {
             const categorySelect = entry.querySelector('.category-select');
             const subcategorySelect = entry.querySelector('.subcategory-select');
             const itemSelect = entry.querySelector('.item-select');
             const selectedCategory = categorySelect.value;
             const selectedSubcategory = subcategorySelect.getAttribute('data-initial');
             const selectedItem = itemSelect.getAttribute('data-initial');
+
             if (selectedCategory) {
-                populateSubcategories(categorySelect, subcategorySelect, selectedSubcategory, function() {
+                populateSubcategories(categorySelect, subcategorySelect, selectedSubcategory, () => {
                     if (selectedSubcategory) {
                         populateItems(subcategorySelect, itemSelect, selectedItem);
                     }
                 });
             }
         });
-    });
 
-    document.getElementById('addItemBtn').addEventListener('click', function () {
-        const template = document.getElementById('itemTemplate');
-        const clone = template.content.cloneNode(true);
-
-        // Replace __INDEX__ in all names
-        const fields = clone.querySelectorAll('[name]');
-        fields.forEach(element => {
-            element.name = element.name.replace('__INDEX__', itemCounter);
-        });
-
-        // Add remove button event
-        clone.querySelector('.remove-item-btn').addEventListener('click', function () {
-            this.closest('.item-entry').remove();
-        });
-
-        document.getElementById('itemsContainer').appendChild(clone);
-        itemCounter++;
-    });
-
-    document.addEventListener('change', function (e) {
-        // Category changed
-        if (e.target.classList.contains('category-select')) {
-            const entry = e.target.closest('.item-entry');
-            const subcategorySelect = entry.querySelector('.subcategory-select');
-            const itemSelect = entry.querySelector('.item-select');
-            populateSubcategories(e.target, subcategorySelect, null, function() {
-                itemSelect.innerHTML = '<option value="">-- Select Item --</option>';
+        document.getElementById('addItemBtn').addEventListener('click', () => {
+            const template = document.getElementById('itemTemplate');
+            const clone = template.content.cloneNode(true);
+            clone.querySelectorAll('[name]').forEach(el => {
+                el.name = el.name.replace('__INDEX__', itemCounter);
             });
-        }
-        // Subcategory changed
-        if (e.target.classList.contains('subcategory-select')) {
-            const entry = e.target.closest('.item-entry');
-            const itemSelect = entry.querySelector('.item-select');
-            populateItems(e.target, itemSelect);
-        }
-    });
+            clone.querySelector('.remove-item-btn').addEventListener('click', function () {
+                this.closest('.item-entry').remove();
+            });
+            document.getElementById('itemsContainer').appendChild(clone);
+            itemCounter++;
+        });
 
-    // When user focuses the item select, always repopulate with current subcategory
-    document.addEventListener('focusin', function (e) {
-        if (e.target.classList.contains('item-select')) {
+        document.addEventListener('change', function (e) {
             const entry = e.target.closest('.item-entry');
-            const subcategorySelect = entry.querySelector('.subcategory-select');
-            populateItems(subcategorySelect, e.target, e.target.value);
-        }
+            if (!entry) return;
+
+            if (e.target.classList.contains('category-select')) {
+                populateSubcategories(e.target, entry.querySelector('.subcategory-select'), null, () => {
+                    entry.querySelector('.item-select').innerHTML = '<option value="">-- Select Item --</option>';
+                    entry.querySelector('.item-code').value = '';
+                    entry.querySelector('.uom').value = '';
+                });
+            }
+
+            if (e.target.classList.contains('subcategory-select')) {
+                populateItems(e.target, entry.querySelector('.item-select'));
+                entry.querySelector('.item-code').value = '';
+                entry.querySelector('.uom').value = '';
+            }
+
+            if (e.target.classList.contains('item-select')) {
+                fetchItemCode(e.target.value, entry);
+            }
+        });
     });
 </script>
 @endpush
