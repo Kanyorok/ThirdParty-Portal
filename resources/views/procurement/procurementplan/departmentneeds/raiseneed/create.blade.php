@@ -10,7 +10,7 @@
         <input type="hidden" name="Status" value="p">
         <input type="hidden" name="PriorityLevel" value="Normal">
         <input type="hidden" name="IsEmergency" value="0">
-        <input type="hidden" name="FiscalYear" va lue="{{ now()->year }}">
+        <input type="hidden" name="FiscalYear" value="{{ now()->year }}">
 
         <div class="row mb-3">
             <div class="col-md-6">
