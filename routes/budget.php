@@ -138,7 +138,6 @@ Route::namespace('Budget')->group(function () {
     // Admin & Integration
     Route::resource('cbssync', CBSSyncController::class);
     Route::resource('datasynclogs', DataSyncLogsController::class);
-    Route::resource('systemsettings', SystemSettingsController::class);
 
     //Budget Settings
     Route::resource('rates', BudgetRatesController::class);
