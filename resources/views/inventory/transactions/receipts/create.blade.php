@@ -1,63 +1,57 @@
 @extends('layouts.app')
 @section('title', 'Create Receipt')
 @section('content')
-<div class="container bg-white shadow rounded p-4">
-    <h4 class="mb-4">Transaction Receipt Form</h4>
-
+<div class="card mb-4">
+  <div class="card-header bg-success text-white">📥 Post Goods Receipt</div>
+  <div class="card-body">
     <form>
       <div class="row mb-3">
-        <div class="col-md-4">
-          <label for="receiptDate" class="form-label">Receipt Date</label>
-          <input type="date" class="form-control" id="receiptDate" required>
+        <div class="col">
+          <label class="form-label">Transfer Ref</label>
+          <select class="form-select">
+            <option>Select Transfer</option>
+          </select>
         </div>
-        <div class="col-md-4">
-          <label for="supplier" class="form-label">Supplier</label>
-          <input type="text" class="form-control" id="supplier" placeholder="Supplier Name" required>
+        <div class="col">
+          <label class="form-label">Received By</label>
+          <input type="text" class="form-control" />
         </div>
-        <div class="col-md-4">
-          <label for="poNumber" class="form-label">PO Number</label>
-          <input type="text" class="form-control" id="poNumber" placeholder="PO-12345">
+        <div class="col">
+          <label class="form-label">Receive Date</label>
+          <input type="date" class="form-control" />
         </div>
       </div>
 
-      <div class="table-responsive mb-3">
-        <table class="table table-bordered align-middle">
+      <div class="mb-3">
+        <label class="form-label">Items Received</label>
+        <table class="table table-bordered">
           <thead class="table-light">
             <tr>
-              <th>#</th>
-              <th>Item Code</th>
-              <th>Item Name</th>
-              <th>Quantity</th>
-              <th>UOM</th>
+              <th>Product</th>
+              <th>Qty Received</th>
+              <th>Qty Damaged</th>
               <th>Remarks</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td>1</td>
-              <td><input type="text" class="form-control" placeholder="ITM-001"></td>
-              <td><input type="text" class="form-control" placeholder="Item Description"></td>
-              <td><input type="number" class="form-control" placeholder="0"></td>
-              <td>
-                <select class="form-select">
-                  <option>pcs</option>
-                  <option>kg</option>
-                  <option>litres</option>
-                </select>
-              </td>
-              <td><input type="text" class="form-control" placeholder="Optional"></td>
+              <td><input class="form-control" /></td>
+              <td><input class="form-control" /></td>
+              <td><input class="form-control" /></td>
+              <td><input class="form-control" /></td>
             </tr>
-            <!-- More rows can be added dynamically -->
           </tbody>
         </table>
       </div>
 
       <div class="mb-3">
-        <label for="receivedBy" class="form-label">Received By</label>
-        <input type="text" class="form-control" id="receivedBy" placeholder="e.g. Daniel Mbugua" required>
+        <label class="form-label">General Remarks</label>
+        <textarea class="form-control" rows="2"></textarea>
       </div>
 
-      <button type="submit" class="btn btn-primary">✅ Submit Receipt</button>
+      <button class="btn btn-success">Post GRN</button>
     </form>
   </div>
+</div>
+
 @endsection
