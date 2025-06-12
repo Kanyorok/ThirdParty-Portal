@@ -79,7 +79,6 @@
                                 <th>Parent Category</th>
                                 <th>Category</th>
                                 <th>Item</th>
-                                <th>UOM</th>
                                 <th>Qty</th>
                                 <th>ApprovedQty</th>
                                 <th>Remarks</th>
@@ -93,7 +92,6 @@
                                     <td>{{ $requisitionItem->item->category->parent->Name ?? '-' }}</td>
                                     <td>{{ $requisitionItem->item->category->Name ?? '-' }}</td>
                                     <td>{{ $requisitionItem->item->ItemName ?? '-' }}</td>
-                                    <td>{{ $requisitionItem->uom->Code ?? '-' }}</td>
                                     <td>{{ $requisitionItem->RequestedQty ?? '-' }}</td>
                                     <td>{{ $requisitionItem->ApprovedQty ?? '-' }}</td>
                                     <td>{{ $requisitionItem->Remarks ?? '-' }}</td>

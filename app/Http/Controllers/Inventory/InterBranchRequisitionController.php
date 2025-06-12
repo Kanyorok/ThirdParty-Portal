@@ -73,7 +73,6 @@ class InterBranchRequisitionController extends Controller
             'creator',
             'items',
             'items.item.category.parent',
-            'items.uom',
         ])->findOrFail($Id);
 
         return view('inventory.interbranchrequisition.show', compact('item'));
@@ -88,7 +87,6 @@ class InterBranchRequisitionController extends Controller
             'creator',
             'items',
             'items.item.category.parent',
-            'items.uom',
         ])->findOrFail($Id);
 
         $categories = ItemCategories::whereNull('ParentId')->get();
@@ -138,6 +136,19 @@ class InterBranchRequisitionController extends Controller
 
         return response()->json($subcategories);
     }
+public function getItemCode($Id)
+{
+    $item = ItemMasterList::with('uom')->select('Id', 'ItemCode', 'UOM')->find($Id);
+
+    if (!$item) {
+        return response()->json(['error' => 'Item not found'], 404);
+    }
+
+    return response()->json([
+        'item_code' => $item->ItemCode,
+        'item_uom' => optional($item->uom)->Code ?? 'N/A',
+    ]);
+}
 
     public function getItemsByCategoryOrSubcategory(Request $request)
     {
@@ -156,4 +167,5 @@ class InterBranchRequisitionController extends Controller
 
         return response()->json($items);
     }
+    
 }

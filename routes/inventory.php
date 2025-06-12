@@ -105,6 +105,9 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::put('/interbranchrequisition/{Id}', [InterBranchRequisitionController::class, 'update'])->name('interbranchrequisition.update');
     Route::delete('/interbranchrequisition/{Id}', [InterBranchRequisitionController::class, 'destroy'])->name('interbranchrequisition.destroy');
     Route::get('/interbranchrequisition/get-items', [InterBranchRequisitionController::class, 'getItemsByCategoryOrSubcategory'])->name('interbranchrequisition.getItemsByCategoryOrSubcategory');
+    Route::get('/items/code/{Id}', [InterBranchRequisitionController::class, 'getItemCode']);
+    
+
 
 
     Route::get('/inventory/get-subcategories', [InterBranchRequisitionController::class, 'getSubcategories'])->name('inventory.getSubcategories');

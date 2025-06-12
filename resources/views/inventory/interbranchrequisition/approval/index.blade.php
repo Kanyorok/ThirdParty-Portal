@@ -70,7 +70,6 @@
                         <tr>
                             <th>#</th>
                             <th>Item Name</th>
-                            <th>UOM</th>
                             <th>Requested Qty</th>
                             <th>Approved Qty</th>
                             <th>Remarks</th>
@@ -81,7 +80,6 @@
                         <tr>
                             <td>{{ $index + 1 }}</td>
                             <td>{{ $requisitionItem->item?->ItemName ?? 'N/A' }}</td>
-                            <td>{{ $requisitionItem->uom?->Code ?? 'N/A' }}</td>
                             <td>{{ $requisitionItem->RequestedQty }}</td>
                             <td>
                                 <input type="number" min="0" name="approved_qty[{{ $requisitionItem->Id }}]" class="form-control"

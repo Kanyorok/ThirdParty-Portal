@@ -91,17 +91,7 @@
                                             <option value="">-- Select Item --</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-1">
-                                        <label class="form-label">UOM</label>
-                                        <select name="items[{{ $index }}][UOM]" class="form-select" required>
-                                            <option value="">Select UOM</option>
-                                            @foreach ($uoms as $uom)
-                                                <option value="{{ $uom->Id }}" {{ $line->UOM == $uom->Id ? 'selected' : '' }}>
-                                                    {{ $uom->Code }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
+                               
                                     <div class="col-md-1">
                                         <label class="form-label">Requested Qty</label>
                                         <input type="number" name="items[{{ $index }}][RequestedQty]" class="form-control" value="{{ $line->RequestedQty }}" min="1" required>
@@ -152,15 +142,7 @@
                         <option value="">-- Select Item --</option>
                     </select>
                 </div>
-                <div class="col-md-1">
-                    <label class="form-label">UOM</label>
-                    <select name="items[__INDEX__][UOM]" class="form-select" required>
-                        <option value="">Select UOM</option>
-                        @foreach ($uoms as $uom)
-                            <option value="{{ $uom->Id }}">{{ $uom->Code }}</option>
-                        @endforeach
-                    </select>
-                </div>
+            
                 <div class="col-md-1">
                     <label class="form-label">Requested Qty</label>
                     <input type="number" name="items[__INDEX__][RequestedQty]" class="form-control" value="1" min="1" required>
