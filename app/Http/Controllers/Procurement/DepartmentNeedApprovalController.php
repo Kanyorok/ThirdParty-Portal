@@ -12,7 +12,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class DepartmentNeedApprovalController extends Controller
