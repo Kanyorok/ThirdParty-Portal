@@ -16,54 +16,37 @@
                     <th>#</th>
                     <th>Scenario</th>
                     <th>Currency</th>
-                    <th>Product</th>
+                    <th>Products</th>
                     <th>Period</th>
                     <th>Volume</th>
-                    <th>Projected Value (KES)</th>
+                    <th>Projected Value</th>
                     <th>Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>1</td>
-                    <td>Base Case</td>
-                    <td>KES</td>
-                    <td>Product A</td>
-                    <td>2025</td>
-                    <td>1,000</td>
-                    <td>250,000.00</td>
-                    <td><span class="badge bg-warning">Pending</span></td>
-                    <td>
-                        <a href="{{route('entrybyproduct.show',1)}}" class="btn btn-sm btn-outline-info">👁</a>
-                        <form action="#" method="POST" class="d-inline">
-                            @csrf @method('DELETE')
-                            <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this entry?')">🗑</button>
-                        </form>
+                @foreach ($projections as $projection)
+                    <tr>
+                        <td>{{ $loop->iteration }}</td>
+                        <td>{{ $projection->scenario->scenarioName }}</td>
+                        <td>{{ $projection->currency->Code }}</td>
+                        <td>{{ $projection->projections->count() }}</td>
+                        <td>{{ $projection->period->fiscalYear }}</td>
+                        <td>{{ number_format($projection->total_volume) }}</td>
+                        <td>{{ number_format($projection->total_value, 2) }}</td>
+                        <td><span class="badge bg-warning">Pending</span></td>
+                        <td>
+                            <a href="{{route('entrybyproduct.show',1)}}" class="btn btn-sm btn-outline-info">👁</a>
+                            <form action="#" method="POST" class="d-inline">
+                                @csrf @method('DELETE')
+                                <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this entry?')">🗑</button>
+                            </form>
 
-                        <a href="{{route('entrybyproduct.edit',1)}}" class="btn btn-sm btn-outline-info">🖉 </a>
-                        <a href="{{route('monthly.create',1)}}" class="btn btn-sm btn-outline-info">Monthly</a> 
-                    </td>
-                </tr>
-                <tr>
-                    <td>2</td>
-                    <td>Optimistic</td>
-                    <td>USD</td>
-                    <td>Product B</td>
-                    <td>2026</td>
-                    <td>2,500</td>
-                    <td>1,200,000.00</td>
-                    <td><span class="badge bg-success">Approved</span></td>
-                    <td>
-                        <a href="{{route('entrybyproduct.show',2)}}" class="btn btn-sm btn-outline-info">👁</a>
-                        <form action="#" method="POST" class="d-inline">
-                            @csrf @method('DELETE')
-                            <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this entry?')">🗑</button>
-                        </form>
-                        <a href="{{route('entrybyproduct.edit',1)}}" class="btn btn-sm btn-outline-info">🖉 </a>
-                        <a href="{{route('monthly.create',1)}}" class="btn btn-sm btn-outline-info">Monthly</a>
-                    </td>
-                </tr>
+                            <a href="{{route('entrybyproduct.edit',1)}}" class="btn btn-sm btn-outline-info">🖉 </a>
+                            <a href="{{route('monthly.create',1)}}" class="btn btn-sm btn-outline-info">Monthly</a> 
+                        </td>
+                    </tr>
+                @endforeach
             </tbody>
         </table>
     </div>

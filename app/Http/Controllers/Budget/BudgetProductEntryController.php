@@ -20,8 +20,22 @@ class BudgetProductEntryController extends Controller
    public function index()
     {
         //$projections = BudgetDriverProjections::with(['scenario', 'product', 'period'])->get();
-        $projections=[];
+        $projections=BudgetDriverProjections::with(
+            'projections',
+            'scenario:Id,scenarioName',
+            'currency:Id,Code',
+            'period:Id,fiscalYear',
+            )->get();
 
+            // Compute totals for each main projection
+            foreach ($projections as $proj) {
+                $proj->total_volume = $proj->projections->sum(function ($item) {
+                    return (float) $item->Volume;
+                });
+                $proj->total_value = $proj->projections->sum(function ($item) {
+                    return (float) $item->Value;
+                });
+            }
         return view('budgetandanalytics.budgetworkspace.entry.index', compact('projections'));
     }
 
