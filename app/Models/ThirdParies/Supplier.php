@@ -78,7 +78,7 @@ class Supplier extends Model
     public function tenders()
     {
         return $this->belongsToMany(Tender::class, 'TenderSupplier', 'SupplierID', 'TenderID')
-                    ->withTimestamps();
+            ->withTimestamps();
     }
 
 }

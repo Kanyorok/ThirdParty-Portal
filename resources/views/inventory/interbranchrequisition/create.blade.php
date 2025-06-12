@@ -28,7 +28,8 @@
                             <select name="FromBranch" class="form-select" required>
                                 <option value="">Select Branch</option>
                                 @foreach ($branches as $branch)
-                                    <option value="{{ $branch->Id }}" {{ old('FromBranch') == $branch->Id ? 'selected' : '' }}>
+                                    <option
+                                        value="{{ $branch->Id }}" {{ old('FromBranch') == $branch->Id ? 'selected' : '' }}>
                                         {{ $branch->Name }}
                                     </option>
                                 @endforeach
@@ -39,7 +40,8 @@
                             <select name="ToBranch" class="form-select" required>
                                 <option value="">Select Branch</option>
                                 @foreach ($branches as $branch)
-                                    <option value="{{ $branch->Id }}" {{ old('ToBranch') == $branch->Id ? 'selected' : '' }}>
+                                    <option
+                                        value="{{ $branch->Id }}" {{ old('ToBranch') == $branch->Id ? 'selected' : '' }}>
                                         {{ $branch->Name }}
                                     </option>
                                 @endforeach
@@ -47,7 +49,8 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Date</label>
-                            <input type="date" name="CreatedOn" class="form-control" value="{{ old('CreatedOn', now()->toDateString()) }}" required>
+                            <input type="date" name="CreatedOn" class="form-control"
+                                   value="{{ old('CreatedOn', now()->toDateString()) }}" required>
                         </div>
                     </div>
 
@@ -105,7 +108,8 @@
 </div>
                     <div class="col-md-1">
                         <label class="form-label">Requested Qty</label>
-                        <input type="number" name="items[__INDEX__][RequestedQty]" class="form-control" value="1" min="1" required>
+                        <input type="number" name="items[__INDEX__][RequestedQty]" class="form-control" value="1"
+                               min="1" required>
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">Remarks</label>
@@ -291,11 +295,11 @@ $('select.item-dropdown').on('change', function () {
 
             // Add first item automatically if no old inputs (fresh form)
             @if (!old('items'))
-                addItem();
+            addItem();
             @else
-                @foreach (old('items', []) as $index => $oldItem)
-                    addItem(@json($oldItem));
-                @endforeach
+            @foreach (old('items', []) as $index => $oldItem)
+            addItem(@json($oldItem));
+            @endforeach
             @endif
         </script>
     @endpush

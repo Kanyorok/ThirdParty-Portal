@@ -21,13 +21,13 @@ class Committee extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-                           "CommitteeID",
-                           "Name",
-                           'Notes',
+        "CommitteeID",
+        "Name",
+        'Notes',
         'Type',
-                           'CreatedBy',
-                           'ModifiedBy',
-                          ];
+        'CreatedBy',
+        'ModifiedBy',
+    ];
 
     public static function getPrimaryKey(): string
     {
@@ -48,7 +48,7 @@ class Committee extends Model
             ->withTimestamps('CreatedOn', 'ModifiedOn')->withPivot(['CreatedBy', 'ModifiedBy'])->using(BoardCommittee::class);
     }
 
-    public function employees()
+    public function employees(): BelongsToMany
     {
         return $this->belongsToMany(Employee::class, 't_Committee_Employee', 'CommitteeId', 'EmployeeId')
             ->withPivot(['CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn', 'DeletedBy', 'DeletedOn']);

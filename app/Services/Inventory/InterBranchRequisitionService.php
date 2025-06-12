@@ -50,7 +50,7 @@ class InterBranchRequisitionService
             'ModifiedOn' => Carbon::now(),
         ]);
 
-       
+
         PendingWorkflow::updateOrCreate(
             [
                 'Source' => 'InterBranchRequisition',
@@ -123,12 +123,13 @@ class InterBranchRequisitionService
 
     public function submitDecision(
         InterBranchRequisition $requisition,
-        string $action,
-        string $comments,
-        array $approvedQty = [],
-        array $itemRemarks = [],
-        $user = null
-    ): void {
+        string                 $action,
+        string                 $comments,
+        array                  $approvedQty = [],
+        array                  $itemRemarks = [],
+                               $user = null
+    ): void
+    {
         $user = $user ?: Auth::user();
 
         if (!empty($approvedQty)) {
@@ -144,7 +145,7 @@ class InterBranchRequisitionService
             }
         }
 
-       
+
         if ($action === 'APPROVED') {
             $requisition->Status = InterBranchRequisitionEnum::Approved->value;
         } elseif ($action === 'REJECTED') {
@@ -154,7 +155,7 @@ class InterBranchRequisitionService
         $requisition->ModifiedOn = Carbon::now();
         $requisition->save();
 
-       
+
         $enum = match ($action) {
             'APPROVED' => InterBranchRequisitionEnum::Approved,
             'REJECTED' => InterBranchRequisitionEnum::Rejected,
@@ -174,7 +175,7 @@ class InterBranchRequisitionService
         ]);
 
         $pending = PendingWorkflow::where([
-            'Source'   => 'InterBranchRequisition',
+            'Source' => 'InterBranchRequisition',
             'SourceID' => $requisition->Id,
         ])->first();
 

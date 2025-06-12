@@ -1,6 +1,7 @@
-<script src="{{ asset('assets/plugins/dropzone/dropzone.min.js') }}"></script>
-<script src="{{ asset('assets/plugins/summernote/summernote-bs5.min.js') }}"></script>
-<script src="{{ asset('assets/plugins/select2/js/select2.full.min.js') }}"></script>
+@php use App\Enums\Core\ExtensionsEnum; @endphp
+<script src="{{ asset('assets/libs/dropzone/dropzone.min.js') }}"></script>
+<script src="{{ asset('assets/libs/summernote/summernote-bs5.min.js') }}"></script>
+<script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
 
 <form method="post" id="mailReplyContactForm" class="row" action="{{ route('emails.send-draft',[$email->EmailID]) }}">
     @csrf
@@ -67,7 +68,7 @@
 <script>
     const AttachmentDropZone = new Dropzone("#upload-form", {
         maxFilesize: 9,//Mb
-        acceptedFiles: "{{ implode(", ",\App\Enums\Core\ExtensionsEnum::getAllMimeTypes()) }}",
+        acceptedFiles: "{{ implode(", ",ExtensionsEnum::getAllMimeTypes()) }}",
         success: function (file, response) {
             file.previewElement.remove();
             $('#emailAttachmentsContent').append(response.html);

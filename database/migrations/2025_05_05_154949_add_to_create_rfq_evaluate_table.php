@@ -24,7 +24,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('t_RFQEvaluation', function (Blueprint $table) {
+        Schema::table('t_RFQEvaluations', function (Blueprint $table) {
             $table->dropConstrainedForeignId('SupplierId');
         });
     }

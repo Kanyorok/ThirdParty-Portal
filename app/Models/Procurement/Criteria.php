@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Criteria extends Model
 {
-    use UserActorTrait,SoftDeletes;
+    use UserActorTrait, SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -29,7 +29,7 @@ class Criteria extends Model
         'DeletedOn' => 'datetime',
     ];
 
-        public static function getPrimaryKey(): string
+    public static function getPrimaryKey(): string
     {
         return (new self())->getRouteKeyName();
     }

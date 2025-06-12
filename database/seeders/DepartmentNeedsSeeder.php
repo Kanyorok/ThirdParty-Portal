@@ -6,7 +6,9 @@ use Illuminate\Database\Seeder;
 use App\Models\Procurement\DepartmentNeeds;
 use App\Models\Core\Branch;
 use App\Models\HRM\Department;
-use App\Models\Inventory\ItemMasterList; // Assuming your Item model is this
+use App\Models\Inventory\ItemMasterList;
+
+// Assuming your Item model is this
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Enums\Procurement\DepartmentNeedsEnum;

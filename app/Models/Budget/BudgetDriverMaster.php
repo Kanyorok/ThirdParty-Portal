@@ -8,11 +8,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BudgetDriverMaster extends Model
 {
-    use UserActorTrait,SoftDeletes;
+    use UserActorTrait, SoftDeletes;
 
-    protected $table='t_BudgetDriversMaster';
+    protected $table = 't_BudgetDriversMaster';
     protected $primaryKey = 'Id';
-    
+
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
@@ -22,7 +22,7 @@ class BudgetDriverMaster extends Model
         return 'BudgetDriversMasterId';
     }
 
-    protected $fillable =[
+    protected $fillable = [
         'DriverName',
         //'DriverCode',
         'DriverTypeID',
@@ -39,14 +39,15 @@ class BudgetDriverMaster extends Model
 
     protected $casts = [
         'IsActive' => 'boolean',
-        
+
         'CreatedOn' => 'datetime',
         'ModifiedOn' => 'datetime',
         'DeletedOn' => 'datetime',
     ];
 
-    public function driverType(){
-        return $this->belongsTo(BudgetDriver::class,'DriverTypeID','Id');
+    public function driverType()
+    {
+        return $this->belongsTo(BudgetDriver::class, 'DriverTypeID', 'Id');
     }
 
 }

@@ -8,7 +8,7 @@ class PriceManagement extends FormRequest
 {
     public function authorize()
     {
-        return true; 
+        return true;
     }
 
     public function rules()
@@ -16,7 +16,7 @@ class PriceManagement extends FormRequest
         return [
             'PriceID' => 'required|string|max:255',
             'ItemID' => 'required|exists:t_Items,Id',
-            'UOM' => 'required|exists:t_Items,Id', 
+            'UOM' => 'required|exists:t_Items,Id',
             'SKUCode' => 'required|exists:t_StockItems,Id',
             'EstimatedPrice' => 'required|numeric|min:0',
             'ActualPrice' => 'required|numeric|min:0',

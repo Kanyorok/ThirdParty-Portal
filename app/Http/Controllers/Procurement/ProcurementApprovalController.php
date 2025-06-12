@@ -12,12 +12,12 @@ use App\Models\Core\Workflow;
 
 class ProcurementApprovalController extends Controller
 {
-   public function index(Request $request)
+    public function index(Request $request)
     {
         $draftPlans = ConsolidatedProcurementPlan::where('Status', ProcurementPlanStatusEnum::Submitted)->get();
 
         $selectedPlan = null;
-        if ($request->has('PlanID') && !empty($request->PlanID)) { 
+        if ($request->has('PlanID') && !empty($request->PlanID)) {
             $selectedPlan = ConsolidatedProcurementPlan::find($request->PlanID);
 
             if ($selectedPlan) {
@@ -44,7 +44,7 @@ class ProcurementApprovalController extends Controller
 
     public function submitDecision(Request $request)
     {
-         $user = auth()->user();
+        $user = auth()->user();
         $request->validate([
             'planId' => 'required|integer',
             'role' => 'required|string',
@@ -59,7 +59,7 @@ class ProcurementApprovalController extends Controller
                 $plan->Status = ProcurementPlanStatusEnum::Approved;
                 break;
             case 'REJECTED':
-                $plan->Status =  ProcurementPlanStatusEnum::Rejected;
+                $plan->Status = ProcurementPlanStatusEnum::Rejected;
                 break;
             case 'COMMENTED':
                 // no status change
@@ -72,27 +72,27 @@ class ProcurementApprovalController extends Controller
         $plan->save();
 
         // Update or insert Workflow record
-            Workflow::create([
-                'Source' => 'ProcurementPlan',
-                'SourceID' => $plan->PlanID,
-                'Stage' => $this->getApprovalLevelFromStatus($plan->Status),
-                'Status' => match ($request->action) {
-                    'APPROVED' => 'Ap',
-                    'REJECTED' => 'Re',
-                    'COMMENTED' => 'Cm',
-                },
-                'Notes' => $request->comments,
-                'CreatedBy' => auth()->id(),
-                'CreatedOn' => Carbon::now(),
-                'ModifiedBy' => auth()->id(),
-                'ModifiedOn' => Carbon::now(),
-            ]);
+        Workflow::create([
+            'Source' => 'ProcurementPlan',
+            'SourceID' => $plan->PlanID,
+            'Stage' => $this->getApprovalLevelFromStatus($plan->Status),
+            'Status' => match ($request->action) {
+                'APPROVED' => 'Ap',
+                'REJECTED' => 'Re',
+                'COMMENTED' => 'Cm',
+            },
+            'Notes' => $request->comments,
+            'CreatedBy' => auth()->id(),
+            'CreatedOn' => Carbon::now(),
+            'ModifiedBy' => auth()->id(),
+            'ModifiedOn' => Carbon::now(),
+        ]);
 
-         activity()
-        ->causedBy($user)
-        ->performedOn($plan)
-        ->event(strtolower($request->action))
-        ->log("{$request->action} procurement plan (PlanID: {$plan->PlanID}) with comment: '{$request->comments}'");
+        activity()
+            ->causedBy($user)
+            ->performedOn($plan)
+            ->event(strtolower($request->action))
+            ->log("{$request->action} procurement plan (PlanID: {$plan->PlanID}) with comment: '{$request->comments}'");
 
         return redirect()->route('planning.approval.index')->with('success', 'Your decision has been recorded.');
     }

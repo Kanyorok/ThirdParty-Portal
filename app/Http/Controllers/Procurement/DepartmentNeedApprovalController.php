@@ -12,7 +12,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class DepartmentNeedApprovalController extends Controller
@@ -26,7 +25,7 @@ class DepartmentNeedApprovalController extends Controller
 
     public function show($Id)
     {
-        $need = DepartmentNeeds::with(['item.category','item.uom', 'creator'])->findOrFail($Id);
+        $need = DepartmentNeeds::with(['item.category', 'item.uom', 'creator'])->findOrFail($Id);
         return view('procurement.procurementplan.departmentneeds.approval.show', compact('need'));
     }
 
@@ -67,36 +66,36 @@ class DepartmentNeedApprovalController extends Controller
     }
 
 
-public function destroy(Request $request, $departmentNeed_ID): RedirectResponse
-{
-    $departmentNeeds = DepartmentNeeds::findOrFail($departmentNeed_ID);
-    $this->authorize('destroy', $departmentNeeds);
+    public function destroy(Request $request, $departmentNeed_ID): RedirectResponse
+    {
+        $departmentNeeds = DepartmentNeeds::findOrFail($departmentNeed_ID);
+        $this->authorize('destroy', $departmentNeeds);
 
-    $actor = $request->user();
-    $data = $request->validate([
-        'Department_needs_reject_reason' => ['required', 'string', 'min:15', 'max:2000'],
-    ]);
+        $actor = $request->user();
+        $data = $request->validate([
+            'Department_needs_reject_reason' => ['required', 'string', 'min:15', 'max:2000'],
+        ]);
 
-    try {
-        DB::transaction(static function () use ($departmentNeeds, $actor, $data) {
-            (new DepartmentNeedsApprovalService($departmentNeeds))
-                ->workflowReject($actor, $data['Department_needs_reject_reason']);
-        });
-    } catch (ErroredException $e) {
+        try {
+            DB::transaction(static function () use ($departmentNeeds, $actor, $data) {
+                (new DepartmentNeedsApprovalService($departmentNeeds))
+                    ->workflowReject($actor, $data['Department_needs_reject_reason']);
+            });
+        } catch (ErroredException $e) {
+            return redirect()
+                ->back()
+                ->with('error', $e->getMessage());
+        } catch (Exception $e) {
+            Log::error('Error reject department needs failed: ' . $e->getMessage());
+            return redirect()
+                ->back()
+                ->with('error', 'Unexpected error, try again later.');
+        }
+
         return redirect()
-            ->back()
-            ->with('error', $e->getMessage());
-    } catch (Exception $e) {
-        Log::error('Error reject department needs failed: ' . $e->getMessage());
-        return redirect()
-            ->back()
-            ->with('error', 'Unexpected error, try again later.');
+            ->route('department-need-approval.index')
+            ->with('success', 'Department needs rejected successfully.');
     }
-
-    return redirect()
-        ->route('department-need-approval.index')
-        ->with('success', 'Department needs rejected successfully.');
-}
 
 }
 

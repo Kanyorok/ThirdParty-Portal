@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Purchase Order')
 @section('styles')
-    <link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
     <style>
         .select2-container {
             width: 100% !important;
@@ -55,12 +55,12 @@
                 </div>
                 <div class="col-md-4">
                     <label>Reference Number</label>
-{{--                    <input type="text" class="form-control refNo" name="refNo" placeholder="RFQ Number" value="{{$orderInfo->ExtOrdNum ?? 'N/A'}}"/>--}}
+                    {{--                    <input type="text" class="form-control refNo" name="refNo" placeholder="RFQ Number" value="{{$orderInfo->ExtOrdNum ?? 'N/A'}}"/>--}}
                     <select class="form-control refNo" name="refNo" id="refNo">
                         <option selected disabled>Select RFQ</option>
-                            @foreach ($RFQ as $data)
-                                <option value="{{ $data->RFQId }}">{{ $data->RFQNumber }}</option>
-                            @endforeach
+                        @foreach ($RFQ as $data)
+                            <option value="{{ $data->RFQId }}">{{ $data->RFQNumber }}</option>
+                        @endforeach
                     </select>
 
                 </div>
@@ -72,7 +72,8 @@
                 </div>
                 <div class="col-md-4 mt-2">
                     <label>Payment Terms</label>
-                    <input type="text" name="terms" class="form-control terms" placeholder="e.g., Net 30, 50%" value=""/>
+                    <input type="text" name="terms" class="form-control terms" placeholder="e.g., Net 30, 50%"
+                           value=""/>
                 </div>
             </div>
 
@@ -149,7 +150,7 @@
             let totalTax = 0;
 
             // Loop through each row to calculate totals
-            $('#po-items tr').each(function() {
+            $('#po-items tr').each(function () {
                 let row = $(this);
                 let qty = parseFloat(row.find('.quantity').val()) || 0;
                 let price = parseFloat(row.find('.unit-price').val()) || 0;
@@ -180,6 +181,7 @@
             $('input[name="taxAmount"]').val(totalTax.toFixed(2));
             $('input[name="inclusiveTotal"]').val(inclusiveTotal.toFixed(2));
         }
+
         // fetch related RFQs
 
         $(document).on('change', '#refNo', function () {
@@ -209,7 +211,7 @@
                             if (rfq.items && rfq.items.length > 0) {
                                 let itemsTable = $('#poTable tbody');
                                 itemsTable.empty();
-                                    // console.log('start')
+                                // console.log('start')
                                 $.each(rfq.items, function (index, line) {
                                     // const item = line.item;
 
@@ -342,6 +344,5 @@
             });
         });
     </script>
-
 
 @endsection

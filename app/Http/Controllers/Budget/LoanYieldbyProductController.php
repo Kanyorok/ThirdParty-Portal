@@ -8,12 +8,13 @@ use Illuminate\Http\Request;
 class LoanYieldbyProductController extends Controller
 {
     //
-   public function index()
+    public function index()
     {
         return view('budgetandanalytics.businessintelligenceandanalytics.multidimentionalanalytics.loanyieldbyproduct.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('budgetandanalytics.businessintelligenceandanalytics.multidimentionalanalytics.loanyieldbyproduct.create');
-    } 
+    }
 }

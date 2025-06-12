@@ -3,58 +3,62 @@
 @section('title', 'Edit Inter-Branch Requisition')
 
 @section('content')
-@if ($errors->any())
-    <div class="alert alert-danger">
-        <ul>
-            @foreach($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
 <div class="container mt-4">
     <h4 class="fw-bold mb-3">Edit Inter-Branch Requisition</h4>
 
-    <form action="{{ route('interbranchrequisition.update', $item->Id) }}" method="POST">
-        @csrf
-        @method('PUT')
+        <form action="{{ route('interbranchrequisition.update', $item->Id) }}" method="POST">
+            @csrf
+            @method('PUT')
 
-        <div class="card shadow">
-            <div class="card-header bg-light fw-bold">✏️ Edit Stock Request</div>
-            <div class="card-body">
-                <div class="row g-3 mb-3">
-                    <div class="col-md-4">
-                        <label class="form-label">Requesting Branch</label>
-                        <select name="FromBranch" class="form-select" required>
-                            <option value="">Select Branch</option>
-                            @foreach ($branches as $branch)
-                                <option value="{{ $branch->Id }}" {{ old('FromBranch', $item->FromBranch) == $branch->Id ? 'selected' : '' }}>
-                                    {{ $branch->Name }}
-                                </option>
-                            @endforeach
-                        </select>
+            <div class="card shadow">
+                <div class="card-header bg-light fw-bold">✏️ Edit Stock Request</div>
+                <div class="card-body">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Requesting Branch</label>
+                            <select name="FromBranch" class="form-select" required>
+                                <option value="">Select Branch</option>
+                                @foreach ($branches as $branch)
+                                    <option
+                                        value="{{ $branch->Id }}" {{ old('FromBranch', $item->FromBranch) == $branch->Id ? 'selected' : '' }}>
+                                        {{ $branch->Name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">To Branch</label>
+                            <select name="ToBranch" class="form-select" required>
+                                <option value="">Select Branch</option>
+                                @foreach ($branches as $branch)
+                                    <option
+                                        value="{{ $branch->Id }}" {{ old('ToBranch', $item->ToBranch) == $branch->Id ? 'selected' : '' }}>
+                                        {{ $branch->Name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Date</label>
+                            <input type="date" name="CreatedOn" class="form-control"
+                                   value="{{ old('CreatedOn', \Carbon\Carbon::parse($item->CreatedOn)->format('Y-m-d')) }}"
+                                   required>
+                        </div>
                     </div>
-                    <div class="col-md-4">
-                        <label class="form-label">To Branch</label>
-                        <select name="ToBranch" class="form-select" required>
-                            <option value="">Select Branch</option>
-                            @foreach ($branches as $branch)
-                                <option value="{{ $branch->Id }}" {{ old('ToBranch', $item->ToBranch) == $branch->Id ? 'selected' : '' }}>
-                                    {{ $branch->Name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Date</label>
-                        <input type="date" name="CreatedOn" class="form-control" value="{{ old('CreatedOn', \Carbon\Carbon::parse($item->CreatedOn)->format('Y-m-d')) }}" required>
-                    </div>
-                </div>
 
-                <div class="mb-3">
-                    <button type="button" class="btn btn-outline-primary" id="addItemBtn">➕ Add Item</button>
-                </div>
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-outline-primary" id="addItemBtn">➕ Add Item</button>
+                    </div>
 
                 <div id="itemsContainer">
                     @foreach($item->items as $index => $line)
@@ -116,13 +120,13 @@
                     @endforeach
                 </div>
 
-                <div class="text-end">
-                    <button type="submit" class="btn btn-success">Update Requisition</button>
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-success">Update Requisition</button>
+                    </div>
                 </div>
             </div>
-        </div>
-    </form>
-</div>
+        </form>
+    </div>
 
 <template id="itemTemplate">
     <div class="card mb-3 item-entry">
@@ -173,9 +177,9 @@
     </div>
 </template>
 
-@push('scripts')
-<script>
-    let itemCounter = {{ count($item->items) }};
+    @push('scripts')
+        <script>
+            let itemCounter = {{ count($item->items) }};
 
     function populateSubcategories(categorySelect, subcategorySelect, selectedSubcat = null, callback = null) {
         const categoryId = categorySelect.value;

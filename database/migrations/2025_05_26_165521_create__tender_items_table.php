@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -13,7 +12,7 @@ return new class extends Migration
     {
         Schema::create('t_TenderItems', function (Blueprint $table) {
             $table->id();
-            
+
             $table->integer('TenderID')->unsigned();
 
             $table->string('SourceType', 20); // 'PLAN' or 'MANUAL'
@@ -30,7 +29,7 @@ return new class extends Migration
 
             $table->string('Remarks', 255)->nullable();
 
-            $table->string('RelatedPRID',20)->nullable(); // Optional PR reference
+            $table->string('RelatedPRID', 20)->nullable(); // Optional PR reference
 
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');

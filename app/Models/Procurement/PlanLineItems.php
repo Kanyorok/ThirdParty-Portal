@@ -85,12 +85,17 @@ class PlanLineItems extends Model
     {
         return $this->belongsTo(User::class, 'DeletedBy', 'Id');
     }
-    public function budgetline(){
-        return $this->belongsTo(BudgetMaster::class, 'BudgetLineID','BudgetLineID');
+
+    public function budgetline()
+    {
+        return $this->belongsTo(BudgetMaster::class, 'BudgetLineID', 'BudgetLineID');
     }
-    public function setMethod(){
-        return $this->belongsTo(ProcurementMethod::class,'LineItemID','ApprovedPlanLineId');
+
+    public function setMethod()
+    {
+        return $this->belongsTo(ProcurementMethod::class, 'LineItemID', 'ApprovedPlanLineId');
     }
+
     public function schedulePlan()
     {
         return $this->belongsTo(SchedulePlan::class, 'LineItemID', 'PlanLineId');

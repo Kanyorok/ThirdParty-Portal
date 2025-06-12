@@ -383,7 +383,6 @@ class SSRSProxyController extends Controller
             }
 
 
-
             // Return the response directly without modification
             return response($ssrsResponse->getBody(), $ssrsResponse->getStatusCode())
                 ->withHeaders($ssrsResponse->getHeaders());

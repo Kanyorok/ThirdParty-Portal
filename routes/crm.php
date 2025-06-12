@@ -3,7 +3,7 @@
 use App\Http\Controllers\CRM\ReportsController;
 use Illuminate\Support\Facades\Route;
 
-Route::namespace('CRM')->group(function () {
+Route::namespace('CRM')->prefix('crm')->group(function () {
 
     Route::namespace('Call')->group(function () {
         Route::get('start-call', 'CallController@index')->name('call.incoming.start');
@@ -183,7 +183,6 @@ Route::namespace('CRM')->group(function () {
     });
 
     Route::namespace('Feedback')->group(function () {
-
         Route::resource('approve-surveys', 'SurveyApprovalController')->parameters(['approve-surveys' => 'survey'])->only(['update', 'destroy']);
 
         Route::get('surveys/{survey}workflows', 'SurveyActionController@workflow')->name('surveys.workflows');
@@ -191,9 +190,9 @@ Route::namespace('CRM')->group(function () {
 
         Route::post('survey-question/{question}/survey-question-answer/five', 'SurveyQuestionAnswerController@five')->name('survey-question-answer.five');
         Route::post('survey-question/{question}/survey-question-answer/boolean', 'SurveyQuestionAnswerController@boolean')->name('survey-question-answer.boolean');
-        Route::resource('survey-question/{question}/survey-question-answer', 'SurveyQuestionAnswerController')->only(['index', 'store', 'destroy']);
+        Route::resource('survey-question/{question}/survey-question-answer', 'SurveyQuestionAnswerController')->only(['index', 'store', 'destroy']);//index static in survey.edit
         Route::resource('surveys/{survey}/survey-question', 'SurveyQuestionController')->only(['store', 'update', 'destroy']);
-        Route::resource('surveys', 'SurveyController')->except(['create']);//->only(['index', 'show']);
+        Route::resource('surveys', 'SurveyController')->except(['create']);
 
         Route::resource('reviews', 'ReviewController')->only(['index', 'show']);
     });

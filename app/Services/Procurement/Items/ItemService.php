@@ -13,7 +13,8 @@ class ItemService
 //
     }
 
-    public static function getItemByType($type, $requisitionId =null){
+    public static function getItemByType($type, $requisitionId = null)
+    {
         // logger('Fetching items for type: ' . $type);
 
         if ($requisitionId) {
@@ -35,10 +36,11 @@ class ItemService
         return DB::table('t_Items')
             ->leftjoin('t_ItemCategories', 't_Items.Category', '=', 't_ItemCategories.Id')
             ->leftjoin('t_ItemTypes', 't_Items.ItemType', '=', 't_ItemTypes.Id')
-            ->where('t_ItemTypes.Id',$type)
+            ->where('t_ItemTypes.Id', $type)
             ->select('t_Items.Id','t_Items.ItemName','t_Items.ItemCode')
             ->get();
     }
+
     public static function getItemDetails($item)
     {
         return DB::table('t_Items')
@@ -55,12 +57,13 @@ class ItemService
             ->get();
     }
 
-    public static function getTypes(){
+    public static function getTypes()
+    {
         // logger('Fetching items for type: ' . $type);
 
         return DB::table('t_ItemTypes')
-            ->select('t_ItemTypes.Id','t_ItemTypes.TypeName')
-            ->where('Active',1)
+            ->select('t_ItemTypes.Id', 't_ItemTypes.TypeName')
+            ->where('Active', 1)
             ->whereNull('DeletedBy')
             ->wherenull('DeletedOn')
             ->get();

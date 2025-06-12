@@ -11,8 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        //
-        Schema::table('t_VendorClarifications', function (Blueprint $table) {
+        Schema::table('t_VendorClarifications', static function (Blueprint $table) {
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
@@ -29,9 +28,12 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //
-        Schema::table('t_VendorClarifications', function (Blueprint $table) {
-            $table->dropColumn('CreatedBy','CreatedOn','ModifiedBy','ModifiedOn','DeletedBy','DeletedOn');
+        Schema::table('t_VendorClarifications', static function (Blueprint $table) {
+            $table->dropConstrainedForeignId('CreatedBy');
+            $table->dropConstrainedForeignId('ModifiedBy');
+            $table->dropConstrainedForeignId('DeletedBy');
+            $table->dropColumn('CreatedOn', 'ModifiedOn', 'DeletedOn');
+            $table->timestamps();
         });
 
     }

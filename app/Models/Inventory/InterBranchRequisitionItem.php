@@ -49,7 +49,7 @@ class InterBranchRequisitionItem extends Model
         return $this->belongsTo(ItemMasterList::class, 'Item', 'Id');
     }
 
-       public function creator()
+    public function creator()
     {
         return $this->belongsTo(User::class, 'CreatedBy', 'Id');
     }

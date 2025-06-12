@@ -1,3 +1,4 @@
+@php use App\Enums\Core\IntegrationsEnum; @endphp
 @extends('layouts.app')
 
 @section('title','Schedule a Post')
@@ -9,12 +10,15 @@
          }*/
     </style>
 @endsection
+@section('breadcrumbs')
+    <li class="breadcrumb-item"><a href="#">CRM</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('socials.index') }}">Socials</a></li>
+@endsection
 @section('content')
     <div class="row">
         <div class="col-12">
             <div class="card mb-3">
                 <div class="card-header pb-0 border-1 border-bottom">
-                    <h3 class="card-title">@yield('title')</h3>
                     <div class="progress mb-3 image-change d-none">
                         <div class="progress-bar progress-bar-striped progress-bar-animated"
                              role="progressbar" id="progress-bar" style="width: 0" aria-valuenow="0"
@@ -30,7 +34,7 @@
                             <label for="Destination" class="form-label">Destination(s) <span
                                     class="text-danger">*</span></label>
                             <select class="form-control " name="Destination[]" id="Destination" multiple required>
-                                @foreach(\App\Enums\Core\IntegrationsEnum::socials() as $social)
+                                @foreach(IntegrationsEnum::socials() as $social)
                                     <option selected
                                             value="{{ $social->value }}">{!! $social->getIcon() !!} {{ $social->name }}</option>
                                 @endforeach
@@ -156,10 +160,10 @@
             if (!state.id) {
                 return state.text;
             }
-            if (state.id === '{{ \App\Enums\Core\IntegrationsEnum::Twitter->value }}') {
-                return '{!!  \App\Enums\Core\IntegrationsEnum::Twitter->getIcon() !!} {{  \App\Enums\Core\IntegrationsEnum::Twitter->name }}';
-            } else if (state.id === '{{ \App\Enums\Core\IntegrationsEnum::Facebook->value }}') {
-                return '{!!  \App\Enums\Core\IntegrationsEnum::Facebook->getIcon() !!} {{  \App\Enums\Core\IntegrationsEnum::Facebook->name }}';
+            if (state.id === '{{ IntegrationsEnum::Twitter->value }}') {
+                return '{!!  IntegrationsEnum::Twitter->getIcon() !!} {{  IntegrationsEnum::Twitter->name }}';
+            } else if (state.id === '{{ IntegrationsEnum::Facebook->value }}') {
+                return '{!!  IntegrationsEnum::Facebook->getIcon() !!} {{  IntegrationsEnum::Facebook->name }}';
             }
             return null;
         }

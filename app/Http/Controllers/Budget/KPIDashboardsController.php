@@ -8,13 +8,14 @@ use Illuminate\Http\Request;
 class KPIDashboardsController extends Controller
 {
     //
-   public function index()
+    public function index()
     {
         return view('budgetandanalytics.businessintelligenceandanalytics.kpidashboards.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('budgetandanalytics.businessintelligenceandanalytics.kpidashboards.create');
-    }   
+    }
 
 }

@@ -11,12 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('t_RequisitionLines', function (Blueprint $table) {
-//            $table->dropColumn(['Module', 'ExpectedPrice']);
-            $table->dropColumn('NeededBy');
-            $table->unsignedBigInteger('RequisitionID')->nullable()->change(); // make sure it's nullable
-            $table->foreign('RequisitionID')->references('Id')->on('t_Requisitions')
-                ->onDelete('set null');
+        Schema::table('t_RequisitionLines', static function (Blueprint $table) {
+            $table->dropColumn(['NeededBy', 'RequisitionID']);
+        });
+
+        Schema::table('t_RequisitionLines', static function (Blueprint $table) {
+            $table->foreignId('RequisitionID')->nullable()->constrained('t_Requisitions', 'Id');
         });
     }
 
@@ -26,9 +26,11 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('t_RequisitionLines', function (Blueprint $table) {
-//            $table->decimal('ExpectedPrice', 15, 2)->nullable();
-            $table->dropForeign(['RequisitionID']);
-            $table->dropColumn('NeededBy');
+            $table->dropConstrainedForeignId('RequisitionID');
+        });
+        Schema::table('t_RequisitionLines', function (Blueprint $table) {
+            $table->integer('RequisitionID')->nullable();
+            $table->date('NeededBy')->nullable();
         });
     }
 };
