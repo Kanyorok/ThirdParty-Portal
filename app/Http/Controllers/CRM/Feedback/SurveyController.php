@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Throwable;
 use Yajra\DataTables\DataTables;
 
 class SurveyController extends Controller
@@ -89,7 +90,7 @@ class SurveyController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception $e) {
+        } catch (Throwable|Exception $e) {
             Log::error('Error create survey :  ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }

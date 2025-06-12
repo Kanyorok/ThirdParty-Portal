@@ -35,7 +35,7 @@ class AddEmployeeRequest extends FormRequest
             'JobTitle' => ['required', 'string', 'max:250'],
             'JoinDate' => ['required'],
             'DateOfBirth' => ['required'],
-            'Address' => ['nullable', 'string'],
+            'Address' => ['nullable', 'string', 'max:220'],
             'image' => ['nullable', Rule::imageFile()->max('2mb')],
             'CreateUser' => ['sometimes', 'accepted']
         ];

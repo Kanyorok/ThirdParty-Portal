@@ -90,7 +90,7 @@
                     processing: true,
                     serverSide: true,
                     responsive: true,
-                    //dom:'lfrtip',
+                    dom: '<"row"<"col-12"r><"col-12 w-100 my-3"t><"col-6"i><"col-6"p>>',
                     ajax: {
                         url: getDocumentUrl() + "?member_no=" + $('#member_no').val() + "&id_number=" + $('#id_number').val() + "&phone=" + $('#phone').val() + "&name=" + $('#name').val(),
                         error: function (jqXHR) {
