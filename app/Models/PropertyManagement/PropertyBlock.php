@@ -18,19 +18,20 @@ class PropertyBlock extends Model
 
     protected $fillable = [
         'PropertyID',
-        'BlockName',                                                                                                 
+        'BlockName',
         'Description',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy'
-       
+
         ];
 
     public static function getPrimaryKey(): string
     {
         return 'PropertyBlockId';
     }
-    public function propery()
+
+    public function property()
     {
         return $this->belongsTo(PropertyRegistry::class,'PropertyID','Id');
     }

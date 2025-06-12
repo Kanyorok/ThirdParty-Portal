@@ -31,7 +31,7 @@
     </div>
 
     <!-- Submissions Table -->
-@if ($data)
+    @if ($data)
 <div class="table-responsive mb-4">
     <table class="table table-bordered table-striped align-middle">
         <thead class="table-light">
@@ -44,25 +44,25 @@
             </tr>
         </thead>
         <tbody>
-            @foreach ($submissions as $item)
-                <tr>
-                    <td>{{$item->SupplierName}}</td>
-                    <td><span class="badge bg-info">Manual</span></td>
-                    <td>{{ \Carbon\Carbon::parse($item->ReceivedAt)->format('d M Y, h:i A') }}</td>
-                    <td>{{ $item->modifiedByUser->Name ?? 'N/A' }}</td>
-                    <td>
-                        <a href="#" class="btn btn-sm btn-outline-info">View</a>
-                        
-                    </td>
-                </tr>
-                
-            @endforeach
+        @foreach ($submissions as $item)
+            <tr>
+                <td>{{$item->SupplierName}}</td>
+                <td><span class="badge bg-info">Manual</span></td>
+                <td>{{ \Carbon\Carbon::parse($item->ReceivedAt)->format('d M Y, h:i A') }}</td>
+                <td>{{ $item->modifiedByUser->Name ?? 'N/A' }}</td>
+                <td>
+                    <a href="#" class="btn btn-sm btn-outline-info">View</a>
+
+                </td>
+            </tr>
+
+        @endforeach
         </tbody>
     </table>
 </div>
-@else
-    
-@endif
+    @else
+
+    @endif
 
     <!-- Bulk Action -->
     {{-- <div class="mb-4 text-end">

@@ -2,7 +2,7 @@
 @section('title', 'Property Blocks')
 @section('content')
 <div class="container mt-4">
-  
+
 <a href="{{ route('addblock.create') }}" class="btn btn-primary mb-3">Add Block</a>
 
   <h4 class="fw-bold mb-3">📋 Property Blocks</h4>
@@ -16,12 +16,12 @@
         <th>Description</th>
         <th>Action</th>
       </tr>
-    </thead>    
+    </thead>
     <tbody>
        @foreach($blocks as $block)
        <tr>
         <td>{{ $loop->iteration }}</td>
-        <td>{{ $block->PropertyID }}</td>
+           <td>{{ $block->property->PropertyName }}</td>
         <td>{{ $block->BlockName}}</td>
         <td>{{ $block->Description}}</td>
         <td>
@@ -29,7 +29,7 @@
           <button class="btn btn-sm btn-outline-warning">✏️ Edit</button>
         </td>
        </tr>
-        @endforeach      
+        @endforeach
     </tbody>
   </table>
    @else

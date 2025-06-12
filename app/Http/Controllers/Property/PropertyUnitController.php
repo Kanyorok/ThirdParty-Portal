@@ -25,37 +25,40 @@ class PropertyUnitController extends Controller
         $floors = PropertyFloor::all();
         return view('property.propertyregistry.structuralmapping.addunit.create', compact('floors', 'properties', 'blocks'));
     }
-    public function show($id){
-        $unit = PropertyUnit::find($id);
-        return view('property.propertyregistry.structuralmapping.addunit.show',compact('unit'));
-    }
-     public function store(Request $request)
+
+    public function show($id)
     {
-       //dd($request->all());
+        $unit = PropertyUnit::find($id);
+        return view('property.propertyregistry.structuralmapping.addunit.show', compact('unit'));
+    }
+
+    public function store(Request $request)
+    {
+        //dd($request->all());
         $request->validate([
-            'PropertyID'=>'required|string|max:50',
-            'BlockID'=>'required|string|max:50',
-            'FloorID'=>'required|string|max:50',
-            'UnitCode'=>'required|string|max:50',  
-            'UnitSize'=>'required|integer',
-            'IsRentable'=>'required|string|max:50',
-            'CurrentStatus'=>'required|string|max:50',
-            'Remarks'=>'required|string|max:50',
+            'PropertyID' => 'required|string|max:50',
+            'BlockID' => 'required|string|max:50',
+            'FloorID' => 'required|string|max:50',
+            'UnitCode' => 'required|string|max:50',
+            'UnitSize' => 'required|integer',
+            'IsRentable' => 'required|string|max:50',
+            'CurrentStatus' => 'required|string|max:50',
+            'Remarks' => 'required|string|max:50',
         ]);
-            
-         $unit = PropertyUnit::create([
-            'PropertyID'=> $request->PropertyID,
-            'BlockID'=> $request->BlockID,
-            'FloorID'=> $request->FloorID,
-            'UnitCode'=> $request->UnitCode,
-            'UnitSize'=> $request->UnitSize,
-            'IsRentable'=> $request->IsRentable,
-            'CurrentStatus'=> $request->CurrentStatus,
-            'Remarks'=> $request->Remarks,
+
+        $unit = PropertyUnit::create([
+            'PropertyID' => $request->PropertyID,
+            'BlockID' => $request->BlockID,
+            'FloorID' => $request->FloorID,
+            'UnitCode' => $request->UnitCode,
+            'UnitSize' => $request->UnitSize,
+            'IsRentable' => $request->IsRentable,
+            'CurrentStatus' => $request->CurrentStatus,
+            'Remarks' => $request->Remarks,
             'CreatedBy' => auth()->user()->Id,
             'ModifiedBy' => auth()->user()->Id,
         ]);
-           return redirect()->route('addunit.index')->with('success','property unit created successfully');
+        return redirect()->route('addunit.index')->with('success', 'property unit created successfully');
     }
 }
 

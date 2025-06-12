@@ -12,8 +12,9 @@
         <div class="col-md-6">
           <label class="form-label">Select Property</label>
             <select name="PropertyID" class="form-select" required>
+                <option value="#">--Select a property--</option>
               @foreach ($properties as $property)
-                <option value="{{ $property->id }}">{{ $property->PropertyName }}</option>
+                    <option value="{{ $property->Id }}">{{ $property->PropertyName }}</option>
               @endforeach
             </select>
         </div>

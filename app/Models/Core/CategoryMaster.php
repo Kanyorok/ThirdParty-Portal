@@ -2,6 +2,7 @@
 
 namespace App\Models\Core;
 
+use App\Models\PropertyManagement\PropertyType;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -21,7 +22,7 @@ class CategoryMaster extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'Name', 'Description', 'Type','Code',
+        'Name', 'Description', 'Type', 'Code',
         'CreatedBy', 'ModifiedBy', 'DeletedBy'
     ];
 
@@ -30,4 +31,10 @@ class CategoryMaster extends Model
     {
         return 'CategoryMasterId';
     }
+
+    public function propertytypes()
+    {
+        return $this->hasMany(PropertyType::class, 'PropertyCategoryId', 'Id');
+    }
+
 }

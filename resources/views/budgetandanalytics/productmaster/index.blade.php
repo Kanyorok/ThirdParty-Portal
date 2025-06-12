@@ -17,18 +17,21 @@
             </tr>
             </thead>
             <tbody>
-            <tr>
-                <td>1</td>
-                <td>P001</td>
-                <td>Personal Loan</td>
-                <td>Loan</td>
-                <td>401001</td>
-                <td><span class="badge bg-success">Yes</span></td>
-                <td><span class="badge bg-primary">Active</span></td>
-                <td>
-                    <button class="btn btn-sm btn-outline-info">👁 View</button>
-                </td>
-            </tr>
+            @foreach ($data as $item)
+                <tr>
+                    <td>{{ $loop->iteration }}.</td>
+                    <td>{{ $item['Code'] }}</td>
+                    <td>{{ $item['Name'] }}</td>
+                    <td>{{ $item['Type'] }}</td>
+                    <td>{{ $item['GLCode'] }}</td>
+                    <td><span class="badge bg-success">Yes</span></td>
+                    <td><span class="badge bg-primary">Active</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-info">👁 View</button>
+                    </td>
+                </tr>
+
+            @endforeach
             </tbody>
         </table>
     </div>

@@ -3,7 +3,7 @@
 @section('content')
 
 <div class="container mt-4">
-    <h3>📝 Procurement Plan Approval</h3>
+    <h3>Procurement Plan Approval</h3>
 
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
@@ -20,7 +20,8 @@
             <select name="PlanID" id="PlanID" class="form-select" onchange="this.form.submit()">
                 <option value="">-- Choose Plan To Approve --</option>
                 @foreach($draftPlans as $planOption)
-                    <option value="{{ $planOption->PlanID }}" {{ old('PlanID', request()->PlanID) == $planOption->PlanID ? 'selected' : '' }}>
+                    <option
+                        value="{{ $planOption->PlanID }}" {{ old('PlanID', request()->PlanID) == $planOption->PlanID ? 'selected' : '' }}>
                         {{ $planOption->ReferenceNumber }} - {{ $planOption->Title }}
                     </option>
                 @endforeach
@@ -29,19 +30,21 @@
     </form>
     <div id="plan-details" class="mt-4">
         @if($selectedPlan)
-        <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4>🔎 Review Procurement Plan – {{ $selectedPlan->ReferenceNumber ?? 'N/A' }}</h4>
-        <span class="badge bg-primary">Logged in as: {{ Auth::user()->role() ? Auth::user()->role()->name : 'Unknown User' }}</span>
-        </div>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4>🔎 Review Procurement Plan – {{ $selectedPlan->ReferenceNumber ?? 'N/A' }}</h4>
+                <span
+                    class="badge bg-primary">Logged in as: {{ Auth::user()->role() ? Auth::user()->role()->name : 'Unknown User' }}</span>
+            </div>
             <!-- Plan Summary -->
             <div class="row mb-4 bg-light p-3 border rounded">
                 <div class="col-md-4"><strong>Title:</strong> {{ $selectedPlan->Title }}</div>
-              <div class="col-md-4"><strong>Status:</strong> 
+                <div class="col-md-4"><strong>Status:</strong>
                     <span class="badge bg-{{ $selectedPlan->Status->badgeColor() }} text-dark">
                         {{ $selectedPlan->Status->label() }}
                     </span>
                 </div>
-                <div class="col-md-4"><strong>Current Level:</strong> {{ $selectedPlan->CurrentApprLevel ?? 'N/A' }}</div>
+                <div class="col-md-4"><strong>Current Level:</strong> {{ $selectedPlan->CurrentApprLevel ?? 'N/A' }}
+                </div>
             </div>
 
             <!-- Plan Items Table -->
@@ -50,20 +53,20 @@
                 @if($selectedPlan->lineItems->isNotEmpty())
                     <table class="table table-bordered">
                         <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Item</th>
-                                <th>Branch</th>
-                                <th>Qty</th>
-                                <th>Unit Cost</th>
-                                <th>Total Cost</th>
-                                <th>Budget Line</th>
-                                <th>Procurement Method</th>
-                                <th>Schedule</th>
-                            </tr>
+                        <tr>
+                            <th>#</th>
+                            <th>Item</th>
+                            <th>Branch</th>
+                            <th>Qty</th>
+                            <th>Unit Cost</th>
+                            <th>Total Cost</th>
+                            <th>Budget Line</th>
+                            <th>Procurement Method</th>
+                            <th>Schedule</th>
+                        </tr>
                         </thead>
                         <tbody>
-                            @foreach($selectedPlan->lineItems as $index => $item)
+                        @foreach($selectedPlan->lineItems as $index => $item)
                             <tr>
                                 <td>{{ $index + 1 }}</td>
                                 <td>{{ $item->item->ItemName ?? 'N/A' }}</td>
@@ -75,7 +78,7 @@
                                 <td>{{ $item->ProcurementMethod ?? 'N/A' }}</td>
                                 <td>{{ $item->SchedulePeriod ?? 'N/A' }}</td>
                             </tr>
-                            @endforeach
+                        @endforeach
                         </tbody>
                     </table>
                 @else
@@ -92,7 +95,9 @@
 
                     <div class="mb-3">
                         <label class="form-label">Role</label>
-                        <input type="text" name="role" class="form-control" value="{{ Auth::user()->role() ? Auth::user()->role()->name : 'N/A' }}" required readonly>
+                        <input type="text" name="role" class="form-control"
+                               value="{{ Auth::user()->role() ? Auth::user()->role()->name : 'N/A' }}" required
+                               readonly>
                     </div>
 
                     <div class="mb-3">

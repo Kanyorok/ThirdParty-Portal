@@ -13,11 +13,13 @@ class PrequalificationApplicationsController extends Controller
         return view('procurement.suppliers.prequalification.applications.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('procurement.suppliers.prequalification.applications.create');
     }
 
-        public function show(){
+    public function show()
+    {
         return view('procurement.suppliers.prequalification.applications.show');
     }
 

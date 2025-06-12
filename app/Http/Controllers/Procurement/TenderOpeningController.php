@@ -16,11 +16,11 @@ class TenderOpeningController extends Controller
     {
         // Fetching all tender openings can be done here if needed
         //return Tender::all();
-        $tenders=Tender::select('Id', 'TenderNo', 'Title', 'Status')
+        $tenders = Tender::select('Id', 'TenderNo', 'Title', 'Status')
             ->where('Status', '=', 'pb')
             ->get();
-        $data=false;
-        return view('procurement.tendering.bidopeningandevaluation.opening.index',compact('tenders','data'));
+        $data = false;
+        return view('procurement.tendering.bidopeningandevaluation.opening.index', compact('tenders', 'data'));
     }
 
     /**
@@ -49,11 +49,11 @@ class TenderOpeningController extends Controller
             ->select('Id', 'SupplierName', 'SubmissionMode', 'ReceivedAt', 'CreatedBy', 'Remarks', 'ModifiedBy')
             ->get();
 
-        $tenders=Tender::select('Id', 'TenderNo', 'Title', 'Status')
+        $tenders = Tender::select('Id', 'TenderNo', 'Title', 'Status')
             ->where('Status', '=', 'pb')
             ->get();
-        $data=true; // This variable is used to indicate that there are no submissions yet
-        return view('procurement.tendering.bidopeningandevaluation.opening.index',compact('tenders','submissions','data'));
+        $data = true; // This variable is used to indicate that there are no submissions yet
+        return view('procurement.tendering.bidopeningandevaluation.opening.index', compact('tenders', 'submissions', 'data'));
 
     }
 

@@ -7,6 +7,7 @@ use App\Models\Procurement\Section;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Models\Auth\User;
 
 class SectionController extends Controller
 {
@@ -15,8 +16,8 @@ class SectionController extends Controller
      */
     public function index()
     {
-        $sections= Section::all();
-        return view('procurement.tendering.settings.sections',compact('sections'));
+        $sections = Section::all();
+        return view('procurement.tendering.settings.sections', compact('sections'));
     }
 
     /**
@@ -76,35 +77,52 @@ class SectionController extends Controller
         return $request->all();
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
-        //
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'desc' => 'nullable|string',
+        ]);
+
+        $section = Section::findOrFail($id);
+        $oldValues = $section->getOriginal();
+
+        $section->SectionName = $request->name;
+        $section->Description = $request->desc;
+        $section->ModifiedBy = auth()->id();
+        $section->ModifiedOn = now();
+        $section->save();
+
+        activity()
+            ->performedOn($section)
+            ->causedBy(auth()->user())
+            ->withProperties([
+                'old' => $oldValues,
+                'new' => $section->getChanges()
+            ])
+            ->log('Updated section: ' . $section->SectionName);
+
+        return redirect()->back()->with('success', 'Section updated successfully.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
+
     public function destroy(string $id)
     {
-        //
+        $section = Section::findOrFail($id);
+        $sectionName = $section->SectionName;
+
+        $section->DeletedBy = auth()->id();
+        $section->save();
+
+        activity()
+            ->performedOn($section)
+            ->causedBy(auth()->user())
+            ->withProperties(['section_name' => $sectionName])
+            ->log('Deleted section: ' . $sectionName);
+
+        $section->delete();
+
+        return redirect()->back()->with('success', 'Section deleted successfully.');
     }
 }

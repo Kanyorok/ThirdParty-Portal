@@ -28,15 +28,15 @@ class Section extends Model
         'ModifiedOn' => 'datetime',
         'DeletedOn' => 'datetime',
     ];
-    protected $primaryKey = 'Id';
+    protected $primaryKey = 'id';
 
-        public static function getPrimaryKey(): string
+    public static function getPrimaryKey(): string
     {
         return (new self())->getRouteKeyName();
     }
 
     public function getRouteKeyName(): string
     {
-        return 'SectionID';
+        return 'id';
     }
 }

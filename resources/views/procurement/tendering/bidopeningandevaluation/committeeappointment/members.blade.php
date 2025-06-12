@@ -1,15 +1,15 @@
 @extends('layouts.app')
 @section('title', 'Item Sub Category')
 @section('content')
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4>Tender Committees</h4>
-        <a href="{{ route('tendercommittee.create') }}" class="btn btn-sm btn-success">+ Appoint New Committee</a>
-    </div>
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4>Tender Committees</h4>
+            <a href="{{ route('tendercommittee.create') }}" class="btn btn-sm btn-success">+ Appoint New Committee</a>
+        </div>
 
-    <div class="table-responsive">
-        <table class="table table-striped table-bordered align-middle">
-            <thead class="table-light">
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered align-middle">
+                <thead class="table-light">
                 <tr>
                     <th>#</th>
                     <th>Tender Ref</th>
@@ -20,8 +20,8 @@
                     <th>Responded On</th>
                     <th>Actions</th>
                 </tr>
-            </thead>
-            <tbody>
+                </thead>
+                <tbody>
                 <tr>
                     <td>1</td>
                     <td>TND/PROC/2025/001</td>
@@ -47,8 +47,8 @@
                     </td>
                 </tr>
                 <!-- More rows -->
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
 @endsection

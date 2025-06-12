@@ -1,27 +1,25 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Property Management')
+@section('styles')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+@endsection
 @section('content')
 <div class="container mt-4">
 
 <a href="{{ route('PropertyRegistry.create') }}" class="btn btn-primary mb-3">Add Property</a>
 
   <h4 class="fw-bold mb-3">📋 Registered Properties</h4>
-
 @if($properties->count())
-  <table class="table table-bordered table-striped align-middle">
+        <table id="propertyregistry" class="table table-bordered table-striped align-middle">
     <thead class="table-light">
       <tr>
         <th>#</th>
         <th>Property Name</th>
-        <th>Code</th>
         <th>Type</th>
         <th>Category</th>
-        <th>Owner</th>
-        <th>Acquisition Date</th>
         <th>Country</th>
-        <th>Town/City</th>
-        <th>Area/Locality</th>
-        <th>Property Description</th>
+          <th>Town/City</th>
+          >
         <th>Status</th>
         <th>Action</th>
       </tr>
@@ -31,19 +29,20 @@
       <tr>
         <td>{{ $loop->iteration }}</td>
         <td>{{ $property->PropertyName?? '-' }}</td>
-        <td>{{ $property->PropertyCode?? '-' }}</td>
-        <td>{{ $property->PropertyType?? '-' }}</td>
-        <td>{{ $property->Category?? '-' }}</td>
-        <td>{{ $property->Owner?? '-' }}</td>
-        <td>{{ $property->AcquisitionDate?? '-' }}</td>
+          <td>{{ $property->type->PropertyTypeName ?? '-' }}</td>
+          <td>{{ $property->propertyCategory->Name?? '-' }}</td>
         <td>{{ $property->Country?? '-' }}</td>
-        <td>{{ $property->TownCity?? '-' }}</td>
-        <td>{{ $property->AreaLocality ?? '-' }}</td>
-        <td>{{ $property->PropertyDescription?? '-' }}</td>
+          <td>{{ $property->propertyLocality->Name?? '-' }}</td>
         <td><span class="badge bg-success">Active</span></td>
-        <td>
-          <a href="{{ route('PropertyRegistry.show', $property->Id) }}" class="btn btn-sm btn-info">👁 View</a>
-          <button class="btn btn-sm btn-outline-warning">✏️ Edit</button>
+          <td><a href="{{ route('PropertyRegistry.show', $property->Id) }}" class="btn btn-sm btn-info">👁 View</a>
+              <a href="{{ route('PropertyRegistry.edit', $property->Id) }}" class="btn btn-sm btn-warning">Edit</a>
+              <form action="{{ route('PropertyRegistry.destroy', $property->Id) }}" method="POST" class="d-inline">
+                  @csrf
+                  @method('DELETE')
+                  <button type="submit" class="btn btn-sm btn-danger"
+                          onclick="return confirm('Are you sure you want to delete this property?');">Delete
+                  </button>
+              </form>
         </td>
       </tr>
       @endforeach
@@ -53,4 +52,17 @@
  <p>No properties registered yet.</p>
 @endif
 </div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        $('#propertyregistry').DataTable({
+            pageLength: 10,
+            ordering: true,
+            searching: true,
+            lengthChange: true
+        });
+    });
+</script>
 @endsection

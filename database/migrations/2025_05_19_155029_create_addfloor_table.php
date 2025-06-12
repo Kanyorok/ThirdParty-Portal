@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -13,8 +12,8 @@ return new class extends Migration
     {
         Schema::create('t_PropertyFloor', function (Blueprint $table) {
             $table->id('Id');
-            $table->foreignId('PropertyID')->constrained('t_PropertyRegistry','Id');
-            $table->foreignId('BlockID')->constrained('t_PropertyBlock','Id');
+            $table->foreignId('PropertyID')->constrained('t_PropertyRegistry', 'Id');
+            $table->foreignId('BlockID')->constrained('t_PropertyBlock', 'Id');
             $table->string('FloorLabel');
             $table->string('FloorNotes');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
@@ -31,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('t_AddFloor');
+        Schema::dropIfExists('t_PropertyFloor');
     }
 };

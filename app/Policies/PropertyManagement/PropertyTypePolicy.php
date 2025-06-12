@@ -14,6 +14,7 @@ class PropertyTypePolicy
     public function __construct()
     {
     }
+
     public function viewAny(User $user): bool
     {
         return $user->can(PermissionEnum::PropertyTypeView->value);

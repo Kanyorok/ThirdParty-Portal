@@ -16,6 +16,15 @@
             <p><strong>Instructions:</strong> Choose whether to break down each item by Quarter or Month, and assign
                 quantity accordingly.</p>
         </div>
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
         <form action="{{ route('Procurement-Plan-Schedule.store') }}" method="POST">
             @csrf
@@ -41,7 +50,10 @@
                 @foreach ($plan->lineItems as $lineItem)
                     <tr>
                         <input type="hidden" name="lineItemIds[]" value="{{ $lineItem->LineItemID }}">
-                        <td>{{ $lineItem->item->ItemName ?? 'Unnamed' }}</td>
+                        <td>{{ $lineItem->item->ItemName ?? 'Unnamed' }}
+                            <input type="hidden" class="merged-qty" data-id="{{ $lineItem->LineItemID }}"
+                                   value="{{ $lineItem->MergedQty }}">
+                        </td>
                         <td>
                             <select name="mode_{{ $lineItem->LineItemID }}" class="form-control schedule-mode"
                                     data-id="{{ $lineItem->LineItemID }}">
@@ -100,5 +112,41 @@
             });
         </script>
     @endpush
+    @push('scripts')
+        <script>
+            document.querySelector('form').addEventListener('submit', function (e) {
+                let isValid = true;
+                const months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+
+                document.querySelectorAll('.merged-qty').forEach(input => {
+                    const itemId = input.dataset.id;
+                    const maxQty = parseInt(input.value);
+                    const mode = document.querySelector(`select[name="mode_${itemId}"]`).value;
+
+                    let total = 0;
+
+                    if (mode === 'quarter') {
+                        for (let q = 1; q <= 4; q++) {
+                            const val = parseInt(document.querySelector(`input[name="q${q}_${itemId}"]`).value) || 0;
+                            total += val;
+                        }
+                    } else {
+                        months.forEach(month => {
+                            const val = parseInt(document.querySelector(`input[name="${month}_${itemId}"]`).value) || 0;
+                            total += val;
+                        });
+                    }
+
+                    if (total > maxQty) {
+                        alert(`Scheduled quantity (${total}) for item ID ${itemId} exceeds allowed quantity (${maxQty}).`);
+                        isValid = false;
+                    }
+                });
+
+                if (!isValid) e.preventDefault();
+            });
+        </script>
+    @endpush
+
 
 @endsection

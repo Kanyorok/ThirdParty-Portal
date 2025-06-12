@@ -41,13 +41,30 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::get('propertytype', [PropertyTypeController::class,'index'])->name('propertytype.index');
     Route::get('propertytype/create', [PropertyTypeController::class,'create'])->name('propertytype.create');
     Route::post('propertytype', [PropertyTypeController::class,'store'])->name('propertytype.store');
+    Route::delete('propertytype/delete/{Id}', [PropertyTypeController::class, 'destroy'])->name('propertytype.destroy');
+    Route::get('propertytype/edit/{Id}', [PropertyTypeController::class, 'edit'])->name('propertytype.edit');
+    Route::put('propertytype/edit/{Id}', [PropertyTypeController::class, 'update'])->name('propertytype.update');
+
 
     //Property Registry
-    Route::get('propertyregistry', [PropertyRegistryController::class,'index'])->name('PropertyRegistry.index');
+    Route::get('propertyregistry/index', [PropertyRegistryController::class, 'index'])->name('PropertyRegistry.index');
     Route::get('propertyregistry/create', [PropertyRegistryController::class,'create'])->name('PropertyRegistry.create');
     Route::post('propertyregistry', [PropertyRegistryController::class,'store'])->name('propertyregistry.store');
+    Route::get('propertyregistry/show/{id}', [PropertyRegistryController::class, 'show'])->name('PropertyRegistry.show');
+    Route::get('/propertyregistry/types/{categoryId}', [PropertyRegistryController::class, 'getTypesByCategory'])->name('gettypes');
+    Route::delete('propertyregistry/delete/{Id}', [PropertyRegistryController::class, 'destroy'])->name('PropertyRegistry.destroy');
+    Route::get('propertyregistry/edit/{Id}', [PropertyRegistryController::class, 'edit'])->name('PropertyRegistry.edit');
+    Route::put('propertyregistry/edit/{Id}', [PropertyRegistryController::class, 'update'])->name('PropertyRegistry.update');
 
-    Route::resource('addblock', PropertyBlockController::class);
+
+    //Property Block
+    //Route::resource('addblock', PropertyBlockController::class);
+    Route::get('propertyaddblock', [PropertyBlockController::class, 'index'])->name('addblock.index');
+    Route::get('propertyaddblock/create', [PropertyBlockController::class, 'create'])->name('addblock.create');
+    Route::post('propertyaddblock', [PropertyBlockController::class, 'store'])->name('addblock.store');
+    Route::get('propertyaddblock/show', [PropertyBlockController::class, 'show'])->name('addblock.show');
+
+
     Route::resource('addfloor', PropertyFloorController::class);
     Route::resource('addunit', PropertyUnitController::class);
     Route::resource('attachments', PropertyAttachmentsController::class);

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class PropertyType extends Model
 {
     use SoftDeletes, UserActorTrait;
+
     //
     protected $table = 't_PropertyType';
     const string CREATED_AT = 'CreatedOn';
@@ -30,10 +31,12 @@ class PropertyType extends Model
     {
         return 'PropertyTypeId';
     }
+
     public function propertycategory()
     {
         return $this->belongsTo(CategoryMaster::class, 'PropertyCategoryId', 'Id');
     }
+
     public function property()
     {
         return $this->hasMany(PropertyRegistry::class, 'PropertyType', 'Id');

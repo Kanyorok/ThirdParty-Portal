@@ -11,8 +11,8 @@ use App\Http\Controllers\Budget\BudgetDriversController;
 use App\Http\Controllers\Budget\BudgetActivitiesController;
 
 use App\Http\Controllers\Budget\YieldRateController;
-use App\Http\Controllers\Budget\BudgetProjectionsController; 
-use App\Http\Controllers\Budget\BudgetProductEntryController; 
+use App\Http\Controllers\Budget\BudgetProjectionsController;
+use App\Http\Controllers\Budget\BudgetProductEntryController;
 
 
 use App\Http\Controllers\Budget\BudgetGLLineEntryController;
@@ -22,17 +22,22 @@ use App\Http\Controllers\Budget\BudgetTopDownAllocationController;
 use App\Http\Controllers\Budget\BudgetSceneriosController;
 use App\Http\Controllers\Budget\BudgetFormulaController;
 
-use App\Http\Controllers\Budget\BudgetConsolidationController;  
-use App\Http\Controllers\Budget\BudgetvsActualDashboardController; 
-use App\Http\Controllers\Budget\BudgetVarianceAnalysisController; 
-use App\Http\Controllers\Budget\BudgetKPIscorecardsController; 
+use App\Http\Controllers\Budget\BudgetConsolidationController;
+use App\Http\Controllers\Budget\BudgetvsActualDashboardController;
+use App\Http\Controllers\Budget\BudgetVarianceAnalysisController;
+use App\Http\Controllers\Budget\BudgetKPIscorecardsController;
 use App\Http\Controllers\Budget\BudgetKPIscorecardsOfficerController;
+
+use App\Http\Controllers\Budget\BudgetRatesController;
+use App\Http\Controllers\Budget\BudgetPeriodTypesController;
+use App\Http\Controllers\Budget\BudgetPlanningMethodsController;
 
 //TODO:Make Controllers
 use App\Http\Controllers\Budget\BusinessAnalyticsDashboardController;
 use App\Http\Controllers\Budget\KPIDashboardsController;
 use App\Http\Controllers\Budget\TrendAndGrowthController;
 use App\Http\Controllers\Budget\BranchPerformanceController;
+use App\Http\Controllers\Budget\BudgetDriversSetupController;
 use App\Http\Controllers\Budget\BudgetLinesController;
 use App\Http\Controllers\Budget\ProductProfitabilityController;
 use App\Http\Controllers\Budget\OfficerPerformanceController;
@@ -94,14 +99,13 @@ Route::namespace('Budget')->group(function () {
     Route::resource('topcontributors', TopContibutorsController::class);
     Route::resource('regulatoryratios', RegulatoryRatiosController::class);
     Route::resource('liquidityratio', LiquidityController::class);
-    
-    
-    
+
+
     // Business Intelligence & Deep Analytics
     Route::resource('analyticsdashboard', BusinessAnalyticsDashboardController::class);
     Route::resource('kpidashboards', KPIDashboardsController::class);
     Route::resource('trendsdashboards', TrendAndGrowthController::class);
-    
+
     Route::resource('branchperformance', BranchPerformanceController::class);
     Route::resource('productprofitability', ProductProfitabilityController::class);
     Route::resource('officerperformance', OfficerPerformanceController::class);
@@ -128,11 +132,17 @@ Route::namespace('Budget')->group(function () {
     Route::resource('budgetvsactualbybranch', BudgetvsActualbyBranchController::class);
     Route::resource('loanyieldbybranch', LoanYieldbyProductController::class);
     Route::resource('analyticsdataexport', DataExportToolsProductController::class);
-    
+
 
     // Admin & Integration
     Route::resource('cbssync', CBSSyncController::class);
     Route::resource('datasynclogs', DataSyncLogsController::class);
     Route::resource('systemsettings', SystemSettingsController::class);
-    
+
+    //Budget Settings
+    Route::resource('rates', BudgetRatesController::class);
+    Route::resource('planningmethods', BudgetPlanningMethodsController::class);
+    Route::resource('periodtypes', BudgetPeriodTypesController::class);
+
+    Route::resource('budgetdriverssetup', BudgetDriversSetupController::class);
 });

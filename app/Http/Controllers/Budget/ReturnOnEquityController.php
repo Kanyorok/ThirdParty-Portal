@@ -8,12 +8,13 @@ use Illuminate\Http\Request;
 class ReturnOnEquityController extends Controller
 {
     //
-   public function index()
+    public function index()
     {
         return view('budgetandanalytics.businessintelligenceandanalytics.regulatorycompliance.returnonequity.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('budgetandanalytics.businessintelligenceandanalytics.regulatorycompliance.returnonequity.create');
     }
 }

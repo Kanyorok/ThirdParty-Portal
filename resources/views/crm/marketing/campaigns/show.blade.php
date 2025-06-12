@@ -1,4 +1,4 @@
-@php use Illuminate\Support\Str; @endphp
+@php use App\Enums\CampaignStatusEnum;use App\Enums\CampaignTypeEnum;use Carbon\Carbon;use Illuminate\Support\Str; @endphp
 @extends('layouts.app')
 
 @section('title')
@@ -22,7 +22,7 @@
 
                     @include('snippets.behind_scenes',['model'=>$campaign])
 
-                    @if( $campaign->Status->value === \App\Enums\CampaignStatusEnum::Draft->value)
+                    @if( $campaign->Status->value === CampaignStatusEnum::Draft->value)
                         @if(!$campaign->Processing)
                             <hr>
                             <button type="button" class="btn btn-success campaign-submit m-2 w-100">
@@ -34,7 +34,7 @@
                         @else
                             <h3 class="text-center py-2">Processing Contacts</h3>
                         @endif
-                    @elseif($campaign->Status->value === \App\Enums\CampaignStatusEnum::Approval->value)
+                    @elseif($campaign->Status->value === CampaignStatusEnum::Approval->value)
                         @if($canApprove)
                             <button type="button" class="btn btn-success campaign-approve m-2 w-100">
                                 <i class="fas fa-check"></i> approve
@@ -67,7 +67,7 @@
                                      style="width: 0" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
                             </div>
                         @endif
-                        @if($campaign->Status->value === \App\Enums\CampaignStatusEnum::Draft->value)
+                            @if($campaign->Status->value === CampaignStatusEnum::Draft->value)
                             <div class="accordion accordion-flush mb-3" id="accordionHelp">
                                 <div class="accordion-item">
                                     <h2 class="accordion-header" id="flush-headingOne">
@@ -87,7 +87,7 @@
                                                 </li>
                                                 <li class="campaign-group-item">You can use <code> #date</code> to be
                                                     replaced by
-                                                    {{ \Carbon\Carbon::now()->format('M d, Y') }} while sending.
+                                                    {{ Carbon::now()->format('M d, Y') }} while sending.
                                                 </li>
                                             </ul>
                                         </div>
@@ -97,7 +97,7 @@
                             <form action="{{ route('campaigns.update',[$campaign->CampaignID]) }}" method="post"
                                   id="updateCampaignForm">@method('put')
                                 @csrf
-                                @if($campaign->Type->value === \App\Enums\CampaignTypeEnum::Email->value)
+                                @if($campaign->Type->value === CampaignTypeEnum::Email->value)
                                     <div class="mb-3">
                                         <label class="form-label" for="Subject">Subject <span
                                                 class="text-danger">*</span> <small>same as campaign
@@ -115,7 +115,7 @@
                                         <textarea name="Content" id="Content" class="form-control" rows="4"
                                                   maxlength="50000" minlength="2">{!! $campaign->Details !!}</textarea>
                                     </div>
-                                @elseif($campaign->Type->value === \App\Enums\CampaignTypeEnum::SMS->value)
+                                @elseif($campaign->Type->value === CampaignTypeEnum::SMS->value)
                                     <div class="mb-3 col-12">
                                         <label class="form-label" for="Content">Content <span
                                                 class="text-danger">*</span></label>
@@ -182,7 +182,7 @@
                             aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    @if($campaign->Status->value === \App\Enums\CampaignStatusEnum::Draft->value)
+                    @if($campaign->Status->value === CampaignStatusEnum::Draft->value)
                         <div class="onboarding-content text-center with-gradient d-none modal-item"
                              id="cancelCampaignModal">
                             <p class="text-danger h4">
@@ -226,7 +226,7 @@
                                 </div>
                             </form>
                         </div>
-                    @elseif($campaign->Status->value === \App\Enums\CampaignStatusEnum::Approval->value && $canApprove)
+                    @elseif($campaign->Status->value === CampaignStatusEnum::Approval->value && $canApprove)
                         <div class="onboarding-content with-gradient d-none modal-item text-center"
                              id="approveCampaignModal">
                             <h4 class="text-success">
@@ -296,7 +296,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.20/summernote-bs5.min.js"
             integrity="sha512-6F1RVfnxCprKJmfulcxxym1Dar5FsT/V2jiEUvABiaEiFWoQ8yHvqRM/Slf0qJKiwin6IDQucjXuolCfCKnaJQ=="
             crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="{{ asset('assets/js/datatables.js') }}"></script>
+
     <script>
         const maxLimit = 168, $Modal = $('#campaignActionsModel');
         let smsCount = 1, campaignContactsTable = null, campaignWorkflowTable = null, progressInterval = null;
@@ -309,7 +309,7 @@
             fetchProgress();
             @endif
 
-            @if( $campaign->Status->value === \App\Enums\CampaignStatusEnum::Draft->value)
+            @if( $campaign->Status->value === CampaignStatusEnum::Draft->value)
             $(document).on('click', '.campaign-submit', function () {
                 $(".modal-title").html('Submit campaign for approval');
                 $(".modal-item").addClass('d-none');
@@ -343,7 +343,7 @@
                 }
             });
 
-            @if($campaign->Type->value === \App\Enums\CampaignTypeEnum::Email->value)
+            @if($campaign->Type->value === CampaignTypeEnum::Email->value)
             $('textarea#Content').summernote({
                 placeholder: '',
                 dialogsInBody: true,
@@ -359,12 +359,12 @@
                     ['view', ['fullscreen', 'codeview', 'help']]
                 ]
             });
-            @elseif($campaign->Type->value === \App\Enums\CampaignTypeEnum::SMS->value)
+            @elseif($campaign->Type->value === CampaignTypeEnum::SMS->value)
             $('#Content').keyup(function () {
                 $('#msgCounter').html(parseInt((this.value.length / window.smsMaxLimit) + 1) + " sms's");
             });
             @endif
-            @elseif($campaign->Status->value === \App\Enums\CampaignStatusEnum::Approval->value && $canApprove)
+            @elseif($campaign->Status->value === CampaignStatusEnum::Approval->value && $canApprove)
             $(document).on('click', '.campaign-approve', function () {
                 $(".modal-title").html('<b class="text-success">APPROVE</b> campaign');
                 $(".modal-item").addClass('d-none');

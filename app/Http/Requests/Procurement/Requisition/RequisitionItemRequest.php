@@ -23,18 +23,17 @@ class RequisitionItemRequest extends FormRequest
     {
         return [
 
-            'RequisitionID' => ['nullable'],
-            'Type' => ['required'],
-            'Item' =>   ['required'],
-//            'NeededBy' =>    ['nullable'],
-            'Quantity' =>   ['required'],
-            'Urgency' =>    ['required'],
-            'UOM' =>    ['nullable'],
-            'ExpectedPrice' =>  ['nullable'],
-            'ActualPrice' =>    ['nullable'],
-            'CategoryId' =>    ['nullable'],
-
-            //
-               ];
+            'RequisitionID' => ['nullable', 'integer'],
+            'Type' => ['required', 'string'],
+            'Item' => ['required', 'integer'],
+            // 'NeededBy' => ['nullable', 'date'],
+            'Quantity' => ['required', 'numeric'],
+            'Urgency' => ['required', 'integer'],
+            'UOM' => ['nullable', 'string'],
+            // 'ExpectedPrice' => ['nullable', 'numeric'],
+            // 'ActualPrice' => ['nullable', 'numeric'],
+            'CategoryId' => ['nullable', 'integer'],
+        ];
     }
+
 }

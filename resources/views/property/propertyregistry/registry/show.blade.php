@@ -20,8 +20,7 @@
       </dl>
     </div>
     <div class="card-footer">
-      <a href="#" class="btn btn-primary">Edit</a>
-      <a href="#" class="btn btn-secondary">Back</a>
+        <a href="{{ route('PropertyRegistry.index') }}" class="btn btn-secondary">Back</a>
     </div>
   </div>
 </div>

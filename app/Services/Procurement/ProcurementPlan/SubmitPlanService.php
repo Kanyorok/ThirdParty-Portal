@@ -22,10 +22,10 @@ class SubmitPlanService
 
         // Create workflow record for the submission
         $this->consolidatedProcurementPlan->workflows()->create([
-            'Stage'      => ProcurementPlanStatusEnum::Submitted->name,
-            'Status'     => WorkflowStatus::Submitted->value,
-            'Notes'      => 'Plan Submission',
-            'CreatedBy'  => $actor->Id,
+            'Stage' => ProcurementPlanStatusEnum::Submitted->name,
+            'Status' => WorkflowStatus::Submitted->value,
+            'Notes' => 'Plan Submission',
+            'CreatedBy' => $actor->Id,
             'ModifiedBy' => $actor->Id,
         ]);
 

@@ -65,9 +65,9 @@ class ItemCategories extends Model
 
 
     public function parent()
-{
-    return $this->belongsTo(ItemCategories::class, 'ParentId');
-}
+    {
+        return $this->belongsTo(ItemCategories::class, 'ParentId');
+    }
 
 
     public function children()

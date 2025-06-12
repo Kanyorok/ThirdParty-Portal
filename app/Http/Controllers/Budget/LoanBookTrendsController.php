@@ -8,12 +8,13 @@ use Illuminate\Http\Request;
 class LoanBookTrendsController extends Controller
 {
     //
-   public function index()
+    public function index()
     {
         return view('budgetandanalytics.businessintelligenceandanalytics.kpidashboards.loanbookgrowth.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('budgetandanalytics.businessintelligenceandanalytics.kpidashboards.loanbookgrowth.create');
-    }       
+    }
 }

@@ -1,3 +1,4 @@
+@php use App\Models\ThirdParies\Board; @endphp
 @extends('layouts.app')
 
 @section('title','Board')
@@ -8,6 +9,10 @@
             width: 100% !important;
         }
     </style>
+@endsection
+
+@section('breadcrumbs')
+    <li class="breadcrumb-item"><a href="#">CRM</a></li>
 @endsection
 @section('content')
     <div class="row">
@@ -43,7 +48,7 @@
                     <div class="card">
                         <div class="card-header">
                             <div class="card-actions float-end">
-                                @can('meeting', \App\Models\ThirdParies\Board::class)
+                                @can('meeting', Board::class)
                                     <button type="button" class="btn btn-outline-primary m-1"
                                             id="triggerBoardMeetingBtn">
                                         <i class="fas fa-calendar-plus"></i>&nbsp; Schedule a Meeting
@@ -120,7 +125,8 @@
                                             required>
                                         <option selected disabled>select a committee</option>
                                         @foreach($committees as $committee)
-                                            <option value="{{ $committee->CommitteeID }}">{{ $committee->Name }}</option>
+                                            <option
+                                                value="{{ $committee->CommitteeID }}">{{ $committee->Name }}</option>
                                         @endforeach
                                     </select>
                                     <p id="NotificationCommittees_error" class="invalid-feedback d-none error col-12"
@@ -213,7 +219,7 @@
                             aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    @can('meeting', \App\Models\ThirdParies\Board::class)
+                    @can('meeting', Board::class)
                         <div class="onboarding-content with-gradient d-none modal-item" id="createBoardMeetingModal">
                             <form action="{{ route('board-meetings.store') }}" method="post"
                                   id="createBoardMeetingForm" class="row">
@@ -263,7 +269,8 @@
                                             required>
                                         <option selected disabled>select a committee</option>
                                         @foreach($committees as $committee)
-                                            <option value="{{ $committee->CommitteeID }}">{{ $committee->Name }}</option>
+                                            <option
+                                                value="{{ $committee->CommitteeID }}">{{ $committee->Name }}</option>
                                         @endforeach
                                     </select>
                                     <p id="BoardMeetingCommittees_error" class="invalid-feedback d-none error col-12"
@@ -310,7 +317,7 @@
     <script src="{{ asset('assets/libs/rangePlugin.js') }}"></script>
     <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
     <script src='{{ asset('assets/libs/moment/moment-with-locales.js') }}'></script>
-    
+
     <script>let usersTable = null, rolesTable = null, teamsTable = null, branchesTable = null;
         const $Modal = $('#boardActionsModal');
         $(function () {

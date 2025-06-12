@@ -16,20 +16,20 @@ class StoresSeeder extends Seeder
     {
 
         {
-    
-        Store::insert([
-            [
-                'StoreID'     => 'ST001',
-                'StoreName'   => 'Procurement Store',
-                'BranchID'    => 1,
-                'Status'      => 'Active',
-                'CreatedBy'     => 1,
-                'ModifiedBy'    => 1,
-                'DeletedBy'     => null,
-                'CreatedOn'    => Carbon::now(),
-                'ModifiedOn'    => Carbon::now(),
-            ],
-        ]);  
-    } 
-}
+
+            Store::insert([
+                [
+                    'StoreID' => 'ST001',
+                    'StoreName' => 'Procurement Store',
+                    'BranchID' => 1,
+                    'Status' => 'Active',
+                    'CreatedBy' => 1,
+                    'ModifiedBy' => 1,
+                    'DeletedBy' => null,
+                    'CreatedOn' => Carbon::now(),
+                    'ModifiedOn' => Carbon::now(),
+                ],
+            ]);
+        }
+    }
 }

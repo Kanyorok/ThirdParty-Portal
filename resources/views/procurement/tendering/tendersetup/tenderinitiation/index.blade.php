@@ -75,7 +75,7 @@
                                 </td>
                                 <td>
                                     @if($tender->TenderType)
-                                    <span class="badge
+                                        <span class="badge
                                         @if($tender->TenderType === \App\Enums\TenderTypeEnum::Restricted) bg-warning text-dark
                                         @elseif($tender->TenderType === \App\Enums\TenderTypeEnum::Open) bg-success
                                         @else bg-info text-dark
@@ -128,7 +128,7 @@
                                     @endif
                                     @if ($tender->ApprovalStatus== \App\Enums\TenderApprovalStatusEnum::PENDING)
                                         <span class="badge rounded-pill bg-warning text-dark">
-                                            Pending 
+                                            Pending
                                          </span>
                                     @endif
                                 </td>
@@ -136,14 +136,16 @@
                                     <a href="{{ route('initiatetender.show', $tender->Id) }}" class="btn btn-sm btn-outline-info" title="View">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    
+
                                     @if ($tender->ApprovalStatus === \App\Enums\TenderApprovalStatusEnum::APPROVED || $tender->ApprovalStatus === \App\Enums\TenderApprovalStatusEnum::REJECTED)
                                         {{-- If tender is approved or rejected, disable edit button --}}
-                                        <a href="{{ route('initiatetender.edit', $tender->Id) }}" class="btn btn-sm btn-outline-primary disabled" title="Edit">
+                                        <a href="{{ route('initiatetender.edit', $tender->Id) }}"
+                                           class="btn btn-sm btn-outline-primary disabled" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
                                     @else
-                                        <a href="{{ route('initiatetender.edit', $tender->Id) }}" class="btn btn-sm btn-outline-primary" title="Edit">
+                                        <a href="{{ route('initiatetender.edit', $tender->Id) }}"
+                                           class="btn btn-sm btn-outline-primary" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
                                     @endif
@@ -158,12 +160,12 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr>
-                                <td colspan="12" class="text-center py-4"> 
+                            {{-- <tr>
+                                <td colspan="12" class="text-center py-4">
                                     <i class="fas fa-folder-open fa-2x text-muted mb-2"></i><br>
                                     No initiated tenders found. <a href="{{ route('initiatetender.create') }}">Create a new one?</a>
                                 </td>
-                            </tr>
+                            </tr> --}}
                         @endforelse
                         </tbody>
                     </table>

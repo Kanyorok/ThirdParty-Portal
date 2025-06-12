@@ -17,6 +17,7 @@
             <th>Name</th>
             <th>Category</th>
             <th>Description</th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
@@ -24,8 +25,18 @@
             <tr>
                 <td>{{ $Index + 1 }}</td>
                 <td>{{ $type->PropertyTypeName }}</td>
-                <td>{{ $type->propertycategory->Name }}</td>
+                <td>{{ $type->propertycategory->Name ?? '--' }}</td>
                 <td>{{ $type->Description }}</td>
+                <td>
+                    <a href="{{ route('propertytype.edit', $type->Id) }}" class="btn btn-sm btn-warning">Edit</a>
+                    <form action="{{ route('propertytype.destroy', $type->Id) }}" method="POST" class="d-inline">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-sm btn-danger"
+                                onclick="return confirm('Are you sure you want to delete this type?');">Delete
+                        </button>
+                    </form>
+                </td>
             </tr>
         @endforeach
     </tbody>

@@ -2,6 +2,7 @@
 
 namespace App\Models\PropertyManagement;
 
+use App\Models\Core\CategoryMaster;
 use App\Models\Core\Locality;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
@@ -32,19 +33,19 @@ class PropertyRegistry extends Model
         'ModifiedBy',
         'DeletedBy'
         ];
-    
+
     public static function getPrimaryKey(): string
     {
         return 'PropertyRegistryId';
     }
-   
-    public function propertyType()
+
+    public function type()
     {
         return $this->belongsTo(PropertyType::class, 'PropertyType', 'Id');
     }
     public function propertyCategory()
     {
-        return $this->belongsTo(PropertyCategory::class, 'Category', 'Id');
+        return $this->belongsTo(CategoryMaster::class, 'Category', 'Id');
     }
     public function propertyLocality()
     {

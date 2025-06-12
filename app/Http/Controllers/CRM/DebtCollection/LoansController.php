@@ -30,7 +30,7 @@ class LoansController extends Controller
     {
         $this->authorize('viewAny', DebtProduct::class);
         if ($request->ajax()) {
-            if ($request->has('dated') && StringHelper::isInteger($request->dated) && (int) $request->dated > 0) {
+            if ($request->has('dated') && StringHelper::isInteger($request->dated) && (int)$request->dated > 0) {
                 try {
                     $dated = Carbon::createFromFormat('U', $request->dated);
                     $dated?->setTimezone(new DateTimeZone(config('app.timezone')));

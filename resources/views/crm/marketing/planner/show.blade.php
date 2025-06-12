@@ -1,11 +1,15 @@
-@php use Illuminate\Support\Str; @endphp
+@php use App\Enums\Marketing\PlannerStatus;use App\Enums\Marketing\PlannerTypeEnum;use Illuminate\Support\Str; @endphp
 @extends('layouts.app')
 
 @section('title')
-    {{ Str::upper($planner->PlannerID) }}
+    Plan :  {{ Str::upper($planner->PlannerID) }}
 @endsection
 @section('styles')
 
+@endsection
+@section('breadcrumbs')
+    <li class="breadcrumb-item"><a href="#">CRM</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('marketing-planner.index') }}">Marketing Plans</a></li>
 @endsection
 @section('content')
     <div class="row">
@@ -18,11 +22,11 @@
                     <p class="text-justify">{!! $planner->Notes !!}</p>
 
                     <ul class="list-group list-group-flush">
-                        @if(\App\Enums\Marketing\PlannerTypeEnum::BranchPlanner->value === $planner->Type->value)
-                        <li class="list-group-item">Branch: <span
-                                class="float-end">{{ $planner->branch->BranchName }}</span></li>
-                        <li class="list-group-item">Mode : <span
-                                class="float-end">{{ $planner->mode?->Description }}</span></li>
+                        @if(PlannerTypeEnum::BranchPlanner->value === $planner->Type->value)
+                            <li class="list-group-item">Branch: <span
+                                    class="float-end">{{ $planner->branch?->BranchName }}</span></li>
+                            <li class="list-group-item">Mode : <span
+                                    class="float-end">{{ $planner->mode?->Description }}</span></li>
                         @endif
                         <li class="list-group-item">Owner : <span class="float-end">{{ $planner->owner->Name }}</span>
                         </li>
@@ -39,7 +43,7 @@
                 </div>
                 <div class="card-body">
                     @switch($planner->Status->value)
-                        @case(\App\Enums\Marketing\PlannerStatus::Draft->value)
+                        @case(PlannerStatus::Draft->value)
                             @if($planner->Type->value === App\Enums\Marketing\PlannerTypeEnum::BranchPlanner->value)
                                 <a href="{{ route('marketing-planner.edit',[$planner->PlannerID]) }}"
                                    class="btn btn-info w-100 m-2"><i
@@ -53,9 +57,9 @@
                                 <i class="fas fa-plane-departure"></i> submit for approval
                             </button>
                             @break
-                        @case(\App\Enums\Marketing\PlannerStatus::MarketingManager->value)
-                        @case(\App\Enums\Marketing\PlannerStatus::BranchManager->value)
-                        @case(\App\Enums\Marketing\PlannerStatus::Ceo->value)
+                        @case(PlannerStatus::MarketingManager->value)
+                        @case(PlannerStatus::BranchManager->value)
+                        @case(PlannerStatus::Ceo->value)
                             @if($canApprove)
                                 <button type="button" class="btn btn-success planner-approve m-2 w-100">
                                     <i class="fas fa-check"></i> approve
@@ -65,7 +69,7 @@
                                 </button>
                             @endif
                                 @break
-                        @case(\App\Enums\Marketing\PlannerStatus::Active->value)
+                        @case(PlannerStatus::Active->value)
                             <a href="{{ route('planner.document',[$planner->PlannerID]) }}"
                                class="btn btn-info w-100 m-2" download target="_blank"><i class="fas fa-download"></i>
                                 download plan</a>
@@ -151,7 +155,7 @@
                 </div>
                 <div class="modal-body">
                     @switch($planner->Status->value)
-                        @case(\App\Enums\Marketing\PlannerStatus::Draft->value)
+                        @case(PlannerStatus::Draft->value)
                             <div class="onboarding-content with-gradient d-none modal-item text-center"
                                  id="submitPlannerModal">
                                 <h4 class="text-success">
@@ -159,7 +163,7 @@
                                     ({{ Str::upper($planner->PlannerID) }}) for Approval?
                                 </h4>
                                 <p class="text-muted">This action is non reversible, are you sure ?</p>
-                                @if(\App\Enums\Marketing\PlannerTypeEnum::MasterPlanner->value === $planner->Type->value)
+                                @if(PlannerTypeEnum::MasterPlanner->value === $planner->Type->value)
                                     <form id="submitPlannerForm" method="post"
                                           action="{{ route('marketing-planner-manager.update',[$planner->PlannerID]) }}"> @csrf @method('put')
                                         <div class="mt-4">
@@ -191,7 +195,7 @@
 
                             </div>
                             @break
-                        @case(\App\Enums\Marketing\PlannerStatus::BranchManager->value)
+                        @case(PlannerStatus::BranchManager->value)
                             @if($canApprove)
                                 <div class="onboarding-content with-gradient d-none modal-item text-center"
                                      id="approveBranchPlanModal">
@@ -247,7 +251,7 @@
                                 </div>
                             @endif
                                 @break
-                        @case(\App\Enums\Marketing\PlannerStatus::MarketingManager->value)
+                        @case(PlannerStatus::MarketingManager->value)
                             @if($canApprove)
                                 <div class="onboarding-content with-gradient d-none modal-item text-center"
                                      id="approveManagerPlanModal">
@@ -303,7 +307,7 @@
                                 </div>
                             @endif
                                 @break
-                        @case(\App\Enums\Marketing\PlannerStatus::Ceo->value)
+                        @case(PlannerStatus::Ceo->value)
                             @if($canApprove)
                                 <div class="onboarding-content with-gradient d-none modal-item text-center"
                                      id="approveCEOPlanModal">
@@ -367,9 +371,11 @@
     </div>
 @endsection
 @section('scripts')
-    <script src='{{ asset('assets/js/fullcalendar-6.1.14.js') }}'></script>
-    <script src='{{ asset('assets/plugins/moment/moment-with-locales.js') }}'></script>
-    <script src="{{ asset('assets/js/datatables.js') }}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.14/index.global.min.js"
+            integrity="sha512-JEbmnyttAbEkbkpvW1vRqBzY3Otrp0DFwux9+JQ6kXe2mQfUmBpImuREMZS0advTaaCMotaYB5gIng/uPw3r6w=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src='{{ asset('assets/libs/moment/moment-with-locales.js') }}'></script>
+
     <script>   const $Modal = $('#PlannerActionsModal');
         let planActivityTable = null, planWorkflowTable = null;
         $(function () {
@@ -425,7 +431,7 @@
             window.calendar.render();
 
             @switch($planner->Status->value)
-            @case(\App\Enums\Marketing\PlannerStatus::Draft->value)
+            @case(PlannerStatus::Draft->value)
             $(document).on('click', '.planner-submit', function () {
                 $(".modal-title").html('Submit plan : {{ $planner->PlannerID }}');
                 $(".modal-item").addClass('d-none');
@@ -439,7 +445,7 @@
                 }
             });
             @break
-            @case(\App\Enums\Marketing\PlannerStatus::BranchManager->value)
+            @case(PlannerStatus::BranchManager->value)
             $(document).on('click', '.planner-approve', function () {
                 $(".modal-title").html('<b class="text-success">APPROVE</b> plan : {{ $planner->PlannerID }}');
                 $(".modal-item").addClass('d-none');
@@ -465,7 +471,7 @@
                 }
             });
             @break
-            @case(\App\Enums\Marketing\PlannerStatus::MarketingManager->value)
+            @case(PlannerStatus::MarketingManager->value)
             $(document).on('click', '.planner-approve', function () {
                 $(".modal-title").html('<b class="text-success">APPROVE</b> plan : {{ $planner->PlannerID }}');
                 $(".modal-item").addClass('d-none');
@@ -491,7 +497,7 @@
                 }
             });
             @break
-            @case(\App\Enums\Marketing\PlannerStatus::Ceo->value)
+            @case(PlannerStatus::Ceo->value)
             $(document).on('click', '.planner-approve', function () {
                 $(".modal-title").html('<b class="text-success">APPROVE</b> plan : {{ $planner->PlannerID }}');
                 $(".modal-item").addClass('d-none');

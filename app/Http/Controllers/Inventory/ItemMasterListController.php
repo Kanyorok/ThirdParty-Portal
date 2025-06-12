@@ -13,32 +13,36 @@ use App\Models\Inventory\ItemCategories;
 use App\Models\Inventory\InventoryType;
 use App\Models\Inventory\ItemType;
 use App\Models\Inventory\UnitOfMeasure;
+use App\Models\Inventory\PriceManagement;
+
 
 class ItemMasterListController extends Controller
 {
     public function index(Request $request)
     {
+
         if ($request->ajax()) {
-            return DataTables::of(ItemMasterList::with('category.parent'))
+            return DataTables::of(ItemMasterList::with('category.parent', 'itemType', 'inventoryType', 'uom', 'price'))
                 ->addIndexColumn()
                 ->addColumn('Category', fn($item) => optional($item->category)->Name ?? 'Uncategorized')
                 ->addColumn('ParentCategory', fn($item) => optional(optional($item->category)->parent)->Name ?? '—')
                 ->addColumn('ItemType', fn($item) => optional($item->itemType)->TypeName ?? '—')
                 ->addColumn('InventoryType', fn($item) => optional($item->inventoryType)->Type ?? '—')
                 ->addColumn('UOM', fn($item) => optional($item->uom)->Code ?? '—')
-                ->addColumn('Status', function($item) {
+                ->addColumn('Status', function ($item) {
                     return $item->Status == 1
                         ? '<span class="badge bg-success">Active</span>'
                         : '<span class="badge bg-warning">Inactive</span>';
                 })
+                ->addColumn('ItemPrice', fn($item) => optional($item->price)->ActualPrice ?? '—')
                 ->addColumn('Action', function ($item) {
                     return '
                         <a href="' . route('itemmasterlist.show', $item->Id) . '" class="btn btn-sm btn-primary">View</a>
                         <a href="' . route('itemmasterlist.edit', $item->Id) . '" class="btn btn-sm btn-warning">Edit</a>
-                        <button onclick="confirmDelete('.$item->Id.')" class="btn btn-danger btn-sm">Delete</button>
-                        <form id="delete-form-'.$item->Id.'" action="'.route('itemmasterlist.destroy', $item->Id).'" method="POST" style="display:none;">
-                            '.csrf_field().'
-                            '.method_field('DELETE').'
+                        <button onclick="confirmDelete(' . $item->Id . ')" class="btn btn-danger btn-sm">Delete</button>
+                        <form id="delete-form-' . $item->Id . '" action="' . route('itemmasterlist.destroy', $item->Id) . '" method="POST" style="display:none;">
+                            ' . csrf_field() . '
+                            ' . method_field('DELETE') . '
                         </form>';
                 })
                 ->rawColumns(['Status', 'Action'])
@@ -56,12 +60,14 @@ class ItemMasterListController extends Controller
             'categories' => ItemCategories::whereNull('ParentId')->get(),
             'itemTypes' => ItemType::all(),
             'uoms' => UnitOfMeasure::all(),
+            'price' => PriceManagement::all(),
             'inventoryTypes' => InventoryType::all(),
         ]);
     }
 
     public function store(Request $request)
     {
+
         $this->authorize('create', ItemMasterList::class);
 
         $validatedData = $request->validate([
@@ -72,6 +78,7 @@ class ItemMasterListController extends Controller
             'UOM' => 'required|integer|exists:t_UOM,Id',
             'Status' => 'boolean',
             'InventoryType' => 'required|integer|exists:t_InventoryTypes,Id',
+            'ItemPrice' => 'nullable|integer|exists:t_Pricing,Id',
             'ImageUpload' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'DocumentUpload' => 'nullable|file|mimes:pdf,doc,docx,xlsx,xls|max:5120',
             'ItemDescription' => 'nullable|string',
@@ -142,6 +149,7 @@ class ItemMasterListController extends Controller
             'itemTypes' => ItemType::all(),
             'uoms' => UnitOfMeasure::all(),
             'inventoryTypes' => InventoryType::all(),
+            'priceManagement' => PriceManagement::all(),
         ]);
     }
 
@@ -157,13 +165,14 @@ class ItemMasterListController extends Controller
             'Category' => 'required|integer|exists:t_ItemCategories,Id',
             'UOM' => 'required|integer|exists:t_UOM,Id',
             'Status' => 'boolean',
+            'ItemPrice' => 'nullable|integer|exists:t_Pricing,Id',
             'InventoryType' => 'required|integer|exists:t_InventoryTypes,Id',
             'ImageUpload' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'DocumentUpload' => 'nullable|file|mimes:pdf,doc,docx,xlsx,xls|max:5120',
             'ItemDescription' => 'nullable|string',
         ]);
 
-       
+
         $validatedData['Status'] = $request->input('Status', 0);
 
         $item->fill($validatedData);

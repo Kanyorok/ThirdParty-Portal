@@ -32,34 +32,35 @@ class MarketingPlanner extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-                           'PlannerID',
-                           'Name',
-                           'Type',
-                           'BranchId',
-                           'OwnerId',
-                           'MasterPlannerId',
-                           'Notes',
-                           'Status',
-                           'Modes',
-                           'StartOn',
-                           'EndOn',
-                           'CreatedBy',
-                           'ModifiedBy',
-                           'DeletedBy',
-                          ];
+        'PlannerID',
+        'Name',
+        'Type',
+        'BranchId',
+        'OwnerId',
+        'MasterPlannerId',
+        'Notes',
+        'Status',
+        'Modes',
+        'StartOn',
+        'EndOn',
+        'CreatedBy',
+        'ModifiedBy',
+        'DeletedBy',
+    ];
+
+    protected $casts = [
+        'StartOn' => 'datetime',
+        'EndOn' => 'datetime',
+        'OwnerId' => 'integer',
+        'Type' => PlannerTypeEnum::class,
+        'Status' => PlannerStatus::class,
+    ];
 
     public static function getPrimaryKey(): string
     {
         return (new self())->getRouteKeyName();
     }
 
-    protected $casts = [
-                        'StartOn' => 'datetime',
-                        'EndOn'   => 'datetime',
-                        'OwnerId' => 'integer',
-                        'Type'    => PlannerTypeEnum::class,
-                        'Status'  => PlannerStatus::class,
-                       ];
     /**
      * Get the route key for the model.
      */

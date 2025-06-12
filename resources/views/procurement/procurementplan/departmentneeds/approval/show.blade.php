@@ -82,43 +82,45 @@
                 </div>
             </div>
         </div>
-        </div>
+    </div>
 
-        <!-- Rejection Reason Modal -->
-        <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+    <!-- Rejection Reason Modal -->
+    <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <form id="rejectForm" method="POST" action="{{ route('department-need-approval.destroy', $need->Id) }}">
                 @csrf
                 @method('DELETE')
                 <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Reject Reason</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                    <label for="rejectReason">Reason for Rejection</label>
-                    <textarea name="Department_needs_reject_reason" id="rejectReason" class="form-control" required minlength="15" maxlength="2000"></textarea>
+                    <div class="modal-header">
+                        <h5 class="modal-title">Reject Reason</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="rejectReason">Reason for Rejection</label>
+                            <textarea name="Department_needs_reject_reason" id="rejectReason" class="form-control"
+                                      required minlength="15" maxlength="2000"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-danger">Reject</button>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-danger">Reject</button>
-                </div>
-                </div>
             </form>
         </div>
-        </div>
+    </div>
 
-        <div class="d-flex justify-content-end gap-2 mt-4">
-            <form action="{{ route('department-need-approval.update', $need->Id) }}" method="POST" class="d-inline">
-                @csrf
-                @method('PUT')
-                <button type="submit" class="btn btn-success">Approve</button>
-            </form>
-            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">Reject</button>
-            <a href="{{ route('department-need-approval.index') }}" class="btn btn-secondary">
-                Back to List
-            </a>
-        </div>
+    <div class="d-flex justify-content-end gap-2 mt-4">
+        <form action="{{ route('department-need-approval.update', $need->Id) }}" method="POST" class="d-inline">
+            @csrf
+            @method('PUT')
+            <button type="submit" class="btn btn-success">Approve</button>
+        </form>
+        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">Reject
+        </button>
+        <a href="{{ route('department-need-approval.index') }}" class="btn btn-secondary">
+            Back to List
+        </a>
+    </div>
     </div>
 @endsection
