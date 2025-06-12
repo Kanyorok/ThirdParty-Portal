@@ -35,13 +35,6 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     // Route::resource('receipts', ReceiptController::class);
 
     Route::get('/itemmaster', [ItemMasterListController::class, 'index'])->name('itemmaster.index');
-
-    Route::resource('transactionsreceipts', TransactionReceiptsController::class);
-    Route::resource('stockissue', StockIssueController::class);
-
-
-    Route::resource('transactionsapproval', TransactionApprovalController::class);
-
     //Route::resource('itemmaster', ItemMasterController::class);
     Route::get('/itemmaster', [ItemMasterListController::class, 'index'])->name('itemmaster.index');
     Route::get('/itemmasterlist/create', [ItemMasterListController::class, 'create'])->name('itemmasterlist.create');
@@ -120,7 +113,9 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::put('/transactionstransfers/{Id}', [TransactionTransfersController::class, 'update'])->name('transactionstransfers.update');
     Route::delete('/transactionstransfers/{Id}', [TransactionTransfersController::class, 'destroy'])->name('transactionstransfers.destroy');
     Route::get('/interbranchrequisition/{id}', [TransactionTransfersController::class, 'getRequisitionDetails']);
-    
+    Route::resource('transactionsreceipts', TransactionReceiptsController::class);
+    Route::resource('stockissue', StockIssueController::class);
+    Route::resource('transactionsapproval', TransactionApprovalController::class);
     Route::resource('transactionsadjustment', TransactionAdjustmentController::class);
 
     //Route::resource('interbranchrequisitionapproval', InterBranchRequisitionApprovalController::class);
