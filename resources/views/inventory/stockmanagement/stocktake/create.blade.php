@@ -3,32 +3,35 @@
 @section('content')
 <div class="container mt-4">
   <h4 class="fw-bold mb-3">📝 Physical Stock Take</h4>
-
   <!-- Header Info -->
+   <form action="{{ route('stocktake.store') }}" method="POST" enctype="multipart/form-data">
+    @csrf
   <div class="row mb-3">
     <div class="col-md-3">
       <label class="form-label">📍 Branch</label>
-      <select class="form-select" id="branchSelect">
-        <option value="">Select Branch</option>
-        <option value="branchA">Branch A</option>
-        <option value="branchB">Branch B</option>
-      </select>
-    </div>
+            <select name="BranchId" class="form-select" required>
+              <option value="">-- Select Branch --</option>
+              @foreach ($items as $item)
+                <option value="{{ $item-> Id }}">{{ $item->Branch }}</option>
+              @endforeach
+            </select>
+</div>
     <div class="col-md-3">
       <label class="form-label">🏢 Store</label>
-      <select class="form-select" id="storeSelect">
-        <option value="">Select Store</option>
-        <option value="store1">Main Store</option>
-        <option value="store2">Back Store</option>
-      </select>
+            <select name="StoreId" class="form-select" required>
+              <option value="">-- Select Store --</option>
+              @foreach ($items as $item)
+                <option value="{{ $item->Id }}">{{ $item->Store }}</option>
+              @endforeach
+            </select>
     </div>
     <div class="col-md-3">
       <label class="form-label">🧑‍💼 Counted By</label>
-      <input type="text" class="form-control" id="countedBy" placeholder="Enter name">
+      <input type="text" class="form-control" id="countedBy" placeholder="Enter name"name="CountedBy">
     </div>
     <div class="col-md-3">
       <label class="form-label">📅 Count Date</label>
-      <input type="date" class="form-control" id="countedDate" value="2025-05-02">
+      <input type="date" class="form-control" id="countedDate" value="2025-05-02"name="CountDate">
     </div>
   </div>
 
@@ -68,9 +71,7 @@
       </tbody>
     </table>
   </div>
-
-  <div class="text-end">
-    <button class="btn btn-success mt-3">✅ Submit Stock Count</button>
+    <button class="btn btn-success mt-3">✅ Submit Stock Count</button>   
   </div>
 </div>
 
@@ -85,4 +86,5 @@
     });
   });
 </script>
+</form>
 @endsection
