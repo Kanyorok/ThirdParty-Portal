@@ -39,6 +39,7 @@ use App\Http\Controllers\Budget\TrendAndGrowthController;
 use App\Http\Controllers\Budget\BranchPerformanceController;
 use App\Http\Controllers\Budget\BudgetDriversSetupController;
 use App\Http\Controllers\Budget\BudgetLinesController;
+use App\Http\Controllers\Budget\BudgetMonthlyProjectionController;
 use App\Http\Controllers\Budget\ProductProfitabilityController;
 use App\Http\Controllers\Budget\OfficerPerformanceController;
 use App\Http\Controllers\Budget\LoanBookTrendsController;
@@ -96,6 +97,7 @@ Route::namespace('Budget')->group(function () {
     Route::resource('budgetvarianceanalysis', BudgetVarianceAnalysisController::class);
     Route::resource('kpiscorecards', BudgetKPIscorecardsController::class);
     Route::resource('kpiscorecardsofficer', BudgetKPIscorecardsOfficerController::class);
+    Route::resource('monthly', BudgetMonthlyProjectionController::class);
     Route::resource('topcontributors', TopContibutorsController::class);
     Route::resource('regulatoryratios', RegulatoryRatiosController::class);
     Route::resource('liquidityratio', LiquidityController::class);

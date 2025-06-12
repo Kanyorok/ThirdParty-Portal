@@ -35,11 +35,14 @@
                     <td>250,000.00</td>
                     <td><span class="badge bg-warning">Pending</span></td>
                     <td>
-                        <a href="#" class="btn btn-sm btn-outline-info">👁 View</a>
+                        <a href="{{route('entrybyproduct.show',1)}}" class="btn btn-sm btn-outline-info">👁</a>
                         <form action="#" method="POST" class="d-inline">
                             @csrf @method('DELETE')
-                            <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this entry?')">🗑 Delete</button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this entry?')">🗑</button>
                         </form>
+
+                        <a href="{{route('entrybyproduct.edit',1)}}" class="btn btn-sm btn-outline-info">🖉 </a>
+                        <a href="{{route('monthly.create',1)}}" class="btn btn-sm btn-outline-info">Monthly</a> 
                     </td>
                 </tr>
                 <tr>
@@ -52,11 +55,13 @@
                     <td>1,200,000.00</td>
                     <td><span class="badge bg-success">Approved</span></td>
                     <td>
-                        <a href="#" class="btn btn-sm btn-outline-info">👁 View</a>
+                        <a href="{{route('entrybyproduct.show',2)}}" class="btn btn-sm btn-outline-info">👁</a>
                         <form action="#" method="POST" class="d-inline">
                             @csrf @method('DELETE')
-                            <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this entry?')">🗑 Delete</button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this entry?')">🗑</button>
                         </form>
+                        <a href="{{route('entrybyproduct.edit',1)}}" class="btn btn-sm btn-outline-info">🖉 </a>
+                        <a href="{{route('monthly.create',1)}}" class="btn btn-sm btn-outline-info">Monthly</a>
                     </td>
                 </tr>
             </tbody>

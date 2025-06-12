@@ -101,4 +101,13 @@ class BudgetProductEntryController extends Controller
                 ->withInput();
         }
     }
+
+    public function show($id){
+        return view('budgetandanalytics.budgetworkspace.entry.show') ;
+    }
+
+    public function edit($id)
+    {
+        return view('budgetandanalytics.budgetworkspace.entry.edit');
+    }
 }

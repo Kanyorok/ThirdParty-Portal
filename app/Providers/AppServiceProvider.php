@@ -15,6 +15,8 @@ use App\Models\Budget\BudgetLine;
 use App\Models\Budget\BudgetLinesGLAccount;
 use App\Models\Budget\BudgetProduct;
 use App\Models\Budget\BudgetProductType;
+use App\Models\Budget\BudgetTopDown;
+use App\Models\Budget\BudgetTopDownData;
 use App\Models\Communication\Call;
 use App\Models\Communication\Comment;
 use App\Models\Communication\Email;
@@ -161,6 +163,8 @@ class AppServiceProvider extends ServiceProvider
             BudgetDriver::getPrimaryKey()=>BudgetDriver::class,
             BudgetDriverMaster::getPrimaryKey()=>BudgetDriverMaster::class,
             BudgetDriverProjections::getPrimaryKey()=>BudgetDriverProjections::class,
+            BudgetTopDown::getPrimaryKey()=>BudgetTopDown::class,
+            BudgetTopDownData::getPrimaryKey()=>BudgetTopDownData::class,
 
           
             CategoryMaster::getPrimaryKey() => CategoryMaster::class,
