@@ -140,15 +140,15 @@
                             {{--                                name="itemDescription[]" id="Description" readonly> --}}
                         </td>
                         <td class="text-start"><input type="number" class="form-control form-control-sm qty quantity"
-                                                      name="quantity[]" id="Quantity"></td>
+                                                      name="quantity[]" id="Quantity" step="any"></td>
                         <td class="text-start"><input type="number" class="form-control form-control-sm unit-price "
-                                                      name="unitPrice[]" id="Price"></td>
+                                                      name="unitPrice[]" id="Price" step="any"></td>
                         <td class="text-start"><input type="number" class="form-control form-control-sm tax"
-                                                      name="tax[]" id="Tax"></td>
+                                                      name="tax[]" id="Tax" step="any"></td>
                         <td class="text-start"><input type="number" class="form-control form-control-sm discount"
-                                                      name="discount[]" id="Discount"></td>
+                                                      name="discount[]" id="Discount" step="any"></td>
                         <td class="text-start"><input type="number" class="form-control form-control-sm line-total"
-                                                      name="lineTotal[]" id="lineTotal" step=""></td>
+                                                      name="lineTotal[]" id="lineTotal" step="any"></td>
                     </tr>
                     </tbody>
                 </table>

@@ -77,12 +77,13 @@ class ApprovalService
         $userIds = array_map(fn($user) => $user->Id, $actors);
 
         // Count users with the permission via their roles
-        $count = DB::table('t_UserRoles as ur')
-            ->join('t_RolePermissions as rp', 'ur.role_id', '=', 'rp.role_id')
-            ->whereIn('ur.user_id', $userIds)
+        $count = DB::table('t_ModelRoles as mr')
+            ->join('t_RolePermissions as rp', 'mr.role_id', '=', 'rp.role_id')
+            ->where('mr.model_type', 'UserID')
+            ->whereIn('mr.model_id', $userIds)
             ->where('rp.permission_id', $permissionId)
-            ->distinct('ur.user_id')
-            ->count('ur.user_id');
+            ->distinct('mr.model_id')
+            ->count('mr.model_id');
 
         $majorityThreshold = (int) ceil(count($userIds) / 2);
 
@@ -103,11 +104,13 @@ class ApprovalService
 
     private function userHasPermission(User $user, int $permissionId): bool
     {
-        return DB::table('t_UserRoles as ur')
-            ->join('t_RolePermissions as rp', 'ur.role_id', '=', 'rp.role_id')
-            ->where('ur.user_id', $user->Id)
+        return DB::table('t_ModelRoles as mr')
+            ->join('t_RolePermissions as rp', 'mr.role_id', '=', 'rp.role_id')
+            ->where('mr.model_type', 'UserID')
+            ->where('mr.model_id', $user->Id)
             ->where('rp.permission_id', $permissionId)
             ->exists();
+
     }
 
     private function isAllApproved(string $docType, $documentId)
@@ -121,19 +124,18 @@ class ApprovalService
             return false;
         }
 
-        // 2. Get all users who have this permission via their roles
-        $allApprovers = DB::table('t_UserRoles as ur')
-            ->join('t_RolePermissions as rp', 'ur.role_id', '=', 'rp.role_id')
+        $allApprovers = DB::table('t_ModelRoles as mr')
+            ->join('t_RolePermissions as rp', 'mr.role_id', '=', 'rp.role_id')
+            ->where('mr.model_type', 'UserID')
             ->where('rp.permission_id', $permissionId)
-            ->distinct('ur.user_id')
-            ->pluck('ur.user_id')
+            ->distinct('mr.model_id')
+            ->pluck('mr.model_id')
             ->toArray();
 
         if (empty($allApprovers)) {
             return false;
         }
 
-        // 3. Get all users who have approved this document (in t_Approvals)
         $approvedUsers = DB::table('t_Approvals')
             ->where('DocType', $docType)
             ->where('DocumentId', $documentId)
@@ -142,7 +144,7 @@ class ApprovalService
             ->pluck('UserId')
             ->toArray();
 
-        // 4. Check if all required approvers have approved
+
         sort($allApprovers);
         sort($approvedUsers);
 

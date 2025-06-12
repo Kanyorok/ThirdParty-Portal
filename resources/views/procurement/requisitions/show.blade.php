@@ -121,7 +121,7 @@
                             <div class="mb-3">
                                 <label class="form-label" for="Quantity">Quantity </label>
 
-                                <input type="number" class="form-control" id="Quantity" name="Quantity" required
+                                <input type="number" class="form-control" id="Quantity" name="Quantity" required step="any"
                                        placeholder="Quantity">
                                 {{-- <textarea name="Quantity" id="Quantity" rows="3" class="form-control"
                                           maxlength="1000"></textarea> --}}
