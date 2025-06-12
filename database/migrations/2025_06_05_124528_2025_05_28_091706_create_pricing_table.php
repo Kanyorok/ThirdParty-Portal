@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     public function up(): void
     {
         Schema::create('t_Pricing', function (Blueprint $table) {
@@ -20,7 +19,7 @@ return new class extends Migration
             $table->string('CurrencyCode')->default('KES');
             $table->date('EffectiveFrom')->nullable();
             $table->date('EffectiveTo')->nullable();
-            $table->boolean('IsDefault')->default(false); 
+            $table->boolean('IsDefault')->default(false);
             $table->string('Source')->nullable();
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
@@ -28,9 +27,8 @@ return new class extends Migration
             $table->dateTime('ModifiedOn');
             $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
             $table->softDeletes('DeletedOn');
-            
 
-        
+
         });
     }
 

@@ -34,7 +34,7 @@ class PlanFromNeedsController extends Controller
         $categoryIds = $approvedNeeds->pluck('item.Category')->filter()->unique();
         $categories = ItemCategories::whereIn('Id', $categoryIds)->orderBy('Name')->get();
 
-        return view('procurement.procurementplan.planconsolidation.loadfromneeds.create', compact( 'approvedNeeds', 'plans', 'branches', 'departments', 'categories', 'budgetLines'
+        return view('procurement.procurementplan.planconsolidation.loadfromneeds.create', compact('approvedNeeds', 'plans', 'branches', 'departments', 'categories', 'budgetLines'
         ));
     }
 
@@ -49,14 +49,13 @@ class PlanFromNeedsController extends Controller
     private function getFilteredNeeds(Request $request)
     {
         $query = DepartmentNeeds::with(['item', 'branch', 'department'])->where('Status', DepartmentNeedsEnum::Approved)
-
-        ->whereNotExists(function ($subquery) {
-            $subquery->selectRaw(1)
-                ->from('t_PlanLineItem')
-                ->whereColumn('t_PlanLineItem.ItemID', 't_DepartmentNeeds.ItemID')
-                ->whereColumn('t_PlanLineItem.BranchID', 't_DepartmentNeeds.BranchID')
-                ->whereColumn('t_PlanLineItem.DepartmentID', 't_DepartmentNeeds.DepartmentID');
-        });
+            ->whereNotExists(function ($subquery) {
+                $subquery->selectRaw(1)
+                    ->from('t_PlanLineItem')
+                    ->whereColumn('t_PlanLineItem.ItemID', 't_DepartmentNeeds.ItemID')
+                    ->whereColumn('t_PlanLineItem.BranchID', 't_DepartmentNeeds.BranchID')
+                    ->whereColumn('t_PlanLineItem.DepartmentID', 't_DepartmentNeeds.DepartmentID');
+            });
         if ($request->filled('branch_filter')) {
             $query->where('BranchID', $request->branch_filter);
         }

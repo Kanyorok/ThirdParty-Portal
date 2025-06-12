@@ -9,11 +9,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BudgetLinesGLAccount extends Pivot
 {
-    use UserActorTrait,SoftDeletes;
+    use UserActorTrait, SoftDeletes;
 
-    protected $table='t_BudgetLinesGLAccounts';
+    protected $table = 't_BudgetLinesGLAccounts';
     protected $primaryKey = 'Id';
-    
+
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
@@ -34,9 +34,9 @@ class BudgetLinesGLAccount extends Pivot
     ];
 
     protected $casts = [
-        'CreatedOn'  => 'datetime',
+        'CreatedOn' => 'datetime',
         'ModifiedOn' => 'datetime',
-        'DeletedOn'  => 'datetime',
+        'DeletedOn' => 'datetime',
     ];
 
 }

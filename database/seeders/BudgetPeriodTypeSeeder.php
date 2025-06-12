@@ -14,7 +14,7 @@ class BudgetPeriodTypeSeeder extends Seeder
      */
     public function run(): void
     {
-         $now = Carbon::now();
+        $now = Carbon::now();
 
         // Fetch the first available user Id
         $userId = DB::table('t_Users')->value('Id');
@@ -26,16 +26,16 @@ class BudgetPeriodTypeSeeder extends Seeder
         }
 
         $periodTypes = [
-            ['PeriodType' => 'Annually',      'Code' => 'ANL', 'IsActive' => true],
-            ['PeriodType' => 'Bi-Annually',   'Code' => 'BAN', 'IsActive' => true],
-            ['PeriodType' => 'Quarterly',     'Code' => 'QTR', 'IsActive' => true],
-            ['PeriodType' => 'Monthly',       'Code' => 'MTH', 'IsActive' => true],
-            ['PeriodType' => 'Weekly',        'Code' => 'WKY', 'IsActive' => false],
-            ['PeriodType' => 'Daily',         'Code' => 'DAY', 'IsActive' => false],
-            ['PeriodType' => 'Biennially',    'Code' => 'BIN', 'IsActive' => true],
+            ['PeriodType' => 'Annually', 'Code' => 'ANL', 'IsActive' => true],
+            ['PeriodType' => 'Bi-Annually', 'Code' => 'BAN', 'IsActive' => true],
+            ['PeriodType' => 'Quarterly', 'Code' => 'QTR', 'IsActive' => true],
+            ['PeriodType' => 'Monthly', 'Code' => 'MTH', 'IsActive' => true],
+            ['PeriodType' => 'Weekly', 'Code' => 'WKY', 'IsActive' => false],
+            ['PeriodType' => 'Daily', 'Code' => 'DAY', 'IsActive' => false],
+            ['PeriodType' => 'Biennially', 'Code' => 'BIN', 'IsActive' => true],
             ['PeriodType' => 'Semi-Annually', 'Code' => 'SMA', 'IsActive' => true],
-            ['PeriodType' => 'Custom',        'Code' => 'CST', 'IsActive' => false],
-            ['PeriodType' => 'One-time',      'Code' => 'ONE', 'IsActive' => true],
+            ['PeriodType' => 'Custom', 'Code' => 'CST', 'IsActive' => false],
+            ['PeriodType' => 'One-time', 'Code' => 'ONE', 'IsActive' => true],
         ];
 
         foreach ($periodTypes as $type) {

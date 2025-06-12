@@ -2,7 +2,7 @@
 
 @section('title','Users & Roles')
 @section('styles')
-    <link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
     <style>
         .select2-container {
             width: 100% !important;
@@ -281,7 +281,7 @@
     </div>
 @endsection
 @section('scripts')
-    <script src="{{ asset('assets/plugins/select2/js/select2.full.min.js') }}"></script>
+    <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
     <script src="{{ asset('assets/js/datatables.js') }}"></script>
     <script>let usersTable = null, rolesTable = null, teamsTable = null, branchesTable = null;
         const $Modal = $('#userRolesActionsModal');

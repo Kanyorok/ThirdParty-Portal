@@ -37,15 +37,15 @@ class ItemType extends Model
     ];
 
     protected $casts = [
-        'TypeName'  => 'string',
-        'StockTracked'  => 'boolean',
-        'RequiresTagging'  => 'boolean',
-        'Active'  => 'boolean',
-        'CreatedBy'     => 'integer',
-        'ModifiedBy'    => 'integer',
-        'DeletedBy'     => 'integer',
-        'CreatedOn'     => 'datetime',
-        'ModifiedOn'    => 'datetime',
+        'TypeName' => 'string',
+        'StockTracked' => 'boolean',
+        'RequiresTagging' => 'boolean',
+        'Active' => 'boolean',
+        'CreatedBy' => 'integer',
+        'ModifiedBy' => 'integer',
+        'DeletedBy' => 'integer',
+        'CreatedOn' => 'datetime',
+        'ModifiedOn' => 'datetime',
     ];
 
     public function requisitionitems()

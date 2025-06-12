@@ -1,4 +1,4 @@
-@php use App\Enums\TicketStatusEnum;  @endphp
+@php use App\Enums\TicketStatusEnum;use App\Models\CRM\Ticket;  @endphp
 @extends('layouts.app')
 
 @section('title','Tickets')
@@ -29,7 +29,7 @@
         <div class="col-sm-2 col-6">
             <div class="mx-1 mb-2">
                 <select class="form-control w-100 filter-field" name="TicketUser" id="TicketUser">
-                    @can('viewAny', \App\Models\CRM\Ticket::class)
+                    @can('viewAny', Ticket::class)
                         <option value="all">Assigned: Any</option>
                         <option value="none">Assigned: None</option>
                     @endcan
@@ -76,7 +76,7 @@
 @endsection
 @section('scripts')
     @include('snippets.actions.tickets')
-    <script src="{{ asset('assets/js/datatables.js') }}"></script>
+
     <script>
         let ticketsTable = null, ticketsTableRoute = '';
         $(function () {

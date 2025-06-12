@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -13,7 +12,7 @@ return new class extends Migration
     {
         Schema::create('t_BudgetDrivers', function (Blueprint $table) {
             $table->id('Id');
-            $table->string('DriverName',30);
+            $table->string('DriverName', 30);
             $table->boolean('IsActive')->default(true);
 
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');

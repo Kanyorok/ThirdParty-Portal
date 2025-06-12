@@ -1,15 +1,20 @@
+@php use App\Enums\LocalityTypeEnum; @endphp
 @extends('layouts.app')
 
 @section('title')
     {{ $competitor->CompetitorName }}
 @endsection
 @section('styles')
-    <link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
     <style>
         .select2-container {
             width: 100% !important;
         }
     </style>
+@endsection
+@section('breadcrumbs')
+    <li class="breadcrumb-item"><a href="#">CRM</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('competitors.index') }}">Competitors</a></li>
 @endsection
 @section('content')
     <div class="row">
@@ -461,14 +466,14 @@
     </div>
 @endsection
 @section('scripts')
-    <script src="{{ asset('assets/js/datatables.js') }}"></script>
-    <script src="{{asset('assets/plugins/jquery-form/jquery.form.min.js')}}"></script>
-    <script src="{{ asset('assets/plugins/select2/js/select2.full.min.js') }}"></script>
+
+    <script src="{{asset('assets/libs/jquery-form/jquery.form.min.js')}}"></script>
+    <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
     <script>
         const $Modal = $('#CompetitorActionsModal'),
             ItemsUrl = '{{ route('competitor-descriptions.index',[$competitor->CompetitorID]) }}';
         let competitorProductsTable = null, StrengthTable = null, WeaknessesTable = null, progressInterval = null
-            CustomerServicePerceptionTable = null;
+        CustomerServicePerceptionTable = null;
         $(function () {
             $.fn.dataTable.ext.errMode = 'none';
 
@@ -570,7 +575,7 @@
                 placeholder: "Select a Town/City", minimumInputLength: 2,
                 dropdownParent: $Modal,
                 ajax: {
-                    url: "{{ route('locality.select2') }}?type={{ \App\Enums\LocalityTypeEnum::City->value }}",
+                    url: "{{ route('locality.select2') }}?type={{ LocalityTypeEnum::City->value }}",
                     dataType: 'json',
                     delay: 250,
                     data: function (params) {

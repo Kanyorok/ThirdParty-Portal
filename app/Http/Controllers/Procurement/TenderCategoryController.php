@@ -27,7 +27,7 @@ class TenderCategoryController extends Controller
         $defaultCategory = TenderCategoryEnum::cases()[0]->value;
         $newCatCode = TenderCategory::generateCatCode($defaultCategory);
         $tenderCatOptions = TenderCategoryEnum::cases();
-        
+
         return view('procurement.tendering.tendersetup.tendercategory.create', [
             'newCatCode' => $newCatCode,
             'tenderCatOptions' => $tenderCatOptions,
@@ -76,7 +76,7 @@ class TenderCategoryController extends Controller
         $this->authorize(PermissionEnum::TenderWrite, Tender::class);
         $tenderCategory = TenderCategory::findOrFail($id);
         $tenderCatOptions = TenderCategoryEnum::cases();
-        
+
         return view('procurement.tendering.tendersetup.tendercategory.edit', [
             'tenderCategory' => $tenderCategory,
             'tenderCatOptions' => $tenderCatOptions
@@ -84,7 +84,7 @@ class TenderCategoryController extends Controller
     }
 
     public function update(Request $request, $id)
-    {   
+    {
         //Check if user has permission to edit tender categories
         $this->authorize(PermissionEnum::TenderWrite, Tender::class);
         $validated = $request->validate([

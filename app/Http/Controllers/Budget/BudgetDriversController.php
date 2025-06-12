@@ -19,15 +19,15 @@ class BudgetDriversController extends Controller
     public function index()
     {
         //check Perm
-        $this->authorize(PermissionEnum::BudgetSetupView,BudgetLine::class);
+        $this->authorize(PermissionEnum::BudgetSetupView, BudgetLine::class);
 
-        $drivers=BudgetDriverMaster::with('driverType')->get();
-        $driverTypes=BudgetDriver::where('IsActive',1)->get();
+        $drivers = BudgetDriverMaster::with('driverType')->get();
+        $driverTypes = BudgetDriver::where('IsActive', 1)->get();
         //$uom=UnitOfMeasure::all();
-        return view('budgetandanalytics.budgetdrivers.index',compact(
+        return view('budgetandanalytics.budgetdrivers.index', compact(
             'drivers',
             'driverTypes',
-            //'uom'
+        //'uom'
         ));
     }
 
@@ -36,30 +36,31 @@ class BudgetDriversController extends Controller
         return view('budgetandanalytics.budgetdrivers.create');
     }
 
-    public function store(Request $request){
+    public function store(Request $request)
+    {
         //Check Permission
-        $this->authorize(PermissionEnum::BudgetSetupCreate,BudgetLine::class);
+        $this->authorize(PermissionEnum::BudgetSetupCreate, BudgetLine::class);
 
         //Validate Incoming request
-        $validated=$request->validate([
-            'DriverName'=>'required|string',
-            'DriverType'=>'required|integer',
+        $validated = $request->validate([
+            'DriverName' => 'required|string',
+            'DriverType' => 'required|integer',
             //'UOM'=>'required|integer',
-            'Frequency'=>'required|string'
+            'Frequency' => 'required|string'
 
         ]);
 
         try {
             DB::beginTransaction();
-            $driver=BudgetDriverMaster::create([
-                'DriverName'=>$validated['DriverName'],
-                'DriverTypeID'=>$validated['DriverType'],
+            $driver = BudgetDriverMaster::create([
+                'DriverName' => $validated['DriverName'],
+                'DriverTypeID' => $validated['DriverType'],
                 //'UOMID'=>$validated['UOM'],
-                'Frequency'=>$validated['Frequency'],
-                'IsActive'   => $request->has('IsActive') ? 1 : 0,
+                'Frequency' => $validated['Frequency'],
+                'IsActive' => $request->has('IsActive') ? 1 : 0,
 
                 'CreatedBy' => Auth::id(),
-                'ModifiedBy'=>Auth::id()
+                'ModifiedBy' => Auth::id()
             ]);
 
             DB::commit();
@@ -70,7 +71,7 @@ class BudgetDriversController extends Controller
                 ->event('create')
                 ->withProperties(['action' => 'create'])
                 ->log('Created a Budget Driver');
-            return back()->with('success','Budget driver Created successfully.');
+            return back()->with('success', 'Budget driver Created successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
             return $th->getMessage();
@@ -78,7 +79,7 @@ class BudgetDriversController extends Controller
                 'error' => $th->getMessage(),
                 'stack' => $th->getTraceAsString()
             ]);
-            return back()->with('error','An Error Occurred. Please try again');
+            return back()->with('error', 'An Error Occurred. Please try again');
         }
     }
 }

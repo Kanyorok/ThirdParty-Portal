@@ -3,7 +3,7 @@
 @extends('layouts.app')
 
 @section('title')
-    Debt Collection
+    Loan: {{ $loan->AccountID }}
 @endsection
 
 @section('styles')
@@ -14,7 +14,10 @@
         }
     </style>
 @endsection
-
+@section('breadcrumbs')
+    <li class="breadcrumb-item"><a href="#">CRM</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('debt-collection.index') }}">Debt Collection</a></li>
+@endsection
 @section('content')
     <div class="row">
         <div class="col-md-4">

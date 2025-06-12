@@ -1,3 +1,4 @@
+@php use App\Enums\LocalityTypeEnum; @endphp
 @extends('layouts.app')
 
 @section('title','Competitors')
@@ -10,15 +11,16 @@
     </style>
 @endsection
 @section('content')
-    <div class="mb-3">
-        <h1 class="h3 d-inline align-middle">@yield('title')</h1>
-        <button class="btn btn-primary float-end ms-2 modal-create-competitor" type="button"><i
-                class="fas fa-plus-circle"></i> Add Competitor
-        </button>
-    </div>
     <div class="row">
         <div class="col-12">
             <div class="card mb-3">
+                <div class="card-header">
+                    <div class="float-end">
+                        <button class="btn btn-primary float-end ms-2 modal-create-competitor btn-sm" type="button"><i
+                                class="fas fa-plus-circle"></i> Add Competitor
+                        </button>
+                    </div>
+                </div>
                 <div class="card-body">
                     <table id="competitorsTable"
                            class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
@@ -130,7 +132,7 @@
                 placeholder: "Select a Town/City", minimumInputLength: 2,
                 dropdownParent: $Modal,
                 ajax: {
-                    url: "{{ route('locality.select2') }}?type={{  \App\Enums\LocalityTypeEnum::City->value }}",
+                    url: "{{ route('locality.select2') }}?type={{  LocalityTypeEnum::City->value }}",
                     dataType: 'json',
                     delay: 250,
                     data: function (params) {

@@ -22,7 +22,7 @@ class StorePolicy
      */
     public function view(User $user): bool
     {
-         return $user->can(PermissionEnum::StoreView->value);
+        return $user->can(PermissionEnum::StoreView->value);
     }
 
     /**

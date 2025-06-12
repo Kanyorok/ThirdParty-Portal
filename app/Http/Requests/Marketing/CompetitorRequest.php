@@ -24,68 +24,62 @@ class CompetitorRequest extends FormRequest
     public function rules(): array
     {
         return [
-                'Name'         => [
-                                   'required',
-                                   'string',
-                                   'max:250',
-                                  ],
-                'Location'     => [
-                                   'required',
-                                   Rule::exists('t_Localities', 'ID')->where(function (Builder $query) {
-                                                    return $query->where('LocationType', LocalityTypeEnum::City->value);
-                                   }),
-                                  ],
-                'Website'      => [
-                                   'nullable',
-                                   'url',
-                                   'max:250',
-                                   new isDomain(),
-                                  ],
-                'Phone'        => [
-                                   'nullable',
-                                   'string',
-                                   'max:250',
-                                  ],
-                'Email'        => [
-                                   'nullable',
-                                   'email',
-                                   'max:250',
-                                  ],
-                "CoreBusiness" => [
-                                   'nullable',
-                                   'string',
-                                   'max:250',
-                                  ],
-                "Clients"      => [
-                                   'nullable',
-                                   'integer',
-                                   'min:1',
-                                  ],
-                "MarketShare"  => [
-                                   'nullable',
-                                   'string',
-                                   'max:250',
-                                  ],
+            'Name' => [
+                'required',
+                'string',
+                'max:250',
+            ],
+            'Location' => [
+                'required',
+                Rule::exists('t_Localities', 'ID')->where(function (Builder $query) {
+                    return $query->where('LocationType', LocalityTypeEnum::City->value);
+                }),
+            ],
+            'Website' => [
+                'nullable',
+                'url',
+                'max:250',
+                new isDomain(),
+            ],
+            'Phone' => [
+                'nullable',
+                'string',
+                'max:250',
+            ],
+            'Email' => [
+                'nullable',
+                'email',
+                'max:250',
+            ],
+            "CoreBusiness" => [
+                'nullable',
+                'string',
+                'max:250',
+            ],
+            "Clients" => [
+                'nullable',
+                'integer',
+                'min:1',
+            ],
+            "MarketShare" => [
+                'nullable',
+                'string',
+                'max:250',
+            ],
             /* "FinancialCapabilities" => ['nullable', 'string', 'max:7000'],
              "StrengthWeaknesses" => ['nullable', 'string', 'max:7000'],
              "CustomerPerception" => ['nullable', 'string', 'max:7000'],*/
-                'Notes'        => [
-                                   'nullable',
-                                   'string',
-                                   'max:5000',
-                                  ],
-                'image'        => [
-                                   'nullable',
-                                   Rule::imageFile()->max('10mb'),
-                                  ],
-               ];
+            'Notes' => [
+                'nullable',
+                'string',
+                'max:5000',
+            ],
+            'image' => [
+                'nullable',
+                Rule::imageFile()->max('10mb'),
+            ],
+        ];
     }
-
-    public function getImage(): ?UploadedFile
-    {
-        return $this->file('image');
-    }
-
 
     /**
      * @throws Throwable
@@ -99,17 +93,17 @@ class CompetitorRequest extends FormRequest
         return DB::transaction(function () use ($new, $competitor, $image, $actor) {
 
             $competitor->fill(array_merge([
-                                           "CompetitorName" => $this->validated('Name'),
-                                           "LocationID"     => $this->validated('Location'),
-                                           "CoreBusiness"   => $this->validated('CoreBusiness'),
-                                           "Clients"        => $this->validated('Clients'),
-                                           "MarketShare"    => $this->validated('MarketShare'),
-                                           "Email"          => $this->validated('Email'),
-                                           "Phone"          => $this->validated('Phone'),
-                                           "Website"        => $this->validated('Website'),
-                                           'Notes'          => $this->validated('Notes'),
-                                           'ModifiedBy'     => $actor->Id,
-                                          ], $new))->save();
+                "CompetitorName" => $this->validated('Name'),
+                "LocationID" => $this->validated('Location'),
+                "CoreBusiness" => $this->validated('CoreBusiness'),
+                "Clients" => $this->validated('Clients'),
+                "MarketShare" => $this->validated('MarketShare'),
+                "Email" => $this->validated('Email'),
+                "Phone" => $this->validated('Phone'),
+                "Website" => $this->validated('Website'),
+                'Notes' => $this->validated('Notes'),
+                'ModifiedBy' => $actor->Id,
+            ], $new))->save();
 
             if (empty($new)) {
                 activity()->causedBy($actor)->performedOn($competitor)->event('create')->log('Added a new competitor ' . $competitor->CompetitorName . '.');
@@ -124,5 +118,10 @@ class CompetitorRequest extends FormRequest
 
             return $competitor;
         });
+    }
+
+    public function getImage(): ?UploadedFile
+    {
+        return $this->file('image');
     }
 }

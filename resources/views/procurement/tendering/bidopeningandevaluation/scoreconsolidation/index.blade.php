@@ -36,7 +36,7 @@
                 </tr>
             </thead>
             <tbody>
-                <!-- Bidder 1 -->
+            <!-- Bidder 1 -->
                 <tr>
                     <td>1</td>
                     <td>Tech Supplies Ltd</td>
@@ -55,7 +55,7 @@
                     <td><span class="badge bg-success">Recommended</span></td>
                 </tr>
 
-                <!-- Bidder 2 -->
+            <!-- Bidder 2 -->
                 <tr>
                     <td>2</td>
                     <td>Nova Systems</td>
@@ -74,7 +74,7 @@
                     <td><span class="badge bg-secondary">Backup</span></td>
                 </tr>
 
-                <!-- Bidder 3 -->
+            <!-- Bidder 3 -->
                 <tr>
                     <td>3</td>
                     <td>EquiBuild Ltd</td>

@@ -1,16 +1,20 @@
-@php use Illuminate\Support\Str; @endphp
+@php use App\Enums\Core\VisibilityEnum;use App\Models\BR\Client;use App\Models\CRM\Lead;use Illuminate\Support\Str; @endphp
 @extends('layouts.app')
 
 @section('title')
     {{ Str::limit($list->Label,50) }} List
 @endsection
 @section('styles')
-    <link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
     <style>
         .select2-container {
             width: 100% !important;
         }
     </style>
+@endsection
+@section('breadcrumbs')
+    <li class="breadcrumb-item"><a href="#">CRM</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('marketing-list.index') }}">Marketing Lists</a></li>
 @endsection
 @section('content')
     <div class="row">
@@ -70,9 +74,9 @@
             <div class="card">
                 <div class="card-header border-bottom">
                     <h3 class="card-title float-start">Contacts -
-                        @if($list->Source === \App\Models\BR\Client::getPrimaryKey())
+                        @if($list->Source === Client::getPrimaryKey())
                             Clients
-                        @elseif($list->Source === \App\Models\CRM\Lead::getPrimaryKey())
+                        @elseif($list->Source === Lead::getPrimaryKey())
                             Leads
                         @else
                             Unkown Contacts
@@ -83,7 +87,7 @@
                 </div>
                 <div class="card-body pt-1">
                     @switch($list->Source)
-                        @case(\App\Models\BR\Client::getPrimaryKey())
+                        @case(Client::getPrimaryKey())
                             <table id="clientsTable"
                                    class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
                                 <thead>
@@ -98,7 +102,7 @@
                                 <tbody></tbody>
                             </table>
                             @break
-                        @case(\App\Models\CRM\Lead::getPrimaryKey())
+                        @case(Lead::getPrimaryKey())
                             <table id="leadsTable"
                                    class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
                                 <thead>
@@ -141,6 +145,16 @@
                                 <p id="Label_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
                             <div class="mb-3">
+                                <label class="form-label" for="Visibility">Visibility <span class="text-danger">*</span></label>
+                                <select class="form-control" name="Visibility" id="Visibility" required>
+                                    @foreach(VisibilityEnum::cases() as $Visibility)
+                                        <option
+                                            value="{{ $Visibility->value }}" {{ ($Visibility->value===$list->Visibility->value)?'selected':'' }}>{!! $Visibility->icon() !!} {{ $Visibility->description() }}</option>
+                                    @endforeach
+                                </select>
+                                <p id="Visibility_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                            </div>
+                            <div class="mb-3">
                                 <label class="form-label" for="Notes">Notes </label>
                                 <textarea name="Notes" id="Notes" rows="3" class="form-control"
                                           maxlength="1000">{{ $list->Notes }}</textarea>
@@ -155,7 +169,7 @@
                                 </button>
                                 <button class="btn btn-primary float-end" id="updateListBtn" type="submit"><i
                                         class="fas fa-save"></i>
-                                    update {{ \Illuminate\Support\Str::limit($list->Label ,20) }}
+                                    update {{ Str::limit($list->Label ,20) }}
                                 </button>
                             </div>
                         </form>
@@ -202,8 +216,8 @@
     </div>
 @endsection
 @section('scripts')
-    <script src="{{ asset('assets/js/datatables.js') }}"></script>
-    <script src="{{ asset('assets/plugins/select2/js/select2.full.min.js') }}"></script>
+
+    <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
     <script>let filtersTable = null;
         const $Modal = $('#ListActionsModal');
         $(function () {
@@ -312,7 +326,7 @@
 
     </script>
     @switch($list->Source)
-        @case(\App\Models\BR\Client::getPrimaryKey())
+        @case(Client::getPrimaryKey())
             <script>let clientsTable = null;
 
                 function fetchContacts() {
@@ -348,7 +362,7 @@
                 }
             </script>
             @break
-        @case(\App\Models\CRM\Lead::getPrimaryKey())
+        @case(Lead::getPrimaryKey())
             <script>let leadsTable = null;
 
                 function fetchContacts() {

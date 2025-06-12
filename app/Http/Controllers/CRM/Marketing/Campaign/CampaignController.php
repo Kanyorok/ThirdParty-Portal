@@ -23,6 +23,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Throwable;
 
 class CampaignController extends Controller
 {
@@ -50,7 +51,7 @@ class CampaignController extends Controller
         }
 
         return view('crm.marketing.campaigns.index')
-            ->with('MarketingLists', MarketingList::query()->where(function ($q) use ($request) {
+            ->with('MarketingLists', MarketingList::query()->where('Source', '!=', DebtProduct::getPrimaryKey())->where(function ($q) use ($request) {
                 $q->where('Visibility', VisibilityEnum::Public->value)
                     ->orWhere(function ($subQuery) use ($request) {
                         $subQuery->where('Visibility', VisibilityEnum::Private->value)
@@ -74,7 +75,7 @@ class CampaignController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (\Throwable | Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Error create campaign ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }

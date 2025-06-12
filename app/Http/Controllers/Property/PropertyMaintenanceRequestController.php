@@ -20,40 +20,41 @@ class PropertyMaintenanceRequestController extends Controller
     }
 
     public function create(){
-         $units = PropertyUnit::all();
-         $blocks = PropertyBlock::all();
-         $floors = PropertyFloor::all();
+        $units = PropertyUnit::all();
+        $blocks = PropertyBlock::all();
+        $floors = PropertyFloor::all();
         $properties = PropertyRegistry::all();
         return view('property.maintenanceandissues.maintenancerequest.create', compact('properties', 'floors', 'blocks', 'units'));
     }
+
     public function store(Request $request)
     {
         //dd($request->all());
         $request->validate([
-            'Property'=>'required|string|max:50',
-            'Block'=>'required|string|max:50',
-            'Floor'=>'required|string|max:50',
-            'Unit'=>'required|string|max:50',
-            'ReportedBy'=>'required|string|max:50',
-            'IssueType'=>'required|string|max:50',
-            'Priority'=>'required|string|max:50',
-            'IssueDescription'=>'required|string|max:255',
+            'Property' => 'required|string|max:50',
+            'Block' => 'required|string|max:50',
+            'Floor' => 'required|string|max:50',
+            'Unit' => 'required|string|max:50',
+            'ReportedBy' => 'required|string|max:50',
+            'IssueType' => 'required|string|max:50',
+            'Priority' => 'required|string|max:50',
+            'IssueDescription' => 'required|string|max:255',
         ]);
-       //dd('validation passed');
-         $maintenancerequest = PropertyMaintenanceRequest::create([
-            'Property'=> $request->Property,
-            'Block'=> $request->Block,
-            'Floor'=> $request->Floor,
-            'Unit'=> $request->Unit,
-            'ReportedBy'=> $request->ReportedBy,
-            'IssueType'=> $request->IssueType,
-            'Priority'=> $request->Priority,
-            'IssueDescription'=> $request->IssueDescription,
+        //dd('validation passed');
+        $maintenancerequest = PropertyMaintenanceRequest::create([
+            'Property' => $request->Property,
+            'Block' => $request->Block,
+            'Floor' => $request->Floor,
+            'Unit' => $request->Unit,
+            'ReportedBy' => $request->ReportedBy,
+            'IssueType' => $request->IssueType,
+            'Priority' => $request->Priority,
+            'IssueDescription' => $request->IssueDescription,
             'CreatedBy' => auth()->user()->Id,
             'ModifiedBy' => auth()->user()->Id,
         ]);
         //dd('validation passed');
-        return redirect()->route('maintenancerequest.index')->with('success','Maintenance request created successfully');
+        return redirect()->route('maintenancerequest.index')->with('success', 'Maintenance request created successfully');
 
     }
 

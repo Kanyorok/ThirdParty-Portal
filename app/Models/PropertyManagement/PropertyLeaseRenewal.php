@@ -24,6 +24,6 @@ class PropertyLeaseRenewal extends Model
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy'
-        ];
+    ];
 
 }

@@ -30,7 +30,7 @@ class InterBranchRequisitionApprovalController extends Controller
             $requisition = InterBranchRequisition::where('Id', $request->ReqId)->first();
 
             if ($requisition) {
-                $requisition->load(['fromBranch', 'toBranch', 'creator', 'items', 'items.item', 'items.uom']);
+                $requisition->load(['fromBranch', 'toBranch', 'creator', 'items', 'items.item']);
                 $requisition->CurrentApprLevel = $this->service->getApprovalLevelFromStatus($requisition->Status);
             } else {
                 return redirect()->back()->with('error', 'Selected requisition not found.');
@@ -43,6 +43,7 @@ class InterBranchRequisitionApprovalController extends Controller
         ]);
     }
 
+    
     public function submitDecision(Request $request)
     {
         $request->validate([

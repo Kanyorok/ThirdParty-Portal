@@ -8,12 +8,13 @@ use Illuminate\Http\Request;
 class DepositGrowthByOfficerController extends Controller
 {
     //
-   public function index()
+    public function index()
     {
         return view('budgetandanalytics.businessintelligenceandanalytics.multidimentionalanalytics.depositgrowthbyofficer.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('budgetandanalytics.businessintelligenceandanalytics.multidimentionalanalytics.depositgrowthbyofficer.create');
-    } 
+    }
 }

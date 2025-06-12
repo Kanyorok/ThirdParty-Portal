@@ -30,9 +30,10 @@
                     {{-- <td>2025-05-10</td> --}}
                     <td>
                         @if ($item['HasEvaluated'])
-                         <a href="#" class="btn btn-sm btn-outline-secondary">Evaluated</a>
+                            <a href="#" class="btn btn-sm btn-outline-secondary">Evaluated</a>
                         @else
-                          <a href="{{ route('bidevaluation.index',['sID'=>$item['supplierID'],'tenderId'=>$item['tenderID']]) }}" class="btn btn-sm btn-outline-primary">Evaluate</a>
+                            <a href="{{ route('bidevaluation.index',['sID'=>$item['supplierID'],'tenderId'=>$item['tenderID']]) }}"
+                               class="btn btn-sm btn-outline-primary">Evaluate</a>
                         @endif
                     </td>
                 </tr>

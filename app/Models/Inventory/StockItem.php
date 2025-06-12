@@ -46,42 +46,43 @@ class StockItem extends Model
     ];
 
     protected $casts = [
-        'SKUCode'   => 'string',
-        'ItemID'   => 'string',
-        'Batch'         => 'boolean',
-        'Serial'        => 'boolean',
-        'Perishable'    => 'boolean',
-        'Saleable'      => 'boolean',
-        'Purchasable'   => 'boolean',
-        'Store'         => 'integer',
-        'Branch'        => 'integer',
-        'CurrentQty'   => 'integer',
-        'Min'           => 'integer',
-        'Reorder'       => 'integer',
-        'Max'           => 'integer',
+        'SKUCode' => 'string',
+        'ItemID' => 'string',
+        'Batch' => 'boolean',
+        'Serial' => 'boolean',
+        'Perishable' => 'boolean',
+        'Saleable' => 'boolean',
+        'Purchasable' => 'boolean',
+        'Store' => 'integer',
+        'Branch' => 'integer',
+        'CurrentQty' => 'integer',
+        'Min' => 'integer',
+        'Reorder' => 'integer',
+        'Max' => 'integer',
         'LastReceived' => 'datetime',
-        'Status'        => 'boolean',
-        'CreatedBy'     => 'integer',
-        'ModifiedBy'    => 'integer',
-        'DeletedBy'     => 'integer',
-        'CreatedOn'     => 'datetime',
-        'ModifiedOn'    => 'datetime',
+        'Status' => 'boolean',
+        'CreatedBy' => 'integer',
+        'ModifiedBy' => 'integer',
+        'DeletedBy' => 'integer',
+        'CreatedOn' => 'datetime',
+        'ModifiedOn' => 'datetime',
     ];
 
 
     public function store()
-   {
-       return $this->belongsTo(Store::class, 'Store', 'Id');
-   }
-   public function branch()
-{
-    return $this->belongsTo(Branch::class, 'Branch', 'Id');
-}
-public function item()
-{
-    return $this->belongsTo(ItemMasterList::class, 'ItemID', 'Id');
-}
+    {
+        return $this->belongsTo(Store::class, 'Store', 'Id');
+    }
 
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class, 'Branch', 'Id');
+    }
+
+    public function item()
+    {
+        return $this->belongsTo(ItemMasterList::class, 'ItemID', 'Id');
+    }
 
 
 }

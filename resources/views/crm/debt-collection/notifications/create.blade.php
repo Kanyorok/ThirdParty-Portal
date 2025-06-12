@@ -1,3 +1,4 @@
+@php use App\Enums\Loan\LoanCategorizationEnum; @endphp
 @extends('layouts.app')
 
 @section('title','Bulk Notifications')
@@ -8,6 +9,10 @@
             width: 100% !important;
         }
     </style>
+@endsection
+@section('breadcrumbs')
+    <li class="breadcrumb-item"><a href="#">CRM</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('debt-notification.index') }}">Debt Notifications</a></li>
 @endsection
 @section('content')
     <div class="row">
@@ -92,7 +97,7 @@
                                             <label for="Categorization" class="form-label">Categorization</label>
                                             <select class="form-control" name="Categorization" id="Categorization">
                                                 <option value="all">All</option>
-                                                @foreach(\App\Enums\Loan\LoanCategorizationEnum::getAll() as $cat)
+                                                @foreach(LoanCategorizationEnum::getAll() as $cat)
                                                     <option
                                                         value="{{ $cat->name }}">{{ $cat->description() }}</option>
                                                 @endforeach
@@ -310,7 +315,7 @@
         });
 
         function getUrl(base) {
-            return base + "?Contacted=" + $('#Contacted').val() + "&MaturityMin=" + $('#MaturityMin').val() + "&MaturityMax=" + $('#MaturityMax').val() + "&ArrearsDaysMin=" + $('#ArrearsDaysMin').val() + "&ArrearsDaysMax=" + $('#ArrearsDaysMax').val() + "&ArrearsAmountMax=" + $('#ArrearsAmountMax').val() + "&ArrearsAmountMin=" + $('#ArrearsAmountMin').val() + "&Status=" + $('#Status').val() + "&Categorization=" + $('#Categorization').val()+ "&Product=" + $('#Product').val() + "&Branch=" + $('#Branch').val() + "&dated={{ ($dated instanceof Carbon\Carbon)? $dated->format('U'):0 }}";
+            return base + "?Contacted=" + $('#Contacted').val() + "&MaturityMin=" + $('#MaturityMin').val() + "&MaturityMax=" + $('#MaturityMax').val() + "&ArrearsDaysMin=" + $('#ArrearsDaysMin').val() + "&ArrearsDaysMax=" + $('#ArrearsDaysMax').val() + "&ArrearsAmountMax=" + $('#ArrearsAmountMax').val() + "&ArrearsAmountMin=" + $('#ArrearsAmountMin').val() + "&Status=" + $('#Status').val() + "&Categorization=" + $('#Categorization').val() + "&Product=" + $('#Product').val() + "&Branch=" + $('#Branch').val() + "&dated={{ ($dated instanceof Carbon\Carbon)? $dated->format('U'):0 }}";
         }
 
         function fetchProductsTable() {

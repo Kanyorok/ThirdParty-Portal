@@ -25,29 +25,29 @@ class Store extends Model
     }
 
     protected $fillable = [
-                           'StoreID',
-                           'StoreName',
-                           'BranchID',
-                           'Status',
-                           'CreatedBy',
-                           'ModifiedBy',
-                           'DeletedBy',
-                           'CreatedOn',
-                           'ModifiedOn',
-                          ];
+        'StoreID',
+        'StoreName',
+        'BranchID',
+        'Status',
+        'CreatedBy',
+        'ModifiedBy',
+        'DeletedBy',
+        'CreatedOn',
+        'ModifiedOn',
+    ];
 
     protected $casts = [
-                            'StoreID'       => 'string',
-                            'StoreName'       => 'string',
-                            'BranchID'      => 'integer',
-                            'Status'      => 'string',
-                            'CreatedBy'     => 'integer',
-                            'ModifiedBy'    => 'integer',
-                            'DeletedBy'     => 'integer',
-                            'CreatedOn'     => 'datetime',
-                            'ModifiedOn'    => 'datetime',
+        'StoreID' => 'string',
+        'StoreName' => 'string',
+        'BranchID' => 'integer',
+        'Status' => 'string',
+        'CreatedBy' => 'integer',
+        'ModifiedBy' => 'integer',
+        'DeletedBy' => 'integer',
+        'CreatedOn' => 'datetime',
+        'ModifiedOn' => 'datetime',
 
-                        ];
+    ];
 
     public function branch()
     {

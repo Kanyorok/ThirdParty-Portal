@@ -28,7 +28,8 @@
                             <select name="FromBranch" class="form-select" required>
                                 <option value="">Select Branch</option>
                                 @foreach ($branches as $branch)
-                                    <option value="{{ $branch->Id }}" {{ old('FromBranch') == $branch->Id ? 'selected' : '' }}>
+                                    <option
+                                        value="{{ $branch->Id }}" {{ old('FromBranch') == $branch->Id ? 'selected' : '' }}>
                                         {{ $branch->Name }}
                                     </option>
                                 @endforeach
@@ -39,7 +40,8 @@
                             <select name="ToBranch" class="form-select" required>
                                 <option value="">Select Branch</option>
                                 @foreach ($branches as $branch)
-                                    <option value="{{ $branch->Id }}" {{ old('ToBranch') == $branch->Id ? 'selected' : '' }}>
+                                    <option
+                                        value="{{ $branch->Id }}" {{ old('ToBranch') == $branch->Id ? 'selected' : '' }}>
                                         {{ $branch->Name }}
                                     </option>
                                 @endforeach
@@ -47,7 +49,8 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Date</label>
-                            <input type="date" name="CreatedOn" class="form-control" value="{{ old('CreatedOn', now()->toDateString()) }}" required>
+                            <input type="date" name="CreatedOn" class="form-control"
+                                   value="{{ old('CreatedOn', now()->toDateString()) }}" required>
                         </div>
                     </div>
 
@@ -85,24 +88,28 @@
                             <option value="">-- Select Subcategory --</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Item</label>
-                        <select name="items[__INDEX__][Item]" class="form-select item-select" required>
-                            <option value="">-- Select Item --</option>
-                        </select>
-                    </div>
-                    <div class="col-md-1">
-                        <label class="form-label">UOM</label>
-                        <select name="items[__INDEX__][UOM]" class="form-select" required>
-                            <option value="">Select UOM</option>
-                            @foreach ($uoms as $uom)
-                                <option value="{{ $uom->Id }}">{{ $uom->Code }}</option>
-                            @endforeach
-                        </select>
-                    </div>
+<div class="col-md-3">
+    <label class="form-label">Item</label>
+    <select name="items[__INDEX__][Item]" class="form-select item-select" required>
+        <option value="">-- Select Item --</option>
+    </select>
+</div>
+
+<div class="col-md-2">
+    <label class="form-label">Item Code</label>
+    <input type="text" name="items[__INDEX__][ItemCode]" class="form-control item-code" value="" readonly>
+</div>
+
+
+
+    <div class="col-md-2">
+    <label class="form-label"> UOM </label>
+    <input type="text" class="form-control item-uom" readonly>
+</div>
                     <div class="col-md-1">
                         <label class="form-label">Requested Qty</label>
-                        <input type="number" name="items[__INDEX__][RequestedQty]" class="form-control" value="1" min="1" required>
+                        <input type="number" name="items[__INDEX__][RequestedQty]" class="form-control" value="1"
+                               min="1" required>
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">Remarks</label>
@@ -134,7 +141,6 @@
                     }
                 });
 
-                // Add remove button event
                 clone.querySelector('.remove-item-btn').addEventListener('click', function () {
                     this.closest('.item-entry').remove();
                 });
@@ -147,9 +153,7 @@
                 addItem();
             });
 
-            // Event delegation for dynamic elements
             document.addEventListener('change', function (e) {
-                // Handle category selection
                 if (e.target.classList.contains('category-select')) {
                     const categoryId = e.target.value;
                     const entry = e.target.closest('.item-entry');
@@ -248,13 +252,54 @@
                 }
             });
 
+            // Fetch and display Item Code based on selected Item
+document.addEventListener('change', function (e) {
+    if (e.target.classList.contains('item-select')) {
+        const itemSelect = e.target;
+        const itemId = itemSelect.value;
+        const entry = itemSelect.closest('.item-entry');
+
+        const itemCodeInput = entry.querySelector('.item-code');
+        const itemUomInput = entry.querySelector('.item-uom');
+
+        if (itemCodeInput) itemCodeInput.value = '';
+        if (itemUomInput) itemUomInput.value = '';
+
+        if (itemId) {
+            fetch(`/inventory/items/code/${itemId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (itemCodeInput) itemCodeInput.value = data.item_code ?? 'N/A';
+                    if (itemUomInput) itemUomInput.value = data.item_uom ?? 'N/A';
+                })
+                .catch(error => {
+                    console.error('Error fetching item data:', error);
+                    if (itemCodeInput) itemCodeInput.value = 'Error';
+                    if (itemUomInput) itemUomInput.value = 'Error';
+                });
+        }
+    }
+});
+
+$('select.item-dropdown').on('change', function () {
+    let itemId = $(this).val();
+    let row = $(this).closest('tr');
+
+    $.get('/interbranchrequisition/getItemCode/' + itemId, function (response) {
+        row.find('input.item-code').val(response.item_code);
+        row.find('.uom-display').text(response.item_uom); // if you're showing UOM as text
+    });
+});
+
+
+
             // Add first item automatically if no old inputs (fresh form)
             @if (!old('items'))
-                addItem();
+            addItem();
             @else
-                @foreach (old('items', []) as $index => $oldItem)
-                    addItem(@json($oldItem));
-                @endforeach
+            @foreach (old('items', []) as $index => $oldItem)
+            addItem(@json($oldItem));
+            @endforeach
             @endif
         </script>
     @endpush

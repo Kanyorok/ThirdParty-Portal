@@ -50,7 +50,7 @@ class RequisitionItemsController extends Controller
 //        $this->authorize('view',RequisitionLines::class);
         try{
             $requisitionId = $request->query('requisition_id');
-            $items = $this->itemService->getItemByType($type,$requisitionId);
+            $items = $this->itemService->getItemByType($type, $requisitionId);
             return response()->json([
                 'success' => true,
                 'data' => $items,

@@ -20,12 +20,12 @@
             <p class="card-text"><strong>Description:</strong> {{ $category->Description }}</p>
 
             <p class="card-text">
-                <strong>Parent Category:</strong> 
+                <strong>Parent Category:</strong>
                 {{ $category->parent ? $category->parent->Name : 'None (Top-Level Category)' }}
             </p>
 
             <p class="card-text"><strong>Status:</strong> {{ $category->Status ? 'Active' : 'Inactive' }}</p>
-            
+
             <a href="{{ route('itemcategory.edit', $category->Id) }}" class="btn btn-warning">Edit</a>
             <a href="{{ route('itemcategory.index') }}" class="btn btn-secondary">Back to List</a>
         </div>
@@ -44,7 +44,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($category->children as $subcategory)
+            @foreach($category->children as $subcategory)
                     <tr>
                         <td>{{ $loop->iteration }}</td>
                         <td>{{ $subcategory->CategoryCode }}</td>
@@ -54,20 +54,22 @@
                             <a href="{{ route('itemcategory.show', $subcategory->Id) }}" class="btn btn-sm btn-primary">View</a>
                             <a href="{{ route('itemcategory.edit', $subcategory->Id) }}" class="btn btn-sm btn-warning">Edit</a>
                             <a href="#" class="btn btn-danger btn-sm" onclick="confirmDelete('{{ $subcategory->Id }}')">Delete</a>
-                            <form id="delete-form-{{ $subcategory->Id }}" action="{{ route('itemcategory.destroy', $subcategory->Id) }}" method="POST" style="display:none;">
-                            @csrf
-                            @method('DELETE')
-                           </form>
+                            <form id="delete-form-{{ $subcategory->Id }}"
+                                  action="{{ route('itemcategory.destroy', $subcategory->Id) }}" method="POST"
+                                  style="display:none;">
+                                @csrf
+                                @method('DELETE')
+                            </form>
                         </td>
                     </tr>
                 @endforeach
-                <script>
-    function confirmDelete(Id) {
-        if (confirm('⚠️ Are you sure you want to delete this subcategory?')) {
-            document.getElementById('delete-form-' + Id).submit();
-        }
-    }
-</script>
+            <script>
+                function confirmDelete(Id) {
+                    if (confirm('⚠️ Are you sure you want to delete this subcategory?')) {
+                        document.getElementById('delete-form-' + Id).submit();
+                    }
+                }
+            </script>
 
             </tbody>
         </table>

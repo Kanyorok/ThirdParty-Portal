@@ -30,7 +30,7 @@ class PropertyBlock extends Model
     {
         return 'PropertyBlockId';
     }
-    public function propery()
+    public function property()
     {
         return $this->belongsTo(PropertyRegistry::class,'PropertyID','Id');
     }

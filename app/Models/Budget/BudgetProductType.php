@@ -8,11 +8,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BudgetProductType extends Model
 {
-    use UserActorTrait,SoftDeletes;
-    
-    protected $table='t_BudgetProductTypes';
+    use UserActorTrait, SoftDeletes;
+
+    protected $table = 't_BudgetProductTypes';
     protected $primaryKey = 'Id';
-    
+
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
@@ -36,10 +36,10 @@ class BudgetProductType extends Model
     ];
 
     protected $casts = [
-        'CreatedOn'     => 'datetime',
-        'LastSyncDate'  => 'datetime',
-        'ModifiedOn'    => 'datetime',
-        'DeletedOn'     => 'datetime',
+        'CreatedOn' => 'datetime',
+        'LastSyncDate' => 'datetime',
+        'ModifiedOn' => 'datetime',
+        'DeletedOn' => 'datetime',
     ];
 
     public function products()

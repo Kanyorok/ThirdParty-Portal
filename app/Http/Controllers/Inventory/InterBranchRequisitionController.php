@@ -25,7 +25,8 @@ class InterBranchRequisitionController extends Controller
         $this->service = $service;
     }
 
-    public function index(Request $request) {
+    public function index(Request $request)
+    {
         $query = InterBranchRequisition::with(['fromBranch', 'toBranch', 'items']);
         if ($request->filled('status')) {
 
@@ -34,18 +35,18 @@ class InterBranchRequisitionController extends Controller
             $query->where('Status', $status);
         }
         if ($request->filled('status')) {
-   
-    $groupedRequisitions = $query->latest()->get();
-} else {
-  
-    $groupedRequisitions = $query->latest()->get();
-}
+
+            $groupedRequisitions = $query->latest()->get();
+        } else {
+
+            $groupedRequisitions = $query->latest()->get();
+        }
         return view('inventory.interbranchrequisition.index', compact('groupedRequisitions'));
     }
 
     public function create()
     {
-        $this->authorize('create', InterBranchRequisition::class);
+        // $this->authorize('create', InterBranchRequisition::class);
         $categories = ItemCategories::whereNull('ParentId')->get();
         $branches = Branch::all();
         $uoms = UnitOfMeasure::all();
@@ -55,7 +56,7 @@ class InterBranchRequisitionController extends Controller
 
     public function store(InterBranchRequisitionRequest $request)
     {
-        $this->authorize('create', InterBranchRequisition::class);
+        // $this->authorize('create', InterBranchRequisition::class);
         $data = $request->validated();
 
         if (!isset($data['Status'])) {
@@ -73,7 +74,6 @@ class InterBranchRequisitionController extends Controller
             'creator',
             'items',
             'items.item.category.parent',
-            'items.uom',
         ])->findOrFail($Id);
 
         return view('inventory.interbranchrequisition.show', compact('item'));
@@ -88,7 +88,6 @@ class InterBranchRequisitionController extends Controller
             'creator',
             'items',
             'items.item.category.parent',
-            'items.uom',
         ])->findOrFail($Id);
 
         $categories = ItemCategories::whereNull('ParentId')->get();
@@ -104,7 +103,7 @@ class InterBranchRequisitionController extends Controller
         $item = InterBranchRequisition::with('items')->findOrFail($Id);
         $data = $request->validated();
 
-     
+
         if (!isset($data['Status']) && $item->Status) {
             $data['Status'] = $item->Status;
         }
@@ -138,6 +137,19 @@ class InterBranchRequisitionController extends Controller
 
         return response()->json($subcategories);
     }
+public function getItemCode($Id)
+{
+    $item = ItemMasterList::with('uom')->select('Id', 'ItemCode', 'UOM')->find($Id);
+
+    if (!$item) {
+        return response()->json(['error' => 'Item not found'], 404);
+    }
+
+    return response()->json([
+        'item_code' => $item->ItemCode,
+        'item_uom' => optional($item->uom)->Code ?? 'N/A',
+    ]);
+}
 
     public function getItemsByCategoryOrSubcategory(Request $request)
     {
@@ -156,4 +168,6 @@ class InterBranchRequisitionController extends Controller
 
         return response()->json($items);
     }
+    
+    
 }
