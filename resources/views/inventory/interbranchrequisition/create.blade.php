@@ -68,7 +68,6 @@
         </form>
     </div>
 
-    <!-- Item Template -->
     <template id="itemTemplate">
         <div class="card mb-3 item-entry">
             <div class="card-body border">
@@ -290,13 +289,13 @@
                              const option = new Option(originalItemName, currentItem, true, true);
                              itemSelect.add(option);
                              fetchItemCodeAndUom(currentItem, entry);
-                         } else if (itemSelect.value) {
+                           } else if (itemSelect.value) {
                              fetchItemCodeAndUom(itemSelect.value, entry);
-                         } else {
+                           } else {
                              entry.querySelector('.item-code').value = '';
                              entry.querySelector('.item-uom').value = '';
                              entry.querySelector('.item-name-hidden').value = '';
-                         }
+                           }
 
                     })
                     .catch(error => {
@@ -318,7 +317,7 @@
                     return;
                 }
                 // Using the specific route: /items/code/{Id}
-                fetch(`/items/code/${itemId}`)
+                fetch(`/inventory/items/code/${itemId}`)
                     .then(response => response.json())
                     .then(data => {
                         entry.querySelector('.item-code').value = data.item_code ?? 'N/A';
@@ -334,147 +333,115 @@
                     });
             }
 
-            function addItem(oldValues = null) {
+            function addItem(values = {}) {
                 const template = document.getElementById('itemTemplate');
                 const clone = template.content.cloneNode(true);
-                const newEntry = clone.firstElementChild;
+                const currentItemIndex = itemCounter;
 
                 // Replace __INDEX__ in all names
-                newEntry.querySelectorAll('[name]').forEach(el => {
-                    el.name = el.name.replace('__INDEX__', itemCounter);
+                const fields = clone.querySelectorAll('[name]');
+                fields.forEach(element => {
+                    element.name = element.name.replace('__INDEX__', currentItemIndex);
+                });
+
+                document.getElementById('itemsContainer').appendChild(clone);
+                const newEntry = document.getElementById('itemsContainer').lastElementChild;
+
+                const categorySelect = newEntry.querySelector('.category-select');
+                const subcategorySelect = newEntry.querySelector('.subcategory-select');
+                const itemSelect = newEntry.querySelector('.item-select');
+                const itemCodeInput = newEntry.querySelector('.item-code');
+                const itemUomInput = newEntry.querySelector('.item-uom');
+                const itemNameHiddenInput = newEntry.querySelector('.item-name-hidden');
+                const requestedQtyInput = newEntry.querySelector('.item-qty');
+                const remarksInput = newEntry.querySelector('[name$="[Remarks]"]');
+
+                // Set initial values from old input or provided values
+                if (values.Category) {
+                    categorySelect.setAttribute('data-initial', values.Category);
+                }
+                if (values.Subcategory) {
+                    subcategorySelect.setAttribute('data-initial', values.Subcategory);
+                }
+                if (values.Item) {
+                    itemSelect.setAttribute('data-initial', values.Item);
+                }
+                if (values.ItemCode) {
+                    itemCodeInput.value = values.ItemCode;
+                }
+                if (values.item_uom) { // Assuming item_uom might be passed in old values
+                    itemUomInput.value = values.item_uom;
+                }
+                if (values.item_name) {
+                    itemNameHiddenInput.value = values.item_name;
+                }
+                if (values.RequestedQty) {
+                    requestedQtyInput.value = values.RequestedQty;
+                }
+                if (values.Remarks) {
+                    remarksInput.value = values.Remarks;
+                }
+
+                // Populate categories and then subcategories/items based on old values
+                populateCategoriesByBranch(newEntry, values.Category, () => {
+                    if (values.Category) {
+                        categorySelect.value = values.Category; // Ensure selected
+                        populateSubcategoriesByBranchAndCategory(newEntry, values.Subcategory, () => {
+                            if (values.Subcategory) {
+                                subcategorySelect.value = values.Subcategory; // Ensure selected
+                                populateItemsByBranchAndCategoryOrSubcategory(newEntry, values.Item);
+                            } else if (values.Category) {
+                                // If subcategory was not set, but category was, load items for that category
+                                populateItemsByBranchAndCategoryOrSubcategory(newEntry, values.Item, values.Category);
+                            }
+                        });
+                    }
                 });
 
                 newEntry.querySelector('.remove-item-btn').addEventListener('click', function () {
                     this.closest('.item-entry').remove();
                 });
 
-                document.getElementById('itemsContainer').appendChild(newEntry);
-
-                const categorySelect = newEntry.querySelector('.category-select');
-                const subcategorySelect = newEntry.querySelector('.subcategory-select');
-                const itemSelect = newEntry.querySelector('.item-select');
-
-                // Set initial state for new rows
-                categorySelect.disabled = true;
-                subcategorySelect.disabled = true;
-                itemSelect.disabled = true;
-                categorySelect.innerHTML = '<option value="">Select Requesting Branch First</option>';
-                subcategorySelect.innerHTML = '<option value="">-- Select Subcategory --</option>';
-                itemSelect.innerHTML = '<option value="">-- Select Item --</option>';
-
-                // Handle old values and trigger initial population
-                if (oldValues) {
-                    newEntry.querySelector('.item-qty').value = oldValues.RequestedQty || '1';
-                    newEntry.querySelector('[name*="[Remarks]"]').value = oldValues.Remarks || '';
-
-                    // Store old values for data-initial attributes for subsequent cascade
-                    categorySelect.setAttribute('data-initial', oldValues.Category || '');
-                    subcategorySelect.setAttribute('data-initial', oldValues.Subcategory || '');
-                    itemSelect.setAttribute('data-initial', oldValues.Item || '');
-                    newEntry.querySelector('.item-code').value = oldValues.ItemCode || '';
-                    newEntry.querySelector('.item-uom').value = oldValues.item_uom || '';
-                    newEntry.querySelector('.item-name-hidden').value = oldValues.item_name || '';
-
-                    // If a branch was already selected (e.g., from old('FromBranch')), initiate population
-                    const initialFromBranchId = document.getElementById('from_branch_select').value;
-                    if (initialFromBranchId) {
-                         populateCategoriesByBranch(newEntry, oldValues.Category, () => {
-                             // After categories load, if old category was set, load subcategories
-                             if (oldValues.Category) {
-                                 populateSubcategoriesByBranchAndCategory(newEntry, oldValues.Subcategory, () => {
-                                     // After subcategories load, if old item was set, load items
-                                     if (oldValues.Item) {
-                                         populateItemsByBranchAndCategoryOrSubcategory(newEntry, oldValues.Item);
-                                     }
-                                 });
-                             } else {
-                                 // If no specific category in oldValues, but branch is selected, still try to populate items
-                                 populateItemsByBranchAndCategoryOrSubcategory(newEntry, oldValues.Item);
-                             }
-                         });
-                    }
-                }
-
                 itemCounter++;
             }
 
-            document.addEventListener('DOMContentLoaded', () => {
-                const initialFromBranchValue = document.getElementById('from_branch_select').value;
+            document.getElementById('addItemBtn').addEventListener('click', function () {
+                addItem();
+            });
 
-                @if (old('items'))
-                    @foreach (old('items', []) as $index => $oldItem)
-                        addItem(@json($oldItem));
-                    @endforeach
-                @else
-                    addItem();
-                @endif
-
-
-                document.getElementById('addItemBtn').addEventListener('click', function () {
-                    addItem();
-                });
-
-                document.addEventListener('change', function (e) {
-                    const target = e.target;
-                    const entry = target.closest('.item-entry'); // May be null if event is from #from_branch_select
-
-                    // When From Branch changes (this event target is NOT inside an item-entry normally)
-                    if (target.id === 'from_branch_select') {
-                        document.querySelectorAll('.item-entry').forEach(itemEntry => {
-                            // Reset all dropdowns in this entry
-                            itemEntry.querySelector('.category-select').value = '';
-                            itemEntry.querySelector('.subcategory-select').value = '';
-                            itemEntry.querySelector('.item-select').value = '';
-                            itemEntry.querySelector('.category-select').setAttribute('data-initial', '');
-                            itemEntry.querySelector('.subcategory-select').setAttribute('data-initial', '');
-                            itemEntry.querySelector('.item-select').setAttribute('data-initial', '');
-
-                            itemEntry.querySelector('.item-code').value = '';
-                            itemEntry.querySelector('.item-uom').value = '';
-                            itemEntry.querySelector('.item-name-hidden').value = '';
-
-                            // Trigger the cascade: populate categories based on new branch
-                            populateCategoriesByBranch(itemEntry);
-                        });
-                        return; // Stop here, no need to proceed to category/subcategory/item specific logic
-                    }
-
-                    // For events within an item-entry (category, subcategory, item selects)
-                    if (entry) {
-                        // When Parent Category changes
-                        if (target.classList.contains('category-select')) {
-                            const subcategorySelect = entry.querySelector('.subcategory-select');
-                            const itemSelect = entry.querySelector('.item-select');
-                            subcategorySelect.setAttribute('data-initial', '');
-                            itemSelect.setAttribute('data-initial', '');
-
-                            populateSubcategoriesByBranchAndCategory(entry, null, () => {
-                                // If no subcategories are available for the selected parent category,
-                                // or if the subcategory dropdown becomes disabled, then try to load items
-                                // directly based on the parent category.
-                                if (subcategorySelect.options.length <= 1 || subcategorySelect.disabled) {
-                                    populateItemsByBranchAndCategoryOrSubcategory(entry, null, target.value); // Pass categoryId as fallback
-                                }
-                            });
-                        }
-
-                        // When Subcategory changes
-                        if (target.classList.contains('subcategory-select')) {
-                            const itemSelect = entry.querySelector('.item-select');
-                            itemSelect.setAttribute('data-initial', '');
-                            populateItemsByBranchAndCategoryOrSubcategory(entry);
-                            entry.querySelector('.item-code').value = '';
-                            entry.querySelector('.item-uom').value = '';
-                            entry.querySelector('.item-name-hidden').value = '';
-                        }
-
-                        // When Item changes
-                        if (target.classList.contains('item-select')) {
-                            fetchItemCodeAndUom(target.value, entry);
-                        }
-                    }
+            // Handle changes on Requesting Branch select to update all item categories
+            document.getElementById('from_branch_select').addEventListener('change', function () {
+                const itemEntries = document.querySelectorAll('.item-entry');
+                itemEntries.forEach(entry => {
+                    populateCategoriesByBranch(entry);
                 });
             });
+
+
+            // Delegated event listener for category and subcategory changes
+            document.addEventListener('change', function (e) {
+                const entry = e.target.closest('.item-entry');
+                if (!entry) return;
+
+                if (e.target.classList.contains('category-select')) {
+                    populateSubcategoriesByBranchAndCategory(entry);
+                    populateItemsByBranchAndCategoryOrSubcategory(entry); // Reset items when category changes
+                } else if (e.target.classList.contains('subcategory-select')) {
+                    populateItemsByBranchAndCategoryOrSubcategory(entry);
+                } else if (e.target.classList.contains('item-select')) {
+                    // Call the dedicated function to fetch item code and UOM
+                    fetchItemCodeAndUom(e.target.value, entry);
+                }
+            });
+
+            // Initial load: Add first item automatically if no old inputs (fresh form) or repopulate from old input
+            @if (!old('items'))
+                addItem();
+            @else
+                @foreach (old('items', []) as $index => $oldItem)
+                    addItem(@json($oldItem));
+                @endforeach
+            @endif
         </script>
     @endpush
 @endsection
