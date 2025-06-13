@@ -33,7 +33,7 @@ class StockItemRequest extends FormRequest
             'Perishable' => 'required|boolean',
             'Saleable' => 'required|boolean',
             'Purchasable' => 'required|boolean',
-            'Store' => 'required|integer|exists:t_Stores,Id',
+            'Store' => 'nullable|exists:t_Stores,Id', 
             'Branch' => 'required|integer|exists:t_Branches,Id',
             'CurrentQty' => 'required|integer|min:0',
             'Min' => 'required|integer|min:0',
