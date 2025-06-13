@@ -7,6 +7,7 @@ use App\Models\Auth\User;
 use App\Models\Procurement\Order;
 use App\Models\Procurement\Requisitions;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -17,7 +18,7 @@ class DocumentApprovalService
         //
     }
 
-    public function approve(ApproveOrderRequest $request, int $id): RedirectResponse
+    public function approve(Request $request, int $id): RedirectResponse
     {
         try {
             $actor = $request->user();
