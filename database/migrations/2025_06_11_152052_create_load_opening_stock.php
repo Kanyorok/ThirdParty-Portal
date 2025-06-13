@@ -15,10 +15,11 @@ return new class extends Migration
             $table->id('Id');
             $table->foreignId('BranchId')->constratined('t_Branches','Id');
             $table->foreignId('StoreId')->constratined('t_Stores','Id');
-            $table->foreignId('ItemCode')->constratined('t_Items','ItemCode');
+            $table->string('ItemCode');
+            $table->foreign('ItemCode')->references('ItemCode')->on('t_Items');
             $table->date('Date');
             $table->integer('Quantity');
-            $table->foreignId('UOM')->constratined('t_Items','UOM');
+            $table->foreignId('UOM')->constratined('t_UOM','Id');
             $table->float('Value');
             $table->string('Remarks');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');

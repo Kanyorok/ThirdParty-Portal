@@ -11,7 +11,7 @@ class OpeningStockRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -28,8 +28,8 @@ class OpeningStockRequest extends FormRequest
         'Date'  => 'required|date',
         'Quantity'  =>'required|integer',
         'UOM'   =>'required|exists:t_Items,UOM',
-        'Value' => 'required|decimal',
-        'Remarks'   => 'string', 
+        'Value' => 'required|numeric|min:0',
+        'Remarks'  => 'nullable|string', 
         ];
     }
 }

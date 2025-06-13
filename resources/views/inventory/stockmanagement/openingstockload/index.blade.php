@@ -1,10 +1,13 @@
 @extends('layouts.app')
 @section('title', 'Opening Stock Records')
+@section('styles')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+@endsection
 @section('content')
 <div class="container mt-4">
   <h4 class="fw-bold mb-3">📋 Opening Stock Records</h4>
   <a href="{{ route('openingstock.create') }}" class="btn btn-success">➕ Add New Stock Take</a>
-  <table class="table table-bordered table-striped align-middle">
+  <table id="openstock" class="table table-bordered table-striped align-middle">
     <thead class="table-light">
       <tr>
         <th>#</th>
@@ -13,38 +16,42 @@
         <th>Item</th>
         <th>Qty Entered</th>
         <th>UOM</th>
-        <th>Qty (Base)</th>
         <th>Value</th>
         <th>Date</th>
         <th>Remarks</th>
       </tr>
     </thead>
     <tbody>
+      @foreach( $entries as $entry)
       <tr>
-        <td>1</td>
-        <td>Branch A</td>
-        <td>Main Store</td>
-        <td>A4 Paper</td>
-        <td>10</td>
-        <td>dozen</td>
-        <td>120</td>
-        <td>2400</td>
-        <td>2025-05-01</td>
-        <td>Initial load</td>
+        <td>{{ $loop->iteration }}</td>
+        <td>{{ $entry->branch->Name?? '-' }}</td>
+        <td>{{ $entry->store->StoreName ?? '-' }}</td>
+        <td>{{ $entry->item->ItemName?? '-' }}</td>
+        <td>{{ $entry->Quantity?? '-' }}</td>
+        <td>{{ $entry->uom->Code?? '-' }}</td>
+        <td>{{ $entry->Value?? '-' }}</td>
+        <td>{{ $entry->Date?? '-' }}</td>
+        <td>{{ $entry->Remarks?? '-' }}</td>
+        </td>
       </tr>
-      <tr>
-        <td>2</td>
-        <td>Branch B</td>
-        <td>Back Store</td>
-        <td>Printer</td>
-        <td>5</td>
-        <td>pcs</td>
-        <td>5</td>
-        <td>50000</td>
-        <td>2025-05-01</td>
-        <td>Opening stock</td>
-      </tr>
+      @endforeach
     </tbody>
   </table>
 </div>
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        $('#openstock').DataTable({
+            pageLength: 10,
+            ordering: true,
+            searching: true,
+            lengthChange: true
+        });
+    });
+</script>
 @endsection

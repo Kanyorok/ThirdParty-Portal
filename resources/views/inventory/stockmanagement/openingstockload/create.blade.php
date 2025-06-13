@@ -13,7 +13,7 @@
         <div class="row g-3 mb-3">
           <div class="col-md-3">
             <label class="form-label">Branch</label>
-            <select name="BranchId" class="form-select" required>
+            <select name="BranchId" id="branch-select" class="form-select" required>
               <option value="">-- Select Branch --</option>
               @foreach ($branches as $branch)
               <option value="{{ $branch->Id }}">{{ $branch->Name }}</option>
@@ -21,12 +21,9 @@
             </select>
           </div>
           <div class="col-md-3">
-            <label class="form-label">Store</label>
-            <select name="StoreId" class="form-select" required>
+            <label for="StoreId" class="form-label">Store</label>
+            <select name="StoreId" id="store-select" class="form-select" required>
               <option value="">-- Select Store --</option>
-              @foreach ($stores as $store)
-              <option value="{{ $store->Id }}">{{ $store->Name }}</option>
-              @endforeach
             </select>
           </div>
           <div class="col-md-3">
@@ -53,8 +50,8 @@
             <label class="form-label">UOM</label>
             <select name="UOM" class="form-select" required>
               <option value="">-- Select UOM --</option>
-              @foreach ($items as $item)
-              <option value="{{ $item->UOM }}">{{ $item->uom->Code }}</option>
+              @foreach ($uoms as $uom)
+              <option value="{{ $uom->Id }}">{{ $uom->Code }}</option>
               @endforeach
             </select>
           </div>
@@ -79,7 +76,8 @@
   <div class="card shadow">
     <div class="card-header bg-light fw-bold">📤 Upload Opening Stock (Excel)</div>
     <div class="card-body">
-      <form method="POST" action="#" enctype="multipart/form-data">
+      <form method="POST" action="{{ route('openingstock.upload') }}" enctype="multipart/form-data">
+      @csrf
         @csrf
         <div class="row g-3 align-items-end">
           <div class="col-md-6">
@@ -87,7 +85,7 @@
             <input type="file" name="excel_file" class="form-control" accept=".xlsx" required>
           </div>
           <div class="col-md-6 text-end">
-            <a href="/downloads/opening_stock_uom_sample.xlsx" class="btn btn-outline-primary">
+            <a href="{{ route('openingstock.sample') }}" class="btn btn-outline-primary">
               ⬇️ Download Sample Template
             </a>
             <button type="submit" class="btn btn-primary ms-2">📤 Upload & Import</button>
@@ -97,4 +95,34 @@
     </div>
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const branchSelect = document.getElementById('branch-select');
+    const storeSelect = document.getElementById('store-select');
+
+    branchSelect.addEventListener('change', function () {
+        const branchId = this.value;
+
+        // Reset type dropdown
+        storeSelect.innerHTML = '<option value="">-- Select a store --</option>';
+
+        if (branchId) {
+            const url = `{{ route('getstores', ':Id') }}`.replace(':Id', branchId);
+
+            fetch(url)
+                .then(response => response.json())
+                .then(stores => {
+                    stores.forEach(store => {
+                        const option = document.createElement('option');
+                        option.value = store.Id;
+                        option.textContent = store.StoreName;
+                        storeSelect.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error loading stores:', error));
+        }
+    });
+});
+</script>
 @endsection

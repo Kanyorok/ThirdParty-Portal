@@ -2,6 +2,7 @@
 
 namespace App\Models\Inventory;
 
+use App\Models\Core\Branch;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -38,5 +39,17 @@ class LoadOpeningStock extends Model
     public function item()
     {
         return $this->belongsTo(ItemMasterList::class,'ItemCode');
+    }
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class,'BranchId','Id');
+    }
+        public function store()
+    {
+        return $this->belongsTo(Store::class,'StoreId','Id');
+    }
+        public function uom()
+    {
+        return $this->belongsTo(UnitOfMeasure::class,'UOM','Id');
     }
 }
