@@ -117,7 +117,17 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::delete('/transactionstransfers/{Id}', [TransactionTransfersController::class, 'destroy'])->name('transactionstransfers.destroy');
     Route::get('/interbranchrequisition/{id}', [TransactionTransfersController::class, 'getRequisitionDetails']);
     
-    Route::resource('transactionsreceipts', TransactionReceiptsController::class);
+    //Route::resource('transactionsreceipts', TransactionReceiptsController::class);
+        Route::get('/transactionsreceipts', [TransactionReceiptsController::class, 'index'])->name('transactionsreceipts.index');
+    Route::get('/transactionsreceipts/create', [TransactionReceiptsController::class, 'create'])->name('transactionsreceipts.create');
+    Route::post('/transactionsreceipts', [TransactionReceiptsController::class, 'store'])->name('transactionsreceipts.store');
+    Route::get('/transactionsreceipts/{Id}', [TransactionReceiptsController::class, 'show'])->name('transactionsreceipts.show');
+    Route::get('/transactionsreceipts/{Id}/edit', [TransactionReceiptsController::class, 'edit'])->name('transactionsreceipts.edit');
+    Route::put('/transactionsreceipts/{Id}', [TransactionReceiptsController::class, 'update'])->name('transactionsreceipts.update');
+    Route::delete('/transactionsreceipts/{Id}', [TransactionReceiptsController::class, 'destroy'])->name('transactionsreceipts.destroy');
+    Route::get('/transactionsreceipts/{Id}', [TransactionReceiptsController::class, 'getTransferItems']);
+
+
     Route::resource('stockissue', StockIssueController::class);
     Route::resource('transactionsapproval', TransactionApprovalController::class);
     Route::resource('transactionsadjustment', TransactionAdjustmentController::class);

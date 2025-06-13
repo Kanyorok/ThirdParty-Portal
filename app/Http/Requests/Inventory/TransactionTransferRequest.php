@@ -16,17 +16,16 @@ class TransactionTransferRequest extends FormRequest
         return true; 
     }
 
-   public function rules()
+public function rules()
 {
     return [
-        'RequisitionId' => 'required|exists:t_InterBranchRequisition,Id',
         'TransferDate' => 'required|date',
         'TransferredBy' => 'required|string',
         'FromBranch' => 'required|exists:t_Branches,Id',
-        'ToBranch' => 'required|exists:t_Branches,Id|different:FromBranch',
+        'ToBranch' => 'required|exists:t_Branches,Id',
         'items' => 'required|array|min:1',
         'items.*.item' => 'required|exists:t_Items,Id',
-        'items.*.approved_qty' => 'required|integer|min:1',
+        'items.*.approved_qty' => 'required|numeric|min:1',
         'items.*.dispatched_qty' => 'required|integer|min:0', 
         'items.*.remarks' => 'nullable|string|max:255',
     ];
