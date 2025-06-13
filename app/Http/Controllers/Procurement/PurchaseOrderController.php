@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Procurement;
 
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Orders\ApproveOrderRequest;
 use App\Http\Requests\Orders\PurchaseOrderRequest;
 use App\Models\Auth\User;
 use App\Models\Procurement\Order;
@@ -22,7 +23,7 @@ class PurchaseOrderController extends Controller
     public function __construct(protected ItemService $itemService, protected SupplierService $supplierService, protected OrderService $orderService, protected RFQService $rfqService, protected ApprovalService $approvalService)
     {
 
-        $this->middleware('ajax')->except(['index', 'create', 'show', 'linkRFQ', 'fetchRFQDetails']);
+        $this->middleware('ajax')->except(['index', 'create', 'show', 'linkRFQ', 'fetchRFQDetails','approval','approve']);
 //        $this->authorizeResource(Order::class);
     }
 
@@ -329,48 +330,109 @@ class PurchaseOrderController extends Controller
         return view("procurement.orders.rfqlink", compact('RFQ'));
     }
 
+    public function approval($id){
 
-    public function approve(Request $request, $id)
-    {
-        $purchaseOrder = Order::findOrFail($id);
-        $actor = $request->user();
 
-        // Record the approval by the current user
-        DB::table('t_Approvals')->updateOrInsert(
-            [
-                'DocType' => 'purchase_order',
-                'DocumentId' => $purchaseOrder->Id,
-                'UserId' => $actor->Id,
-            ],
-            [
-                'CreatedBy' => $actor->Id,
-                'ModifiedBy' => $actor->Id,
-                'CreatedOn' => now(),
-                'ModifiedOn' => now(),
-            ]
-        );
 
-        // Check if the document is fully approved based on approval type (including ALL)
+        try {
+            $order = Order::findOrFail($id); // This will throw 404 if not found
+            $this->authorize('view', $order); // Authorize the order object itself
 
-        $isApproved = $this->approvalService->isDocumentApproved(
-            'purchase_order',
-            $purchaseOrder->total_amount,
-            $actor,
-            $purchaseOrder->Id
-        );
+            $orderInfo = $this->orderService->fetchOrderDetails($id);
+            $lineInfo = $this->orderService->fetchOrderLineDetails($id);
 
-        if ($isApproved) {
-            $purchaseOrder->status = 'approved';
-            $purchaseOrder->save();
+            return view('procurement.orders.approval', compact('orderInfo', 'lineInfo'));
 
-            return response()->json(['message' => 'Document approved']);
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            Log::warning("Unauthorized access attempt to view Order ID: {$id} by user ID: " . auth()->id());
+            return redirect()->back()->with('error', 'Unauthorized access.');
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::error("Order ID {$id} not found. Exception: " . $e->getMessage());
+            return redirect()->back()->with('error', 'Order not found.');
+        } catch (\Exception $e) {
+            Log::error("Failed to fetch order ID {$id}. Exception: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return redirect()->back()->with('error', 'Failed to fetch order.');
         }
 
-
-        return response()->json(['message' => 'Approval recorded, but pending full approval']);
     }
 
+    public function approve(ApproveOrderRequest $orderRequest, $id)
+    {
+        try {
+            $purchaseOrder = Order::findOrFail($id);
+            $actor = $orderRequest->user();
 
+            $validatedData = $orderRequest->validated();
+            $action = $validatedData['action'] ?? 'approve';
+            $orderTotal = (float) $validatedData['order_total'];
+            $documentType = $validatedData['document_type'];
+
+            if ($action === 'reject') {
+                DB::table('t_Approvals')->updateOrInsert(
+                    [
+                        'DocType' => $documentType,
+                        'DocumentId' => $purchaseOrder->Id,
+                        'UserId' => $actor->Id,
+                    ],
+                    [
+                        'RejectionReason' => $orderRequest->input('rejection_reason'),
+                        'Status' => 'rejected',
+                        'CreatedBy' => $actor->Id,
+                        'ModifiedBy' => $actor->Id,
+                        'CreatedOn' => now(),
+                        'ModifiedOn' => now(),
+                    ]
+                );
+
+                $purchaseOrder->status = 'rejected';
+                $purchaseOrder->save();
+
+                return redirect()->route('purchaseOrder.approval', $purchaseOrder->Id)
+                    ->with('status', 'Purchase order rejected.');
+            }
+
+            DB::table('t_Approvals')->updateOrInsert(
+                [
+                    'DocType' => $documentType,
+                    'DocumentId' => $purchaseOrder->Id,
+                    'UserId' => $actor->Id,
+                ],
+                [
+                    'CreatedBy' => $actor->Id,
+                    'ModifiedBy' => $actor->Id,
+                    'CreatedOn' => now(),
+                    'ModifiedOn' => now(),
+                ]
+            );
+
+            $isApproved = $this->approvalService->isDocumentApproved(
+                $documentType,
+                $orderTotal,
+                $actor,
+                $purchaseOrder->Id
+            );
+
+            if ($isApproved) {
+                $purchaseOrder->DocStatus = 'a';
+                $purchaseOrder->save();
+
+                return redirect()->route('purchaseOrder.approval', $purchaseOrder->Id)
+                    ->with('status', 'Document approved successfully.');
+            }
+
+            return redirect()->route('purchaseOrder.approval', $purchaseOrder->Id)
+                ->with('status', 'Approval recorded, pending full approval.');
+
+        } catch (\Throwable $e) {
+            Log::error('Exception occurred while approving order.', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return redirect()->route('purchaseOrder.approval', $id)
+                ->with('error', 'Failed to approve order: ' . $e->getMessage());
+        }
+    }
 
     public function fetchRFQDetails($id): JsonResponse
     {

@@ -47,7 +47,7 @@
                                 <td>{{ $item->CreatedBy }}</td>
                                 <td>{{ \Carbon\Carbon::parse($item->CreatedOn)->format('d-m-Y H:i') }}</td>
                                 <td> <a href="{{ route('purchaseOrder.show', $item->Id) }}" class="btn btn-info btn-sm">View</a>
-{{--                                    <a href="{{ route('purchaseOrder.approval', $item->Id) }}" class="btn btn-success btn-sm">Approve</a>--}}
+                                    <a href="{{ route('purchaseOrder.approval', $item->Id) }}" class="btn btn-success btn-sm">Approve</a>
                                 </td>
                             </tr>
                         @empty

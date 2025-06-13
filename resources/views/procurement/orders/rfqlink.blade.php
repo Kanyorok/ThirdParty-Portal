@@ -67,7 +67,9 @@
                 <div class="col-md-4 mt-2">
                     <label>Priority</label>
                     <select class="form-control priority" name="priority">
-                        <option selected></option>
+                        <option>High</option>
+                        <option>Medium</option>
+                        <option>Low</option>
                     </select>
                 </div>
                 <div class="col-md-4 mt-2">
