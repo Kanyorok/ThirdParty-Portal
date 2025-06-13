@@ -96,7 +96,7 @@
 
                         <div class="col-md-6">
                             <label for="Store" class="form-label">Store</label>
-                            <select name="Store" id="Store" class="form-select" required>
+                            <select name="Store" id="Store" class="form-select">
                                 <option value="">-- Select Store --</option>
                                 {{-- Stores will be loaded dynamically --}}
                             </select>
