@@ -138,7 +138,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 301540, 'Name' => 'Deviations', 'Icon' => null, 'Description' => '', 'ParentID' => 301500, 'Route' => 'approvalinbox.index'],
             ['ModuleID' => 302000, 'Name' => 'Purchase Requisition', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 302100, 'Name' => 'Requisition List', 'Icon' => null, 'Description' => '', 'ParentID' => 302000, 'Route' => 'requisition.create'],
-            ['ModuleID' => 302200, 'Name' => 'Requisition Approval', 'Icon' => null, 'Description' => '', 'ParentID' => 302000, 'Route' => 'requisition.index'],
+//            ['ModuleID' => 302200, 'Name' => 'Requisition Approval', 'Icon' => null, 'Description' => '', 'ParentID' => 302000, 'Route' => 'requisition.index'],
             ['ModuleID' => 302300, 'Name' => 'Priority List', 'Icon' => null, 'Description' => '', 'ParentID' => 302000, 'Route' => 'requisitionItem.index'],
             ['ModuleID' => 303000, 'Name' => 'Suppliers', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 303100, 'Name' => 'Suppliers List', 'Icon' => null, 'Description' => '', 'ParentID' => 303000, 'Route' => 'suppliers.index'],

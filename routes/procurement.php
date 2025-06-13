@@ -84,7 +84,9 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
 
     Route::get('requisitionItem/{id}', [RequisitionItemsController::class, 'show'])->name('requisitionItem.show');
     Route::get('requisitionItem/create/{id}', [RequisitionItemsController::class, 'create'])->name('requisitionItems.create');
-    Route::get('requisition/approval', [RequisitionsController::class, 'approvalList'])->name('requisition.approval');
+
+    Route::post('requisition/approve/{id}', [RequisitionsController::class, 'approve'])->name('requisition.approve');
+    Route::get('requisition/approval/{id}', [RequisitionsController::class, 'approval'])->name('requisition.approval');
 
     //Purchase Order
     Route::get('purchaseOrder/getSuppliers', [PurchaseOrderController::class, 'getSuppliers'])->name('purchaseOrder.getSuppliers');
