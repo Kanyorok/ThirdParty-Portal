@@ -117,7 +117,7 @@ class PurchaseOrderController extends Controller
             $suppliers = $this->supplierService->getSuppliers();
             $itemTypes = $this->itemService->getTypes();
 
-            if(!$suppliers || !$itemTypes){
+            if (!$suppliers || !$itemTypes) {
 
                 return view('procurement.orders.create', [
                     'suppliers' => $suppliers ?? [],
@@ -125,7 +125,7 @@ class PurchaseOrderController extends Controller
                 ]);
 
             }
-            return view("procurement.orders.create", compact('suppliers','itemTypes'));
+            return view("procurement.orders.create", compact('suppliers', 'itemTypes'));
 
 //            \Log::info('Suppliers loaded in create():', $suppliers->toArray());
         } catch (\Exception $e) {

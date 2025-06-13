@@ -14,8 +14,9 @@ BEGIN
     select @StatusID= c.ID from t_CodeDetails c (nolock) where c.CodeID='RequisitionStatus' and c.Description='Pending'
 
     -- Insert new requisition
-    INSERT INTO t_Requisitions (RequisitionNo, BranchId, DepartmentId, Remarks, CreatedBy,CreatedOn, ModifiedBy,ModifiedOn,StatusID,PlanRef)
-    VALUES (@RequisitionNo, @Branch, @Department, @Remarks, @User, getdate(),@User,getdate(),@StatusID,@Plan)
+    INSERT INTO t_Requisitions (RequisitionNo, BranchId, DepartmentId, Remarks, CreatedBy, CreatedOn, ModifiedBy,
+                                ModifiedOn, StatusID, PlanRef)
+    VALUES (@RequisitionNo, @Branch, @Department, @Remarks, @User, getdate(), @User, getdate(), @StatusID, @Plan)
 
     -- Generate RequisitionNo
     SET @RequisitionId = (SELECT MAX (r.Id) FROM t_Requisitions r)

@@ -16,8 +16,8 @@ class SectionController extends Controller
      */
     public function index()
     {
-        $sections= Section::all();
-        return view('procurement.tendering.settings.sections',compact('sections'));
+        $sections = Section::all();
+        return view('procurement.tendering.settings.sections', compact('sections'));
     }
 
     /**
@@ -31,7 +31,7 @@ class SectionController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-   public function store(Request $request)
+    public function store(Request $request)
     {
         //check if the user has permission to create a section
         // Validate the request data
@@ -76,7 +76,7 @@ class SectionController extends Controller
 
         return $request->all();
     }
-  
+
 
     public function update(Request $request, string $id)
     {
@@ -106,13 +106,13 @@ class SectionController extends Controller
         return redirect()->back()->with('success', 'Section updated successfully.');
     }
 
-    
+
     public function destroy(string $id)
     {
         $section = Section::findOrFail($id);
         $sectionName = $section->SectionName;
 
-        $section->DeletedBy = auth()->id(); 
+        $section->DeletedBy = auth()->id();
         $section->save();
 
         activity()

@@ -8,7 +8,8 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('t_BidSubmissions', function (Blueprint $table) {
+        Schema::create('t_BidSubmissions', static function (Blueprint $table) {
+            $table->id('Id');
             $table->string('TenderRef'); // e.g., 'TND/PROC/2025/001'
             $table->string('SupplierName'); // e.g., 'Tech Supplies Ltd'
             $table->foreignId('SubmissionMode')->constrained('t_CodeDetails', 'ID');

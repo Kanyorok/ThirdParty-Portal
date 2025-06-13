@@ -1,4 +1,4 @@
-@php use Illuminate\Support\Str; @endphp
+@php use App\Enums\MarketingListEnum;use App\Models\BR\Client;use App\Models\CRM\Lead;use Illuminate\Support\Str; @endphp
 @extends('layouts.app')
 
 @section('title')
@@ -7,6 +7,10 @@
 @section('styles')
     <link rel="stylesheet" href="https://cdn.datatables.net/2.1.5/css/dataTables.dataTables.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/select/2.0.5/css/select.dataTables.css">
+@endsection
+@section('breadcrumbs')
+    <li class="breadcrumb-item"><a href="#">CRM</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('marketing-list.index') }}">Marketing Lists</a></li>
 @endsection
 @section('content')
     <div class="row">
@@ -47,24 +51,24 @@
             @endif
             <div class="tab">
                 <ul class="nav nav-tabs" role="tablist">
-                    @if(is_null($list->Source) && $list->Type->value === \App\Enums\MarketingListEnum::Static->value)
+                    @if(is_null($list->Source) && $list->Type->value === MarketingListEnum::Static->value)
                         <li class="nav-item"><a class="nav-link active" href="#tab-1" data-bs-toggle="tab" role="tab"
                                                 aria-selected="false" onclick="fetchLeadsTable()">Leads</a></li>
                         <li class="nav-item"><a class="nav-link" href="#tab-0" data-bs-toggle="tab" role="tab"
                                                 aria-selected="false" onclick="fetchMembersTable()">Members </a></li>
-                    @elseif($list->Source === \App\Models\CRM\Lead::getPrimaryKey())
+                    @elseif($list->Source === Lead::getPrimaryKey())
                         <li class="nav-item"><a class="nav-link active" href="#tab-1" data-bs-toggle="tab" role="tab"
                                                 aria-selected="false" onclick="fetchLeadsTable()">Leads</a></li>
-                    @elseif($list->Source === \App\Models\BR\Client::getPrimaryKey())
+                    @elseif($list->Source === Client::getPrimaryKey())
                         <li class="nav-item"><a class="nav-link active" href="#tab-0" data-bs-toggle="tab" role="tab"
                                                 aria-selected="false" onclick="fetchMembersTable()">Members </a></li>
                     @endif
                 </ul>
                 <div class="tab-content">
                     <div
-                        class="tab-pane m-2 {{ ($list->Source === \App\Models\BR\Client::getPrimaryKey())?'active':'' }} "
+                        class="tab-pane m-2 {{ ($list->Source === Client::getPrimaryKey())?'active':'' }} "
                         id="tab-0" role="tabpanel">
-                        @if( $list->Type->value === \App\Enums\MarketingListEnum::Static->value && !$isProcessing)
+                        @if( $list->Type->value === MarketingListEnum::Static->value && !$isProcessing)
                             @can('update',$list)
                                 <div class="row mb-0">
                                     <div class="col-8 mb-0">
@@ -81,7 +85,7 @@
                                                     id="removeMembersList">
                                                 <i class="fas fa-minus-circle"></i> remove members
                                             </button>
-                                            <input type="hidden" name="members" id="MembersList" class="d-none">
+                                            <input type="hidden" name="clients" id="MembersList" class="d-none">
                                         </form>
                                     </div>
                                 </div>
@@ -104,9 +108,9 @@
                         </table>
                     </div>
                     <div
-                        class="tab-pane {{ ($list->Source === \App\Models\BR\Client::getPrimaryKey())?'':'active' }} m-2"
+                        class="tab-pane {{ ($list->Source === Client::getPrimaryKey())?'':'active' }} m-2"
                         id="tab-1" role="tabpanel">
-                        @if($list->Type->value === \App\Enums\MarketingListEnum::Static->value  && !$isProcessing)
+                        @if($list->Type->value === MarketingListEnum::Static->value  && !$isProcessing)
                             @can('update',$list)
                                 <div class="row mb-0">
                                     <div class="col-8 mb-0">
@@ -159,7 +163,7 @@
         const leadsBtn = $("#saveLeadsToList"), membersBtn = $("#removeMembersList"), $Modal = $('#ListActionsModal');
         $(function () {
             $.fn.dataTable.ext.errMode = 'none';
-            @if($list->Source === \App\Models\BR\Client::getPrimaryKey())
+            @if($list->Source === Client::getPrimaryKey())
             fetchMembersTable();
             @else
             fetchLeadsTable();

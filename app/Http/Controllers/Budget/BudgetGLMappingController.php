@@ -12,8 +12,8 @@ class BudgetGLMappingController extends Controller
     //
     public function index()
     {
-        $this->authorize(PermissionEnum::BudgetSetupView , BudgetGLAccount::class);
-        $gls=BudgetGLAccount::all();
+        $this->authorize(PermissionEnum::BudgetSetupView, BudgetGLAccount::class);
+        $gls = BudgetGLAccount::all();
         return view('budgetandanalytics.glmapping.index', compact('gls'));
     }
 

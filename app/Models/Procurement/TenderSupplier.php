@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class TenderSupplier extends Model
 {
     use SoftDeletes;
+
     protected $table = 't_TenderSuppliers';
 
     public const CREATED_AT = 'CreatedOn';
@@ -18,7 +19,7 @@ class TenderSupplier extends Model
     protected $fillable = [
         'TenderID',
         'SupplierID',
-        'CreatedBy', 
+        'CreatedBy',
         'ModifiedBy',
     ];
 

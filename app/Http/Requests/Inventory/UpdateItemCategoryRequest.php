@@ -14,7 +14,7 @@ class UpdateItemCategoryRequest extends FormRequest
     /**
      * Determine if the user is authorized to make this request.
      */
-     public function authorize(): bool
+    public function authorize(): bool
     {
         $category = ItemCategories::findOrFail($this->route('id'));
         return auth()->user()->can('update', $category);

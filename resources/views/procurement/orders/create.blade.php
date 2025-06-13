@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Purchase Order')
 @section('styles')
-    <link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
     <style>
         .select2-container {
             width: 100% !important;
@@ -117,9 +117,9 @@
                                 @foreach ($itemTypes as $type)
                                     <option value="{{ $type->Id }}">{{ $type->TypeName }}</option>
                                 @endforeach
-{{--                                <option value="Stock">Stock</option>--}}
-{{--                                <option value="Asset">Asset</option>--}}
-{{--                                <option value="Non-Stock">Non-Stock</option>--}}
+                                {{--                                <option value="Stock">Stock</option>--}}
+                                {{--                                <option value="Asset">Asset</option>--}}
+                                {{--                                <option value="Non-Stock">Non-Stock</option>--}}
                             </select>
                         </td>
                         <td class="text-start">

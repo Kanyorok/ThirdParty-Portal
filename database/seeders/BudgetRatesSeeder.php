@@ -14,7 +14,7 @@ class BudgetRatesSeeder extends Seeder
      */
     public function run(): void
     {
-          $now = Carbon::now();
+        $now = Carbon::now();
 
         // Ensure at least one user exists
         $userId = DB::table('t_Users')->value('Id');
@@ -40,14 +40,14 @@ class BudgetRatesSeeder extends Seeder
             DB::table('t_BudgetRates')->insert([
                 'RateTypeCode' => $code,
                 'RateTypeName' => $name,
-                'Description'   => $desc,
-                'IsDefault'     => $isDefault,
-                'CreatedBy'     => $userId,
-                'CreatedOn'     => $now,
-                'ModifiedBy'    => $userId,
-                'ModifiedOn'    => $now,
-                'DeletedBy'     => null,
-                'DeletedOn'     => null,
+                'Description' => $desc,
+                'IsDefault' => $isDefault,
+                'CreatedBy' => $userId,
+                'CreatedOn' => $now,
+                'ModifiedBy' => $userId,
+                'ModifiedOn' => $now,
+                'DeletedBy' => null,
+                'DeletedOn' => null,
             ]);
         }
 

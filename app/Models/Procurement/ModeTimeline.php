@@ -17,7 +17,7 @@ class ModeTimeline extends Model
     protected $table = 't_ModeTimelines';
     protected $primaryKey = 'Id';
     public $incrementing = true;
-    protected $fillable = ['ProcurementModeId', 'Stage', 'DurationDays','CreatedBy', 'ModifiedBy'];
+    protected $fillable = ['ProcurementModeId', 'Stage', 'DurationDays', 'CreatedBy', 'ModifiedBy'];
 
     public static function getPrimaryKey(): string
     {

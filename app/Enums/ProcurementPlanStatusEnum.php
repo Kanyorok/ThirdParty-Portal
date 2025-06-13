@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Enums;
+
 use App\Traits\UsefulEnumTrait;
 
 enum ProcurementPlanStatusEnum: string
@@ -26,9 +27,9 @@ enum ProcurementPlanStatusEnum: string
     {
         return match ($this) {
             self::Draft => 'warning',
-            self::Submitted => 'info',  
-            self::Approved => 'success', 
-            self::Rejected => 'danger',  
+            self::Submitted => 'info',
+            self::Approved => 'success',
+            self::Rejected => 'danger',
         };
     }
 }

@@ -12,7 +12,10 @@
         }
     </style>
 @endsection
-
+@section('breadcrumbs')
+    <li class="breadcrumb-item"><a href="#">CRM</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('debt-notification.index') }}">Debt Notifications</a></li>
+@endsection
 @section('content')
     <div class="row">
         <div class="col-md-5 col-xl-4">

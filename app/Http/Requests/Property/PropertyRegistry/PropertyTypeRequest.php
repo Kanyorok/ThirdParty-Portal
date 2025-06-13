@@ -22,9 +22,9 @@ class PropertyTypeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'PropertyTypeName'=>'required|String',
-            'PropertyCategoryId'=>'required|exists:t_CategoryMaster,Id',
-            'Description'=>'required|string|max:255',
+            'PropertyTypeName' => 'required|String',
+            'PropertyCategoryId' => 'required|exists:t_CategoryMaster,Id',
+            'Description' => 'required|string|max:255',
         ];
     }
 }

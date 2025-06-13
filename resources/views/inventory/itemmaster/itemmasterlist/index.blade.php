@@ -3,15 +3,15 @@
 @section('title', 'Item Master List')
 
 @section('content')
-@if($errors->any())
-    <div class="alert alert-danger">
-        <ul>
-            @foreach($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
+    @if($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
 <div class="container bg-white shadow-sm rounded p-4">
     <h4 class="mb-4">📦 Item Master List</h4>
@@ -36,7 +36,7 @@
                     <th>Item Code</th>
                     <th>Bar Code</th>
                     <th>Item Name</th>
-                     <th>Item Price</th>
+                    <th>Item Price</th>
                     <th>Category</th>
                     <th>Parent Category</th>
                     <th>Item Type</th>
@@ -61,22 +61,22 @@ $(document).ready(function () {
         serverSide: true,
         ajax: "{{ route('itemmaster.index') }}",
         columns: [
-            { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+            {data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false},
             { data: 'ItemCode', name: 'ItemCode' },
             { data: 'BarCode', name: 'BarCode' },
             { data: 'ItemName', name: 'ItemName' },
-            { data: 'ItemPrice', name: 'ItemPrice' },
-            { data: 'Category', name: 'Category', defaultContent: 'Uncategorized' },
-            { data: 'ParentCategory', name: 'ParentCategory', defaultContent: '—' },
-            { data: 'ItemType', name: 'ItemType' },
-            { data: 'InventoryType', name: 'InventoryType' },
-            { data: 'UOM', name: 'UOM' },
+            {data: 'ItemPrice', name: 'ItemPrice'},
+            {data: 'Category', name: 'Category', defaultContent: 'Uncategorized'},
+            {data: 'ParentCategory', name: 'ParentCategory', defaultContent: '—'},
+            {data: 'ItemType', name: 'ItemType'},
+            {data: 'InventoryType', name: 'InventoryType'},
+            {data: 'UOM', name: 'UOM'},
             {
-        data: 'Status',
-        name: 'Status',
-        orderable: false,
-        searchable: false
-    },
+                data: 'Status',
+                name: 'Status',
+                orderable: false,
+                searchable: false
+            },
             {
                 data: 'Action',
                 name: 'Action',

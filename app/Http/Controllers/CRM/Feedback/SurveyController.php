@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Throwable;
 use Yajra\DataTables\DataTables;
 
 class SurveyController extends Controller
@@ -61,10 +62,10 @@ class SurveyController extends Controller
                 })->editColumn('Notes', function (Survey $survey) {
                     return Str::limit($survey->Notes);
                 })->setRowClass('mouse_pointer user-select-none dbl-click-redirect-data')->setRowData([
-                                                                                                       'dbl_click_url' => function (Survey $survey) {
-                                                                                                        return route('surveys.show', $survey->SurveyID);
-                                                                                                       },
-                                                                                                      ])->rawColumns(['action'])->make();
+                    'dbl_click_url' => function (Survey $survey) {
+                        return route('surveys.show', $survey->SurveyID);
+                    },
+                ])->rawColumns(['action'])->make();
         }
 
         return view('crm.feedback.surveys.index');
@@ -89,7 +90,7 @@ class SurveyController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception $e) {
+        } catch (Throwable|Exception $e) {
             Log::error('Error create survey :  ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }

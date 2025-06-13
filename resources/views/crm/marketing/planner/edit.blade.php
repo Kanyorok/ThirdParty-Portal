@@ -5,12 +5,16 @@
     {{ Str::upper($planner->PlannerID) }}
 @endsection
 @section('styles')
-    <link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
     <style>
         .select2-container {
             width: 100% !important;
         }
     </style>
+@endsection
+@section('breadcrumbs')
+    <li class="breadcrumb-item"><a href="#">CRM</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('marketing-planner.index') }}">Marketing Plans</a></li>
 @endsection
 @section('content')
     <div class="row">
@@ -313,10 +317,10 @@
     </div>
 @endsection
 @section('scripts')
-    <script src='{{ asset('assets/plugins/moment/moment-with-locales.js') }}'></script>
-    <script src="{{ asset('assets/js/datatables.js') }}"></script>
-    <script src="{{ asset('assets/plugins/rangePlugin.js') }}"></script>
-    <script src="{{ asset('assets/plugins/select2/js/select2.full.min.js') }}"></script>
+    <script src='{{ asset('assets/libs/moment/moment-with-locales.js') }}'></script>
+
+    <script src="{{ asset('assets/libs/rangePlugin.js') }}"></script>
+    <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
     <script>   const EditPlannerBtn = $("#plannerEditBtn"), CancelPlannerBtn = $("#plannerCancelBtn"),
             UpdatePlannerBtn = $("#updatePlannerBtn"), $Modal = $('#PlannerActionsModal')
         let planActivityTable = null;

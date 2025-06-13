@@ -1,3 +1,4 @@
+@php use App\Models\Communication\BulkNotification; @endphp
 @extends('layouts.app')
 
 @section('title','Debt Collection Bulk Notification')
@@ -9,24 +10,21 @@
         }
     </style>
 @endsection
+@section('breadcrumbs')
+    <li class="breadcrumb-item"><a href="#">CRM</a></li>
+@endsection
 @section('content')
-    <div class="row">
-        <div class="col-sm-6 col-6">
-            <h1 class="h3 d-inline align-middle">
-                @yield('title')
-            </h1>
-        </div>
-        <div class="col-sm-6 col-6 mb-3">
-            <div class="float-end">
-                @can('create',\App\Models\Communication\BulkNotification::class)
-                    <a href="{{ route('debt-notification.create') }}" class="btn btn-primary"><i
-                            class="fas fa-plane-departure"></i> send notification</a>
-                @endcan
-            </div>
-        </div>
+    <div class="row">>
         <div class="col-12">
-
             <div class="card mb-3">
+                <div class="card-header">
+                    <div class="float-end">
+                        @can('create',BulkNotification::class)
+                            <a href="{{ route('debt-notification.create') }}" class="btn btn-primary"><i
+                                    class="fas fa-plane-departure"></i> send notification</a>
+                        @endcan
+                    </div>
+                </div>
                 <div class="card-body">
                     <table id="notificationTable"
                            class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">

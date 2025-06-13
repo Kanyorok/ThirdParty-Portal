@@ -21,6 +21,6 @@ class PropertyLeaseTermination extends Model
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy'
-        ];
+    ];
 
 }

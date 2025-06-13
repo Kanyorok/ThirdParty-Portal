@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BudgetPlanningMethods extends Model
 {
-    use UserActorTrait,SoftDeletes;
+    use UserActorTrait, SoftDeletes;
 
     protected $primaryKey = 'Id';
     
@@ -25,7 +25,7 @@ class BudgetPlanningMethods extends Model
     protected $table = 't_BudgetPlanningMethods';
 
     protected $fillable = [
-        
+
         'MethodName',
         'Description',
         'IsActive',
@@ -33,7 +33,7 @@ class BudgetPlanningMethods extends Model
         'ModifiedBy',
     ];
 
-    protected $cast=[
+    protected $cast = [
         'IsActive' => 'boolean',
     ];
 }

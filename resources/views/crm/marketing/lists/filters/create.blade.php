@@ -1,5 +1,7 @@
-<link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
-<script src="{{ asset('assets/plugins/select2/js/select2.full.min.js') }}"></script>
+@php use App\Enums\Core\DataTypesEnum; @endphp
+@php use App\Enums\Core\ComparisonOperatorsEnum; @endphp
+<link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
+<script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
 {{--<style>
     .select2-container {
         width: 100% !important;
@@ -10,7 +12,7 @@
     <form action="{{ route('marketing-list-filters.store',[$list->slug])}}" method="post" id="createFilterForm"> @csrf
         <input type="hidden" name="filter" value="{{ $filter->Id }}" class="d-none" id="filter" style="display:none;">
         <p id="filter_error" class="text-danger d-none error col-12" role="alert"></p>
-        @if($filter->Operator->value === \App\Enums\Core\ComparisonOperatorsEnum::Between->value)
+        @if($filter->Operator->value === ComparisonOperatorsEnum::Between->value)
             <div class="mb-3">
                 <label class="form-label" for="Start">Start <span class="text-danger">*</span></label>
                 <input type="text" class="form-control filters-value" id="Start" name="Start" required>
@@ -21,7 +23,7 @@
                 <input type="text" class="form-control filters-value" id="End" name="End" required>
                 <p id="End_error" class="invalid-feedback d-none error col-12" role="alert"></p>
             </div>
-        @elseif($filter->Operator->value === \App\Enums\Core\ComparisonOperatorsEnum::In->value)
+        @elseif($filter->Operator->value === ComparisonOperatorsEnum::In->value)
             <div class="mb-3">
                 <label for="Values" class="form-label">Values <span class="text-danger">*</span></label>
                 <select class="form-control select2-fields" name="Values[]" id="Values" multiple required>
@@ -94,7 +96,7 @@
 </div>
 <script>
     $(function () {
-        @if($filter->DataType->value === \App\Enums\Core\DataTypesEnum::DateTime->value)
+        @if($filter->DataType->value === DataTypesEnum::DateTime->value)
         flatpickr(".filters-value", {
             enableTime: true,
             minuteIncrement: 1,
@@ -102,7 +104,7 @@
             allowInput: true,
         });
         @endif
-        @if($filter->Operator->value === \App\Enums\Core\ComparisonOperatorsEnum::In->value)
+        @if($filter->Operator->value === ComparisonOperatorsEnum::In->value)
         $('.select2-fields').select2({
             /*    theme: "bootstrap-5",*/
             dropdownParent: $("#offcanvasMain"),

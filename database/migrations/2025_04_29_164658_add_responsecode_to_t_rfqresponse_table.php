@@ -22,6 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('t_RFQResponse', function (Blueprint $table) {
+            $table->dropUnique('t_rfqresponse_rfqresponsenumber_unique');
             $table->dropColumn('RFQResponseNumber');
         });
     }

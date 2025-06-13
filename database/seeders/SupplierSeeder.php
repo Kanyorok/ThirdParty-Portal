@@ -65,7 +65,7 @@ class SupplierSeeder extends Seeder
         $suffixes = ['Suppliers', 'Distributors', 'Solutions', 'Enterprises', 'Corp', 'Traders'];
 
         return $prefixes[array_rand($prefixes)] . ' ' .
-               Str::title($categoryName) . ' ' .
-               $suffixes[array_rand($suffixes)];
+            Str::title($categoryName) . ' ' .
+            $suffixes[array_rand($suffixes)];
     }
 }

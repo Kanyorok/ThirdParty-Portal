@@ -27,6 +27,6 @@ class PropertyMaintenanceWorkCompletion extends Model
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy'
-        ];
+    ];
 
 }

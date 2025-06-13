@@ -1,3 +1,6 @@
+@php use App\Models\CRM\MarketingList; @endphp
+@php use App\Models\BR\DebtProduct; @endphp
+@php use App\Enums\Core\VisibilityEnum; @endphp
 @extends('layouts.app')
 
 @section('title','Loans Lists')
@@ -9,22 +12,22 @@
         }
     </style>
 @endsection
+@section('breadcrumbs')
+    <li class="breadcrumb-item"><a href="#">CRM</a></li>
+@endsection
 @section('content')
     <div class="row">
-        <div class="col-12 col-md-3">
-            <h1 class="h3 d-inline align-middle">@yield('title')</h1>
-        </div>
-        <div class="col-12 col-md-9 ">
-            <div class="float-end">
-                @can('debt',\App\Models\CRM\MarketingList::class)
-                    <button class="btn btn-secondary  ms-2 modal-create-loans-list" type="button">
-                        <i class="fas fa-plus-circle"></i> Add a Loans List
-                    </button>
-                @endcan
-            </div>
-        </div>
         <div class="col-12 mt-3">
             <div class="card mb-3">
+                <div class="card-header">
+                    <div class="float-end">
+                        @can('debt',MarketingList::class)
+                            <button class="btn btn-secondary  ms-2 modal-create-loans-list btn-sm" type="button">
+                                <i class="fas fa-plus-circle"></i> Add a Loans List
+                            </button>
+                        @endcan
+                    </div>
+                </div>
                 <div class="card-body">
                     <table id="loansListsTable"
                            class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
@@ -56,7 +59,7 @@
                         <form action="{{ route('loans-list.store') }}" method="post" id="createLoanListForm">
                             @csrf
                             <div class="mb-3"><input type="hidden" name="Source"
-                                                     value="{{ \App\Models\BR\DebtProduct::getPrimaryKey()  }}">
+                                                     value="{{ DebtProduct::getPrimaryKey()  }}">
                                 <label class="form-label" for="Label">Label <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="Label" name="Label" required
                                        placeholder="Label">
@@ -65,9 +68,9 @@
                             <div class="mb-3">
                                 <label class="form-label" for="Visibility">Visibility <span class="text-danger">*</span></label>
                                 <select class="form-control" name="Visibility" id="Visibility" required>
-                                    @foreach(\App\Enums\Core\VisibilityEnum::cases() as $Visibility)
+                                    @foreach(VisibilityEnum::cases() as $Visibility)
                                         <option
-                                            value="{{ $Visibility->value }}" {{ ($Visibility->value===\App\Enums\Core\VisibilityEnum::Private->value)?'selected':'' }}>{!! $Visibility->icon() !!} {{ $Visibility->description() }}</option>
+                                            value="{{ $Visibility->value }}" {{ ($Visibility->value===VisibilityEnum::Private->value)?'selected':'' }}>{!! $Visibility->icon() !!} {{ $Visibility->description() }}</option>
                                     @endforeach
                                 </select>
                                 <p id="Party_error" class="invalid-feedback d-none error col-12" role="alert"></p>

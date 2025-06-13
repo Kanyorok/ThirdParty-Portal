@@ -8,15 +8,15 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class TenderCommittee extends Model
 {
-    use UserActorTrait,SoftDeletes;
-    
+    use UserActorTrait, SoftDeletes;
+
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_TenderCommittee';
-   
-        protected $fillable = [
+
+    protected $fillable = [
         'TenderID',
         'CommitteeName',
         'AppointmentDate',
@@ -61,10 +61,11 @@ class TenderCommittee extends Model
         return 'TenderCommitteeID';
     }
 
-        public function members()
+    public function members()
     {
         return $this->hasMany(TenderCommitteeMember::class, 'CommitteeID', 'Id');
     }
+
     public function tender()
     {
         return $this->belongsTo(Tender::class, 'TenderID', 'Id');

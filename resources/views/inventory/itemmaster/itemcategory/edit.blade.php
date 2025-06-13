@@ -24,7 +24,8 @@
         <div class="row mb-3">
             <div class="col-md-4">
                 <label for="CategoryCode" class="form-label">Category Code</label>
-                <input type="text" name="CategoryCode" value="{{ $category->CategoryCode }}" class="form-control" readonly>
+                <input type="text" name="CategoryCode" value="{{ $category->CategoryCode }}" class="form-control"
+                       readonly>
             </div>
             <div class="col-md-4">
                 <label for="Name" class="form-label">Category Name</label>
@@ -35,7 +36,8 @@
         <div class="row mb-3">
             <div class="col-md-4">
                 <label for="Description" class="form-label">Description</label>
-                <input type="text" name="Description" value="{{ $category->Description }}" class="form-control" required>
+                <input type="text" name="Description" value="{{ $category->Description }}" class="form-control"
+                       required>
             </div>
 
             <div class="col-md-4">
@@ -49,11 +51,11 @@
         </div>
 
         <!-- Auto-assign ModifiedBy -->
-        <div class="d-flex justify-content-start mt-4">
+            <div class="d-flex justify-content-start mt-4">
         <input type="hidden" name="ModifiedBy" value="{{ auth()->id() }}">
         <button type="submit" class="btn btn-primary">✅ Save Changes</button>
         <a href="{{ route('itemcategory.index') }}" class="btn btn-secondary">🔙 Cancel</a>
-</div>
+            </div>
     </form>
 </div>
 @endsection

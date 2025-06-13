@@ -2,6 +2,7 @@
 
 
 namespace App\Http\Requests\Inventory;
+
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use App\Models\Inventory\ItemCategories;
@@ -14,8 +15,8 @@ class StoreItemCategoryRequest extends FormRequest
     /**
      * Determine if the user is authorized to make this request.
      */
- 
- public function authorize(): bool
+
+    public function authorize(): bool
     {
         return auth()->user()->can('create', ItemCategories::class);
     }

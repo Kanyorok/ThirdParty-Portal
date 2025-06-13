@@ -48,4 +48,9 @@ class LeadUser extends Model
     {
         return " Lead User";
     }
+
+    public static function getPrimaryKey(): string
+    {
+        return 'LeadUsersId';
+    }
 }

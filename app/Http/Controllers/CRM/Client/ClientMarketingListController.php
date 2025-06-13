@@ -32,7 +32,7 @@ class ClientMarketingListController extends Controller
                     $q->where('Visibility', VisibilityEnum::Public->value)
                         ->orWhere(function ($subQuery) use ($request) {
                             $subQuery->where('Visibility', VisibilityEnum::Private->value)
-                                ->where('CreatedBy', $request->user()->Id);
+                                ->where('t_MarketingLists.CreatedBy', $request->user()->Id);
                         });
                 })->where('Source', '!=', DebtProduct::getPrimaryKey())->select(['slug'])->pluck('slug')->toArray())
             ->with('MarketingLists', MarketingList::query()->where('Type', MarketingListEnum::Static->value)
@@ -40,7 +40,7 @@ class ClientMarketingListController extends Controller
                     $q->where('Visibility', VisibilityEnum::Public->value)
                         ->orWhere(function ($subQuery) use ($request) {
                             $subQuery->where('Visibility', VisibilityEnum::Private->value)
-                                ->where('CreatedBy', $request->user()->Id);
+                                ->where('t_MarketingLists.CreatedBy', $request->user()->Id);
                         });
                 })->where('Source', '!=', DebtProduct::getPrimaryKey())->select(['slug', 'Label'])->get());
     }

@@ -13,7 +13,8 @@ class PrequalificationEvalAprovalController extends Controller
         return view('procurement.suppliers.prequalification.evaluationapproval.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('procurement.suppliers.prequalification.evaluationapproval.create');
     }
 }

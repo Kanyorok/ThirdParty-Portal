@@ -15,18 +15,7 @@
                    placeholder="Name" value="{{ $user->Name }}">
             <p id="Name_error" class="invalid-feedback d-none error col-12" role="alert"></p>
         </div>
-        <div class="mb-2">
-            <label for="Gender" class="form-label">Gender
-                <span class="text-danger">*</span></label>
-            <select class="form-control" name="Gender" id="Gender" required>
-                @foreach(App\Enums\Employee\GenderEnum::getAll() as $gender)
-                    <option value="{{ $gender->value }}"
-                            {{ ($gender->value ===  $user->Gender->value)?'selected':'' }}
-                    >{{ $gender->name }}</option>
-                @endforeach
-            </select>
-            <p id="Gender_error" class="invalid-feedback d-none error col-12" role="alert"></p>
-        </div>
+
         <div class="mb-2">
             <label for="Branch" class="form-label">Branch <span
                         class="text-danger">*</span></label>
