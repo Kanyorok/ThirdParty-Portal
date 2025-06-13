@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Orders\ApproveOrderRequest;
+use App\Http\Requests\Procurement\Requisition\ApproveRequisitionRequest;
 use App\Http\Requests\Procurement\Requisition\RequisitionRequest;
 use App\Models\Procurement\Requisitions;
+use App\Services\Core\DocumentApprovalService;
 use App\Services\Procurement\Requisition\RequisitionItemService;
 use App\Services\Procurement\Requisition\RequisitionService;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -15,7 +18,7 @@ use App\Enums\ProcurementPlanStatusEnum;
 
 class RequisitionsController extends Controller
 {
-    public function __construct(protected RequisitionService $service,protected RequisitionItemService $requisitionItemService)
+    public function __construct(protected RequisitionService $service,protected RequisitionItemService $requisitionItemService,protected DocumentApprovalService $documentApprovalService)
     {
         $this->middleware('ajax')->except(['index', 'show', 'create']);
 //         $this->authorizeResource(Requisitions::class); // Uncomment if using authorization
@@ -137,6 +140,12 @@ class RequisitionsController extends Controller
         }
     }
 
+
+    public function approve(ApproveRequisitionRequest $orderRequest, $id)
+    {
+//        $app
+        return $this->documentApprovalService->approve($orderRequest, $id);
+    }
 
     public function getRequisitions(): JsonResponse{
         try{

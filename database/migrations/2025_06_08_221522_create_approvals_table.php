@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('DocType');
             $table->unsignedBigInteger('DocumentId');
             $table->unsignedBigInteger('UserId');
+            $table->string('Status', 15)->nullable();
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
