@@ -52,24 +52,27 @@ class DocumentApprovalService
                 return redirect($route)->with('info', 'This document is already fully approved.');
             }
 
+            // Handle rejection
             if ($action === 'reject') {
                 $this->recordRejection($documentType, $id, $actor, $request->input('rejection_reason'));
-                $document->status = 'rejected';
+                $document->DocStatus = 'r'; //'r' for rejected
                 $document->save();
 
-                return redirect($route)->with('status', 'Document rejected.');
+                return redirect($route)->with('status', 'Document rejected successfully.');
             }
 
+            // Record approval
             $this->recordApproval($documentType, $id, $actor);
 
-            if ($this->approvalService->isDocumentApproved($documentType, $orderTotal, $actor, $id)) {
-                $document->DocStatus = 'a'; // Optional: Check if this column exists
+            // Check if document is now fully approved
+            if ($this->approvalService->isFullyApproved($documentType, $id, $orderTotal)) {
+                $document->DocStatus = 'a'; // 'a' for approved
                 $document->save();
 
-                return redirect($route)->with('status', 'Document approved successfully.');
+                return redirect($route)->with('status', 'The document has been fully approved.');
             }
 
-            return redirect($route)->with('status', 'Approval recorded, pending full approval.');
+            return redirect($route)->with('status', 'Approval recorded. Awaiting further approvals.');
 
         } catch (\Throwable $e) {
             Log::error('Approval exception', [
@@ -102,9 +105,9 @@ class DocumentApprovalService
     {
         DB::table('t_Approvals')->updateOrInsert(
             [
-                'DocType' => $docType,
-                'DocumentId' => $documentId,
-                'UserId' => $actor->Id,
+                'DocType'    => $docType,
+                'DocumentId'=> $documentId,
+                'UserId'     => $actor->Id,
             ],
             [
                 'Status'     => 'approved',
@@ -120,9 +123,9 @@ class DocumentApprovalService
     {
         DB::table('t_Approvals')->updateOrInsert(
             [
-                'DocType' => $docType,
-                'DocumentId' => $documentId,
-                'UserId' => $actor->Id,
+                'DocType'    => $docType,
+                'DocumentId'=> $documentId,
+                'UserId'     => $actor->Id,
             ],
             [
                 'Status'           => 'rejected',
