@@ -38,7 +38,7 @@ class LoadOpeningStock extends Model
 
     public function item()
     {
-        return $this->belongsTo(ItemMasterList::class,'ItemCode');
+        return $this->belongsTo(ItemMasterList::class,'ItemCode','ItemCode');
     }
     public function branch()
     {

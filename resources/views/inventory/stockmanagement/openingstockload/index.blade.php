@@ -27,11 +27,11 @@
         <td>{{ $loop->iteration }}</td>
         <td>{{ $entry->branch->Name?? '-' }}</td>
         <td>{{ $entry->store->StoreName ?? '-' }}</td>
-        <td>{{ $entry->item->ItemName?? '-' }}</td>
+        <td>{{ $entry->item->ItemCode?? '-' }}</td>
         <td>{{ $entry->Quantity?? '-' }}</td>
         <td>{{ $entry->uom->Code?? '-' }}</td>
         <td>{{ $entry->Value?? '-' }}</td>
-        <td>{{ $entry->Date?? '-' }}</td>
+        <td>{{ $entry->Date ? \Carbon\Carbon::parse($entry->Date)->format('d/m/Y') : '-' }}</td>
         <td>{{ $entry->Remarks?? '-' }}</td>
         </td>
       </tr>

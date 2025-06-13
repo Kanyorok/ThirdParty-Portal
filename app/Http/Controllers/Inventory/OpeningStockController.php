@@ -18,7 +18,6 @@ use Illuminate\Http\Request;
 
 class OpeningStockController extends Controller
 {
-    //
     public function index()
     {
         $entries = LoadOpeningStock::with('item','branch','store','uom')->get();
@@ -50,11 +49,6 @@ class OpeningStockController extends Controller
         $this->authorize('create', LoadOpeningStock::class);
 
         $validated = $request->validated();
-
-        //dd($validated);
-
-        //$code = ItemMasterList::where('ItemCode', $request->ItemCode)->firstOrFail();
-
         
         $openstock = OpenStockService::create(
             (int) $validated['BranchId'],

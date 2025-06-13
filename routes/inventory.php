@@ -94,6 +94,9 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/downloads/opening-stock-sample', [OpeningStockController::class, 'downloadSampleTemplate'])->name('openingstock.sample');
     Route::post('/openingstock/upload', [OpeningStockController::class, 'uploadExcel'])->name('openingstock.upload');
 
+    //Route::resource('bintracking', BinTrackingController::class);
+    Route::get('/inventorytracking', [BinTrackingController::class, 'index'])->name('bintracking.index');
+    Route::get('/inventorytracking/create', [BinTrackingController::class, 'create'])->name('bintracking.create');
 
 
 
@@ -102,7 +105,6 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::resource('movementdashboard', MovementDashboardController::class);
     Route::resource('stocktake', StockTakeController::class);
     Route::resource('uomconversion', UOMConversionController::class);
-    Route::resource('bintracking', BinTrackingController::class);
     Route::resource('stockvaluationhistory', StockValuationHistoryController::class);
     Route::resource('expirytracking', ExpiryBatchTrackingController::class);
     //Route::resource('interbranchrequisition', InterBranchRequisitionController::class);
