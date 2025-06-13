@@ -80,7 +80,7 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/itemsubcategory', [ItemSubCategoryController::class, 'index'])->name('itemsubcategory.index');
     Route::get('/itemsubcategory/create', [ItemSubCategoryController::class, 'create'])->name('itemsubcategory.create');
     Route::post('/itemsubcategory', [ItemSubCategoryController::class, 'store'])->name('itemsubcategory.store');
-    Route::get('/itemsubcategory/{Id}', [ItemSubCategoryController::class, 'show'])->name('itemsubcategory.show');
+    Route::get('/itemsubcategory/{id}', [ItemSubCategoryController::class, 'show'])->name('itemsubcategory.show');
     Route::get('/itemsubcategory/{Id}/edit', [ItemSubCategoryController::class, 'edit'])->name('itemsubcategory.edit');
     Route::put('/itemsubcategory/{Id}', [ItemSubCategoryController::class, 'update'])->name('itemsubcategory.update');
     Route::delete('/itemsubcategory/{Id}', [ItemSubCategoryController::class, 'destroy'])->name('itemsubcategory.destroy');
@@ -103,7 +103,22 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
 
     Route::resource('inventorydashboard', InventoryDashboardController::class);
     Route::resource('movementdashboard', MovementDashboardController::class);
-    Route::resource('stocktake', StockTakeController::class);
+
+    //Route::resource('stocktake', StockTakeController::class);
+    Route::get('/stocktake/index', [StockTakeController::class, 'index'])->name('stocktake.index');
+    Route::get('/stocktake', [StockTakeController::class, 'create'])->name('stocktake.create');
+    Route::post('/stocktake/store', [StockTakeController::class, 'store'])->name('stocktake.store');
+    Route::post('/stocktake/storeline', [StockTakeController::class, 'storeline'])->name('stocktake.storeline');
+    Route::get('/stocktake/show/{Id}', [StockTakeController::class, 'show'])->name('stocktake.show');
+    Route::delete('stocktake/delete/{Id}', [StockTakeController::class,'destroy'])->name('stocktake.destroy');
+    Route::get('stocktake/edit/{Id}',[StockTakeController::class,'edit'])->name('stocktake.edit');
+    Route::put('stocktake/edit/{Id}',[StockTakeController::class,'update'])->name('stocktake.update');
+    Route::get('/stocktake/branches/{branchId}', [StockTakeController::class, 'getStoreByBranch'])->name('getstore');
+    
+    
+
+
+    Route::resource('openingstock', OpeningStockController::class);
     Route::resource('uomconversion', UOMConversionController::class);
     Route::resource('stockvaluationhistory', StockValuationHistoryController::class);
     Route::resource('expirytracking', ExpiryBatchTrackingController::class);
@@ -161,5 +176,7 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
         'index' => 'inventory-reports.index',
         'show' => 'inventory-reports.show'
+    
+
     ]);
 });
