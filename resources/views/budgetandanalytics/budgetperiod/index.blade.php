@@ -23,7 +23,7 @@
             <tr>
                 <td>{{$loop->iteration}}</td>
                 <td>{{$period->fiscalYear ?? '-'}}</td>
-                <td>{{$period->periodType ?? '-'}}</td>
+                <td>{{ $period->periodTypeID?->PeriodType ?? '-' }}</td>
                 <td>{{$period->notes ?? '-'}}</td>
                 <td>
                     <div class="d-flex gap-2">

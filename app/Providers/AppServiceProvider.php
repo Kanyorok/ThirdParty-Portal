@@ -13,6 +13,8 @@ use App\Models\Budget\BudgetDriverProjections;
 use App\Models\Budget\BudgetGLAccount;
 use App\Models\Budget\BudgetLine;
 use App\Models\Budget\BudgetLinesGLAccount;
+use App\Models\Budget\BudgetPeriods;
+use App\Models\Budget\BudgetPeriodTypes;
 use App\Models\Budget\BudgetProduct;
 use App\Models\Budget\BudgetProductType;
 use App\Models\Budget\BudgetTopDown;
@@ -158,6 +160,8 @@ class AppServiceProvider extends ServiceProvider
             BudgetLinesGLAccount::getPrimaryKey()=>BudgetLinesGLAccount::class,
             BudgetGLAccount::getPrimaryKey()=>BudgetGLAccount::class,
             BudgetLine::getPrimaryKey()=>BudgetLine::class,
+            BudgetPeriods::getPrimaryKey()=>BudgetPeriods::class,
+            BudgetPeriodTypes::getPrimaryKey()=>BudgetPeriodTypes::class,
             BudgetProduct::getPrimaryKey()=>BudgetProduct::class,
             BudgetProductType::getPrimaryKey()=>BudgetProductType::class,
             BudgetDriver::getPrimaryKey()=>BudgetDriver::class,
