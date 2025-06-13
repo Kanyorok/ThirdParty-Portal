@@ -71,7 +71,6 @@
                             <th>Item Code</th> {{-- New: Added Item Code column --}}
                             <th>Approved Qty</th>
                             <th>Dispatched Qty</th>
-                            <th>UOM</th>
                             <th>Remarks</th>
                         </tr>
                     </thead>
@@ -93,11 +92,6 @@
                             <td>
                                 <input type="number" class="form-control" name="items[{{ $index }}][dispatched_qty]" value="{{ old('items.'.$index.'.dispatched_qty', $item->ApprovedQty) }}" min="0" max="{{ $item->ApprovedQty }}" required> {{-- Default to approved qty, cap at approved qty --}}
                             </td>
-                            <td>
-                                {{ $item->uom->Code ?? '' }}
-                                <input type="hidden" name="items[{{ $index }}][uom]" value="{{ $item->UOM }}">
-                            </td>
-
                             <td>
                                 <input type="text" class="form-control" name="items[{{ $index }}][remarks]" value="{{ old('items.'.$index.'.remarks', $item->Remarks ?? '') }}" maxlength="255">
                             </td>

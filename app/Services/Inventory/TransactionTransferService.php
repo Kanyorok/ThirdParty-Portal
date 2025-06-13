@@ -47,7 +47,6 @@ public function createTransferItems(TransactionTransfer $transfer, array $items)
             'Item'         => $item['item'],          
             'ApprovedQty'  => $item['approved_qty'],
             'DispatchedQty' => $item['dispatched_qty'],
-            'UOM'          => $item['uom_id'],
             'Remarks'      => $item['remarks'] ?? null,
             'CreatedBy'    => Auth::id(),
             'ModifiedBy'   => Auth::id(),

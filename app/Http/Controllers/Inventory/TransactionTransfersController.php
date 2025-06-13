@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
 use App\Models\Inventory\ItemMasterList;
-use App\Models\Inventory\UnitOfMeasure;
+use App\Models\Inventory\UnitOfMeasure; // Still needed if other parts of the app use it, but not for eager loading here
 use App\Http\Requests\Inventory\TransactionTransferRequest;
 use App\Models\Inventory\TransactionTransfer;
 use App\Models\Inventory\InterBranchRequisition;
@@ -37,7 +37,7 @@ class TransactionTransfersController extends Controller
             $requisition = InterBranchRequisition::with([
                 'fromBranch',
                 'toBranch',
-                'items.item.uom' // <-- THIS IS THE CRUCIAL CHANGE for the UOM to load
+                'items.item' 
             ])
                 ->where('Id', $request->input('requisition_id'))
                 ->first();
@@ -69,7 +69,7 @@ class TransactionTransfersController extends Controller
             'fromBranch',
             'toBranch',
             'creator',
-            'items.item.uom',
+            'items.item', 
         ])->findOrFail($Id);
 
         return view('inventory.transactions.transfers.show', compact('transferitem'));
@@ -79,13 +79,13 @@ class TransactionTransfersController extends Controller
     {
         $branches = Branch::all();
         $approvedRequisitions = InterBranchRequisition::where('Status', 'Ap')->get();
-        $itemsMasterList = ItemMasterList::with('uom')->get();
+        $itemsMasterList = ItemMasterList::all(); 
 
         $transferitem = TransactionTransfer::with([
             'fromBranch',
             'toBranch',
             'creator',
-            'items.item.uom',
+            'items.item', 
             'requisition',
         ])->findOrFail($Id);
 
@@ -108,6 +108,4 @@ class TransactionTransfersController extends Controller
         return redirect()->route('transactionstransfers.index')
             ->with('success', 'Inter-branch transfer deleted successfully.');
     }
-
-
 }

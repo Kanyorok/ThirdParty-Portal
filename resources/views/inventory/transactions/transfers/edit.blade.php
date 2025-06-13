@@ -29,7 +29,6 @@
                         <th>Item Code</th> {{-- New: Added Item Code column --}}
                         <th>Approved Qty</th>
                         <th>Dispatched Qty</th>
-                        <th>UOM</th>
                         <th>Remarks</th>
                     </tr>
                 </thead>
@@ -52,12 +51,6 @@
                             <td>
                                 <input type="number" name="items[{{ $index }}][DispatchedQty]" class="form-control" value="{{ old("items.$index.DispatchedQty", $item->DispatchedQty) }}" required>
                             </td>
-                            <td>
-                                {{-- Display UOM Code --}}
-                                <input type="hidden" name="items[{{ $index }}][UOM]" value="{{ $item->UOM }}">
-                                <input type="text" class="form-control" value="{{ $item->uom->Code ?? 'N/A' }}" readonly>
-                            </td>
-                            <td>
                                 <input type="text" name="items[{{ $index }}][Remarks]" class="form-control" value="{{ old("items.$index.Remarks", $item->Remarks) }}">
                             </td>
                         </tr>
