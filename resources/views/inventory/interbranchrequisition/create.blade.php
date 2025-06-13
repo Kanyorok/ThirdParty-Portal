@@ -24,7 +24,7 @@
                 <div class="card-body">
                     <div class="row g-3 mb-3">
                         <div class="col-md-4">
-                            <label class="form-label">Requesting Branch</label>
+                            <label class="form-label">From Branch</label>
                             <select name="FromBranch" id="from_branch_select" class="form-select" required>
                                 <option value="">Select Branch</option>
                                 @foreach ($branches as $branch)
@@ -36,7 +36,7 @@
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">To Branch</label>
+                            <label class="form-label">To Branch/ Requesting Branch</label>
                             <select name="ToBranch" class="form-select" required>
                                 <option value="">Select Branch</option>
                                 @foreach ($branches as $branch)

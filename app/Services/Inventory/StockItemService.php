@@ -20,7 +20,7 @@ class StockItemService
                     $stockItem = StockItem::create([
                         'ItemID' => $data['ItemID'],
                         'Branch' => $data['Branch'],
-                        'Store' => $data['Store'] ?? null, // Ensure 'Store' is explicitly null if not provided
+                        'Store' => $data['Store'],
                         'CurrentQty' => $data['CurrentQty'],
                         'Status' => $data['Status'],
                         'Batch' => $data['Batch'] ?? false,
@@ -38,7 +38,8 @@ class StockItemService
                         'ModifiedOn' => now(),
                     ]);
 
-                    $skuCode = $this->generateSKUCode($stockItem->Id, $data['Branch'], $data['Store'] ?? null);
+                    // Generate SKU based on `Id`, Branch, Store
+                    $skuCode = $this->generateSKUCode($stockItem->Id, $data['Branch'], $data['Store']);
                     $stockItem->update(['SKUCode' => $skuCode]);
 
                     // Log activity
@@ -66,8 +67,9 @@ class StockItemService
     public function update(StockItem $item, array $data): void
     {
         DB::transaction(function () use ($item, $data) {
-            if (($data['Branch'] ?? null) !== $item->Branch || ($data['Store'] ?? null) !== $item->Store) {
-                $data['SKUCode'] = $this->generateSKUCode($item->Id, $data['Branch'], $data['Store'] ?? null);
+            // Regenerate SKU when branch or store changes
+            if ($data['Branch'] !== $item->Branch || $data['Store'] !== $item->Store) {
+                $data['SKUCode'] = $this->generateSKUCode($item->Id, $data['Branch'], $data['Store']);
             }
 
             $item->update($data);
@@ -94,15 +96,14 @@ class StockItemService
         });
     }
 
- 
-    protected function generateSKUCode(int $Id, int $branchId, ?int $storeId): string
+    /**
+     * Generate SKUCode based on Item ID, Branch, and Store
+     */
+    protected function generateSKUCode(int $Id, int $branchId, int $storeId): string
     {
-        // Use 'NA' as a placeholder for the store segment if storeId is null
-        $storeSegment = ($storeId !== null) ? str_pad($storeId, 2, '0', STR_PAD_LEFT) : 'NA';
-
         return 'SKU-' . str_pad($branchId, 2, '0', STR_PAD_LEFT) . '-' .
-               $storeSegment . '-' .
-               str_pad($Id, 5, '0', STR_PAD_LEFT);
+            str_pad($storeId, 2, '0', STR_PAD_LEFT) . '-' .
+            str_pad($Id, 5, '0', STR_PAD_LEFT);
     }
 
     /**

@@ -9,9 +9,16 @@ use App\Models\Core\PendingWorkflow;
 use App\Enums\Inventory\InterBranchRequisitionEnum;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB; // Ensure DB facade is imported if not already
 
 class InterBranchRequisitionService
 {
+    protected function generateReqNo(InterBranchRequisition $requisition): string
+    {
+        $year = now()->format('Y');
+        return 'REQ-' . $year . '-' . str_pad($requisition->Id, 4, '0', STR_PAD_LEFT);
+    }
+
     public function create(array $data): InterBranchRequisition
     {
         $items = $data['items'] ?? [];
@@ -26,8 +33,9 @@ class InterBranchRequisitionService
         $requisition->ModifiedOn = Carbon::now();
         $requisition->save();
 
+        // Generate ReqNo after saving to ensure ID is available
         $requisition->ReqNo = $this->generateReqNo($requisition);
-        $requisition->save();
+        $requisition->save(); // Save again to persist ReqNo
 
         foreach ($items as $item) {
             $item['RequisitionId'] = $requisition->Id;
@@ -77,29 +85,65 @@ class InterBranchRequisitionService
 
     public function update(InterBranchRequisition $requisition, array $data): InterBranchRequisition
     {
-        $items = $data['items'] ?? [];
+        $submittedItemsData = $data['items'] ?? [];
         unset($data['items']);
 
+        // Update the main requisition record
         $requisition->fill($data);
         $requisition->ModifiedBy = Auth::id();
         $requisition->ModifiedOn = Carbon::now();
         $requisition->save();
 
-        $requisition->items()->delete();
+        // Get current item IDs for this requisition
+        $existingItemIds = $requisition->items->pluck('Id')->toArray();
+        $itemsToKeepIds = [];
 
-        foreach ($items as $item) {
-            $item['RequisitionId'] = $requisition->Id;
-            $item['CreatedBy'] = Auth::id();
-            $item['ModifiedBy'] = Auth::id();
-            $item['CreatedOn'] = Carbon::now();
-            $item['ModifiedOn'] = Carbon::now();
-            InterBranchRequisitionItem::create($item);
+        foreach ($submittedItemsData as $itemData) {
+            // Check if 'Id' exists and is not empty, indicating an existing item being updated
+            if (isset($itemData['Id']) && !empty($itemData['Id'])) {
+                $itemsToKeepIds[] = $itemData['Id']; // Mark this ID to be kept
+                $existingItem = InterBranchRequisitionItem::find($itemData['Id']); // Find by primary key directly
+
+                if ($existingItem) {
+                    // Update existing item
+                    $existingItem->fill($itemData);
+                    $existingItem->ModifiedBy = Auth::id();
+                    $existingItem->ModifiedOn = Carbon::now();
+                    $existingItem->save();
+                } else {
+                    // This scenario should ideally not happen if 'Id' is provided but doesn't exist.
+                    // For robustness, treat it as a new item or log an error.
+                    // For this context, we'll treat it as a new item to avoid breaking.
+                    $itemData['RequisitionId'] = $requisition->Id;
+                    $itemData['CreatedBy'] = Auth::id();
+                    $itemData['ModifiedBy'] = Auth::id();
+                    $itemData['CreatedOn'] = Carbon::now();
+                    $itemData['ModifiedOn'] = Carbon::now();
+                    InterBranchRequisitionItem::create($itemData);
+                }
+            } else {
+                // This is a new item (no 'Id' or 'Id' is empty), create it
+                $itemData['RequisitionId'] = $requisition->Id;
+                $itemData['CreatedBy'] = Auth::id();
+                $itemData['ModifiedBy'] = Auth::id();
+                $itemData['CreatedOn'] = Carbon::now();
+                $itemData['ModifiedOn'] = Carbon::now();
+                InterBranchRequisitionItem::create($itemData);
+            }
+        }
+
+        // Determine which existing items were removed from the form
+        $itemsToDelete = array_diff($existingItemIds, $itemsToKeepIds);
+
+        // Delete items that are no longer present in the submitted data
+        if (!empty($itemsToDelete)) {
+            InterBranchRequisitionItem::whereIn('Id', $itemsToDelete)->delete();
         }
 
         activity()
             ->performedOn($requisition)
             ->causedBy(Auth::user())
-            ->withProperties(['attributes' => $data, 'items' => $items])
+            ->withProperties(['attributes' => $data, 'items' => $submittedItemsData])
             ->log('Updated InterBranch Requisition');
 
         return $requisition;
@@ -111,6 +155,7 @@ class InterBranchRequisitionService
         $requisition->save();
         $requisition->delete();
 
+        // Also delete associated items (soft delete if model uses SoftDeletes)
         $requisition->items()->delete();
 
         activity()
@@ -202,11 +247,5 @@ class InterBranchRequisitionService
             InterBranchRequisitionEnum::Rejected->value => InterBranchRequisitionEnum::Rejected->label(),
             default => 'N/A',
         };
-    }
-
-    protected function generateReqNo(InterBranchRequisition $requisition): string
-    {
-        $year = now()->format('Y');
-        return 'REQ-' . $year . '-' . str_pad($requisition->Id, 4, '0', STR_PAD_LEFT);
     }
 }
