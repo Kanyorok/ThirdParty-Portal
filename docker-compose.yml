@@ -1,23 +1,23 @@
 version: '3.8'
 
 services:
-  nimble:
+  laravel:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: ERP
-    working_dir: /var/www
-    volumes:
-        - .:/var/www                      # mount your app code
-        - logs:/var/www/logs              # mount a named volume for logs, so logs folder is preserved inside container
-    networks:
-        - Applications
+    container_name: BRERP
     ports:
-        - "80:80"
+      - "80:80"
+    volumes:
+      - .:/var/www
+      - logs:/var/www/logs
+    working_dir: /var/www
+    networks:
+      - Applications
 
 networks:
-    Applications:
-        external: true
+  Applications:
+    external: true
 
 volumes:
-    logs:                              # declare a named volume for logs
+  logs:
