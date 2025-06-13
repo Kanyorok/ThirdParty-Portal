@@ -33,6 +33,12 @@
         <td>
           <a href="{{ route('stocktake.show', $stock->Id) }}" class="btn btn-sm btn-info">👁 View</a>
           <button class="btn btn-sm btn-outline-success">📌 Post</button>
+          <a href="{{ route('stocktake.edit', $stock->Id) }}" class="btn btn-sm btn-warning">Edit</a>
+          <form action="{{ route('stocktake.destroy', $stock->Id) }}" method="POST" class="d-inline">
+              @csrf
+              @method('DELETE')
+              <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this type?');">Delete</button>
+          </form>
         </td>
       </tr>
       @endforeach

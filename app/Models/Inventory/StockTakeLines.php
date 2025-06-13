@@ -2,7 +2,9 @@
 
 namespace App\Models\Inventory;
 
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class StockTakeLines extends Model
 {

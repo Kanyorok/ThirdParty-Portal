@@ -30,4 +30,13 @@ class StockTake extends Model
     {
         return 'StockTakeId';
     }
+        public function ItemStoreId()
+    {
+        return $this->belongsTo(StockItem::class, 'Store', 'Id');
+    }
+        public function ItemBranchId()
+    {
+        return $this->belongsTo(StockItem::class, 'Branch', 'Id');
+    }
+
 }
