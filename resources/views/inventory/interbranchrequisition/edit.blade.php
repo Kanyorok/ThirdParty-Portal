@@ -26,7 +26,7 @@
                     <div class="row g-3 mb-3">
                         <div class="col-md-4">
                             <label class="form-label">Requesting Branch</label>
-                            <select name="FromBranch" class="form-select" required>
+                            <select name="FromBranch" id="from_branch_select" class="form-select" required>
                                 <option value="">Select Branch</option>
                                 @foreach ($branches as $branch)
                                     <option
@@ -51,8 +51,8 @@
                         <div class="col-md-4">
                             <label class="form-label">Date</label>
                             <input type="date" name="CreatedOn" class="form-control"
-                                   value="{{ old('CreatedOn', \Carbon\Carbon::parse($item->CreatedOn)->format('Y-m-d')) }}"
-                                   required>
+                                       value="{{ old('CreatedOn', \Carbon\Carbon::parse($item->CreatedOn)->format('Y-m-d')) }}"
+                                       required>
                         </div>
                     </div>
 
@@ -94,20 +94,19 @@
                                         <select name="items[{{ $index }}][Item]" class="form-select item-select" data-initial="{{ $selectedItem->Id ?? '' }}" required>
                                             <option value="">-- Select Item --</option>
                                         </select>
+                                        {{-- Hidden input for item_name, required for server-side validation error message --}}
+                                        <input type="hidden" name="items[{{ $index }}][item_name]" class="item-name-hidden" value="{{ $selectedItem->ItemName ?? '' }}">
                                     </div>
                                     <div class="col-md-1">
                                         <label class="form-label">Code</label>
                                         <input type="text" name="items[{{ $index }}][ItemCode]" class="form-control item-code" value="{{ $selectedItem->ItemCode ?? '' }}" readonly>
                                     </div>
-                                    <div class="col-md-1">
-                                        <label class="form-label">UOM</label>
-                                        <input type="text" name="items[{{ $index }}][UOM]" class="form-control uom" value="{{ $selectedItem->uom->Name ?? '' }}" readonly>
-                                    </div>
+                                    {{-- UOM field removed --}}
                                     <div class="col-md-1">
                                         <label class="form-label">Qty</label>
-                                        <input type="number" name="items[{{ $index }}][RequestedQty]" class="form-control" value="{{ $line->RequestedQty }}" min="1" required>
+                                        <input type="number" name="items[{{ $index }}][RequestedQty]" class="form-control item-qty" value="{{ $line->RequestedQty }}" min="1" required>
                                     </div>
-                                    <div class="col-md-1">
+                                    <div class="col-md-2"> {{-- Adjusted to col-md-2 --}}
                                         <label class="form-label">Remarks</label>
                                         <input type="text" name="items[{{ $index }}][Remarks]" class="form-control" value="{{ $line->Remarks }}">
                                     </div>
@@ -152,20 +151,19 @@
                     <select name="items[__INDEX__][Item]" class="form-select item-select" required>
                         <option value="">-- Select Item --</option>
                     </select>
+                    {{-- Hidden input for item_name, required for server-side validation error message --}}
+                    <input type="hidden" name="items[__INDEX__][item_name]" class="item-name-hidden">
                 </div>
                 <div class="col-md-1">
                     <label class="form-label">Code</label>
                     <input type="text" name="items[__INDEX__][ItemCode]" class="form-control item-code" readonly>
                 </div>
-                <div class="col-md-1">
-                    <label class="form-label">UOM</label>
-                    <input type="text" name="items[__INDEX__][UOM]" class="form-control uom" readonly>
-                </div>
+                {{-- UOM field removed from template --}}
                 <div class="col-md-1">
                     <label class="form-label">Qty</label>
-                    <input type="number" name="items[__INDEX__][RequestedQty]" class="form-control" value="1" min="1" required>
+                    <input type="number" name="items[__INDEX__][RequestedQty]" class="form-control item-qty" value="1" min="1" required>
                 </div>
-                <div class="col-md-1">
+                <div class="col-md-2"> {{-- Adjusted to col-md-2 --}}
                     <label class="form-label">Remarks</label>
                     <input type="text" name="items[__INDEX__][Remarks]" class="form-control">
                 </div>
@@ -179,183 +177,210 @@
 
     @push('scripts')
         <script>
-            let itemCounter = {{ count($item->items) }};
+            let itemCounter = {{ count($item->items) }}; // Initialize counter with existing items
 
-    function populateSubcategories(categorySelect, subcategorySelect, selectedSubcat = null, callback = null) {
-        const categoryId = categorySelect.value;
-        subcategorySelect.innerHTML = '<option value="">-- Select Subcategory --</option>';
-        subcategorySelect.disabled = false; // Enable subcategory select
-        if (!categoryId) {
-            subcategorySelect.disabled = true; // Disable if no category selected
-            return callback?.();
-        }
-
-        fetch(`/inventory/get-subcategories?category_id=${categoryId}`)
-            .then(response => response.json())
-            .then(data => {
-                data.forEach(subcat => {
-                    const option = new Option(subcat.Name, subcat.Id);
-                    if (selectedSubcat == subcat.Id) option.selected = true;
-                    subcategorySelect.add(option);
-                });
-                callback?.();
-            })
-            .catch(error => {
-                console.error('Error fetching subcategories:', error);
-                subcategorySelect.disabled = true; // Disable on error
-            });
-    }
-
-    function populateItems(entry, selectedItem = null) {
-        const categorySelect = entry.querySelector('.category-select');
-        const subcategorySelect = entry.querySelector('.subcategory-select');
-        const itemSelect = entry.querySelector('.item-select');
-
-        const categoryId = categorySelect.value;
-        const subcategoryId = subcategorySelect.value;
-
-        itemSelect.innerHTML = '<option value="">-- Select Item --</option>';
-        itemSelect.disabled = false; // Enable item select
-
-        let fetchUrl = '';
-        if (subcategoryId) {
-            fetchUrl = `/inventory/get-items?subcategory_id=${subcategoryId}`;
-        } else if (categoryId) {
-            fetchUrl = `/inventory/get-items?category_id=${categoryId}`;
-        } else {
-            itemSelect.disabled = true; // Disable if no category/subcategory selected
-            return;
-        }
-
-        fetch(fetchUrl)
-            .then(response => response.json())
-            .then(data => {
-                const currentItem = selectedItem || itemSelect.getAttribute('data-initial');
-                const hasCurrent = data.some(item => item.Id == currentItem);
-
-                data.forEach(item => {
-                    const option = new Option(item.ItemName, item.Id);
-                    if (item.Id == currentItem) option.selected = true;
-                    itemSelect.add(option);
-                });
-
-                if (currentItem && !hasCurrent) {
-                    // If the initial item is not in the fetched list (e.g., due to category change),
-                    // add it as a selected option.
-                    const option = new Option('[Original Item]', currentItem, true, true);
-                    itemSelect.add(option);
+            // Function to populate subcategories
+            function populateSubcategories(categorySelect, subcategorySelect, selectedSubcat = null, callback = null) {
+                const categoryId = categorySelect.value;
+                subcategorySelect.innerHTML = '<option value="">-- Select Subcategory --</option>';
+                subcategorySelect.disabled = false;
+                if (!categoryId) {
+                    subcategorySelect.disabled = true;
+                    return callback?.();
                 }
-            })
-            .catch(error => {
-                console.error('Error fetching items:', error);
-                itemSelect.disabled = true; // Disable on error
-            });
-    }
 
-    function fetchItemCodeAndUOM(itemId, entry) {
-        if (!itemId) {
-            entry.querySelector('.item-code').value = '';
-            entry.querySelector('.uom').value = '';
-            return;
-        }
-
-        fetch(`/inventory/items/code/${itemId}`)
-            .then(response => response.json())
-            .then(data => {
-                // Corrected property names
-                entry.querySelector('.item-code').value = data.item_code ?? 'N/A';
-                entry.querySelector('.uom').value = data.item_uom ?? 'N/A';
-            })
-            .catch(error => {
-                console.error('Error fetching item data:', error);
-                entry.querySelector('.item-code').value = 'Error';
-                entry.querySelector('.uom').value = 'Error';
-            });
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        document.querySelectorAll('.item-entry').forEach(entry => {
-            const categorySelect = entry.querySelector('.category-select');
-            const subcategorySelect = entry.querySelector('.subcategory-select');
-            const itemSelect = entry.querySelector('.item-select');
-
-            const selectedCategory = categorySelect.value;
-            const selectedSubcategory = subcategorySelect.getAttribute('data-initial');
-            const selectedItem = itemSelect.getAttribute('data-initial');
-
-            // Populate subcategories and then items on load for each existing entry
-            if (selectedCategory) {
-                populateSubcategories(categorySelect, subcategorySelect, selectedSubcategory, () => {
-                    populateItems(entry, selectedItem);
-                });
-            } else {
-                // If no parent category is selected, disable subcategory and item selects
-                subcategorySelect.disabled = true;
-                itemSelect.disabled = true;
+                fetch(`/inventory/get-subcategories?category_id=${categoryId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        data.forEach(subcat => {
+                            const option = new Option(subcat.Name, subcat.Id);
+                            if (selectedSubcat == subcat.Id) option.selected = true;
+                            subcategorySelect.add(option);
+                        });
+                        callback?.();
+                    })
+                    .catch(error => {
+                        console.error('Error fetching subcategories:', error);
+                        subcategorySelect.disabled = true;
+                    });
             }
 
-            // Also fetch Item Code and UOM for initially selected items
-            if (selectedItem) {
-                fetchItemCodeAndUOM(selectedItem, entry);
-            }
-        });
-
-        document.getElementById('addItemBtn').addEventListener('click', () => {
-            const template = document.getElementById('itemTemplate');
-            const clone = template.content.cloneNode(true);
-            const newEntry = clone.firstElementChild; // Get the .item-entry div
-
-            // Replace __INDEX__ in all names
-            newEntry.querySelectorAll('[name]').forEach(el => {
-                el.name = el.name.replace('__INDEX__', itemCounter);
-            });
-
-            // Add event listener for remove button
-            newEntry.querySelector('.remove-item-btn').addEventListener('click', function () {
-                this.closest('.item-entry').remove();
-            });
-
-            // Disable subcategory and item dropdowns for newly added rows initially
-            newEntry.querySelector('.subcategory-select').disabled = true;
-            newEntry.querySelector('.item-select').disabled = true;
-            newEntry.querySelector('.item-code').value = '';
-            newEntry.querySelector('.uom').value = '';
-
-
-            document.getElementById('itemsContainer').appendChild(newEntry);
-            itemCounter++;
-        });
-
-        // Event delegation for dynamically added elements
-        document.addEventListener('change', function (e) {
-            const entry = e.target.closest('.item-entry');
-            if (!entry) return; // Not an event from an item entry
-
-            if (e.target.classList.contains('category-select')) {
+            // Function to populate items based on category/subcategory and fromBranchId for stock check
+            function populateItems(entry, selectedItem = null) {
+                const categorySelect = entry.querySelector('.category-select');
                 const subcategorySelect = entry.querySelector('.subcategory-select');
                 const itemSelect = entry.querySelector('.item-select');
-                populateSubcategories(e.target, subcategorySelect, null, () => {
-                    itemSelect.innerHTML = '<option value="">-- Select Item --</option>';
-                    itemSelect.disabled = true; // Disable items until subcategory or category is selected
+                const fromBranchSelect = document.getElementById('from_branch_select'); // Get fromBranch select
+
+                const categoryId = categorySelect.value;
+                const subcategoryId = subcategorySelect.value;
+                const fromBranchId = fromBranchSelect.value; // Get the selected From Branch ID
+
+                itemSelect.innerHTML = '<option value="">-- Select Item --</option>';
+                itemSelect.disabled = false;
+
+                let fetchUrl = '';
+                if ((subcategoryId || categoryId) && fromBranchId) { // Ensure branch is also selected
+                    fetchUrl = `/inventory/get-items?`;
+                    if (subcategoryId) {
+                        fetchUrl += `subcategory_id=${subcategoryId}`;
+                    } else {
+                        fetchUrl += `category_id=${categoryId}`;
+                    }
+                    fetchUrl += `&from_branch_id=${fromBranchId}`; // Append from_branch_id
+                } else {
+                    itemSelect.disabled = true;
+                    // Clear item code and UOM fields if no valid selection for items
                     entry.querySelector('.item-code').value = '';
-                    entry.querySelector('.uom').value = '';
+                    entry.querySelector('.item-name-hidden').value = ''; // Clear hidden item name
+                    return;
+                }
+
+                fetch(fetchUrl)
+                    .then(response => response.json())
+                    .then(data => {
+                        const currentItem = selectedItem || itemSelect.getAttribute('data-initial');
+                        const hasCurrent = data.some(item => item.Id == currentItem);
+
+                        data.forEach(item => {
+                            const option = new Option(item.ItemName, item.Id);
+                            if (item.Id == currentItem) option.selected = true;
+                            itemSelect.add(option);
+                        });
+
+                        // If the initial item is not in the fetched list (e.g., due to category/stock change),
+                        // but it's an existing item being edited, re-add it as a selected option.
+                        // This handles cases where an item was previously selected but is now out of stock or
+                        // falls into a different category.
+                        if (currentItem && !hasCurrent) {
+                            const originalItemName = entry.querySelector('.item-name-hidden').value || '[Original Item]';
+                            const option = new Option(originalItemName, currentItem, true, true);
+                            itemSelect.add(option);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching items:', error);
+                        itemSelect.disabled = true;
+                        entry.querySelector('.item-code').value = 'Error';
+                        entry.querySelector('.item-name-hidden').value = '';
+                    });
+            }
+
+            // Function to fetch Item Code (and UOM, though UOM is removed from UI)
+            function fetchItemCode(itemId, entry) {
+                if (!itemId) {
+                    entry.querySelector('.item-code').value = '';
+                    entry.querySelector('.item-name-hidden').value = ''; // Clear hidden item name
+                    return;
+                }
+
+                fetch(`/inventory/items/code/${itemId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        entry.querySelector('.item-code').value = data.item_code ?? 'N/A';
+                        // Update the hidden item_name field
+                        const selectedText = entry.querySelector('.item-select option:checked')?.textContent;
+                        entry.querySelector('.item-name-hidden').value = selectedText || '';
+                    })
+                    .catch(error => {
+                        console.error('Error fetching item data:', error);
+                        entry.querySelector('.item-code').value = 'Error';
+                        entry.querySelector('.item-name-hidden').value = '';
+                    });
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('.item-entry').forEach(entry => {
+                    const categorySelect = entry.querySelector('.category-select');
+                    const subcategorySelect = entry.querySelector('.subcategory-select');
+                    const itemSelect = entry.querySelector('.item-select');
+
+                    const selectedCategory = categorySelect.value;
+                    const selectedSubcategory = subcategorySelect.getAttribute('data-initial');
+                    const selectedItem = itemSelect.getAttribute('data-initial');
+
+                    // Populate subcategories and then items on load for each existing entry
+                    if (selectedCategory) {
+                        populateSubcategories(categorySelect, subcategorySelect, selectedSubcategory, () => {
+                            populateItems(entry, selectedItem);
+                        });
+                    } else {
+                        subcategorySelect.disabled = true;
+                        itemSelect.disabled = true;
+                    }
+
+                    // Also fetch Item Code for initially selected items
+                    if (selectedItem) {
+                        fetchItemCode(selectedItem, entry);
+                    }
                 });
-                // After category changes, repopulate items directly if no subcategory is chosen
-                populateItems(entry); // This will load items based on the category if no subcategory is selected
-            }
 
-            if (e.target.classList.contains('subcategory-select')) {
-                const itemSelect = entry.querySelector('.item-select');
-                populateItems(entry); // Pass the entire entry to populateItems
-                entry.querySelector('.item-code').value = '';
-                entry.querySelector('.uom').value = '';
-            }
+                // Add Item Button functionality
+                document.getElementById('addItemBtn').addEventListener('click', () => {
+                    const template = document.getElementById('itemTemplate');
+                    const clone = template.content.cloneNode(true);
+                    const newEntry = clone.firstElementChild;
 
-            if (e.target.classList.contains('item-select')) {
-                fetchItemCodeAndUOM(e.target.value, entry);
-            }
-        });
-    });
-</script>
-@endpush
+                    // Replace __INDEX__ in all names
+                    newEntry.querySelectorAll('[name]').forEach(el => {
+                        el.name = el.name.replace('__INDEX__', itemCounter);
+                    });
+
+                    // Add event listener for remove button
+                    newEntry.querySelector('.remove-item-btn').addEventListener('click', function () {
+                        this.closest('.item-entry').remove();
+                    });
+
+                    // Disable subcategory and item dropdowns for newly added rows initially
+                    newEntry.querySelector('.subcategory-select').disabled = true;
+                    newEntry.querySelector('.item-select').disabled = true;
+                    newEntry.querySelector('.item-code').value = '';
+                    newEntry.querySelector('.item-name-hidden').value = ''; // Clear hidden item name
+
+                    document.getElementById('itemsContainer').appendChild(newEntry);
+                    itemCounter++;
+                });
+
+                // Event delegation for dynamically added elements
+                document.addEventListener('change', function (e) {
+                    const entry = e.target.closest('.item-entry');
+                    if (!entry) return;
+
+                    // When Category changes
+                    if (e.target.classList.contains('category-select')) {
+                        const subcategorySelect = entry.querySelector('.subcategory-select');
+                        const itemSelect = entry.querySelector('.item-select');
+                        populateSubcategories(e.target, subcategorySelect, null, () => {
+                            itemSelect.innerHTML = '<option value="">-- Select Item --</option>';
+                            itemSelect.disabled = true;
+                            entry.querySelector('.item-code').value = '';
+                            entry.querySelector('.item-name-hidden').value = ''; // Clear hidden item name
+                        });
+                        // After category changes, repopulate items directly if no subcategory is chosen
+                        populateItems(entry); // This will load items based on the category (and fromBranch)
+                    }
+
+                    // When Subcategory changes
+                    if (e.target.classList.contains('subcategory-select')) {
+                        populateItems(entry);
+                        entry.querySelector('.item-code').value = '';
+                        entry.querySelector('.item-name-hidden').value = ''; // Clear hidden item name
+                    }
+
+                    // When Item changes
+                    if (e.target.classList.contains('item-select')) {
+                        fetchItemCode(e.target.value, entry);
+                    }
+
+                    // When From Branch changes (affecting all item dropdowns)
+                    if (e.target.id === 'from_branch_select') {
+                        document.querySelectorAll('.item-entry').forEach(itemEntry => {
+                            populateItems(itemEntry, itemEntry.querySelector('.item-select').value); // Pass current item value to re-select if still available
+                            fetchItemCode(itemEntry.querySelector('.item-select').value, itemEntry); // Refetch code for current selection
+                        });
+                    }
+                });
+            });
+        </script>
+    @endpush
 @endsection

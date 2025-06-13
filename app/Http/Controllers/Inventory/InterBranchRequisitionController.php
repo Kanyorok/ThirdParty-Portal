@@ -15,6 +15,7 @@ use App\Services\Inventory\InterBranchRequisitionService;
 use Illuminate\Http\Request;
 use App\Providers\Inventory\InterBranchRequisitionPolicy;
 use App\Enums\Inventory\InterBranchRequisitionEnum;
+use Illuminate\Support\Facades\DB; // Import DB facade
 
 class InterBranchRequisitionController extends Controller
 {
@@ -29,16 +30,13 @@ class InterBranchRequisitionController extends Controller
     {
         $query = InterBranchRequisition::with(['fromBranch', 'toBranch', 'items']);
         if ($request->filled('status')) {
-
             $enum = InterBranchRequisitionEnum::tryFrom($request->status);
             $status = $enum ? $enum->value : $request->status;
             $query->where('Status', $status);
         }
         if ($request->filled('status')) {
-
             $groupedRequisitions = $query->latest()->get();
         } else {
-
             $groupedRequisitions = $query->latest()->get();
         }
         return view('inventory.interbranchrequisition.index', compact('groupedRequisitions'));
@@ -58,6 +56,24 @@ class InterBranchRequisitionController extends Controller
     {
         // $this->authorize('create', InterBranchRequisition::class);
         $data = $request->validated();
+
+        // Additional Server-Side Stock Validation before creating the requisition
+        // This is a crucial step to prevent creating requisitions for out-of-stock items.
+        $fromBranchId = $data['FromBranch'];
+        foreach ($data['items'] as $itemData) {
+            $itemId = $itemData['item'];
+            $requestedQty = $itemData['quantity'];
+
+            $stock = DB::table('t_Stockitems')
+                        ->where('BranchId', $fromBranchId)
+                        ->where('ItemId', $itemId)
+                        ->first();
+
+            if (!$stock || $stock->Quantity < $requestedQty) {
+                return back()->withErrors(['items' => "Item '{$itemData['item_name']}' (ID: {$itemId}) is not sufficiently in stock at the From Branch."])->withInput();
+            }
+        }
+
 
         if (!isset($data['Status'])) {
             $data['Status'] = InterBranchRequisitionEnum::Submitted->value;
@@ -103,6 +119,21 @@ class InterBranchRequisitionController extends Controller
         $item = InterBranchRequisition::with('items')->findOrFail($Id);
         $data = $request->validated();
 
+        // Additional Server-Side Stock Validation during update
+        $fromBranchId = $data['FromBranch']; // Assuming FromBranch is always part of validated data
+        foreach ($data['items'] as $itemData) {
+            $itemId = $itemData['item'];
+            $requestedQty = $itemData['quantity'];
+
+            $stock = DB::table('t_Stockitems')
+                        ->where('BranchId', $fromBranchId)
+                        ->where('ItemId', $itemId)
+                        ->first();
+
+            if (!$stock || $stock->Quantity < $requestedQty) {
+                return back()->withErrors(['items' => "Item '{$itemData['item_name']}' (ID: {$itemId}) is not sufficiently in stock at the From Branch for update."])->withInput();
+            }
+        }
 
         if (!isset($data['Status']) && $item->Status) {
             $data['Status'] = $item->Status;
@@ -137,37 +168,48 @@ class InterBranchRequisitionController extends Controller
 
         return response()->json($subcategories);
     }
-public function getItemCode($Id)
-{
-    $item = ItemMasterList::with('uom')->select('Id', 'ItemCode', 'UOM')->find($Id);
 
-    if (!$item) {
-        return response()->json(['error' => 'Item not found'], 404);
+    public function getItemCode($Id)
+    {
+        $item = ItemMasterList::with('uom')->select('Id', 'ItemCode', 'UOM')->find($Id);
+
+        if (!$item) {
+            return response()->json(['error' => 'Item not found'], 404);
+        }
+
+        return response()->json([
+            'item_code' => $item->ItemCode,
+            'item_uom' => optional($item->uom)->Code ?? 'N/A',
+        ]);
     }
-
-    return response()->json([
-        'item_code' => $item->ItemCode,
-        'item_uom' => optional($item->uom)->Code ?? 'N/A',
-    ]);
-}
 
     public function getItemsByCategoryOrSubcategory(Request $request)
     {
         $categoryId = $request->get('category_id');
         $subcategoryId = $request->get('subcategory_id');
+        $fromBranchId = $request->get('from_branch_id'); // <-- New: Get from_branch_id
 
         if ((!is_null($subcategoryId) && !is_numeric($subcategoryId)) ||
-            (!is_null($categoryId) && !is_numeric($categoryId))) {
+            (!is_null($categoryId) && !is_numeric($categoryId)) ||
+            (!is_null($fromBranchId) && !is_numeric($fromBranchId))) { // Validate fromBranchId
             return response()->json([]);
         }
 
-        $items = \DB::table('t_Items')
-            ->where('Category', $subcategoryId ?? $categoryId)
+        // Base query for items in the selected category/subcategory
+        $itemsQuery = DB::table('t_Items')
             ->select('Id', 'ItemName')
-            ->get();
+            ->where('Category', $subcategoryId ?? $categoryId);
+
+        // If a fromBranchId is provided, join with stock items to filter by available stock
+        if ($fromBranchId) {
+            $itemsQuery->join('t_Stockitems', 't_Items.Id', '=', 't_Stockitems.ItemId')
+                       ->where('t_Stockitems.BranchId', $fromBranchId)
+                       ->where('t_Stockitems.Quantity', '>', 0) // Only include items with > 0 quantity
+                       ->distinct('t_Items.Id'); // Ensure unique items if multiple stock entries exist
+        }
+
+        $items = $itemsQuery->get();
 
         return response()->json($items);
     }
-    
-    
 }
