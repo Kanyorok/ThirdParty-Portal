@@ -10,14 +10,15 @@ use Maatwebsite\Excel\Facades\Excel;
 class DataExportToolsProductController extends Controller
 {
     //
-   public function index()
+    public function index()
     {
         return view('budgetandanalytics.businessintelligenceandanalytics.dataexport.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('budgetandanalytics.businessintelligenceandanalytics.dataexport.create');
-    }  
+    }
 
-    
+
 }

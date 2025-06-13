@@ -37,7 +37,7 @@ class InterBranchRequisitionPolicy
     /**
      * Determine whether the user can update the model.
      */
-     public function update(User $user): bool
+    public function update(User $user): bool
     {
         return $user->can(PermissionEnum::InterBranchRequisitionUpdate->value);
     }
@@ -59,21 +59,21 @@ class InterBranchRequisitionPolicy
     }
 
     public function approve(User $user, InterBranchRequisition $requisition): bool
-{
-    // Don't allow approving if already approved or rejected
-    if (
-        $requisition->Status === InterBranchRequisitionEnum::Approved->value ||
-        $requisition->Status === InterBranchRequisitionEnum::Rejected->value
-    ) {
-        return false;
+    {
+        // Don't allow approving if already approved or rejected
+        if (
+            $requisition->Status === InterBranchRequisitionEnum::Approved->value ||
+            $requisition->Status === InterBranchRequisitionEnum::Rejected->value
+        ) {
+            return false;
+        }
+
+        // Don't allow approving your own requisition
+        // if ($requisition->CreatedBy === $user->Id) {
+        //    return false;
+        // }
+
+        // Must have the approval permission
+        return $user->can(PermissionEnum::InterBranchRequisitionApproval->value);
     }
-
-    // Don't allow approving your own requisition
-   // if ($requisition->CreatedBy === $user->Id) {
-    //    return false;
-   // }
-
-    // Must have the approval permission
-    return $user->can(PermissionEnum::InterBranchRequisitionApproval->value);
-}
 }

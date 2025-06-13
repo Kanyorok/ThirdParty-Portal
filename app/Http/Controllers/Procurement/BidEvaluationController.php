@@ -14,10 +14,10 @@ class BidEvaluationController extends Controller
 {
     //
 
-        public function index(Request $request)
+    public function index(Request $request)
     {
-        $supplierID=$request->sID;
-        $TenderId=$request->tenderId;
+        $supplierID = $request->sID;
+        $TenderId = $request->tenderId;
 
         $tender = Tender::findOrFail($TenderId);
         // Fetch all active criteria already stored for this tender
@@ -44,7 +44,7 @@ class BidEvaluationController extends Controller
             $section->criteria = $criteriaList;
         }
 
-        $supplier=Supplier::find($supplierID)->SupplierName ?? 'Unknown Supplier';
+        $supplier = Supplier::find($supplierID)->SupplierName ?? 'Unknown Supplier';
         return view('procurement.tendering.bidopeningandevaluation.evaluation.evaluate', compact(
             'TenderId',
             'tender',

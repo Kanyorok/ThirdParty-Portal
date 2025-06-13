@@ -22,7 +22,7 @@ class CategoryMaster extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'Name', 'Description', 'Type','Code',
+        'Name', 'Description', 'Type', 'Code',
         'CreatedBy', 'ModifiedBy', 'DeletedBy'
     ];
 

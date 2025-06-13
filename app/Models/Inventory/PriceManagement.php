@@ -19,8 +19,8 @@ class PriceManagement extends Model
     protected $table = 't_Pricing';
     protected $connection = 'sqlsrv';
     protected $primaryKey = 'Id';
-  
-  
+
+
     protected $fillable = [
         'PriceID',
         'ItemID',
@@ -54,7 +54,7 @@ class PriceManagement extends Model
     {
         return $this->belongsTo(UnitOfMeasure::class, 'UOM', 'Id');
     }
-    
+
     public function creator()
     {
         return $this->belongsTo(User::class, 'CreatedBy', 'Id');
@@ -69,5 +69,5 @@ class PriceManagement extends Model
     {
         return $this->belongsTo(User::class, 'DeletedBy', 'Id');
     }
-    
+
 }

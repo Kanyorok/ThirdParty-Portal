@@ -20,16 +20,16 @@ class ItemMasterListController extends Controller
 {
     public function index(Request $request)
     {
-        
+
         if ($request->ajax()) {
-            return DataTables::of(ItemMasterList::with( 'category.parent','itemType','inventoryType','uom','price'))
+            return DataTables::of(ItemMasterList::with('category.parent', 'itemType', 'inventoryType', 'uom', 'price'))
                 ->addIndexColumn()
                 ->addColumn('Category', fn($item) => optional($item->category)->Name ?? 'Uncategorized')
                 ->addColumn('ParentCategory', fn($item) => optional(optional($item->category)->parent)->Name ?? '—')
                 ->addColumn('ItemType', fn($item) => optional($item->itemType)->TypeName ?? '—')
                 ->addColumn('InventoryType', fn($item) => optional($item->inventoryType)->Type ?? '—')
                 ->addColumn('UOM', fn($item) => optional($item->uom)->Code ?? '—')
-                ->addColumn('Status', function($item) {
+                ->addColumn('Status', function ($item) {
                     return $item->Status == 1
                         ? '<span class="badge bg-success">Active</span>'
                         : '<span class="badge bg-warning">Inactive</span>';
@@ -39,10 +39,10 @@ class ItemMasterListController extends Controller
                     return '
                         <a href="' . route('itemmasterlist.show', $item->Id) . '" class="btn btn-sm btn-primary">View</a>
                         <a href="' . route('itemmasterlist.edit', $item->Id) . '" class="btn btn-sm btn-warning">Edit</a>
-                        <button onclick="confirmDelete('.$item->Id.')" class="btn btn-danger btn-sm">Delete</button>
-                        <form id="delete-form-'.$item->Id.'" action="'.route('itemmasterlist.destroy', $item->Id).'" method="POST" style="display:none;">
-                            '.csrf_field().'
-                            '.method_field('DELETE').'
+                        <button onclick="confirmDelete(' . $item->Id . ')" class="btn btn-danger btn-sm">Delete</button>
+                        <form id="delete-form-' . $item->Id . '" action="' . route('itemmasterlist.destroy', $item->Id) . '" method="POST" style="display:none;">
+                            ' . csrf_field() . '
+                            ' . method_field('DELETE') . '
                         </form>';
                 })
                 ->rawColumns(['Status', 'Action'])
@@ -67,7 +67,7 @@ class ItemMasterListController extends Controller
 
     public function store(Request $request)
     {
-        
+
         $this->authorize('create', ItemMasterList::class);
 
         $validatedData = $request->validate([
@@ -172,7 +172,7 @@ class ItemMasterListController extends Controller
             'ItemDescription' => 'nullable|string',
         ]);
 
-       
+
         $validatedData['Status'] = $request->input('Status', 0);
 
         $item->fill($validatedData);

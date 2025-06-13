@@ -14,6 +14,10 @@
         }
     </style>
 @endsection
+@section('breadcrumbs')
+    <li class="breadcrumb-item"><a href="#">CRM</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('loans-list.index') }}">Loans List</a></li>
+@endsection
 @section('content')
     <div class="row">
         <div class="col-md-4 ">
@@ -80,7 +84,7 @@
                                             <select class="form-control" name="Branch[]" id="Branch" multiple>
                                                 @foreach($branches as $branch)
                                                     <option
-                                                        value="{{ $branch->OurBranchID }}">{{ \Illuminate\Support\Str::title($branch->BranchName) }}</option>
+                                                        value="{{ $branch->OurBranchID }}">{{ Str::title($branch->BranchName) }}</option>
                                                 @endforeach
                                             </select>
                                             <p id="RooMBranch_error" class="invalid-feedback d-none error col-12"
@@ -266,7 +270,7 @@
                                 </button>
                                 <button class="btn btn-primary float-end" id="updateListBtn" type="submit"><i
                                         class="fas fa-save"></i>
-                                    update {{ \Illuminate\Support\Str::limit($list->Label ,20) }}
+                                    update {{ Str::limit($list->Label ,20) }}
                                 </button>
                             </div>
                         </form>

@@ -60,7 +60,6 @@ use App\Models\Procurement\Tender;
 use App\Http\Controllers\Procurement\SectionController;
 use App\Http\Controllers\Procurement\ProcurementSchedulePlanController;
 use App\Http\Controllers\Procurement\ProcurementSubmitPlanController;
-//SupplierManagement
 use App\Http\Controllers\Procurement\SupplierListingController;
 use App\Http\Controllers\Procurement\PrequalificationRoundsController;
 use App\Http\Controllers\Procurement\PrequalificationCriteriaController;
@@ -90,7 +89,7 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     //Purchase Order
     Route::get('purchaseOrder/getSuppliers', [PurchaseOrderController::class, 'getSuppliers'])->name('purchaseOrder.getSuppliers');
     Route::get('purchaseOrder/linkRFQ', [PurchaseOrderController::class, 'linkRFQ'])->name('purchaseOrder.linkRFQ');
-    //Route::get('purchaseOrder/getRFQs', [PurchaseOrderController::class, 'fetchRFQ'])->name('purchaseOrder.getRFQ');
+    Route::get('purchaseOrder/approve/{id}', [PurchaseOrderController::class, 'approve'])->name('purchaseOrder.approve');
     //this route is static affecting orders/rfqLink
     Route::get('purchaseOrder/rqfDetails/{id}', [PurchaseOrderController::class, 'fetchRFQDetails'])->name('purchaseOrder.RFQ');
     Route::resource('purchaseOrder', 'PurchaseOrderController');
@@ -270,7 +269,7 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::put('/Procurement-Plan-Submission/{plan}', [ProcurementSubmitPlanController::class, 'update'])->name('Procurement-Plan-Submission.update');
 
 
-    
+
 
 
     //Procurement Plan, Plan Consolidation

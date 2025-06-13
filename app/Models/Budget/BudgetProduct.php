@@ -9,11 +9,11 @@ use App\Models\Budget\BudgetProductType;
 
 class BudgetProduct extends Model
 {
-    use UserActorTrait,SoftDeletes;
+    use UserActorTrait, SoftDeletes;
 
-    protected $table='t_BudgetProducts';
+    protected $table = 't_BudgetProducts';
     protected $primaryKey = 'Id';
-    
+
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
@@ -35,11 +35,11 @@ class BudgetProduct extends Model
         'ModifiedOn',
         'DeletedBy',
     ];
-    
+
     protected $casts = [
-        'CreatedOn'  => 'datetime',
+        'CreatedOn' => 'datetime',
         'ModifiedOn' => 'datetime',
-        'DeletedOn'  => 'datetime',
+        'DeletedOn' => 'datetime',
     ];
 
     public function productType()
@@ -47,8 +47,9 @@ class BudgetProduct extends Model
         return $this->belongsTo(BudgetProductType::class, 'CBSProductID', 'Id');
     }
 
-    public function glAccount(){
-        return $this->belongsTo(BudgetGLAccount::class,'GLAccountID','Id');
+    public function glAccount()
+    {
+        return $this->belongsTo(BudgetGLAccount::class, 'GLAccountID', 'Id');
     }
 
 }

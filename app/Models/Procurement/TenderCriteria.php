@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class TenderCriteria extends Model
 {
-    use UserActorTrait,SoftDeletes;
+    use UserActorTrait, SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -31,30 +31,37 @@ class TenderCriteria extends Model
         'DeletedOn' => 'datetime',
         'IsActive' => 'boolean',
     ];
+
     public static function getPrimaryKey(): string
     {
         return (new self())->getRouteKeyName();
     }
+
     public function getRouteKeyName(): string
     {
         return 'TenderCriteriaID';
     }
+
     public function criteria()
     {
         return $this->belongsTo(Criteria::class, 'CriteriaID', 'Id');
     }
+
     public function section()
     {
         return $this->belongsTo(Section::class, 'SectionID', 'Id');
     }
+
     public function tender()
     {
         return $this->belongsTo(Tender::class, 'TenderRef', 'TenderRef');
     }
+
     public function tenderSection()
     {
         return $this->belongsTo(TenderSection::class, 'SectionID', 'TenderSectionID');
     }
+
     public function tenderCriteria()
     {
         return $this->hasMany(TenderCriteria::class, 'TenderRef', 'TenderRef');

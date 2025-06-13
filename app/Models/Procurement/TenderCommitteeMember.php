@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class TenderCommitteeMember extends Model
 {
-    use UserActorTrait,SoftDeletes;
+    use UserActorTrait, SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -61,35 +61,44 @@ class TenderCommitteeMember extends Model
     {
         return $this->belongsTo(TenderCommittee::class, 'TenderCommitteeID', 'Id');
     }
+
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'CreatedBy', 'Id');
     }
+
     public function modifiedBy()
     {
         return $this->belongsTo(User::class, 'ModifiedBy', 'Id');
     }
+
     public function deletedBy()
     {
         return $this->belongsTo(User::class, 'DeletedBy', 'Id');
     }
+
     public function tenderCommitteeEvaluations()
     {
         return $this->hasMany(TenderCommitteeEvaluation::class, 'TenderCommitteeMemberID', 'Id');
     }
+
     public function tender()
     {
         return $this->belongsTo(Tender::class, 'TenderID', 'Id');
     }
+
     public static function getPrimaryKey(): string
     {
         return (new self())->getRouteKeyName();
     }
+
     public function getRouteKeyName(): string
     {
         return 'TenderCommitteeMemberID';
     }
-    public function employee(){
+
+    public function employee()
+    {
         return $this->belongsTo(Employee::class, 'UserID', 'Id');
     }
 }

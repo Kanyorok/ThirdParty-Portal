@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BudgetScenarioPlanning extends Model
 {
-     use UserActorTrait,SoftDeletes;
+    use UserActorTrait, SoftDeletes;
 
 
     protected $primaryKey = 'Id';
@@ -25,7 +25,7 @@ class BudgetScenarioPlanning extends Model
     protected $table = 't_BudgetScenarioPlanning';
 
     protected $fillable = [
-        
+
         'scenarioName',
         'description',
         'budgetPeriod',
@@ -36,7 +36,7 @@ class BudgetScenarioPlanning extends Model
     ];
 
     protected $casts = [
-    'isDefault' => 'boolean',
-];
+        'isDefault' => 'boolean',
+    ];
 
 }

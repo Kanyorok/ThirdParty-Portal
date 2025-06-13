@@ -13,17 +13,17 @@ class BudgetProductMasterController extends Controller
     //
     public function index()
     {
-        $products=BudgetProduct::all();
-        $data=[];
-        foreach($products as $p){
-            $data[]=[
-                'Code'=>$p->ProductTypeID,
-                'Name'=>$p->Description,
-                'Type'=>BudgetProductType::find($p->CBSProductID)->Name,
-                'GLCode'=>BudgetGLAccount::find($p->GLAccountID)->GTType,
+        $products = BudgetProduct::all();
+        $data = [];
+        foreach ($products as $p) {
+            $data[] = [
+                'Code' => $p->ProductTypeID,
+                'Name' => $p->Description,
+                'Type' => BudgetProductType::find($p->CBSProductID)->Name,
+                'GLCode' => BudgetGLAccount::find($p->GLAccountID)->GTType,
             ];
         }
-        return view('budgetandanalytics.productmaster.index',compact('data'));
+        return view('budgetandanalytics.productmaster.index', compact('data'));
     }
 
     public function create()

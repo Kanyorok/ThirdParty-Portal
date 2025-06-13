@@ -14,11 +14,11 @@ use App\Models\PropertyManagement\PropertyType;
 
 class PropertyTypeController extends Controller
 {
-        
+
     public function index()
     {
         $types = PropertyType::with('propertycategory')->get();
-       //dd($properties);
+        //dd($properties);
         return view('property.propertyregistry.propertytype.index', compact('types'));
     }
 
@@ -26,6 +26,7 @@ class PropertyTypeController extends Controller
         $categories = CategoryMaster::all();
         return view('property.propertyregistry.propertytype.create', compact('categories'));
     }
+
     public function store(PropertyTypeRequest $request)
     {
         $validated = $request->validated();
@@ -39,7 +40,7 @@ class PropertyTypeController extends Controller
             auth()->user()
         );
 
-    //$this->authorize('store', $propertyType);
+        //$this->authorize('store', $propertyType);
 
         return redirect()->route('propertytype.index')->with('success', 'Property type created successfully');
     }

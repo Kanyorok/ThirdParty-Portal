@@ -57,11 +57,11 @@ class TenderController extends Controller
         $tenderCategories = TenderCategory::select('Id', 'TenderCategory')->get();
         $AllItemsCategories = ItemCategories::select('Id', 'Name')->whereNull('ParentId')->get();
         $allItemsWithCategoryIds = ItemMasterList::select('Id', 'ItemName', 'Category')->get();
-        $procurementPlan= ConsolidatedProcurementPlan::select('PlanID','ReferenceNumber','Title')
+        $procurementPlan = ConsolidatedProcurementPlan::select('PlanID', 'ReferenceNumber', 'Title')
             //->where('Status', 'Approved') //Add this once approval process is done
             ->get();
 
-        $allCurrency = Currency::select('Id', 'Name','Code','Symbol')->get();
+        $allCurrency = Currency::select('Id', 'Name', 'Code', 'Symbol')->get();
 
         //return$allItemsWithCategoryIds = Item::select('Id', 'ItemName', 'Category')->get()->groupBy('Category');
 
@@ -107,7 +107,7 @@ class TenderController extends Controller
         }
 
         //Getting List of All Suppliers
-        $suppliers = Supplier::select('Id', 'SupplierName','CategoryId')->get();
+        $suppliers = Supplier::select('Id', 'SupplierName', 'CategoryId')->get();
 
         // Log activity for creating tender
         activity()
@@ -131,7 +131,7 @@ class TenderController extends Controller
             'suppliers',
             'allItemsWithCategoryIds',
             'allCurrency'
-            
+
         ));
     }
 
@@ -147,12 +147,12 @@ class TenderController extends Controller
         //     'tender_category_id' => 'required|integer',
         //     'item_category_id' => 'required|integer', //Commented out since the planItem aint working
         //     'procurement_plan_id' => 'required|integer',
-            
+
         //     'plan_items' => 'required|array',
         //     'plan_items.*.item_id' => 'required|integer',
         //     'plan_items.*.qty' => 'required|integer',
         //     'plan_items.*.pr_ref' => 'nullable|string|max:255',
-        //     'plan_items.*.file' => 'nullable|file|max:5120', // max 5MB 
+        //     'plan_items.*.file' => 'nullable|file|max:5120', // max 5MB
 
         //     'manual_items' => 'nullable|array',
         //     'manual_items.*.item_id' => 'required|integer',
@@ -199,7 +199,7 @@ class TenderController extends Controller
             $tender->ModifiedBy = Auth::id();
             $tender->ModifiedOn = now();
             $tender->RelatedPRID = '1'; // rm error fo nulable after later migration
-            $tender->CurrencyId =$request->currency_id; // rm error fo nulable after later migration
+            $tender->CurrencyId = $request->currency_id; // rm error fo nulable after later migration
             $tender->save();
 
             $tenderId = $tender->Id;
@@ -209,7 +209,7 @@ class TenderController extends Controller
                     TenderItems::create([
                         'TenderID' => $tenderId,
                         'SourceType' => 'PLAN',
-                        'ItemID' => $item['item_id']?? null, // Assuming item_id is optional
+                        'ItemID' => $item['item_id'] ?? null, // Assuming item_id is optional
                         'PlanItemID' => $planItemId,
                         'PlannedQty' => $item['qty'],
                         'QtyToTender' => $item['qty'],
@@ -228,11 +228,11 @@ class TenderController extends Controller
                     //Rm if no item_id is provided
                     if (empty($manualItem['item_id'])) {
                         //continue; // Skip if item_id is not provided
-                    }else{
+                    } else {
                         TenderItems::create([
                             'TenderID' => $tenderId,
                             'SourceType' => 'MANUAL',
-                            'ItemID' => $manualItem['item_id']?? null, // Assuming item_id is optional
+                            'ItemID' => $manualItem['item_id'] ?? null, // Assuming item_id is optional
                             'ManualItemDescription' => null, // Optional: Provide actual description if needed
                             'PlannedQty' => null,
                             'QtyToTender' => $manualItem['qty'],
@@ -299,11 +299,11 @@ class TenderController extends Controller
         $this->authorize(PermissionEnum::TenderRead, Tender::class);
         $tender = Tender::findOrFail($id);
         //Check if the tender has passed approval process
-        $show=false;
+        $show = false;
         if ($tender->ApprovalStatus === TenderApprovalStatusEnum::REJECTED || $tender->ApprovalStatus === TenderApprovalStatusEnum::APPROVED) {
             $show = true;
         }
-        $items= TenderItems::where('TenderID', $id)->get();
+        $items = TenderItems::where('TenderID', $id)->get();
         $suppliers = TenderSupplier::where('TenderID', $id)->with('supplier')->get();
         //Extract item names from TenderItems using relationship
         $tenderCategory = TenderCategory::find($tender->tender_category_id);
@@ -312,7 +312,7 @@ class TenderController extends Controller
         $procurementPlan = ProcurementPlan::find($tender->procurement_plan_id);
 
         $planItems = [];//PlanItem::where('tender_id', $id)->get();
-        $manualItems =[];// ManualItem::where('tender_id', $id)->get();
+        $manualItems = [];// ManualItem::where('tender_id', $id)->get();
 
         // Attach item names manually to planItems and manualItems
         foreach ($planItems as $planItem) {
@@ -344,11 +344,11 @@ class TenderController extends Controller
         $this->authorize(PermissionEnum::TenderUpdate, Tender::class);
         $tender = Tender::findOrFail($id);
         //Check if the tender has passed approval process
-        $show=false;
+        $show = false;
         if ($tender->ApprovalStatus === TenderApprovalStatusEnum::REJECTED || $tender->ApprovalStatus === TenderApprovalStatusEnum::APPROVED) {
             $show = true;
         }
-        $items= TenderItems::where('TenderID', $id)->where('ItemCategory',$tender->ItemCategoryId)->get();
+        $items = TenderItems::where('TenderID', $id)->where('ItemCategory', $tender->ItemCategoryId)->get();
         $otherItemsForThatTender = ItemMasterList::where('Category', $tender->ItemCategoryId)->get();
         // foreach ($items as $key => $value) {
         //      $r[]=$value->item->ItemName;
@@ -357,21 +357,21 @@ class TenderController extends Controller
         $suppliers = TenderSupplier::where('TenderID', $id)->with('supplier')->get();
         $existingSupplierIds = $suppliers->pluck('SupplierID')->toArray();
         $otherSuppliers = Supplier::select('Id', 'SupplierName', 'CategoryId', 'ContactPhone', 'ContactEmail')
-        ->where('CategoryId', $tender->ItemCategoryId)
-        ->whereNotIn('Id', $existingSupplierIds)
-        ->get();
+            ->where('CategoryId', $tender->ItemCategoryId)
+            ->whereNotIn('Id', $existingSupplierIds)
+            ->get();
         //Extract item names from TenderItems using relationship
         $tenderCategory = TenderCategory::find($tender->TenderCategory)->Id;
         $tenderCategories = TenderCategory::select('Id', 'TenderCategory')->get();
         $itemCategory = ItemCategories::find($tender->ItemCategoryId)->Name;
         $itemCategoryID = ItemCategories::find($tender->ItemCategoryId)->Id;
         $currency = $tender->CurrencyId;
-        
-        $allCurrency = Currency::select('Id', 'Name','Code','Symbol')->get();
+
+        $allCurrency = Currency::select('Id', 'Name', 'Code', 'Symbol')->get();
         $procurementPlan = ProcurementPlan::find($tender->procurement_plan_id);
 
         $planItems = [];//PlanItem::where('tender_id', $id)->get();
-        $manualItems =[];// ManualItem::where('tender_id', $id)->get();
+        $manualItems = [];// ManualItem::where('tender_id', $id)->get();
 
         // Attach item names manually to planItems and manualItems
         foreach ($planItems as $planItem) {
@@ -406,196 +406,188 @@ class TenderController extends Controller
         //return $request->all();
         //Check if the user has permission to update tenders using the enum set
         $this->authorize(PermissionEnum::TenderUpdate, Tender::class);
-        //Check the update is coming from which form 
-    $type = $request->input('type');
+        //Check the update is coming from which form
+        $type = $request->input('type');
 
-    if ($type === 'editTenderInfo') {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'tender_category_id' => 'required|exists:t_TenderCategories,Id',
-            //'item_category_id' => 'required|exists:item_categories,Id',
-            'currency_id' => 'required|exists:t_Currencies,Id',
-            'submission_deadline' => 'required|date|after:today',
-            'opening_date' => 'required|date|after_or_equal:submission_deadline',
-            'documents.*' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:2048',
-        ]);
-
-        DB::beginTransaction();
-
-        try {
-            $tender = Tender::findOrFail($id);
-            $tender->Title = $validated['title'];
-            $tender->TenderCategory = $validated['tender_category_id'];
-            //$tender->ItemCategoryId = $validated['item_category_id'];
-            $tender->CurrencyId = $validated['currency_id'];
-            $tender->SubmissionDeadline = $validated['submission_deadline'];
-            $tender->OpeningDate = $validated['opening_date'];
-
-            // Optional: handle file uploads here if needed
-
-            $tender->save();
-
-            DB::commit();
-
-            // Log activity
-            activity()
-                ->performedOn($tender)
-                ->causedBy(Auth::user())
-                ->withProperties(['action' => 'update'])
-                ->log('Tender updated successfully with ID: ' . $id);
-
-            return redirect()->route('initiatetender.edit', $id)->with('success', 'Tender Info updated successfully.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('--- UPDATE TENDER ERROR --- ' . $e->getMessage());
-            Log::error($e);
-            return $e->getMessage();
-            // Log the error and return an error message
-
-            return redirect()->route('initiatetender.edit', $id)->with('error', 'Failed to update Tender. Please try again.');
-        }
-    }elseif($type=='crudItem'){
-        //CrudType
-        $crudType = $request->crudType;
-        //Check if the crud is create
-        if($crudType=='addItem'){
-            // Validate the request for item CRUD operations
+        if ($type === 'editTenderInfo') {
             $validated = $request->validate([
-                'item_id' => 'required|integer',
-                'QtyToTender' => 'required|integer|min:1',
-                'pr_ref' => 'nullable|string|max:255',
-                //'file' => 'nullable|file|max:5120', // max 5MB
+                'title' => 'required|string|max:255',
+                'tender_category_id' => 'required|exists:t_TenderCategories,Id',
+                //'item_category_id' => 'required|exists:item_categories,Id',
+                'currency_id' => 'required|exists:t_Currencies,Id',
+                'submission_deadline' => 'required|date|after:today',
+                'opening_date' => 'required|date|after_or_equal:submission_deadline',
+                'documents.*' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:2048',
             ]);
+
             DB::beginTransaction();
+
             try {
-                // Create a new TenderItems record
-                $tenderItem = new TenderItems();
-                $tenderItem->TenderID = $id;
-                $tenderItem->SourceType = 'MANUAL'; // Assuming manual entry
-                $tenderItem->ItemID = $validated['item_id'];
-                $tenderItem->itemCategory = $request->itemCategoryID; // Assuming this is passed from the form
-                $tenderItem->QtyToTender = $validated['QtyToTender'];
-                $tenderItem->RelatedPRID = $validated['pr_ref'] ?? null;
-                $tenderItem->CreatedBy = Auth::id();
-                $tenderItem->ModifiedBy = Auth::id();
-                $tenderItem->save();
+                $tender = Tender::findOrFail($id);
+                $tender->Title = $validated['title'];
+                $tender->TenderCategory = $validated['tender_category_id'];
+                //$tender->ItemCategoryId = $validated['item_category_id'];
+                $tender->CurrencyId = $validated['currency_id'];
+                $tender->SubmissionDeadline = $validated['submission_deadline'];
+                $tender->OpeningDate = $validated['opening_date'];
+
+                // Optional: handle file uploads here if needed
+
+                $tender->save();
 
                 DB::commit();
 
-                // Log activity for item creation
+                // Log activity
                 activity()
-                    ->performedOn($tenderItem)
+                    ->performedOn($tender)
                     ->causedBy(Auth::user())
-                    ->withProperties(['action' => 'create'])
-                    ->log('Tender Item created successfully with ID: ' . $tenderItem->Id);
+                    ->withProperties(['action' => 'update'])
+                    ->log('Tender updated successfully with ID: ' . $id);
 
-                return redirect()->route('initiatetender.edit', $id)->with('success', 'Tender Item created successfully.');
+                return redirect()->route('initiatetender.edit', $id)->with('success', 'Tender Info updated successfully.');
             } catch (\Exception $e) {
                 DB::rollBack();
-                Log::error("--- CREATE TENDER ITEM ERROR --- " . $e->getMessage());
+                Log::error('--- UPDATE TENDER ERROR --- ' . $e->getMessage());
                 Log::error($e);
-                return redirect()->route('initiatetender.edit', $id)->with('error', 'Failed to create Tender Item. Please try again.');
-            }
-
-        }elseif($crudType=='deleteItem'){
-            DB::beginTransaction();
-            try {
-                // Find and delete the TenderItems record
-                $tenderItem = TenderItems::findOrFail($request->item_id);
-                $tenderItem->delete();
-
-                DB::commit();
-
-                // Log activity for item deletion
-                activity()
-                    ->performedOn($tenderItem)
-                    ->causedBy(Auth::user())
-                    ->withProperties(['action' => 'delete'])
-                    ->log('Tender Item deleted successfully with ID: ' . $tenderItem->Id);
-
-                return redirect()->route('initiatetender.edit', $id)->with('success', 'Tender Item deleted successfully.');
-            } catch (\Exception $e) {
-                DB::rollBack();
                 return $e->getMessage();
-                Log::error("--- DELETE TENDER ITEM ERROR --- " . $e->getMessage());
-                Log::error($e);
-                return redirect()->route('initiatetender.edit', $id)->with('error', 'Failed to delete Tender Item. Please try again.');
+                // Log the error and return an error message
+
+                return redirect()->route('initiatetender.edit', $id)->with('error', 'Failed to update Tender. Please try again.');
             }
-         }
-    }elseif($type=='crudSupplier'){
-        //CrudType
-        $crudType = $request->crudType;
-        //Check if the crud is create
-        if($crudType=='addSupplier'){
-            return $request->all();
-            // Validate the request for supplier CRUD operations
-            $validated = $request->validate([
-                'supplier_id' => 'required|integer|exists:t_Suppliers,Id',
-            ]);
-            DB::beginTransaction();
-            try {
-                // Create a new TenderSupplier record
-                $tenderSupplier = new TenderSupplier();
-                $tenderSupplier->TenderID = $id;
-                $tenderSupplier->SupplierID = $validated['supplier_id'];
-                $tenderSupplier->CreatedBy = Auth::id();
-                $tenderSupplier->ModifiedBy = Auth::id();
-                $tenderSupplier->save();
+        } elseif ($type == 'crudItem') {
+            //CrudType
+            $crudType = $request->crudType;
+            //Check if the crud is create
+            if ($crudType == 'addItem') {
+                // Validate the request for item CRUD operations
+                $validated = $request->validate([
+                    'item_id' => 'required|integer',
+                    'QtyToTender' => 'required|integer|min:1',
+                    'pr_ref' => 'nullable|string|max:255',
+                    //'file' => 'nullable|file|max:5120', // max 5MB
+                ]);
+                DB::beginTransaction();
+                try {
+                    // Create a new TenderItems record
+                    $tenderItem = new TenderItems();
+                    $tenderItem->TenderID = $id;
+                    $tenderItem->SourceType = 'MANUAL'; // Assuming manual entry
+                    $tenderItem->ItemID = $validated['item_id'];
+                    $tenderItem->itemCategory = $request->itemCategoryID; // Assuming this is passed from the form
+                    $tenderItem->QtyToTender = $validated['QtyToTender'];
+                    $tenderItem->RelatedPRID = $validated['pr_ref'] ?? null;
+                    $tenderItem->CreatedBy = Auth::id();
+                    $tenderItem->ModifiedBy = Auth::id();
+                    $tenderItem->save();
 
-                DB::commit();
+                    DB::commit();
 
-                // Log activity for supplier creation
-                activity()
-                    ->performedOn($tenderSupplier)
-                    ->causedBy(Auth::user())
-                    ->withProperties(['action' => 'create'])
-                    ->log('Tender Supplier created successfully with ID: ' . $tenderSupplier->Id);
+                    // Log activity for item creation
+                    activity()
+                        ->performedOn($tenderItem)
+                        ->causedBy(Auth::user())
+                        ->withProperties(['action' => 'create'])
+                        ->log('Tender Item created successfully with ID: ' . $tenderItem->Id);
 
-                return redirect()->route('initiatetender.edit', $id)->with('success', 'Tender Supplier created successfully.');
-            } catch (\Exception $e) {
-                DB::rollBack();
-                Log::error("--- CREATE TENDER SUPPLIER ERROR --- " . $e->getMessage());
-                Log::error($e);
-                return redirect()->route('initiatetender.edit', $id)->with('error', 'Failed to create Tender Supplier. Please try again.');
+                    return redirect()->route('initiatetender.edit', $id)->with('success', 'Tender Item created successfully.');
+                } catch (\Exception $e) {
+                    DB::rollBack();
+                    Log::error("--- CREATE TENDER ITEM ERROR --- " . $e->getMessage());
+                    Log::error($e);
+                    return redirect()->route('initiatetender.edit', $id)->with('error', 'Failed to create Tender Item. Please try again.');
+                }
+
+            } elseif ($crudType == 'deleteItem') {
+                DB::beginTransaction();
+                try {
+                    // Find and delete the TenderItems record
+                    $tenderItem = TenderItems::findOrFail($request->item_id);
+                    $tenderItem->delete();
+
+                    DB::commit();
+
+                    // Log activity for item deletion
+                    activity()
+                        ->performedOn($tenderItem)
+                        ->causedBy(Auth::user())
+                        ->withProperties(['action' => 'delete'])
+                        ->log('Tender Item deleted successfully with ID: ' . $tenderItem->Id);
+
+                    return redirect()->route('initiatetender.edit', $id)->with('success', 'Tender Item deleted successfully.');
+                } catch (\Exception $e) {
+                    DB::rollBack();
+                    return $e->getMessage();
+                    Log::error("--- DELETE TENDER ITEM ERROR --- " . $e->getMessage());
+                    Log::error($e);
+                    return redirect()->route('initiatetender.edit', $id)->with('error', 'Failed to delete Tender Item. Please try again.');
+                }
             }
+        } elseif ($type == 'crudSupplier') {
+            //CrudType
+            $crudType = $request->crudType;
+            //Check if the crud is create
+            if ($crudType == 'addSupplier') {
+                return $request->all();
+                // Validate the request for supplier CRUD operations
+                $validated = $request->validate([
+                    'supplier_id' => 'required|integer|exists:t_Suppliers,Id',
+                ]);
+                DB::beginTransaction();
+                try {
+                    // Create a new TenderSupplier record
+                    $tenderSupplier = new TenderSupplier();
+                    $tenderSupplier->TenderID = $id;
+                    $tenderSupplier->SupplierID = $validated['supplier_id'];
+                    $tenderSupplier->CreatedBy = Auth::id();
+                    $tenderSupplier->ModifiedBy = Auth::id();
+                    $tenderSupplier->save();
 
-        }elseif($crudType=='deleteSupplier'){
-            return $request->all();
-            DB::beginTransaction();
-            try {
-                // Find and delete the TenderSupplier record
-                $tenderSupplier = TenderSupplier::findOrFail($request->supplier_id);
-                $tenderSupplier->delete();
+                    DB::commit();
 
-                DB::commit();
+                    // Log activity for supplier creation
+                    activity()
+                        ->performedOn($tenderSupplier)
+                        ->causedBy(Auth::user())
+                        ->withProperties(['action' => 'create'])
+                        ->log('Tender Supplier created successfully with ID: ' . $tenderSupplier->Id);
 
-                // Log activity for supplier deletion
-                activity()
-                    ->performedOn($tenderSupplier)
-                    ->causedBy(Auth::user())
-                    ->withProperties(['action' => 'delete'])
-                    ->log('Tender Supplier deleted successfully with ID: ' . $tenderSupplier->Id);
+                    return redirect()->route('initiatetender.edit', $id)->with('success', 'Tender Supplier created successfully.');
+                } catch (\Exception $e) {
+                    DB::rollBack();
+                    Log::error("--- CREATE TENDER SUPPLIER ERROR --- " . $e->getMessage());
+                    Log::error($e);
+                    return redirect()->route('initiatetender.edit', $id)->with('error', 'Failed to create Tender Supplier. Please try again.');
+                }
 
-                return redirect()->route('initiatetender.edit', $id)->with('success', 'Tender Supplier deleted successfully.');
-            } catch (\Exception $e) {
-                DB::rollBack();
-                Log::error("--- DELETE TENDER SUPPLIER ERROR --- " . $e->getMessage());
-                Log::error($e);
-                return redirect()->route('initiatetender.edit', $id)->with('error', 'Failed to delete Tender Supplier. Please try again.');
+            } elseif ($crudType == 'deleteSupplier') {
+                return $request->all();
+                DB::beginTransaction();
+                try {
+                    // Find and delete the TenderSupplier record
+                    $tenderSupplier = TenderSupplier::findOrFail($request->supplier_id);
+                    $tenderSupplier->delete();
+
+                    DB::commit();
+
+                    // Log activity for supplier deletion
+                    activity()
+                        ->performedOn($tenderSupplier)
+                        ->causedBy(Auth::user())
+                        ->withProperties(['action' => 'delete'])
+                        ->log('Tender Supplier deleted successfully with ID: ' . $tenderSupplier->Id);
+
+                    return redirect()->route('initiatetender.edit', $id)->with('success', 'Tender Supplier deleted successfully.');
+                } catch (\Exception $e) {
+                    DB::rollBack();
+                    Log::error("--- DELETE TENDER SUPPLIER ERROR --- " . $e->getMessage());
+                    Log::error($e);
+                    return redirect()->route('initiatetender.edit', $id)->with('error', 'Failed to delete Tender Supplier. Please try again.');
+                }
             }
         }
-    }
 
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    return redirect()->route('initiatetender.index')->with('error', 'Invalid request type.');
+
+        return redirect()->route('initiatetender.index')->with('error', 'Invalid request type.');
 
 
         $validated = $request->validate([
@@ -615,7 +607,7 @@ class TenderController extends Controller
         ]);
 
         DB::beginTransaction();
-        try{
+        try {
             $tender = Tender::findOrFail($id);
             $tender->fill($request->only([
                 'Title',
@@ -628,16 +620,16 @@ class TenderController extends Controller
                 'EstimatedValue',
                 'StartDate'
             ]));
-    
+
             $fillData['CurrencyId'] = $request->Currency;
             $tender->fill($fillData);
-    
+
             $tender->TenderType = TenderTypeEnum::from($request->TenderType);
             $tender->TenderCategory = TenderCategoryEnum::from($request->TenderCategory);
             $tender->Status = TenderStatusEnum::from($request->Status);
             $tender->ModifiedBy = Auth::id();
             $tender->save();
-    
+
             // Handle restricted tender suppliers
             if ($request->TenderType === TenderTypeEnum::Restricted->value) {
                 $tender->suppliers()->sync($request->suppliers ?? []);
@@ -652,7 +644,7 @@ class TenderController extends Controller
                 ->withProperties(['action' => 'update'])
                 ->log('Tender updated successfully with ID: ' . $id);
             return redirect()->route('initiatetender.index')->with('success', 'Tender updated successfully.');
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
             Log::error("--- UPDATE TENDER ERROR --- " . $e->getMessage());
             Log::error($e);
@@ -705,7 +697,7 @@ class TenderController extends Controller
     }
 
 
-    //Approval and rejection of tender 
+    //Approval and rejection of tender
     public function approveTender(Request $request)
     {
         //Check if the user has permission to approve tenders using the enum set

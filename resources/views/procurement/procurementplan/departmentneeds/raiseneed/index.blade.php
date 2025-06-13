@@ -27,13 +27,13 @@
     <tbody>
     @forelse ($departmentneedviews as $index => $departmentneedview)
       <tr>
-        <td>{{ $index + 1 ?? 'N/A'}}</td>
+          <td>{{ $index + 1 ?? 'N/A'}}</td>
         <td>{{ $departmentneedview->item->ItemName ?? 'N/A' }}</td>
-        <td>{{ $departmentneedview->item->category->Name ?? 'N/A' }}</td>
-        <td>{{ $departmentneedview->RequestedQty ?? 'N/A' }}</td>
-        <td>{{ $departmentneedview->EstimatedUnitCost ?? 'N/A' }}</td>
-        <td>{{ $departmentneedview->Status->label() ?? 'N/A' }}</td>
-        <td>{{ $departmentneedview->creator->Name ?? 'N/A' }}</td>
+          <td>{{ $departmentneedview->item->category->Name ?? 'N/A' }}</td>
+          <td>{{ $departmentneedview->RequestedQty ?? 'N/A' }}</td>
+          <td>{{ $departmentneedview->EstimatedUnitCost ?? 'N/A' }}</td>
+          <td>{{ $departmentneedview->Status->label() ?? 'N/A' }}</td>
+          <td>{{ $departmentneedview->creator->Name ?? 'N/A' }}</td>
         <td>
             <button onclick="openEditModal('{{ $departmentneedview->NeedID }}')" class="btn btn-sm btn-outline-primary">
                 Edit
@@ -139,7 +139,7 @@
       pageLength: 10,
       ordering: true,
       searching: true,
-      lengthChange: true,
+        lengthChange: true,
     });
   });
 </script>

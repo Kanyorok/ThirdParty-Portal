@@ -21,22 +21,27 @@ class DescriptionItem extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-                           "Item",
-                           "ItemID",
-                           "Description",
-                           "ItemType",
-                           "Tonality",
-                           'Notes',
-                           'CreatedBy',
-                           'ModifiedBy',
-                           'DeletedBy',
-                          ];
+        "Item",
+        "ItemID",
+        "Description",
+        "ItemType",
+        "Tonality",
+        'Notes',
+        'CreatedBy',
+        'ModifiedBy',
+        'DeletedBy',
+    ];
 
 
     protected $casts = [
-                        'ItemType' => ItemTypeEnum::class,
-                        'Tonality' => TonalityEnum::class,
-                       ];
+        'ItemType' => ItemTypeEnum::class,
+        'Tonality' => TonalityEnum::class,
+    ];
+
+    public static function getPrimaryKey(): string
+    {
+        return 'DescriptionItemsId';
+    }
 
     public function item(): MorphTo
     {

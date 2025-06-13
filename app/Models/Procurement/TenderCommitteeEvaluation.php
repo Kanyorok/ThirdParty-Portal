@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class TenderCommitteeEvaluation extends Model
 {
-    use UserActorTrait,SoftDeletes;
+    use UserActorTrait, SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -59,46 +59,57 @@ class TenderCommitteeEvaluation extends Model
     {
         return $this->belongsTo(TenderCommittee::class, 'TenderCommitteeID', 'Id');
     }
+
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'CreatedBy', 'Id');
     }
+
     public function modifiedBy()
     {
         return $this->belongsTo(User::class, 'ModifiedBy', 'Id');
     }
+
     public function deletedBy()
     {
         return $this->belongsTo(User::class, 'DeletedBy', 'Id');
     }
+
     public function tenderCommitteeMembers()
     {
         return $this->hasMany(TenderCommitteeMember::class, 'TenderCommitteeID', 'Id');
     }
+
     public function tender()
     {
         return $this->belongsTo(Tender::class, 'TenderID', 'Id');
     }
+
     public function tenderCommitteeMember()
     {
         return $this->belongsTo(TenderCommitteeMember::class, 'TenderCommitteeMemberID', 'Id');
     }
+
     public function tenderCommitteeEvaluations()
     {
         return $this->hasMany(TenderCommitteeEvaluation::class, 'TenderCommitteeMemberID', 'Id');
     }
+
     public function tenderCommitteeMemberEvaluations()
     {
         return $this->hasMany(TenderCommitteeEvaluation::class, 'TenderCommitteeMemberID', 'Id');
     }
+
     public function tenderCommitteeMemberEvaluation()
     {
         return $this->belongsTo(TenderCommitteeEvaluation::class, 'TenderCommitteeMemberID', 'Id');
     }
+
     public static function getPrimaryKey(): string
     {
         return (new self())->getRouteKeyName();
     }
+
     public function getRouteKeyName(): string
     {
         return 'TenderCommitteeEvaluationID';

@@ -27,9 +27,9 @@ class StoreRequest extends FormRequest
     {
         return [
             'StoreName' => 'required|string|max:255',
-            'BranchID'  => 'required|integer|exists:t_Branches,Id',
-            'Status'    => 'required|boolean',
+            'BranchID' => 'required|integer|exists:t_Branches,Id',
+            'Status' => 'required|boolean',
         ];
     }
 }
-            
+

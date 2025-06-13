@@ -19,14 +19,14 @@ class ItemCategoriesSeeder extends Seeder
                 'Pens & Pencils',
                 'Paper Products',
                 'Binders & Folders',
-                'Miscellaneous', 
+                'Miscellaneous',
             ],
             'Electronics' => [
                 'Laptops',
                 'Printers',
                 'Monitors',
-                'Networking', 
-                'Audio',      
+                'Networking',
+                'Audio',
             ],
             'Furniture' => [
                 'Desks',

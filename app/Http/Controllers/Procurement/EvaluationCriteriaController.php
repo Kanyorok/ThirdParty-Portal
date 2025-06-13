@@ -10,9 +10,9 @@ class EvaluationCriteriaController extends Controller
 {
     //
         public function index()
-    {   
-        $sections= Section::all();
-        return view('procurement.tendering.settings.sections',compact('sections'));
+        {
+            $sections = Section::all();
+            return view('procurement.tendering.settings.sections', compact('sections'));
     }
 
     public function create(){

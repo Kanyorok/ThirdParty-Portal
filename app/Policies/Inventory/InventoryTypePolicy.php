@@ -36,7 +36,7 @@ class InventoryTypePolicy
     /**
      * Determine whether the user can update the model.
      */
-     public function update(User $user): bool
+    public function update(User $user): bool
     {
         return $user->can(PermissionEnum::InventoryTypeUpdate->value);
     }
@@ -44,7 +44,7 @@ class InventoryTypePolicy
     /**
      * Determine whether the user can delete the model.
      */
- public function destroy(User $user): bool
+    public function destroy(User $user): bool
     {
         return $user->can(PermissionEnum::InventoryTypeDestroy->value);
     }

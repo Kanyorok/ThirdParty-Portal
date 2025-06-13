@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BudgetPeriodTypes extends Model
 {
-     use UserActorTrait,SoftDeletes;
+    use UserActorTrait, SoftDeletes;
 
     protected $primaryKey = 'Id';
     
@@ -25,7 +25,7 @@ class BudgetPeriodTypes extends Model
     protected $table = 't_BudgetPeriodTypes';
 
     protected $fillable = [
-        
+
         'PeriodType',
         'Code',
         'IsActive',
@@ -33,7 +33,7 @@ class BudgetPeriodTypes extends Model
         'ModifiedBy',
     ];
 
-    protected $cast=[
+    protected $cast = [
         'IsActive' => 'boolean',
     ];
 

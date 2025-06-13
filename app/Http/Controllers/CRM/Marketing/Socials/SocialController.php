@@ -66,21 +66,13 @@ class SocialController extends Controller
                 })->editColumn('ViewCount', function (Social $social) {
                     return number_format($social->ViewsCount);
                 })->setRowClass('mouse_pointer user-select-none dbl-click-redirect-data')->setRowData([
-                                                                                                       'dbl_click_url' => function (Social $social) {
-                                                                                                        return route('socials.show', $social->SocialID);
-                                                                                                       },
-                                                                                                      ])->rawColumns(['image', 'Type'])->make();
+                    'dbl_click_url' => function (Social $social) {
+                        return route('socials.show', $social->SocialID);
+                    },
+                ])->rawColumns(['image', 'Type'])->make();
         }
 
         return view('crm.marketing.socials.index');
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create(): View
-    {
-        return view('crm.marketing.socials.create');
     }
 
     /**
@@ -118,14 +110,11 @@ class SocialController extends Controller
     }
 
     /**
-     * Display the specified resource. covermart brilliant white 2l.
+     * Show the form for creating a new resource.
      */
-    public function show(Social $social): View
+    public function create(): View
     {
-        return view('crm.marketing.socials.show')
-            ->with('images', $social->images()->where('t_Images.MIMEType', 'like', 'image/%')->get())
-            ->with('video', $social->images()->where('t_Images.MIMEType', 'like', 'video/%')->first())
-            ->with('social', $social);
+        return view('crm.marketing.socials.create');
     }
 
     /**
@@ -134,6 +123,17 @@ class SocialController extends Controller
     public function update(Request $request, Social $social)
     {
         //
+    }
+
+    /**
+     * Display the specified resource. covermart brilliant white 2l.
+     */
+    public function show(Social $social): View
+    {
+        return view('crm.marketing.socials.show')
+            ->with('images', $social->images()->where('t_Images.MIMEType', 'like', 'image/%')->get())
+            ->with('video', $social->images()->where('t_Images.MIMEType', 'like', 'video/%')->first())
+            ->with('social', $social);
     }
 
     /**

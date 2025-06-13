@@ -4,25 +4,24 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
     public function up(): void
     {
-        Schema::create('t_PropertyRegistry', function (Blueprint $table){
+        Schema::create('t_PropertyRegistry', function (Blueprint $table) {
             $table->id('Id');
             $table->string('PropertyName');
             $table->string('PropertyCode');
-            $table->foreignId('PropertyType')->constrained('t_PropertyType','Id');
-            $table->foreignId('Category')->constrained('t_CategoryMaster','Id');
+            $table->foreignId('PropertyType')->constrained('t_PropertyType', 'Id');
+            $table->foreignId('Category')->constrained('t_CategoryMaster', 'Id');
             $table->string('Owner');
             $table->date('AcquisitionDate');
-            $table->string('Country'); 
-            $table->foreignId('TownCity')->constrained('t_Localities','Id');                                
+            $table->string('Country');
+            $table->foreignId('TownCity')->constrained('t_Localities', 'Id');
             $table->string('AreaLocality');
-            $table->string('PropertyDescription');           
+            $table->string('PropertyDescription');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');

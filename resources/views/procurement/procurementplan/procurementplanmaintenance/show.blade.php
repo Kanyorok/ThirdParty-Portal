@@ -47,12 +47,14 @@
             </a>
 
             @if($plan->Status->label() === 'Draft')
-                <a href="{{ route('planmanualinput.create', ['plan_id' => $plan->PlanID, 'title' => $plan->Title]) }}" class="btn btn-outline-primary">
+                <a href="{{ route('planmanualinput.create', ['plan_id' => $plan->PlanID, 'title' => $plan->Title]) }}"
+                   class="btn btn-outline-primary">
                     <i class="fas fa-plus me-1"></i>
                     Add Items Manually
                 </a>
 
-                <a href="{{ route('planfromneeds.create', ['plan_id' => $plan->PlanID]) }}" class="btn btn-outline-success">
+                <a href="{{ route('planfromneeds.create', ['plan_id' => $plan->PlanID]) }}"
+                   class="btn btn-outline-success">
                     <i class="fas fa-file-import me-1"></i>
                     Generate Items from Needs
                 </a>

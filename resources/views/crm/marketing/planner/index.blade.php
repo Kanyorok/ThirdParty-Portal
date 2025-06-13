@@ -9,22 +9,28 @@
         }
     </style>
 @endsection
+@section('breadcrumbs')
+    <li class="breadcrumb-item"><a href="#">CRM</a></li>
+@endsection
 @section('content')
-    <div class="mb-3">
-        <h1 class="h3 d-inline align-middle">@yield('title')</h1>
-        @if($isMarketingManager)
-            <button class="btn btn-primary float-end ms-2 modal-create-marketing-planner" type="button"><i
-                    class="fas fa-plus-circle"></i> Create a global Planner
-            </button>
-        @else
-            <button class="btn btn-primary float-end ms-2 modal-create-marketing-planner" type="button"><i
-                    class="fas fa-plus-circle"></i> Create a new Planner
-            </button>
-        @endif
-    </div>
     <div class="row">
         <div class="col-12">
             <div class="card mb-3">
+                <div class="card-header">
+                    <div class="float-end">
+                        @if($isMarketingManager)
+                            <button class="btn btn-primary float-end ms-2 modal-create-marketing-planner btn-sm"
+                                    type="button"><i
+                                    class="fas fa-plus-circle"></i> Create a global Planner
+                            </button>
+                        @else
+                            <button class="btn btn-primary float-end ms-2 modal-create-marketing-planner btn-sm"
+                                    type="button"><i
+                                    class="fas fa-plus-circle"></i> Create a new Planner
+                            </button>
+                        @endif
+                    </div>
+                </div>
                 <div class="card-body">
                     <table id="campaignTable"
                            class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">

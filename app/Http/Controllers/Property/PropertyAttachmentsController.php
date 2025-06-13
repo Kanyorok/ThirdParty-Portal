@@ -14,21 +14,22 @@ class PropertyAttachmentsController extends Controller
     {
         $propertyattachments = PropertyAttachments::all();
 
-        return view('property.propertyregistry.propertyattachments.index',compact('propertyattachments'));
+        return view('property.propertyregistry.propertyattachments.index', compact('propertyattachments'));
     }
 
     public function create(){
         $properties = PropertyRegistry::all();
         return view('property.propertyregistry.propertyattachments.create', compact('properties'));
     }
-     public function store(Request $request)
+
+    public function store(Request $request)
     {
         //dd($request->all());
         $request->validate([
-            'PropertyID'=>'required|string|max:20',
-            'DocumentTitle'=>'required|string|max:100',
-            'DocumentType'=>'required|string|max:50',
-            'Description'=>'required|string|max:255',
+            'PropertyID' => 'required|string|max:20',
+            'DocumentTitle' => 'required|string|max:100',
+            'DocumentType' => 'required|string|max:50',
+            'Description' => 'required|string|max:255',
         ]);
 
         $propertyattachment = PropertyAttachments::create([
@@ -40,7 +41,7 @@ class PropertyAttachmentsController extends Controller
             'ModifiedBy' => auth()->user()->Id,
         ]);
 
-        return redirect()->route('attachments.index')->with('success','Property attachment created successfully');
+        return redirect()->route('attachments.index')->with('success', 'Property attachment created successfully');
     }
 
 }

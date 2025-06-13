@@ -17,7 +17,7 @@ class ItemCategoryService
         do {
             try {
                 $category = DB::transaction(function () use (&$data) {
-                  
+
                     $isSubcategory = !empty($data['ParentId']);
 
                     $categoryCode = $this->generateCategoryCode($isSubcategory);
@@ -62,7 +62,7 @@ class ItemCategoryService
         $maxCode = DB::table('t_ItemCategories')
             ->whereRaw("LEFT(CategoryCode, 3) = ?", [$prefix])
             ->select(DB::raw("MAX(CAST(SUBSTRING(CategoryCode, 5, LEN(CategoryCode)) AS INT)) AS max_code"))
-            ->lock('WITH (TABLOCKX, HOLDLOCK)') 
+            ->lock('WITH (TABLOCKX, HOLDLOCK)')
             ->value('max_code');
 
         $nextNumber = $maxCode ? $maxCode + 1 : 1;
@@ -76,16 +76,16 @@ class ItemCategoryService
     }
 
     public function destroy(ItemCategories $category): void
-{
-    $category->DeletedBy = auth()->id();
-    $category->save();
-    $category->delete();
+    {
+        $category->DeletedBy = auth()->id();
+        $category->save();
+        $category->delete();
 
-    activity()
-        ->causedBy(auth()->user())
-        ->performedOn($category)
-        ->event('delete')
-        ->log('Deleted Item Category ' . $category->CategoryCode);
-}
+        activity()
+            ->causedBy(auth()->user())
+            ->performedOn($category)
+            ->event('delete')
+            ->log('Deleted Item Category ' . $category->CategoryCode);
+    }
 
 }

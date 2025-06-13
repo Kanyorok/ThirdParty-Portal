@@ -1,5 +1,6 @@
-<link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
-<script src="{{ asset('assets/plugins/select2/js/select2.full.min.js') }}"></script>
+@php use App\Models\Auth\User; @endphp
+<link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
+<script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
 <style>
     .select2-container {
         width: 100% !important;
@@ -28,7 +29,7 @@
         <div class="mb-3">
             <label for="Manager" class="form-label">Branch Manager </label>
             <select class="form-control form-control-lg w-100 select-users" name="Manager" id="Manager">
-                @if($local?->manager instanceof \App\Models\Auth\User)
+                @if($local?->manager instanceof User)
                     <option selected value="{{ $local->manager->UserID }}">{{ $local->manager->Name }}
                         - {{ $local->manager->UserID }}</option>
                 @endif
@@ -39,7 +40,7 @@
         <div class="mb-3">
             <label for="Operation" class="form-label">Operation Manager </label>
             <select class="form-control form-control-lg w-100 select-users" name="Operation" id="Operation">
-                @if($local?->operation instanceof \App\Models\Auth\User)
+                @if($local?->operation instanceof User)
                     <option selected value="{{ $local->operation->UserID }}">{{ $local->operation->Name }}
                         - {{ $local->operation->UserID }}</option>
                 @endif
