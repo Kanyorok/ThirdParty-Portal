@@ -14,6 +14,7 @@ return new class extends Migration {
             $table->id('Id');
             $table->string('Name');
             $table->longText('Description')->nullable();
+            $table->char('Visibility', 3)->comment('pub,pri');
             $table->foreignId('RepositoryId')->nullable()->constrained('t_Repositories', 'Id');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
@@ -26,9 +27,10 @@ return new class extends Migration {
         Schema::create('t_Documents', static function (Blueprint $table) {
             $table->id('Id');
             $table->string('Name');
-            $table->string("ImageType")->nullable();
-            $table->foreignId('CategoryId')->constrained('t_CategoryMaster', 'Id');
+            $table->string("MimeType")->nullable();
+            $table->foreignId('CategoryId')->nullable()->constrained('t_CategoryMaster', 'Id');
             $table->foreignId('RepositoryId')->constrained('t_Repositories', 'Id');
+            $table->char('Visibility', 3)->comment('pub,pri');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
@@ -48,6 +50,31 @@ return new class extends Migration {
             $table->foreignId('DocumentId')->constrained('t_Documents', 'Id');
             $table->longText('Description')->nullable();
             $table->longText('Blob')->nullable();
+            $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('CreatedOn');
+            $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('ModifiedOn');
+            $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
+            $table->softDeletes('DeletedOn');
+        });
+
+        Schema::create('t_DMSTags', static function (Blueprint $table) {
+            $table->id('Id');
+            $table->string('TagID', 200)->unique();
+            $table->string('Name');
+            $table->char('Visibility', 3)->comment('pub,pri');
+            $table->longText('Description')->nullable();
+            $table->dateTime('CreatedOn');
+            $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('ModifiedOn');
+            $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
+            $table->softDeletes('DeletedOn');
+        });
+
+        Schema::create('t_DocumentTags', static function (Blueprint $table) {
+            $table->id('Id');
+            $table->foreignId('DocumentId')->constrained('t_Documents', 'Id');
+            $table->foreignId('TagId')->nullable()->constrained('t_DMSTags', 'Id');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
@@ -77,6 +104,7 @@ return new class extends Migration {
     public function down(): void
     {
         Schema::dropIfExists('t_DocumentAttributes');
+        Schema::dropIfExists('t_DocumentTags');
         Schema::dropIfExists('t_DocumentVersions');
         Schema::dropIfExists('t_Documents');
         Schema::dropIfExists('t_Repositories');

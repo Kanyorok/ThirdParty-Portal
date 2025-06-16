@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\DMS;
 
 use App\Enums\Core\ExtensionsEnum;
 use App\Exceptions\ErroredException;
@@ -34,6 +34,22 @@ class ImageService
         return self::create($Type, $TypeID, $file->getContent(), $file->getMimeType() ?? $file->getClientMimeType(), $file->getClientOriginalName(), $actor);
     }
 
+    public static function create(string $Type, string $TypeID, string $Content, string $MimeType, string $Name, User $actor): self
+    {
+        $img = new Image();
+        $img->fill([
+            "Name" => $Name,
+            "ImageType" => $Type,
+            "ImageTypeID" => $TypeID,
+            "Image" => base64_encode($Content),
+            "MIMEType" => $MimeType,
+            'CreatedBy' => $actor->Id,
+            'ModifiedBy' => $actor->Id,
+        ])->save();
+
+        return new self($img->refresh());
+    }
+
     public static function createContent(string $fileContent, string $Type, string $TypeID, string $MimeType, string $fileName, User $actor): self
     {
         return self::create($Type, $TypeID, $fileContent, $MimeType, $fileName, $actor);
@@ -42,22 +58,6 @@ class ImageService
     public static function createURL(string $url, string $Type, string $TypeID, User $actor, string $MimeType): self
     {
         return self::create($Type, $TypeID, file_get_contents($url), $MimeType, explode('?', basename($url))[0], $actor);
-    }
-
-    public static function create(string $Type, string $TypeID, string $Content, string $MimeType, string $Name, User $actor): self
-    {
-        $img = new Image();
-        $img->fill([
-                    "Name"        => $Name,
-                    "ImageType"   => $Type,
-                    "ImageTypeID" => $TypeID,
-                    "Image"       => base64_encode($Content),
-                    "MIMEType"    => $MimeType,
-                    'CreatedBy'   => $actor->Id,
-                    'ModifiedBy'  => $actor->Id,
-                   ])->save();
-
-        return new self($img->refresh());
     }
 
     public function isPrevieable(): bool

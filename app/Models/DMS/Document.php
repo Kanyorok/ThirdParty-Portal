@@ -3,12 +3,14 @@
 namespace App\Models\DMS;
 
 use App\Enums\Core\ExtensionsEnum;
+use App\Enums\Core\VisibilityEnum;
 use App\Exceptions\ErroredException;
 use App\Models\Core\CategoryMaster;
 use App\Models\Core\SpecialPermission;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -26,8 +28,12 @@ class Document extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        "Name", "ImageType", "CategoryId", "RepositoryId",
+        "Name", "MimeType", "CategoryId", "RepositoryId", "Visibility",
         'CreatedBy', 'ModifiedBy', 'DeletedBy',
+    ];
+
+    protected $casts = [
+        'Visibility' => VisibilityEnum::class,
     ];
 
     public function ext(): ?ExtensionsEnum
@@ -53,6 +59,14 @@ class Document extends Model
     {
         return $this->belongsTo(Repository::class, 'RepositoryId', 'Id');
     }
+
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(DMSTags::class, 't_DocumentTags', 'DocumentId', 'TagId', 'Id', 'Id')
+            ->withPivot(['CreatedBy', 'ModifiedBy', 'DeletedBy'])->withTimestamps();
+        //->using(DocumentTags::class);
+    }
+
 
     public function permissions(): MorphMany
     {

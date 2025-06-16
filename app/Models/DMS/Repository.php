@@ -2,6 +2,7 @@
 
 namespace App\Models\DMS;
 
+use App\Enums\Core\VisibilityEnum;
 use App\Models\Core\SpecialPermission;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
@@ -21,13 +22,17 @@ class Repository extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'Name', 'Description', 'RepositoryId',
+        'Name', 'Description', 'RepositoryId', 'Visibility',
         'CreatedBy', 'ModifiedBy', 'DeletedBy',
+    ];
+
+    protected $casts = [
+        'Visibility' => VisibilityEnum::class,
     ];
 
     public static function getPrimaryKey(): string
     {
-        return 'Document';
+        return 'RepositoryId';
     }
 
     public function documents(): HasMany

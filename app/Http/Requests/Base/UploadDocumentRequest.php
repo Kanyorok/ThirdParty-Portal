@@ -3,7 +3,7 @@
 namespace App\Http\Requests\Base;
 
 use App\Enums\Core\ExtensionsEnum;
-use App\Services\ImageService;
+use App\Services\DMS\ImageService;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;

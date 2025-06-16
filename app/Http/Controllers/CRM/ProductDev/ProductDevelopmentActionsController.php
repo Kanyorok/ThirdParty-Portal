@@ -7,7 +7,7 @@ use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Base\UploadDocumentRequest;
 use App\Models\CRM\ProductDevelopment;
-use App\Services\ImageService;
+use App\Services\DMS\ImageService;
 use App\Services\ProductDevService;
 use App\Traits\Controller\ActivitiesTrait;
 use App\Traits\Controller\WorkflowTrait;

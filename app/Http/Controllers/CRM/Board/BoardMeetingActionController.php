@@ -7,12 +7,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Base\UploadDocumentRequest;
 use App\Models\CRM\Meeting;
 use App\Models\ThirdParies\Board;
-use App\Services\ImageService;
+use App\Services\DMS\ImageService;
 use App\Services\MeetingService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class BoardMeetingActionController extends Controller
 {
@@ -35,7 +36,7 @@ class BoardMeetingActionController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (\Throwable | Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Error upload meeting document : ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }

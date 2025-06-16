@@ -7,7 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Marketing\NewSocialPostRequest;
 use App\Models\CRM\Social;
 use App\Models\DMS\Image;
-use App\Services\ImageService;
+use App\Services\DMS\ImageService;
 use App\Services\SocialMediaService;
 use Exception;
 use Illuminate\Http\JsonResponse;

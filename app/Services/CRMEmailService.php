@@ -25,6 +25,7 @@ use App\Models\CRM\Lead;
 use App\Models\DMS\Image;
 use App\Models\Settings\APICredential;
 use App\Models\ThirdParies\Board;
+use App\Services\DMS\ImageService;
 use App\Services\Marketing\CampaignService;
 use Carbon\Carbon;
 use Exception;

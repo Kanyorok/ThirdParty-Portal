@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Enums\Core\ModulesEnum;
 use Illuminate\Database\Seeder;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -47,5 +46,6 @@ class DatabaseSeeder extends Seeder
         $this->call(BudgetProductTypeSeeder::class);
         $this->call(BudgetProductsSeeder::class);
         $this->call(BudgetDriversMasterSeeder::class);
+        $this->call(RepositorySeeder::class);
     }
 }
