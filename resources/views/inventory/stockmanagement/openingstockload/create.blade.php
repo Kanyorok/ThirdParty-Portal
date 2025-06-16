@@ -2,76 +2,7 @@
 @section('title', 'Opening Stock Load')
 @section('content')
 <div class="container mt-4">
-  <h4 class="fw-bold mb-3">📥 Opening Stock Load (Manual & Bulk Upload)</h4>
-
-  <!-- Manual Entry Card -->
-  <div class="card shadow mb-4">
-    <div class="card-header bg-light fw-bold">➕ Add Opening Stock Entry (Manual)</div>
-    <div class="card-body">
-      <form method="POST" action="{{ route('openingstock.store') }}">
-        @csrf
-        <div class="row g-3 mb-3">
-          <div class="col-md-3">
-            <label class="form-label">Branch</label>
-            <select name="BranchId" id="branch-select" class="form-select" required>
-              <option value="">-- Select Branch --</option>
-              @foreach ($branches as $branch)
-              <option value="{{ $branch->Id }}">{{ $branch->Name }}</option>
-              @endforeach
-            </select>
-          </div>
-          <div class="col-md-3">
-            <label for="StoreId" class="form-label">Store</label>
-            <select name="StoreId" id="store-select" class="form-select" required>
-              <option value="">-- Select Store --</option>
-            </select>
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">Item</label>
-            <select name="ItemCode" class="form-select" required>
-              <option value="">-- Select Item --</option>
-              @foreach ($items as $item)
-              <option value="{{ $item->ItemCode }}">{{ $item->ItemName }}</option>
-              @endforeach
-            </select>
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">Date</label>
-            <input type="date" name="Date" class="form-control" value="{{ date('Y-m-d') }}" required>
-          </div>
-        </div>
-
-        <div class="row g-3 mb-3">
-          <div class="col-md-3">
-            <label class="form-label">Quantity</label>
-            <input type="number" name="Quantity" class="form-control" placeholder="e.g. 10" required>
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">UOM</label>
-            <select name="UOM" class="form-select" required>
-              <option value="">-- Select UOM --</option>
-              @foreach ($uoms as $uom)
-              <option value="{{ $uom->Id }}">{{ $uom->Code }}</option>
-              @endforeach
-            </select>
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">Value (KES)</label>
-            <input type="number" name="Value" class="form-control" placeholder="e.g. 2400" required>
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">Remarks</label>
-            <input type="text" name="Remarks" class="form-control" placeholder="Optional">
-          </div>
-        </div>
-
-        <div class="text-end">
-          <button type="submit" class="btn btn-success">💾 Save Entry</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
+  <h4 class="fw-bold mb-3">📥 Opening Stock Load (Bulk Upload)</h4>
   <!-- Bulk Upload Card -->
   <div class="card shadow">
     <div class="card-header bg-light fw-bold">📤 Upload Opening Stock (Excel)</div>
@@ -95,34 +26,4 @@
     </div>
   </div>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const branchSelect = document.getElementById('branch-select');
-    const storeSelect = document.getElementById('store-select');
-
-    branchSelect.addEventListener('change', function () {
-        const branchId = this.value;
-
-        // Reset type dropdown
-        storeSelect.innerHTML = '<option value="">-- Select a store --</option>';
-
-        if (branchId) {
-            const url = `{{ route('getstores', ':Id') }}`.replace(':Id', branchId);
-
-            fetch(url)
-                .then(response => response.json())
-                .then(stores => {
-                    stores.forEach(store => {
-                        const option = document.createElement('option');
-                        option.value = store.Id;
-                        option.textContent = store.StoreName;
-                        storeSelect.appendChild(option);
-                    });
-                })
-                .catch(error => console.error('Error loading stores:', error));
-        }
-    });
-});
-</script>
 @endsection

@@ -237,7 +237,6 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 404300, 'Name' => 'Adjustments', 'Icon' => null, 'Description' => 'Transaction Adjustments', 'Route' => 'transactionsadjustment.index', 'ParentID' => 404000],
             ['ModuleID' => 405000, 'Name' => 'Stock Management', 'Icon' => null, 'Description' => 'Stock Management', 'Route' => null, 'ParentID' => 400000],
             ['ModuleID' => 405100, 'Name' => 'Stock Take', 'Icon' => null, 'Description' => 'Stock Take Management', 'Route' => 'stocktake.index', 'ParentID' => 405000],
-            ['ModuleID' => 405200, 'Name' => 'Load Opening Stock', 'Icon' => null, 'Description' => 'Load Opening Stock', 'Route' => 'openingstock.index', 'ParentID' => 405000],
             ['ModuleID' => 405300, 'Name' => 'Location Tracking', 'Icon' => null, 'Description' => 'Location Tracking', 'Route' => 'bintracking.index', 'ParentID' => 405000],
             ['ModuleID' => 405400, 'Name' => 'Stock Valuation', 'Icon' => null, 'Description' => 'Stock Valuation History', 'Route' => 'stockvaluationhistory.index', 'ParentID' => 405000],
             ['ModuleID' => 405500, 'Name' => 'Expiry Batch Tracking', 'Icon' => null, 'Description' => 'Expiry Batch Tracking', 'Route' => 'expirytracking.index', 'ParentID' => 405000],
@@ -245,6 +244,9 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 406100, 'Name' => 'Conversion Mapping', 'Icon' => null, 'Description' => 'UOM Conversion Mapping', 'Route' => 'uomconversion.index', 'ParentID' => 406000],
             ['ModuleID' => 408000, 'Name' => 'Stores', 'Icon' => null, 'Description' => 'List of Stores', 'Route' => 'stores.index', 'ParentID' => 400000],
             ['ModuleID' => 407000, 'Name' => 'Price Management', 'Icon' => null, 'Description' => 'Items Prices', 'Route' => 'pricemanagement.index', 'ParentID' => 400000],
+
+            ['ModuleID' => 498000, 'Name' => 'Settings', 'Icon' => null, 'Description' => 'Inventory Settings', 'Route' => null, 'ParentID' => 400000],
+            ['ModuleID' => 498001, 'Name' => 'Load Opening Stock', 'Icon' => null, 'Description' => 'Load Opening Stock', 'Route' => 'openingstock.index', 'ParentID' => 498000],
 
             ['ModuleID' => 499000, 'Name' => 'Reports', 'Icon' => null, 'Description' => 'Inventory Reports', 'Route' => 'inventory-reports.index', 'ParentID' => 400000],
 
