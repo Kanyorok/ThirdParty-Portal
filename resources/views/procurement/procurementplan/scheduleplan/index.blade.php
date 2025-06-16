@@ -4,7 +4,9 @@
     <div class="container mt-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h4>📋 Procurement Plan Scheduling Summary</h4>
-            <a href="/" class="btn btn-sm btn-outline-secondary">← Back to Plan</a>
+            <a href="{{ route('Procurement-Plan-Schedule.index') }}" class="btn btn-sm btn-outline-secondary">
+                ← Back to Plan
+            </a>
         </div>
 
         <div class="card shadow-sm mb-4">
@@ -44,8 +46,7 @@
                         <th>Action</th>
                     </tr>
                     </thead>
-                    <tbody id="items-table-body">
-                    </tbody>
+                    <tbody id="items-table-body"></tbody>
                 </table>
             </div>
         </form>
@@ -68,7 +69,17 @@
 
                         document.getElementById('approved-plan-id-hidden').value = planId;
 
-                        tbody.innerHTML = '<tr><td colspan="7" class="text-center">Loading...</td></tr>';
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="7" class="text-center py-4">
+                                    <div class="d-flex justify-content-center align-items-center">
+                                        <div class="spinner-border text-primary me-2" role="status">
+                                            <span class="visually-hidden">Loading Items...</span>
+                                        </div>
+                                        <strong>Loading Items...</strong>
+                                    </div>
+                                </td>
+                            </tr>`;
 
                         fetch(`${baseUrl.replace('__PLAN_ID__', planId)}`)
                             .then(response => {
@@ -78,7 +89,7 @@
                                 return response.json();
                             })
                             .then(data => {
-                                tbody.innerHTML = '';
+                                tbody.innerHTML = ''; // Clear the spinner
 
                                 if (Array.isArray(data) && data.length > 0) {
                                     data.forEach((line, index) => {
@@ -99,13 +110,13 @@
                                         tbody.insertAdjacentHTML('beforeend', row);
                                     });
                                 } else {
-                                    tbody.innerHTML = '<tr><td colspan="7" class="text-center">No lines created for the selected plan.</td></tr>';
+                                    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">No lines created for the selected plan.</td></tr>';
                                     nWarning('No lines created for the selected plan.');
                                 }
                             })
                             .catch(error => {
                                 console.error('Error loading items:', error);
-                                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Failed to load items.</td></tr>';
+                                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger py-4">Failed to load items.</td></tr>';
                                 nError('An error occurred while loading items.');
                             });
                     });

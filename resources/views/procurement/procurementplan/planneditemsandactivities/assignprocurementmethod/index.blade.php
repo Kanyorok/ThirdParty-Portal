@@ -10,7 +10,7 @@
         <div class="card-body">
             <div class="row g-3 align-items-end">
                 <div class="col-md-6">
-                    <label class="form-label">Select Approved Plan</label>
+                    <label class="form-label">Select Plan</label>
                     <select class="form-select" id="approved-plan-select">
                         <option selected disabled>-- Choose Plan --</option>
                         @foreach ($approvedPlans as $plan)
