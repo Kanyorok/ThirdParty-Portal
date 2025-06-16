@@ -38,7 +38,7 @@
 
 <script>
   //gettign stores per Branch
-    document.addEventListener('DOMContentLoaded', function () {
+  document.addEventListener('DOMContentLoaded', function () {
       const branchSelect = document.getElementById('branch-select');
       const storeSelect = document.getElementById('store-select');
 
@@ -49,8 +49,7 @@
           storeSelect.innerHTML = '<option value="">-- Select a store --</option>';
 
           if (branchId) {
-              // Construct the URL from the named route
-              const url = `{{ route('getstore', ':Id') }}`.replace(':Id', branchId);
+              const url = `{{ route('getstores', ':Id') }}`.replace(':Id', branchId);
 
               fetch(url)
                   .then(response => response.json())
@@ -62,7 +61,7 @@
                           storeSelect.appendChild(option);
                       });
                   })
-                  .catch(error => console.error('Error loading the store:', error));
+                  .catch(error => console.error('Error loading stores:', error));
           }
       });
   });

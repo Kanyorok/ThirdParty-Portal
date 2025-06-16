@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Inventory;
 
+use App\Models\Inventory\StockTakeLines;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
@@ -30,8 +31,8 @@ class StockTakeController extends Controller
     }
 
     public function getStoreByBranch($storeId)
-    {
-        $stores = Branch::where('BranchID', $storeId)->get();
+    {   
+        $stores = Store::where('BranchID',$storeId)->get();
         return response()->json($stores);
     }
 
