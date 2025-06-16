@@ -384,10 +384,10 @@
                 </select>
             </td>
             <td><input type="text" class="form-control form-control-sm itemDescription" name="item_description[]" id="Description" readonly></td>
-            <td><input type="number" class="form-control form-control-sm qty quantity" name="quantity[]" id="Quantity" ></td>
-            <td><input type="number" class="form-control form-control-sm unit-price" name="unit_price[]" id="Price" ></td>
-            <td><input type="number" class="form-control form-control-sm tax" name="tax[]" id="Tax" ></td>
-            <td><input type="number" class="form-control form-control-sm discount" name="discount[]" id="Discount" ></td>
+            <td><input type="number" class="form-control form-control-sm qty quantity" name="quantity[]" id="Quantity" step="any" readonly ></td>
+            <td><input type="number" class="form-control form-control-sm unit-price" name="unit_price[]" id="Price" step="any" readonly ></td>
+            <td><input type="number" class="form-control form-control-sm tax" name="tax[]" id="Tax" step="any" readonly ></td>
+            <td><input type="number" class="form-control form-control-sm discount" name="discount[]" id="Discount" step="any" readonly ></td>
             <td><input type="number" class="form-control form-control-sm line-total" name="line_total[]"  id="lineTotal" readonly></td>
         </tr>`;
             document.getElementById('po-items').insertAdjacentHTML('beforeend', row);

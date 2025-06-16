@@ -21,6 +21,7 @@ class InterBranchRequisitionItem extends Model
         'RequisitionId',
         'Category',
         'Subcategory',
+        'ItemCode',
         'Item',
         'UOM',
         'RequestedQty',
@@ -38,10 +39,10 @@ class InterBranchRequisitionItem extends Model
         return $this->belongsTo(InterBranchRequisition::class, 'RequisitionId', 'Id');
     }
 
-    public function uom()
-    {
-        return $this->belongsTo(UnitOfMeasure::class, 'UOM', 'Id');
-    }
+    //public function uom()
+    //{
+    //    return $this->belongsTo(UnitOfMeasure::class, 'UOM', 'Id');
+   // }
 
     public function item()
     {

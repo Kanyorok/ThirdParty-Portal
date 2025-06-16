@@ -65,7 +65,7 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::put('/sku/{Id}', [SKUController::class, 'update'])->name('sku.update');
     Route::delete('/sku/{Id}', [SKUController::class, 'destroy'])->name('sku.destroy');
     Route::get('/get-stores', [SKUController::class, 'getStores'])->name('get.stores');
-    Route::get('/get-items', [SKUController::class, 'getItemsByCategoryOrSubcategory'])->name('get.items');
+    Route::get('/info/get-items', [SKUController::class, 'getItemsByCategoryOrSubcategory'])->name('get.items');
 
     //Route::resource('itemcategory', ItemCategoryController::class);
     Route::get('/itemcategory', [ItemCategoryController::class, 'index'])->name('itemcategory.index');
@@ -131,8 +131,12 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::put('/interbranchrequisition/{Id}', [InterBranchRequisitionController::class, 'update'])->name('interbranchrequisition.update');
     Route::delete('/interbranchrequisition/{Id}', [InterBranchRequisitionController::class, 'destroy'])->name('interbranchrequisition.destroy');
     Route::get('/interbranchrequisition/get-items', [InterBranchRequisitionController::class, 'getItemsByCategoryOrSubcategory'])->name('interbranchrequisition.getItemsByCategoryOrSubcategory');
-
-    Route::get('/inventory/get-subcategories', [InterBranchRequisitionController::class, 'getSubcategories'])->name('inventory.getSubcategories');
+    Route::get('/items/code/{Id}', [InterBranchRequisitionController::class, 'getItemCode']);
+    
+    Route::get('/get-categories-by-branch', [InterBranchRequisitionController::class, 'getCategoriesByBranch'])->name('inventory.get-categories-by-branch');
+    Route::get('/get-subcategories-by-branch-and-category', [InterBranchRequisitionController::class, 'getSubcategoriesByBranchAndCategory'])->name('inventory.get-subcategories-by-branch-and-category');
+    Route::get('/get-items', [InterBranchRequisitionController::class, 'getItemsByBranchAndCategoryOrSubcategory'])->name('inventory.get-items');
+    Route::get('/get-subcategories', [InterBranchRequisitionController::class, 'getSubcategories'])->name('inventory.getSubcategories');
 
     //Route::resource('interbranchrequisitionapproval', InterBranchRequisitionApprovalController::class);
     Route::get('/interbranchrequisitionapproval', [InterBranchRequisitionApprovalController::class, 'index'])->name('interbranchrequisitionapproval.index');
