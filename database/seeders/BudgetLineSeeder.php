@@ -3,89 +3,50 @@
 namespace Database\Seeders;
 
 use App\Models\Auth\User;
-use Carbon\Carbon;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class BudgetLineSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        // Ensure there are users in t_Users table
         $userIds = User::pluck('Id')->toArray();
         if (empty($userIds)) {
             throw new \Exception('No users found in t_Users table. Please seed t_Users first.');
         }
 
-        // Sample budget lines for a banking system
+        // Get available BudgetLineCategories
+        $categoryIds = DB::table('t_BudgetLineCategories')->pluck('Id')->toArray();
+        if (empty($categoryIds)) {
+            throw new \Exception('No budget line categories found. Please seed t_BudgetLineCategories first.');
+        }
+
         $budgetLines = [
-            [
-                'LineName' => 'Loan Interest Income',
-                'Description' => 'Revenue from interest on loans issued to customers',
-                'IsDefault' => true
-            ],
-            [
-                'LineName' => 'Fee Income',
-                'Description' => 'Income from account maintenance and transaction fees',
-                'IsDefault' => false
-            ],
-            [
-                'LineName' => 'Operational Expenses',
-                'Description' => 'Costs for branch operations, utilities, and staffing',
-                'IsDefault' => false
-            ],
-            [
-                'LineName' => 'Expected Loan Losses',
-                'Description' => 'Provisions for potential loan defaults based on risk models',
-                'IsDefault' => false
-            ],
-            [
-                'LineName' => 'Funding Costs',
-                'Description' => 'Interest expenses on deposits and borrowed funds',
-                'IsDefault' => false
-            ],
-            [
-                'LineName' => 'IT Infrastructure Costs',
-                'Description' => 'Expenses for maintaining banking systems and cybersecurity',
-                'IsDefault' => false
-            ],
-            [
-                'LineName' => 'Marketing Expenses',
-                'Description' => 'Costs for customer acquisition and promotional campaigns',
-                'IsDefault' => false
-            ],
-            [
-                'LineName' => 'Wealth Management Fees',
-                'Description' => 'Revenue from wealth management and advisory services',
-                'IsDefault' => false
-            ],
-            [
-                'LineName' => 'Regulatory Compliance Costs',
-                'Description' => 'Expenses for meeting regulatory requirements and audits',
-                'IsDefault' => false
-            ],
-            [
-                'LineName' => 'Branch Expansion Costs',
-                'Description' => 'Capital expenditure for opening new branches or ATMs',
-                'IsDefault' => false
-            ],
+            ['Loan Interest Income', 'Money earned by the bank from charging interest on loans.', true],
+            ['Fee Income', 'Income from service fees like ATM use, maintenance, etc.', false],
+            ['Operational Expenses', 'Costs to keep branches running (rent, salaries).', false],
+            ['Expected Loan Losses', 'Provisions for unpaid loans.', false],
+            ['Funding Costs', 'Costs paid on deposits or borrowed funds.', false],
+            ['IT Infrastructure Costs', 'Running digital systems, software, and security.', false],
+            ['Marketing Expenses', 'Promotions and outreach activities.', false],
+            ['Wealth Management Fees', 'Fees from managing customer investments.', false],
+            ['Regulatory Compliance Costs', 'Audit and reporting expenses.', false],
+            ['Branch Expansion Costs', 'Opening new branches or installing ATMs.', false],
         ];
 
-        foreach ($budgetLines as $line) {
+        foreach ($budgetLines as [$name, $desc, $isDefault]) {
             DB::table('t_BudgetLines')->insert([
-                'LineName' => $line['LineName'],
-                'Description' => $line['Description'],
-                'IsDefault' => $line['IsDefault'],
-                'CreatedBy' => $userIds[array_rand($userIds)], // Random user ID
-                'CreatedOn' => Carbon::now()->subDays(rand(1, 30)), // Random date within last 30 days
-                'ModifiedBy' => $userIds[array_rand($userIds)], // Random user ID
-                'ModifiedOn' => Carbon::now()->subDays(rand(0, 10)), // Recent modification
-                'DeletedBy' => null, // No soft deletes
-                'DeletedOn' => null, // No soft deletes
+                'LineName'              => $name,
+                'Description'           => $desc,
+                'IsDefault'             => $isDefault,
+                'BudgetLineCategoryID'  => $categoryIds[array_rand($categoryIds)], // Random category
+                'CreatedBy'             => $userIds[array_rand($userIds)],
+                'CreatedOn'             => Carbon::now()->subDays(rand(1, 30)),
+                'ModifiedBy'            => $userIds[array_rand($userIds)],
+                'ModifiedOn'            => Carbon::now()->subDays(rand(0, 10)),
+                'DeletedBy'             => null,
+                'DeletedOn'             => null,
             ]);
         }
     }

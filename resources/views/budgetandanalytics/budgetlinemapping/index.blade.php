@@ -19,10 +19,12 @@
    </div>
 <div class="card-header bg-secondary text-white">📄 Budget Lines List</div>
   <div class="card-body">
-    <table class="table table-bordered table-hover">
+    <p class="text-muted mb-2">Manage your budget lines and their associated GL accounts here. You can add, edit, or delete budget lines as needed.Each budget line can be linked to multiple CBS GL accounts. Ensure you map them correctly for accurate financial reporting.</p>
+    <table class="table table-bordered  table-hover">
       <thead class="table-light">
         <tr>
           <th>#</th>
+          <th>Budget Line Category</th>
           <th>Line Name</th>
           <th>Description</th>
           <th>CBS GLs Mapped</th>
@@ -34,13 +36,14 @@
         @foreach ($budgetLines as $item)
             <tr>
               <td>{{ $loop->index+1 }}.</td>
+              <td>{{ $item->category->CategoryName ?? 'N/A' }}</td>
               <td>
                 {{ $item->LineName }}
-                @if ($item->IsDefault)
+                {{-- @if ($item->IsDefault)
                   <span class="badge bg-success">Default</span>
-                @endif
+                @endif --}}
               </td>
-              <td>{{ $item->Description }}</td>
+              <td style="white-space: normal; break-word; max-width= 300px;">{{ $item->Description }}</td>
                 <td>
                 @foreach($item->glAccounts as $gl)
                   <small><div>- {{ $gl->Description }}</div></small>
@@ -78,6 +81,17 @@
                     @csrf
                     @method('POST')
                     <!-- 🧾 Budget Line Entry -->
+
+                    <div class="mb-3">
+                      <label class="form-label">Budget Category</label>
+                      <select class="form-select" name="BudgetLineCategoryID" required>
+                        <option selected disabled>-- Select Budget Category --</option>
+                        @foreach ($budgetCategories as $category)
+                            <option value="{{ $category->Id }}">{{ $category->CategoryName }}</option>
+                        @endforeach
+                      </select>
+                    </div>
+
                     <div class="mb-3">
                       <label class="form-label">Budget Line Name</label>
                       <input type="text" class="form-control" name="LineName" placeholder="e.g. Interest Income, Loan Fees" required>

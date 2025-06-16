@@ -18,6 +18,17 @@
       @csrf
       @method('POST')
       <!-- 🧾 Budget Line Entry -->
+
+      <div class="mb-3">
+        <label class="form-label">Budget Category</label>
+        <select class="form-select" name="BudgetLineCategoryID" required>
+          <option selected disabled>-- Select Budget Category --</option>
+          @foreach ($budgetCategories as $category)
+              <option value="{{ $category->Id }}">{{ $category->CategoryName }}</option>
+          @endforeach
+        </select>
+      </div>
+
       <div class="mb-3">
         <label class="form-label">Budget Line Name</label>
         <input type="text" class="form-control" name="LineName" placeholder="e.g. Interest Income, Loan Fees" required>
