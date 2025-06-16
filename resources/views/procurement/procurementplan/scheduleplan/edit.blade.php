@@ -4,7 +4,7 @@
 
     <div class="container mt-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h4>✏️ Edit Procurement Item Schedule</h4>
+            <h4>✏️ Procurement Item Schedule</h4>
             <a href="{{ route('Procurement-Plan-Schedule.index') }}" class="btn btn-sm btn-outline-secondary">
                 ← Back
             </a>
@@ -102,7 +102,7 @@
                 </div>
             </div>
 
-            <button type="submit" class="btn btn-primary">Update Schedule</button>
+            <button type="submit" class="btn btn-primary">Schedule</button>
         </form>
     </div>
 
