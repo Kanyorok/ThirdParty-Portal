@@ -57,7 +57,6 @@
                     const loadBtn = document.getElementById('load-items-btn');
                     const planSelect = document.getElementById('approved-plan-select');
                     const tbody = document.getElementById('items-table-body');
-
                     const baseUrl = @json(route('Procurement-Plan-Schedule.view', ['PlanId' => '__PLAN_ID__']));
 
                     loadBtn.addEventListener('click', function () {
@@ -67,8 +66,7 @@
                             return;
                         }
 
-                        document.getElementById('approved-plan-id-hidden').value = planId;
-
+            hiddenPlanId.value = planId;
                         tbody.innerHTML = `
                             <tr>
                                 <td colspan="7" class="text-center py-4">

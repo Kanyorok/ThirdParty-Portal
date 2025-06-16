@@ -24,7 +24,7 @@
           <th>Title</th>
           <th>Year</th>
           <th>Items</th>
-          <th>Estimated Cost (KES)</th>
+          <th>Estimated Total Cost (KES)</th>
           <th>Status</th>
           <th>Created By</th>
           <th>Created On</th>
@@ -52,12 +52,12 @@
               @else
                 N/A
               @endif
-            </td>
-              <td>
-                  <a href="{{ route('procurementplanmaintain.show', $plan->PlanID) }}"
-                     class="btn btn-sm btn-outline-primary">View To Add Items</a>
-                  <a href="{{ url('/planning/edit-draft/' . $plan->PlanID) }}" class="btn btn-sm btn-outline-success"
-                     hidden>Edit</a>
+            </td> 
+            <td>
+              <a href="{{ route('procurementplanmaintain.show', $plan->PlanID) }}" class="btn btn-sm btn-outline-primary">View To Add Items</a>
+               @if($plan->Status->value === 'Dr')
+                  <a href="{{ route('planning.editDraftItems', ['PlanID' => $plan->PlanID]) }}" class="btn btn-sm btn-outline-success">Edit</a>
+                @endif
             </td>
           </tr>
       @endforeach
