@@ -138,7 +138,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 301540, 'Name' => 'Deviations', 'Icon' => null, 'Description' => '', 'ParentID' => 301500, 'Route' => 'approvalinbox.index'],
             ['ModuleID' => 302000, 'Name' => 'Purchase Requisition', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 302100, 'Name' => 'Requisition List', 'Icon' => null, 'Description' => '', 'ParentID' => 302000, 'Route' => 'requisition.create'],
-            ['ModuleID' => 302200, 'Name' => 'Requisition Approval', 'Icon' => null, 'Description' => '', 'ParentID' => 302000, 'Route' => 'requisition.index'],
+//            ['ModuleID' => 302200, 'Name' => 'Requisition Approval', 'Icon' => null, 'Description' => '', 'ParentID' => 302000, 'Route' => 'requisition.index'],
             ['ModuleID' => 302300, 'Name' => 'Priority List', 'Icon' => null, 'Description' => '', 'ParentID' => 302000, 'Route' => 'requisitionItem.index'],
             ['ModuleID' => 303000, 'Name' => 'Suppliers', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 303100, 'Name' => 'Suppliers List', 'Icon' => null, 'Description' => '', 'ParentID' => 303000, 'Route' => 'suppliers.index'],
@@ -185,7 +185,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 307100, 'Name' => 'View Purchase Orders', 'Icon' => null, 'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.index'],
             ['ModuleID' => 307200, 'Name' => 'Create Purchase Orders', 'Icon' => null, 'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.create'],
             ['ModuleID' => 307300, 'Name' => 'Link RFQ to Purchase Order', 'Icon' => null, 'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.linkRFQ'],
-//            ['ModuleID' => 307400, 'Name' => 'Purchase Order Approval', 'Icon' => null,'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.approval'],
+    //            ['ModuleID' => 307400, 'Name' => 'Purchase Order Approval', 'Icon' => null,'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.approval'],
 
             ['ModuleID' => 308000, 'Name' => 'Good Receipt', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 308100, 'Name' => 'View Good Receipt', 'Icon' => null, 'Description' => '', 'ParentID' => 308000, 'Route' => 'procurementreceipts.index'],
