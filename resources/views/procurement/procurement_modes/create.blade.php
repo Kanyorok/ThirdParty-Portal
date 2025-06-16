@@ -2,7 +2,7 @@
 @section('title','Create New Procurement Mode')
 @section('content')
 <div class="container mt-4">
-    <h3 class="mb-4">Add Procurement Mode</h3>
+    <h3 class="mb-4">Add Procurement Method</h3>
 
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
@@ -23,7 +23,7 @@
         @csrf
 
         <div class="mb-3">
-            <label for="name" class="form-label">Mode Name</label>
+            <label for="name" class="form-label">Method Name</label>
             <input type="text" name="name" id="name" value="{{ old('name') }}" class="form-control" required>
         </div>
 
@@ -32,7 +32,7 @@
             <textarea name="description" id="description" class="form-control" rows="3">{{ old('description') }}</textarea>
         </div>
 
-        <button type="submit" class="btn btn-primary">Save Mode</button>
+        <button type="submit" class="btn btn-primary">Save Method</button>
         <a href="{{ route('procurement-modes.index') }}" class="btn btn-secondary">Back</a>
     </form>
 </div>

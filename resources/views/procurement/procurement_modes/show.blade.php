@@ -62,7 +62,7 @@
             </tbody>
         </table>
     @else
-        <p>No timelines defined for this mode yet.</p>
+        <p>No timelines defined for this method yet.</p>
     @endif
 </div>
 @endsection

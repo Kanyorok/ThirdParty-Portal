@@ -53,12 +53,12 @@
         </form>
 
 
-        <!--script-->
-        @push('scripts')
-            <script>
-                document.addEventListener('DOMContentLoaded', function () {
-                    const loadBtn = document.getElementById('load-items-btn');
-                    const planSelect = document.getElementById('approved-plan-select');
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const loadBtn = document.getElementById('load-items-btn');
+        const planSelect = document.getElementById('approved-plan-select');
+        const hiddenPlanId = document.getElementById('approved-plan-id-hidden');
 
                     const baseUrl = @json(route('Procurement-Plan-Schedule.view', ['PlanId' => '__PLAN_ID__']));
 
@@ -69,24 +69,51 @@
                             return;
                         }
 
-                        document.getElementById('approved-plan-id-hidden').value = planId;
+            hiddenPlanId.value = planId;
 
-                        fetch(`${baseUrl.replace('__PLAN_ID__', planId)}`)
-                            .then(response => response.json())
-                            .then(data => {
-                                const tbody = document.getElementById('items-table-body');
-                                tbody.innerHTML = '';
+            const fetchUrl = baseUrl.replace('__PLAN_ID__', planId);
 
-                                if (Array.isArray(data) && data.length > 0) {
-                                    data.forEach((line, index) => {
-                                        const row = `
+            fetch(fetchUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const tbody = document.getElementById('items-table-body');
+                    tbody.innerHTML = '';
+
+                    if (Array.isArray(data) && data.length > 0) {
+                        data.forEach((line, index) => {
+                            const mergedQty = parseInt(line.MergedQty) || 0;
+                            const scheduledQty = parseInt(line.ScheduleQTY) || 0;
+
+                            let statusLabel = '';
+                            let badgeClass = '';
+
+                            if (scheduledQty === 0) {
+                                statusLabel = 'Not Scheduled';
+                                badgeClass = 'bg-danger';
+                            } else if (scheduledQty < mergedQty) {
+                                statusLabel = 'Partially Scheduled';
+                                badgeClass = 'bg-warning text-dark';
+                            } else if (scheduledQty === mergedQty) {
+                                statusLabel = 'Fully Scheduled';
+                                badgeClass = 'bg-success';
+                            } else {
+                                statusLabel = 'Overscheduled';
+                                badgeClass = 'bg-secondary';
+                            }
+
+                            const row = `
                                 <tr>
                                     <td>${index + 1}</td>
                                     <td>${line.item_name}</td>
-                                    <td>${line.MergedQty}</td>
-                                    <td>${line.ScheduleQTY ?? '-'}</td>
+                                    <td>${mergedQty}</td>
+                                    <td>${scheduledQty > 0 ? scheduledQty : '-'}</td>
                                     <td>${line.ScheduleType ?? '-'}</td>
-                                    <td>${line.Status ?? 'Not Scheduled'}</td>
+                                    <td><span class="badge ${badgeClass}">${statusLabel}</span></td>
                                     <td>
                                         <a href="/procurement/Procurement-Plan-Schedule/create/${line.LineItemID}?plan_id=${planId}" class="btn btn-sm btn-primary">Schedule</a> |
                                         <a href="/procurement/Procurement-Plan-Schedule/edit/${line.LineItemID}?plan_id=${planId}" class="btn btn-sm btn-warning">Edit</a> |
@@ -94,19 +121,18 @@
                                     </td>
                                 </tr>
                             `;
-                                        tbody.insertAdjacentHTML('beforeend', row);
-                                    });
-                                } else {
-                                    nWarning('No lines created for the selected plan.');
-                                }
-                            })
-                            .catch(error => {
-                                console.error('Error loading items:', error);
-                                nError('An error occurred while loading items.');
-                            });
-                    });
+                            tbody.insertAdjacentHTML('beforeend', row);
+                        });
+                    } else {
+                        alert('No lines created for the selected plan.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading items:', error);
+                    alert('An error occurred while loading items.');
                 });
-            </script>
-    @endpush
-
+        });
+    });
+</script>
+@endpush
 @endsection
