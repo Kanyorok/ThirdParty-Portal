@@ -38,7 +38,7 @@ class StockItemService
                         'ModifiedOn' => now(),
                     ]);
 
-                    $skuCode = $this->generateSKUCode($stockItem->Id, $data['Branch'], $data['Store'] ?? null);
+                    $skuCode = $this->generateSKUCode($stockItem->Id, $data['Branch'], $data['Store'] ?? '00');
                     $stockItem->update(['SKUCode' => $skuCode]);
 
                     // Log activity

@@ -3,6 +3,7 @@
 namespace App\Models\Core;
 
 use App\Models\Auth\User;
+use App\Models\Inventory\Store;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -40,5 +41,11 @@ class Branch extends Model
     public function operation(): BelongsTo
     {
         return $this->belongsTo(User::class, 'ManagerId', 'Id')->withTrashed();
+    }
+
+    
+    public function store()
+    {
+        return $this->hasMany(Store::class, 'BranchID', 'Id');
     }
 }

@@ -4,6 +4,7 @@
 <div class="container mt-4">
   <h4 class="fw-bold mb-3">📋 Stock Take Records</h4>
   <a href="{{ route('stocktake.create') }}" class="btn btn-success">➕ Add New Stock Take</a>
+  @if($stocks->count())
   <table class="table table-bordered table-striped align-middle">
     <thead class="table-light">
       <tr>
@@ -19,34 +20,32 @@
       </tr>
     </thead>
     <tbody>
+      @foreach($stocks as $stock)
       <tr>
-        <td>1</td>
-        <td>Branch A</td>
-        <td>Main Store</td>
-        <td>Moses K.</td>
-        <td>2025-05-02</td>
+        <td>{{$loop->iteration}}</td>
+        <td>{{$stock->BranchId}}</td>
+        <td>{{$stock->StoreId}}</td>
+        <td>{{$stock->CountedBy}}</td>
+        <td>{{$stock->CountDate}}</td>
         <td><span class="badge bg-warning text-dark">Pending</span></td>
-        <td>–</td>
-        <td>–</td>
+        <td>{{$stock->CreatedBy}}</td>
+        <td>{{$stock->CreatedOn}}</td>
         <td>
-          <button class="btn btn-sm btn-outline-primary">👁 View</button>
+          <a href="{{ route('stocktake.show', $stock->Id) }}" class="btn btn-sm btn-info">👁 View</a>
           <button class="btn btn-sm btn-outline-success">📌 Post</button>
+          <a href="{{ route('stocktake.edit', $stock->Id) }}" class="btn btn-sm btn-warning">Edit</a>
+          <form action="{{ route('stocktake.destroy', $stock->Id) }}" method="POST" class="d-inline">
+              @csrf
+              @method('DELETE')
+              <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this type?');">Delete</button>
+          </form>
         </td>
       </tr>
-      <tr>
-        <td>2</td>
-        <td>Branch B</td>
-        <td>Back Store</td>
-        <td>Jane M.</td>
-        <td>2025-04-30</td>
-        <td><span class="badge bg-success">Posted</span></td>
-        <td>Admin</td>
-        <td>2025-04-30 11:42 AM</td>
-        <td>
-          <button class="btn btn-sm btn-outline-primary">👁 View</button>
-        </td>
-      </tr>
+      @endforeach
     </tbody>
   </table>
+  @else
+<p>No property stock registered yet.</p>
+@endif
 </div>
 @endsection
