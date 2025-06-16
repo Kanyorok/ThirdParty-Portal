@@ -5,11 +5,13 @@ namespace App\Models\DMS;
 use App\Enums\Core\ExtensionsEnum;
 use App\Exceptions\ErroredException;
 use App\Models\Core\CategoryMaster;
+use App\Models\Core\SpecialPermission;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Document extends Model
@@ -50,6 +52,11 @@ class Document extends Model
     public function repository(): BelongsTo
     {
         return $this->belongsTo(Repository::class, 'RepositoryId', 'Id');
+    }
+
+    public function permissions(): MorphMany
+    {
+        return $this->morphMany(SpecialPermission::class, 'party', "Party", "PartyID", 'Id');
     }
 
     public function current(): HasOne

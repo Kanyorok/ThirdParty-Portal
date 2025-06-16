@@ -2,6 +2,7 @@
 
 namespace App\Models\DMS;
 
+use App\Enums\DMS\DisksEnum;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -19,13 +20,15 @@ class DocumentVersion extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'DocumentId', "Name", "Version", "Path", "Disk", "Checksum", "Size", "Description",
+        'DocumentId', "Name", "Version", "Path", "Disk", "Checksum", "Size", "Description", "Blob",
         'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
 
     protected $casts = [
         'Size' => 'integer',
+        'Disk' => DisksEnum::class,
     ];
+
 
     public static function getPrimaryKey(): string
     {
