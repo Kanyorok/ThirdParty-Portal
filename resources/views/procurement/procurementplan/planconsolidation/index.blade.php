@@ -14,7 +14,7 @@
 
     <div class="card shadow-sm mb-4">
         <div class="card-body">
-            <form id="filterForm" method="GET" action="{{ route('procurement-plans.index') }}"> {{-- Explicit GET and action --}}
+            <form id="filterForm" method="GET" action="{{ route('procurement-plans.index') }}">
                 <div class="row g-3">
                     <div class="col-md-3">
                         <label for="yearFilter" class="form-label">Year</label>

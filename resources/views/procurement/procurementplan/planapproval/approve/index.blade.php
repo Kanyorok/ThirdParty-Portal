@@ -75,7 +75,7 @@
                                 <td>{{ $item->EstimatedUnitCost ?? 'N/A' }}</td>
                                 <td>{{ $item->MergedQty && $item->EstimatedUnitCost ? number_format($item->MergedQty * $item->EstimatedUnitCost, 2) : 'N/A' }}</td>
                                 <td>{{ $item->budgetLine->Description ?? 'N/A' }}</td>
-                                <td>{{ $item->ProcurementMethod ?? 'N/A' }}</td>
+                                <td>{{ $item->procurementMode->Name ?? 'N/A' }}</td>
                                 <td>{{ $item->SchedulePeriod ?? 'N/A' }}</td>
                             </tr>
                         @endforeach
@@ -106,7 +106,7 @@
                             <option value="">-- Choose Action --</option>
                             <option value="APPROVED">✅ Approve</option>
                             <option value="REJECTED">❌ Reject</option>
-                            <option value="COMMENTED">📝 Comment</option>
+                            <option value="RETURNED">↩️ Return</option>
                         </select>
                     </div>
 

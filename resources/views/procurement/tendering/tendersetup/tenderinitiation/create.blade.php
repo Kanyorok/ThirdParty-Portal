@@ -237,19 +237,19 @@
     </form>
 
 </div>
-
-<!-- Script Section -->
+ 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const open = document.getElementById('openTender');
-        const restricted = document.getElementById('restrictedTender');
-        const section = document.getElementById('restrictedSuppliersSection');
+document.addEventListener('DOMContentLoaded', function () {
+    // Toggle supplier section based on tender type
+    const open = document.getElementById('openTender');
+    const restricted = document.getElementById('restrictedTender');
+    const section = document.getElementById('restrictedSuppliersSection');
 
-        open.addEventListener('change', () => section.style.display = 'none');
-        restricted.addEventListener('change', () => section.style.display = 'block');
-    });
+    open.addEventListener('change', () => section.style.display = 'none');
+    restricted.addEventListener('change', () => section.style.display = 'block');
+});
 
-    let manualItemIndex = 1;
+let manualItemIndex = 1;
 
     function addManualItemRow() {
         const tableBody = document.getElementById('manualItemsBody');
@@ -282,71 +282,85 @@
         manualItemIndex++;
     }
 
+// ----- Procurement Plan Section -----
+const procurementPlans = @json($procurementPlansOutput);
+const planItemData = @json($planItemData);
 
-    const procurementPlans = @json($procurementPlansOutput);
-    const planItemData = @json($planItemData);
-    const addedPlanItems = new Set();
+// Track added items by string ID
+const addedPlanItems = new Set();
 
-    function loadPlanItemsForPlan() {
-        const planId = document.getElementById('selectedProcurementPlan').value;
-        const select = document.getElementById('planItemSelect');
-        select.innerHTML = `<option selected disabled>-- Select Item --</option>`;
+function loadPlanItemsForPlan() {
+    const planId = document.getElementById('selectedProcurementPlan').value;
+    const select = document.getElementById('planItemSelect');
+    select.innerHTML = `<option selected disabled>-- Select Item --</option>`;
 
-        console.log(procurementPlans);
+    if (procurementPlans[planId]) {
+        procurementPlans[planId].forEach(item => {
+            const opt = document.createElement('option');
+            opt.value = item.itemId;
+            opt.textContent = `${item.name} (${item.plannedQty})`;
+            select.appendChild(opt);
+        });
+    }
+}
 
-        if (procurementPlans[planId]) {
-            procurementPlans[planId].forEach(item => {
-                const opt = document.createElement('option');
-                opt.value = item.id;
-                opt.textContent = `${item.name} (${item.plannedQty})`;
-                select.appendChild(opt);
-            });
-        }
+function addPlanItemToGrid() {
+    const planId = document.getElementById('selectedProcurementPlan').value;
+    const select = document.getElementById('planItemSelect');
+    const itemId = select.value;
+    const tbody = document.querySelector('#planItemsGrid tbody');
+
+    if (!planId || !itemId) {
+        alert('Please select both a plan and an item.');
+        return;
     }
 
-    function addPlanItemToGrid() {
-        const select = document.getElementById('planItemSelect');
-        console.log(select);
+    const uniqueKey = `${planId}-${itemId}`;
 
-        const itemId = select.value;
-        const item = planItemData[itemId];
-        const tbody = document.querySelector('#planItemsGrid tbody');
-
-        if (!itemId || addedPlanItems.has(itemId)) {
-            alert('Item already added or not selected');
-            return;
-        }
-
-        const row = `
-            <tr data-id="${itemId}">
-                <td>${item.name}</td>
-                <td>${item.plannedQty}</td>
-                <td>
-                    <input type="hidden" name="plan_items[${itemId}][item_id]" value="${itemId}">
-                    <input type="number" class="form-control" name="plan_items[${itemId}][qty]" value="${item.plannedQty}" min="1" max="${item.plannedQty}">
-                </td>
-                <td>
-                    <input type="file" class="form-control" name="plan_items[${itemId}][file]">
-                </td>
-                <td>
-                    <input type="text" class="form-control" name="plan_items[${itemId}][pr_ref]" placeholder="PR/2025/XXX">
-                </td>
-                <td>
-                    <button type="button" class="btn btn-sm btn-danger" onclick="removePlanItemFromGrid(${itemId})">🗑</button>
-                </td>
-            </tr>
-        `;
-
-        tbody.insertAdjacentHTML('beforeend', row);
-        addedPlanItems.add(itemId);
-        select.selectedIndex = 0;
+    if (addedPlanItems.has(uniqueKey)) {
+        alert('Item already added for this plan.');
+        return;
     }
 
-    function removePlanItemFromGrid(itemId) {
-        const row = document.querySelector(`#planItemsGrid tr[data-id="${itemId}"]`);
-        if (row) row.remove();
-        addedPlanItems.delete(itemId.toString());
+    const itemList = planItemData[planId] || [];
+    const item = itemList.find(obj => obj.itemId == itemId);
+
+    if (!item) {
+        alert('Item not found in plan data.');
+        return;
     }
+
+    const row = `
+        <tr data-id="${uniqueKey}">
+            <td>${item.name}</td>
+            <td>${item.plannedQty}</td>
+            <td>
+                <input type="hidden" name="plan_items[${uniqueKey}][item_id]" value="${itemId}">
+                <input type="number" class="form-control" name="plan_items[${uniqueKey}][qty]" value="${item.plannedQty}" min="1" max="${item.plannedQty}">
+            </td>
+            <td>
+                <input type="file" class="form-control" name="plan_items[${uniqueKey}][file]">
+            </td>
+            <td>
+                <input type="text" class="form-control" name="plan_items[${uniqueKey}][pr_ref]" placeholder="PR/2025/XXX">
+            </td>
+            <td>
+                <button type="button" class="btn btn-sm btn-danger" onclick="removePlanItemFromGrid('${uniqueKey}')">🗑</button>
+            </td>
+        </tr>
+    `;
+
+    tbody.insertAdjacentHTML('beforeend', row);
+    addedPlanItems.add(uniqueKey);
+    select.selectedIndex = 0;
+}
+
+
+function removePlanItemFromGrid(uniqueKey) {
+    const row = document.querySelector(`#planItemsGrid tr[data-id="${uniqueKey}"]`);
+    if (row) row.remove();
+    addedPlanItems.delete(uniqueKey);
+}
 </script>
 
 <script>
@@ -445,5 +459,6 @@
         });
     });
 </script>
+
 
 @endsection
