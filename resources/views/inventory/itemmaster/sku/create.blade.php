@@ -96,7 +96,7 @@
 
                         <div class="col-md-6">
                             <label for="Store" class="form-label">Store</label>
-                            <select name="Store" id="Store" class="form-select" required>
+                            <select name="Store" id="Store" class="form-select">
                                 <option value="">-- Select Store --</option>
                                 {{-- Stores will be loaded dynamically --}}
                             </select>
@@ -230,7 +230,7 @@
                 const subcategoryId = this.value;
                 itemSelect.innerHTML = '<option value="">-- Select Item --</option>';
                 if (subcategoryId) {
-                    fetch(`/inventory/get-items?subcategory_id=${subcategoryId}`)
+                    fetch(`/inventory/info/get-items?subcategory_id=${subcategoryId}`)
                         .then(response => response.json())
                         .then(data => {
                             if (data.length > 0) {
