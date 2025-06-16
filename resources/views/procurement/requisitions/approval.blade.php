@@ -3,7 +3,7 @@
 @section('content')
     <div class="container">
         <div class="card">
-            <div class="card-header bg-primary text-white">
+            <div class="card-header bg-info text-white">
                 <h3>Requisition Approval</h3>
             </div>
 
@@ -13,7 +13,7 @@
                     <div class="col-md-6">
                         <h5>Requisition Information</h5>
                         <p><strong>Requisition Number:</strong> {{ $requisitionInfo->RequisitionNo ?? 'N/A' }}</p>
-                        <p><strong>Date:</strong> {{ isset($requisitionInfo->CreatedOn) ? \Carbon\Carbon::parse($requisitionInfo->CreatedOn)->format('Y-m-d') : '' }}</p>
+                        <p><strong>Date:</strong> {{ isset($requisitionInfo->CreatedOn) ? \Carbon\Carbon::parse($requisitionInfo->CreatedOn)->format('d/m/Y') : '' }}</p>
                         <p><strong>Branch:</strong> {{ $requisitionInfo->BranchID ?? 'N/A' }}</p>
                         <p><strong>Department:</strong> {{ $requisitionInfo->DepartmentID ?? 'N/A' }}</p>
                     </div>
@@ -35,8 +35,9 @@
                             <th>#</th>
                             <th>Item Type</th>
                             <th>Item Name</th>
-                            <th>Quantity</th>
                             <th>UOM</th>
+                            <th>Quantity</th>
+                            <th>Pricing</th>
                             <th>Urgency</th>
                         </tr>
                         </thead>
@@ -46,11 +47,20 @@
                                 <td>{{ $index + 1 }}</td>
                                 <td>{{ $item->Type ?? 'N/A' }}</td>
                                 <td>{{ $item->ItemName ?? 'N/A' }}</td>
-                                <td>{{ $item->Quantity }}</td>
                                 <td>{{ $item->UOM }}</td>
+                                <td>{{ $item->Quantity }}</td>
+                                <td>{{ $item->ExpectedPrice }}</td>
                                 <td>{{ ucfirst($item->Urgency) }}</td>
                             </tr>
                         @endforeach
+                        <tr>
+                            <td colspan="5">
+                              <b>  Total Amount</b>
+                            </td>
+                            <td colspan="2" style="text-align: right;">
+                                <b>{{ $requisitionInfo->ExpectedPrice ?? 'N/A' }}</b>
+                            </td>
+                        </tr>
                         </tbody>
                     </table>
                 </div>
@@ -71,8 +81,14 @@
                         <div class="col-md-12">
                             <form action="{{ route('requisition.approve', $requisitionInfo->Id) }}" method="POST" class="d-inline">
                                 @csrf
+{{--                                <input type="text" name="action" value="approve">--}}
+{{--                                @csrf--}}
+
+                                <input type="hidden" name="document_type" value="purchase_requisition">
+                                <input type="hidden" name="order_total" value="{{ $requisitionInfo->ExpectedPrice ?? 'N/A' }}">
+                                <input type="hidden" name="order_id" value="{{$requisitionInfo->Id}}">
                                 <input type="hidden" name="action" value="approve">
-                                <button type="submit" class="btn btn-success btn-lg">
+                               <button type="submit" class="btn btn-success btn-lg">
                                     <i class="fas fa-check"></i> Approve
                                 </button>
                             </form>

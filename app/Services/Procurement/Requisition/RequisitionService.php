@@ -114,11 +114,12 @@ class RequisitionService {
     public static function getRelatedRequisition($RequisitionId)
     {
         return DB::table(DB::raw('t_Requisitions WITH (NOLOCK)'))
-            ->leftJoin(DB::raw('t_RequisitionLines WITH (NOLOCK)'), 't_Requisitions.id', '=', 't_RequisitionLines.RequisitionId')
+            ->leftJoin(DB::raw('t_RequisitionLines WITH (NOLOCK)'), 't_Requisitions.Id', '=', 't_RequisitionLines.RequisitionId')
             ->leftJoin(DB::raw('t_CodeDetails WITH (NOLOCK)'), 't_Requisitions.StatusID', '=', 't_CodeDetails.ID')
             ->leftJoin(DB::raw('t_Branches WITH (NOLOCK)'), 't_Requisitions.BranchID', '=', 't_Branches.Id')
             ->leftJoin(DB::raw('t_Departments WITH (NOLOCK)'), 't_Requisitions.DepartmentID', '=', 't_Departments.Id')
             ->leftJoin(DB::raw('t_ConsolidatedProcurementPlan WITH (NOLOCK)'), 't_Requisitions.PlanRef', '=', 't_ConsolidatedProcurementPlan.PlanID')
+            ->leftJoin(DB::raw('t_Users WITH (NOLOCK)'), 't_Requisitions.CreatedBy', '=', 't_Users.Id')
             ->where('t_Requisitions.Id', $RequisitionId)
             ->select([
                 't_Requisitions.RequisitionNo',
@@ -127,7 +128,7 @@ class RequisitionService {
                 't_Requisitions.Remarks',
                 DB::raw('t_CodeDetails.Description AS Status'),
                 't_Requisitions.CreatedOn',
-                't_Requisitions.CreatedBy',
+                DB::raw('isnull(t_Users.Name, t_Requisitions.CreatedBy) AS CreatedBy'),
                 't_Requisitions.Id',
                 DB::raw('SUM(ISNULL(t_RequisitionLines.ExpectedPrice, 0)) AS ExpectedPrice'),
                 DB::raw('COUNT(t_RequisitionLines.Id) AS itemcount'),
@@ -146,8 +147,10 @@ class RequisitionService {
                 't_ConsolidatedProcurementPlan.Title',
                 't_ConsolidatedProcurementPlan.ReferenceNumber',
                 't_Requisitions.CreatedBy',
+                't_Users.Name'
             )
             ->first();
+
 
     }
 

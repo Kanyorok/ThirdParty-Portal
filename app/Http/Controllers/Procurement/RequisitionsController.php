@@ -165,7 +165,7 @@ class RequisitionsController extends Controller
 
     public function approve(ApproveRequisitionRequest $requisitionRequest, $id)
     {
-
+//        dd($requisitionRequest->validated()); // if using validation
         return $this->documentApprovalService->approve($requisitionRequest, $id);
     }
 
