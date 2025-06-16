@@ -113,7 +113,7 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::delete('stocktake/delete/{Id}', [StockTakeController::class,'destroy'])->name('stocktake.destroy');
     Route::get('stocktake/edit/{Id}',[StockTakeController::class,'edit'])->name('stocktake.edit');
     Route::put('stocktake/edit/{Id}',[StockTakeController::class,'update'])->name('stocktake.update');
-    Route::get('/stocktake/branches/{branchId}', [StockTakeController::class, 'getStoreByBranch'])->name('getstore');
+    Route::get('/stocktake/branches/{storeId}', [StockTakeController::class, 'getStoreByBranch'])->name('getstores');
     
     
 
