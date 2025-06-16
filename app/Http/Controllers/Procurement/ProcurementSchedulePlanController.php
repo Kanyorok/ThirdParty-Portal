@@ -2,21 +2,25 @@
 
 namespace App\Http\Controllers\Procurement;
 
-use App\Enums\Core\PostingEnum;
 use App\Enums\Procurement\SchedulePlanEnum;
 use App\Enums\ProcurementPlanStatusEnum;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Procurement\ProcurementPlan\SchedulePlanRequest;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\PlanLineItems;
 use App\Services\Procurement\ProcurementPlan\SchedulePlanService;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class ProcurementSchedulePlanController extends Controller
 {
+    protected $schedulePlanService;
+
+    public function __construct(SchedulePlanService $schedulePlanService)
+    {
+        $this->schedulePlanService = $schedulePlanService;
+    }
+
     public function index()
     {
         $draftedplans = ConsolidatedProcurementPlan::where('Status', ProcurementPlanStatusEnum::Draft)->get();
@@ -33,17 +37,26 @@ class ProcurementSchedulePlanController extends Controller
     public function fetchLinesByDPlan($planId)
     {
         try {
-            $Lines = PlanLineItems::with(['item', 'schedulePlan.periods']) // Include periods
-            ->where('PlanID', $planId)->get();
+            $Lines = PlanLineItems::with(['item', 'schedulePlan.periods'])
+                ->where('PlanID', $planId)->get();
 
             $mappedLines = $Lines->map(function ($lineItem) {
                 $statusEnum = $lineItem->schedulePlan?->Status ?? SchedulePlanEnum::NotScheduled;
+
+                $rawType = $lineItem->schedulePlan?->ScheduleType;
+                $displayType = '-';
+                if ($rawType === 'month') {
+                    $displayType = 'Monthly';
+                } elseif ($rawType === 'quarter') {
+                    $displayType = 'Quarterly';
+                }
 
                 return [
                     'LineItemID' => $lineItem->LineItemID,
                     'item_name' => $lineItem->item?->ItemName,
                     'MergedQty' => $lineItem->MergedQty,
                     'ScheduleQTY' => $lineItem->schedulePlan?->ScheduleQTY,
+                    'ScheduleType' => $displayType,
                     'Status' => $statusEnum->label(),
                     'Periods' => $lineItem->schedulePlan?->periods ?? [],
                 ];
@@ -52,76 +65,67 @@ class ProcurementSchedulePlanController extends Controller
             return response()->json($mappedLines);
         } catch (Throwable $e) {
             Log::error('Error in fetchLinesByDPlan: ' . $e->getMessage());
-            return $this->errored('error occurred, try again later.');
+            return response()->json(['error' => 'An error occurred'], 500);
         }
     }
 
-
-    public function store(SchedulePlanRequest $request, SchedulePlanService $schedulePlanService)
+    public function store(Request $request)
     {
         $actor = $request->user();
-        $consolidatedPlan = $request->getPlan();
+        $plan = ConsolidatedProcurementPlan::findOrFail($request->input('pending_plan_id'));
+        $lineItemIds = $request->input('lineItemIds', []);
 
-        $lineItemIds = $request->input('lineItemIds');
+        foreach ($lineItemIds as $lineItemId) {
+            $lineItem = PlanLineItems::find($lineItemId);
+            if (!$lineItem) continue;
 
-        foreach ($consolidatedPlan->lineItems as $planLineItem) {
-            $lineItemId = $planLineItem->LineItemID;
-            $mode = $request->input("mode_$lineItemId");
+            $mode = $request->input("mode_{$lineItemId}");
+            if (empty($mode)) continue;
 
             $totalQty = 0;
             $periods = [];
 
             if ($mode === 'quarter') {
-                $q1 = $request->getQuarterOne($lineItemId);
-                $q2 = $request->getQuarterTwo($lineItemId);
-                $q3 = $request->getQuarterThree($lineItemId);
-                $q4 = $request->getQuarterFour($lineItemId);
-                $periods = [
-                    'Q1' => $q1,
-                    'Q2' => $q2,
-                    'Q3' => $q3,
-                    'Q4' => $q4,
-                ];
-                $totalQty = (int)bcadd($q1, bcadd($q2, bcadd($q3, $q4)));
+                for ($q = 1; $q <= 4; $q++) {
+                    $qty = (int)$request->input("q{$q}_{$lineItemId}", 0);
+                    if ($qty > 0) {
+                        $periods["Q{$q}"] = $qty;
+                        $totalQty += $qty;
+                    }
+                }
             } elseif ($mode === 'month') {
-                $months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-                foreach ($months as $month) {
-                    $inputKey = strtolower($month) . "_$lineItemId";
-                    $qty = (int)$request->input($inputKey, 0);
-                    $periods[$month] = $qty;
-                    $totalQty += $qty;
+                for ($m = 1; $m <= 12; $m++) {
+                    $qty = (int)$request->input("month{$m}_{$lineItemId}", 0);
+                    if ($qty > 0) {
+                        $periods["M{$m}"] = $qty;
+                        $totalQty += $qty;
+                    }
                 }
             }
 
-            $mergedQty = $planLineItem->MergedQty ?? 0;
-
+            $mergedQty = $lineItem->MergedQty ?? 0;
             if ($totalQty > $mergedQty) {
                 return redirect()->back()
-                    ->withErrors([
-                        "The scheduled quantity for item '{$planLineItem->item->ItemName}' exceeds the available quantity of {$mergedQty}."
-                    ])
+                    ->withErrors(["Schedule for '{$lineItem->item->ItemName}' failed: Total ({$totalQty}) exceeds available ({$mergedQty})."])
                     ->withInput();
             }
 
-
-            if ($totalQty === 0) {
+            if ($totalQty == 0) {
                 $status = SchedulePlanEnum::NotScheduled;
             } elseif ($totalQty < $mergedQty) {
                 $status = SchedulePlanEnum::PartiallyScheduled;
-            } elseif ($totalQty === $mergedQty) {
-                $status = SchedulePlanEnum::FullyScheduled;
             } else {
-                $status = SchedulePlanEnum::PartiallyScheduled; // fallback
+                $status = SchedulePlanEnum::FullyScheduled;
             }
 
-            $data = [
+            $dataForService = [
                 'ScheduleQTY' => $totalQty,
+                'ScheduleType' => $mode,
                 'Status' => $status,
                 'periods' => $periods,
-                'mode' => $mode
             ];
 
-            $schedulePlanService->create($data, $actor, $consolidatedPlan, $planLineItem);
+            $this->schedulePlanService->create($dataForService, $actor, $plan, $lineItem);
         }
 
         return redirect()->route('Procurement-Plan-Schedule.index')
@@ -136,6 +140,4 @@ class ProcurementSchedulePlanController extends Controller
 
         return view('procurement.procurementplan.scheduleplan.edit', compact('plan', 'lineItem'));
     }
-
-
 }

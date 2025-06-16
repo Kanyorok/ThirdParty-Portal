@@ -42,12 +42,10 @@ class ProcurementPeriodController extends Controller
         $validated['CreatedBy'] = Auth::id();
         $validated['ModifiedBy'] = Auth::id();
         // Generate UniqueCode
-        $prefix = 'PP'; // Prefix for Procurement Periods
+        $prefix = 'PP';
         $lastPeriod = ProcurementPeriod::where('ProcurementPeriodNumber', 'like', "$prefix%")->orderBy('id', 'desc')->first();
-        // Determine the next sequential number
         $lastCode = $lastPeriod ? intval(substr($lastPeriod->ProcurementPeriodNumber, strlen($prefix))) : 0;
         $nextCode = str_pad($lastCode + 1, 3, '0', STR_PAD_LEFT);
-        // Assign the generated UniqueCode
         $validated['ProcurementPeriodNumber'] = $prefix . $nextCode;
 
         ProcurementPeriod::create($validated);

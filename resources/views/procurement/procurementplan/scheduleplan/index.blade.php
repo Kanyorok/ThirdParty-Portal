@@ -4,10 +4,11 @@
     <div class="container mt-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h4>📋 Procurement Plan Scheduling Summary</h4>
-            <a href="/" class="btn btn-sm btn-outline-secondary">← Back to Plan</a>
+            <a href="{{ route('Procurement-Plan-Schedule.index') }}" class="btn btn-sm btn-outline-secondary">
+                ← Back to Plan
+            </a>
         </div>
 
-        <!-- Plan Selection -->
         <div class="card shadow-sm mb-4">
             <div class="card-body">
                 <div class="row g-3 align-items-end">
@@ -31,7 +32,6 @@
 
         <form method="POST" action="{{ route('procurement-set-method.store') }}">
             @csrf
-
             <input type="hidden" name="approved_plan_id" id="approved-plan-id-hidden">
             <div class="table-responsive">
                 <table class="table table-bordered align-middle table-striped">
@@ -46,93 +46,80 @@
                         <th>Action</th>
                     </tr>
                     </thead>
-                    <tbody id="items-table-body">
-                    </tbody>
+                    <tbody id="items-table-body"></tbody>
                 </table>
             </div>
         </form>
 
-
-@push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const loadBtn = document.getElementById('load-items-btn');
-        const planSelect = document.getElementById('approved-plan-select');
-        const hiddenPlanId = document.getElementById('approved-plan-id-hidden');
-
+        @push('scripts')
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    const loadBtn = document.getElementById('load-items-btn');
+                    const planSelect = document.getElementById('approved-plan-select');
+                    const tbody = document.getElementById('items-table-body');
                     const baseUrl = @json(route('Procurement-Plan-Schedule.view', ['PlanId' => '__PLAN_ID__']));
 
                     loadBtn.addEventListener('click', function () {
                         const planId = planSelect.value;
-                        if (!planId) {
+                        if (!planId || planId === '-- Choose Plan --') {
                             alert('Please select a plan.');
                             return;
                         }
 
             hiddenPlanId.value = planId;
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="7" class="text-center py-4">
+                                    <div class="d-flex justify-content-center align-items-center">
+                                        <div class="spinner-border text-primary me-2" role="status">
+                                            <span class="visually-hidden">Loading Items...</span>
+                                        </div>
+                                        <strong>Loading Items...</strong>
+                                    </div>
+                                </td>
+                            </tr>`;
 
-            const fetchUrl = baseUrl.replace('__PLAN_ID__', planId);
+                        fetch(`${baseUrl.replace('__PLAN_ID__', planId)}`)
+                            .then(response => {
+                                if (!response.ok) {
+                                    throw new Error('Network response was not ok');
+                                }
+                                return response.json();
+                            })
+                            .then(data => {
+                                tbody.innerHTML = ''; // Clear the spinner
 
-            fetch(fetchUrl)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    const tbody = document.getElementById('items-table-body');
-                    tbody.innerHTML = '';
+                                if (Array.isArray(data) && data.length > 0) {
+                                    data.forEach((line, index) => {
+                                        const isScheduled = line.Status && line.Status !== 'Not Scheduled';
 
-                    if (Array.isArray(data) && data.length > 0) {
-                        data.forEach((line, index) => {
-                            const mergedQty = parseInt(line.MergedQty) || 0;
-                            const scheduledQty = parseInt(line.ScheduleQTY) || 0;
-
-                            let statusLabel = '';
-                            let badgeClass = '';
-
-                            if (scheduledQty === 0) {
-                                statusLabel = 'Not Scheduled';
-                                badgeClass = 'bg-danger';
-                            } else if (scheduledQty < mergedQty) {
-                                statusLabel = 'Partially Scheduled';
-                                badgeClass = 'bg-warning text-dark';
-                            } else if (scheduledQty === mergedQty) {
-                                statusLabel = 'Fully Scheduled';
-                                badgeClass = 'bg-success';
-                            } else {
-                                statusLabel = 'Overscheduled';
-                                badgeClass = 'bg-secondary';
-                            }
-
-                            const row = `
-                                <tr>
-                                    <td>${index + 1}</td>
-                                    <td>${line.item_name}</td>
-                                    <td>${mergedQty}</td>
-                                    <td>${scheduledQty > 0 ? scheduledQty : '-'}</td>
-                                    <td>${line.ScheduleType ?? '-'}</td>
-                                    <td><span class="badge ${badgeClass}">${statusLabel}</span></td>
-                                    <td>
-                                        <a href="/procurement/Procurement-Plan-Schedule/create/${line.LineItemID}?plan_id=${planId}" class="btn btn-sm btn-primary">Schedule</a> |
-                                        <a href="/procurement/Procurement-Plan-Schedule/edit/${line.LineItemID}?plan_id=${planId}" class="btn btn-sm btn-warning">Edit</a> |
-                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.history.back();">Cancel</button>
-                                    </td>
-                                </tr>
-                            `;
-                            tbody.insertAdjacentHTML('beforeend', row);
-                        });
-                    } else {
-                        alert('No lines created for the selected plan.');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading items:', error);
-                    alert('An error occurred while loading items.');
+                                        const row = `
+                                        <tr>
+                                            <td>${index + 1}</td>
+                                            <td>${line.item_name}</td>
+                                            <td>${line.MergedQty}</td>
+                                            <td>${line.ScheduleQTY ?? '-'}</td>
+                                            <td>${line.ScheduleType ?? '-'}</td>
+                                            <td><span class="badge ${isScheduled ? 'bg-success' : 'bg-secondary'}">${line.Status ?? 'Not Scheduled'}</span></td>
+                                            <td>
+                                                <a href="/procurement/Procurement-Plan-Schedule/edit/${line.LineItemID}?plan_id=${planId}" class="btn btn-sm btn-primary">Schedule</a>
+                                            </td>
+                                        </tr>`;
+                                        tbody.insertAdjacentHTML('beforeend', row);
+                                    });
+                                } else {
+                                    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">No lines created for the selected plan.</td></tr>';
+                                    nWarning('No lines created for the selected plan.');
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error loading items:', error);
+                                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger py-4">Failed to load items.</td></tr>';
+                                nError('An error occurred while loading items.');
+                            });
+                    });
                 });
-        });
-    });
-</script>
-@endpush
+            </script>
+        @endpush
+    </div>
 @endsection
