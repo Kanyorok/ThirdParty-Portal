@@ -10,12 +10,12 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('t_CategoryMaster', function (Blueprint $table) {
+        Schema::create('t_CategoryMaster', static function (Blueprint $table) {
             $table->id('Id');
             $table->string('Name');
             $table->string('Description');
             $table->string('Type');
-            $table->integer('Code')->constrained('t_Modules', 'ModuleID');
+            $table->foreignId('Code')->constrained('t_Modules', 'ModuleID');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');

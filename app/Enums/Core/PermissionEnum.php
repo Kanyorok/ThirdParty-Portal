@@ -2,56 +2,10 @@
 
 namespace App\Enums\Core;
 
-use App\Models\Auth\Team;
-use App\Models\Auth\User;
-use App\Models\BR\Client;
-use App\Models\BR\DebtProduct;
-use App\Models\Communication\BulkNotification;
-use App\Models\Communication\Call;
-use App\Models\Communication\EmailConversation;
-use App\Models\Core\Branch;
-use App\Models\Core\CodeDetail;
-use App\Models\Core\Task;
-use App\Models\CRM\Campaign;
-use App\Models\CRM\Lead;
-use App\Models\CRM\MarketingList;
-use App\Models\CRM\MarketingPlanner;
-use App\Models\CRM\MeetingRoom;
-use App\Models\CRM\Review;
-use App\Models\CRM\Schedule;
-use App\Models\CRM\Social;
-use App\Models\CRM\Survey;
-use App\Models\CRM\Ticket;
-use App\Models\Procurement\DepartmentNeeds;
-use App\Models\Procurement\ProcurementMethod;
-use App\Models\HRM\Department;
-use App\Models\HRM\Employee;
-use App\Models\Procurement\Order;
-use App\Models\Procurement\RequisitionLine;
-use App\Models\Procurement\Requisitions;
-use App\Models\Procurement\RFQ;
-use App\Models\Settings\APICredential;
-use App\Models\ThirdParies\Board;
-use App\Models\ThirdParies\Competitor;
 use App\Traits\UsefulEnumTrait;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
-
-use App\Models\Inventory\ItemMasterList;
-use App\Models\Inventory\ItemCategories;
-use App\Models\Inventory\StockItem;
-use App\Models\Inventory\Store;
-use App\Models\Inventory\InventoryType;
-use App\Models\Inventory\ItemType;
-use App\Models\Inventory\UnitOfMeasure;
-use App\Models\Inventory\InterBranchRequisition;
-use App\Models\Inventory\PriceManagement;
-
-use App\Models\Procurement\ConsolidatedProcurementPlan;
-use App\Models\Procurement\PlanLineItems;
-use App\Models\Procurement\BidSubmission;
-use App\Models\Procurement\TenderInvitation;
-use App\Models\Procurement\VendorClarifications;
+use LogicException;
 
 enum PermissionEnum: string
 {
@@ -353,10 +307,6 @@ enum PermissionEnum: string
     case PropertyStructuralView = 'propertyblock-view';
 
 
-
-
-
-
     /*
      *
      * ========================================  Human Resource management  ========================================
@@ -367,16 +317,29 @@ enum PermissionEnum: string
     case EmployeesUpdate = 'employee-update';
     case EmployeesDelete = 'employee-delete';
 
+    /*
+    * ========================================  DMS  ========================================
+    */
+    case DocumentViewAll = 'document-viewAll';
+    case DocumentRead = 'document-read';
+    case DocumentWrite = 'document-create';
+    case DocumentUpdate = 'document-update';
+    case DocumentDelete = 'document-delete';
+    case DocumentDownload = 'document-download';
+    case DocumentUpload = 'document-upload';
+
+    case DocumentRepositoryCreate = 'document-RepositoryCreate';
+    case DocumentRepositoryUpdate = 'document-RepositoryUpdate';
+    case DocumentRepositoryDelete = 'document-RepositoryDelete';
 
     /*
- *
- * ========================================  Budget and Analytics  ========================================
- */
+    *
+    * ========================================  Budget and Analytics  ========================================
+    */
     case BudgetSetupView = 'budgetSetup-view';
     case BudgetSetupCreate = 'budgetSetup-create';
     case BudgetSetupUpdate = 'budgetSetup-update';
     case BudgetSetupDelete = 'budgetSetup-delete';
-
 
     public static function display(): Collection
     {
@@ -522,7 +485,7 @@ enum PermissionEnum: string
             self::PropertyTypeView, self::PropertyTypeCreate, self::PropertyTypeUpdate, self::PropertyTypeDelete,
             self::PropertyRegistryView, self::PropertyRegistryCreate, self::PropertyRegistryUpdate, self::PropertyRegistryDelete,
             self::PropertyStructuralView, self::PropertyStructuralCreate, self::PropertyStructuralUpdate, self::PropertyStructuralDelete, => ModulesEnum::Property,
-            default => throw new \LogicException("Unhandled PermissionEnum case: {$this->value}"),
+            default => throw new LogicException("Unhandled PermissionEnum case: {$this->value}"),
 
             ///////////////^*********** Budget and Analytics ******************/////////////////
             self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate, self::BudgetSetupDelete,
