@@ -24,7 +24,6 @@
                     <th>Item Name</th>
                     <th>Approved Qty</th>
                     <th>Dispatched Qty</th>
-                    <th>UOM</th>
                     <th>Remarks</th>
                 </tr>
             </thead>
@@ -35,7 +34,6 @@
                         <td>{{ $item->item->ItemName ?? 'N/A' }}</td>
                         <td>{{ $item->ApprovedQty ?? 'N/A' }}</td>
                         <td>{{ $item->DispatchedQty ?? 'N/A' }}</td>
-                        <td>{{ $item->uom->Code ?? 'N/A' }}</td>
                         <td>{{ $item->Remarks ?? '-' }}</td>
                     </tr>
                 @empty

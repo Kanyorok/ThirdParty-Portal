@@ -19,6 +19,8 @@ class TransactionTransferRequest extends FormRequest
 public function rules()
 {
     return [
+        
+        'RequisitionId'   => 'required|exists:t_InterBranchRequisition,Id',
         'TransferDate' => 'required|date',
         'TransferredBy' => 'required|string',
         'FromBranch' => 'required|exists:t_Branches,Id',
@@ -29,5 +31,7 @@ public function rules()
         'items.*.dispatched_qty' => 'required|integer|min:0', 
         'items.*.remarks' => 'nullable|string|max:255',
     ];
+  
 }
+
 }

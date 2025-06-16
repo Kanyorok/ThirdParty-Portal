@@ -27,9 +27,12 @@ class TransactionReceiptRequest extends FormRequest
         'ReceivedDate' => 'required|date',
         'GeneralRemarks' => 'required|string',
         'items' => 'required|array|min:1',
+        'items.*.item' => 'required|exists:t_Items,Id',   
+        'items.*.dispatched_qty' => 'nullable|numeric|min:0', 
+        'items.*.discrepancy' => 'nullable|numeric',   
         'items.*.received_qty' => 'required|numeric|min:0',
         'items.*.damaged_qty' => 'nullable|numeric|min:0',
-        'items.*.remarks' => 'nullable|string',
+     
     ];
 }
 

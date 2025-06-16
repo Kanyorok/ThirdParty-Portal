@@ -59,8 +59,13 @@ class TransactionTransferItem extends Model
     {
         return $this->belongsTo(ItemMasterList::class, 'Item', 'Id');
     }
- 
 
+    public function transfer()
+    {
+        return $this->belongsTo(TransactionTransfer::class, 'TransferId', 'Id');
+    }
+ 
+    
 
  
 }

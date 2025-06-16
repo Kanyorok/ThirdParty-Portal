@@ -80,8 +80,12 @@ use App\Policies\Inventory\StorePolicy;
 use App\Policies\Inventory\UnitOfMeasurePolicy;
 use App\Policies\Inventory\InterBranchRequisitionPolicy;
 use App\Policies\Inventory\PriceManagementPolicy;
+use App\Policies\Inventory\TransactionReceiptPolicy;
+use App\Policies\Inventory\TransactionTransferPolicy;
 use App\Models\Inventory\ItemType;
 use App\Models\Inventory\ItemMasterList;
+use App\Models\Inventory\TransactionReceipt;
+use App\Models\Inventory\TransactionTransfer;
 use App\Models\Inventory\ItemCategories;
 use App\Models\Inventory\StockItem;
 use App\Models\Inventory\UnitOfMeasure;
@@ -157,6 +161,8 @@ class AppServiceProvider extends ServiceProvider
             InterBranchRequisition::getPrimaryKey() => InterBranchRequisition::class,
             ConsolidatedProcurementPlan::getPrimaryKey() => ConsolidatedProcurementPlan::class,
             PlanLineItems::getPrimaryKey() => PlanLineItems::class,
+            TransactionReceipt::getPrimaryKey() => TransactionReceipt::class,
+            TransactionTransfer::getPrimaryKey() => TransactionTransfer::class,
 
             ///////// Budget and Analytics /////////
             BudgetLinesGLAccount::getPrimaryKey() => BudgetLinesGLAccount::class,
@@ -194,6 +200,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(SchedulePlan::class, SchedulePlanPolicy::class);
         Gate::policy(PlanLineItems::class, PlanManualInputPolicy::class);
         Gate::policy(InterBranchRequisition::class, InterBranchRequisitionPolicy::class);
+        Gate::policy(TransactionReceipt::class, TransactionReceiptPolicy::class);
+        Gate::policy(TransactionTransfer::class, TransactionTransferPolicy::class);
         Gate::policy(CategoryMaster::class, PropertyCategoryPolicy::class);
         Gate::policy(PropertyType::class, PropertyTypePolicy::class);
         Gate::policy(PropertyRegistry::class, PropertyRegistryPolicy::class);

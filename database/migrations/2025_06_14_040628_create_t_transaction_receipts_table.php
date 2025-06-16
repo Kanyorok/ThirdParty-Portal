@@ -6,17 +6,16 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up(): void
+    public function up()
     {
-        Schema::create('t_Transfers', function (Blueprint $table) {
+        Schema::create('t_TransactionReceipts', function (Blueprint $table) {
             $table->id('Id');
-            $table->string('TransferID')->nullable();
-            $table->foreignId('RequisitionId')->constrained('t_InterBranchRequisition', 'Id');
-            $table->date('TransferDate')->nullable();
-            $table->string('TransferredBy')->nullable();
+            $table->string('ReceiptId')->nullable();   
+            $table->foreignId('TransferId')->constrained('t_Transfers', 'Id');            
+            $table->string('ReceivedBy');
+            $table->date('ReceivedDate');
+            $table->text('GeneralRemarks')->nullable();
             $table->string('Status')->nullable();
-            $table->foreignId('FromBranch')->constrained('t_Branches', 'Id');
-            $table->foreignId('ToBranch')->constrained('t_Branches', 'Id');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
@@ -26,8 +25,8 @@ return new class extends Migration
         });
     }
 
-    public function down(): void
+    public function down()
     {
-        Schema::dropIfExists('t_Transfers');
+        Schema::dropIfExists('t_TransactionReceipts');
     }
 };

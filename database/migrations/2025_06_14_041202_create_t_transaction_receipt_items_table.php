@@ -6,15 +6,16 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up(): void
+    public function up()
     {
-        Schema::create('t_TransferItems', function (Blueprint $table) {
+        Schema::create('t_TransactionReceiptItems', function (Blueprint $table) {
             $table->id('Id');
-            $table->foreignId('TransferId')->constrained('t_Transfers', 'Id')->onDelete('cascade');
-            $table->foreignId('Item')->constrained('t_Items', 'Id');
-            $table->integer('ApprovedQty');
-            $table->integer('DispatchedQty');
-            $table->string('Remarks')->nullable();
+            $table->foreignId('ReceiptId')->constrained('t_TransactionReceipts', 'Id');    
+            $table->foreignId('Item')->constrained('t_Items', 'Id');  
+            $table->string('DispatchedQty');    
+            $table->string('ReceivedQty')->nullable();
+            $table->string('DamagedQty')->nullable();
+            $table->string('Discrepancy');  
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
@@ -24,8 +25,8 @@ return new class extends Migration
         });
     }
 
-    public function down(): void
+    public function down()
     {
-        Schema::dropIfExists('t_TransferItems');
+        Schema::dropIfExists('t_TransactionReceiptItems');
     }
 };

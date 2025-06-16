@@ -12,6 +12,7 @@ use App\Services\Inventory\TransactionTransferService;
 use Illuminate\Http\Request;
 use App\Models\Core\Branch;
 use Illuminate\Support\Facades\Auth; // Make sure Auth is imported if used in blade for transferredBy
+use App\Enums\Inventory\Transfers;
 
 class TransactionTransfersController extends Controller
 {
@@ -24,12 +25,13 @@ class TransactionTransfersController extends Controller
 
     public function index()
     {
-        $transfers = TransactionTransfer::all();
+        $transfers = TransactionTransfer::where('Status', Transfers::Pending)->get();
         return view('inventory.transactions.transfers.index', compact('transfers'));
     }
 
     public function create(Request $request)
     {
+        $this->authorize('create', TransactionTransfer::class);
         $approvedRequisitions = InterBranchRequisition::where('Status', 'Ap')->get();
         $requisition = null;
 
@@ -51,6 +53,7 @@ class TransactionTransfersController extends Controller
 
     public function store(TransactionTransferRequest $request)
     {
+        $this->authorize('create', TransactionTransfer::class);
         $validatedData = $request->validated();
         $items = $validatedData['items'] ?? [];
         unset($validatedData['items']);
@@ -65,6 +68,7 @@ class TransactionTransfersController extends Controller
 
     public function show($Id)
     {
+        $this->authorize('view', TransactionTransfer::class);
         $transferitem = TransactionTransfer::with([
             'fromBranch',
             'toBranch',
@@ -77,6 +81,7 @@ class TransactionTransfersController extends Controller
 
     public function edit($Id)
     {
+        $this->authorize('update', TransactionTransfer::class);
         $branches = Branch::all();
         $approvedRequisitions = InterBranchRequisition::where('Status', 'Ap')->get();
         $itemsMasterList = ItemMasterList::all(); 
@@ -94,6 +99,7 @@ class TransactionTransfersController extends Controller
 
     public function update(TransactionTransferRequest $request, TransactionTransfer $transactionTransfer)
     {
+        $this->authorize('update', TransactionTransfer::class);
         $transfer = $this->service->update($transactionTransfer, $request->validated());
 
         return redirect()
@@ -103,6 +109,7 @@ class TransactionTransfersController extends Controller
 
     public function destroy($Id)
     {
+        $this->authorize('destroy', TransactionTransfer::class);
         $transfer = TransactionTransfer::findOrFail($Id);
         $this->service->delete($transfer);
         return redirect()->route('transactionstransfers.index')

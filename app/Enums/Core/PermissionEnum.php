@@ -46,6 +46,8 @@ use App\Models\Inventory\ItemType;
 use App\Models\Inventory\UnitOfMeasure;
 use App\Models\Inventory\InterBranchRequisition;
 use App\Models\Inventory\PriceManagement;
+use App\Models\Inventory\TransactionReceipt;
+use App\Models\Inventory\TransactionTransfer;
  
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\PlanLineItems;
@@ -317,10 +319,21 @@ enum PermissionEnum: string
     case InterBranchRequisitionCreate = 'interBranchRequisition-create';
     case InterBranchRequisitionDestroy= 'interBranchRequisition-destroy';
     case InterBranchRequisitionApproval= 'interBranchRequisition-approval';
+    
     case PriceManagementView = 'priceManagement-view';
     case PriceManagementUpdate = 'priceManagement-update';
     case PriceManagementCreate = 'priceManagement-create';
     case PriceManagementDestroy= 'priceManagement-destroy';
+
+    case TransactionReceiptView = 'transactionReceipt-view';
+    case TransactionReceiptUpdate = 'transactionReceipt-update';
+    case TransactionReceiptCreate = 'transactionReceipt-create';
+    case TransactionReceiptDestroy= 'transactionReceipt-destroy';
+
+    case TransactionTransferView = 'transactionTransfer-view';
+    case TransactionTransferUpdate = 'transactionTransfer-update';
+    case TransactionTransferCreate = 'transactionTransfer-create';
+    case TransactionTransferDestroy= 'transactionTransfer-destroy';
     /*
      *
      * ========================================  Property Management  ========================================
@@ -429,6 +442,8 @@ enum PermissionEnum: string
             [self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy],
             [self::InterBranchRequisitionView, self::InterBranchRequisitionUpdate, self::InterBranchRequisitionCreate, self::InterBranchRequisitionDestroy, self::InterBranchRequisitionApproval],
             [self::PriceManagementView, self::PriceManagementUpdate, self::PriceManagementCreate, self::PriceManagementDestroy],
+            [self::TransactionReceiptView, self::TransactionReceiptUpdate, self::TransactionReceiptCreate, self::TransactionReceiptDestroy],
+            [self::TransactionTransferView, self::TransactionTransferUpdate, self::TransactionTransferCreate, self::TransactionTransferDestroy],
 
             [self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete],
             [self::PlanLineItemsRead, self::PlanLineItemsWrite, self::PlanLineItemsUpdate, self::PlanLineItemsDelete],
@@ -515,8 +530,11 @@ enum PermissionEnum: string
             self::ItemTypeView, self::ItemTypeUpdate, self::ItemTypeCreate, self::ItemTypeDestroy,
             self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy,
             self::InterBranchRequisitionView, self::InterBranchRequisitionUpdate, self::InterBranchRequisitionCreate, self::InterBranchRequisitionDestroy,self::InterBranchRequisitionApproval,
-            self::PriceManagementView, self::PriceManagementUpdate, self::PriceManagementCreate, self::PriceManagementDestroy => ModulesEnum::Inventory,
-            
+            self::PriceManagementView, self::PriceManagementUpdate, self::PriceManagementCreate, self::PriceManagementDestroy,
+            self::TransactionReceiptView, self::TransactionReceiptUpdate, self::TransactionReceiptCreate, self::TransactionReceiptDestroy,
+            self::TransactionTransferView, self::TransactionTransferUpdate, self::TransactionTransferCreate, self::TransactionTransferDestroy => ModulesEnum::Inventory,
+
+
             //Property Management
             self::PropertyCategoryView,self::PropertyCategoryCreate,self::PropertyCategoryUpdate,self::PropertyCategoryDelete,
             self::PropertyTypeView,self::PropertyTypeCreate,self::PropertyTypeUpdate,self::PropertyTypeDelete,
@@ -591,6 +609,10 @@ enum PermissionEnum: string
             self::ItemTypeView, self::ItemTypeUpdate, self::ItemTypeCreate, self::ItemTypeDestroy => 'Item Type',
             self::InterBranchRequisitionView, self::InterBranchRequisitionUpdate, self::InterBranchRequisitionCreate, self::InterBranchRequisitionDestroy,self::InterBranchRequisitionApproval =>'InterBranch Requisition',
             self::PriceManagementView, self::PriceManagementUpdate, self::PriceManagementCreate, self::PriceManagementDestroy=> 'Price Management',
+            self::TransactionReceiptView, self::TransactionReceiptUpdate, self::TransactionReceiptCreate, self::TransactionReceiptDestroy => 'Receipt',
+            self::TransactionTransferView, self::TransactionTransferUpdate, self::TransactionTransferCreate, self::TransactionTransferDestroy => 'Transfer',
+
+
 
             ////////////////////////// Budget and Analytics //////////////////////////////
             self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate,self::BudgetSetupDelete =>'Budget Setup',

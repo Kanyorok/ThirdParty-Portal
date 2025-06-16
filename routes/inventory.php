@@ -125,16 +125,35 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/transactionsreceipts/{Id}/edit', [TransactionReceiptsController::class, 'edit'])->name('transactionsreceipts.edit');
     Route::put('/transactionsreceipts/{Id}', [TransactionReceiptsController::class, 'update'])->name('transactionsreceipts.update');
     Route::delete('/transactionsreceipts/{Id}', [TransactionReceiptsController::class, 'destroy'])->name('transactionsreceipts.destroy');
-    Route::get('/transactionsreceipts/{Id}', [TransactionReceiptsController::class, 'getTransferItems']);
+    Route::get('/transactionsreceipts/transfer-items/{Id}', [TransactionReceiptsController::class, 'getTransferItems']);
+
 
 
     Route::resource('stockissue', StockIssueController::class);
-    Route::resource('transactionsapproval', TransactionApprovalController::class);
-    Route::resource('transactionsadjustment', TransactionAdjustmentController::class);
+
+    //Route::resource('transactionsapproval', TransactionApprovalController::class);
+    Route::get('/transactionsapproval', [TransactionApprovalController::class, 'index'])->name('transactionsapproval.index');
+    Route::post('/transactionsapproval/approve/{Id}', [TransactionApprovalController::class, 'approve'])->name('transactionsapproval.approve');
+    Route::post('/transactionsapproval/reject/{Id}', [TransactionApprovalController::class, 'reject'])->name('transactionsapproval.reject');
+
+
+    //Route::resource('transactionsadjustment', TransactionAdjustmentController::class);
+    Route::get('/transactionsadjustment', [TransactionAdjustmentController::class, 'index'])->name('transactionsadjustment.index');
+    Route::get('/transactionsadjustment/create', [TransactionAdjustmentController::class, 'create'])->name('transactionsadjustment.create');
+    Route::post('/transactionsadjustment', [TransactionAdjustmentController::class, 'store'])->name('transactionsadjustment.store');
+    Route::get('/transactionsadjustment/{Id}', [TransactionAdjustmentController::class, 'show'])->name('transactionsadjustment.show');
+    Route::get('/transactionsadjustment/{Id}/edit', [TransactionAdjustmentController::class, 'edit'])->name('transactionsadjustment.edit');
+    Route::put('/transactionsadjustment/{Id}', [TransactionAdjustmentController::class, 'update'])->name('transactionsadjustment.update');
+    Route::delete('/transactionsadjustment/{Id}', [TransactionAdjustmentController::class, 'destroy'])->name('transactionsadjustment.destroy');
+    Route::get('/branch-stock/{branchId}', [TransactionAdjustmentController::class, 'getBranchStock'])->name('branch.stock');
+    
 
     //Route::resource('interbranchrequisitionapproval', InterBranchRequisitionApprovalController::class);
     Route::get('/interbranchrequisitionapproval', [InterBranchRequisitionApprovalController::class, 'index'])->name('interbranchrequisitionapproval.index');
-    Route::post('interbranchrequisitionapproval/submit', [InterBranchRequisitionApprovalController::class, 'submitDecision'])->name('interbranchrequisitionapproval.submit');    //Route::resource('rentdashboard', RentDashboardController::class);
+    Route::post('interbranchrequisitionapproval/submit', [InterBranchRequisitionApprovalController::class, 'submitDecision'])->name('interbranchrequisitionapproval.submit');   
+    
+    
+    //Route::resource('rentdashboard', RentDashboardController::class);
 
    // Route::resource('unitofmeasure', UOMController::class);
     Route::get('/unitofmeasure', [UOMController::class, 'index'])->name('unitofmeasure.index');

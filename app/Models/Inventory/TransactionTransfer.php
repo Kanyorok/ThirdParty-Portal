@@ -58,18 +58,24 @@ class TransactionTransfer extends Model
         return $this->belongsTo(InterBranchRequisition::class, 'RequisitionId', 'Id');
     }
 
-  public function items()
-{
-    return $this->hasMany(TransactionTransferItem::class, 'TransferId', 'Id');
-}
 
-       public function fromBranch()
+     public function items()  
+     {
+      return $this->hasMany(TransactionTransferItem::class, 'TransferId', 'Id')->whereNull('DeletedOn');
+     }
+
+
+    public function fromBranch()
     {
     return $this->belongsTo(Branch::class, 'FromBranch', 'Id');
     }
     public function toBranch()
     {
     return $this->belongsTo(Branch::class, 'ToBranch', 'Id');
+    }
+     public static function getPrimaryKey(): string
+    {
+        return 'TransferId';
     }
 
 

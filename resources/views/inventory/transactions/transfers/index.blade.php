@@ -8,11 +8,12 @@
     </div>
 
     <div class="table-responsive">
-         <table id="transfersTable" class="table table-bordered table-striped align-middle">
+        <table class="table table-bordered table-striped align-middle">
         <thead class="table-light">
                 <tr>
                     <th>#</th>
                     <th>Transfer ID</th>
+                    <th>Requisition ID</th>
                     <th>Date</th>
                     <th>From Branch</th>
                     <th>To Branch</th>
@@ -26,22 +27,24 @@
                     <tr>
                         <td>{{ $i+1 }}</td>
                         <td>{{ $transfer->TransferID ?? '-' }}</td>
+                        <td>{{ $transfer->RequisitionId ?? '-' }}</td>
                         <td>{{ $transfer->TransferDate ?? '-' }}</td>
-                        
                         <td>{{ optional($transfer->fromBranch)->Name ?? '-' }}</td>
                         <td>{{ optional($transfer->toBranch)->Name ?? '-' }}</td>
                         <td>{{ $transfer->TransferredBy ?? '-' }}</td>
                         <td>
-                            @if(isset($transfer->Status))
-                                @if($transfer->Status === 'Completed')
-                                    <span class="badge bg-success">Completed</span>
-                                @elseif($transfer->Status === 'Pending')
-                                    <span class="badge bg-warning">Pending</span>
-                                @else
-                                    <span class="badge bg-secondary">{{ $transfer->Status }}</span>
-                                @endif
+                            @php
+                                $statusEnum = $transfer->Status instanceof \App\Enums\Inventory\Transfers
+                                    ? $transfer->Status
+                                    : (\App\Enums\Inventory\Transfers::tryFrom($transfer->Status) ?? null);
+                            @endphp
+
+                            @if($statusEnum)
+                                <span class="badge bg-{{ $statusEnum->badgeColor() }}">
+                                    {{ $statusEnum->label() }}
+                                </span>
                             @else
-                                <span class="badge bg-secondary">-</span>
+                                <span class="badge bg-secondary">{{ $transfer->Status ?? '-' }}</span>
                             @endif
                         </td>
                         <td>
@@ -63,16 +66,5 @@
         </table>
     </div>
 </div>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script>
-    $(document).ready(function () {
-        $('#transfersTable').DataTable({
-            pageLength: 10,
-            ordering: true,
-            searching: true,
-            lengthChange: true
-        });
-    });
 </script>
 @endsection

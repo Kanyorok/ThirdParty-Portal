@@ -3,17 +3,130 @@
 namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
+use App\Models\Inventory\TransactionTransfer;
 use Illuminate\Http\Request;
+use App\Enums\Inventory\Transfers;
+use App\Models\Inventory\StockItem;
+use App\Models\Inventory\StockAdjustment;
+use App\Services\Inventory\StockAdjustmentService;
 
 class TransactionApprovalController extends Controller
 {
-    //
-    public function index()
-    {
-        return view('inventory.transactions.transactionsapprovals.index');
+    protected $adjustmentService;
+
+public function __construct(StockAdjustmentService $adjustmentService)
+{
+    $this->adjustmentService = $adjustmentService;
+}
+
+    public function index(Request $request)
+{
+    $transactionType = $request->get('transaction_type', 'Stock Transfer');
+    $branch = $request->get('branch');
+    $fromDate = $request->get('from_date');
+    $toDate = $request->get('to_date');
+
+    if ($transactionType === 'Stock Transfer') {
+        $query = TransactionTransfer::with(['fromBranch', 'toBranch', 'creator'])
+            ->where('Status', Transfers::Pending);
+
+        if ($branch) {
+            $query->whereHas('fromBranch', function ($q) use ($branch) {
+                $q->where('Name', 'like', "%$branch%")
+                  ->orWhere('Id', $branch);
+            });
+        }
+    } elseif ($transactionType === 'Stock Issue') {
+        $query = \App\Models\Inventory\StockIssue::with(['branch', 'creator'])
+            ->where('Status', 'Pending');
+
+        if ($branch) {
+            $query->whereHas('branch', function ($q) use ($branch) {
+                $q->where('Name', 'like', "%$branch%")
+                  ->orWhere('Id', $branch);
+            });
+        }
+    } 
+    
+    elseif  ($transactionType === 'Stock Adjustment') {
+        $query = \App\Models\Inventory\StockAdjustment::with('branch')
+    ->where('Status', Transfers::Pending);
+
+if ($branch) {
+    $query->whereHas('branch', function ($q) use ($branch) {
+        $q->where('Name', 'like', "%$branch%")
+          ->orWhere('Id', $branch);
+    });
+}
+
+    } else {
+        $query = collect(); // fallback if unknown type
     }
 
-    public function create(){
-        return view('inventory.transactions.transactionsapprovals.create');
+    if (is_a($query, \Illuminate\Database\Eloquent\Builder::class)) {
+        if ($fromDate) {
+            $query->whereDate('CreatedOn', '>=', $fromDate);
+        }
+
+        if ($toDate) {
+            $query->whereDate('CreatedOn', '<=', $toDate);
+        }
+
+        $records = $query->orderByDesc('CreatedOn')->get();
+    } else {
+        $records = collect();
     }
+
+    return view('inventory.transactions.transactionsapprovals.index', compact('transactionType', 'records'));
+}
+
+
+    public function approve(Request $request, $id)
+{
+    $transactionType = $request->input('transaction_type');
+
+    if ($transactionType === 'Stock Transfer') {
+        $transfer = TransactionTransfer::with('items')->findOrFail($id);
+        if ($transfer->Status != Transfers::InTransit) {
+            foreach ($transfer->items as $item) {
+                $fromStock = StockItem::where('ItemID', $item->Item)
+                    ->where('Branch', $transfer->FromBranch)
+                    ->first();
+                if ($fromStock) {
+                    $fromStock->CurrentQty -= $item->DispatchedQty;
+                    $fromStock->CurrentQty = max(0, $fromStock->CurrentQty);
+                    $fromStock->save();
+                }
+
+                $toStock = StockItem::firstOrCreate(
+                    ['ItemID' => $item->Item, 'Branch' => $transfer->ToBranch],
+                    ['CurrentQty' => 0, 'Batch' => 0]
+                );
+                $toStock->CurrentQty += $item->DispatchedQty;
+                $toStock->save();
+            }
+            $transfer->Status = Transfers::InTransit;
+            $transfer->save();
+        }
+        return redirect()->back()->with('success', 'Stock Transfer approved.');
+    }
+
+    if ($transactionType === 'Stock Issue') {
+        $issue = \App\Models\Inventory\StockIssue::findOrFail($id);
+        $issue->Status = 'Approved';
+        $issue->save();
+        return redirect()->back()->with('success', 'Stock Issue approved.');
+    }
+    if ($transactionType === 'Stock Adjustment') {
+    $this->adjustmentService->approve($id);
+    return redirect()->back()->with('success', 'Stock Adjustment approved.');
+}
+    if ($transactionType === 'Stock Adjustment') {
+    $this->adjustmentService->reject($id);
+    return redirect()->back()->with('success', 'Stock Adjustment rejected.');
+}
+
+
+    return redirect()->back()->with('error', 'Unknown transaction type.');
+}
 }
