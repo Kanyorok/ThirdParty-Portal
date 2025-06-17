@@ -7,14 +7,14 @@ use App\Models\Auth\User;
 use App\Models\Inventory\Store;
 use Illuminate\Auth\Access\Response;
 
-class TransactionTransferPolicy
+class StockAdjustmentPolicy
 {
     /**
      * Determine whether the user can view any models.
      */
     public function viewAny(User $user): bool
     {
-        return $user->can(PermissionEnum::TransactionTransferView->value);
+        return $user->can(PermissionEnum::StockAdjustmentView->value);
     }
 
     /**
@@ -22,7 +22,7 @@ class TransactionTransferPolicy
      */
     public function view(User $user): bool
     {
-        return $user->can(PermissionEnum::TransactionTransferView->value);
+        return $user->can(PermissionEnum::StockAdjustmentView->value);
     }
 
     /**
@@ -30,7 +30,7 @@ class TransactionTransferPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can(PermissionEnum::TransactionTransferCreate->value);
+        return $user->can(PermissionEnum::StockAdjustmentCreate->value);
     }
 
     /**
@@ -38,7 +38,7 @@ class TransactionTransferPolicy
      */
     public function update(User $user): bool
     {
-        return $user->can(PermissionEnum::TransactionTransferUpdate->value);
+        return $user->can(PermissionEnum::StockAdjustmentUpdate->value);
     }
 
     /**
@@ -46,15 +46,15 @@ class TransactionTransferPolicy
      */
     public function destroy(User $user): bool
     {
-        return $user->can(PermissionEnum::TransactionTransferDestroy->value);
+        return $user->can(PermissionEnum::StockAdjustmentDestroy->value);
     }
 
     /**
      * Determine whether the user can restore the model.
      */
-    public function edit(User $user, TransactionTransfer $transactionTransfer): bool
+    public function edit(User $user, StockAdjustment $stockAdjustment): bool
     {
-        return $user->can(PermissionEnum::TransactionTransferRestore->value);
+        return $user->can(PermissionEnum::StockAdjustmentRestore->value);
     }
    //  public function approve(User $user, TransactionTransfer $transfer): bool
    // {

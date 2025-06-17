@@ -25,7 +25,7 @@ class TransactionReceiptRequest extends FormRequest
         'TransferID' => 'required|exists:t_Transfers,Id',
         'ReceivedBy' => 'required|string',
         'ReceivedDate' => 'required|date',
-        'GeneralRemarks' => 'required|string',
+        'GeneralRemarks' => 'nullable|string',
         'items' => 'required|array|min:1',
         'items.*.item' => 'required|exists:t_Items,Id',   
         'items.*.dispatched_qty' => 'nullable|numeric|min:0', 

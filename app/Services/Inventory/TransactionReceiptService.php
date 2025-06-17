@@ -4,18 +4,21 @@ namespace App\Services\Inventory;
 
 use App\Models\Inventory\TransactionReceipt;
 use App\Models\Inventory\TransactionReceiptItem;
+use App\Models\Inventory\TransactionTransfer;
+use App\Models\Inventory\TransactionTransferItem;
 use App\Models\Inventory\InterBranchRequisition;
+use App\Models\Core\Workflow;
+use App\Models\Core\PendingWorkflow;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
 use App\Enums\Inventory\Transfers;
 
 class TransactionReceiptService
-
 {
-    public function createReceipt($validatedData)
+    public function createReceipt($validatedData, $items)
     {
-        return DB::transaction(function () use ($validatedData) {
+        return DB::transaction(function () use ($validatedData, $items) {
             $receipt = TransactionReceipt::create([
                 'TransferId' => $validatedData['TransferID'],
                 'ReceivedBy' => $validatedData['ReceivedBy'],
@@ -28,16 +31,41 @@ class TransactionReceiptService
                 'ModifiedOn' => now(),
             ]);
 
-           
             $transfer = $receipt->transfer;
             if ($transfer && ($transfer->Status == Transfers::InTransit || $transfer->Status === Transfers::InTransit->value)) {
                 $transfer->Status = Transfers::Delivered;
                 $transfer->save();
             }
 
-            // Generate formatted Receipt ID
             $receipt->ReceiptId = 'REC/' . now()->format('Ymd') . '/' . str_pad($receipt->Id, 4, '0', STR_PAD_LEFT);
             $receipt->save();
+
+            // Add receipt items
+            $this->createReceiptItems($receipt, $items);
+
+            Workflow::create([
+                'Source' => 'TransactionReceipts',
+                'SourceID' => $receipt->Id,
+                'Stage' => Transfers::Delivered->label(),
+                'Status' => Transfers::Delivered->value,
+                'Notes' => 'Transaction Receipts Delivered',
+                'CreatedBy' => Auth::id(),
+                'CreatedOn' => now(),
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
+            ]);
+
+            PendingWorkflow::updateOrCreate(
+                ['Source' => 'TransactionReceipts', 'SourceID' => $receipt->Id],
+                [
+                    'Stage' => Transfers::Delivered->label(),
+                    'UserId' => Auth::id(),
+                    'CreatedBy' => Auth::id(),
+                    'CreatedOn' => now(),
+                    'ModifiedBy' => Auth::id(),
+                    'ModifiedOn' => now(),
+                ]
+            );
 
             activity()
                 ->causedBy(auth()->user())
@@ -93,7 +121,6 @@ class TransactionReceiptService
                 ->withProperties(['attributes' => $receipt->toArray()])
                 ->log('Transaction Receipt updated');
 
-            // Remove old items not in update
             $updatedItemIds = collect($data['items'])->pluck('item')->toArray();
             $receipt->items()->whereNotIn('Item', $updatedItemIds)->delete();
 
@@ -124,7 +151,7 @@ class TransactionReceiptService
         });
     }
 
-    public function deleteReceipt($receipt)
+    public function delete($receipt)
     {
         $receiptId = $receipt->Id;
 

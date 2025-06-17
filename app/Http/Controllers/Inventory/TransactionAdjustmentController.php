@@ -27,6 +27,7 @@ class TransactionAdjustmentController extends Controller
 
     public function create()
     {
+        $this->authorize('create', StockAdjustment::class);
         $branches = \App\Models\Core\Branch::all();
         return view('inventory.transactions.adjustments.create', compact('branches'));
     }
@@ -34,6 +35,7 @@ class TransactionAdjustmentController extends Controller
 
     public function store(StockAdjustmentRequest $request)
     {
+    $this->authorize('create', StockAdjustment::class);
     $this->service->create($request->validated(), $request->user());
 
     return redirect()->route('transactionsadjustment.index')->with('success', 'Stock adjustment recorded.');
@@ -54,6 +56,22 @@ class TransactionAdjustmentController extends Controller
     $this->service->approve($adjustment->Id);
     return redirect()->back()->with('success', 'Stock adjustment approved.');
 }
+    public function edit(StockAdjustment $adjustment)
+    {
+        $this->authorize('update', StockAdjustment::class);
+        $branches = \App\Models\Core\Branch::all();
+        $adjustment->load(['items.stockItem']);
+        return view('inventory.transactions.adjustments.edit', compact('adjustment', 'branches'));
+    }
+
+    
+    public function update(StockAdjustmentRequest $request, StockAdjustment $adjustment)
+    {
+        $this->authorize('update', StockAdjustment::class);
+        $this->service->update($adjustment, $request->validated());
+
+        return redirect()->route('transactionsadjustment.index')->with('success', 'Stock adjustment updated.');
+    }
 
 public function reject(StockAdjustment $adjustment)
 {

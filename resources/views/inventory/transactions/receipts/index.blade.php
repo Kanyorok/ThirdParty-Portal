@@ -46,8 +46,9 @@
 
     <div class="card-header bg-light">Transfers Receipts</div>
     <div class="card-body">
-        <table class="table table-bordered table-striped">
-            <thead class="table-secondary">
+        <div class="table-responsive">
+          <table id="receiptsTable" class="table table-bordered table-striped align-middle">
+                    <thead class="table-light">
                 <tr>
                     <th>#</th>
                     <th>Receipt ID</th>
@@ -66,7 +67,7 @@
                         <td>{{ $index + 1 }}</td>
                         <td>{{ $receipt->ReceiptId ?? 'N/A' }}</td>
                         <td>{{ optional($receipt->transfer)->TransferID ?? 'N/A' }}</td>
-                        <td>{{ optional($receipt->transfer->fromBranch)->Name ?? 'N/A' }}</td>
+                        <td>{{ optional(optional($receipt->transfer)->fromBranch)->Name ?? 'N/A' }}</td>
                         <td>{{ $receipt->ReceivedBy ?? 'N/A' }}</td>
                         <td>{{ \Carbon\Carbon::parse($receipt->ReceivedDate)->format('Y-m-d') }}</td>
                         <td>
@@ -94,23 +95,7 @@
                             {{ $hasDiscrepancy ? 'Yes' : 'No' }}
                         </td>
                         <td>
-                            <a href="{{ route('transactionsreceipts.show', $receipt->Id) }}" class="btn btn-sm btn-info">View</a>
-                            <a href="{{ route('transactionsreceipts.edit', $receipt->Id) }}"
-                               class="btn btn-sm btn-warning"
-                               onclick="@if($receipt->Status !== 'Pending') return showCustomError('You cannot edit this receipt because a decision has already been made.'); @endif">
-                               Edit
-                            </a>
-                            <a href="#"
-                               class="btn btn-sm btn-danger"
-                               onclick="@if($receipt->Status !== 'Pending') return showCustomError('You cannot delete this receipt because a decision has already been made.'); @else confirmDelete('{{ $receipt->Id }}'); return false; @endif">
-                               Delete
-                            </a>
-                            <form id="delete-form-{{ $receipt->Id }}"
-                                  action="{{ route('transactionsreceipts.destroy', $receipt->Id) }}"
-                                  method="POST" style="display:none;">
-                                @csrf
-                                @method('DELETE')
-                            </form>
+                            <a href="{{ route('transactionsreceipts.show', $receipt->Id) }}" class="btn btn-sm btn-warning">View</a>
                         </td>
                     </tr>
                 @empty
@@ -130,9 +115,21 @@
 
 @endsection
 
-@push('scripts') {{-- Using @push('scripts') to include JS at the end of the body --}}
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+@push('scripts') 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#receiptsTable').DataTable({
+                pageLength: 10,
+                ordering: true,
+                searching: true,
+                lengthChange: true,
+                
+            });
+        });
+    </script>
 
 <script>
     $(document).ready(function () {
@@ -160,4 +157,5 @@
         document.getElementById('customErrorContainer').style.display = 'none';
     }
 </script>
-@endpush
+
+@endpush 

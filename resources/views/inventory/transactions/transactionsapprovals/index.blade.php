@@ -9,6 +9,7 @@
 @section('content')
 <div class="container">
     <h4 class="mb-4">Approve Stock Transactions</h4>
+
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
@@ -75,15 +76,22 @@
                         @endif
                     </td>
                     <td>
-    @if($transactionType == 'Stock Transfer')
-        {{ $record->fromBranch->Name ?? 'N/A' }}
-    @else
-        {{ $record->branch->Name ?? 'N/A' }}
-    @endif
-</td>
-
+                        @if($transactionType == 'Stock Transfer')
+                            {{ $record->fromBranch->Name ?? 'N/A' }}
+                        @else
+                            {{ $record->branch->Name ?? 'N/A' }}
+                        @endif
+                    </td>
                     <td>{{ \Carbon\Carbon::parse($record->CreatedOn)->format('Y-m-d') }}</td>
-                    <td>{{ $record->creator->name ?? 'N/A' }}</td>
+                    <td>
+                        @if($transactionType == 'Stock Transfer')
+                            {{ $record->TransferredBy ?? 'N/A' }}
+                        @elseif($transactionType == 'Stock Adjustment')
+                            {{ $record->AdjustedBy ?? 'N/A' }}
+                        @else
+                            {{ $record->creator->name ?? 'N/A' }}
+                        @endif
+                    </td>
                     <td>
                         @if($transactionType == 'Stock Transfer' && $statusEnum)
                             <span class="badge bg-{{ $statusEnum->badgeColor() }}">{{ $statusEnum->label() }}</span>
@@ -93,28 +101,21 @@
                     </td>
                     <td>
                         <form method="POST" action="{{ route('transactionsapproval.approve', ['Id' => $record->Id, 'transaction_type' => $transactionType]) }}">
-                         @csrf
-                        <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                            @csrf
+                            <button type="submit" class="btn btn-success btn-sm">Approve</button>
                         </form>
                     </td>
                     <td>
-                        
-                        @if($transactionType === 'Stock Transfer' && $statusEnum && $statusEnum->value === 'pe')
-                            <form method="POST" action="{{ route('transactionsapproval.reject', $record->Id) }}">
-                                @csrf
-                                <button class="btn btn-danger btn-sm">Reject</button>
-                            </form>
-                        @elseif($transactionType !== 'Stock Transfer' && $record->Status === 'Pending')
-                            <form method="POST" action="{{ route('transactionsapproval.reject', $record->Id) }}">
-                                @csrf
-                                <button class="btn btn-danger btn-sm">Reject</button>
-                            </form>
-                        @endif
+                        <form method="POST" action="{{ route('transactionsapproval.reject', ['Id' => $record->Id]) }}">
+                            @csrf
+                            <input type="hidden" name="transaction_type" value="{{ $transactionType }}">
+                            <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                        </form>
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="10" class="text-center">No pending {{ strtolower($transactionType) }}s found.</td>
+                    <td colspan="9" class="text-center">No pending {{ strtolower($transactionType) }}s found.</td>
                 </tr>
             @endforelse
         </tbody>

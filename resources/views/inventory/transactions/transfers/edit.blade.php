@@ -35,25 +35,25 @@
                 <tbody>
                     @foreach($transferitem->items as $index => $item)
                         <tr>
-                            <td>{{ $index + 1 }}</td>
-                            <td>
-                                {{-- Display Item Name --}}
-                                <input type="hidden" name="items[{{ $index }}][item]" value="{{ $item->Item }}">
-                                <input type="text" class="form-control" value="{{ $item->item->ItemName ?? 'N/A' }}" readonly>
-                            </td>
-                            <td>
-                                {{-- Display Item Code --}}
-                                <input type="text" class="form-control" value="{{ $item->item->ItemCode ?? 'N/A' }}" readonly>
-                            </td>
-                            <td>
-                                <input type="number" name="items[{{ $index }}][ApprovedQty]" class="form-control" value="{{ old("items.$index.ApprovedQty", $item->ApprovedQty) }}" required>
-                            </td>
-                            <td>
-                                <input type="number" name="items[{{ $index }}][DispatchedQty]" class="form-control" value="{{ old("items.$index.DispatchedQty", $item->DispatchedQty) }}" required>
-                            </td>
-                                <input type="text" name="items[{{ $index }}][Remarks]" class="form-control" value="{{ old("items.$index.Remarks", $item->Remarks) }}">
-                            </td>
-                        </tr>
+    <td>{{ $index + 1 }}</td>
+    <td>
+        <input type="hidden" name="items[{{ $index }}][item]" value="{{ $item->Item }}">
+        <input type="text" class="form-control" value="{{ $item->item->ItemName ?? 'N/A' }}" readonly>
+    </td>
+    <td>
+        <input type="text" class="form-control" value="{{ $item->item->ItemCode ?? 'N/A' }}" readonly>
+    </td>
+    <td>
+        <input type="number" name="items[{{ $index }}][ApprovedQty]" class="form-control" value="{{ old("items.$index.ApprovedQty", $item->ApprovedQty) }}" required>
+    </td>
+    <td>
+        <input type="number" name="items[{{ $index }}][DispatchedQty]" class="form-control" value="{{ old("items.$index.DispatchedQty", $item->DispatchedQty) }}" required>
+    </td>
+    <td>
+        <input type="text" name="items[{{ $index }}][Remarks]" class="form-control" value="{{ old("items.$index.Remarks", $item->Remarks) }}">
+    </td>
+</tr>
+
                     @endforeach
                 </tbody>
             </table>

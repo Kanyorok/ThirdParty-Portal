@@ -57,5 +57,10 @@ class StockAdjustment extends Model
     {
         return $this->belongsTo(Branch::class, 'Branch', 'Id');
     }
+    public static function getPrimaryKey(): string
+    {
+        return 'StockAdjustmentId';
+    }
+
     
 }

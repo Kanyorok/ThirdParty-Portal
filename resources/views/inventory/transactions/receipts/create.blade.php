@@ -8,13 +8,9 @@
   <div class="card-body">
     <form method="POST" action="{{ route('transactionsreceipts.store') }}" id="transferForm">
       @csrf
-
-      {{-- Success Message --}}
       @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
       @endif
-
-      {{-- Validation Errors --}}
       @if ($errors->any())
         <div class="alert alert-danger">
           <ul>
@@ -55,13 +51,13 @@
               <th>Product</th>
               <th>Dispatched Qty</th>
               <th>Qty Received</th>
-              <th>Discrepancy</th> {{-- ✅ NEW --}}
+              <th>Discrepancy</th> 
               <th>Qty Damaged</th>
               <th>Remarks</th>
             </tr>
           </thead>
           <tbody id="itemsTableBody">
-            {{-- Dynamic content will be inserted here --}}
+       
           </tbody>
         </table>
       </div>

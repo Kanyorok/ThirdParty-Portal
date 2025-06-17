@@ -37,7 +37,7 @@
                     <th>Item Name</th>
                     <th>Dispatched Qty</th>
                     <th>Received Qty</th>
-                    <th>Discrepancy</th> {{-- ✅ Added --}}
+                    <th>Discrepancy</th> 
                     <th>Damaged Qty</th>
                     <th>Remarks</th>
                 </tr>
@@ -68,13 +68,8 @@
     </div>
 
     <div class="mt-4 d-flex gap-2">
-        <a href="{{ route('transactionsreceipts.index') }}" class="btn btn-secondary">Back</a>
-        <a href="{{ route('transactionsreceipts.edit', $receipt->Id) }}" class="btn btn-warning">Edit</a>
-        <form action="{{ route('transactionsreceipts.destroy', $receipt->Id) }}" method="POST" onsubmit="return confirm('Delete this receipt?')">
-            @csrf
-            @method('DELETE')
-            <button class="btn btn-danger">Delete</button>
-        </form>
+        <a href="{{ route('transactionsreceipts.index') }}" class="btn btn-primary">Back</a>
+        
     </div>
 </div>
 @endsection

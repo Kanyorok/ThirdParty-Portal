@@ -16,7 +16,7 @@ enum Transfers: string
 
     case Delivered = 'de';
 
-    case Rejected = 're';
+    case Rejected = 'Re';
 
      case Approved = 'Ap';
 
