@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('t_StockTake', function (Blueprint $table) {
             $table->id('Id');
-            $table->foreignId('BranchId')->constrained('t_StockItems','Id');
-            $table->foreignId('StoreId')->constrained('t_StockItems','Id');
+            $table->foreignId('BranchId')->constrained('t_Branches', 'Id');
+            $table->foreignId('StoreId')->constrained('t_Stores', 'Id');
             $table->string('CountedBy');
             $table->date('CountDate');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');

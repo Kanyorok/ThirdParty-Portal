@@ -111,6 +111,9 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('stocktake/edit/{Id}',[StockTakeController::class,'edit'])->name('stocktake.edit');
     Route::put('stocktake/edit/{Id}',[StockTakeController::class,'update'])->name('stocktake.update');
     Route::get('/stocktake/branches/{storeId}', [StockTakeController::class, 'getStoreByBranch'])->name('getstores');
+    Route::get('/stock-items/{branchId}/{storeId}', [StockTakeController::class, 'getStockItems'])->name('stocktake.items');
+
+
     
     
     Route::resource('uomconversion', UOMConversionController::class);
