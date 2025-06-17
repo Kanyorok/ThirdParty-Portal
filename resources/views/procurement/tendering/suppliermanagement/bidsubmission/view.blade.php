@@ -28,7 +28,7 @@
                 <div class="row">
                     <div class="col-md-4 mb-3">
                         <label class="form-label fw-bold">Submission Mode</label>
-                        <p class="text-muted">{{ $submission->SubmissionMode ?? 'N/A' }}</p>
+                        <p class="text-muted">{{ $submission->submissionMode->Description ?? 'N/A' }}</p>
                     </div>
                     <div class="col-md-4 mb-3">
                         <label class="form-label fw-bold">Received At</label>
@@ -36,7 +36,7 @@
                     </div>
                     <div class="col-md-4 mb-3">
                         <label class="form-label fw-bold">Recorded By</label>
-                        <p class="text-muted">{{ $submission->RecordedBy ?? 'N/A' }}</p>
+                        <p class="text-muted">{{ $submission->createdByUser->Name ?? 'N/A' }}</p>
                     </div>
                 </div>
                 <div class="row">

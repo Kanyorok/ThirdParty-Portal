@@ -1,0 +1,28 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration {
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        // You need the doctrine/dbal package to modify column types
+        Schema::table('t_PlanLineItem', function (Blueprint $table) {
+            $table->integer('BudgetLineID')->nullable()->change();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('t_PlanLineItem', function (Blueprint $table) {
+            $table->string('BudgetLineID')->nullable()->change();
+        });
+    }
+};
