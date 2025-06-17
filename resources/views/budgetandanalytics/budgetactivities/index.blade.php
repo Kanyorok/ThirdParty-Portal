@@ -4,7 +4,12 @@
 <div class="container mt-4">
   <div class="card p-4">
     <h5>📋 Budget Activities Overview</h5>
-    <p class="text-muted">All activities contributing to budget lines with allocation summaries.</p>
+    <p class="text-muted">
+      Below is a list of budget activities that have been added and linked to their respective budget lines. Each activity
+       represents a planned action or initiative under the budget, including its description, cost, and the period it is 
+       intended to be implemented. This view helps track how funds are allocated across various budget items.
+    
+    </p>
   
 <div class="mb-2 d-flex justify-content-between">
    <a href="{{ route('budgetactivities.create') }}" class="btn btn-success">➕ New Activity</a>    
@@ -13,9 +18,10 @@
       <thead class="table-light">
         <tr>
           <th>#</th>
-          <th>Budget Line</th>
-          <th>Activity</th>
-          <th>Branch</th>
+          <th>Budget</th>
+          {{-- <th>Budget Line</th> --}}
+          <th>Activities</th>
+          {{-- <th>Branch</th> --}}
           <th>Allocation Type</th>
           <th>Total Allocation</th>
           <th>Actions</th>
@@ -25,9 +31,11 @@
         @foreach ($activities as $item)            
           <tr>
             <td>{{ $loop->iteration }}</td>
-            <td>{{ $item->budgetLine->LineName }}</td>
-            <td>{{ $item->ActivityName }}</td>
-            <td>{{ $item->branch->Name }}</td>
+            <td>Budget Name</td>
+            {{-- <td>{{ $item->budgetLine->LineName }}</td> --}}
+            <td>3</td>
+            {{-- <td>{{ $item->ActivityName }}</td> --}}
+            {{-- <td>{{ $item->branch->Name }}</td> --}}
             @if ($item->AllocationType=='monthly')
               <td>Monthly
                 <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#viewAllocationsModal-{{ $item->Id }}">👁️ View</button>

@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Budget Entry')
+@section('title', '📦 Budget Projections Entry')
 
 @section('content')
 
@@ -22,18 +22,20 @@
 
 
 <div class="card p-4">
-    <h5>📦 Budget Entry by Product</h5>
-    <p class="text-muted">Branches enter volume and value projections for each product. These will generate budget
-        lines based on linked drivers and formulas.</p>
+    {{-- <h5>📦 Budget Projections Entry</h5> --}}
+    <p class="text-muted">
+        For each product, specify the expected volume and its corresponding projected value. These entries help 
+        estimate financial forecasts and contribute to the overall budgeting framework.
+    </p>
 
-    <form action="{{ route('entrybyproduct.store') }}" method="POST">
+    <form action="{{ route('budgetprojections.store') }}" method="POST">
         @csrf
 
         <div class="row mb-3">
             <div class="col-md-6">
-                <label for="scenario" class="form-label">Scenario</label>
+                <label for="scenario" class="form-label">Budget</label>
                 <select class="form-select" name="ScenarioID" required>
-                    <option disabled selected>-- Select Scenario --</option>
+                    <option disabled selected>-- Select Budget --</option>
                     @foreach($scenarios as $scenario)
                         <option value="{{ $scenario->Id }}">{{ $scenario->scenarioName }}</option>
                     @endforeach
@@ -51,7 +53,7 @@
             </div>
         </div>
 
-         <div class="mt-3">
+         {{-- <div class="mt-3">
                 <label for="period" class="form-label">Period</label>
                 <select class="form-select" name="PeriodID" required>
                     <option disabled selected>-- Select Period --</option>
@@ -59,14 +61,14 @@
                              <option value="{{ $period->Id }}">{{ $period->fiscalYear }}</option>
                         @endforeach
                 </select>
-            </div>        
+            </div>         --}}
 
         <div class="table-responsive mt-3">
             <table class="table table-bordered table-hover align-middle">
                 <thead class="table-light">
                     <tr>
                         <th>Product</th>
-                        <th>Volume</th>
+                        <th>No of Accounts</th>
                         <th>Projected Value</th>
                     </tr>
                 </thead>
@@ -75,7 +77,7 @@
                         <td>
                             <select class="form-select" name="Products[0][ProductID]" required>
                                 @foreach($products as $product)
-                                    <option value="{{ $product->Id }}">{{ $product->Name }}</option>
+                                    <option value="{{ $product->Id }}">{{ $product->Description }}</option>
                                 @endforeach
                             </select>
                         </td>

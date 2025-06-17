@@ -18,32 +18,25 @@ class BudgetScenarioPlanningSeeder extends Seeder
 
         // Ensure dependencies exist
         $userId = DB::table('t_Users')->value('Id');
-        $budgetPeriods = DB::table('t_BudgetPeriods')->pluck('Id')->toArray();
+        //$budgetPeriods = DB::table('t_BudgetPeriods')->pluck('Id')->toArray();
         $planningMethods = DB::table('t_BudgetPlanningMethods')->pluck('Id')->toArray();
 
-        if (!$userId || empty($budgetPeriods) || empty($planningMethods)) {
-            echo "❌ Missing required data: Users, BudgetPeriods, or PlanningMethods.\n";
-            return;
-        }
+        // if (!$userId || empty($budgetPeriods) || empty($planningMethods)) {
+        //     echo "❌ Missing required data: Users, BudgetPeriods, or PlanningMethods.\n";
+        //     return;
+        // }
 
         $scenarios = [
-            'Baseline FY2025',
-            'Optimistic FY2025',
-            'Pessimistic FY2025',
-            'Mid-Year Review FY2025',
-            'Q1 Focused FY2026',
-            'Q2 Adjustment FY2026',
-            'Growth Plan FY2026',
-            'Cost Reduction FY2026',
-            'Strategy Shift FY2027',
-            'Performance Based FY2027',
+            'Base Case',
+            'Worst Case',
+            'Best Case',
         ];
 
         foreach ($scenarios as $index => $name) {
             DB::table('t_BudgetScenarioPlanning')->insert([
                 'scenarioName' => $name,
                 'description' => "Scenario planning for {$name}.",
-                'budgetPeriod' => $budgetPeriods[array_rand($budgetPeriods)],
+                //'budgetPeriod' => $budgetPeriods[array_rand($budgetPeriods)],
                 'planningMethod' => $planningMethods[array_rand($planningMethods)],
                 'isDefault' => $index === 0, // First scenario isDefault
                 'CreatedBy' => $userId,

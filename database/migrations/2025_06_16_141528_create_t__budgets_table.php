@@ -11,14 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('t_BudgetScenarioPlanning', function (Blueprint $table) {
+        Schema::create('t_Budgets', function (Blueprint $table) {
             $table->id('Id');
-            $table->string('scenarioName');
-            $table->text('description');
-            $table->foreignId('budgetPeriod')->nullable();//constrained('t_BudgetPeriods','Id');
-            $table->foreignId('planningMethod')->constrained('t_BudgetPlanningMethods','Id');
-            $table->boolean('isDefault')->default(false);
-
+            $table->string('Name');
+            $table->integer('FiscalYear');
+            $table->date('From');
+            $table->date('To');
+            $table->longText('Notes');
+            
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
@@ -33,6 +33,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('t_BudgetScenarioPlanning');
+        Schema::dropIfExists('t_Budgets');
     }
 };

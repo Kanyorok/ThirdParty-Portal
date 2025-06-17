@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Budget\BudgetGLAccount;
 use App\Models\Budget\BudgetLine;
 use App\Models\Budget\BudgetLinesGLAccount;
+use App\Models\Budget\BudgetProductType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -24,7 +25,9 @@ class BudgetLineMappingController extends Controller
         $budgetLines=BudgetLine::with('glAccounts')->get();
         //Pull the GLS 
         $gls=BudgetGLAccount::select('Id','Description','GTType')->get();
-        return view('budgetandanalytics.budgetlinemapping.index',compact('budgetLines','gls'));
+        //Fetch Product type 
+        $productTypes=BudgetProductType::select('Id','Name')->get();
+        return view('budgetandanalytics.budgetlinemapping.index',compact('budgetLines','gls','productTypes'));
     }
 
     public function create()
@@ -33,7 +36,9 @@ class BudgetLineMappingController extends Controller
         $this->authorize(PermissionEnum::BudgetSetupCreate,BudgetLine::class);
         //Pull the GLS 
         $gls=BudgetGLAccount::select('Id','Description','GTType')->get();
-        return view('budgetandanalytics.budgetlinemapping.create',compact('gls'));
+        //Fetch Product type 
+        $productTypes=BudgetProductType::select('Id','Name')->get();
+        return view('budgetandanalytics.budgetlinemapping.create',compact('gls','productTypes'));
     }
 
     public function store(Request $request)
