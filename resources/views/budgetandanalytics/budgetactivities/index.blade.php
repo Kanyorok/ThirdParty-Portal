@@ -9,46 +9,45 @@
 <div class="mb-2 d-flex justify-content-between">
    <a href="{{ route('budgetactivities.create') }}" class="btn btn-success">➕ New Activity</a>    
   </div>
-    <table class="table table-bordered table-hover table-striped align-middle">
+    <table class="table table-bordered table-hover table-striped align-middle text-center">
       <thead class="table-light">
         <tr>
           <th>#</th>
           <th>Budget Line</th>
           <th>Activity</th>
-          <th>Owner</th>
-          <th>Cost Center</th>
-          <th>Driver-Based</th>
-          <th>Total Allocation (KES)</th>
+          <th>Branch</th>
+          <th>Allocation Type</th>
+          <th>Total Allocation</th>
           <th>Actions</th>
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <td>1</td>
-          <td>Marketing</td>
-          <td>Radio Ad Campaign – Q1</td>
-          <td>Jane Mwangi</td>
-          <td>Marketing Dept</td>
-          <td><span class="badge bg-success">Yes</span></td>
-          <td>250,000</td>
-          <td>
-            <button class="btn btn-sm btn-outline-primary">✏️ Edit</button>
-            <button class="btn btn-sm btn-outline-secondary">📊 View Monthly</button>
-          </td>
-        </tr>
-        <tr>
-          <td>2</td>
-          <td>Training</td>
-          <td>Branch Staff Training</td>
-          <td>John Otieno</td>
-          <td>HR Dept</td>
-          <td><span class="badge bg-secondary">No</span></td>
-          <td>180,000</td>
-          <td>
-            <button class="btn btn-sm btn-outline-primary">✏️ Edit</button>
-            <button class="btn btn-sm btn-outline-secondary">📊 View Monthly</button>
-          </td>
-        </tr>
+        @foreach ($activities as $item)            
+          <tr>
+            <td>{{ $loop->iteration }}</td>
+            <td>{{ $item->budgetLine->LineName }}</td>
+            <td>{{ $item->ActivityName }}</td>
+            <td>{{ $item->branch->Name }}</td>
+            @if ($item->AllocationType=='monthly')
+              <td>Monthly
+                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#viewAllocationsModal-{{ $item->Id }}">👁️ View</button>
+              </td>
+            @else
+              <td>Full Allocation</td>
+            @endif
+            <td>{{ $item->FullAllocation }}</td>
+            <td>
+              <button class="btn btn-sm btn-outline-primary">✏️</button>
+              <button class="btn btn-sm btn-outline-danger custom-delete-btn"
+                      data-bs-toggle="modal"
+                      data-bs-target="#customDeleteConfirmModal"
+                      data-name="{{ $item->budgetLine->LineName }}"
+                      data-route="{{ route('budgetactivities.destroy', $item->Id) }}">
+                🗑️
+              </button>
+            </td>
+          </tr>
+        @endforeach
         <!-- Add more rows as needed -->
       </tbody>
     </table>
@@ -56,4 +55,47 @@
 </div>
 
 
+
+@foreach ($activities as $item)
+  <!-- View Allocations Modal -->
+  <div class="modal fade" id="viewAllocationsModal-{{ $item->Id }}" tabindex="-1" aria-labelledby="viewAllocationsLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+          <div class="modal-content rounded-3 shadow">
+              <div class="modal-header">
+                  <h5 class="modal-title" id="viewAllocationsLabel">Monthly Allocations for {{ $item->ActivityName }}</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                  <table class="table table-striped">
+                      <thead>
+                          <tr>
+                              <th>Month</th>
+                              <th>Amount</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                        @foreach ($item->allocations as $alloc)
+                          <tr>
+                              <td>{{ \DateTime::createFromFormat('!m', $alloc->Month)->format('F') }}</td>
+                              <td>{{ number_format($alloc->Amount) }}</td>
+                          </tr>
+                        @endforeach
+                      </tbody>
+                      <tfoot>
+                          <tr>
+                              <th>Total</th>
+                              <th>{{ number_format($item->FullAllocation) }}</th>
+                          </tr>
+                      </tfoot>
+                  </table>
+              </div>
+              <div class="modal-footer">
+                  <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+              </div>
+          </div>
+      </div>
+  </div>
+@endforeach
+
+@include('components.modals.delete-confirm')
 @endsection
