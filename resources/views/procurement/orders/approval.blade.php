@@ -3,11 +3,12 @@
 @section('content')
     <div class="container">
         <div class="card">
-            <div class="card-header bg-primary text-white">
+            <div class="card-header bg-info text-white">
                 <h3>Purchase Order Approval</h3>
             </div>
 
             <div class="card-body">
+
                 <!-- PO Summary Section -->
                 <div class="row mb-4">
                     <div class="col-md-6">
