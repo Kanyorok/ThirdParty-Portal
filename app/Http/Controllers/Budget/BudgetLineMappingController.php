@@ -6,11 +6,13 @@ use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Budget\BudgetGLAccount;
 use App\Models\Budget\BudgetLine;
+use App\Models\Budget\BudgetLineCategories;
 use App\Models\Budget\BudgetLinesGLAccount;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use PhpOffice\PhpSpreadsheet\Calculation\Category;
 
 class BudgetLineMappingController extends Controller
 {
@@ -20,20 +22,25 @@ class BudgetLineMappingController extends Controller
         //Check if the user has permission to view using the enum set for budgetSetup
         $this->authorize(PermissionEnum::BudgetSetupView, BudgetLine::class);
 
-        //Fetch Budget Lines 
-        $budgetLines=BudgetLine::with('glAccounts')->get();
+        //Fetch Budget Lines with related glAccounts and category
+        $budgetLines = BudgetLine::with(['glAccounts', 'category'])->get();
+
+        //Fetch Budget Line Categories (if needed separately)
+        $budgetCategories = BudgetLineCategories::all();
+
         //Pull the GLS 
         $gls=BudgetGLAccount::select('Id','Description','GTType')->get();
-        return view('budgetandanalytics.budgetlinemapping.index',compact('budgetLines','gls'));
+        return view('budgetandanalytics.budgetlinemapping.index', compact('budgetLines', 'gls', 'budgetCategories'));
     }
 
     public function create()
     {
         //Check Permissions
         $this->authorize(PermissionEnum::BudgetSetupCreate,BudgetLine::class);
+        $budgetCategories = BudgetLineCategories::all();
         //Pull the GLS 
         $gls=BudgetGLAccount::select('Id','Description','GTType')->get();
-        return view('budgetandanalytics.budgetlinemapping.create',compact('gls'));
+        return view('budgetandanalytics.budgetlinemapping.create',compact('gls', 'budgetCategories'));
     }
 
     public function store(Request $request)
@@ -41,6 +48,7 @@ class BudgetLineMappingController extends Controller
         //Check Permissions
         $this->authorize(PermissionEnum::BudgetSetupCreate,BudgetLine::class);
         $validated = $request->validate([
+            'BudgetLineCategoryID' => 'required|exists:t_BudgetLineCategories,Id',
             'LineName' => 'required|string|max:255',
             'Description' => 'required|string',
             'GLS' => 'required|array|min:1',
@@ -55,6 +63,7 @@ class BudgetLineMappingController extends Controller
                 BudgetLine::where('IsDefault',1)->update(['IsDefault'=>0]);
             }
             $budgetLine = BudgetLine::create([
+                'BudgetLineCategoryID' => $validated['BudgetLineCategoryID'],
                 'LineName'=>$validated['LineName'],
                 'Description'=>$validated['Description'],
                 'IsDefault'   => $request->has('IsDefault') ? 1 : 0,
@@ -70,7 +79,7 @@ class BudgetLineMappingController extends Controller
                     'BudgetGLAccountID' => $glId,
 
                     'CreatedBy' => Auth::id(),
-                    'ModifiedBy'=>Auth::id()
+                    'ModifiedBy' => Auth::id()
                 ]);
             }
 
@@ -103,6 +112,7 @@ public function update(Request $request, $id)
     $this->authorize(PermissionEnum::BudgetSetupUpdate, BudgetLine::class);
 
     $validated = $request->validate([
+        'BudgetLineCategoryID' => 'required|exists:t_BudgetLineCategories,Id',
         'LineName' => 'required|string|max:255',
         'Description' => 'required|string',
         'GLS' => 'required|array|min:1',
@@ -122,6 +132,7 @@ public function update(Request $request, $id)
 
         // Update BudgetLine fields
         $budgetLine->update([
+            'BudgetLineCategoryID' => $validated['BudgetLineCategoryID'],
             'LineName' => $validated['LineName'],
             'Description' => $validated['Description'],
             'IsDefault' => $request->has('IsDefault') ? 1 : 0,

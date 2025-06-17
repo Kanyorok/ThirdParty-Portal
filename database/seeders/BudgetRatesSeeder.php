@@ -14,7 +14,7 @@ class BudgetRatesSeeder extends Seeder
      */
     public function run(): void
     {
-          $now = Carbon::now();
+        $now = Carbon::now();
 
         // Ensure at least one user exists
         $userId = DB::table('t_Users')->value('Id');
@@ -24,17 +24,12 @@ class BudgetRatesSeeder extends Seeder
         }
 
         $rateTypes = [
-            ['RATE-001', 'Interest Rate', 'Used for loan calculations', true],
-            ['RATE-002', 'Exchange Rate', 'Used for currency conversion', false],
-            ['RATE-003', 'Inflation Rate', 'Adjusts for economic inflation', false],
-            ['RATE-004', 'Discount Rate', 'Used for present value calculations', false],
-            ['RATE-005', 'Tax Rate', 'Applicable for tax projections', false],
-            ['RATE-006', 'Growth Rate', 'Used in forecasting future values', false],
-            ['RATE-007', 'Depreciation Rate', 'Used for asset depreciation', false],
-            ['RATE-008', 'Contribution Rate', 'Staff pension or benefits contribution', false],
-            ['RATE-009', 'Penalty Rate', 'Late payment penalties', false],
-            ['RATE-010', 'Escalation Rate', 'Annual increase projections', false]
-        ];
+            ['RATE-001', 'Interest Rate', 'The percentage charged on loans or earned on savings over a period of time. Commonly used in financial projections and loan repayment schedules.', true],
+            ['RATE-002', 'Exchange Rate', 'The rate at which one currency can be exchanged for another. Critical in budgeting for multi-currency transactions and conversions.', true],
+            ['RATE-003', 'Inflation Rate', 'Represents the annual percentage increase in the price of goods and services. Used to adjust historical costs and forecast future pricing.', false],
+            ['RATE-004', 'Discount Rate', 'Used to calculate the present value of future cash flows. It reflects the time value of money and investment risk.', false],
+            ['RATE-005', 'Tax Rate', 'Represents the percentage of tax levied on income, goods, or services. Helps estimate tax liabilities in financial plans.', true],
+            ];
 
         foreach ($rateTypes as [$code, $name, $desc, $isDefault]) {
             DB::table('t_BudgetRates')->insert([
@@ -51,6 +46,6 @@ class BudgetRatesSeeder extends Seeder
             ]);
         }
 
-        echo "✅ Seeded t_BudgetRates with 10 entries.\n";
+        echo "✅ Seeded t_BudgetRates with 10 entries (some marked as default).\n";
     }
 }

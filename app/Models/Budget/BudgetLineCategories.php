@@ -2,42 +2,38 @@
 
 namespace App\Models\Budget;
 
-use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\Model\UserActorTrait;
 
-class BudgetDriver extends Model
+class BudgetLineCategories extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use SoftDeletes;
+    use UserActorTrait;
 
-    protected $table='t_BudgetDrivers';
+    protected $table = 't_BudgetLineCategories';
     protected $primaryKey = 'Id';
-    
+
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
 
-    protected $fillable=[
-        'DriverName',
+    protected $fillable = [
+        'CategoryCode',
+        'CategoryName',
         'Description',
         'IsActive',
-
         'CreatedBy',
-        'CreatedOn',
         'ModifiedBy',
-        'ModifiedOn',
         'DeletedBy',
     ];
 
-    protected $cast=[
-        'IsActive'=>'boolean',
-        'CreatedOn'   => 'datetime',
-        'ModifiedOn'  => 'datetime',
-        'DeletedOn'   => 'datetime',
+    protected $casts = [
+        'IsActive' => 'boolean',
     ];
 
     public static function getPrimaryKey(): string
     {
-        return 'BudgetDriverId';
+        return 'BudgetLineCategoriesId';
     }
 }

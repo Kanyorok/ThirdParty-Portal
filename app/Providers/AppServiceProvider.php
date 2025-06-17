@@ -7,6 +7,7 @@ use App\Models\Auth\User;
 use App\Models\BR\Account;
 use App\Models\BR\Client;
 use App\Models\BR\DebtProduct;
+use App\Models\Budget\BudgetActivityMaster;
 use App\Models\Budget\BudgetActivity;
 use App\Models\Budget\BudgetDriver;
 use App\Models\Budget\BudgetDriverMaster;
@@ -19,6 +20,7 @@ use App\Models\Budget\BudgetPeriodTypes;
 use App\Models\Budget\BudgetMonthlyAllocation;
 use App\Models\Budget\BudgetProduct;
 use App\Models\Budget\BudgetProductType;
+use App\Models\Budget\BudgetScenarioPlanning;
 use App\Models\Budget\BudgetTopDown;
 use App\Models\Budget\BudgetTopDownData;
 use App\Models\Communication\Call;
@@ -159,11 +161,13 @@ class AppServiceProvider extends ServiceProvider
             PlanLineItems::getPrimaryKey() => PlanLineItems::class,
           
             ///////// Budget and Analytics /////////
+            BudgetActivityMaster::getPrimaryKey()=>BudgetActivityMaster::class,
             BudgetLinesGLAccount::getPrimaryKey()=>BudgetLinesGLAccount::class,
             BudgetGLAccount::getPrimaryKey()=>BudgetGLAccount::class,
             BudgetLine::getPrimaryKey()=>BudgetLine::class,
             BudgetPeriods::getPrimaryKey()=>BudgetPeriods::class,
             BudgetPeriodTypes::getPrimaryKey()=>BudgetPeriodTypes::class,
+            BudgetScenarioPlanning::getPrimaryKey()=>BudgetScenarioPlanning::class,
             BudgetProduct::getPrimaryKey()=>BudgetProduct::class,
             BudgetProductType::getPrimaryKey()=>BudgetProductType::class,
             BudgetDriver::getPrimaryKey()=>BudgetDriver::class,
