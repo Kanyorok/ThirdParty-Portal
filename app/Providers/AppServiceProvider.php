@@ -37,6 +37,7 @@ use App\Models\CRM\Survey;
 use App\Models\CRM\Ticket;
 use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
+use App\Models\Inventory\LoadOpeningStock;
 use App\Models\Procurement\DepartmentNeeds;
 use App\Models\Procurement\Order;
 use App\Models\Procurement\RequisitionLine;
@@ -53,6 +54,7 @@ use App\Models\Settings\APICredential;
 use App\Models\ThirdParies\Board;
 use App\Models\ThirdParies\Competitor;
 use App\Policies\CrmBranchPolicy;
+use App\Policies\Inventory\OpenStockPolicy;
 use App\Policies\Procurement\DepartmentNeedsPolicy;
 use App\Policies\Procurement\OrderPolicy;
 use App\Policies\Procurement\ProcurementMethodPolicy;
@@ -157,17 +159,17 @@ class AppServiceProvider extends ServiceProvider
             InterBranchRequisition::getPrimaryKey() => InterBranchRequisition::class,
             ConsolidatedProcurementPlan::getPrimaryKey() => ConsolidatedProcurementPlan::class,
             PlanLineItems::getPrimaryKey() => PlanLineItems::class,
-
+          
             ///////// Budget and Analytics /////////
-            BudgetLinesGLAccount::getPrimaryKey() => BudgetLinesGLAccount::class,
-            BudgetGLAccount::getPrimaryKey() => BudgetGLAccount::class,
-            BudgetLine::getPrimaryKey() => BudgetLine::class,
-            BudgetProduct::getPrimaryKey() => BudgetProduct::class,
-            BudgetProductType::getPrimaryKey() => BudgetProductType::class,
-            BudgetDriver::getPrimaryKey() => BudgetDriver::class,
-            BudgetDriverMaster::getPrimaryKey() => BudgetDriverMaster::class,
+            BudgetLinesGLAccount::getPrimaryKey()=>BudgetLinesGLAccount::class,
+            BudgetGLAccount::getPrimaryKey()=>BudgetGLAccount::class,
+            BudgetLine::getPrimaryKey()=>BudgetLine::class,
+            BudgetProduct::getPrimaryKey()=>BudgetProduct::class,
+            BudgetProductType::getPrimaryKey()=>BudgetProductType::class,
+            BudgetDriver::getPrimaryKey()=>BudgetDriver::class,
+            BudgetDriverMaster::getPrimaryKey()=>BudgetDriverMaster::class,
 
-
+          
             CategoryMaster::getPrimaryKey() => CategoryMaster::class,
             PropertyType::getPrimaryKey() => PropertyType::class,
             PropertyRegistry::getPrimaryKey() => PropertyRegistry::class,

@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="container mt-4">
-    <h3 class="mb-4">Edit Procurement Mode</h3>
+    <h3 class="mb-4">Edit Procurement Method</h3>
 
     @if(session('success'))
     <div class="alert alert-success">{{ session('success') }}</div>
@@ -26,7 +26,7 @@
         @method('PUT')
 
         <div class="mb-3">
-            <label for="name" class="form-label">Mode Name</label>
+            <label for="name" class="form-label">Method Name</label>
             <input type="text" name="name" id="name" value="{{ old('name', $procurement_mode->Name) }}" class="form-control" required>
         </div>
 
@@ -35,7 +35,7 @@
             <textarea name="description" id="description" class="form-control" rows="3">{{ old('description', $procurement_mode->Description) }}</textarea>
         </div>
 
-        <button type="submit" class="btn btn-primary">Update Mode</button>
+        <button type="submit" class="btn btn-primary">Update Method</button>
         <a href="{{ route('procurement-modes.index') }}" class="btn btn-secondary">Cancel</a>
     </form>
 </div>

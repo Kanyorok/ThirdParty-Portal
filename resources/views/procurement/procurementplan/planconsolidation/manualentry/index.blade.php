@@ -50,7 +50,7 @@
               <th>Category</th>
               <th>Qty</th>
               <th>UOM</th>
-              <th>Est. Cost</th>
+              <th>Est. Unit Cost</th>
               <th>Planned Quarter</th>
               <th>Expected Delivery</th>
               <th>Action</th>

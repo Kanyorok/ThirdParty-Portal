@@ -45,6 +45,8 @@ class PlanLineItems extends Model
         'ModifiedBy',
         'DeletedBy',
         'ExpectedDeliveryDate',
+        'SourceType',
+        'OriginalQTY',
 
     ];
     
@@ -64,6 +66,10 @@ class PlanLineItems extends Model
     {
         return $this->belongsTo(Department::class, 'DepartmentID');
     }
+    public function procurementMode()
+{
+    return $this->belongsTo(ProcurementMode::class, 'ProcurementMethod', 'id');
+}
 
     public function procurementMode()
     {
