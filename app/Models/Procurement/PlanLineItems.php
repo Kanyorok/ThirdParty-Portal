@@ -47,8 +47,8 @@ class PlanLineItems extends Model
         'ExpectedDeliveryDate',
 
     ];
+    
     protected $dates = ['ExpectedDeliveryDate'];
-
 
     // Relationships
     public function consolidatedProcurementPlan()
@@ -63,6 +63,11 @@ class PlanLineItems extends Model
     public function department()
     {
         return $this->belongsTo(Department::class, 'DepartmentID');
+    }
+
+    public function procurementMode()
+    {
+        return $this->belongsTo(ProcurementMode::class, 'ProcurementMethod', 'id');
     }
 
     // PlanLineItems.php
@@ -88,7 +93,7 @@ class PlanLineItems extends Model
 
     public function budgetline()
     {
-        return $this->belongsTo(BudgetMaster::class, 'BudgetLineID', 'BudgetLineID');
+        return $this->belongsTo(BudgetMaster::class, 'BudgetLineID', 'Id');
     }
 
     public function setMethod()

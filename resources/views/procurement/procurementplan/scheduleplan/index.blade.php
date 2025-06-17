@@ -59,7 +59,8 @@
                 document.addEventListener('DOMContentLoaded', function () {
                     const loadBtn = document.getElementById('load-items-btn');
                     const planSelect = document.getElementById('approved-plan-select');
-
+                    const tbody = document.getElementById('items-table-body');
+                    const hiddenPlanId = document.getElementById('approved-plan-id-hidden'); // Define hiddenPlanId
                     const baseUrl = @json(route('Procurement-Plan-Schedule.view', ['PlanId' => '__PLAN_ID__']));
 
                     loadBtn.addEventListener('click', function () {
@@ -69,7 +70,18 @@
                             return;
                         }
 
-                        document.getElementById('approved-plan-id-hidden').value = planId;
+                        hiddenPlanId.value = planId; // Assign the selected plan ID to the hidden input
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="7" class="text-center py-4">
+                                    <div class="d-flex justify-content-center align-items-center">
+                                        <div class="spinner-border text-primary me-2" role="status">
+                                            <span class="visually-hidden">Loading Items...</span>
+                                        </div>
+                                        <strong>Loading Items...</strong>
+                                    </div>
+                                </td>
+                            </tr>`;
 
                         fetch(`${baseUrl.replace('__PLAN_ID__', planId)}`)
                             .then(response => response.json())
