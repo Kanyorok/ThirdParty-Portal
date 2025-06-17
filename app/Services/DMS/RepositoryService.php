@@ -3,9 +3,14 @@
 namespace App\Services\DMS;
 
 use App\Enums\Core\VisibilityEnum;
+use App\Exceptions\ErroredException;
 use App\Helpers\SystemHelper;
 use App\Models\Auth\User;
 use App\Models\DMS\Repository;
+use Exception;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class RepositoryService extends PermissionsService
 {
@@ -23,28 +28,42 @@ class RepositoryService extends PermissionsService
         });
     }
 
+    /**
+     * @throws ErroredException
+     */
     private static function _create(string $Name, User $actor, Repository $repository = null, string $Description = ""): Repository
     {
-        $visibility = (($repository instanceof Repository) && $repository->Visibility->value === VisibilityEnum::Private->value) ?
-            VisibilityEnum::Private : VisibilityEnum::Public;
+        try {
+            return DB::transaction(static function () use ($repository, $Name, $Description, $actor) {
+                $visibility = (($repository instanceof Repository) && $repository->Visibility->value === VisibilityEnum::Private->value) ?
+                    VisibilityEnum::Private : VisibilityEnum::Public;
 
-        $repo = Repository::create([
-            'Name' => $Name,
-            'Description' => $Description,
-            'RepositoryID' => $repository->Id ?? null,
-            'Visibility' => $visibility->value,
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
-        ]);
+                $repo = Repository::create([
+                    'Name' => $Name,
+                    'Description' => $Description,
+                    'RepositoryID' => $repository->Id ?? null,
+                    'Visibility' => $visibility->value,
+                    'CreatedBy' => $actor->Id,
+                    'ModifiedBy' => $actor->Id,
+                ]);
 
-        //copy permissions
-        if ($visibility->value === VisibilityEnum::Private->value) {
-            self::copyRepoPermissions($repository, $repo);
+                //copy permissions
+                if ($visibility->value === VisibilityEnum::Private->value) {
+                    self::copyRepoPermissions($repository, $repo);
+                }
+
+                activity()->causedBy($actor)->performedOn($repo)->event('create')->log('Created folder : ' . $repo->Name);
+                return $repo;
+            });
+        } catch (Exception|Throwable $e) {
+            Log::error('Error creating repository: ' . $e->getMessage());
+            throw new ErroredException();
         }
-
-        return $repo;
     }
 
+    /**
+     * @throws ErroredException
+     */
     public static function create(Repository $repository, string $Name, User $actor, string $Description = ""): RepositoryService
     {
         return new self(self::_create($Name, $actor, $repository, $Description));
