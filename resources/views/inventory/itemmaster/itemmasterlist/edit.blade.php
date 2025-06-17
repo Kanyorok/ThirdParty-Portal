@@ -162,7 +162,7 @@
             $('#subcategory').html('<option value="">Loading...</option>');
 
             $.ajax({
-                url: "{{ route('get.subcategories') }}",
+                url: "{{ route('inventory.getSubcategories') }}",
                 type: 'GET',
                 data: { category_id: categoryId },
                 success: function (data) {
