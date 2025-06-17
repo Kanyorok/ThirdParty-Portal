@@ -87,6 +87,7 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
 
 
     //Route::resource('openingstock', OpeningStockController::class);
+    Route::get('/openingstock/index', [OpeningStockController::class, 'index'])->name('openingstock.index');
     Route::get('/openingstock/create', [OpeningStockController::class, 'create'])->name('openingstock.create');
     Route::get('/downloads/opening-stock-sample', [OpeningStockController::class, 'downloadSampleTemplate'])->name('openingstock.sample');
     Route::post('/openingstock/upload', [OpeningStockController::class, 'uploadExcel'])->name('openingstock.upload');
