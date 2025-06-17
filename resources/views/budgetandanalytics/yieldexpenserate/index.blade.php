@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Driver Rates')
+@section('title', 'Products Rates')
 @section('content')
 @if ($errors->any())
     <div class="alert alert-danger">
@@ -18,17 +18,21 @@
     + New Rate
    </a>
    </div>
-    <div class="card-header bg-secondary text-white">📈 Loan Yield / Interest Expense Rates</div>
+    <div class="card-header bg-secondary text-white">📈Product Rates</div>
+    <p class="text-muted">
+    This form allows you to configure and manage financial rates for products imported from the Core Banking System (CBS). 
+    Specify the rate type (e.g., interest, tax, discount), applicable product and source of the rate. These settings will directly impact budget drivers and projections tied to each product.
+    </p>
     <div class="card-body">
         <table class="table table-bordered table-striped">
             <thead class="table-light">
                 <tr>
                     <th>#</th>
-                    <th>Period</th>
+                    {{-- <th>Period</th> --}}
                     <th>Product</th>
                     <th>Rate Type</th>
                     <th>Rate Value</th>
-                    <th>Effective Date</th>
+                    {{-- <th>Effective Date</th> --}}
                     <th>Source</th>
                     <th>Actions</th>
                 </tr>
@@ -37,11 +41,11 @@
                 @foreach ($driverRates as $item)
                     <tr>
                         <td>{{ $loop->iteration }}. </td>
-                        <td>{{ $item->periodType->PeriodType }}</td>
+                        {{-- <td>{{ $item->periodType->PeriodType }}</td> --}}
                         <td>{{ $item->productType->Name }}</td>
                         <td>{{ $item->rateType->RateTypeName }}</td>
                         <td>{{ $item->RateValue }}</td>
-                        <td>{{ \Carbon\Carbon::parse($item->EffectiveDate)->format('d-m-y') }}</td>
+                        {{-- <td>{{ \Carbon\Carbon::parse($item->EffectiveDate)->format('d-m-y') }}</td> --}}
                         <td>{{ $item->Source }}</td>
                         <td>
                             <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#editRaterModal">
@@ -74,7 +78,7 @@
                         @method('POST')
                         <div class="row">
                             <!-- Budget Period -->
-                            <div class="mb-4 col-md-6">
+                            {{-- <div class="mb-4 col-md-6">
                                 <label class="form-label">Budget Period</label>
                                 <select class="form-select" name="PeriodTypeID" required>
                                     <option value="">-- Select Period --</option>
@@ -85,7 +89,7 @@
                                 @error('PeriodTypeID')
                                     <div class="text-danger">{{ $message }}</div>
                                 @enderror
-                            </div>
+                            </div> --}}
 
                             <!-- Product -->
                             <div class="mb-4 col-md-6">
@@ -125,13 +129,13 @@
                             </div>
 
                             <!-- Effective Date -->
-                            <div class="mb-4 col-md-6">
+                            {{-- <div class="mb-4 col-md-6">
                                 <label class="form-label">Effective Date</label>
                                 <input type="date" class="form-control" name="EffectiveDate" required>
                                 @error('EffectiveDate')
                                     <div class="text-danger">{{ $message }}</div>
                                 @enderror
-                            </div>
+                            </div> --}}
 
                             <!-- Source -->
                             <div class="mb-4 col-md-6">

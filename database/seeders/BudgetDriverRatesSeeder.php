@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class BudgetDriverRatesSeeder extends Seeder
 {
@@ -31,38 +32,43 @@ class BudgetDriverRatesSeeder extends Seeder
         }
 
         $rateTypeIds = DB::table('t_BudgetRates')->pluck('Id')->toArray();
+        Log::info('t_BudgetRates IDs: ' . json_encode($rateTypeIds));
         if (empty($rateTypeIds)) {
             throw new \Exception('No rate types found in t_BudgetRates table. Please seed t_BudgetRates first.');
         }
 
         $rates = [
-            ['PeriodTypeID' => $periodTypeIds[0], 'ProductTypeID' => $productTypeIds['LN001'], 'RateTypeID' => $rateTypeIds[0], 'RateValue' => 5.25, 'EffectiveDate' => '2025-01-01 00:00:00', 'Source' => 'Market Analysis'],
-            ['PeriodTypeID' => $periodTypeIds[1], 'ProductTypeID' => $productTypeIds['MTG01'], 'RateTypeID' => $rateTypeIds[1], 'RateValue' => 3.75, 'EffectiveDate' => '2025-02-01 00:00:00', 'Source' => 'Central Bank'],
-            ['PeriodTypeID' => $periodTypeIds[2], 'ProductTypeID' => $productTypeIds['CC001'], 'RateTypeID' => $rateTypeIds[1], 'RateValue' => 18.50, 'EffectiveDate' => '2025-03-01 00:00:00', 'Source' => 'Internal Policy'],
-            ['PeriodTypeID' => $periodTypeIds[3], 'ProductTypeID' => $productTypeIds['SV001'], 'RateTypeID' => $rateTypeIds[2], 'RateValue' => 1.20, 'EffectiveDate' => '2025-04-01 00:00:00', 'Source' => 'Market Analysis'],
-            ['PeriodTypeID' => $periodTypeIds[4], 'ProductTypeID' => $productTypeIds['CK001'], 'RateTypeID' => $rateTypeIds[2], 'RateValue' => 10.50, 'EffectiveDate' => '2025-05-01 00:00:00', 'Source' => 'Internal Policy'],
-            ['PeriodTypeID' => $periodTypeIds[5], 'ProductTypeID' => $productTypeIds['CL001'], 'RateTypeID' => $rateTypeIds[3], 'RateValue' => 6.80, 'EffectiveDate' => '2025-06-01 00:00:00', 'Source' => 'Market Analysis'],
-            ['PeriodTypeID' => $periodTypeIds[0], 'ProductTypeID' => $productTypeIds['WM001'], 'RateTypeID' => $rateTypeIds[4], 'RateValue' => 2.00, 'EffectiveDate' => '2025-07-01 00:00:00', 'Source' => 'Internal Policy'],
-            ['PeriodTypeID' => $periodTypeIds[0], 'ProductTypeID' => $productTypeIds['OD001'], 'RateTypeID' => $rateTypeIds[0], 'RateValue' => 12.00, 'EffectiveDate' => '2025-08-01 00:00:00', 'Source' => 'Central Bank'],
-            ['PeriodTypeID' => $periodTypeIds[6], 'ProductTypeID' => $productTypeIds['FD001'], 'RateTypeID' => $rateTypeIds[0], 'RateValue' => 2.50, 'EffectiveDate' => '2025-09-01 00:00:00', 'Source' => 'Market Analysis'],
-            ['PeriodTypeID' => $periodTypeIds[4], 'ProductTypeID' => $productTypeIds['IL001'], 'RateTypeID' => $rateTypeIds[1], 'RateValue' => 7.25, 'EffectiveDate' => '2025-10-01 00:00:00', 'Source' => 'Internal Policy'],
+            ['PeriodTypeID' => $periodTypeIds[0] ?? 1, 'ProductCode' => 'LN', 'RateTypeID' => $rateTypeIds[0] ?? 1, 'RateValue' => 5.25, 'EffectiveDate' => '2025-01-01 00:00:00', 'Source' => 'Market Analysis'],
+            ['PeriodTypeID' => $periodTypeIds[1] ?? 1, 'ProductCode' => 'LN', 'RateTypeID' => $rateTypeIds[1] ?? 2, 'RateValue' => 3.75, 'EffectiveDate' => '2025-02-01 00:00:00', 'Source' => 'Central Bank'],
+            ['PeriodTypeID' => $periodTypeIds[2] ?? 1, 'ProductCode' => 'CA', 'RateTypeID' => $rateTypeIds[1] ?? 2, 'RateValue' => 18.50, 'EffectiveDate' => '2025-03-01 00:00:00', 'Source' => 'Internal Policy'],
+            ['PeriodTypeID' => $periodTypeIds[3] ?? 1, 'ProductCode' => 'SB', 'RateTypeID' => $rateTypeIds[2] ?? 3, 'RateValue' => 1.20, 'EffectiveDate' => '2025-04-01 00:00:00', 'Source' => 'Market Analysis'],
+            ['PeriodTypeID' => $periodTypeIds[4] ?? 1, 'ProductCode' => 'CA', 'RateTypeID' => $rateTypeIds[2] ?? 3, 'RateValue' => 10.50, 'EffectiveDate' => '2025-05-01 00:00:00', 'Source' => 'Internal Policy'],
+            ['PeriodTypeID' => $periodTypeIds[5] ?? 1, 'ProductCode' => 'LN', 'RateTypeID' => $rateTypeIds[3] ?? 4, 'RateValue' => 6.80, 'EffectiveDate' => '2025-06-01 00:00:00', 'Source' => 'Market Analysis'],
+            ['PeriodTypeID' => $periodTypeIds[0] ?? 1, 'ProductCode' => 'SB', 'RateTypeID' => $rateTypeIds[4] ?? 5, 'RateValue' => 2.00, 'EffectiveDate' => '2025-07-01 00:00:00', 'Source' => 'Internal Policy'],
+            ['PeriodTypeID' => $periodTypeIds[0] ?? 1, 'ProductCode' => 'OD', 'RateTypeID' => $rateTypeIds[0] ?? 1, 'RateValue' => 12.00, 'EffectiveDate' => '2025-08-01 00:00:00', 'Source' => 'Central Bank'],
+            ['PeriodTypeID' => $periodTypeIds[6] ?? 1, 'ProductCode' => 'FD', 'RateTypeID' => $rateTypeIds[0] ?? 1, 'RateValue' => 2.50, 'EffectiveDate' => '2025-09-01 00:00:00', 'Source' => 'Market Analysis'],
+            ['PeriodTypeID' => $periodTypeIds[4] ?? 1, 'ProductCode' => 'LN', 'RateTypeID' => $rateTypeIds[1] ?? 2, 'RateValue' => 7.25, 'EffectiveDate' => '2025-10-01 00:00:00', 'Source' => 'Internal Policy'],
         ];
 
         foreach ($rates as $rate) {
-            DB::table('t_BudgetDriverRates')->insert([
-                'PeriodTypeID' => $rate['PeriodTypeID'],
-                'ProductTypeID' => $rate['ProductTypeID'],
-                'RateTypeID' => $rate['RateTypeID'],
-                'RateValue' => $rate['RateValue'],
-                'EffectiveDate' => $rate['EffectiveDate'],
-                'Source' => $rate['Source'],
-                'CreatedBy' => $userIds[array_rand($userIds)],
-                'CreatedOn' => Carbon::now()->subDays(rand(1, 30)),
-                'ModifiedBy' => $userIds[array_rand($userIds)],
-                'ModifiedOn' => Carbon::now()->subDays(rand(0, 10)),
-                'DeletedBy' => null,
-                'DeletedOn' => null,
-            ]);
+            if (isset($productTypeIds[$rate['ProductCode']])) {
+                DB::table('t_BudgetDriverRates')->insert([
+                    'PeriodTypeID' => $rate['PeriodTypeID'],
+                    'ProductTypeID' => $productTypeIds[$rate['ProductCode']],
+                    'RateTypeID' => $rate['RateTypeID'],
+                    'RateValue' => $rate['RateValue'],
+                    'EffectiveDate' => $rate['EffectiveDate'],
+                    'Source' => $rate['Source'],
+                    'CreatedBy' => $userIds[array_rand($userIds)],
+                    'CreatedOn' => Carbon::now()->subDays(rand(1, 30)),
+                    'ModifiedBy' => $userIds[array_rand($userIds)],
+                    'ModifiedOn' => Carbon::now()->subDays(rand(0, 10)),
+                    'DeletedBy' => null,
+                    'DeletedOn' => null,
+                ]);
+            } else {
+                Log::warning("Skipping rate for ProductCode {$rate['ProductCode']} as it does not exist in t_BudgetProductTypes.");
+            }
         }
     }
 }

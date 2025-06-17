@@ -6,8 +6,8 @@ use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Budget\BudgetGLAccount;
 use App\Models\Budget\BudgetLine;
-use App\Models\Budget\BudgetLineCategories;
 use App\Models\Budget\BudgetLinesGLAccount;
+use App\Models\Budget\BudgetProductType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -25,22 +25,22 @@ class BudgetLineMappingController extends Controller
         //Fetch Budget Lines with related glAccounts and category
         $budgetLines = BudgetLine::with(['glAccounts', 'category'])->get();
 
-        //Fetch Budget Line Categories (if needed separately)
-        $budgetCategories = BudgetLineCategories::all();
-
         //Pull the GLS 
         $gls=BudgetGLAccount::select('Id','Description','GTType')->get();
-        return view('budgetandanalytics.budgetlinemapping.index', compact('budgetLines', 'gls', 'budgetCategories'));
+        //Fetch Product type 
+        $productTypes=BudgetProductType::select('Id','Name')->get();
+        return view('budgetandanalytics.budgetlinemapping.index',compact('budgetLines','gls','productTypes'));
     }
 
     public function create()
     {
         //Check Permissions
         $this->authorize(PermissionEnum::BudgetSetupCreate,BudgetLine::class);
-        $budgetCategories = BudgetLineCategories::all();
         //Pull the GLS 
         $gls=BudgetGLAccount::select('Id','Description','GTType')->get();
-        return view('budgetandanalytics.budgetlinemapping.create',compact('gls', 'budgetCategories'));
+        //Fetch Product type 
+        $productTypes=BudgetProductType::select('Id','Name')->get();
+        return view('budgetandanalytics.budgetlinemapping.create',compact('gls','productTypes'));
     }
 
     public function store(Request $request)

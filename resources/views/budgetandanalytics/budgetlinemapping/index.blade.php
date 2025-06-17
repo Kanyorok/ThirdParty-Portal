@@ -10,59 +10,67 @@
             @endforeach
         </ul>
     </div>
-@endif
-<div class="card mb-4">
-
+@endif  
   <div class="mb-2 d-flex justify-content-between">
-   <a href="{{ route('budgetlinemapping.create') }}" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addLineModal">
+   <a href="{{ route('budgetlinemapping.create') }}" class="btn btn-success btn-sm" data-bs-toggle="modal1" data-bs-target="#addLineModal">
     + New Budget Line</a>
-   </div>
+  </div>
+<div class="card mb-4">
 <div class="card-header bg-secondary text-white">📄 Budget Lines List</div>
   <div class="card-body">
-    <p class="text-muted mb-2">Manage your budget lines and their associated GL accounts here. You can add, edit, or delete budget lines as needed.Each budget line can be linked to multiple CBS GL accounts. Ensure you map them correctly for accurate financial reporting.</p>
-    <table class="table table-bordered  table-hover">
-      <thead class="table-light">
-        <tr>
-          <th>#</th>
-          <th>Budget Line Category</th>
-          <th>Line Name</th>
-          <th>Description</th>
-          <th>CBS GLs Mapped</th>
-          {{-- <th>ERP GLs Mapped</th> --}}
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        @foreach ($budgetLines as $item)
-            <tr>
-              <td>{{ $loop->index+1 }}.</td>
-              <td>{{ $item->category->CategoryName ?? 'N/A' }}</td>
-              <td>
-                {{ $item->LineName }}
-                {{-- @if ($item->IsDefault)
-                  <span class="badge bg-success">Default</span>
-                @endif --}}
-              </td>
-              <td style="white-space: normal; break-word; max-width= 300px;">{{ $item->Description }}</td>
-                <td>
-                @foreach($item->glAccounts as $gl)
-                  <small><div>- {{ $gl->Description }}</div></small>
-                @endforeach
-                </td>
-              {{-- <td>ERP1001</td> --}}
-              <td>
-                <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editLineModal{{ $item->Id }}">
-                  ✏ Edit</button>
-                  <form method="POST" action="{{ route('budgetlinemapping.destroy',$item->Id) }}" class="delete-form d-inline">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-sm btn-danger delete-btn">🗑 Delete</button>
-                </form>
-              </td>
-            </tr>        
-        @endforeach
-      </tbody>
-    </table>
+<p class="text-muted">
+  Below is a list of all existing Budget Lines, including their associated departments, descriptions, mapped CBS GL accounts, and product type mappings (if projection-driven). 
+</p>
+<div class="table-responsive">
+  <table class="table table-bordered table-hover text-nowrap text-center">
+    <thead class="table-light">
+      <tr>
+        <th>#</th>
+        <th>Line Name</th>
+        <th>Department</th>
+        <th>Products Type</th>
+        <th>Description</th>
+        <th>CBS GLs Mapped</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      @foreach ($budgetLines as $item)
+          <tr>
+            <td>{{ $loop->index+1 }}.</td>
+            <td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              {{ $item->LineName }}
+              @if ($item->IsDefault)
+                <span class="badge bg-success">Default</span>
+              @endif
+            </td>
+            <td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ $item->Description }}">
+              {{ $item->Description }}
+            </td>
+            <td>3</td>
+            <td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              {{ $item->Description }}
+            </td>
+            <td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              @foreach($item->glAccounts as $gl)
+                <small><div>GL10014- {{ $gl->Description }}</div></small>
+              @endforeach
+            </td>
+            <td>
+              <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editLineModal{{ $item->Id }}">
+                ✏ Edit</button>
+                <form method="POST" action="{{ route('budgetlinemapping.destroy',$item->Id) }}" class="delete-form d-inline">
+                  @csrf
+                  @method('DELETE')
+                  <button type="submit" class="btn btn-sm btn-danger delete-btn">🗑 Delete</button>
+              </form>
+            </td>
+          </tr>        
+      @endforeach
+    </tbody>
+  </table>
+</div>
+
   </div>
 </div>
 
@@ -80,9 +88,9 @@
                   <form action="{{ route('budgetlinemapping.store') }}" method="POST">
                     @csrf
                     @method('POST')
+                    <div class="row">
                     <!-- 🧾 Budget Line Entry -->
-
-                    <div class="mb-3">
+                    <div class="mb-3 col-md-6">
                       <label class="form-label">Budget Category</label>
                       <select class="form-select" name="BudgetLineCategoryID" required>
                         <option selected disabled>-- Select Budget Category --</option>
@@ -98,6 +106,33 @@
                       @error('LineName')
                           <div class="text-danger">{{ $message }}</div>
                       @enderror
+                    </div>
+                    
+                    <div class="mb-3 col-md-6">
+                      <label class="form-label">Department</label>
+                      <select class="form-select">
+                        <option selected disabled>-- Select Department --</option>
+                        <option value="ERP001">ERP001 - Interest Revenue</option>
+                        <option value="ERP002">ERP002 - Other Income</option>
+                      </select>
+                    </div>
+                    
+                    <div class="mb-3 col-md-6">
+                      <label class="form-label">GL Account Type</label>
+                      <select class="form-select">
+                        <option selected disabled>-- Select Account type --</option>
+                        <option value="ERP001">ERP001 - Interest Revenue</option>
+                        <option value="ERP002">ERP002 - Other Income</option>
+                      </select>
+                    </div>
+                    
+                    <div class="mb-3 col-md-6">
+                      <label class="form-label">GL Sub-Type</label>
+                      <select class="form-select">
+                        <option selected disabled>-- Select Sub-Type --</option>
+                        <option value="ERP001">ERP001 - Interest Revenue</option>
+                        <option value="ERP002">ERP002 - Other Income</option>
+                      </select>
                     </div>
 
                     <div class="mb-3">
@@ -137,12 +172,14 @@
                         Mark as Primary Mapping
                       </label>
                     </div>
+                   </div>
+                      
                 </div>
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-success" onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Submitting...'; this.form.submit(); }">
-                      💾 Save Budget Line & Mapping</button>
+                      💾 Save Line & Mapping</button>
                 </div>
             </form>
         </div>

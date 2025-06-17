@@ -5,6 +5,8 @@ namespace App\Models\Budget;
 use App\Models\Core\Currency;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BudgetDriverProjections extends Model
@@ -32,6 +34,24 @@ class BudgetDriverProjections extends Model
     ];
 
     // Relationships
+    public function projections():HasMany
+    {
+        return $this->hasMany(BudgetDriverProjectionsData::class,'BudgetDriverProjectionsID','Id');
+    }
 
+    public function scenario():BelongsTo
+    {
+        return $this->belongsTo(BudgetScenarioPlanning::class,'ScenarioID','Id');
+    }
+
+    public function currency():BelongsTo
+    {
+        return $this->belongsTo(Currency::class,'CurrencyID','Id');
+    }
+
+    public function period():BelongsTo
+    {
+        return $this->belongsTo(BudgetPeriods::class,'PeriodID','Id');
+    }
 
 }

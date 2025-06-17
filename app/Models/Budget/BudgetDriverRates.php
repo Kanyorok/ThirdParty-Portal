@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class BudgetDriverRates extends Model
 {
     use UserActorTrait,SoftDeletes;
-
+  
     protected $table='t_BudgetDriverRates';
     protected $primaryKey = 'Id';
     

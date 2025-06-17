@@ -4,12 +4,12 @@
 @section('content')
 
 <div class="card p-4">
-    <div class="card-header bg-dark text-white py-4" style="font-size: 20px; font-weight: bold;">
-        💰 Budget Rate Types
-    </div>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5>📊 Budget Rate Types</h5>
 
-    <div class="d-flex justify-content-between align-items-center mb-2">
+
         <p class="text-muted mb-1 fs-5">Manage budget rate types used in financial calculations.</p>
+
         {{-- <a href="{{route('rates.create')}}" class="btn btn-primary">➕ Add New Rate</a> --}}
     </div>
     @if(session('success'))
@@ -33,7 +33,8 @@
                 <th>Rate Code</th>
                 <th>Rate Name</th>
                 <th>Description</th>
-                <th>Default?</th>
+                {{-- <th>Default?</th> --}}
+
                 {{-- <th>Actions</th> --}}
             </tr>
         </thead>
@@ -43,8 +44,9 @@
                     <td>{{ $loop->iteration }}</td>
                     <td>{{ $rate->RateTypeCode }}</td>
                     <td>{{ $rate->RateTypeName }}</td>
-                    <td style="white-space: normal; break-word; max-width= 300px;">{{ $rate->Description }}</td>
-                    <td>{{ $rate->IsDefault ? 'Yes' : 'No' }}</td>
+                    <td>{{ $rate->Description }}</td>
+                    {{-- <td>{{ $rate->IsDefault ? 'Yes' : 'No' }}</td> --}}
+
                     {{-- <td>
                      <div class="d-flex gap-2">
                         <a href="{{route('rates.edit', $rate->Id)}}" class="btn btn-sm btn-warning">Edit</a>

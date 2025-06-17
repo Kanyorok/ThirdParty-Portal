@@ -88,8 +88,8 @@ Route::namespace('Budget')->group(function () {
     Route::resource('budgetlinecategories', BudgetLineCategoriesController::class);
     Route::resource('budgetactivities', BudgetActivitiesController::class);
     Route::resource('yieldexpenserate', YieldRateController::class);
+    //Route::resource('budgetprojections', BudgetProjectionsController::class);
     Route::resource('budgetprojections', BudgetProjectionsController::class);
-    Route::resource('entrybyproduct', BudgetProductEntryController::class);
     Route::resource('entrybyglline', BudgetGLLineEntryController::class);
     Route::resource('submitapproval', BudgetSubmitController::class);
     Route::resource('budgetapproval', BudgetApprovalController::class);
