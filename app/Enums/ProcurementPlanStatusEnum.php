@@ -13,6 +13,9 @@ enum ProcurementPlanStatusEnum: string
     case Approved = 'Ap';
     case Rejected = 'Re';
 
+        // Added this status
+    case Pending = 'P';
+
     public function label(): string
     {
         return match ($this) {
@@ -20,6 +23,7 @@ enum ProcurementPlanStatusEnum: string
             self::Submitted => 'Submitted',
             self::Approved => 'Approved',
             self::Rejected => 'Rejected',
+            self::Pending => 'Pending',
         };
     }
 
@@ -30,6 +34,7 @@ enum ProcurementPlanStatusEnum: string
             self::Submitted => 'info',
             self::Approved => 'success',
             self::Rejected => 'danger',
+            self::Pending => 'secondary',
         };
     }
 }

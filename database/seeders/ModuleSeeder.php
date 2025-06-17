@@ -115,7 +115,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 301120, 'Name' => 'Approve Needs', 'Icon' => null, 'Description' => '', 'ParentID' => 301100, 'Route' => 'department-need-approval.index'],
             ['ModuleID' => 301200, 'Name' => 'Plan Consolidation', 'Icon' => null, 'Description' => '', 'ParentID' => 301000, 'Route' => null],
             ['ModuleID' => 301210, 'Name' => 'Consolidated Needs', 'Icon' => null, 'Description' => '', 'ParentID' => 301200, 'Route' => 'consolidated.index'],
-            ['ModuleID' => 301220, 'Name' => 'New Plan', 'Icon' => null, 'Description' => '', 'ParentID' => 301200, 'Route' => 'procurementplanmaintain.index'],
+            ['ModuleID' => 301220, 'Name' => 'Plan Management', 'Icon' => null, 'Description' => '', 'ParentID' => 301200, 'Route' => 'procurementplanmaintain.index'],
             ['ModuleID' => 301230, 'Name' => 'Amend Plan', 'Icon' => null, 'Description' => '', 'ParentID' => 301200, 'Route' => 'ammendplan.index'],
             ['ModuleID' => 301240, 'Name' => 'Link Budget Lines', 'Icon' => null, 'Description' => '', 'ParentID' => 301200, 'Route' => 'maptobudget.index'],
             ['ModuleID' => 301250, 'Name' => 'Set Method', 'Icon' => null, 'Description' => '', 'ParentID' => 301200, 'Route' => 'procurement-set-method.index'],
@@ -138,7 +138,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 301540, 'Name' => 'Deviations', 'Icon' => null, 'Description' => '', 'ParentID' => 301500, 'Route' => 'approvalinbox.index'],
             ['ModuleID' => 302000, 'Name' => 'Purchase Requisition', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 302100, 'Name' => 'Requisition List', 'Icon' => null, 'Description' => '', 'ParentID' => 302000, 'Route' => 'requisition.create'],
-            ['ModuleID' => 302200, 'Name' => 'Requisition Approval', 'Icon' => null, 'Description' => '', 'ParentID' => 302000, 'Route' => 'requisition.index'],
+//            ['ModuleID' => 302200, 'Name' => 'Requisition Approval', 'Icon' => null, 'Description' => '', 'ParentID' => 302000, 'Route' => 'requisition.index'],
             ['ModuleID' => 302300, 'Name' => 'Priority List', 'Icon' => null, 'Description' => '', 'ParentID' => 302000, 'Route' => 'requisitionItem.index'],
             ['ModuleID' => 303000, 'Name' => 'Suppliers', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 303100, 'Name' => 'Suppliers List', 'Icon' => null, 'Description' => '', 'ParentID' => 303000, 'Route' => 'suppliers.index'],
@@ -148,9 +148,6 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 303230, 'Name' => 'Supplier Applications', 'Icon' => null, 'Description' => '', 'ParentID' => 303200, 'Route' => 'preqapplications.index'],
             ['ModuleID' => 303240, 'Name' => 'Evaluation & Approval', 'Icon' => null, 'Description' => '', 'ParentID' => 303200, 'Route' => 'preqevaluation.index'],
             ['ModuleID' => 303250, 'Name' => 'Prequalified Suppliers', 'Icon' => null, 'Description' => '', 'ParentID' => 303200, 'Route' => 'preqsuppliers.index'],
-            ['ModuleID' => 304000, 'Name' => 'Procurement Modes', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
-            ['ModuleID' => 304100, 'Name' => 'List Modes', 'Icon' => null, 'Description' => '', 'ParentID' => 304000, 'Route' => 'procurement-modes.index'],
-            ['ModuleID' => 304200, 'Name' => 'Add Mode', 'Icon' => null, 'Description' => '', 'ParentID' => 304000, 'Route' => 'procurement-modes.create'],
             ['ModuleID' => 305000, 'Name' => 'Tendering', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
 
             // Tender Setup
@@ -188,7 +185,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 307100, 'Name' => 'View Purchase Orders', 'Icon' => null, 'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.index'],
             ['ModuleID' => 307200, 'Name' => 'Create Purchase Orders', 'Icon' => null, 'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.create'],
             ['ModuleID' => 307300, 'Name' => 'Link RFQ to Purchase Order', 'Icon' => null, 'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.linkRFQ'],
-//            ['ModuleID' => 307400, 'Name' => 'Purchase Order Approval', 'Icon' => null,'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.approval'],
+    //            ['ModuleID' => 307400, 'Name' => 'Purchase Order Approval', 'Icon' => null,'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.approval'],
 
             ['ModuleID' => 308000, 'Name' => 'Good Receipt', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 308100, 'Name' => 'View Good Receipt', 'Icon' => null, 'Description' => '', 'ParentID' => 308000, 'Route' => 'procurementreceipts.index'],
@@ -196,7 +193,8 @@ class ModuleSeeder extends Seeder
 
             ['ModuleID' => 398000, 'Name' => 'Settings', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 398100, 'Name' => 'Criteria Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'sections.index'],
-
+            ['ModuleID' => 398200, 'Name' => 'Methods Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'procurement-modes.index'],
+           
             ['ModuleID' => 399000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'Description' => '', 'ParentID' => 300000, 'Route' => 'procurement-reports.index'],
         ]);
 

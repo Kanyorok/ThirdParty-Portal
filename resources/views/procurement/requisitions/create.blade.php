@@ -51,7 +51,8 @@
                                 <td>{{ $item->itemcount }}</td>
                                 <td>{{ number_format($item->ExpectedPrice, 2) }}</td>
                                 <td>{{ $item->Status }}</td>
-                                <td><a href="{{ route('requisition.show',[ $item->Id]) }}" class="btn btn-info">View</a>
+                                <td><a href="{{ route('requisition.show',[ $item->Id]) }}" class="btn btn-info btn-sm">View</a>
+                                    <a href="{{ route('requisition.approval',[ $item->Id]) }}" class="btn btn-success btn-sm">Approve</a>
                                 </td>
 
 

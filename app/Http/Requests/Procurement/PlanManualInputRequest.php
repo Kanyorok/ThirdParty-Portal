@@ -40,7 +40,7 @@ class PlanManualInputRequest extends FormRequest
             'ItemID' => 'required|exists:t_items,Id',
             'CategoryID' => 'required|exists:t_ItemCategories,Id',
             'quantity' => 'required|integer|min:1',
-            'unit_of_measure' => 'required|string|max:50',
+            'unit_of_measure_id' => 'required|string|max:50',
             'estimated_cost' => 'required|numeric|min:0',
             'schedule_period' => 'required|string|max:10',
             'expected_delivery_date' => 'required|date',

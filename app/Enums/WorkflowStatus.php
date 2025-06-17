@@ -13,6 +13,7 @@ enum WorkflowStatus: string
     case APPROVED = 'Ap';
     case REJECTED = 'Re';
     case COMMENTED = 'Cm';
+    case RETURNED = 'Dr';
 
 
     case RejectedDelete = 'rd';

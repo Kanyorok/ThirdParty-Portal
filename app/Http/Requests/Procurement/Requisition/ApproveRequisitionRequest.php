@@ -22,10 +22,10 @@ class ApproveRequisitionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'requisition_id' => ['required', 'integer'],
+            'order_id' => ['required', 'integer'],
             'document_type' => ['required', 'string'],
             'action' => ['required', 'string'],
-            'requisition_total' => ['required', 'numeric', 'min:0'],
+            'order_total' => ['required', 'numeric', 'min:0'],
         ];
     }
 

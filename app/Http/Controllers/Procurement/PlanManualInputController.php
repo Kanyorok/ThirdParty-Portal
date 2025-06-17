@@ -80,10 +80,10 @@ class PlanManualInputController extends Controller
         $planLineItem->ItemID = $item->Id;
         $planLineItem->CategoryID = $category->Id;
         $planLineItem->MergedQty = $validated['quantity'];
-        $planLineItem->UnitOfMeasure = $validated['unit_of_measure'];
+        $planLineItem->UnitOfMeasure = $validated['unit_of_measure_id'];
         $planLineItem->EstimatedUnitCost = $validated['estimated_cost'];
         $planLineItem->AdjustedCost = 0;
-        $planLineItem->ProcurementMethod = 'Open Tender';
+        $planLineItem->ProcurementMethod = 'Not set';
         $planLineItem->SchedulePeriod = $validated['schedule_period'];
         $planLineItem->ExpectedDeliveryDate = $validated['expected_delivery_date'];
         $planLineItem->BudgetLineID = $validated['budget_line_id'];
@@ -96,6 +96,8 @@ class PlanManualInputController extends Controller
         $planLineItem->ModifiedBy = $user->id ?? 1;
         $planLineItem->CreatedOn = Carbon::now();
         $planLineItem->ModifiedOn = Carbon::now();
+        $planLineItem->SourceType = 'manual';
+        $planLineItem->OriginalQTY = $validated['quantity'];
 
         $planLineItem->save();
 
