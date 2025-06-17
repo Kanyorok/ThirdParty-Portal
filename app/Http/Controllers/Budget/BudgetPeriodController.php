@@ -19,8 +19,10 @@ class BudgetPeriodController extends Controller
     public function index()
     {
         $this->authorize(PermissionEnum::BudgetSetupView, BudgetPeriods::class);
-        $periods=BudgetPeriods::all();
-        //$periods=BudgetPeriods::with('periodType')->get();
+        
+        $periods=BudgetPeriods::with('periodTypeID')->get();
+        
+
         return view('budgetandanalytics.budgetperiod.index', compact('periods'));
     }
 
@@ -33,7 +35,7 @@ class BudgetPeriodController extends Controller
     public function store(Request $request){
         $validated=$request->validate([
         'fiscalYear'  => 'required|string|max:10',
-        'periodType'  => 'required|string|max:20',
+        'periodType'  => 'required|exists:t_BudgetPeriodTypes,Id',
         'notes'       => 'nullable|string',
         ]);
 
@@ -74,7 +76,7 @@ class BudgetPeriodController extends Controller
 
         $validated=$request->validate([
         'fiscalYear'  => 'required|string|max:10',
-        'periodType'  => 'required|string|max:20',
+        'periodType'  => 'required|exists:t_BudgetPeriodTypes,Id',
         'notes'       => 'nullable|string',
     ]);
 
@@ -111,8 +113,8 @@ class BudgetPeriodController extends Controller
     public function destroy(string $id){
         $this->authorize(PermissionEnum::BudgetSetupDelete, BudgetPeriods::class);
         try{
-            $period=BudgetPeriods::find($id)->delete();
-            //$period->delete();
+            $period = BudgetPeriods::findOrFail($id); // safer: throws 404 if not found
+            $period->delete();
 
             activity()
                     ->performedOn(new BudgetPeriods())

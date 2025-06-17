@@ -37,7 +37,9 @@ use App\Http\Controllers\Budget\BusinessAnalyticsDashboardController;
 use App\Http\Controllers\Budget\KPIDashboardsController;
 use App\Http\Controllers\Budget\TrendAndGrowthController;
 use App\Http\Controllers\Budget\BranchPerformanceController;
+use App\Http\Controllers\Budget\BudgetActivitiesMasterController;
 use App\Http\Controllers\Budget\BudgetDriversSetupController;
+use App\Http\Controllers\Budget\BudgetLineCategoriesController;
 use App\Http\Controllers\Budget\BudgetLinesController;
 use App\Http\Controllers\Budget\BudgetMonthlyProjectionController;
 use App\Http\Controllers\Budget\ProductProfitabilityController;
@@ -73,6 +75,7 @@ use App\Http\Controllers\Budget\DataExportToolsProductController;
 use App\Http\Controllers\Budget\CBSSyncController;
 use App\Http\Controllers\Budget\DataSyncLogsController;
 use App\Http\Controllers\Budget\SystemSettingsController;
+use App\Models\Budget\BudgetActivityMaster;
 
 Route::namespace('Budget')->group(function () {
     Route::resource('budgetline', BudgetLinesController::class);
@@ -82,6 +85,7 @@ Route::namespace('Budget')->group(function () {
     Route::resource('budgetlinemapping', BudgetLineMappingController::class);
     Route::resource('budgetglmapping', BudgetGLMappingController::class);
     Route::resource('budgetdrivers', BudgetDriversController::class);
+    Route::resource('budgetlinecategories', BudgetLineCategoriesController::class);
     Route::resource('budgetactivities', BudgetActivitiesController::class);
     Route::resource('yieldexpenserate', YieldRateController::class);
     //Route::resource('budgetprojections', BudgetProjectionsController::class);
@@ -90,6 +94,7 @@ Route::namespace('Budget')->group(function () {
     Route::resource('submitapproval', BudgetSubmitController::class);
     Route::resource('budgetapproval', BudgetApprovalController::class);
     Route::resource('topdownallocation', BudgetTopDownAllocationController::class);
+    Route::resource('activitymaster', BudgetActivitiesMasterController::class);
     Route::resource('budgetscenerios', BudgetSceneriosController::class);
     Route::resource('budgetformula', BudgetFormulaController::class);
     Route::resource('budgetconsolidation', BudgetConsolidationController::class);

@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('t_BudgetDrivers', function (Blueprint $table) {
+        Schema::create('t_BudgetActivityMaster', function (Blueprint $table) {
             $table->id('Id');
-            $table->string('DriverName',30);
+            $table->foreignId('BudgetLineID')->constrained('t_BudgetLines', 'Id');
+            $table->string('ActivityCode', 20)->unique();
+            $table->string('ActivityName');
             $table->text('Description');
             $table->boolean('IsActive')->default(true);
 
@@ -31,6 +33,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('t_BudgetDrivers');
+        Schema::dropIfExists('t_BudgetActivityMaster');
     }
 };

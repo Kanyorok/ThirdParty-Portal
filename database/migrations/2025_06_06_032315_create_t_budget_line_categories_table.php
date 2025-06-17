@@ -11,10 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('t_BudgetDrivers', function (Blueprint $table) {
+        Schema::create('t_BudgetLineCategories', function (Blueprint $table) {
             $table->id('Id');
-            $table->string('DriverName',30);
-            $table->text('Description');
+            $table->string('CategoryCode')->unique();
+            $table->string('CategoryName');
+            $table->text('Description')->nullable();
             $table->boolean('IsActive')->default(true);
 
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
@@ -31,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('t_BudgetDrivers');
+        Schema::dropIfExists('t_BudgetLineCategories');
     }
 };

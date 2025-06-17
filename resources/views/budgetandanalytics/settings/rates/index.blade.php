@@ -2,9 +2,14 @@
 @section('title', 'Budget Rate Types')
 
 @section('content')
+
 <div class="card p-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h5>📊 Budget Rate Types</h5>
+
+
+        <p class="text-muted mb-1 fs-5">Manage budget rate types used in financial calculations.</p>
+
         {{-- <a href="{{route('rates.create')}}" class="btn btn-primary">➕ Add New Rate</a> --}}
     </div>
     @if(session('success'))
@@ -21,7 +26,7 @@
         </div>
     @endif
 
-    <table class="table table-striped">
+    <table class="table table-bordered table-hover align-middle table-striped">
         <thead>
             <tr>
                 <th>#</th>
@@ -29,6 +34,7 @@
                 <th>Rate Name</th>
                 <th>Description</th>
                 {{-- <th>Default?</th> --}}
+
                 {{-- <th>Actions</th> --}}
             </tr>
         </thead>
@@ -40,6 +46,7 @@
                     <td>{{ $rate->RateTypeName }}</td>
                     <td>{{ $rate->Description }}</td>
                     {{-- <td>{{ $rate->IsDefault ? 'Yes' : 'No' }}</td> --}}
+
                     {{-- <td>
                      <div class="d-flex gap-2">
                         <a href="{{route('rates.edit', $rate->Id)}}" class="btn btn-sm btn-warning">Edit</a>

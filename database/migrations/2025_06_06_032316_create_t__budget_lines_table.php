@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('t_BudgetLines', function (Blueprint $table) {
             $table->id('Id');
+            $table->foreignId('BudgetLineCategoryID')->constrained('t_BudgetLineCategories', 'Id');
             $table->string('LineName');
             $table->text('Description');
             $table->boolean('IsDefault')->default(false);

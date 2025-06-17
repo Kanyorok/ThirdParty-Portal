@@ -36,7 +36,7 @@
             <select class="form-select" id="periodType" name="periodType" required>
                 <option disabled selected>Select Period</option>
                 @foreach ($types as $type)
-                    <option value="{{ $type->PeriodType }}">{{ $type->PeriodType }}</option>
+                    <option value="{{ $type->Id }}">{{ $type->PeriodType }}</option>
                 @endforeach
             </select>
         </div>

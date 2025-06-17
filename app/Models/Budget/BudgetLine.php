@@ -23,6 +23,7 @@ class BudgetLine extends Model
     }
 
     protected $fillable = [
+        'BudgetLineCategoryID',
         'LineName',
         'Description',
         'IsDefault',
@@ -43,6 +44,12 @@ class BudgetLine extends Model
     ];
 
     //relations
+
+    public function category()
+    {
+        return $this->belongsTo(BudgetLineCategories::class, 'BudgetLineCategoryID', 'Id');
+    }
+
     public function glAccounts()
     {
         return $this->belongsToMany(BudgetGLAccount::class, 't_BudgetLinesGLAccounts', 'BudgetLineID', 'BudgetGLAccountID')
