@@ -37,7 +37,7 @@ class PropertyFloor extends Model
         return $this->hasMany(PropertyUnit::class, 'FloorID');
     }
 
-    public function blocks()
+    public function block()
     {
         return $this->belongsTo(PropertyBlock::class, 'BlockID', 'Id');
     }
