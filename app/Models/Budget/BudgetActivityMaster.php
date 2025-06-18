@@ -25,7 +25,7 @@ class BudgetActivityMaster extends Model
 
     protected $fillable = [
         'BudgetLineID',
-        'ActivityCode',
+        //'ActivityCode',
         'ActivityName',
         'Description',
         'IsActive',

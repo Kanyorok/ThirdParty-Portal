@@ -34,7 +34,7 @@ class BudgetActivitiesMasterController extends Controller
         $this->authorize(PermissionEnum::BudgetSetupCreate, BudgetActivityMaster::class);
         $validated = $request->validate([
             'BudgetLineID' => 'required|exists:t_BudgetLines,Id',
-            'ActivityCode' => 'required|string|max:20|unique:t_BudgetActivityMaster',
+            //'ActivityCode' => 'required|string|max:20|unique:t_BudgetActivityMaster',
             'ActivityName' => 'required|string|max:255',
             'Description'  => 'nullable|string',
             'IsActive'     => 'boolean',
@@ -44,7 +44,7 @@ class BudgetActivitiesMasterController extends Controller
         try {
             $activity = BudgetActivityMaster::create([
                 'BudgetLineID' => $validated['BudgetLineID'],
-                'ActivityCode' => $validated['ActivityCode'],
+                //'ActivityCode' => $validated['ActivityCode'],
                 'ActivityName' => $validated['ActivityName'],
                 'Description'  => $validated['Description'],
                 'IsActive'     => $validated['IsActive'] ?? true,

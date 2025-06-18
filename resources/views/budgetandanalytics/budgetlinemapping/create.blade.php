@@ -23,6 +23,16 @@
                     @method('POST')
                     <div class="row">
                     <!-- 🧾 Budget Line Entry -->
+                    <div class="mb-3">
+                      <label class="form-label">Budget Category</label>
+                      <select class="form-select" name="BudgetLineCategoryID" required>
+                        <option selected disabled>-- Select Budget Category --</option>
+                        @foreach ($budgetCategories as $category)
+                            <option value="{{ $category->Id }}">{{ $category->CategoryName }}</option>
+                        @endforeach
+                      </select>
+                    </div>
+ 
                     <div class="mb-3 col-md-6">
                       <label class="form-label">Budget Line Name</label>
                       <input type="text" class="form-control" name="LineName" placeholder="e.g. Interest Income, Loan Fees" required>
@@ -44,8 +54,9 @@
                       <label class="form-label">GL Account Type</label>
                       <select class="form-select">
                         <option selected disabled>-- Select Account type --</option>
-                        <option value="ERP001">ERP001 - Interest Revenue</option>
-                        <option value="ERP002">ERP002 - Other Income</option>
+                        @foreach ($glAccountTypes as $item)
+                          <option value="{{ $item->Value }}">{{ $item->Description }}</option>
+                        @endforeach
                       </select>
                     </div>
                     

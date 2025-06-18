@@ -28,7 +28,7 @@
         <th>#</th>
         <th>Line Name</th>
         <th>Department</th>
-        <th>Products Type</th>
+        {{-- <th>Products Type</th> --}}
         <th>Description</th>
         <th>CBS GLs Mapped</th>
         <th>Actions</th>
@@ -38,16 +38,12 @@
       @foreach ($budgetLines as $item)
           <tr>
             <td>{{ $loop->index+1 }}.</td>
-            <td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+            <td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ $item->LineName }}">
               {{ $item->LineName }}
-              @if ($item->IsDefault)
-                <span class="badge bg-success">Default</span>
-              @endif
             </td>
             <td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ $item->Description }}">
               {{ $item->Description }}
             </td>
-            <td>3</td>
             <td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
               {{ $item->Description }}
             </td>
@@ -73,193 +69,6 @@
 
   </div>
 </div>
-
-
-
-<!-- Add Line Modal -->
-<div class="modal fade" id="addLineModal" tabindex="-1" aria-labelledby="addSectionLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content rounded-3 shadow">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addItemModalLabel">Add New Section</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-                <div class="modal-body">
-                  <form action="{{ route('budgetlinemapping.store') }}" method="POST">
-                    @csrf
-                    @method('POST')
-                    <div class="row">
-                    <!-- 🧾 Budget Line Entry -->
-                    <div class="mb-3 col-md-6">
-                      <label class="form-label">Budget Category</label>
-                      <select class="form-select" name="BudgetLineCategoryID" required>
-                        <option selected disabled>-- Select Budget Category --</option>
-                        @foreach ($budgetCategories as $category)
-                            <option value="{{ $category->Id }}">{{ $category->CategoryName }}</option>
-                        @endforeach
-                      </select>
-                    </div>
-
-                    <div class="mb-3">
-                      <label class="form-label">Budget Line Name</label>
-                      <input type="text" class="form-control" name="LineName" placeholder="e.g. Interest Income, Loan Fees" required>
-                      @error('LineName')
-                          <div class="text-danger">{{ $message }}</div>
-                      @enderror
-                    </div>
-                    
-                    <div class="mb-3 col-md-6">
-                      <label class="form-label">Department</label>
-                      <select class="form-select">
-                        <option selected disabled>-- Select Department --</option>
-                        <option value="ERP001">ERP001 - Interest Revenue</option>
-                        <option value="ERP002">ERP002 - Other Income</option>
-                      </select>
-                    </div>
-                    
-                    <div class="mb-3 col-md-6">
-                      <label class="form-label">GL Account Type</label>
-                      <select class="form-select">
-                        <option selected disabled>-- Select Account type --</option>
-                        <option value="ERP001">ERP001 - Interest Revenue</option>
-                        <option value="ERP002">ERP002 - Other Income</option>
-                      </select>
-                    </div>
-                    
-                    <div class="mb-3 col-md-6">
-                      <label class="form-label">GL Sub-Type</label>
-                      <select class="form-select">
-                        <option selected disabled>-- Select Sub-Type --</option>
-                        <option value="ERP001">ERP001 - Interest Revenue</option>
-                        <option value="ERP002">ERP002 - Other Income</option>
-                      </select>
-                    </div>
-
-                    <div class="mb-3">
-                      <label class="form-label">Description</label>
-                      <textarea class="form-control" rows="2" name="Description" placeholder="Describe this budget line..."></textarea>
-                      @error('Description')
-                          <div class="text-danger">{{ $message }}</div>
-                      @enderror
-                    </div>
-
-                    <!-- 🔗 CBS GL Mapping -->
-                    <h6>🔗 CBS GL Accounts (Multiple)</h6>
-                    <div class="mb-3">
-                      <label class="form-label">Select CBS GLs</label>
-                      <select multiple class="form-select" name="GLS[]" required>
-                        @foreach ($gls as $item)
-                            <option value="{{ $item->Id }}">GL00{{ $item->Id }} - {{ $item->Description }}</option>
-                        @endforeach
-                      </select>
-                      <div class="form-text">Hold Ctrl (Windows) or Cmd (Mac) to select multiple GLs.</div>
-                    </div>
-
-                    <!-- 🔗 ERP GL Mapping -->
-                    {{-- <div class="mb-3">
-                      <label class="form-label">ERP GL Account (Optional)</label>
-                      <select class="form-select">
-                        <option selected disabled>-- Select ERP GL --</option>
-                        <option value="ERP001">ERP001 - Interest Revenue</option>
-                        <option value="ERP002">ERP002 - Other Income</option>
-                      </select>
-                    </div> --}}
-
-                    <!-- 🔘 Primary Flag -->
-                    <div class="form-check mb-3">
-                      <input class="form-check-input" name="IsDefault" type="checkbox" id="primaryCheck">
-                      <label class="form-check-label" for="primaryCheck">
-                        Mark as Primary Mapping
-                      </label>
-                    </div>
-                   </div>
-                      
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success" onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Submitting...'; this.form.submit(); }">
-                      💾 Save Line & Mapping</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-
-
-@foreach ($budgetLines as $line)
-<!-- Edit Line Modal for Line ID: {{ $line->Id }} -->
-<div class="modal fade" id="editLineModal{{ $line->Id }}" tabindex="-1" aria-labelledby="editLineModalLabel{{ $line->Id }}" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content rounded-3 shadow">
-      <div class="modal-header">
-        <h5 class="modal-title">Edit Budget Line</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-
-      <form action="{{ route('budgetlinemapping.update', $line->Id) }}" method="POST">
-        @csrf
-        @method('PUT')
-        <div class="modal-body">
-
-          <!-- Budget Line Name -->
-          <div class="mb-3">
-            <label class="form-label">Budget Line Name</label>
-            <input type="text" class="form-control" name="LineName" value="{{ $line->LineName }}" required>
-            @error('LineName')
-              <div class="text-danger">{{ $message }}</div>
-            @enderror
-          </div>
-
-          <!-- Description -->
-          <div class="mb-3">
-            <label class="form-label">Description</label>
-            <textarea class="form-control" name="Description" rows="2">{{ $line->Description }}</textarea>
-            @error('Description')
-              <div class="text-danger">{{ $message }}</div>
-            @enderror
-          </div>
-
-          <!-- CBS GL Mapping -->
-          <h6>🔗 CBS GL Accounts</h6>
-          <div class="mb-3">
-            <label class="form-label">Select CBS GLs</label>
-            <select multiple class="form-select" name="GLS[]" required>
-              @php
-                  $selectedGLs = $line->glAccounts->pluck('Id')->toArray();
-              @endphp
-              @foreach ($gls as $item)
-                <option value="{{ $item->Id }}" @if(in_array($item->Id, $selectedGLs)) selected @endif>
-                  GL00{{ $item->Id }} - {{ $item->Description }}
-                </option>
-              @endforeach
-            </select>
-            <div class="form-text">Hold Ctrl (Windows) or Cmd (Mac) to select multiple GLs.</div>
-          </div>
-
-          <!-- Primary Checkbox -->
-          <div class="form-check mb-3">
-            <input class="form-check-input" name="IsDefault" type="checkbox" id="primaryCheck{{ $line->Id }}" @checked($line->IsDefault)>
-            <label class="form-check-label" for="primaryCheck{{ $line->Id }}">
-              Mark as Primary Mapping
-            </label>
-          </div>
-
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-primary"
-            onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Updating...'; this.form.submit(); }">
-            💾 Update Budget Line
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-@endforeach
 
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
