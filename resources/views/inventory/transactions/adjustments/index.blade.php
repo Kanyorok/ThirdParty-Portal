@@ -2,19 +2,24 @@
 
 @section('title', 'Stock Adjustments List')
 
+@section('styles')
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+@endsection
+
 @section('content')
+@php
+    use App\Enums\Inventory\Transfers;
+    use Carbon\Carbon;
+@endphp
+
 <div class="container bg-white shadow-sm rounded p-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4>🛠️ Stock Adjustment List</h4>
+        <h4>Stock Adjustment List</h4>
         <a href="{{ route('transactionsadjustment.create') }}" class="btn btn-success">➕ New Adjustment</a>
     </div>
 
-    <div class="mb-3">
-        <input type="text" class="form-control" placeholder="🔍 Search by Store, Reason, or Adjusted By" disabled>
-    </div>
-
     <div class="table-responsive">
-        <table class="table table-bordered table-hover align-middle">
+        <table id="adjustmentTable" class="table table-bordered table-striped align-middle">
             <thead class="table-light">
                 <tr>
                     <th>#</th>
@@ -28,16 +33,16 @@
             </thead>
             <tbody>
                 @forelse($adjustments as $index => $adjustment)
+                    @php
+                        $statusEnum = Transfers::tryFrom($adjustment->Status);
+                    @endphp
                     <tr>
                         <td>{{ $adjustments->firstItem() + $index }}</td>
-                        <td>{{ \Carbon\Carbon::parse($adjustment->AdjustmentDate)->format('Y-m-d') }}</td>
+                        <td>{{ Carbon::parse($adjustment->AdjustmentDate)->format('Y-m-d') }}</td>
                         <td>{{ optional($adjustment->branch)->Name ?? 'N/A' }}</td>
                         <td>{{ $adjustment->Reason }}</td>
                         <td>{{ $adjustment->AdjustedBy }}</td>
                         <td>
-                            @php
-                                $statusEnum = \App\Enums\Inventory\Transfers::tryFrom($adjustment->Status);
-                            @endphp
                             @if($statusEnum)
                                 <span class="badge bg-{{ $statusEnum->badgeColor() }}">
                                     {{ $statusEnum->label() }}
@@ -47,9 +52,16 @@
                             @endif
                         </td>
                         <td>
-                            <a href="#" class="btn btn-sm btn-primary">View</a>
-                            @if($statusEnum === \App\Enums\Inventory\Transfers::Pending)
-                                <a href="#" class="btn btn-sm btn-secondary">Edit</a>
+                            <a href="{{ route('transactionsadjustment.show', $adjustment->Id) }}" class="btn btn-sm btn-primary">View</a>
+
+                            @if($statusEnum === Transfers::Pending)
+                                <a href="{{ route('transactionsadjustment.edit', $adjustment->Id) }}" class="btn btn-sm btn-secondary">Edit</a>
+
+                                <form action="{{ route('transactionsadjustment.destroy', $adjustment->Id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this adjustment?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                </form>
                             @endif
                         </td>
                     </tr>
@@ -66,4 +78,20 @@
         {{ $adjustments->links() }}
     </div>
 </div>
+
+@section('scripts')
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('#adjustmentTable').DataTable({
+            pageLength: 10,
+            ordering: true,
+            searching: true,
+            lengthChange: true,
+        });
+    });
+</script>
+@endsection
+
 @endsection

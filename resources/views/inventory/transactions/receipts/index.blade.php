@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('title', 'Goods Receipts')
+@section('styles')    <link rel="stylesheet" 
+href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">@endsection
+
 
 @section('content')
 
@@ -79,8 +82,7 @@
                             @if($statusEnum)
                                 <span class="badge bg-{{ $statusEnum->badgeColor() }}">{{ $statusEnum->label() }}</span>
                             @else
-                                {{-- Default to 'Completed' for display if status is not an enum value,
-                                    but 'Pending' for restriction logic below. --}}
+                                
                                 <span class="badge bg-secondary">{{ $receipt->Status ?? 'Completed' }}</span>
                             @endif
                         </td>
@@ -116,12 +118,12 @@
 @endsection
 
 @push('scripts') 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+      <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
     <script>
         $(document).ready(function () {
-            $('#receiptsTable').DataTable({
+            $('#adjustmentTable').DataTable({
                 pageLength: 10,
                 ordering: true,
                 searching: true,

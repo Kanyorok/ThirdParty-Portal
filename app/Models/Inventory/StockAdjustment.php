@@ -8,8 +8,12 @@ use App\Traits\Model\UserActorTrait;
 use App\Models\Core\Branch;
 use App\Models\Auth\User;
 
+
+
 class StockAdjustment extends Model
 {
+    use SoftDeletes;
+
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
@@ -59,8 +63,9 @@ class StockAdjustment extends Model
     }
     public static function getPrimaryKey(): string
     {
-        return 'StockAdjustmentId';
+        return 'Id';
     }
+    
 
     
 }

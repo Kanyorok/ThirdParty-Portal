@@ -5,6 +5,10 @@
 @extends('layouts.app')
 
 @section('title', 'Approve Stock Transactions')
+@section('styles')
+<link rel="stylesheet" 
+href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">@endsection
+
 
 @section('content')
 <div class="container">
@@ -41,8 +45,11 @@
             </div>
         </div>
     </form>
+    
 
-    <table class="table table-bordered table-striped mt-3">
+    <div class="table-responsive">
+          <table id="approvalsTable" class="table table-bordered table-striped align-middle">
+                    <thead class="table-light">
         <thead>
             <tr>
                 <th>#</th>
@@ -121,4 +128,28 @@
         </tbody>
     </table>
 </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+    <script>
+    $(document).ready(function () {
+        const table = $('#approvalsTable');
+
+        @if(!$records->isEmpty())
+        table.DataTable({
+            pageLength: 10,
+            ordering: true,
+            searching: true,
+            lengthChange: true,
+            language: {
+            emptyTable: "No records available"
+            },
+            columnDefs: [
+                { orderable: false, targets: [7, 8] } 
+            ]
+        });
+        @endif
+    });
+</script>
+
 @endsection

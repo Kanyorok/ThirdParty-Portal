@@ -142,7 +142,8 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/transactionsadjustment/create', [TransactionAdjustmentController::class, 'create'])->name('transactionsadjustment.create');
     Route::post('/transactionsadjustment', [TransactionAdjustmentController::class, 'store'])->name('transactionsadjustment.store');
     Route::get('/transactionsadjustment/{Id}', [TransactionAdjustmentController::class, 'show'])->name('transactionsadjustment.show');
-    Route::get('/transactionsadjustment/{Id}/edit', [TransactionAdjustmentController::class, 'edit'])->name('transactionsadjustment.edit');
+    Route::get('/transactionsadjustment/edit/{Id}', [TransactionAdjustmentController::class, 'edit'])->name('transactionsadjustment.edit');
+    
     Route::put('/transactionsadjustment/{Id}', [TransactionAdjustmentController::class, 'update'])->name('transactionsadjustment.update');
     Route::delete('/transactionsadjustment/{Id}', [TransactionAdjustmentController::class, 'destroy'])->name('transactionsadjustment.destroy');
     Route::get('/branch-stock/{branchId}', [TransactionAdjustmentController::class, 'getBranchStock'])->name('branch.stock');

@@ -11,13 +11,18 @@ use App\Enums\Inventory\Transfers;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
+
 
 class StockAdjustmentService
 {
+    
     public function create(array $validated, $user)
     {
+        
         DB::transaction(function () use ($validated, $user) {
             $adjustment = StockAdjustment::create([
+                
                 'AdjustmentDate' => $validated['AdjustmentDate'],
                 'Branch' => $validated['Branch'],
                 'Reason' => $validated['Reason'],
@@ -29,19 +34,22 @@ class StockAdjustmentService
                 'ModifiedOn' => now(),
             ]);
 
-            $adjustment->AdjustmentId = 'SA/' . now()->format('Ymd') . '/' . str_pad($adjustment->Id, 4, '0', STR_PAD_LEFT);
-            $adjustment->save();
             
 
+            $adjustment->AdjustmentId = 'SA/' . now()->format('Ymd') . '/' . str_pad($adjustment->Id, 4, '0', STR_PAD_LEFT);
+            $adjustment->save();
+    
+
             foreach ($validated['items'] as $item) {
-                $adjustment->items()->create([
-                    'Item' => $item['Item'],
-                    'AdjustmentQty' => $item['AdjustmentQty'],
-                    'Remarks' => $item['Remarks'] ?? null,
-                    'CreatedBy' => auth()->id(),
-                    'CreatedOn' => now(),
-                    'ModifiedBy' => auth()->id(),
-                    'ModifiedOn' => now(),
+                StockAdjustmentItem::create([
+                'AdjustmentId' => $adjustment->Id,
+                'Item' => $item['Item'],
+                'AdjustmentQty' => $item['AdjustmentQty'],
+                'Remarks' => $item['Remarks'] ?? null,
+                'CreatedBy' => auth()->id(),
+                'CreatedOn' => now(),
+                'ModifiedBy' => auth()->id(),
+                'ModifiedOn' => now(),
                 ]);
             }
 
@@ -51,50 +59,89 @@ class StockAdjustmentService
                 'Stage' => Transfers::Pending->label(),
                 'Status' => Transfers::Pending->value,
                 'Notes' => 'Adjustment submitted, awaiting approval',
-                'CreatedBy' => Auth::id(),
+                'CreatedBy' => auth()->id(),
                 'CreatedOn' => now(),
-                'ModifiedBy' => Auth::id(),
+                'ModifiedBy' => auth()->id(),
                 'ModifiedOn' => now(),
             ]);
 
             PendingWorkflow::updateOrCreate(
                 ['Source' => 'StockAdjustment', 'SourceID' => $adjustment->Id],
                 [
-                    'Stage' => Transfers::Pending->label(),
-                    'UserId' => Auth::id(),
-                    'CreatedBy' => Auth::id(),
-                    'CreatedOn' => now(),
-                    'ModifiedBy' => Auth::id(),
-                    'ModifiedOn' => now(),
+                'Stage' => Transfers::Pending->label(),
+                'UserId' => $user->id,
+                'CreatedBy' => auth()->id(),
+                'CreatedOn' => now(),
+                'ModifiedBy' => auth()->id(),
+                'ModifiedOn' => now(),
                 ]
             );
         });
     }
+    
+  public function update(StockAdjustment $adjustment, array $validated)
+{
+    Log::info('Updating Stock Adjustment:', [
+        'AdjustmentId' => $adjustment->Id,
+        'Validated Data' => $validated 
+    ]);
+
+    DB::transaction(function () use ($adjustment, $validated) { 
+    $adjustment->fill([
+        'AdjustmentDate' => $validated['AdjustmentDate'],
+        'Reason' => $validated['Reason'],
+        'Branch' => $validated['Branch'],
+        'Status' => Transfers::Pending->value, 
+        'AdjustedBy' => $validated['AdjustedBy'],
+        'CreatedBy' => auth()->id(),
+        'ModifiedBy' => auth()->id(),
+        'CreatedOn' => now(),
+        'ModifiedOn' => now(),
+    ])->save(); 
+
+    foreach ($validated['items'] as $itemData) { 
+        $item = StockAdjustmentItem::where('AdjustmentId', $adjustment->Id)
+            ->where('Item', $itemData['Item'])
+            ->first();
+
+        if ($item) {
+            $item->update([
+                'AdjustmentQty' => $itemData['AdjustmentQty'],
+                'Remarks' => $itemData['Remarks'] ?? null,
+                'ModifiedBy' => auth()->id(),
+                'ModifiedOn' => now(),
+            ]);
+        } else {
+            StockAdjustmentItem::create([
+                'AdjustmentId' => $adjustment->Id,
+                'Item' => $itemData['Item'],
+                'AdjustmentQty' => $itemData['AdjustmentQty'],
+                'Remarks' => $itemData['Remarks'] ?? null,
+                'CreatedBy' => auth()->id(),
+                'ModifiedBy' => auth()->id(),
+                'CreatedOn' => now(),
+                'ModifiedOn' => now(),
+            ]);
+        }
+    }
+});
+
+
+    return redirect()->route('transactionsadjustment.index')->with('success', 'Stock adjustment updated successfully.');
+}
 
     public function approve(int $adjustmentId)
     {
         DB::transaction(function () use ($adjustmentId) {
             $adjustment = StockAdjustment::with('items')->findOrFail($adjustmentId);
-
-            // Update stock quantities now (AFTER approval)
+            
             foreach ($adjustment->items as $item) {
-                $stockItem = StockItem::where('ItemID', $item->Item)
-                    ->where('Branch', $adjustment->Branch)
-                    ->first();
-
-                $newQty = ($stockItem?->CurrentQty ?? 0) + $item->AdjustmentQty;
-
-                if ($stockItem) {
-                    $stockItem->CurrentQty = $newQty;
-                    $stockItem->save();
-                } else {
-                    $stockItem = StockItem::create([
-                        'ItemID' => $item->Item,
-                        'Branch' => $adjustment->Branch,
-                        'CurrentQty' => $newQty,
-                    ]);
-                }
-
+                $stockItem = StockItem::firstOrNew([
+                    'ItemID' => $item->Item,
+                    'Branch' => $adjustment->Branch
+                ]);
+                $stockItem->CurrentQty = ($stockItem->CurrentQty ?? 0) + $item->AdjustmentQty;
+                $stockItem->save();
                 activity()
                     ->causedBy(Auth::user())
                     ->performedOn($stockItem)
@@ -102,10 +149,11 @@ class StockAdjustmentService
                     ->log("Stock adjusted by {$item->AdjustmentQty} for Item {$item->Item} in Branch {$adjustment->Branch}");
             }
 
-            $adjustment->Status = Transfers::Approved->value;
-            $adjustment->ModifiedBy = Auth::id();
-            $adjustment->ModifiedOn = now();
-            $adjustment->save();
+            $adjustment->update([
+                'Status' => Transfers::Approved->value,
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
+            ]);
 
             Workflow::create([
                 'Source' => 'StockAdjustment',
@@ -121,7 +169,7 @@ class StockAdjustmentService
 
             PendingWorkflow::where('Source', 'StockAdjustment')
                 ->where('SourceID', $adjustment->Id)
-                ->update(['Stage' => Transfers::Approved]);
+                ->update(['Stage' => Transfers::Approved->label()]);
 
             activity()
                 ->causedBy(Auth::user())
@@ -136,10 +184,11 @@ class StockAdjustmentService
         DB::transaction(function () use ($adjustmentId) {
             $adjustment = StockAdjustment::findOrFail($adjustmentId);
 
-            $adjustment->Status = Transfers::Rejected->value;
-            $adjustment->ModifiedBy = Auth::id();
-            $adjustment->ModifiedOn = now();
-            $adjustment->save();
+            $adjustment->update([
+                'Status' => Transfers::Rejected->value,
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
+            ]);
 
             Workflow::create([
                 'Source' => 'StockAdjustment',
@@ -155,7 +204,7 @@ class StockAdjustmentService
 
             PendingWorkflow::where('Source', 'StockAdjustment')
                 ->where('SourceID', $adjustment->Id)
-                ->update(['Stage' => Transfers::Rejected]);
+                ->update(['Stage' => Transfers::Rejected->label()]);
 
             activity()
                 ->causedBy(Auth::user())

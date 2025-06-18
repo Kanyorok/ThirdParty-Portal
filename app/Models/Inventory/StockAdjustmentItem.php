@@ -11,6 +11,8 @@ use App\Models\Auth\User;
 
 class StockAdjustmentItem extends Model
 {
+     use SoftDeletes;
+
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
@@ -48,5 +50,13 @@ class StockAdjustmentItem extends Model
     {
         return $this->belongsTo(Branch::class, 'Branch', 'Id');
     }
+    public function stockItem()
+    {
+    return $this->belongsTo(StockItem::class, 'Item', 'ItemID');
+   }
+   public function item()
+   {
+    return $this->belongsTo(ItemMasterList::class, 'Item', 'Id');
+   }
 
 }

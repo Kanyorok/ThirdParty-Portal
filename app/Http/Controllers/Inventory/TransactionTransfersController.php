@@ -103,12 +103,18 @@ class TransactionTransfersController extends Controller
         return view('inventory.transactions.transfers.edit', compact('transferitem', 'branches', 'approvedRequisitions', 'itemsMasterList'));
     }
 
-    public function update(TransactionTransferRequest $request, TransactionTransfer $transactionTransfer)
+    
+
+    public function update(TransactionTransferRequest $request, $Id)
     {
-        $this->authorize('update', TransactionTransfer::class);
-        $this->service->update($transactionTransfer, $request->validated());
-        return redirect()->route('transactionstransfers.show', $transactionTransfer->Id)->with('success', 'Transfer updated.');
+    $this->authorize('update', TransactionTransfer::class);
+    $transactionTransfer = TransactionTransfer::findOrFail($Id); 
+    $this->service->update($transactionTransfer, $request->validated());
+    return redirect()
+        ->route('transactionstransfers.index', $transactionTransfer->Id)
+        ->with('success', 'Transfer updated.');
     }
+
 
     public function destroy($Id)
     {

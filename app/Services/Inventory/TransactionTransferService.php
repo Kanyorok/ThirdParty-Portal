@@ -102,30 +102,59 @@ class TransactionTransferService
         }
     }
 
-    public function update(TransactionTransfer $transfer, array $data): TransactionTransfer
-    {
-        $items = $data['items'] ?? [];
-        unset($data['items']); 
+public function update(TransactionTransfer $transfer, array $data): TransactionTransfer
+{
+    DB::beginTransaction();
 
+    try {
+        $items = $data['items'] ?? [];
+        unset($data['items']);
+        $requisition = InterBranchRequisition::findOrFail($data['RequisitionId']);
+
+    
         $transfer->fill($data);
-        $transfer->TransferDate = $data['TransferDate'] ?? Carbon::now(); 
+        $transfer->TransferDate = $data['TransferDate'];
+        $transfer->TransferredBy = $data['TransferredBy'];
+        $transfer->RequisitionId = $data['RequisitionId'];
+        $transfer->FromBranch = $requisition->FromBranch;
+        $transfer->ToBranch = $requisition->ToBranch;
         $transfer->ModifiedBy = Auth::id();
         $transfer->ModifiedOn = Carbon::now();
         $transfer->save();
 
-        $transfer->items()->delete();
-
+        
         foreach ($items as $itemData) {
-            
-            $itemData['TransferId'] = $transfer->Id;
-            $itemData['CreatedBy'] = Auth::id();
-            $itemData['ModifiedBy'] = Auth::id();
-            $itemData['CreatedOn'] = Carbon::now();
-            $itemData['ModifiedOn'] = Carbon::now();
-            TransactionTransferItem::create($itemData);
+            $item = TransactionTransferItem::where('TransferId', $transfer->Id)
+                ->where('Item', $itemData['item'])
+                ->first();
+
+            if ($item) {
+                // Update existing item
+                $item->update([
+                    'ApprovedQty'   => $itemData['approved_qty'],
+                    'DispatchedQty' => $itemData['dispatched_qty'],
+                    'Remarks'       => $itemData['remarks'] ?? null,
+                    'ModifiedBy'    => Auth::id(),
+                    'ModifiedOn'    => Carbon::now(),
+                ]);
+            } else {
+                // Optionally create new item if it doesn't exist
+                TransactionTransferItem::create([
+                    'TransferId'    => $transfer->Id,
+                    'Item'          => $itemData['item'],
+                    'ApprovedQty'   => $itemData['approved_qty'],
+                    'DispatchedQty' => $itemData['dispatched_qty'],
+                    'Remarks'       => $itemData['remarks'] ?? null,
+                    'CreatedBy'     => Auth::id(),
+                    'ModifiedBy'    => Auth::id(),
+                    'CreatedOn'     => Carbon::now(),
+                    'ModifiedOn'    => Carbon::now(),
+                ]);
+            }
         }
 
-    
+        DB::commit();
+
         activity()
             ->performedOn($transfer)
             ->causedBy(Auth::user())
@@ -133,7 +162,12 @@ class TransactionTransferService
             ->log('Updated Transaction Transfer');
 
         return $transfer;
+    } catch (\Throwable $th) {
+        DB::rollBack();
+        Log::error('Failed to update transaction transfer: ' . $th->getMessage());
+        throw $th;
     }
+}
 
 
     public function approve(int $transferId): void
