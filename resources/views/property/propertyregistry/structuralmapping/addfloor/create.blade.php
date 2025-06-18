@@ -1,6 +1,15 @@
 @extends('layouts.app')
 @section('title', 'Item Sub Category')
 @section('content')
+@if ($errors->any())
+    <div class="alert alert-danger">
+        <ul class="mb-0">
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
 <div class="container mt-4">
   <h4 class="fw-bold mb-3">🏬 Add Floor to Block</h4>
     <form action="{{ route('addfloor.store') }}" method="POST" enctype="multipart/form-data">
@@ -12,8 +21,9 @@
             <div class="col-md-6">
                 <label class="form-label">Select Property</label>
                 <select name="PropertyID" class="form-select" required>
-                    @foreach ($properties as $property)
-                        <option value="{{ $property->id }}">{{ $property->PropertyName }}</option>
+                  <option value="">-- Select Property --</option>
+                    @foreach ($lineentries as $property)
+                        <option value="{{ $property->Id }}">{{ $property->PropertyName }}</option>
                     @endforeach
                 </select>
             </div>
@@ -22,9 +32,7 @@
         <div class="col-md-6">
           <label class="form-label">Select Block</label>
             <select name="BlockID" class="form-select" required>
-                @foreach ($blocks as $block)
-                    <option value="{{ $block->id }}">{{ $block->BlockName }}</option>
-                @endforeach
+                <option value="">-- Select Block --</option>  
             </select>
         </div>
         <div class="col-md-6">
@@ -41,4 +49,36 @@
     </div>
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+   const PropertySelect = document.getElementById('property-select');
+  const BlockSelect = document.getElementById('block-select');
+
+    PropertySelect.addEventListener('change', function () {
+        const PropertyId = this.value;
+
+        // Reset Block dropdown
+        BlockSelect.innerHTML = '<option value="">-- Select a Block --</option>';
+
+        if (PropertyId) {
+            // Construct the URL from the named route
+            const url = `{{ route('getblockbyproperty', ':Id') }}`.replace(':Id', PropertyID);
+
+            fetch(url)
+                .then(response => response.json())
+                .then(blocks => {
+                    blocks.forEach(block => {
+                        const option = document.createElement('option');
+                        option.value = block.Id;
+                        option.textContent = block.BlockName;
+                        BlockSelect.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error loading property blocks:', error));
+        }
+    });
+});
+</script>
+
 @endsection

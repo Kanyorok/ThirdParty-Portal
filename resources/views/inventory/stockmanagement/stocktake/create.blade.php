@@ -1,6 +1,15 @@
 @extends('layouts.app')
 @section('title', 'Physical Stock Take')
 @section('content')
+@if ($errors->any())
+    <div class="alert alert-danger">
+        <ul class="mb-0">
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
 <div class="container mt-4">
   <h4 class="fw-bold mb-3">📝 Physical Stock Take</h4>
   <!-- Header Info -->
@@ -31,49 +40,138 @@
       <input type="date" class="form-control" id="countedDate" value="2025-05-02"name="CountDate">
     </div>
   </div>
+</form>
 
-  <!-- Items Grid -->
-  
-
+   <!-- Items Table -->
+<div id="items-container" class="mt-4" style="display:none;">
+  <h5 class="mb-3">📦 Store Items</h5>
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        <th>Item Name</th>
+        <th>System Quantity</th>
+        <th>Counted Quantity</th>
+        <th>Variance</th>
+        <th>Remarks</th>
+      </tr>
+    </thead>
+    <tbody id="items-table-body">
+      <!-- Items will be inserted here dynamically -->
+    </tbody>
+  </table>
+</div>
 
 <script>
-  //gettign stores per Branch
-  document.addEventListener('DOMContentLoaded', function () {
-      const branchSelect = document.getElementById('branch-select');
-      const storeSelect = document.getElementById('store-select');
+document.addEventListener('DOMContentLoaded', function () {
+    const branchSelect = document.getElementById('branch-select');
+    const storeSelect = document.getElementById('store-select');
+    const itemsContainer = document.getElementById('items-container');
+    const itemsTableBody = document.getElementById('items-table-body');
+    const errorMessage = document.getElementById('error-message');
 
-      branchSelect.addEventListener('change', function () {
-          const branchId = this.value;
+    branchSelect.addEventListener('change', function () {
+        const branchId = this.value;
+        storeSelect.innerHTML = '<option value="">-- Select a Store --</option>';
+        itemsTableBody.innerHTML = '';
+        itemsContainer.style.display = 'none';
+        if (errorMessage) errorMessage.textContent = '';
 
-          // Reset type dropdown
-          storeSelect.innerHTML = '<option value="">-- Select a store --</option>';
-
-          if (branchId) {
-              const url = `{{ route('getstores', ':Id') }}`.replace(':Id', branchId);
-
-              fetch(url)
-                  .then(response => response.json())
-                  .then(stores => {
-                      stores.forEach(store => {
-                          const option = document.createElement('option');
-                          option.value = store.Id;
-                          option.textContent = store.StoreName;
-                          storeSelect.appendChild(option);
-                      });
-                  })
-                  .catch(error => console.error('Error loading stores:', error));
-          }
-      });
-  });
-  //compare quantity
-  document.querySelectorAll('.counted-qty').forEach((input, index) => {
-    input.addEventListener('input', function () {
-      const row = input.closest('tr');
-      const ActualQty = parseFloat(row.querySelector('.system-qty').innerText) || 0;
-      const countedQty = parseFloat(input.value) || 0;
-      const variance = countedQty - ActualQty;
-      row.querySelector('.variance').innerText = variance;
+        if (branchId) {
+            const url = `{{ route('getstores', ':Id') }}`.replace(':Id', branchId);
+            fetch(url)
+                .then(response => response.json())
+                .then(stores => {
+                    if (stores.length === 0) {
+                        if (errorMessage) errorMessage.textContent = 'No stores found for this branch.';
+                    }
+                    stores.forEach(store => {
+                        const option = document.createElement('option');
+                        option.value = store.Id;
+                        option.textContent = store.StoreName;
+                        storeSelect.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    if (errorMessage) errorMessage.textContent = 'Error loading stores.';
+                    console.error('Error loading stores:', error);
+                });
+        }
     });
-  });
+
+    storeSelect.addEventListener('change', function () {
+        const storeId = this.value;
+        itemsTableBody.innerHTML = '';
+        itemsContainer.style.display = 'none';
+        if (errorMessage) errorMessage.textContent = '';
+
+        if (storeId) {
+            const url = `{{ route('getstoreitems', ':storeId') }}`.replace(':storeId', storeId);
+            fetch(url)
+                .then(response => response.json())
+                .then(items => {
+                    if (items.length === 0) {
+                        if (errorMessage) errorMessage.textContent = 'No items found for this store.';
+                        return;
+                    }
+                    items.forEach(item => {
+                        const row = document.createElement('tr');
+
+                        // Create cells
+                        const nameCell = document.createElement('td');
+                        nameCell.textContent = item.ItemName;
+
+                        const qtyCell = document.createElement('td');
+                        qtyCell.className = 'system-qty';
+                        qtyCell.textContent = item.Quantity;
+
+                        const countedCell = document.createElement('td');
+                        const countedInput = document.createElement('input');
+                        countedInput.type = 'number';
+                        countedInput.className = 'form-control counted-qty';
+                        countedInput.name = `CountedQuantity[${item.Id}]`;
+                        countedInput.step = 'any';
+                        countedCell.appendChild(countedInput);
+
+                        const varianceCell = document.createElement('td');
+                        varianceCell.className = 'variance';
+                        varianceCell.textContent = '0';
+
+                        const remarksCell = document.createElement('td');
+                        const remarksInput = document.createElement('input');
+                        remarksInput.type = 'text';
+                        remarksInput.className = 'form-control';
+                        remarksInput.name = `Remarks[${item.Id}]`;
+                        remarksCell.appendChild(remarksInput);
+
+                        // Append cells to row
+                        row.appendChild(nameCell);
+                        row.appendChild(qtyCell);
+                        row.appendChild(countedCell);
+                        row.appendChild(varianceCell);
+                        row.appendChild(remarksCell);
+
+                        itemsTableBody.appendChild(row);
+
+                        // Add real-time variance calculation
+                        countedInput.addEventListener('input', function () {
+                            const actualQty = parseFloat(qtyCell.textContent) || 0;
+                            const countedQty = parseFloat(countedInput.value) || 0;
+                            const variance = countedQty - actualQty;
+                            varianceCell.textContent = variance;
+                        });
+                    });
+
+                    itemsContainer.style.display = 'block';
+                })
+                .catch(error => {
+                    if (errorMessage) errorMessage.textContent = 'Error loading store items.';
+                    console.error('Error loading store items:', error);
+                });
+        }
+    });
+});
 </script>
+<!-- Add this somewhere in your HTML for error messages -->
+<div id="error-message" style="color:red;"></div>
+
 @endsection

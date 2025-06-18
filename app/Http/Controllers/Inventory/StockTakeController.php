@@ -61,6 +61,15 @@ class StockTakeController extends Controller
         ]);
            
     }
+    public function getStoreItems($storeId)
+    {
+    $items = \App\Models\Inventory\StoreItem::where('StoreId', $storeId)->get([
+        'Id', 'ItemName', 'Quantity' // Adjust to your actual column names
+    ]);
+
+    return response()->json($items);
+    }
+
     public function storeline(Request $request)
     {
           $request->validate([
@@ -109,7 +118,7 @@ class StockTakeController extends Controller
         $stock->update([
             'BranchId'  => $validated['BranchId'],
             'StoreId' => $validated['StoreId'],
-            'CountedBy'  => $validated['CountBy'],  
+            'CountedBy'  => $validated['CountedBy'],  
             'CountDate'  => $validated['CountDate'],       
 
             'ModifiedBy' => Auth::Id(),
