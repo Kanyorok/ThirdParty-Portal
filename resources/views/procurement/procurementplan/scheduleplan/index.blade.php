@@ -57,6 +57,7 @@
                     const loadBtn = document.getElementById('load-items-btn');
                     const planSelect = document.getElementById('approved-plan-select');
                     const tbody = document.getElementById('items-table-body');
+                    const hiddenPlanId = document.getElementById('approved-plan-id-hidden'); // Define hiddenPlanId
                     const baseUrl = @json(route('Procurement-Plan-Schedule.view', ['PlanId' => '__PLAN_ID__']));
 
                     loadBtn.addEventListener('click', function () {
@@ -65,8 +66,7 @@
                             alert('Please select a plan.');
                             return;
                         }
-
-            hiddenPlanId.value = planId;
+                        hiddenPlanId.value = planId; // Assign the selected plan ID to the hidden input
                         tbody.innerHTML = `
                             <tr>
                                 <td colspan="7" class="text-center py-4">

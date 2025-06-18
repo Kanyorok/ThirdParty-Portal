@@ -15,7 +15,9 @@ class BudgetMaster extends Model
     const string DELETED_AT = 'DeletedOn';
 
     protected $table = 't_BudgetMaster';
-    protected $primaryKey = 'BudgetLineID';
+    protected $primaryKey = 'Id';
+    public $incrementing = true;
+    protected $keyType = 'int';
 
     protected $fillable = [
         'BudgetLineID',

@@ -35,4 +35,8 @@ Route::prefix('v1')->group(function () {
         Route::post('calls/create', [\App\Http\Controllers\API\PBX\CallController::class, 'outgoing']);
         Route::post('calls/non-answer', [\App\Http\Controllers\API\PBX\CallController::class, 'noAnswer']);
     });
+
+    Route::prefix('inventory')->group(function () {
+        Route::get('item-categories', [\App\Http\Controllers\API\ItemCategories\ItemCategoriesController::class, 'index']);
+    });
 });

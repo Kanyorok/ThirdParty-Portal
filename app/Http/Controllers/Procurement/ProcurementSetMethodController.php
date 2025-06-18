@@ -9,7 +9,7 @@ use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\PlanLineItems;
 use App\Services\Procurement\ProcurementPlan\ProcurementMethodService;
 use Illuminate\Http\Request;
-use App\Models\procurement\ProcurementMode;
+use App\Models\Procurement\ProcurementMode;
 
 
 class ProcurementSetMethodController extends Controller
