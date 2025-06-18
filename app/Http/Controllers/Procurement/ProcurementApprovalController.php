@@ -21,7 +21,7 @@ class ProcurementApprovalController extends Controller
             $selectedPlan = ConsolidatedProcurementPlan::find($request->PlanID);
 
             if ($selectedPlan) {
-                $selectedPlan->load(['lineItems.branch', 'lineItems.department', 'lineItems.item', 'lineItems.budgetLine']);
+                $selectedPlan->load(['lineItems.branch', 'lineItems.department', 'lineItems.item', 'lineItems.budgetLine','lineItems.procurementMode']);
                 $selectedPlan->CurrentApprLevel = $this->getApprovalLevelFromStatus($selectedPlan->Status);
             } else {
                 return redirect()->back()->with('error', 'Selected plan not found.');
@@ -48,7 +48,7 @@ class ProcurementApprovalController extends Controller
         $request->validate([
             'planId' => 'required|integer',
             'role' => 'required|string',
-            'action' => 'required|in:APPROVED,REJECTED,COMMENTED',
+            'action' => 'required|in:APPROVED,REJECTED,RETURNED',
             'comments' => 'required|string|max:1000'
         ]);
 
@@ -61,8 +61,8 @@ class ProcurementApprovalController extends Controller
             case 'REJECTED':
                 $plan->Status = ProcurementPlanStatusEnum::Rejected;
                 break;
-            case 'COMMENTED':
-                // no status change
+            case 'RETURNED':
+                $plan->Status = ProcurementPlanStatusEnum::Draft;
                 break;
         }
 
@@ -79,7 +79,7 @@ class ProcurementApprovalController extends Controller
             'Status' => match ($request->action) {
                 'APPROVED' => 'Ap',
                 'REJECTED' => 'Re',
-                'COMMENTED' => 'Cm',
+                'RETURNED' => 'Dr',
             },
             'Notes' => $request->comments,
             'CreatedBy' => auth()->id(),

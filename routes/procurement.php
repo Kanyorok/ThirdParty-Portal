@@ -84,12 +84,15 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
 
     Route::get('requisitionItem/{id}', [RequisitionItemsController::class, 'show'])->name('requisitionItem.show');
     Route::get('requisitionItem/create/{id}', [RequisitionItemsController::class, 'create'])->name('requisitionItems.create');
-    Route::get('requisition/approval', [RequisitionsController::class, 'approvalList'])->name('requisition.approval');
+
+    Route::post('requisition/approve/{id}', [RequisitionsController::class, 'approve'])->name('requisition.approve');
+    Route::get('requisition/approval/{id}', [RequisitionsController::class, 'approval'])->name('requisition.approval');
 
     //Purchase Order
     Route::get('purchaseOrder/getSuppliers', [PurchaseOrderController::class, 'getSuppliers'])->name('purchaseOrder.getSuppliers');
     Route::get('purchaseOrder/linkRFQ', [PurchaseOrderController::class, 'linkRFQ'])->name('purchaseOrder.linkRFQ');
-    Route::get('purchaseOrder/approve/{id}', [PurchaseOrderController::class, 'approve'])->name('purchaseOrder.approve');
+    Route::post('purchaseOrder/approve/{id}', [PurchaseOrderController::class, 'approve'])->name('purchaseOrder.approve');
+    Route::get('purchaseOrder/approval/{id}', [PurchaseOrderController::class, 'approval'])->name('purchaseOrder.approval');
     //this route is static affecting orders/rfqLink
     Route::get('purchaseOrder/rqfDetails/{id}', [PurchaseOrderController::class, 'fetchRFQDetails'])->name('purchaseOrder.RFQ');
     Route::resource('purchaseOrder', 'PurchaseOrderController');
@@ -312,6 +315,7 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     //procurement Consolidation
     Route::get('/dashboard', [ConsolidatedDashboardController::class, 'index'])->name('dashboard.index');
     Route::get('/dashboard/show/{needId}', [ConsolidatedDashboardController::class, 'show'])->name('dashboard.show');
+    Route::get('/procurement/dashboard/export', [ConsolidatedDashboardController::class, 'exportExcel'])->name('dashboard.export');
 
     Route::post('/procurement-plans', [ProcurementPlanMaintainController::class, 'store'])->name('procurementplanmaintain.store');
     Route::get('/planning/edit-draft/{plan_id}', [ProcurementPlanMaintainController::class, 'editDraft'])
@@ -368,8 +372,7 @@ Route::prefix('planning')->name('planning.')->group(function () {
  Route::resource('preqevaluation', PrequalificationEvaluationController::class);
  Route::resource('preqevalapproval', PrequalificationEvalAprovalController::class);
  Route::resource('preqsuppliers', PrequalifiedSuppliersController::class);
- 
- 
 
- 
- 
+
+
+

@@ -463,6 +463,7 @@ enum PermissionEnum: string
             [self::PlanMaintenanceRead, self::PlanMaintenanceWrite, self::PlanMaintenanceUpdate, self::PlanMaintenanceDelete],
             [self::PlanManualInputRead, self::PlanManualInputWrite, self::PlanManualInputUpdate, self::PlanManualInputDelete],
             [self::PlanEditRead, self::PlanEditWrite, self::PlanEditUpdate, self::PlanEditDelete],
+
             /////////////////////////// Budget and Analytics  ///////////////////////
             [self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate,self::BudgetSetupDelete],
 

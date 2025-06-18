@@ -20,7 +20,7 @@ class RequisitionRequest extends FormRequest
             'ProcurementPlan' => ['nullable'],
             'Branch' => ['required', 'numeric'],
             'Department' => ['required', 'numeric'],
-            'Remarks' => ['nullable', 'string'],
+            'Remarks' => ['required', 'string'],
 
             //
                ];

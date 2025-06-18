@@ -51,7 +51,8 @@
                                 <td>{{ $item->itemcount }}</td>
                                 <td>{{ number_format($item->ExpectedPrice, 2) }}</td>
                                 <td>{{ $item->Status }}</td>
-                                <td><a href="{{ route('requisition.show',[ $item->Id]) }}" class="btn btn-info">View</a>
+                                <td><a href="{{ route('requisition.show',[ $item->Id]) }}" class="btn btn-info btn-sm">View</a>
+                                    <a href="{{ route('requisition.approval',[ $item->Id]) }}" class="btn btn-success btn-sm">Approve</a>
                                 </td>
 
 
@@ -138,8 +139,7 @@
 
                             <div class="mb-3">
                                 <label class="form-label" for="Remarks">Remarks </label>
-                                <textarea name="Remarks" id="Remarks" rows="3" class="form-control"
-                                          maxlength="1000"></textarea>
+                                <textarea name="Remarks" id="Remarks" rows="3" class="form-control" maxlength="1000" required></textarea>
                                 <p id="Remarks_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
 

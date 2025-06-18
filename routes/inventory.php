@@ -78,17 +78,41 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/itemsubcategory', [ItemSubCategoryController::class, 'index'])->name('itemsubcategory.index');
     Route::get('/itemsubcategory/create', [ItemSubCategoryController::class, 'create'])->name('itemsubcategory.create');
     Route::post('/itemsubcategory', [ItemSubCategoryController::class, 'store'])->name('itemsubcategory.store');
-    Route::get('/itemsubcategory/{Id}', [ItemSubCategoryController::class, 'show'])->name('itemsubcategory.show');
+    Route::get('/itemsubcategory/{id}', [ItemSubCategoryController::class, 'show'])->name('itemsubcategory.show');
     Route::get('/itemsubcategory/{Id}/edit', [ItemSubCategoryController::class, 'edit'])->name('itemsubcategory.edit');
     Route::put('/itemsubcategory/{Id}', [ItemSubCategoryController::class, 'update'])->name('itemsubcategory.update');
     Route::delete('/itemsubcategory/{Id}', [ItemSubCategoryController::class, 'destroy'])->name('itemsubcategory.destroy');
 
+
+    //Route::resource('openingstock', OpeningStockController::class);
+    Route::get('/openingstock/index', [OpeningStockController::class, 'index'])->name('openingstock.index');
+    Route::get('/openingstock/create', [OpeningStockController::class, 'create'])->name('openingstock.create');
+    Route::get('/downloads/opening-stock-sample', [OpeningStockController::class, 'downloadSampleTemplate'])->name('openingstock.sample');
+    Route::post('/openingstock/upload', [OpeningStockController::class, 'uploadExcel'])->name('openingstock.upload');
+
+    //Route::resource('bintracking', BinTrackingController::class);
+    Route::get('/inventorytracking', [BinTrackingController::class, 'index'])->name('bintracking.index');
+    Route::get('/inventorytracking/create', [BinTrackingController::class, 'create'])->name('bintracking.create');
+
+
+
+
     Route::resource('inventorydashboard', InventoryDashboardController::class);
     Route::resource('movementdashboard', MovementDashboardController::class);
-    Route::resource('stocktake', StockTakeController::class);
-    Route::resource('openingstock', OpeningStockController::class);
+
+    //Route::resource('stocktake', StockTakeController::class);
+    Route::get('/stocktake/index', [StockTakeController::class, 'index'])->name('stocktake.index');
+    Route::get('/stocktake', [StockTakeController::class, 'create'])->name('stocktake.create');
+    Route::post('/stocktake/store', [StockTakeController::class, 'store'])->name('stocktake.store');
+    Route::post('/stocktake/storeline', [StockTakeController::class, 'storeline'])->name('stocktake.storeline');
+    Route::get('/stocktake/show/{Id}', [StockTakeController::class, 'show'])->name('stocktake.show');
+    Route::delete('stocktake/delete/{Id}', [StockTakeController::class,'destroy'])->name('stocktake.destroy');
+    Route::get('stocktake/edit/{Id}',[StockTakeController::class,'edit'])->name('stocktake.edit');
+    Route::put('stocktake/edit/{Id}',[StockTakeController::class,'update'])->name('stocktake.update');
+    Route::get('/stocktake/branches/{storeId}', [StockTakeController::class, 'getStoreByBranch'])->name('getstores');
+    
+    
     Route::resource('uomconversion', UOMConversionController::class);
-    Route::resource('bintracking', BinTrackingController::class);
     Route::resource('stockvaluationhistory', StockValuationHistoryController::class);
     Route::resource('expirytracking', ExpiryBatchTrackingController::class);
     //Route::resource('interbranchrequisition', InterBranchRequisitionController::class);
@@ -194,5 +218,7 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
         'index' => 'inventory-reports.index',
         'show' => 'inventory-reports.show'
+    
+
     ]);
 });

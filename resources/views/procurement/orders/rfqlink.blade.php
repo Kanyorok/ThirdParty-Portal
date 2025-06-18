@@ -67,7 +67,9 @@
                 <div class="col-md-4 mt-2">
                     <label>Priority</label>
                     <select class="form-control priority" name="priority">
-                        <option selected></option>
+                        <option>High</option>
+                        <option>Medium</option>
+                        <option>Low</option>
                     </select>
                 </div>
                 <div class="col-md-4 mt-2">
@@ -223,11 +225,11 @@
                                     <td><select class="type form-control" name="type[]"><option value="${line.ItemType}">${line.ItemType}</option></select></td>
                                     <td><select class="type form-control" name="itemCode[]"><option value="${line.Id}">${line.ItemName}</option></select></td>
                                     <td><textarea class="itemDescription form-control" name="itemDescription[]" readonly>${line.ItemDescription}</textarea></td>
-                                    <td><input type="number" class="quantity form-control"  name="quantity[]" value="${line.Quantity}"></td>
-                                    <td><input type="number" class="unit-price form-control" name="unitPrice[]" value="${line.QuotedPrice}"></td>
-                                    <td><input type="number" class="tax form-control" name="tax[]" value="${line.Tax || 0}"></td>
-                                    <td><input type="number" class="discount form-control" name="discount[]" value="${line.Discount || 0}"></td>
-                                    <td><input type="number" class="line-total form-control" name="lineTotal[]" value="${line.TotalPayable || 0}"" readonly></td>
+                                    <td><input type="number" class="quantity form-control"  name="quantity[]" value="${line.Quantity}" step="any" readonly></td>
+                                    <td><input type="number" class="unit-price form-control" name="unitPrice[]" value="${line.QuotedPrice}" step="any" readonly></td>
+                                    <td><input type="number" class="tax form-control" name="tax[]" value="${line.Tax || 0}" step="any" readonly></td>
+                                    <td><input type="number" class="discount form-control" name="discount[]" value="${line.Discount || 0}" step="any" readonly></td>
+                                    <td><input type="number" class="line-total form-control" name="lineTotal[]" value="${line.TotalPayable || 0}" step="any" readonly></td>
                                 </tr>
                             `);
                                 });
