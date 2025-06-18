@@ -322,13 +322,6 @@ enum PermissionEnum: string
     case PriceManagementCreate = 'priceManagement-create';
     case PriceManagementDestroy= 'priceManagement-destroy';
 
-
-    //Inventory Load Open stock
-    case OpeningStockView = 'openingstock-view';
-    case OpeningStockCreate = 'openingstock-create';
-    case OpeningStockUpdate = 'openingstock-update';
-    case OpeningStockDelete = 'openingstock-destroy';
-
     /*
      *
      * ========================================  Property Management  ========================================
@@ -437,7 +430,6 @@ enum PermissionEnum: string
             [self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy],
             [self::InterBranchRequisitionView, self::InterBranchRequisitionUpdate, self::InterBranchRequisitionCreate, self::InterBranchRequisitionDestroy, self::InterBranchRequisitionApproval],
             [self::PriceManagementView, self::PriceManagementUpdate, self::PriceManagementCreate, self::PriceManagementDestroy],
-            [self::OpeningStockView,self::OpeningStockCreate,self::OpeningStockUpdate,self::OpeningStockDelete],
 
             [self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete],
             [self::PlanLineItemsRead, self::PlanLineItemsWrite, self::PlanLineItemsUpdate, self::PlanLineItemsDelete],
@@ -525,8 +517,7 @@ enum PermissionEnum: string
             self::ItemTypeView, self::ItemTypeUpdate, self::ItemTypeCreate, self::ItemTypeDestroy,
             self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy,
             self::InterBranchRequisitionView, self::InterBranchRequisitionUpdate, self::InterBranchRequisitionCreate, self::InterBranchRequisitionDestroy,self::InterBranchRequisitionApproval,
-            self::PriceManagementView, self::PriceManagementUpdate, self::PriceManagementCreate, self::PriceManagementDestroy,
-            self::OpeningStockView,self::OpeningStockCreate,self::OpeningStockUpdate,self::OpeningStockDelete => ModulesEnum::Inventory,
+            self::PriceManagementView, self::PriceManagementUpdate, self::PriceManagementCreate, self::PriceManagementDestroy => ModulesEnum::Inventory,
             
             //Property Management
             self::PropertyCategoryView,self::PropertyCategoryCreate,self::PropertyCategoryUpdate,self::PropertyCategoryDelete,
@@ -602,7 +593,6 @@ enum PermissionEnum: string
             self::ItemTypeView, self::ItemTypeUpdate, self::ItemTypeCreate, self::ItemTypeDestroy => 'Item Type',
             self::InterBranchRequisitionView, self::InterBranchRequisitionUpdate, self::InterBranchRequisitionCreate, self::InterBranchRequisitionDestroy,self::InterBranchRequisitionApproval =>'InterBranch Requisition',
             self::PriceManagementView, self::PriceManagementUpdate, self::PriceManagementCreate, self::PriceManagementDestroy=> 'Price Management',
-            self::OpeningStockView,self::OpeningStockCreate,self::OpeningStockUpdate,self::OpeningStockDelete => 'Opening Stock take',
 
             ////////////////////////// Budget and Analytics //////////////////////////////
             self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate,self::BudgetSetupDelete =>'Budget Setup',

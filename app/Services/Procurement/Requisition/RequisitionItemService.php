@@ -150,7 +150,6 @@ class RequisitionItemService
                 't_ItemTypes.TypeName as Type',
                 't_ItemCategories.Name as Category',
                 DB::raw('t_RequisitionLines.ExpectedPrice * t_RequisitionLines.Quantity as ExpectedPrice'),
-                DB::raw('0 * t_RequisitionLines.Quantity as ActualPrice'),
                 't_RequisitionLines.StatusID as Status',
                 DB::raw("CASE
             WHEN t_RequisitionLines.UrgencyID = 1 THEN 'Very High'

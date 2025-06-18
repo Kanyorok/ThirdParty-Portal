@@ -159,7 +159,6 @@ class AppServiceProvider extends ServiceProvider
             InterBranchRequisition::getPrimaryKey() => InterBranchRequisition::class,
             ConsolidatedProcurementPlan::getPrimaryKey() => ConsolidatedProcurementPlan::class,
             PlanLineItems::getPrimaryKey() => PlanLineItems::class,
-            LoadOpeningStock::getPrimaryKey() => LoadOpeningStock::class,
           
             ///////// Budget and Analytics /////////
             BudgetLinesGLAccount::getPrimaryKey()=>BudgetLinesGLAccount::class,
@@ -201,7 +200,6 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PropertyType::class, PropertyTypePolicy::class);
         Gate::policy(PropertyRegistry::class, PropertyRegistryPolicy::class);
         Gate::policy(PropertyBlock::class, PropertyStructuralPolicy::class);
-        gate::policy(LoadOpeningStock::class, OpenStockPolicy::class);
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);
          Event::listen(SMSSendEvent::class, SMSSendListener::class);
