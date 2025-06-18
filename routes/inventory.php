@@ -113,8 +113,10 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('stocktake/edit/{Id}',[StockTakeController::class,'edit'])->name('stocktake.edit');
     Route::put('stocktake/update/{Id}',[StockTakeController::class,'update'])->name('stocktake.update');
     Route::get('/stocktake/branches/{storeId}', [StockTakeController::class, 'getStoreByBranch'])->name('getstores');
-    Route::get('/getStoreItems/{storeId}', [StockTakeController::class, 'getstoreitems'])->name('getstoreitems');
+    Route::get('/stock-items/{branchId}/{storeId}', [StockTakeController::class, 'getStockItems'])->name('stocktake.items');
 
+
+    
     
     Route::resource('uomconversion', UOMConversionController::class);
     Route::resource('stockvaluationhistory', StockValuationHistoryController::class);
