@@ -21,7 +21,7 @@ class InterBranchRequisitionApprovalController extends Controller
 
     public function index(Request $request)
     {
-        // Always use enum for status queries
+        
         $pendingStatus = InterBranchRequisitionEnum::Submitted->value;
         $pendingRequisitions = InterBranchRequisition::where('Status', $pendingStatus)->get();
 

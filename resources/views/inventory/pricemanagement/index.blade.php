@@ -136,8 +136,8 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="11" class="text-center">No prices found.</td>
-                        </tr>
+                            <!-- <td colspan="11" class="text-center">No prices found.</td> -->
+                        </tr >
                     @endforelse
                     </tbody>
                 </table>
@@ -163,14 +163,19 @@
     </div>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script>
-        $(document).ready(function () {
-            $('#pricingTable').DataTable({
-                pageLength: 10,
-                ordering: true,
-                searching: true,
-                lengthChange: true
-            });
+  <script>
+    $(document).ready(function () {
+        @if(!$prices->isEmpty())
+        $('#consolidatedneedsTable').DataTable({
+            pageLength: 10,
+            ordering: true,
+            searching: true,
+            lengthChange: true,
+            language: {
+                emptyTable: ""
+            }
         });
-    </script>
+        @endif
+    });
+</script>
 @endsection
