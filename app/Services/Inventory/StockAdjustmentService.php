@@ -79,7 +79,7 @@ class StockAdjustmentService
         });
     }
     
-  public function update(StockAdjustment $adjustment, array $validated)
+public function update(StockAdjustment $adjustment, array $validated)
 {
     Log::info('Updating Stock Adjustment:', [
         'AdjustmentId' => $adjustment->Id,
@@ -213,4 +213,5 @@ class StockAdjustmentService
                 ->log("Stock Adjustment {$adjustment->AdjustmentId} was rejected.");
         });
     }
+    
 }

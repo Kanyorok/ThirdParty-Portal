@@ -11,7 +11,7 @@ use App\Models\Inventory\TransactionTransferItem;
 
 class TransactionTransfer extends Model
 {
-      use SoftDeletes;
+      use SoftDeletes,UserActorTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';

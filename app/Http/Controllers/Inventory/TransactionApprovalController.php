@@ -25,7 +25,7 @@ public function __construct(
 }
 
 
-    public function index(Request $request)
+public function index(Request $request)
 {
     $transactionType = $request->get('transaction_type', 'Stock Transfer');
     $branch = $request->get('branch');
@@ -88,51 +88,53 @@ if ($branch) {
 }
 
 
-    public function approve(Request $request, $id)
-{
+public function approve(Request $request, $id)
+    {
 
-    $transactionType = $request->input('transaction_type');
-    if ($transactionType === 'Stock Transfer') {
-    //$this->authorize('approve', TransactionTransfer::class);
-    $this->transferService->approve($id);  
+        $transactionType = $request->input('transaction_type');
+        if ($transactionType === 'Stock Transfer') {
+        //$this->authorize('approve', TransactionTransfer::class);
+        $this->transferService->approve($id);  
 
-    return redirect()->back()->with('success', 'Stock Transfer approved.');
-}
-
-    if ($transactionType === 'Stock Issue') {
-        $issue = \App\Models\Inventory\StockIssue::findOrFail($id);
-        $issue->Status = 'Approved';
-        $issue->save();
-        return redirect()->back()->with('success', 'Stock Issue approved.');
+        return redirect()->back()->with('success', 'Stock Transfer approved.');
     }
-    if ($transactionType === 'Stock Adjustment') {
-    $this->adjustmentService->approve($id);
-    return redirect()->back()->with('success', 'Stock Adjustment approved.');
-}
-    if ($transactionType === 'Stock Adjustment') {
-    $this->adjustmentService->reject($id);
-    return redirect()->back()->with('success', 'Stock Adjustment rejected.');
-}
 
-
-    return redirect()->back()->with('error', 'Unknown transaction type.');
-}
-public function reject(Request $request, $id)
-{
-    $transactionType = $request->input('transaction_type');
-
-    if ($transactionType === 'Stock Adjustment') {
+        if ($transactionType === 'Stock Issue') {
+            $issue = \App\Models\Inventory\StockIssue::findOrFail($id);
+            $issue->Status = 'Approved';
+            $issue->save();
+            return redirect()->back()->with('success', 'Stock Issue approved.');
+        }
+        if ($transactionType === 'Stock Adjustment') {
+        $this->adjustmentService->approve($id);
+        return redirect()->back()->with('success', 'Stock Adjustment approved.');
+    }
+        if ($transactionType === 'Stock Adjustment') {
         $this->adjustmentService->reject($id);
         return redirect()->back()->with('success', 'Stock Adjustment rejected.');
     }
 
-     if ($transactionType === 'Stock Transfer') {
-        $this->transferService->reject($id);
-        return redirect()->back()->with('success', 'Stock Transfer rejected.');
+
+        return redirect()->back()->with('error', 'Unknown transaction type.');
     }
 
 
-    return redirect()->back()->with('error', 'Reject not supported for this transaction type.');
-}
+public function reject(Request $request, $id)
+    {
+        $transactionType = $request->input('transaction_type');
+
+        if ($transactionType === 'Stock Adjustment') {
+            $this->adjustmentService->reject($id);
+            return redirect()->back()->with('success', 'Stock Adjustment rejected.');
+        }
+
+        if ($transactionType === 'Stock Transfer') {
+            $this->transferService->reject($id);
+            return redirect()->back()->with('success', 'Stock Transfer rejected.');
+        }
+
+
+        return redirect()->back()->with('error', 'Reject not supported for this transaction type.');
+    }
 
 }
