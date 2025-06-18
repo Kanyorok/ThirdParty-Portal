@@ -54,12 +54,13 @@ class ItemCategoryController extends Controller
     }
 
     public function update(UpdateItemCategoryRequest $request, $id)
-    {
-        $category = ItemCategories::findOrFail($id);
-        $this->authorize('update', $category);
-        $this->service->update($category, $request->validated());
-        return redirect()->route('itemcategory.index')->with('success', 'Category updated successfully.');
-    }
+{
+    $category = ItemCategories::findOrFail($id);
+    $this->authorize('update', $category);
+    $category->update($request->validated());
+    return redirect()->route('itemcategory.index')->with('success', 'Category updated successfully.');
+}
+
 
     public function destroy($id)
     {

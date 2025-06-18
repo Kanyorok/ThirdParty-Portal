@@ -8,7 +8,12 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('t_Items', function (Blueprint $table) {
+            $table->dropUnique('t_items_itemcode_unique'); // Drop the unique index first
+        });
+
+        Schema::table('t_Items', function (Blueprint $table) {
             $table->string('ItemCode')->nullable()->change();
+            $table->unique('ItemCode'); // Re-add the unique index if needed
         });
     }
 
