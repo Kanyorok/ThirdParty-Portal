@@ -5,7 +5,7 @@ namespace App\Http\Controllers\CRM\ProductDev;
 use App\Events\ProductDev\ProductDevCommentingEvent;
 use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Base\UploadDocumentRequest;
+use App\Http\Requests\DMS\UploadDocumentRequest;
 use App\Models\CRM\ProductDevelopment;
 use App\Services\DMS\ImageService;
 use App\Services\ProductDevService;

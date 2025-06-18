@@ -28,7 +28,7 @@ class Document extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        "Name", "MimeType", "CategoryId", "RepositoryId", "Visibility",
+        "DocumentId", "Name", "MimeType", "CategoryId", "RepositoryId", "Visibility",
         'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
 
@@ -39,7 +39,7 @@ class Document extends Model
     public function ext(): ?ExtensionsEnum
     {
         try {
-            return ExtensionsEnum::fromMimeType($this->MIMEType);
+            return ExtensionsEnum::fromMimeType($this->MimeType);
         } catch (ErroredException) {
             return null;
         }
@@ -55,6 +55,11 @@ class Document extends Model
         return 'DocumentId';
     }
 
+    public function getRouteKeyName(): string
+    {
+        return 'DocumentId';
+    }
+
     public function repository(): BelongsTo
     {
         return $this->belongsTo(Repository::class, 'RepositoryId', 'Id');
@@ -62,10 +67,17 @@ class Document extends Model
 
     public function tags(): BelongsToMany
     {
-        return $this->belongsToMany(DMSTags::class, 't_DocumentTags', 'DocumentId', 'TagId', 'Id', 'Id')
-            ->withPivot(['CreatedBy', 'ModifiedBy', 'DeletedBy'])->withTimestamps();
-        //->using(DocumentTags::class);
+        return $this->belongsToMany(DMSTags::class, 't_DocumentTags', 'DocId', 'TagId', $this->primaryKey, 'Id')
+            ->withPivot(['CreatedBy', 'ModifiedBy', 'DeletedBy'])->withTimestamps()->using(DocumentTags::class);
+        //
     }
+
+    public function users(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 't_TeamUser', 'TeamId', 'UserId', $this->primaryKey, 'Id')
+            ->withTimestamps('CreatedOn', 'ModifiedOn')->withPivot(['CreatedBy', 'ModifiedBy']);
+    }
+
 
 
     public function permissions(): MorphMany

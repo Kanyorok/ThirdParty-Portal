@@ -10,6 +10,7 @@ use App\Models\DMS\Repository;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Ramsey\Uuid\Uuid;
 use Throwable;
 
 class RepositoryService extends PermissionsService
@@ -41,7 +42,8 @@ class RepositoryService extends PermissionsService
                 $repo = Repository::create([
                     'Name' => $Name,
                     'Description' => $Description,
-                    'RepositoryID' => $repository->Id ?? null,
+                    'RepositoryId' => Uuid::uuid4()->toString(),
+                    'ParentId' => $repository->Id ?? null,
                     'Visibility' => $visibility->value,
                     'CreatedBy' => $actor->Id,
                     'ModifiedBy' => $actor->Id,

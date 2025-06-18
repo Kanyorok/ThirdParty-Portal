@@ -20,12 +20,8 @@ class DocumentTags extends Pivot
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'DocumentId', 'TagId', 'Visibility',
+        'DocId', 'TagId',
         'CreatedBy', 'ModifiedBy', 'DeletedBy',
-    ];
-
-    protected $casts = [
-        'Visibility' => VisibilityEnum::class,
     ];
 
     public static function getPrimaryKey(): string
@@ -40,6 +36,6 @@ class DocumentTags extends Pivot
 
     public function document(): BelongsTo
     {
-        return $this->belongsTo(Document::class, 'DocumentId');
+        return $this->belongsTo(Document::class, 'DocId');
     }
 }

@@ -1,8 +1,12 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\DMS;
 
+use App\Http\Controllers\Controller;
+use App\Http\Resources\DMS\FilesCollection;
 use App\Models\DMS\Repository;
+use App\Services\DMS\RepositoryService;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 
 class RepositoryController extends Controller
@@ -12,7 +16,7 @@ class RepositoryController extends Controller
      */
     public function index()
     {
-        //
+        return view('dms.repo.show')->with('repository', RepositoryService::root());
     }
 
     /**
@@ -34,9 +38,12 @@ class RepositoryController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Repository $repository)
+    public function show(Request $request, Repository $repository)
     {
-        //
+        if ($request->ajax()) {
+            return new FilesCollection($repository->documents()->whereHas('current')->with(['current'])->latest('t_Documents.Id')->paginate(50));
+        }
+        return view('dms.repo.show')->with('repository', $repository);
     }
 
     /**

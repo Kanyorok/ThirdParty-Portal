@@ -22,7 +22,7 @@ class Repository extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'Name', 'Description', 'RepositoryId', 'Visibility',
+        'Name', 'Description', 'RepositoryId', 'Visibility', 'ParentId',
         'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
 
@@ -35,6 +35,11 @@ class Repository extends Model
         return 'RepositoryId';
     }
 
+    public function getRouteKeyName(): string
+    {
+        return 'RepositoryId';
+    }
+
     public function documents(): HasMany
     {
         return $this->hasMany(Document::class, 'RepositoryId', 'Id');
@@ -42,7 +47,7 @@ class Repository extends Model
 
     public function repositories(): HasMany
     {
-        return $this->hasMany(__CLASS__, 'RepositoryId', 'Id');
+        return $this->hasMany(__CLASS__, 'ParentId', 'Id');
     }
 
     public function permissions(): MorphMany

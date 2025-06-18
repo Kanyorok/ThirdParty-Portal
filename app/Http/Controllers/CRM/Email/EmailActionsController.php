@@ -5,7 +5,7 @@ namespace App\Http\Controllers\CRM\Email;
 use App\Enums\EmailStatusEnum;
 use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Base\UploadDocumentRequest;
+use App\Http\Requests\DMS\UploadDocumentRequest;
 use App\Http\Requests\Email\SendDraftMailRequest;
 use App\Models\Communication\Email;
 use App\Services\CRMEmailService;

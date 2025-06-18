@@ -89,8 +89,6 @@ enum ExtensionsEnum: string
         return ($this->isImage() || $this->isVideo() || ($this->value === self::Pdf->value));
     }
 
-
-
     /**
      * @throws ErroredException
      */
@@ -106,6 +104,9 @@ enum ExtensionsEnum: string
 
     public function getIcon(string $type = 'fa'): string
     {
+        if ($type === 'img') {
+            return $this->images();
+        }
         return $this->_fa();
     }
 
@@ -124,6 +125,24 @@ enum ExtensionsEnum: string
             self::Rar, self::Zip, self::SevenZ => '<i class="fa-regular fa-file-archive"></i>',
             self::Json => '<i class="fa-regular fa-file-code"></i>',
             self::None => '?',
+        };
+    }
+
+    private function images(): string
+    {//source https://dryicons.com/free-icons/file-calendar
+        return match ($this) {
+            self::Jpeg, self::Png, self::Gif, self::Bmp, self::Svg => asset('assets/img/files/img-file-img.svg'),
+            self::Mp4, self::Webm, self::AVI, self::Mpeg => asset('assets/img/files/img-file-video.svg'),
+            self::Doc, self::Docx, self::RTF, self::Odt => asset('assets/img/files/img-file-doc.svg'),
+            self::Pdf => asset('assets/img/files/img-file-pdf.svg'),
+            self::Csv, self::Xls, self::Xlsx, self::Ods => asset('assets/img/files/img-file-xls.svg'),
+            self::PPt, self::Pptx, self::Odp => asset('assets/img/files/img-file-ppt.svg'),
+            self::Txt => asset('assets/img/files/img-file-txt.svg'),
+            self::ICS => asset('assets/img/files/img-file-cal.svg'),
+            self::Rar, => asset('assets/img/files/img-file-rar.svg'),
+            self::Zip, self::SevenZ => asset('assets/img/files/img-file-zip.svg'),
+            self::Json => asset('assets/img/files/img-file-code.svg'),
+            self::None => asset('assets/img/files/img-file-blank.svg'),
         };
     }
 

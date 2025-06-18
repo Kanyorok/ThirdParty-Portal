@@ -13,6 +13,12 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::namespace('DMS')->prefix('dms')->group(function () {
+    Route::resource('repo', \App\Http\Controllers\DMS\RepositoryController::class)
+        ->parameters(['repo' => 'repository']);
+
+    Route::resource('repo/{repository}/files', \App\Http\Controllers\DMS\DocumentController::class)
+        ->parameters(['files' => 'document']);
+
     Route::resource('drepositorymanagement', DrepositoryManagementController::class);
     Route::resource('dtypessetupmanagement', DtypessetupManagementController::class);
     Route::resource('categoriesmanagement', CategoriesManagementController::class);
@@ -22,6 +28,5 @@ Route::namespace('DMS')->prefix('dms')->group(function () {
     Route::resource('accessmanagement', AccessManagementController::class);
     Route::resource('trailmanagement', TrailManagementController::class);
     Route::resource('uploadmanagement', UploadManagementController::class);
-
 
 });

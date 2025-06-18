@@ -4,6 +4,7 @@ namespace App\Enums\DMS;
 
 use App\Exceptions\ErroredException;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 
 enum DisksEnum: string
 {
@@ -19,12 +20,11 @@ enum DisksEnum: string
     public function path(): string
     {
         if ($this->value === self::Local->value) {
-            $path = storage_path('app/files/' . date('Y') . '/' . date('m'));
-            if (!File::exists($path)) {
-                if (!File::makeDirectory($path, 0777, true)) {
-                    throw new ErroredException('Could not create directory');
-                }
+            $path = date('Y') . '/' . date('m');
+            if (!Storage::disk($this->value)->exists($path) && !Storage::disk($this->value)->makeDirectory($path)) {
+                throw new ErroredException('Could not create directory');
             }
+
             return $path;
         }
         throw new ErroredException('Could not create directory');

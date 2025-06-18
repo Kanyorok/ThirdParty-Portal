@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Resources;
+namespace App\Http\Resources\DMS;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
-class TicketCollection extends ResourceCollection
+class FilesCollection extends ResourceCollection
 {
     /**
      * Transform the resource collection into an array.
@@ -15,8 +15,8 @@ class TicketCollection extends ResourceCollection
     public function toArray(Request $request): array
     {
         return [
-            'data' => $this->collection->transform(function ($ticket) {
-                return new TicketResource($ticket);
+            'data' => $this->collection->transform(function ($document) {
+                return new FileResource($document);
             }),
         ];
     }
