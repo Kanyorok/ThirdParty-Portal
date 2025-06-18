@@ -31,10 +31,10 @@
                 @endforeach
             </select>
         </div>
-        <div class="mb-3">
+        {{-- <div class="mb-3">
             <label for="ActivityCode" class="form-label">Activity Code</label>
             <input type="text" name="ActivityCode" id="ActivityCode" class="form-control" value="{{ old('ActivityCode') }}" required>
-        </div>
+        </div> --}}
 
         <div class="mb-3">
             <label for="ActivityName" class="form-label">Activity Name</label>

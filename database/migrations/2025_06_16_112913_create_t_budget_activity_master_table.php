@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('t_BudgetActivityMaster', function (Blueprint $table) {
             $table->id('Id');
             $table->foreignId('BudgetLineID')->constrained('t_BudgetLines', 'Id');
-            $table->string('ActivityCode', 20)->unique();
+            //$table->string('ActivityCode', 20)->unique();
             $table->string('ActivityName');
             $table->text('Description');
             $table->boolean('IsActive')->default(true);

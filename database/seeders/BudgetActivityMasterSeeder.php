@@ -43,7 +43,7 @@ class BudgetActivityMasterSeeder extends Seeder
 
         foreach ($activities as [$code, $name, $desc, $isActive]) {
             DB::table('t_BudgetActivityMaster')->insert([
-                'ActivityCode'   => $code,
+                //'ActivityCode'   => $code,
                 'ActivityName'   => $name,
                 'Description'    => $desc,
                 'IsActive'       => $isActive,

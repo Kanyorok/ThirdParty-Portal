@@ -6,8 +6,10 @@ use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Budget\BudgetGLAccount;
 use App\Models\Budget\BudgetLine;
+use App\Models\Budget\BudgetLineCategories;
 use App\Models\Budget\BudgetLinesGLAccount;
 use App\Models\Budget\BudgetProductType;
+use App\Models\Core\CodeDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -25,11 +27,14 @@ class BudgetLineMappingController extends Controller
         //Fetch Budget Lines with related glAccounts and category
         $budgetLines = BudgetLine::with(['glAccounts', 'category'])->get();
 
+        //Fetch Budget line category
+        $budgetCategories=BudgetLineCategories::all();
+
         //Pull the GLS 
         $gls=BudgetGLAccount::select('Id','Description','GTType')->get();
         //Fetch Product type 
         $productTypes=BudgetProductType::select('Id','Name')->get();
-        return view('budgetandanalytics.budgetlinemapping.index',compact('budgetLines','gls','productTypes'));
+        return view('budgetandanalytics.budgetlinemapping.index',compact('budgetLines','gls','productTypes','budgetCategories'));
     }
 
     public function create()
@@ -38,9 +43,21 @@ class BudgetLineMappingController extends Controller
         $this->authorize(PermissionEnum::BudgetSetupCreate,BudgetLine::class);
         //Pull the GLS 
         $gls=BudgetGLAccount::select('Id','Description','GTType')->get();
+        
+        //Fetch Budget line category
+        $budgetCategories=BudgetLineCategories::all();
+
         //Fetch Product type 
         $productTypes=BudgetProductType::select('Id','Name')->get();
-        return view('budgetandanalytics.budgetlinemapping.create',compact('gls','productTypes'));
+
+        //Fetch GL Account Types
+        $glAccountTypes=CodeDetail::where('CodeID','GLAccountType')->get();
+        return view('budgetandanalytics.budgetlinemapping.create',compact(
+            'gls',
+            'productTypes',
+            'budgetCategories',
+            'glAccountTypes',
+        ));
     }
 
     public function store(Request $request)
