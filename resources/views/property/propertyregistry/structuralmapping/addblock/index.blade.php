@@ -25,8 +25,12 @@
         <td>{{ $block->BlockName}}</td>
         <td>{{ $block->Description}}</td>
         <td>
-          <a href="{{ route('addblock.show', $block->id) }}" class="btn btn-sm btn-info">👁 View</a>
-          <button class="btn btn-sm btn-outline-warning">✏️ Edit</button>
+        <a href="{{ route('addblock.edit', $block->Id) }}" class="btn btn-sm btn-warning">Edit</a>
+        <form action="{{ route('addblock.destroy', $block->Id) }}" method="POST" class="d-inline">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this property?');">Delete</button>
+         </form>
         </td>
        </tr>
         @endforeach      

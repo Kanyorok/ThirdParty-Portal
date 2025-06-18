@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id('Id');
             $table->foreignId('StockTakeId')->constrained('t_StockTake','Id');
             $table->foreignId('ItemId')->constrained('t_StockItems','Id');
-            $table->foreignId('ActualQuantity')->constrained('t_StockItems','Id');           
+            $table->integer('ActualQuantity');           
             $table->integer('CountedQuantity');
             $table->string('Remarks');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');

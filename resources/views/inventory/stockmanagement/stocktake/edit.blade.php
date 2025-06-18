@@ -22,7 +22,7 @@
                     <option value="">-- Select Branch --</option>
                     @foreach ($items as $item)
                                             <option value="{{ $item->Id }}" {{ $stock->BranchId == $item->Id ? 'selected' : '' }}>
-                            {{ $item->Branch }}
+                            {{ $item->branch->Name ?? '_' }}
                         </option>
                     @endforeach
                 </select>
@@ -33,7 +33,7 @@
                     <option value="">-- Select Store --</option>
                     @foreach ($items as $item)
                                           <option value="{{ $item->Id }}" {{ $stock->StoreId == $item->Id ? 'selected' : '' }}>
-                            {{ $item->Store }}
+                            {{ $item->store->StoreName ?? '_' }}
                         </option>
                     @endforeach
                 </select>

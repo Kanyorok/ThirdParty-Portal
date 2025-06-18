@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers\Inventory;
 
+use App\Http\Requests\Inventory\StockTakeRequest;
 use App\Models\Inventory\StockTakeLines;
+use App\Services\Inventory\StockTakeService;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
@@ -23,12 +26,13 @@ class StockTakeController extends Controller
         return view('inventory.stockmanagement.stocktake.index',compact ('stocks'));
     }
 
-    public function create(){
-        $stocks = StockItem::all();
-        $branches = Branch::all();
-        $stores =   Store::all();
-        return view('inventory.stockmanagement.stocktake.create',compact('stocks', 'branches','stores'));
+    public function create()
+    {
+        $branches = Branch::all(); // Replace with your actual Branch model
+        $stocks = collect(); // Empty collection to avoid undefined error
+        return view('inventory.stockmanagement.stocktake.create', compact('branches', 'stocks'));
     }
+
 
     public function getStoreByBranch($storeId)
     {   
@@ -36,59 +40,63 @@ class StockTakeController extends Controller
         return response()->json($stores);
     }
 
+    public function getStockItems($branchId, $storeId)
+    {
+        $stocks = StockItem::where('Branch', $branchId)
+                    ->where('Store', $storeId)
+                    ->whereNull('DeletedOn')
+                    ->with('item')
+                    ->get();
+
+        return response()->json($stocks); // Just return raw data
+    }
+    
+public function store(StockTakeRequest $request)
+{
+    try {
+        $validated = $request->validated();
+
+        // Fetch the Branch and Store models using the validated IDs
+        $branch = Branch::findOrFail($validated['BranchId']);
+        $store = Store::findOrFail($validated['StoreId']);
+
+        $service = StockTakeService::create(
+            branch: $branch,
+            store: $store,
+            countedBy: $validated['CountedBy'],
+            countDate: Carbon::parse($validated['CountDate']),
+        );
+
+        foreach ($validated['lines'] as $line) {
+            $service->addLine(
+                itemId: $line['ItemId'],
+                actualQuantity: $line['ActualQuantity'],
+                countedQuantity: $line['CountedQuantity'],
+                remarks: $line['Remarks'] ?? null
+            );
+        }
+
+        return redirect()->route('stocktake.index')->with('success', 'Stock Take and Lines created successfully.');
+    } catch (\Exception $e) {
+        \Log::error('StockTake store error: ' . $e->getMessage());
+        return redirect()->back()->with('error', 'Failed to create Stock Take: ' . $e->getMessage())->withInput();
+    }
+}
+
     public function show($id){
         $stock = StockTake::find($id);
         return view('inventory.stockmanagement.stocktake.show',compact('stock'));
     }
-    
-     public function store(Request $request)
-    {
-        //dd($request->all());
-        $request->validate([
-            'BranchId'=>'required|string|max:50',
-            'StoreId'=>'required|string|max:50',
-            'CountedBy'=>'required|string|max:100',
-            'CountDate'=>'required|date|max:100',
-            
-        ]);
-         $stocks = StockTake::create([
-            'BranchId'=> $request->BranchId,
-            'StoreId'=> $request->StoreId,
-            'CountedBy'=> $request->CountedBy   ,
-            'CountDate' => $request->CountDate,
-            'CreatedBy' => auth()->user()->Id,
-            'ModifiedBy' => auth()->user()->Id,
-        ]);
-           
-    }
-    public function storeline(Request $request)
-    {
-          $request->validate([
-            'StockTakeId'=>'required|string|max:50',
-            'ItemId'=>'required|string|max:50',
-            'ActualQuantity'=>'required|integer|max:50',
-            'CountedQuantity'=>'required|integer|max:50',
-            'Remarks'=>'required|string|max:100'
-          ]);
-            $stocklines = StockTakeLines::create([
-            'StockTakeId'=> $request->StockTakeId,
-            'ItemId'=> $request->ItemId,
-            'ActualQuantity'=> $request->ActualQuantity,
-            'CountedQuantity' => $request->CounedQuantity,
-            'Remarks' => $request->Remarks,   
-            'CreatedBy' => auth()->user()->Id,
-            'ModifiedBy' => auth()->user()->Id,
-        ]);
-        return redirect()->route('stocktake.index')->with('success','Stock Take AND Stock Take Lines created successfully');
-    }
+
     public function edit($id)
     {
         //Check if user has permission to edit tender categories
        // $this->authorize(PermissionEnum::PropertyTypeUpdate, PropertyType::class);
         $stock = StockTake::findOrFail($id);
         $items = StockItem::all();
+        $stocks = StockTake::all();
 
-        return view('inventory.stockmanagement.stocktake.edit',compact('stock','items'));
+        return view('inventory.stockmanagement.stocktake.edit',compact('stock','items','stocks'));
     }
      public function update(Request $request, $id){ 
        // $this->authorize(PermissionEnum::PropertyTypeUpdate , PropertyType::class);
@@ -109,7 +117,7 @@ class StockTakeController extends Controller
         $stock->update([
             'BranchId'  => $validated['BranchId'],
             'StoreId' => $validated['StoreId'],
-            'CountedBy'  => $validated['CountBy'],  
+            'CountedBy'  => $validated['CountedBy'],  
             'CountDate'  => $validated['CountDate'],       
 
             'ModifiedBy' => Auth::Id(),

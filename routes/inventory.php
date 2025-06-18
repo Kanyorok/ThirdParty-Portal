@@ -90,6 +90,7 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/downloads/opening-stock-sample', [OpeningStockController::class, 'downloadSampleTemplate'])->name('openingstock.sample');
     Route::post('/openingstock/upload', [OpeningStockController::class, 'uploadExcel'])->name('openingstock.upload');
 
+
     //Route::resource('bintracking', BinTrackingController::class);
     Route::get('/inventorytracking', [BinTrackingController::class, 'index'])->name('bintracking.index');
     Route::get('/inventorytracking/create', [BinTrackingController::class, 'create'])->name('bintracking.create');
@@ -108,8 +109,11 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/stocktake/show/{Id}', [StockTakeController::class, 'show'])->name('stocktake.show');
     Route::delete('stocktake/delete/{Id}', [StockTakeController::class,'destroy'])->name('stocktake.destroy');
     Route::get('stocktake/edit/{Id}',[StockTakeController::class,'edit'])->name('stocktake.edit');
-    Route::put('stocktake/edit/{Id}',[StockTakeController::class,'update'])->name('stocktake.update');
+    Route::put('stocktake/update/{Id}',[StockTakeController::class,'update'])->name('stocktake.update');
     Route::get('/stocktake/branches/{storeId}', [StockTakeController::class, 'getStoreByBranch'])->name('getstores');
+    Route::get('/stock-items/{branchId}/{storeId}', [StockTakeController::class, 'getStockItems'])->name('stocktake.items');
+
+
     
     
     Route::resource('uomconversion', UOMConversionController::class);

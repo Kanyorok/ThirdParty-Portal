@@ -1,10 +1,15 @@
 <?php
 
+
 namespace App\Models\Inventory;
 
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Core\Branch;
+use App\Models\Inventory\store;
+use App\Models\Auth\User;
+
 
 class StockTake extends Model
 {
@@ -37,6 +42,19 @@ class StockTake extends Model
         public function ItemBranchId()
     {
         return $this->belongsTo(StockItem::class, 'Branch', 'Id');
+    }
+        public function branch()
+    {
+        return $this->belongsTo(Branch::class, 'BranchId', 'Id');
+    }
+        public function store()
+    {
+        return $this->belongsTo(Store::class, 'StoreId', 'Id');
+
+    }
+        public function user()
+    {
+        return $this->belongsTo(User::class, 'CreatedBy', 'Id');
     }
 
 }

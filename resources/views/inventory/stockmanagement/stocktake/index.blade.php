@@ -13,7 +13,6 @@
         <th>Store</th>
         <th>Counted By</th>
         <th>Date</th>
-        <th>Status</th>
         <th>Posted By</th>
         <th>Posted Date</th>
         <th>Actions</th>
@@ -23,16 +22,14 @@
       @foreach($stocks as $stock)
       <tr>
         <td>{{$loop->iteration}}</td>
-        <td>{{$stock->BranchId}}</td>
-        <td>{{$stock->StoreId}}</td>
+        <td>{{ $stock->branch->Name }}</td>
+        <td>{{$stock->store->StoreName}}</td>
         <td>{{$stock->CountedBy}}</td>
-        <td>{{$stock->CountDate}}</td>
-        <td><span class="badge bg-warning text-dark">Pending</span></td>
-        <td>{{$stock->CreatedBy}}</td>
-        <td>{{$stock->CreatedOn}}</td>
+        <td>{{ \Carbon\Carbon::parse($stock->CountDate)->format('d/m/Y') }}</td>
+        <td>{{$stock->user?->Name}}</td>
+        <td>{{ \Carbon\Carbon::parse($stock->CreatedOn)->format('d/m/Y') }}</td>
         <td>
           <a href="{{ route('stocktake.show', $stock->Id) }}" class="btn btn-sm btn-info">👁 View</a>
-          <button class="btn btn-sm btn-outline-success">📌 Post</button>
           <a href="{{ route('stocktake.edit', $stock->Id) }}" class="btn btn-sm btn-warning">Edit</a>
           <form action="{{ route('stocktake.destroy', $stock->Id) }}" method="POST" class="d-inline">
               @csrf

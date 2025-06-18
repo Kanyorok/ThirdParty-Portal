@@ -321,6 +321,7 @@ enum PermissionEnum: string
     case InterBranchRequisitionDestroy= 'interBranchRequisition-destroy';
     case InterBranchRequisitionApproval= 'interBranchRequisition-approval';
     
+
     case PriceManagementView = 'priceManagement-view';
     case PriceManagementUpdate = 'priceManagement-update';
     case PriceManagementCreate = 'priceManagement-create';
@@ -342,6 +343,12 @@ enum PermissionEnum: string
     case StockAdjustmentCreate = 'stockAdjustment-create';
     case StockAdjustmentDestroy= 'stockAdjustment-destroy';
    // case StockAdjustmentApproval= 'stockAdjustment-approval';
+
+    
+    case StockTakeView = 'stockTake-view';
+    case StockTakeUpdate = 'stockTake-update';
+    case StockTakeCreate = 'stockTake-create';
+    case StockTakeDestroy= 'stockTake-destroy';
 
     /*
      *
@@ -463,6 +470,7 @@ enum PermissionEnum: string
             [self::PlanMaintenanceRead, self::PlanMaintenanceWrite, self::PlanMaintenanceUpdate, self::PlanMaintenanceDelete],
             [self::PlanManualInputRead, self::PlanManualInputWrite, self::PlanManualInputUpdate, self::PlanManualInputDelete],
             [self::PlanEditRead, self::PlanEditWrite, self::PlanEditUpdate, self::PlanEditDelete],
+            [self::StockTakeView, self::StockTakeCreate, self::StockTakeUpdate, self::StockTakeDestroy],
 
             /////////////////////////// Budget and Analytics  ///////////////////////
             [self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate,self::BudgetSetupDelete],
@@ -544,7 +552,8 @@ enum PermissionEnum: string
             self::PriceManagementView, self::PriceManagementUpdate, self::PriceManagementCreate, self::PriceManagementDestroy,
             self::TransactionReceiptView, self::TransactionReceiptUpdate, self::TransactionReceiptCreate, self::TransactionReceiptDestroy,
             self::TransactionTransferView, self::TransactionTransferUpdate, self::TransactionTransferCreate, self::TransactionTransferDestroy,self::TransactionTransferApproval,
-            self::StockAdjustmentView, self::StockAdjustmentUpdate, self::StockAdjusmentCreate, self::StockAdjustmentDestroy => ModulesEnum::Inventory,
+            self::StockAdjustmentView, self::StockAdjustmentUpdate, self::StockAdjusmentCreate, self::StockAdjustmentDestroy,
+            self::StockTakeView, self::StockTakeCreate, self::StockTakeUpdate, self::StockTakeDestroy => ModulesEnum::Inventory,
 
 
             //Property Management
@@ -624,8 +633,7 @@ enum PermissionEnum: string
             self::TransactionReceiptView, self::TransactionReceiptUpdate, self::TransactionReceiptCreate, self::TransactionReceiptDestroy => 'Receipt',
             self::TransactionTransferView, self::TransactionTransferUpdate, self::TransactionTransferCreate, self::TransactionTransferDestroy,self::TransactionTransferApproval => 'Transfer',
             self::StockAdjustmentView, self::StockAdjustmentUpdate, self::StockAdjusmentCreate, self::StockAdjustmentDestroy => 'StockAdjustment',
-
-
+            self::StockTakeView, self::StockTakeCreate, self::StockTakeUpdate, self::StockTakeDestroy => 'Stock Take',
 
             ////////////////////////// Budget and Analytics //////////////////////////////
             self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate,self::BudgetSetupDelete =>'Budget Setup',
