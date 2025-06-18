@@ -155,5 +155,4 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 <!-- Add this somewhere in your HTML for error messages -->
 <div id="error-message" style="color:red;"></div>
-
 @endsection
