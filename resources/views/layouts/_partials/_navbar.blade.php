@@ -20,7 +20,7 @@
                  active
              @endif
              ">
-             <a href="{{ $module['route'] }}" class="pc-link ajax-link">
+             <a href="{{ $module['route'] }}" class="pc-link">
                  <span class="pc-micon">
                      {!! $module['icon'] ?? '<i data-feather="box"></i>' !!}
                  </span>

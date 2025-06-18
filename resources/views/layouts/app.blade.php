@@ -999,27 +999,25 @@
 </header>
 
 <div class="pc-container">
-    <div class="pc-content" id="main-content">
-        <div class="pc-content">
-            <div class="page-header">
-                <div class="page-block">
-                    <div class="row align-items-center">
-                        <div class="col-12 col-sm-6">
-                            <div class="page-header-title"><h3 class="mb-0">@yield('title')</h3></div>
-                        </div>
-                        <div class="col-12 col-sm-6">
-                            <ul class="breadcrumb float-end">
-                                <li class="breadcrumb-item"><a href="{{ route('home') }}">Home</a></li>
-                                @yield('breadcrumbs')
-                                <li class="breadcrumb-item" aria-current="page">@yield('title')</li>
-                            </ul>
-                        </div>
-
+    <div class="pc-content">
+        <div class="page-header">
+            <div class="page-block">
+                <div class="row align-items-center">
+                    <div class="col-12 col-sm-6">
+                        <div class="page-header-title"><h3 class="mb-0">@yield('title')</h3></div>
                     </div>
+                    <div class="col-12 col-sm-6">
+                        <ul class="breadcrumb float-end">
+                            <li class="breadcrumb-item"><a href="{{ route('home') }}">Home</a></li>
+                            @yield('breadcrumbs')
+                            <li class="breadcrumb-item" aria-current="page">@yield('title')</li>
+                        </ul>
+                    </div>
+
                 </div>
             </div>
-            @yield('content')
         </div>
+        @yield('content')
     </div>
 </div>
 <footer class="pc-footer">
@@ -1047,41 +1045,6 @@
 @include('layouts._partials._scripts')
 
 @stack('scripts')
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-$(document).ready(function() {
-    $('.pc-sidebar').on('click', '.ajax-link', function(e) {
-        e.preventDefault(); // prevent full page load
-        const url = $(this).attr('href');
-
-        $.ajax({
-            url: url,
-            type: 'GET',
-            dataType: 'html',
-            success: function(response) {
-                // Extract the content only from response (Laravel blade layout returns full HTML)
-                const html = $('<div>').html(response);
-                const newContent = html.find('#main-content').html();
-                $('#main-content').html(newContent);
-                window.history.pushState({}, '', url); // update URL without reload
-            },
-            error: function() {
-                alert('Failed to load content.');
-            }
-        });
-    });
-
-    // Handle browser back/forward buttons
-    window.onpopstate = function() {
-        $.get(location.href, function(response) {
-            const html = $('<div>').html(response);
-            const newContent = html.find('#main-content').html();
-            $('#main-content').html(newContent);
-        });
-    };
-});
-</script>
-
 </body>
 
 </html>

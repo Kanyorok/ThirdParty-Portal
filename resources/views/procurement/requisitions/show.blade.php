@@ -131,11 +131,7 @@
                                 <label class="form-label" for="UOM">UOM </label>
 
                                 <select class="form-control" name="UOM" id="UOM" required>
-                                    {{--                                    <option selected disabled>Select UOM</option> --}}
-
-                                    {{-- @foreach ($MarketingLists as $MarketingList)
-                                        <option value="{{ $MarketingList->slug }}">{{ $MarketingList->Label }}</option>
-                                    @endforeach --}}
+                                    
                                 </select>
 
                                 <p id="UOM_error" class="invalid-feedback d-none error col-12" role="alert"></p>

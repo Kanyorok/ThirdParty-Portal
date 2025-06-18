@@ -28,7 +28,7 @@ class ItemService
                     ->join('t_ItemTypes as f', 't.ItemType', '=', 'f.Id')
                     ->where('pi.PlanID', $requisition->PlanRef)
                     ->where('t.ItemType', $type)
-                    ->select('t.Id', 't.ItemName', 't.ItemCode')
+                    ->select('t.Id', 't.ItemName', 't.ItemCode', 'i.EstimatedUnitCost')
                     ->get();
             }
         }
@@ -36,8 +36,9 @@ class ItemService
         return DB::table('t_Items')
             ->leftjoin('t_ItemCategories', 't_Items.Category', '=', 't_ItemCategories.Id')
             ->leftjoin('t_ItemTypes', 't_Items.ItemType', '=', 't_ItemTypes.Id')
+            ->leftjoin('t_Pricing', 't_Items.Id', '=', 't_Pricing.ItemID')
             ->where('t_ItemTypes.Id', $type)
-            ->select('t_Items.Id','t_Items.ItemName','t_Items.ItemCode')
+            ->select('t_Items.Id','t_Items.ItemName','t_Items.ItemCode', 't_Pricing.EstimatedPrice')
             ->get();
     }
 
