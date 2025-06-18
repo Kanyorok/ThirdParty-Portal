@@ -18,6 +18,7 @@ return new class extends Migration
             $table->date('From');
             $table->date('To');
             $table->longText('Notes');
+            $table->string('Status')->default('draft');
             
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
