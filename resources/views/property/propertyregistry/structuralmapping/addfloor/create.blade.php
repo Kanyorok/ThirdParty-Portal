@@ -20,7 +20,7 @@
         <div class="row g-3 mb-3">
             <div class="col-md-6">
                 <label class="form-label">Select Property</label>
-                <select name="PropertyID" class="form-select" required>
+                <select name="PropertyID" id="property-select" class="form-select" required>
                   <option value="">-- Select Property --</option>
                     @foreach ($lineentries as $property)
                         <option value="{{ $property->Id }}">{{ $property->PropertyName }}</option>
@@ -31,7 +31,7 @@
       <div class="row g-3 mb-3">
         <div class="col-md-6">
           <label class="form-label">Select Block</label>
-            <select name="BlockID" class="form-select" required>
+            <select name="BlockID" id="block-select" class="form-select" required>
                 <option value="">-- Select Block --</option>  
             </select>
         </div>
@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (PropertyId) {
             // Construct the URL from the named route
-            const url = `{{ route('getblockbyproperty', ':Id') }}`.replace(':Id', PropertyID);
+            const url = `{{ route('getblockbyproperty', ':Id') }}`.replace(':Id', PropertyId);
 
             fetch(url)
                 .then(response => response.json())

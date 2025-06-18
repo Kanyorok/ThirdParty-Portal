@@ -4,7 +4,8 @@ namespace App\Http\Controllers\Property;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;    
+use Illuminate\Support\Facades\Auth; 
+use App\Enums\PermissionEnum;   
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\PropertyManagement\PropertyFloor;
@@ -63,8 +64,8 @@ class PropertyFloorController extends Controller
        public function edit($id)
     {
         //Check if user has permission to edit tender categories
-        //$this->authorize(PermissionEnum::PropertyCategoryUpdate, CategoryMaster::class);
-        $floor = PropertyFloor::findOrFail($id); 
+        //$this->authorize(PermissionEnum::PropertyUpdate, PropertyFloor::class);
+        $floor = PropertyFloor::findOrFail($id);
         $blocks = PropertyBlock::all();
         $properties = PropertyRegistry::all();
         
@@ -74,7 +75,7 @@ class PropertyFloorController extends Controller
 
     public function update(Request $request, $id)
     {
-        //$this->authorize(PermissionEnum::PropertyCategoryUpdate, CategoryMaster::class);
+        //$this->authorize(PermissionEnum::PropertyUpdate, PropertyFloor::class);
         $validated = $request->validate([
             'PropertyID' => 'required|exists:t_PropertyRegistry,Id',
             'BlockID' => 'required|exists:t_PropertyBlock,Id',
@@ -86,9 +87,9 @@ class PropertyFloorController extends Controller
         DB::beginTransaction();
 
         try {
-            $block = PropertyBlock::findOrFail($id);
+            $floor = PropertyFloor::findOrFail($id);
 
-            $block->update([
+            $floor->update([
                 'PropertyID' => $validated['PropertyID'],
                 'BlockID' => $validated['BlockID'],
                 'FloorLabel' => $validated['FloorLabel'],
@@ -106,16 +107,14 @@ class PropertyFloorController extends Controller
             return redirect()->route('addfloor.index')->with('success', 'Floor updated successfully');
         } catch (\Throwable $th) {
             DB::rollBack();
-            Log::error('Failed to Update property floor:' . $th->getMessage());
-
-            return back()->withErrors(['error' => 'Failed to update property floor'])->withInput();
+            return back()->withErrors(['error' => $th->getMessage()])->withInput();
         }
     }
 
     public function destroy($id)
     {
         //Check if user has permission to delete property categories
-       //$this->authorize(PermissionEnum::PropertyCategoryDelete, CategoryMaster::class);
+       //$this->authorize(PermissionEnum::PropertyDelete, PropertyFloor::class);
         try {
             $floor = PropertyFloor::findOrFail($id);
             $floor->delete();
