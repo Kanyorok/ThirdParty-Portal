@@ -94,8 +94,9 @@ public function store(StockTakeRequest $request)
        // $this->authorize(PermissionEnum::PropertyTypeUpdate, PropertyType::class);
         $stock = StockTake::findOrFail($id);
         $items = StockItem::all();
+        $stocks = StockTake::all();
 
-        return view('inventory.stockmanagement.stocktake.edit',compact('stock','items'));
+        return view('inventory.stockmanagement.stocktake.edit',compact('stock','items','stocks'));
     }
      public function update(Request $request, $id){ 
        // $this->authorize(PermissionEnum::PropertyTypeUpdate , PropertyType::class);

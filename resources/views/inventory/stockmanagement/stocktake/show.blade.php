@@ -7,16 +7,22 @@
     <div class="card-body">
       <dl class="row">
         <dt class="col-sm-4">BranchID</dt>
-        <dd class="col-sm-8">{{ $stock->BranchId?? '-' }}</dd>
+        <dd class="col-sm-8">{{ $stock->branch->Name }}</dd>
 
         <dt class="col-sm-4">StoreID</dt>
-        <dd class="col-sm-8">{{ $stock->StoreId?? '-' }}</dd>
+        <dd class="col-sm-8">{{ $stock->store->StoreName?? '-' }}</dd>
 
         <dt class="col-sm-4">CountedBy</dt>
         <dd class="col-sm-8">{{ $stock->CountedBy?? '-' }}</dd>
 
         <dt class="col-sm-4">Count Date</dt>
-        <dd class="col-sm-8">{{ $stock->CountDate?? '-' }}</dd>
+        <dd class="col-sm-8">{{ \Carbon\Carbon::parse($stock->CountDate)->format('d/m/Y') }}</dd>
+
+        <dt class="col-sm-4">Posted By</dt>
+        <dd class="col-sm-8">{{ $stock->user?->Name ?? '-' }}</dd>
+
+        <dt class="col-sm-4">Posted Date</dt>
+        <dd class="col-sm-8">{{ \Carbon\Carbon::parse($stock->CreatedOn)->format('d/m/Y') }}</dd>
 
       </dl>
     </div>
