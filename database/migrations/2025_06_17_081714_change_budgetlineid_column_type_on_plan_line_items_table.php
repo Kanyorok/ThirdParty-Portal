@@ -10,7 +10,7 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        // You need the doctrine/dbal package to modify column types
+        
         Schema::table('t_PlanLineItem', function (Blueprint $table) {
             $table->integer('BudgetLineID')->nullable()->change();
         });
