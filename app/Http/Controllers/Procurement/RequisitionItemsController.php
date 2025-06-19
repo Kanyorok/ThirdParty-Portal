@@ -64,10 +64,9 @@ class RequisitionItemsController extends Controller
         }
     }
 
-    public function getItemDetails($item): JsonResponse
+    public function getItemDetails(Request $request, $item): JsonResponse
     {
-        try{
-
+        try {
             if (empty($item)) {
                 return response()->json([
                     'success' => false,
@@ -75,12 +74,22 @@ class RequisitionItemsController extends Controller
                 ], 400);
             }
 
-            $details = $this->itemService->getItemDetails($item);
+            // ✅ Extract requisition_id from query
+            $requisitionId = $request->query('requisition_id');
+            $planId = null;
+
+            if ($requisitionId) {
+                $planId = DB::table('t_Requisitions')->where('Id', $requisitionId)->value('PlanRef');
+            }
+
+            // ✅ Pass planId to the service
+            $details = $this->itemService->getItemDetails($item, $planId);
+
             return response()->json([
                 'success' => true,
                 'data' => $details,
-            ]);}
-        catch(\Exception $e){
+            ]);
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch items.',
@@ -142,10 +151,8 @@ class RequisitionItemsController extends Controller
     public function store(RequisitionItemRequest $request): JsonResponse
     {
         $this->authorize('create', RequisitionLine::class);
-       dd($request->all());
         try {
             $validatedData = $request->validated();
-
 
             $actor = $request->user();
             if (!$actor) {
