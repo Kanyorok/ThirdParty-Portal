@@ -2,8 +2,11 @@
 
 namespace App\Models\Budget;
 
+use App\Models\Core\CodeDetail;
+use App\Models\HRM\Department;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BudgetLine extends Model
@@ -25,8 +28,12 @@ class BudgetLine extends Model
     protected $fillable = [
         'BudgetLineCategoryID',
         'LineName',
+        'DepartmentID',
+        'GLAccountTypeID',
+        'GLAccountSubTypeID',
         'Description',
         'IsDefault',
+        'IsProductDriven',
 
         'CreatedBy',
         'CreatedOn',
@@ -37,6 +44,7 @@ class BudgetLine extends Model
 
     protected $casts = [
         'IsDefault'   => 'boolean',
+        'IsProductDriven' => 'boolean',
 
         'CreatedOn'   => 'datetime',
         'ModifiedOn'  => 'datetime',
@@ -58,4 +66,18 @@ class BudgetLine extends Model
                     ->wherePivot('DeletedOn', null); // Only fetch if DeletedOn is NULL
     }
 
+    public function glAccountSubType()
+    {
+        return $this->belongsTo(BudgetGLAccountSubType::class, 'GLAccountSubTypeID', 'Id');
+    }
+
+    public function department()
+    {
+        return $this->belongsTo(Department::class, 'DepartmentID', 'Id');
+    }
+
+    public function glAccountType()
+    {
+        return $this->belongsTo(CodeDetail::class, 'GLAccountTypeID','Value');
+    }
 }

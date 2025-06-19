@@ -43,16 +43,17 @@
                     
                     <div class="mb-3 col-md-6">
                       <label class="form-label">Department</label>
-                      <select class="form-select">
+                      <select class="form-select" name="DepartmentID" required>
                         <option selected disabled>-- Select Department --</option>
-                        <option value="ERP001">ERP001 - Interest Revenue</option>
-                        <option value="ERP002">ERP002 - Other Income</option>
+                        @foreach ($departments as $department)
+                            <option value="{{ $department->Id }}">{{ $department->Name }}</option>
+                        @endforeach
                       </select>
                     </div>
                     
                     <div class="mb-3 col-md-6">
                       <label class="form-label">GL Account Type</label>
-                      <select class="form-select">
+                      <select class="form-select" name="GLAccountTypeID" id="glAccountTypeSelect" required>
                         <option selected disabled>-- Select Account type --</option>
                         @foreach ($glAccountTypes as $item)
                           <option value="{{ $item->Value }}">{{ $item->Description }}</option>
@@ -62,10 +63,9 @@
                     
                     <div class="mb-3 col-md-6">
                       <label class="form-label">GL Sub-Type</label>
-                      <select class="form-select">
+                      <select class="form-select" name="GLAccountSubTypeID" id="glAccountSubTypeSelect" required>
                         <option selected disabled>-- Select Sub-Type --</option>
-                        <option value="ERP001">ERP001 - Interest Revenue</option>
-                        <option value="ERP002">ERP002 - Other Income</option>
+                        {{-- Options will be loaded dynamically --}}
                       </select>
                     </div>
 
@@ -91,8 +91,8 @@
 
                     <!-- ❓ Is Projection Product Driven -->
                   <div class="mb-3">
-                    <label for="isProductDriven" class="form-label">Is this Budget Line Product Driven?</label>
-                    <select class="form-select" id="isProductDriven" name="is_product_driven" required>
+                    <label for="IsProductDriven" class="form-label">Is this Budget Line Product Driven?</label>
+                    <select class="form-select" id="IsProductDriven" name="IsProductDriven" required>
                       <option value="" selected disabled>-- Select Option --</option>
                       <option value="1">Yes</option>
                       <option value="0">No</option>
@@ -103,7 +103,7 @@
                   <div class="mb-3" id="productTypeSection" style="display: none;">
                     <h6>🔗 Product Types (Multiple)</h6>
                     <label class="form-label">Select Product Types</label>
-                    <select multiple class="form-select" name="product_types[]">
+                    <select multiple class="form-select" name="ProductTypes[]">
                       @foreach ($productTypes as $type)
                         <option value="{{ $type->Id }}">{{ $type->Name }}</option>
                       @endforeach
@@ -145,15 +145,30 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', function () {
-    const isProductDriven = document.getElementById('isProductDriven');
+    const IsProductDriven = document.getElementById('IsProductDriven');
     const productTypeSection = document.getElementById('productTypeSection');
+    const typeSelect = document.getElementById('glAccountTypeSelect');
+    const subTypeSelect = document.getElementById('glAccountSubTypeSelect');
 
-    isProductDriven.addEventListener('change', function () {
+    IsProductDriven.addEventListener('change', function () {
       if (this.value === '1') {
         productTypeSection.style.display = 'block';
       } else {
         productTypeSection.style.display = 'none';
       }
+    });
+
+    typeSelect.addEventListener('change', function () {
+      const typeId = this.value;
+      subTypeSelect.innerHTML = '<option selected disabled>Loading...</option>';
+      fetch(`/budgetlinemapping/gl-subtypes/${typeId}`)
+        .then(response => response.json())
+        .then(data => {
+          subTypeSelect.innerHTML = '<option selected disabled>-- Select Sub-Type --</option>';
+          data.forEach(function(subType) {
+            subTypeSelect.innerHTML += `<option value="${subType.Id}">${subType.GLAccountSubTypeName}</option>`;
+          });
+        });
     });
   });
 </script>

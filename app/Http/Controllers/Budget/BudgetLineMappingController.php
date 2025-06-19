@@ -15,6 +15,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpSpreadsheet\Calculation\Category;
+use App\Models\HRM\Department;
+use App\Models\Budget\BudgetGLAccountSubType;
+use App\Models\Budget\BudgetLineProductTypes;
 
 class BudgetLineMappingController extends Controller
 {
@@ -25,7 +28,7 @@ class BudgetLineMappingController extends Controller
         $this->authorize(PermissionEnum::BudgetSetupView, BudgetLine::class);
 
         //Fetch Budget Lines with related glAccounts and category
-        $budgetLines = BudgetLine::with(['glAccounts', 'category'])->get();
+        $budgetLines = BudgetLine::with(['glAccounts', 'category', 'glAccountSubType', 'department', 'glAccountType'])->get();
 
         //Fetch Budget line category
         $budgetCategories=BudgetLineCategories::all();
@@ -51,12 +54,19 @@ class BudgetLineMappingController extends Controller
         $productTypes=BudgetProductType::select('Id','Name')->get();
 
         //Fetch GL Account Types
-        $glAccountTypes=CodeDetail::where('CodeID','GLAccountType')->get();
+        $glAccountTypes=CodeDetail::select('Id','CodeID','Value','Description')->where('CodeID','GLAccountType')->get();
+
+        //Fetch GLAccountSubType
+        $glSubtype=BudgetGLAccountSubType::select('Id','GLAccountTypeValue','GLAccountSubTypeName')->get();
+
+        $departments = Department::all();
         return view('budgetandanalytics.budgetlinemapping.create',compact(
             'gls',
             'productTypes',
             'budgetCategories',
             'glAccountTypes',
+            'departments',
+            'glSubtype'
         ));
     }
 
@@ -67,9 +77,13 @@ class BudgetLineMappingController extends Controller
         $validated = $request->validate([
             'BudgetLineCategoryID' => 'required|exists:t_BudgetLineCategories,Id',
             'LineName' => 'required|string|max:255',
+            'DepartmentID' => 'required|exists:t_Departments,Id',
+            'GLAccountTypeID' => 'required|string',
+            'GLAccountSubTypeID' => 'required|integer',
             'Description' => 'required|string',
+            'IsProductDriven' => 'required|boolean',
             'GLS' => 'required|array|min:1',
-            'GLS.*' => 'required|integer|exists:t_BudgetGLAccounts,Id',
+            'GLS.*' => 'required|integer',
             // Add other fields and validation rules as needed
         ]);
 
@@ -82,8 +96,12 @@ class BudgetLineMappingController extends Controller
             $budgetLine = BudgetLine::create([
                 'BudgetLineCategoryID' => $validated['BudgetLineCategoryID'],
                 'LineName'=>$validated['LineName'],
+                'DepartmentID' => $validated['DepartmentID'],
+                'GLAccountTypeID' => $validated['GLAccountTypeID'],
+                'GLAccountSubTypeID' => $validated['GLAccountSubTypeID'],
                 'Description'=>$validated['Description'],
                 'IsDefault'   => $request->has('IsDefault') ? 1 : 0,
+                'IsProductDriven' => $validated['IsProductDriven'],
 
                 'CreatedBy'=>Auth::id(),
                 'ModifiedBy'=>Auth::id()
@@ -99,7 +117,18 @@ class BudgetLineMappingController extends Controller
                     'ModifiedBy' => Auth::id()
                 ]);
             }
-
+            // Product Types mapping (if any)
+            if ($request->has('ProductTypes') && is_array($request->ProductTypes)) {
+                foreach ($request->ProductTypes as $typeId) {
+                    //store in BudgetlineproductType
+                    BudgetLineProductTypes::create([
+                        'BudgetLineId' => $budgetLine->Id,
+                        'ProductTypeId' => $typeId,
+                        'CreatedBy' => Auth::id(),
+                        'ModifiedBy' => Auth::id()
+                    ]);
+                }
+            }
             DB::commit();
             //LOG Activity
             activity()
@@ -236,5 +265,11 @@ public function update(Request $request, $id)
 
             return redirect()->back()->with('error', 'Failed to delete Budget Line.');
         }
+    }
+
+    public function getGLAccountSubTypes($typeId)
+    {
+        $subTypes = \App\Models\Budget\BudgetGLAccountSubType::where('GLAccountTypeValue', $typeId)->get();
+        return response()->json($subTypes);
     }
 }

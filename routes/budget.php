@@ -152,4 +152,5 @@ Route::namespace('Budget')->group(function () {
     Route::resource('periodtypes', BudgetPeriodTypesController::class);
 
     Route::resource('budgetdriverssetup',BudgetDriversSetupController::class);
+    Route::get('budgetlinemapping/gl-subtypes/{typeId}', [BudgetLineMappingController::class, 'getGLAccountSubTypes']);
 });
