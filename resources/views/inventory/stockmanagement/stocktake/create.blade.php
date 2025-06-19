@@ -158,15 +158,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 </script>
-
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    $('.select2').select2({
-      placeholder: 'Select user',
-      allowClear: true
-    });
-  });
-</script>
-
+<!-- Add this somewhere in your HTML for error messages -->
+<div id="error-message" style="color:red;"></div>
 @endsection
