@@ -76,7 +76,7 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::get('propertyaddfloor', [PropertyFloorController::class,'index'])->name('addfloor.index');
     Route::get('propertyaddfloor/create', [PropertyFloorController::class,'create'])->name('addfloor.create');
     Route::post('propertyaddfloor', [PropertyFloorController::class,'store'])->name('addfloor.store');
-    Route::get('propertyaddfloor/show', [PropertyFloorController::class,'show'])->name('addfloor.show');
+    Route::get('propertyaddfloor/show/', [PropertyFloorController::class,'show'])->name('addfloor.show');
     Route::get('/propertyaddfloor/{BlockId}', [PropertyFloorController::class, 'getBlockByProperty'])->name('getblockbyproperty');
     Route::delete('propertyaddfloor/delete/{Id}', [PropertyFloorController::class,'destroy'])->name('addfloor.destroy');
     Route::get('propertyaddfloor/edit/{Id}',[PropertyFloorController::class,'edit'])->name('addfloor.edit');
@@ -84,6 +84,17 @@ Route::namespace('Property')->prefix('property')->group(function () {
 
 
     Route::resource('addunit', PropertyUnitController::class);
+    Route::get('propertyaddunit', [PropertyUnitController::class,'index'])->name('addunit.index');
+    Route::get('propertyaddunit/create', [PropertyUnitController::class,'create'])->name('addunit.create');
+    Route::post('propertyaddunit', [PropertyUnitController::class,'store'])->name('addunit.store');
+    Route::get('propertyaddunit/show', [PropertyUnitController::class,'show'])->name('addunit.show');
+    Route::get('/propertyaddunit/blocks/{PropertyId}', [PropertyUnitController::class, 'getBlockByProperty'])->name('getblockbyproperty');
+    Route::get('/propertyaddunit/floors/{BlockId}', [PropertyUnitController::class, 'getFloorByBlock'])->name('getfloorbyblock');
+    Route::delete('propertyaddunit/delete/{Id}', [PropertyUnitController::class,'destroy'])->name('addunit.destroy');
+    Route::get('propertyaddunit/edit/{Id}',[PropertyUnitController::class,'edit'])->name('addunit.edit');
+    Route::put('propertyaddunit/edit/{Id}',[PropertyUnitController::class,'update'])->name('addunit.update');
+
+
     Route::resource('attachments', PropertyAttachmentsController::class);
     Route::resource('addtenant', PropertyNewTenantController::class);
     Route::resource('addlease', PropertyNewLeaseController::class);

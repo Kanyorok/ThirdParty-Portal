@@ -27,8 +27,8 @@
       </dl>
     </div>
     <div class="card-footer">
-      <a href="#" class="btn btn-primary">Edit</a>
-      <a href="#" class="btn btn-secondary">Back</a>
+      <a href="{{ route('stocktake.edit', $stock->Id) }}" class="btn btn-primary">Edit</a>
+      <a href="{{ route('stocktake.index') }}" class="btn btn-secondary">Back</a>
     </div>
   </div>
 </div>
