@@ -197,7 +197,7 @@ class RequisitionItemsController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show($id)
     {
 //        dd($id);
         $this->authorize('view', Requisitions::query()->findOrFail($id));

@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Add Requisition')
+@section('title', 'Add Requisition Items')
 @section('styles')
     <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
     <style>
