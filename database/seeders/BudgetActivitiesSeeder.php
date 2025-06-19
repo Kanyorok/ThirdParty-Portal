@@ -4,65 +4,101 @@ namespace Database\Seeders;
 
 use App\Models\Auth\User;
 use Carbon\Carbon;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
 class BudgetActivitiesSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        $userIds = User::pluck('Id')->toArray();
-        if (empty($userIds)) {
-            throw new \Exception('No users found in t_Users table. Please seed t_Users first.');
-        }
+        $now = Carbon::now();
 
-        $budgetLineIds = DB::table('t_BudgetLines')->pluck('Id')->toArray();
-        if (empty($budgetLineIds)) {
-            throw new \Exception('No budget lines found in t_BudgetLines table. Please seed t_BudgetLines first.');
-        }
+        // Fetch foreign key data
+        $userIds = DB::table('t_Users')->pluck('Id')->toArray();
+        if (empty($userIds)) throw new \Exception('❌ No users found in t_Users table.');
+
+        $budgetLines = DB::table('t_BudgetLines')->select('Id', 'LineName')->get()->keyBy('LineName');
+        if ($budgetLines->isEmpty()) throw new \Exception('❌ No budget lines found in t_BudgetLines.');
 
         $branchIds = DB::table('t_Branches')->pluck('Id')->toArray();
-        if (empty($branchIds)) {
-            throw new \Exception('No branches found in t_Branches table. Please seed t_Branches first.');
+        if (empty($branchIds)) throw new \Exception('❌ No branches found in t_Branches.');
+
+        $budgets = DB::table('t_Budgets')->pluck('Id')->toArray();
+        if (empty($budgets)) throw new \Exception('❌ No budgets found in t_Budgets.');
+
+        $activityMasters = DB::table('t_BudgetActivityMaster')->select('Id', 'ActivityName')->get()->keyBy('ActivityName');
+        if ($activityMasters->isEmpty()) throw new \Exception('❌ No activities found in t_BudgetActivityMaster.');
+
+        if (DB::table('t_BudgetActivities')->exists()) {
+            echo "✅ t_BudgetActivities already seeded. Skipping...\n";
+            return;
         }
 
-        // Check if table is empty to avoid duplicate insertions
-        if (DB::table('t_BudgetActivities')->count() > 0) {
-            return; // Skip seeding if data exists
-        }
-
+        // Sample activities
         $activities = [
-            ['BudgetLineID' => $budgetLineIds[0], 'BranchID' => $branchIds[0 % count($branchIds)], 'ActivityName' => 'Loan Campaign Q1 2025', 'Description' => 'Marketing campaign for personal loans', 'AllocationType' => 'monthly', 'FullAllocation' => null],
-            ['BudgetLineID' => $budgetLineIds[1], 'BranchID' => $branchIds[1 % count($branchIds)], 'ActivityName' => 'Fee Optimization 2025', 'Description' => 'Analysis of transaction fee structures', 'AllocationType' => 'full', 'FullAllocation' => 50000.00],
-            ['BudgetLineID' => $budgetLineIds[2], 'BranchID' => $branchIds[2 % count($branchIds)], 'ActivityName' => 'Branch Renovation 2025', 'Description' => 'Renovation of main branch facilities', 'AllocationType' => 'full', 'FullAllocation' => 150000.00],
-            ['BudgetLineID' => $budgetLineIds[3], 'BranchID' => $branchIds[3 % count($branchIds)], 'ActivityName' => 'Risk Assessment Q2 2025', 'Description' => null, 'AllocationType' => 'monthly', 'FullAllocation' => null],
-            ['BudgetLineID' => $budgetLineIds[4], 'BranchID' => $branchIds[4 % count($branchIds)], 'ActivityName' => 'Funding Strategy 2025', 'Description' => 'Planning for deposit funding sources', 'AllocationType' => 'monthly', 'FullAllocation' => null],
-            ['BudgetLineID' => $budgetLineIds[5], 'BranchID' => $branchIds[1 % count($branchIds)], 'ActivityName' => 'IT System Upgrade 2025', 'Description' => 'Upgrade of core banking systems', 'AllocationType' => 'full', 'FullAllocation' => 200000.00],
-            ['BudgetLineID' => $budgetLineIds[6], 'BranchID' => $branchIds[2 % count($branchIds)], 'ActivityName' => 'Digital Marketing 2025', 'Description' => 'Online advertising for new accounts', 'AllocationType' => 'monthly', 'FullAllocation' => null],
-            ['BudgetLineID' => $budgetLineIds[7], 'BranchID' => $branchIds[1 % count($branchIds)], 'ActivityName' => 'Wealth Seminar 2025', 'Description' => 'Client seminar for wealth management', 'AllocationType' => 'full', 'FullAllocation' => 25000.00],
-            ['BudgetLineID' => $budgetLineIds[8], 'BranchID' => $branchIds[2 % count($branchIds)], 'ActivityName' => 'Compliance Training 2025', 'Description' => null, 'AllocationType' => 'monthly', 'FullAllocation' => null],
-            ['BudgetLineID' => $budgetLineIds[9], 'BranchID' => $branchIds[0 % count($branchIds)], 'ActivityName' => 'New Branch Setup 2025', 'Description' => 'Setup costs for new branch opening', 'AllocationType' => 'full', 'FullAllocation' => 300000.00],
+            [
+                'ActivityName' => 'Micro Loan Origination',
+                'LineName'     => 'Micro Loan Interest Income',
+                'Description'  => 'Marketing campaign for micro loans',
+                'AllocationType' => 'monthly',
+                'FullAllocation' => null,
+            ],
+            [
+                'ActivityName' => 'Payroll Processing',
+                'LineName'     => 'Salaries and Wages',
+                'Description'  => 'Payroll processing for staff',
+                'AllocationType' => 'monthly',
+                'FullAllocation' => null,
+            ],
+            [
+                'ActivityName' => 'Digital Ad Campaigns',
+                'LineName'     => 'Marketing Expenses',
+                'Description'  => 'Running monthly marketing campaigns',
+                'AllocationType' => 'full',
+                'FullAllocation' => 30000.00,
+            ],
+            [
+                'ActivityName' => 'Server Maintenance',
+                'LineName'     => 'IT Infrastructure Costs',
+                'Description'  => 'Weekly server and network maintenance',
+                'AllocationType' => 'monthly',
+                'FullAllocation' => null,
+            ],
+            [
+                'ActivityName' => 'Wealth Client Advisory',
+                'LineName'     => 'Wealth Management Fees',
+                'Description'  => 'Client sessions for wealth portfolio advice',
+                'AllocationType' => 'full',
+                'FullAllocation' => 15000.00,
+            ],
         ];
 
         foreach ($activities as $activity) {
+            $line = $budgetLines[$activity['LineName']] ?? null;
+            $activityMaster = $activityMasters[$activity['ActivityName']] ?? null;
+
+            if (!$line || !$activityMaster) {
+                echo "⚠️ Skipping: '{$activity['ActivityName']}' (Budget Line/Activity Master not found)\n";
+                continue;
+            }
+
             DB::table('t_BudgetActivities')->insert([
-                'BudgetLineID' => $activity['BudgetLineID'],
-                'BranchID' => $activity['BranchID'],
-                'ActivityName' => $activity['ActivityName'],
-                'Description' => $activity['Description'],
-                'AllocationType' => $activity['AllocationType'],
-                'FullAllocation' => $activity['FullAllocation'],
-                'CreatedBy' => $userIds[array_rand($userIds)],
-                'CreatedOn' => Carbon::now()->subDays(rand(1, 30)),
-                'ModifiedBy' => $userIds[array_rand($userIds)],
-                'ModifiedOn' => Carbon::now()->subDays(rand(0, 10)),
-                'DeletedBy' => null,
-                'DeletedOn' => null,
+                'BudgetID'        => $budgets[array_rand($budgets)],
+                'BudgetLineID'    => $line->Id,
+                'BranchID'        => $branchIds[array_rand($branchIds)],
+                'ActivityID'      => $activityMaster->Id,
+                'Description'     => $activity['Description'],
+                'AllocationType'  => $activity['AllocationType'],
+                'FullAllocation'  => $activity['FullAllocation'],
+                'CreatedBy'       => $userIds[array_rand($userIds)],
+                'CreatedOn'       => $now->copy()->subDays(rand(10, 30)),
+                'ModifiedBy'      => $userIds[array_rand($userIds)],
+                'ModifiedOn'      => $now->copy()->subDays(rand(1, 9)),
+                'DeletedBy'       => null,
+                'DeletedOn'       => null,
             ]);
         }
+
+        echo "✅ t_BudgetActivities seeded successfully with BudgetID.\n";
     }
 }

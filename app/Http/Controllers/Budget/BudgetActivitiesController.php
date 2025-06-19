@@ -44,15 +44,15 @@ class BudgetActivitiesController extends Controller
 
 
     public function store(Request $request){
-        return $request->all();
         //Check for permission
         $this->authorize(PermissionEnum::BudgetSetupCreate,BudgetActivity::class);
         // Validate request
         $validated = $request->validate([
+            'BudgetID' => 'required|exists:t_Budgets,Id',
             'BudgetLineID' => 'required|exists:t_BudgetLines,Id',
-            'ActivityID' => 'required|exists:t_BudgetActivityMaster',
+            'ActivityID' => 'required|exists:t_BudgetActivityMaster,Id',
             'Description' => 'required|string',
-            'BranchID' => 'required|exists:t_Branches,Id',
+            //'BranchID' => 'required|exists:t_Branches,Id',
             'AllocationType' => 'required|in:full,monthly',
             'FullAllocation' => 'nullable|numeric|min:0',
             'monthly_allocations' => 'nullable|array',
@@ -74,13 +74,13 @@ class BudgetActivitiesController extends Controller
             } elseif ($validated['AllocationType'] === 'full') {
                 $fullAllocation = $validated['FullAllocation'] ?? 0;
             }
-
             // Create Budget Activity
             $activity = BudgetActivity::create([
                 'BudgetLineID' => $validated['BudgetLineID'],
+                'BudgetID' => $validated['BudgetID'],
                 'ActivityID' => $validated['ActivityID'],
                 'Description' => $validated['Description'],
-                'BranchID' => $validated['BranchID'],
+                'BranchID' => 1,//$validated['BranchID'], To be fixed when Login branch is implemented
                 'AllocationType' => $validated['AllocationType'],
                 'FullAllocation' => $fullAllocation,
                 'CreatedBy' => $userId,
@@ -116,7 +116,7 @@ class BudgetActivitiesController extends Controller
             return redirect()->route('budgetactivities.index')->with('success', 'Budget Activity created successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
-
+            return $th->getMessage();
             Log::error('Failed to store budget activity.', [
                 'error' => $th->getMessage(),
                 'stack' => $th->getTraceAsString()

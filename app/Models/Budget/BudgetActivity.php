@@ -26,6 +26,7 @@ class BudgetActivity extends Model
     }
 
     protected $fillable = [
+        'BudgetID',
         'BudgetLineID',
         'BranchID',
         'ActivityID',

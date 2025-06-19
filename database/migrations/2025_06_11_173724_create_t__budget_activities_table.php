@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('t_BudgetActivities', function (Blueprint $table) {
             $table->id('Id');
+            $table->foreignId('BudgetID')->constrained('t_Budgets','Id');
             $table->foreignId('BudgetLineID')->constrained('t_BudgetLines','Id');
             $table->foreignId('BranchID')->constrained('t_Branches','Id');
             $table->foreignId('ActivityID')->constrained('t_BudgetActivityMaster','Id');

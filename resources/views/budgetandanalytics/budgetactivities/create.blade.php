@@ -27,7 +27,7 @@
         <div class="row">
             <div class="col-md-6 mb-3">
                 <label class="form-label">Budget</label>
-                <select name="BudgetLineID" class="form-select" required>
+                <select name="BudgetID" class="form-select" required>
                     <option disabled selected required>-- Select Budget --</option>
                     @foreach ($budgets as $item)
                         <option value="{{ $item->Id }}">{{ $item->Name }}</option>
