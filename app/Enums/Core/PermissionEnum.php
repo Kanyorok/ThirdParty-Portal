@@ -348,6 +348,12 @@ enum PermissionEnum: string
     case StockAdjustmentDestroy= 'stockAdjustment-destroy';
    // case StockAdjustmentApproval= 'stockAdjustment-approval';
 
+    
+    case StockTakeView = 'stockTake-view';
+    case StockTakeUpdate = 'stockTake-update';
+    case StockTakeCreate = 'stockTake-create';
+    case StockTakeDestroy= 'stockTake-destroy';
+
     /*
      *
      * ========================================  Property Management  ========================================
@@ -551,6 +557,8 @@ enum PermissionEnum: string
             self::StockTakeView, self::StockTakeCreate, self::StockTakeUpdate, self::StockTakeDestroy => ModulesEnum::Inventory,
             self::TransactionReceiptView, self::TransactionReceiptUpdate, self::TransactionReceiptCreate, self::TransactionReceiptDestroy,
             self::TransactionTransferView, self::TransactionTransferUpdate, self::TransactionTransferCreate, self::TransactionTransferDestroy,self::TransactionTransferApproval,
+            self::StockAdjustmentView, self::StockAdjustmentUpdate, self::StockAdjusmentCreate, self::StockAdjustmentDestroy,
+            self::StockTakeView, self::StockTakeCreate, self::StockTakeUpdate, self::StockTakeDestroy => ModulesEnum::Inventory,
             self::StockAdjustmentView, self::StockAdjustmentUpdate, self::StockAdjustmentCreate, self::StockAdjustmentDestroy => ModulesEnum::Inventory,
             
           //Property Management
@@ -630,6 +638,8 @@ enum PermissionEnum: string
             self::StockTakeView, self::StockTakeCreate, self::StockTakeUpdate, self::StockTakeDestroy => 'Stock Take',
             self::TransactionReceiptView, self::TransactionReceiptUpdate, self::TransactionReceiptCreate, self::TransactionReceiptDestroy => 'Receipt',
             self::TransactionTransferView, self::TransactionTransferUpdate, self::TransactionTransferCreate, self::TransactionTransferDestroy,self::TransactionTransferApproval => 'Transfer',
+            self::StockAdjustmentView, self::StockAdjustmentUpdate, self::StockAdjusmentCreate, self::StockAdjustmentDestroy => 'StockAdjustment',
+            self::StockTakeView, self::StockTakeCreate, self::StockTakeUpdate, self::StockTakeDestroy => 'Stock Take',
             self::StockAdjustmentView, self::StockAdjustmentUpdate, self::StockAdjustmentCreate, self::StockAdjustmentDestroy => 'Stock Adjustment',
 
             ////////////////////////// Budget and Analytics //////////////////////////////
