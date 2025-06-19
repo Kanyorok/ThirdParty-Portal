@@ -9,15 +9,15 @@ return new class extends Migration {
     {
         Schema::create('t_Pricing', function (Blueprint $table) {
             $table->id('Id');
-            $table->string('PriceID');
+            $table->string('PriceID')->nullable();
             $table->foreignId('ItemID')->constrained('t_Items', 'Id');
             //$table->foreignId('SKUCode')->constrained('t_StockItems', 'Id');
             //$table->foreignId('ItemCode')->constrained('t_Items', 'Id');
             $table->foreignId('UOM')->constrained('t_Items', 'Id');
-            $table->decimal('EstimatedPrice');
-            $table->decimal('ActualPrice');
+            $table->decimal('EstimatedPrice')->nullable();
+            $table->decimal('ActualPrice')->nullable();
             $table->string('CurrencyCode')->default('KES');
-            $table->date('EffectiveFrom');
+            $table->date('EffectiveFrom')->nullable();
             $table->date('EffectiveTo')->nullable();
             $table->boolean('IsDefault')->default(false);
             $table->string('Source')->nullable();
