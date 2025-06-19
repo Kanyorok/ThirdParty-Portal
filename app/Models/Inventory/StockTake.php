@@ -8,9 +8,7 @@ use App\Models\Core\Branch;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Core\Branch;
 use App\Models\Inventory\store;
-use App\Models\Auth\User;
 
 
 class StockTake extends Model
