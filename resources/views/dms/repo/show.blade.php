@@ -1,6 +1,20 @@
+@php use App\Enums\Core\ExtensionsEnum; @endphp
+@php use App\Enums\Core\VisibilityEnum; @endphp
 @extends('layouts.app')
 
-@section('title','Repositories')
+@section('title')
+    {{ ($service->isRoot())?'Repositories': $repository->Name }}
+@endsection
+@section('breadcrumbs')
+    <li class="breadcrumb-item"><a href="#">DMS</a></li>
+    @if(!$service->isRoot())
+        <li class="breadcrumb-item"><a href="{{ route('repo.index') }}">Root</a></li>
+        @if(!$service->parentRoot())
+            <li class="breadcrumb-item"><a href="javascript:void(0)">...</a></li>
+        @endif
+    @endif
+
+@endsection
 @section('styles')
     <link rel="stylesheet" href="{{ asset('assets/libs/dropzone/dropzone.min.css') }}">
     <style>
@@ -85,37 +99,33 @@
             --}}
 
 
-            <a class="h5 text-hover-primary my-3 d-block" data-bs-toggle="collapse" href="#collapseRepositories"
-               role="button" aria-expanded="false">Folders </a>
-            <div class="collapse show" id="collapseRepositories">
-                <div class="row">
-                    <div class="col-md-6 col-xl-3">
-                        <div class="card">
-                            <div class="card-body">
-                                <div class="d-flex">
-                                    <div class="flex-shrink-0">
-                                        <svg class="pc-icon wid-40 hei-40 text-warning">
-                                            <use xlink:href="#custom-folder-open"></use>
-                                        </svg>
-                                    </div>
-                                    <div class="flex-grow-1 mx-3"><h5 class="mb-1 d-grid"><span
-                                                class="text-truncate w-100">Documents</span></h5>
-                                        <p class="mb-0"><small>24 files</small></p></div>
-                                    <div class="dropdown"><a
-                                            class="avtar avtar-xs btn-link-secondary dropdown-toggle arrow-none"
-                                            href="#" data-bs-toggle="dropdown" aria-haspopup="true"
-                                            aria-expanded="false"><i class="material-icons-two-tone f-18">more_vert</i></a>
-                                        <div class="dropdown-menu dropdown-menu-end"><a class="dropdown-item" href="#">Edit</a>
-                                            <a class="dropdown-item" href="#">Delete</a></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            <div class="row my-3">
+                <div class="col">
+                    <a class="h5 text-hover-primary my-3 d-block" data-bs-toggle="collapse" href="#collapseRepositories"
+                       role="button" aria-expanded="false">Folders </a>
+                </div>
+                <div class="col-auto">
+                    @if(!($service->isRoot()))
+                        <a href="{{ url()->previous() }}" class="btn btn-primary btn-sm " type="button">
+                            <i class="fas fa-backward"></i>&nbsp; back
+                        </a>
+                        <a href="{{ route('repo.show',[$repository->parent->RepositoryId]) }}"
+                           class="btn btn-primary btn-sm " type="button">
+                            <i class="fas fa-arrow-up"></i>&nbsp; to parent
+                        </a>
+                    @endif
 
+                    <button class="btn btn-primary btn-sm create-new-repository" type="button">
+                        <i class="fas fa-plus-circle"></i>&nbsp; create repository
+                    </button>
                 </div>
             </div>
 
+            <div class="collapse show" id="collapseRepositories">
+                <div class="row" data-url="{{ route('repo.show',[$repository->RepositoryId]) }}"
+                     id="repositoriesContents"></div>
+                <div class="d-grid text-center" id="repositoriesMessage"></div>
+            </div>
 
             <hr class="my-3 border border-secondary-subtle">
             {{--<div class="row my-2">
@@ -179,7 +189,7 @@
             </div>
             <div class="table-responsive card bg-transparent border-0 shadow-none">
                 <table class="table table-borderless file-card">
-                    <tbody id="fileContents" data-url="{{ route('repo.show',[$repository->RepositoryId]) }}"></tbody>
+                    <tbody id="fileContents" data-url="{{ route('files.index',[$repository->RepositoryId]) }}"></tbody>
                 </table>
                 <div class="d-grid text-center" id="filesMessage"></div>
             </div>
@@ -742,13 +752,60 @@
              </div>--}}
         </div>
     </div>
+
+    <div class="modal fade" id="clientsActionsModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">..</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="onboarding-content with-gradient d-none modal-item" id="createRepositoryModal">
+                        <form action="{{ route('repo.store') }}" method="post"
+                              id="createRepositoryForm">
+                            @csrf
+                            <input type="hidden" class="d-none" id="repository_parent" name="repository_parent"
+                                   value="{{ $repository->RepositoryId }}">
+                            <p id="repository_parent_error" class="invalid-feedback d-none error col-12"
+                               role="alert"></p>
+                            <div class="mb-3">
+                                <label class="form-label" for="repository_name">Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="repository_name" name="repository_name"
+                                       placeholder="Name">
+                                <p id="repository_name_error" class="invalid-feedback d-none error col-12"
+                                   role="alert"></p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" for="repository_description">Description </label>
+                                <textarea name="repository_description" id="repository_description" rows="3"
+                                          class="form-control"></textarea>
+                                <p id="repository_description_error" class="invalid-feedback d-none error col-12"
+                                   role="alert"></p>
+                            </div>
+                            <hr>
+                            <div class="mt-4">
+                                <button type="button" class="btn btn-secondary float-start" data-bs-dismiss="modal">
+                                    cancel
+                                </button>
+                                <button class="btn btn-primary float-end" id="createRepositoryBtn" type="submit">
+                                    <i class="fas fa-save"></i> create folder
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 @section('scripts')
     <script src="{{ asset('assets/libs/dropzone/dropzone.min.js') }}"></script>
-    <script>
+    <script>const $Modal = $('#clientsActionsModal');
         Dropzone.options.uploadForm = {
             maxFilesize: 9,//Mb//todo filesize
-            acceptedFiles: "{{ implode(", ",\App\Enums\Core\ExtensionsEnum::getAllMimeTypes()) }}",
+            acceptedFiles: "{{ implode(", ",ExtensionsEnum::getAllMimeTypes()) }}",
             success: function (file, response) {
                 file.previewElement.remove();
                 nSuccess(response.message);
@@ -773,8 +830,65 @@
                 $("#action-file-upload").removeClass('d-none');
             });
 
+            $(document).on('click', '.create-new-repository', function () {
+                $(".modal-item").addClass('d-none');
+                $('#createRepositoryModal').removeClass('d-none');
+                $('.modal-title').html('<b class="text-info">CREATE</b> a repository (folder)');
+                $Modal.children().first().removeClass('modal-lg');
+                $Modal.modal('show');
+            });
+
+            $('form#createRepositoryForm').submit(async function (e) {
+                e.preventDefault();
+                const response = await saveForm($(this), $('#createRepositoryBtn'), false, true, true)
+                if (response) {
+                    $Modal.modal('hide');
+                    _appendRepository(response.data);
+
+                }
+            });
+
+            fetchRepositories();
             fetchFiles();
         });
+
+        async function fetchRepositories() {
+            const parent = $('#repositoriesContents'), cmtMsg = $('#repositoriesMessage');
+            let url = parent.data('url');
+            if (url === null) {
+                cmtMsg.html('');
+                return;
+            }
+            cmtMsg.html('<p class="mt-3"><i class="fas fa-spinner fa-spin fa-5x"></i> please wait</p>');
+            await $.get(url, function (data) {
+                $.map(data.data, function (repo) {
+                    _appendRepository(repo);
+                });
+                url = data.links.next;
+                if (url === null) {
+                    parent.data('url', null);
+                    cmtMsg.html('');
+                    return;
+                }
+                parent.data('url', url);
+                cmtMsg.html('<button type="button" class="btn btn-primary" onclick="_appendRepository()">Load more</button>');
+            }).fail(function (e) {
+                formRequest(e)
+            });
+        }
+
+
+        function _appendRepository(repo) {
+            let content = '<div class="col-md-6 col-xl-3 dbl-click-redirect-data" id="' + repo.id + '"  data-dbl_click_url="' + repo.links.route + '"> ' +
+                '<div class="card"> <div class="card-body"> <div class="d-flex"> <div class="flex-shrink-0"> <svg class="pc-icon wid-40 hei-40 ';
+            content += (repo.visibility.value === '{{ VisibilityEnum::Private->value }}') ? ' text-warning' : ' text-primary';
+            content += '"> <use xlink:href="#custom-folder-open"></use> </svg> </div> <div class="flex-grow-1 mx-3">' +
+                '<h5 class="mb-1 d-grid"><span class="text-truncate w-100">' + repo.name + '</span></h5> <p class="mb-0"><small>';
+
+            content += (repo.files.count >= 1) ? repo.files.string + ' file(s)' : 'empty';
+            content += '</small></p></div></div> </div> </div> </div>';
+            $('#repositoriesContents').append(content);
+        }
 
         async function fetchFiles() {
             const parent = $('#fileContents'), cmtMsg = $('#filesMessage');
@@ -783,7 +897,7 @@
                 cmtMsg.html('');
                 return;
             }
-            cmtMsg.html('<i class="fas fa-spinner fa-spin"></i> please wait');
+            cmtMsg.html('<p class="mt-3"><i class="fas fa-spinner fa-spin fa-5x"></i> please wait</p>');
             await $.get(url, function (data) {
                 $.map(data.data, function (document) {
                     appendFiles(document);
@@ -811,7 +925,7 @@
             }
             let tagsContent = '';
             file.tags.data.data.forEach(function (tag) {
-                if (tag.visibility.value === '{{ \App\Enums\Core\VisibilityEnum::Private->value }}') {
+                if (tag.visibility.value === '{{ VisibilityEnum::Private->value }}') {
                     tagsContent += '<span class="badge rounded-pill text-bg-primary">' + tag.Name + '</span>'
                 } else {
                     tagsContent += '<span class="badge rounded-pill text-bg-danger">' + tag.Name + '</span>'

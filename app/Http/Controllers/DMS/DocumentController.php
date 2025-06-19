@@ -6,22 +6,25 @@ use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\DMS\UploadDocumentRequest;
 use App\Http\Resources\DMS\FileResource;
+use App\Http\Resources\DMS\FilesCollection;
 use App\Models\DMS\Document;
 use App\Models\DMS\Repository;
 use App\Services\DMS\DocumentService;
-use App\Services\DMS\ImageService;
+use Exception;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class DocumentController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Repository $repository): FilesCollection
     {
-        //
+        return new FilesCollection($repository->documents()->whereHas('current')->with(['current'])->latest('t_Documents.Id')->paginate(50));
     }
 
     /**
@@ -35,7 +38,7 @@ class DocumentController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(UploadDocumentRequest $request, Repository $repository): \Illuminate\Http\JsonResponse
+    public function store(UploadDocumentRequest $request, Repository $repository): JsonResponse
     {
         try {
             return DB::transaction(function () use ($request, $repository) {
@@ -46,7 +49,7 @@ class DocumentController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (\Exception|\Throwable $e) {
+        } catch (Exception|Throwable $e) {
             Log::error('Error DMS upload document : ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }

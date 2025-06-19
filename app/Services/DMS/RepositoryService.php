@@ -58,7 +58,8 @@ class RepositoryService extends PermissionsService
                 return $repo;
             });
         } catch (Exception|Throwable $e) {
-            Log::error('Error creating repository: ' . $e->getMessage());
+            Log::error('Error creating repository: ');
+            Log::error($e);
             throw new ErroredException();
         }
     }
@@ -69,6 +70,11 @@ class RepositoryService extends PermissionsService
     public static function create(Repository $repository, string $Name, User $actor, string $Description = ""): RepositoryService
     {
         return new self(self::_create($Name, $actor, $repository, $Description));
+    }
+
+    public function parentRoot(): bool
+    {
+        return ($this->repo->ParentId === self::ROOT);
     }
 
     public function isRoot(): bool

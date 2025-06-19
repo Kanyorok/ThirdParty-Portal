@@ -6,6 +6,7 @@ use App\Enums\Core\VisibilityEnum;
 use App\Models\Core\SpecialPermission;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -28,6 +29,7 @@ class Repository extends Model
 
     protected $casts = [
         'Visibility' => VisibilityEnum::class,
+        'ParentId' => 'integer',
     ];
 
     public static function getPrimaryKey(): string
@@ -48,6 +50,11 @@ class Repository extends Model
     public function repositories(): HasMany
     {
         return $this->hasMany(__CLASS__, 'ParentId', 'Id');
+    }
+
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(__CLASS__, 'ParentId', 'Id');
     }
 
     public function permissions(): MorphMany
