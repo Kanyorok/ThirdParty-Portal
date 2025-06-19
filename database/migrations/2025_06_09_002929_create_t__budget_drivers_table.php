@@ -12,7 +12,8 @@ return new class extends Migration {
     {
         Schema::create('t_BudgetDrivers', function (Blueprint $table) {
             $table->id('Id');
-            $table->string('DriverName', 30);
+            $table->string('DriverName',30);
+            $table->text('Description');
             $table->boolean('IsActive')->default(true);
 
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');

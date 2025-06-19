@@ -17,6 +17,7 @@ class BranchSeeder extends Seeder
         $date = now();
 
         DB::table('t_Branches')->insert([
+        [
             'Name' => 'Nairobi',
             'BranchID' => '005',
             'CreatedOn' => $date,
@@ -24,7 +25,44 @@ class BranchSeeder extends Seeder
             'CreatedBy' => $actor->Id,
             'ModifiedOn' => $date,
             'ModifiedBy' => $actor->Id,
-        ]);
+        ],
+        [
+            'Name' => 'Mombasa',
+            'BranchID' => '006',
+            'CreatedOn' => $date,
+            'IsHQ' => false,
+            'CreatedBy' => $actor->Id,
+            'ModifiedOn' => $date,
+            'ModifiedBy' => $actor->Id,
+        ],
+        [
+            'Name' => 'Kisumu',
+            'BranchID' => '007',
+            'CreatedOn' => $date,
+            'IsHQ' => false,
+            'CreatedBy' => $actor->Id,
+            'ModifiedOn' => $date,
+            'ModifiedBy' => $actor->Id,
+        ],
+        [
+            'Name' => 'Eldoret',
+            'BranchID' => '008',
+            'CreatedOn' => $date,
+            'IsHQ' => false,
+            'CreatedBy' => $actor->Id,
+            'ModifiedOn' => $date,
+            'ModifiedBy' => $actor->Id,
+        ],
+        [
+            'Name' => 'Nyeri',
+            'BranchID' => '009',
+            'CreatedOn' => $date,
+            'IsHQ' => false,
+            'CreatedBy' => $actor->Id,
+            'ModifiedOn' => $date,
+            'ModifiedBy' => $actor->Id,
+        ],
+    ]);
         //
     }
 }

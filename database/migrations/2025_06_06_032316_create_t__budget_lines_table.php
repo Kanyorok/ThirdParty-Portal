@@ -12,10 +12,15 @@ return new class extends Migration {
     {
         Schema::create('t_BudgetLines', function (Blueprint $table) {
             $table->id('Id');
+            $table->foreignId('BudgetLineCategoryID')->constrained('t_BudgetLineCategories', 'Id');
             $table->string('LineName');
+            $table->foreignId('DepartmentID')->constrained('t_Departments', 'Id');
+            $table->string('GLAccountTypeID');
+            $table->foreignId('GLAccountSubTypeID')->constrained('t_GLAccountSubTypes', 'Id');
             $table->text('Description');
             $table->boolean('IsDefault')->default(false);
-
+            $table->boolean('IsProductDriven')->default(false);
+            
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
