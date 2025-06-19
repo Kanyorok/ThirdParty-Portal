@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id('Id');
             $table->foreignId('BudgetLineID')->constrained('t_BudgetLines', 'Id');
             //$table->string('ActivityCode', 20)->unique();
-            $table->string('ActivityName');
+            $table->string('ActivityName')->unique();
             $table->text('Description');
             $table->boolean('IsActive')->default(true);
 

@@ -4,14 +4,16 @@ namespace App\Http\Controllers\Budget;
 
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
+use App\Models\Budget\Budget;
 use App\Models\Budget\BudgetActivity;
+use App\Models\Budget\BudgetActivityMaster;
 use App\Models\Budget\BudgetLine;
 use App\Models\Budget\BudgetMonthlyAllocation;
 use App\Models\Core\Branch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Log; 
 
 class BudgetActivitiesController extends Controller
 {
@@ -21,7 +23,8 @@ class BudgetActivitiesController extends Controller
         $activities = BudgetActivity::with([
             'allocations:Id,BudgetActivityID,Month,Amount', 
             'branch:Id,Name', 
-            'budgetLine:Id,LineName'
+            'budgetLine:Id,LineName',
+            'activity:Id,ActivityName'
             ])->get();
         return view('budgetandanalytics.budgetactivities.index',compact('activities'));
     }
@@ -30,21 +33,24 @@ class BudgetActivitiesController extends Controller
     {
         $budgetLines=BudgetLine::select('Id','LineName')->get();
         $branches=Branch::select('Id','Name')->get();
+        $budgets=Budget::all();
 
         return view('budgetandanalytics.budgetactivities.create',compact(
             'budgetLines',
-            'branches'
+            'branches',
+            'budgets'
         ));
     }
 
 
     public function store(Request $request){
+        return $request->all();
         //Check for permission
         $this->authorize(PermissionEnum::BudgetSetupCreate,BudgetActivity::class);
         // Validate request
         $validated = $request->validate([
             'BudgetLineID' => 'required|exists:t_BudgetLines,Id',
-            'ActivityName' => 'required|string|max:255',
+            'ActivityID' => 'required|exists:t_BudgetActivityMaster',
             'Description' => 'required|string',
             'BranchID' => 'required|exists:t_Branches,Id',
             'AllocationType' => 'required|in:full,monthly',
@@ -72,7 +78,7 @@ class BudgetActivitiesController extends Controller
             // Create Budget Activity
             $activity = BudgetActivity::create([
                 'BudgetLineID' => $validated['BudgetLineID'],
-                'ActivityName' => $validated['ActivityName'],
+                'ActivityID' => $validated['ActivityID'],
                 'Description' => $validated['Description'],
                 'BranchID' => $validated['BranchID'],
                 'AllocationType' => $validated['AllocationType'],
@@ -118,6 +124,17 @@ class BudgetActivitiesController extends Controller
 
             return back()->with('error', 'An error occurred while creating the budget activity. Please try again.');
         }
+    }
+
+
+    public function fetchActivities(Request $request)
+    {
+        $budgetLineId = $request->query('budget_line_id');
+        if (!$budgetLineId)  return response()->json(['error' => 'Missing budget_line_id'], 400);
+        $activities = BudgetActivityMaster::where('BudgetLineID', $budgetLineId)
+            ->select('Id', 'ActivityName')
+            ->get();
+        return response()->json($activities);
     }
 
 }

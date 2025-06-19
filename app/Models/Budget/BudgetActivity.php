@@ -28,7 +28,7 @@ class BudgetActivity extends Model
     protected $fillable = [
         'BudgetLineID',
         'BranchID',
-        'ActivityName',
+        'ActivityID',
         'Description',
         'AllocationType',
         'FullAllocation',
@@ -59,5 +59,10 @@ class BudgetActivity extends Model
     public function budgetLine():BelongsTo
     {
         return $this->belongsTo(BudgetLine::class,'BudgetLineID','Id');
+    }
+
+    public function activity():BelongsTo
+    {
+        return $this->belongsTo(BudgetActivityMaster::class,'ActivityID','Id');
     }
 }

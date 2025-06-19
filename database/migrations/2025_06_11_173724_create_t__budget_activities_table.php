@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id('Id');
             $table->foreignId('BudgetLineID')->constrained('t_BudgetLines','Id');
             $table->foreignId('BranchID')->constrained('t_Branches','Id');
-            $table->string('ActivityName')->unique();
+            $table->foreignId('ActivityID')->constrained('t_BudgetActivityMaster','Id');
             $table->longText('Description')->nullable();
             $table->enum('AllocationType', ['monthly', 'full']);
             $table->decimal('FullAllocation', 15, 2)->nullable(); // only for full

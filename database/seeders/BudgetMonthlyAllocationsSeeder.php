@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Auth\User;
+use App\Models\Budget\BudgetLine;
 use Carbon\Carbon;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -15,69 +16,81 @@ class BudgetMonthlyAllocationsSeeder extends Seeder
      */
     public function run(): void
     {
+        $now = Carbon::now();
+
         $userIds = User::pluck('Id')->toArray();
         if (empty($userIds)) {
-            throw new \Exception('No users found in t_Users table. Please seed t_Users first.');
+            echo "❌ No users found in t_Users table.\n";
+            return;
         }
 
-        $activities = [
-            ['BudgetLineID' => 1, 'BranchID' => 1, 'ActivityName' => 'Loan Campaign Q1', 'Description' => 'Marketing campaign for personal loans', 'AllocationType' => 'monthly', 'FullAllocation' => 560000],
-            ['BudgetLineID' => 2, 'BranchID' => 2, 'ActivityName' => 'Fee Optimization', 'Description' => 'Analysis of transaction fee structures', 'AllocationType' => 'full', 'FullAllocation' => 50000.00],
-            ['BudgetLineID' => 5, 'BranchID' => 5, 'ActivityName' => 'Funding Strategy', 'Description' => 'Planning for deposit funding sources', 'AllocationType' => 'monthly', 'FullAllocation' => 1300000.01],
-            ['BudgetLineID' => 6, 'BranchID' => 2, 'ActivityName' => 'IT System Upgrade', 'Description' => 'Upgrade of core banking systems', 'AllocationType' => 'full', 'FullAllocation' => 200000.00],
-            ['BudgetLineID' => 7, 'BranchID' => 3, 'ActivityName' => 'Digital Marketing', 'Description' => 'Online advertising for new accounts', 'AllocationType' => 'monthly', 'FullAllocation' => 900899.09],
-            ['BudgetLineID' => 8, 'BranchID' => 2, 'ActivityName' => 'Wealth Seminar', 'Description' => 'Client seminar for wealth management', 'AllocationType' => 'full', 'FullAllocation' => 25000000.00],
+        $activityMap = [
+            'Loan Origination' => [
+                'BudgetLineID' => 1,
+                'BranchID' => 1,
+                'Description' => 'Processing and disbursement of new loan applications',
+                'AllocationType' => 'monthly',
+                'FullAllocation' => 560000,
+                'Allocations' => [100000.00, 50000.00, 0.00, 150000.00, 50000.00, 0.00, 100000.00, 0.00, 50000.00, 0.00, 0.00, 60000.00],
+            ],
+            'Financial Forecasting' => [
+                'BudgetLineID' => 5,
+                'BranchID' => 5,
+                'Description' => 'Projection of income and expenses',
+                'AllocationType' => 'monthly',
+                'FullAllocation' => 1300000.01,
+                'Allocations' => array_fill(0, 12, round(1300000.01 / 12, 2)),
+            ],
+            'Digital Product Launch' => [
+                'BudgetLineID' => 7,
+                'BranchID' => 3,
+                'Description' => 'Launch of mobile banking and app features',
+                'AllocationType' => 'monthly',
+                'FullAllocation' => 900899.09,
+                'Allocations' => [200000.00, 0.00, 150000.00, 100000.00, 0.00, 200000.00, 0.00, 150000.00, 0.00, 50000.00, 0.00, 50899.09],
+            ],
         ];
 
-        // Insert activities into t_BudgetActivities to get their IDs
-        $activityIds = [];
-        foreach ($activities as $index => $activity) {
-            $activityId = DB::table('t_BudgetActivities')->insertGetId([
-                'BudgetLineID' => $activity['BudgetLineID'],
-                'BranchID' => $activity['BranchID'],
-                'ActivityName' => $activity['ActivityName'],
-                'Description' => $activity['Description'],
-                'AllocationType' => $activity['AllocationType'],
-                'FullAllocation' => is_numeric($activity['FullAllocation']) ? $activity['FullAllocation'] : null,
-                'CreatedBy' => $userIds[array_rand($userIds)],
-                'CreatedOn' => Carbon::now()->subDays(rand(1, 30)),
-                'ModifiedBy' => $userIds[array_rand($userIds)],
-                'ModifiedOn' => Carbon::now()->subDays(rand(0, 10)),
-                'DeletedBy' => null,
-                'DeletedOn' => null,
-            ]);
-            $activityIds[$activity['ActivityName']] = $activityId;
-        }
-
-        // Monthly allocations for 'monthly' allocation activities with numeric FullAllocation
-        $monthlyAllocations = [
-            // Loan Campaign Q1: Uneven distribution, some months 0.00
-            ['ActivityName' => 'Loan Campaign Q1', 'Allocations' => [100000.00, 50000.00, 0.00, 150000.00, 50000.00, 0.00, 100000.00, 0.00, 50000.00, 0.00, 0.00, 60000.00]],
-            // Funding Strategy: Equal distribution
-            ['ActivityName' => 'Funding Strategy', 'Allocations' => array_fill(0, 12, 1300000.01 / 12)],
-            // Digital Marketing: Uneven distribution, some months 0.00
-            ['ActivityName' => 'Digital Marketing', 'Allocations' => [200000.00, 0.00, 150000.00, 100000.00, 0.00, 200000.00, 0.00, 150000.00, 0.00, 50000.00, 0.00, 50899.09]],
-        ];
-
-        foreach ($monthlyAllocations as $allocation) {
-            $activityName = $allocation['ActivityName'];
-            if (!isset($activityIds[$activityName])) {
+        foreach ($activityMap as $activityName => $config) {
+            // Get the ActivityID from the master table
+            $activityMaster = DB::table('t_BudgetActivityMaster')->where('ActivityName', $activityName)->first();
+            if (!$activityMaster) {
+                echo "⚠️ Skipping: '{$activityName}' not found in t_BudgetActivityMaster.\n";
                 continue;
             }
-            $budgetActivityID = $activityIds[$activityName];
-            foreach ($allocation['Allocations'] as $month => $amount) {
+
+            // Insert into t_BudgetActivities
+            $budgetActivityID = DB::table('t_BudgetActivities')->insertGetId([
+                'BudgetLineID'   => $config['BudgetLineID'],
+                'BranchID'       => $config['BranchID'],
+                'ActivityID'     => $activityMaster->Id,
+                'Description'    => $config['Description'],
+                'AllocationType' => $config['AllocationType'],
+                'FullAllocation' => $config['FullAllocation'],
+                'CreatedBy'      => $userIds[array_rand($userIds)],
+                'CreatedOn'      => $now->copy()->subDays(rand(5, 20)),
+                'ModifiedBy'     => $userIds[array_rand($userIds)],
+                'ModifiedOn'     => $now->copy()->subDays(rand(1, 4)),
+                'DeletedBy'      => null,
+                'DeletedOn'      => null,
+            ]);
+
+            // Insert into t_BudgetMonthlyAllocations
+            foreach ($config['Allocations'] as $month => $amount) {
                 DB::table('t_BudgetMonthlyAllocations')->insert([
                     'BudgetActivityID' => $budgetActivityID,
-                    'Month' => $month + 1,
-                    'Amount' => $amount,
-                    'CreatedBy' => $userIds[array_rand($userIds)],
-                    'CreatedOn' => Carbon::now()->subDays(rand(1, 30)),
-                    'ModifiedBy' => $userIds[array_rand($userIds)],
-                    'ModifiedOn' => Carbon::now()->subDays(rand(0, 10)),
-                    'DeletedBy' => null,
-                    'DeletedOn' => null,
+                    'Month'            => $month + 1,
+                    'Amount'           => $amount,
+                    'CreatedBy'        => $userIds[array_rand($userIds)],
+                    'CreatedOn'        => $now->copy()->subDays(rand(1, 10)),
+                    'ModifiedBy'       => $userIds[array_rand($userIds)],
+                    'ModifiedOn'       => $now->copy()->subDays(rand(0, 5)),
+                    'DeletedBy'        => null,
+                    'DeletedOn'        => null,
                 ]);
             }
+
+            echo "✅ Seeded monthly allocations for activity: {$activityName}\n";
         }
     }
 }
