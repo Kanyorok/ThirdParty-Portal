@@ -5,7 +5,7 @@
   <h4 class="fw-bold mb-3">📋 Stock Take Records</h4>
   <a href="{{ route('stocktake.create') }}" class="btn btn-success">➕ Add New Stock Take</a>
   @if($stocks->count())
-  <table class="table table-bordered table-striped align-middle">
+  <table id="stocktake"  class="table table-bordered table-striped align-middle">
     <thead class="table-light">
       <tr>
         <th>#</th>
@@ -45,4 +45,18 @@
 <p>No property stock registered yet.</p>
 @endif
 </div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        $('#stocktake').DataTable({
+            pageLength: 10,
+            ordering: true,
+            searching: true,
+            lengthChange: true
+        });
+    });
+</script>
 @endsection

@@ -1,5 +1,8 @@
 @extends('layouts.app')
 @section('title', 'Edit Stock Take')
+@section('styles')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+@endsection
 @section('content')
 
 <div class="container mt-5" style="max-width: 1000px;">
@@ -107,8 +110,8 @@
 
     {{-- Action Buttons --}}
     <div class="d-flex justify-content-end gap-2">
-      <button type="submit" class="btn btn-success">💾 Update</button>
-      <a href="{{ route('stocktake.index') }}" class="btn btn-secondary">❌ Cancel</a>
+      <button type="submit" class="btn btn-success">Update</button>
+      <a href="{{ route('stocktake.index') }}" class="btn btn-secondary">Cancel</a>
     </div>
 
   </form>
