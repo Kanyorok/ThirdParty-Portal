@@ -74,9 +74,9 @@ class PropertyFloorController extends Controller
         $floor = PropertyFloor::findOrFail($id);
         $blocks = PropertyBlock::all();
         $properties = PropertyRegistry::all();
-        
+        $lineentries = PropertyRegistry::with('getBlockByProperty')->get();
 
-        return view('property.propertyregistry.structuralmapping.addfloor.edit', compact('blocks', 'properties', 'floor'));
+        return view('property.propertyregistry.structuralmapping.addfloor.edit', compact('blocks', 'properties', 'lineentries', 'floor'));
     }
 
     public function update(Request $request, $id)

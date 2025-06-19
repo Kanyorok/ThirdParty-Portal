@@ -55,6 +55,10 @@ class PropertyRegistry extends Model
     {
         return $this->belongsTo(Locality::class, 'TownCity', 'Id');
     }
+    public function getFloorByBlock()
+{
+    return $this->hasMany(PropertyFloor::class, 'BlockID', 'Id');
+}
     public function attachment()
     {
         return $this->hasMany(PropertyAttachments::class,'PropertyID', 'Id');

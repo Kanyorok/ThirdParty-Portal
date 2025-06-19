@@ -13,11 +13,11 @@
         <th>#</th>
           <th>Property</th>
           <th>Block</th>
-        <th>Floor</th>
+          <th>Floor</th>
           <th>Unit Code</th>
           <th>Size (sq.ft)</th>
           <th>Rentable?</th>
-        <th>Status</th>
+          <th>Status</th>
           <th>Remarks</th>
         <th>Action</th>
       </tr>
@@ -26,18 +26,21 @@
     @foreach($units as $unit)
       <tr>
           <td>{{ $loop->iteration }}</td>
-          <td>{{ $unit->PropertyID }}</td>
-          <td>{{ $unit->BlockID }}</td>
-          <td>{{ $unit->FloorID }}</td>
+          <td>{{ $unit->property->PropertyName }}</td>
+          <td>{{ $unit->blocks?->BlockName ?? 'N/A' }}</td>
+          <td>{{ $unit->floors?->FloorLabel ?? 'N/A' }}</td>
           <td>{{ $unit->UnitCode }}</td>
           <td>{{ $unit->UnitSize }}</td>
-          <td>{{ $unit->IsRentable? 'Yes' : 'No' }}</td>
-          <td>{{ $unit->CurrentStatus }}</td>
+          <td>{{ $unit->IsRentable ? 'Yes' : 'No' }}</td>
+          <td>{{ $unit->CurrentStatus ? 'Vacant' : 'Occupied' }}</td>
           <td>{{ $unit->Remarks }}</td>
         <td>
-            <a href="{{ route('addunit.show', $unit->id) }}" class="btn btn-sm btn-info">👁 View</a>
-          <button class="btn btn-sm btn-outline-warning">✏️ Edit</button>
-        </td>
+        <a href="{{ route('addunit.edit', $unit->Id) }}" class="btn btn-sm btn-warning">Edit</a>
+        <form action="{{ route('addunit.destroy', $unit->Id) }}" method="POST" class="d-inline">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this property?');">Delete</button>
+         </form>
       </tr>
     @endforeach
     </tbody>

@@ -23,8 +23,8 @@
     @foreach($floors as $floor)
         <tr>
             <td>{{ $loop->iteration }}</td>
-            <td>{{ $floor->PropertyID }}</td>
-            <td>{{ $floor->BlockID }}</td>
+            <td>{{ $floor->property->PropertyName }}</td>
+            <td>{{ $floor->blocks->BlockName }}</td>
             <td>{{ $floor->FloorLabel }}</td>
             <td>{{ $floor->FloorNotes }}</td>
         <td>
