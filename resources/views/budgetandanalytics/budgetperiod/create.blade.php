@@ -2,12 +2,12 @@
 @section('title', 'Budget Period Setup')
 @section('content')
 
-@if(session('error'))
-  <div class="alert alert-danger">{{ session('error') }}</div>
-@endif
-@if(session('success'))
-  <div class="alert alert-success">{{ session('success') }}</div>
-@endif
+    @if(session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
+    @endif
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
 
     <form method="post" action="{{ route('budgetperiod.store') }}">
         @csrf

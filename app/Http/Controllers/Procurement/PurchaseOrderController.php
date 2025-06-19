@@ -2,23 +2,29 @@
 
 namespace App\Http\Controllers\Procurement;
 
+use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Orders\ApproveOrderRequest;
 use App\Http\Requests\Orders\PurchaseOrderRequest;
+use App\Models\Auth\User;
 use App\Models\Procurement\Order;
+use App\Services\Core\ApprovalService;
+use App\Services\Core\DocumentApprovalService;
 use App\Services\Procurement\Items\ItemService;
 use App\Services\Procurement\Orders\OrderService;
 use App\Services\Procurement\RFQ\RFQService;
 use App\Services\ThirdParty\SupplierService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class PurchaseOrderController extends Controller
 {
-    public function __construct(protected ItemService $itemService, protected SupplierService $supplierService, protected OrderService $orderService, protected RFQService $rfqService)
+    public function __construct(protected ItemService $itemService, protected SupplierService $supplierService, protected OrderService $orderService, protected RFQService $rfqService, protected DocumentApprovalService $documentApprovalService)
     {
 
-        $this->middleware('ajax')->except(['index', 'create', 'show', 'linkRFQ', 'fetchRFQDetails']);
+        $this->middleware('ajax')->except(['index', 'create', 'show', 'linkRFQ', 'fetchRFQDetails','approval','approve']);
 //        $this->authorizeResource(Order::class);
     }
 
@@ -62,13 +68,13 @@ class PurchaseOrderController extends Controller
 
         try {
             $suppliers = $this->supplierService->getSuppliers();
-            \Log::info('Suppliers data:', $suppliers->toArray());
+            Log::info('Suppliers data:', $suppliers->toArray());
             return response()->json([
                 'success' => true,
                 'data' => $suppliers,
             ]);}
         catch(\Exception $e){
-            \Log::error('Error fetching suppliers: ' . $e->getMessage());
+            Log::error('Error fetching suppliers: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
@@ -84,6 +90,8 @@ class PurchaseOrderController extends Controller
     public function index()
 
     {
+
+//        User::query()->hasPermission(PermissionEnum::Users->value)->dd();
 
         try {
             $details = $this->orderService->fetchOrders();
@@ -109,7 +117,7 @@ class PurchaseOrderController extends Controller
             $suppliers = $this->supplierService->getSuppliers();
             $itemTypes = $this->itemService->getTypes();
 
-            if(!$suppliers || !$itemTypes){
+            if (!$suppliers || !$itemTypes) {
 
                 return view('procurement.orders.create', [
                     'suppliers' => $suppliers ?? [],
@@ -117,7 +125,7 @@ class PurchaseOrderController extends Controller
                 ]);
 
             }
-            return view("procurement.orders.create", compact('suppliers','itemTypes'));
+            return view("procurement.orders.create", compact('suppliers', 'itemTypes'));
 
 //            \Log::info('Suppliers loaded in create():', $suppliers->toArray());
         } catch (\Exception $e) {
@@ -155,7 +163,7 @@ class PurchaseOrderController extends Controller
             );
 
             if ($POAdd['status'] !== 'success') {
-                \Log::error('Failed to create PO.', [
+                Log::error('Failed to create PO.', [
                     'input' => $validatedData,
                     'user_id' => $actor->id ?? null,
                     'service_response' => $POAdd,
@@ -170,7 +178,7 @@ class PurchaseOrderController extends Controller
             $poId = $POAdd['po_id'] ?? null;
 
             if (!$poId) {
-                \Log::error('PO created but no ID returned.', [
+                Log::error('PO created but no ID returned.', [
                     'response' => $POAdd
                 ]);
 
@@ -194,7 +202,7 @@ class PurchaseOrderController extends Controller
                 );
 
                 if ($POLinesAdd['status'] !== 'success') {
-                    \Log::error('Failed to add PO line.', [
+                    Log::error('Failed to add PO line.', [
                         'index' => $index,
                         'item' => $itemCode,
                         'response' => $POLinesAdd,
@@ -212,7 +220,7 @@ class PurchaseOrderController extends Controller
                 $poId
             );
             if ($POSum['status'] !== 'success') {
-                \Log::error('Failed to calculate POs sum.', [
+                Log::error('Failed to calculate POs sum.', [
                     'po_id' => $poId,
                     'response' => $POSum,
                 ]);
@@ -232,7 +240,7 @@ class PurchaseOrderController extends Controller
             ], 200);
 
         } catch (\Throwable $e) {
-            \Log::error('Exception occurred while creating order.', [
+            Log::error('Exception occurred while creating order.', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
@@ -278,6 +286,8 @@ class PurchaseOrderController extends Controller
 
     public function relatedPO()
     {
+
+
 //        $this->authorize('view', Order::query()->findOrFail($id));
 //        dd($id);
         return view('procurement.orders.index');
@@ -321,27 +331,36 @@ class PurchaseOrderController extends Controller
         return view("procurement.orders.rfqlink", compact('RFQ'));
     }
 
+    public function approval($id){
 
 
-//    public function fetchRFQDetails($id){
-////        dd($id);
-//        try {
-//
-//            $RFQData = $this->rfqService->RFQTOPO($id);
-//            return response()->json($RFQData);
-//
-//        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
-//            Log::warning("Unauthorized access attempt to view RFQ ID: {$id} by user ID: " . auth()->id());
-//            return redirect()->back()->with('error', 'Unauthorized access.');
-//        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-//            Log::error("RFQ ID {$id} not found. Exception: " . $e->getMessage());
-//            return redirect()->back()->with('error', 'RFQ not found.');
-//        } catch (\Exception $e) {
-//            Log::error("Failed to fetch RFQ ID {$id}. Exception: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-//            return redirect()->back()->with('error', 'Failed to fetch RFQ.');
-//        }
-//    }
-//
+
+        try {
+            $order = Order::findOrFail($id); // This will throw 404 if not found
+            $this->authorize('view', $order); // Authorize the order object itself
+
+            $orderInfo = $this->orderService->fetchOrderDetails($id);
+            $lineInfo = $this->orderService->fetchOrderLineDetails($id);
+
+            return view('procurement.orders.approval', compact('orderInfo', 'lineInfo'));
+
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            Log::warning("Unauthorized access attempt to view Order ID: {$id} by user ID: " . auth()->id());
+            return redirect()->back()->with('error', 'Unauthorized access.');
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::error("Order ID {$id} not found. Exception: " . $e->getMessage());
+            return redirect()->back()->with('error', 'Order not found.');
+        } catch (\Exception $e) {
+            Log::error("Failed to fetch order ID {$id}. Exception: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return redirect()->back()->with('error', 'Failed to fetch order.');
+        }
+
+    }
+
+    public function approve(ApproveOrderRequest $orderRequest, $id)
+    {
+        return $this->documentApprovalService->approve($orderRequest, $id);
+    }
 
     public function fetchRFQDetails($id): JsonResponse
     {

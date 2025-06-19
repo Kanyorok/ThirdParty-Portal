@@ -14,7 +14,7 @@ class BudgetScenarioPlanningSeeder extends Seeder
      */
     public function run(): void
     {
-         $now = Carbon::now();
+        $now = Carbon::now();
 
         // Ensure dependencies exist
         $userId = DB::table('t_Users')->value('Id');

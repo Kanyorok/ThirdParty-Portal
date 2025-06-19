@@ -24,9 +24,9 @@ class BudgetSceneriosController extends Controller
 
     public function create()
     {
-        $periods=BudgetPeriods::all();
-        $methods=BudgetPlanningMethods::all();
-        return view('budgetandanalytics.scenarioplanning.create', compact('methods','periods'));
+        $periods = BudgetPeriods::all();
+        $methods = BudgetPlanningMethods::all();
+        return view('budgetandanalytics.scenarioplanning.create', compact('methods', 'periods'));
     }
 
     public function store(request $request){
@@ -40,41 +40,43 @@ class BudgetSceneriosController extends Controller
 
         DB::beginTransaction();
         try {
-        $scenario = BudgetScenarioPlanning::create([
-            'scenarioName'    => $validated['scenarioName'],
-            'description'     => $validated['description'] ?? null,
-            'budgetPeriod'    => $validated['budgetPeriod'],
-            'planningMethod'  => $validated['planningMethod'],
-            'isDefault'       => $request->isDefault=='on' ?true:false,
-            'CreatedBy'       => Auth::Id(),
-            'ModifiedBy'      => Auth::Id(),
-        ]);
+            $scenario = BudgetScenarioPlanning::create([
+                'scenarioName' => $validated['scenarioName'],
+                'description' => $validated['description'] ?? null,
+                'budgetPeriod' => $validated['budgetPeriod'],
+                'planningMethod' => $validated['planningMethod'],
+                'isDefault' => $request->isDefault == 'on' ? true : false,
+                'CreatedBy' => Auth::Id(),
+                'ModifiedBy' => Auth::Id(),
+            ]);
 
-        DB::commit();
-         activity()
-            ->performedOn(new BudgetScenarioPlanning())
-            ->causedBy(Auth::user())
-            ->withProperties(['action' => 'Create'])
-            ->log('Create Scennarios');
+            DB::commit();
+            activity()
+                ->performedOn(new BudgetScenarioPlanning())
+                ->causedBy(Auth::user())
+                ->withProperties(['action' => 'Create'])
+                ->log('Create Scennarios');
 
-            return redirect()->route('budgetscenerios.index')->with('Success','Scenario successfully created');
-    }catch(\Throwable $th){
-        DB::rollBack();
-return $th->getMessage();
-        Log::error('Fialed to create scenario:' . $th->getMessage());
-         return back()->withErrors(['error' => 'Failed to create budget scenario']);
-    }
-}
-
-    public function edit($id){
-        $scenario=BudgetScenarioPlanning::findOrFail($id);
-        $periods=BudgetPeriods::all();
-        $methods=BudgetPlanningMethods::all();
-
-        return view('budgetandanalytics.scenarioplanning.edit', compact('scenario', 'periods','methods'));
+            return redirect()->route('budgetscenerios.index')->with('Success', 'Scenario successfully created');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return $th->getMessage();
+            Log::error('Fialed to create scenario:' . $th->getMessage());
+            return back()->withErrors(['error' => 'Failed to create budget scenario']);
+        }
     }
 
-    public function update(Request $request, $id){
+    public function edit($id)
+    {
+        $scenario = BudgetScenarioPlanning::findOrFail($id);
+        $periods = BudgetPeriods::all();
+        $methods = BudgetPlanningMethods::all();
+
+        return view('budgetandanalytics.scenarioplanning.edit', compact('scenario', 'periods', 'methods'));
+    }
+
+    public function update(Request $request, $id)
+    {
         $this->authorize(PermissionEnum::BudgetSetupUpdate, BudgetScenarioPlanning::class);
 
         $validated=$request->validate([
@@ -87,53 +89,54 @@ return $th->getMessage();
 
         DB::beginTransaction();
 
-        try{
-            $scenario=BudgetScenarioPlanning::findOrFail($id);
+        try {
+            $scenario = BudgetScenarioPlanning::findOrFail($id);
 
             $scenario->update([
-                'scenarioName'    => $validated['scenarioName'],
-                'description'     => $validated['description'] ?? null,
-                'budgetPeriod'    => $validated['budgetPeriod'],
-                'planningMethod'  => $validated['planningMethod'],
-                'isDefault'       => $request->isDefault=='on' ?true:false,
-                'CreatedBy'       => Auth::Id(),
-                'ModifiedBy'      => Auth::Id(),
+                'scenarioName' => $validated['scenarioName'],
+                'description' => $validated['description'] ?? null,
+                'budgetPeriod' => $validated['budgetPeriod'],
+                'planningMethod' => $validated['planningMethod'],
+                'isDefault' => $request->isDefault == 'on' ? true : false,
+                'CreatedBy' => Auth::Id(),
+                'ModifiedBy' => Auth::Id(),
             ]);
-             
+
             DB::commit();
 
             activity()
                 ->performedOn($scenario)
                 ->causedBy(Auth::user())
-                ->withProperties(['action'=>'update'])
+                ->withProperties(['action' => 'update'])
                 ->log('Updated Scenario');
 
-            return redirect()->route('budgetscenerios.index')->with('success','Scenario Updated Successfully');
-        }catch(\Throwable $th){
+            return redirect()->route('budgetscenerios.index')->with('success', 'Scenario Updated Successfully');
+        } catch (\Throwable $th) {
             DB::rollBack();
 
             Log::error('Failed to update scenario:' . $th->getMessage());
 
-            return back()->withErrors(['Errors'=>'Failed to Update Scenario'])->withInput();
+            return back()->withErrors(['Errors' => 'Failed to Update Scenario'])->withInput();
         }
     }
 
-    public function destroy(string $id){
+    public function destroy(string $id)
+    {
         $this->authorize(PermissionEnum::BudgetSetupDelete, BudgetScenarioPlanning::class);
-        try{
-            $scenario=BudgetScenarioPlanning::find($id)->delete();
+        try {
+            $scenario = BudgetScenarioPlanning::find($id)->delete();
             //$scenario->delete();
 
             activity()
-                    ->performedOn(new BudgetScenarioPlanning())
-                    ->causedBy(Auth::user())
-                    ->withProperties(['action'=>'Delete'])
-                    ->log('Deleted Scenario Successfully:'.$id);
+                ->performedOn(new BudgetScenarioPlanning())
+                ->causedBy(Auth::user())
+                ->withProperties(['action' => 'Delete'])
+                ->log('Deleted Scenario Successfully:' . $id);
 
             return redirect()->route('budgetscenerios.index')->with('Success', 'Scenario Deleted Successfully');
-        }catch(\Throwable $th){
+        } catch (\Throwable $th) {
             Log::error('---DELETE SCENARIO ERROR---' . $th->getMessage());
-             return redirect()->route('budgetscenerios.index')->with('error', 'Failed to delete Scenario. Please try again.');
+            return redirect()->route('budgetscenerios.index')->with('error', 'Failed to delete Scenario. Please try again.');
         }
     }
 

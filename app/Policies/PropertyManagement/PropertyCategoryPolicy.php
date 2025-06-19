@@ -13,32 +13,27 @@ class PropertyCategoryPolicy
      */
     public function viewAny(User $user): bool
     {
-        //return $user->can(PermissionEnum::PropertyCategoryView->value);
-        return true;
+        return $user->can(PermissionEnum::PropertyCategoryView->value);
     }
 
     public function store(User $user): bool
     {
-        //return $user->can(PermissionEnum::PropertyCategoryCreate->value);
-        return true;
+        return $user->can(PermissionEnum::PropertyCategoryCreate->value);
     }
 
     public function view(User $user, CategoryMaster $categoryMaster): bool
     {
-        //return $user->can(PermissionEnum::PropertyCategoryView->value);
-        return true;
+        return $user->can(PermissionEnum::PropertyCategoryView->value);
     }
 
     public function update(User $user, CategoryMaster $categoryMaster): bool
     {
-        //return $user->can(PermissionEnum::PropertyCategoryUpdate->value);
-        return true;
+        return $user->can(PermissionEnum::PropertyCategoryUpdate->value);
     }
 
     public function destroy(User $user, CategoryMaster $categoryMaster): bool
     {
-        //return $user->can(PermissionEnum::PropertyCategoryDelete->value);
-        return true;
+        return $user->can(PermissionEnum::PropertyCategoryDelete->value);
     }
 }
 

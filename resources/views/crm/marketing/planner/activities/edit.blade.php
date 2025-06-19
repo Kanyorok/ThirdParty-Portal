@@ -1,12 +1,13 @@
-<link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
+@php use App\Enums\Marketing\PlannerTypeEnum; @endphp
+<link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
 <style>
     .select2-container {
         width: 100% !important;
     }
 </style>
-<script src='{{ asset('assets/plugins/moment/moment-with-locales.js') }}'></script>
-<script src="{{ asset('assets/plugins/rangePlugin.js') }}"></script>
-<script src="{{ asset('assets/plugins/select2/js/select2.full.min.js') }}"></script>
+<script src='{{ asset('assets/libs/moment/moment-with-locales.js') }}'></script>
+<script src="{{ asset('assets/libs/rangePlugin.js') }}"></script>
+<script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
 <div>
     <form action="{{ route('planner-activities.update',[$planner->PlannerID, $activity->PlannerActivityID]) }}"
           method="post" class="row"
@@ -35,7 +36,7 @@
             <p id="e_activity_location_error" class="invalid-feedback d-none error col-12"
                role="alert"></p>
         </div>
-        @if($planner->Type->value === \App\Enums\Marketing\PlannerTypeEnum::MasterPlanner->value)
+        @if($planner->Type->value === PlannerTypeEnum::MasterPlanner->value)
             <div class="mb-3 ">
                 <label for="e_Branch" class="form-label">Branch <span class="text-danger">*</span> </label>
                 <select class="form-control" name="Branch" id="e_Branch" required>

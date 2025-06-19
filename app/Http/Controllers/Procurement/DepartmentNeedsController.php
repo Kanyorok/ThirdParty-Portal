@@ -23,7 +23,7 @@ class DepartmentNeedsController extends Controller
 
     public function create()
     {
-        $items = ItemMasterList::with('category','uom')->orderBy('ItemName')->get();
+        $items = ItemMasterList::with('category', 'uom')->orderBy('ItemName')->get();
         return view('procurement.procurementplan.departmentneeds.raiseneed.create', compact('items'));
     }
 
@@ -42,7 +42,6 @@ class DepartmentNeedsController extends Controller
             Log::error("--- CREATE DEPARTMENT NEEDS ERROR --- " . $e->getMessage());
             return redirect()->back()->withErrors(['error' => 'Failed to create need.']);
         }
-
     }
 
     public function index(Request $request)
@@ -105,6 +104,4 @@ class DepartmentNeedsController extends Controller
             return redirect()->route('procurementdepartmentalplan.index')->withErrors(['error' => 'Failed to delete department need.']);
         }
     }
-
-
 }

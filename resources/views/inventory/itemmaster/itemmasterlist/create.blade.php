@@ -35,13 +35,13 @@
             <div class="col-md-4">
                 <label for="ItemType" class="form-label">Item Type</label>
                 <select name="ItemType" id="ItemType" class="form-select" required>
-               <option selected disabled>Select Type</option>
-                @foreach($itemTypes as $itemType)
-               <option value="{{ $itemType->Id }}" {{ old('ItemType') == $itemType->Id ? 'selected' : '' }}>
-                {{ $itemType->TypeName }}
-               </option>
-               @endforeach
-               </select>
+                    <option selected disabled>Select Type</option>
+                    @foreach($itemTypes as $itemType)
+                        <option value="{{ $itemType->Id }}" {{ old('ItemType') == $itemType->Id ? 'selected' : '' }}>
+                            {{ $itemType->TypeName }}
+                        </option>
+                    @endforeach
+                </select>
 
             </div>
             <div class="col-md-4">
@@ -64,25 +64,26 @@
         <div class="row mb-3">
             <div class="col-md-4">
                 <label for="UOM" class="form-label">Unit of Measure (UOM)</label>
-                    <select name="UOM" id="UOM" class="form-select" required>
+                <select name="UOM" id="UOM" class="form-select" required>
                     <option selected disabled>Select UOM</option>
                     @foreach($uoms as $uom)
-                    <option value="{{ $uom->Id }}" {{ old('UOM') == $uom->Id ? 'selected' : '' }}>
-                    {{ $uom->Code }}
-                </option>
+                        <option value="{{ $uom->Id }}" {{ old('UOM') == $uom->Id ? 'selected' : '' }}>
+                            {{ $uom->Code }}
+                        </option>
                     @endforeach
-    </select>
+                </select>
 
             </div>
             <div class="col-md-4">
                 <label for="InventoryType" class="form-label">Inventory Type</label>
                 <select name="InventoryType" id="InventoryType" class="form-select" required>
                     <option selected disabled>Select Inventory Type</option>
-                    @foreach($inventoryTypes as $inventoryType) 
-                    <option value="{{ $inventoryType->Id }}" {{ old('InventoryType') == $inventoryType->Id ? 'selected' : '' }}>
-                    {{ $inventoryType->Type }}
-            </option>
-            @endforeach
+                    @foreach($inventoryTypes as $inventoryType)
+                        <option
+                            value="{{ $inventoryType->Id }}" {{ old('InventoryType') == $inventoryType->Id ? 'selected' : '' }}>
+                            {{ $inventoryType->Type }}
+                        </option>
+                    @endforeach
                 </select>
             </div>
         </div>
@@ -98,13 +99,14 @@
         </div>
         <div class="mb-3">
             <label for="DocumentUpload" class="form-label">Upload Document (PDF, DOCX, XLSX, etc.)</label>
-            <input type="file" name="DocumentUpload" id="DocumentUpload" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx">
+            <input type="file" name="DocumentUpload" id="DocumentUpload" class="form-control"
+                   accept=".pdf,.doc,.docx,.xls,.xlsx">
         </div>
         <div class="form-check mb-3">
             <input type="hidden" name="Status" value="0">
-           <input class="form-check-input" type="checkbox" name="Status" value="1" id="Status" checked>
-           <label class="form-check-label" for="Status">Is Active</label>
-       </div>
+            <input class="form-check-input" type="checkbox" name="Status" value="1" id="Status" checked>
+            <label class="form-check-label" for="Status">Is Active</label>
+        </div>
 
         <button type="submit" class="btn btn-primary">✅ Save Item</button>
     </form>
@@ -116,9 +118,9 @@
 <script>
     $(document).ready(function () {
         $("#subcategory").change(function () {
-        console.log('changed')
-        console.log($(this).val())
-    });
+            console.log('changed')
+            console.log($(this).val())
+        });
         $('#category').change(function () {
             let categoryId = $(this).val();
             $('#subcategory').html('<option value="">Loading...</option>');

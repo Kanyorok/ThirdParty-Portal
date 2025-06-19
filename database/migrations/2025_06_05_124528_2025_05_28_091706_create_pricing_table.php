@@ -4,23 +4,22 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     public function up(): void
     {
         Schema::create('t_Pricing', function (Blueprint $table) {
             $table->id('Id');
-            $table->string('PriceID');
+            $table->string('PriceID')->nullable();
             $table->foreignId('ItemID')->constrained('t_Items', 'Id');
             //$table->foreignId('SKUCode')->constrained('t_StockItems', 'Id');
             //$table->foreignId('ItemCode')->constrained('t_Items', 'Id');
             $table->foreignId('UOM')->constrained('t_Items', 'Id');
-            $table->decimal('EstimatedPrice');
-            $table->decimal('ActualPrice');
+            $table->decimal('EstimatedPrice')->nullable();
+            $table->decimal('ActualPrice')->nullable();
             $table->string('CurrencyCode')->default('KES');
-            $table->date('EffectiveFrom');
+            $table->date('EffectiveFrom')->nullable();
             $table->date('EffectiveTo')->nullable();
-            $table->boolean('IsDefault')->default(false); 
+            $table->boolean('IsDefault')->default(false);
             $table->string('Source')->nullable();
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
@@ -28,9 +27,8 @@ return new class extends Migration
             $table->dateTime('ModifiedOn');
             $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
             $table->softDeletes('DeletedOn');
-            
 
-        
+
         });
     }
 

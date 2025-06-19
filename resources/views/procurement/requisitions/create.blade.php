@@ -1,7 +1,8 @@
+@php use Carbon\Carbon; @endphp
 @extends('layouts.app')
 @section('title', 'Requisitions')
 @section('styles')
-    <link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
     <style>
         .select2-container {
             width: 100% !important;
@@ -11,7 +12,8 @@
 @section('content')
     <div class="mb-3">
         <h1 class="h3 d-inline align-middle">@yield('title')</h1>
-        <button class="btn btn-primary float-end ms-2 modal-create-item" type="button"><i class="fas fa-plus-circle"></i> New
+        <button class="btn btn-primary float-end ms-2 modal-create-item" type="button"><i
+                class="fas fa-plus-circle"></i> New
             Requisition
         </button>
     </div>
@@ -20,36 +22,37 @@
             <div class="card mb-3">
                 <div class="card-body">
                     <table id="requsitionTable"
-                        class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                           class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
                         <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Requisition No</th>
-                                <th>Requisition Date</th>
-                                <th>Branch</th>
-                                <th>Department</th>
-                                <th>Remarks</th>
-                                <th>Total Items</th>
-                                <th>Total Cost</th>
-                                <th>Status</th>
-                                <th>Action</th>
-                            </tr>
+                        <tr>
+                            <th>#</th>
+                            <th>Requisition No</th>
+                            <th>Requisition Date</th>
+                            <th>Branch</th>
+                            <th>Department</th>
+                            <th>Remarks</th>
+                            <th>Total Items</th>
+                            <th>Total Cost</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
                         </thead>
                         <tbody>
 
                         @forelse($details as $item)
                             <tr>
-{{--                                <td>{{$item->Id}}</td>--}}
+                                {{--                                <td>{{$item->Id}}</td>--}}
                                 <td>{{$loop->iteration }}</td>
                                 <td>{{ $item->RequisitionNo }}</td>
-                                <td>{{ \Carbon\Carbon::parse($item->CreatedOn)->format('d-m-Y') }}</td>
+                                <td>{{ Carbon::parse($item->CreatedOn)->format('d-m-Y') }}</td>
                                 <td>{{ $item->BranchID }}</td>
                                 <td>{{ $item->DepartmentID }}</td>
                                 <td>{{ $item->Remarks }}</td>
                                 <td>{{ $item->itemcount }}</td>
                                 <td>{{ number_format($item->ExpectedPrice, 2) }}</td>
                                 <td>{{ $item->Status }}</td>
-                                <td><a href="{{ route('requisition.show',[ $item->Id]) }}" class="btn btn-info">View</a>
+                                <td><a href="{{ route('requisition.show',[ $item->Id]) }}" class="btn btn-info btn-sm">View</a>
+                                    <a href="{{ route('requisition.approval',[ $item->Id]) }}" class="btn btn-success btn-sm">Approve</a>
                                 </td>
 
 
@@ -77,20 +80,20 @@
                         <form action="{{ route('requisition.store') }}" method="post" id="createRequisitionForm">
                             @csrf
 
-{{--                            <div class="mb-3">--}}
-{{--                                <label class="form-label" for="Category">Category <span class="text-danger">*</span></label>--}}
-{{--                                <select class="form-control" name="Category" id="Category" required>--}}
-{{--                                    <option selected disabled>Select Category</option>--}}
-{{--                                    <option>Purchase Requisition</option>--}}
-{{--                                    <option>Tender</option>--}}
+                            {{--                            <div class="mb-3">--}}
+                            {{--                                <label class="form-label" for="Category">Category <span class="text-danger">*</span></label>--}}
+                            {{--                                <select class="form-control" name="Category" id="Category" required>--}}
+                            {{--                                    <option selected disabled>Select Category</option>--}}
+                            {{--                                    <option>Purchase Requisition</option>--}}
+                            {{--                                    <option>Tender</option>--}}
 
-{{--                                    --}}{{-- @foreach ($MarketingLists as $MarketingList)--}}
-{{--                                        <option value="{{ $MarketingList->slug }}">{{ $MarketingList->Label }}</option>--}}
-{{--                                    @endforeach --}}
-{{--                                </select>--}}
+                            {{--                                    --}}{{-- @foreach ($MarketingLists as $MarketingList)--}}
+                            {{--                                        <option value="{{ $MarketingList->slug }}">{{ $MarketingList->Label }}</option>--}}
+                            {{--                                    @endforeach --}}
+                            {{--                                </select>--}}
 
-{{--                                <p id="Category_error" class="invalid-feedback d-none error col-12" role="alert"></p>--}}
-{{--                            </div>--}}
+                            {{--                                <p id="Category_error" class="invalid-feedback d-none error col-12" role="alert"></p>--}}
+                            {{--                            </div>--}}
 
 
                             <div class="mb-3">
@@ -110,7 +113,7 @@
                                         class="text-danger">*</span></label>
                                 <select class="form-control" name="Department" id="Department" required>
                                     <option selected disabled>Select Department</option>
-                                     @foreach ($departments as $Department)
+                                    @foreach ($departments as $Department)
                                         <option value="{{ $Department->Id }}">{{ $Department->Name }}</option>
                                     @endforeach
 
@@ -122,19 +125,21 @@
                             <div class="mb-3">
                                 <label class="form-label" for="ProcurementPlan">Procurement Plan <span
                                         class="text-danger">*</span></label>
-                                <select class="form-control" name="ProcurementPlan" id="ProcurementPlan" >
+                                <select class="form-control" name="ProcurementPlan" id="ProcurementPlan">
                                     <option selected value="">Select Procurement Plan</option>
-                                     @foreach ($procurementPlans  as $procurementPlan )
-                                        <option value="{{ $procurementPlan->PlanID }}">{{ $procurementPlan->ReferenceNumber }}</option>
+                                    @foreach ($procurementPlans  as $procurementPlan )
+                                        <option
+                                            value="{{ $procurementPlan->PlanID }}">{{ $procurementPlan->ReferenceNumber }}</option>
                                     @endforeach
                                 </select>
 
-                                <p id="ProcurementPlan_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                                <p id="ProcurementPlan_error" class="invalid-feedback d-none error col-12"
+                                   role="alert"></p>
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label" for="Remarks">Remarks </label>
-                                <textarea name="Remarks" id="Remarks" rows="3" class="form-control" maxlength="1000"></textarea>
+                                <textarea name="Remarks" id="Remarks" rows="3" class="form-control" maxlength="1000" required></textarea>
                                 <p id="Remarks_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
 
@@ -155,22 +160,22 @@
     </div>
 @endsection
 @section('scripts')
-    <script src="{{ asset('assets/plugins/select2/js/select2.full.min.js') }}"></script>
+    <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
     <script src="{{ asset('assets/js/datatables.js') }}"></script>
     <script>
         const $Modal = $('#RequisitionItemModal');
-        $(function() {
+        $(function () {
             // $.fn.dataTable.ext.errMode = 'none';
             // fetchCampaignsTable();
 
-            $(document).on('click', '.modal-create-item', function() {
+            $(document).on('click', '.modal-create-item', function () {
                 $(".modal-title").html('Add Requisition');
                 $(".modal-item").addClass('d-none');
                 $('#createRequisition').removeClass('d-none');
                 $Modal.modal('show');
             });
 
-            $('form#createRequisitionForm').submit(async function(e) {
+            $('form#createRequisitionForm').submit(async function (e) {
                 // alert('hello');
                 e.preventDefault();
                 if (await saveForm($(this), $('#createRequisitionBtn'), true, true, true)) {

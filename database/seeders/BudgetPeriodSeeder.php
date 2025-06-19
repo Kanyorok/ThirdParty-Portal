@@ -14,7 +14,7 @@ class BudgetPeriodSeeder extends Seeder
      */
     public function run(): void
     {
-         $now = Carbon::now();
+        $now = Carbon::now();
 
         // Get a valid user ID
         $userId = DB::table('t_Users')->value('Id');

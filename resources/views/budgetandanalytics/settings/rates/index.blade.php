@@ -36,8 +36,8 @@
                 {{-- <th>Default?</th> --}}
                 {{-- <th>Actions</th> --}}
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             @forelse($rates as $index => $rate)
                 <tr>
                     <td>{{ $loop->iteration }}</td>
@@ -62,9 +62,9 @@
                     <td colspan="6" class="text-center">No budget rates available.</td>
                 </tr>
             @endforelse
-        </tbody>
-    </table>
-</div>
+            </tbody>
+        </table>
+    </div>
 @endsection
  
  

@@ -83,6 +83,7 @@
                 @error('Description') <small class="text-danger">{{ $message }}</small> @enderror
             </div>
         </div>
+    </div>
 
         <!-- Full Allocation Fields -->
         <div id="fullAllocationSection" class="mb-3" style="display:none;">

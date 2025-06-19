@@ -34,7 +34,7 @@ class PlanFromNeedsController extends Controller
         $categoryIds = $approvedNeeds->pluck('item.Category')->filter()->unique();
         $categories = ItemCategories::whereIn('Id', $categoryIds)->orderBy('Name')->get();
 
-        return view('procurement.procurementplan.planconsolidation.loadfromneeds.create', compact( 'approvedNeeds', 'plans', 'branches', 'departments', 'categories', 'budgetLines'
+        return view('procurement.procurementplan.planconsolidation.loadfromneeds.create', compact('approvedNeeds', 'plans', 'branches', 'departments', 'categories', 'budgetLines'
         ));
     }
 
@@ -49,14 +49,13 @@ class PlanFromNeedsController extends Controller
     private function getFilteredNeeds(Request $request)
     {
         $query = DepartmentNeeds::with(['item', 'branch', 'department'])->where('Status', DepartmentNeedsEnum::Approved)
-
-        ->whereNotExists(function ($subquery) {
-            $subquery->selectRaw(1)
-                ->from('t_PlanLineItem')
-                ->whereColumn('t_PlanLineItem.ItemID', 't_DepartmentNeeds.ItemID')
-                ->whereColumn('t_PlanLineItem.BranchID', 't_DepartmentNeeds.BranchID')
-                ->whereColumn('t_PlanLineItem.DepartmentID', 't_DepartmentNeeds.DepartmentID');
-        });
+            ->whereNotExists(function ($subquery) {
+                $subquery->selectRaw(1)
+                    ->from('t_PlanLineItem')
+                    ->whereColumn('t_PlanLineItem.ItemID', 't_DepartmentNeeds.ItemID')
+                    ->whereColumn('t_PlanLineItem.BranchID', 't_DepartmentNeeds.BranchID')
+                    ->whereColumn('t_PlanLineItem.DepartmentID', 't_DepartmentNeeds.DepartmentID');
+            });
         if ($request->filled('branch_filter')) {
             $query->where('BranchID', $request->branch_filter);
         }
@@ -74,49 +73,97 @@ class PlanFromNeedsController extends Controller
         return $query->get();
     }
 
-    // Store selected needs
-    public function store(PlanFromNeedsRequest $request)
-    {
-        $this->authorize('store', PlanLineItems::class);
-        $user = $request->user();
+     // Store selected needs
+  public function store(PlanFromNeedsRequest $request)
+{
+    
+    $this->authorize('store', PlanLineItems::class);
+    $user = $request->user();
 
-        $selectedNeeds = DepartmentNeeds::whereIn('Id', $request->selected_needs)->get();
+    $selectedNeeds = DepartmentNeeds::whereIn('Id', $request->selected_needs)->with('item')->get();
 
-        foreach ($selectedNeeds as $need) {
-            $budgetLineId = $request->budget_line_id[$need->Id] ?? null;
 
-            $planitems = PlanLineItems::create([
+    $noFilters = !$request->filled('branch_filter') && !$request->filled('department_filter') && !$request->filled('category_id');
+
+   foreach ($selectedNeeds as $need) {
+    $budgetLineId = $request->budget_line_id[$need->Id] ?? 0;
+    $categoryFromNeed = $need->item?->Category;
+
+    if ($noFilters) {
+        $branches = Branch::all();
+        $departments = Department::all();
+
+        foreach ($branches as $branch) {
+            foreach ($departments as $department) {
+                $unitOfMeasureId = $need->item?->uom?->Id;
+                
+                PlanLineItems::create([
+                    'PlanID' => $request->plan_id,
+                    'ItemID' => $need->ItemID,
+                    'BranchID' => $branch->Id,
+                    'DepartmentID' => $department->Id,
+                    'CategoryID' => $categoryFromNeed,
+                    'MergedQty' => $need->RequestedQty,
+                    'EstimatedUnitCost' => $need->EstimatedUnitCost,
+                    'CreatedBy' => Auth::id(),
+                    'AdjustedCost' => 0,
+                    'UnitOfMeasure' => $unitOfMeasureId,
+                    'ProcurementMethod' => '',
+                    'SchedulePeriod' => $request->fiscal_year ?? now()->year,
+                    'ExpectedDeliveryDate' => Carbon::parse($need->RequestedDate),
+                    'BudgetLineID' => $budgetLineId,
+                    'ExecutionStatus' => 'Pending',
+                    'ChangeRemarks' => $need->Justification,
+                    'IsDeleted' => 0,
+                    'ModifiedBy' => Auth::id(),
+                    'CreatedOn' => now(),
+                    'ModifiedOn' => now(),
+                    'SourceType' => 'needs',
+                    'OriginalQTY' => $need->RequestedQty,
+                ]);
+            }
+        }
+        } else {
+            // Some filters applied – respect filters, fallback to need values
+            $branchId = $request->branch_filter ?? $need->BranchID;
+            $departmentId = $request->department_filter ?? $need->DepartmentID;
+            $categoryId = $request->category_id ?? $categoryFromNeed;
+
+            $unitOfMeasureId = $need->item?->uom?->Id;
+
+            PlanLineItems::create([
                 'PlanID' => $request->plan_id,
                 'ItemID' => $need->ItemID,
-                'BranchID' => $need->BranchID,
-                'DepartmentID' => $need->DepartmentID,
-                'CategoryID' => $request->category_id,
+                'BranchID' => $branchId,
+                'DepartmentID' => $departmentId,
+                'CategoryID' => $categoryId,
                 'MergedQty' => $need->RequestedQty,
                 'EstimatedUnitCost' => $need->EstimatedUnitCost,
                 'CreatedBy' => Auth::id(),
                 'AdjustedCost' => 0,
-                'UnitOfMeasure' => $need->UnitOfMeasure ?? 'Unit',
-                'ProcurementMethod' => 'Open Tender',
+                'UnitOfMeasure' => $unitOfMeasureId,
+                'ProcurementMethod' => '',
                 'SchedulePeriod' => $request->fiscal_year ?? now()->year,
                 'ExpectedDeliveryDate' => Carbon::parse($need->RequestedDate),
-                'BudgetLineID' => $budgetLineId ?? 0,
+                'BudgetLineID' => $budgetLineId,
                 'ExecutionStatus' => 'Pending',
                 'ChangeRemarks' => $need->Justification,
                 'IsDeleted' => 0,
                 'ModifiedBy' => Auth::id(),
                 'CreatedOn' => now(),
                 'ModifiedOn' => now(),
+                'SourceType' => 'needs',
+                'OriginalQTY' => $need->RequestedQty,
             ]);
-            foreach ($selectedNeeds as $need) {
-                activity()
-                    ->causedBy($user)
-                    ->performedOn($need)
-                    ->event('create')
-                    ->log('Created plan line item for: ' . $need->id);
-            }
-
         }
 
-        return redirect()->route('procurementplanmaintain.index')->with('success', 'Selected needs successfully included in the draft plan.');
+        activity()
+            ->causedBy(Auth::user())
+            ->performedOn($need)
+            ->event('create')
+            ->log('Created plan line item for need ID: ' . $need->id);
     }
+
+    return redirect()->route('procurementplanmaintain.index')->with('success', 'Selected needs successfully included in the draft plan.');
+}
 }

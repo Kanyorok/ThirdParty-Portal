@@ -32,7 +32,8 @@ class YieldRateController extends Controller
         ));
     }
 
-    public function create(){
+    public function create()
+    {
         return view('budgetandanalytics.yieldexpenserate.create');
     }
 

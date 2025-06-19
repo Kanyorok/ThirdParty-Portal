@@ -73,7 +73,7 @@ class BudgetLineMappingController extends Controller
     public function store(Request $request)
     {
         //Check Permissions
-        $this->authorize(PermissionEnum::BudgetSetupCreate,BudgetLine::class);
+        $this->authorize(PermissionEnum::BudgetSetupCreate, BudgetLine::class);
         $validated = $request->validate([
             'BudgetLineCategoryID' => 'required|exists:t_BudgetLineCategories,Id',
             'LineName' => 'required|string|max:255',
@@ -90,8 +90,8 @@ class BudgetLineMappingController extends Controller
         try {
             DB::beginTransaction();
             //Check if there is a default so that we can drop the existing and add the one created
-            if($request->IsDefault){
-                BudgetLine::where('IsDefault',1)->update(['IsDefault'=>0]);
+            if ($request->IsDefault) {
+                BudgetLine::where('IsDefault', 1)->update(['IsDefault' => 0]);
             }
             $budgetLine = BudgetLine::create([
                 'BudgetLineCategoryID' => $validated['BudgetLineCategoryID'],
@@ -103,8 +103,8 @@ class BudgetLineMappingController extends Controller
                 'IsDefault'   => $request->has('IsDefault') ? 1 : 0,
                 'IsProductDriven' => $validated['IsProductDriven'],
 
-                'CreatedBy'=>Auth::id(),
-                'ModifiedBy'=>Auth::id()
+                'CreatedBy' => Auth::id(),
+                'ModifiedBy' => Auth::id()
             ]);
             //Store the mappings in BudgetLinesGLAccount
             foreach ($validated['GLS'] as $glId) {
@@ -114,6 +114,7 @@ class BudgetLineMappingController extends Controller
                     'BudgetGLAccountID' => $glId,
 
                     'CreatedBy' => Auth::id(),
+                    'ModifiedBy' => Auth::id(),
                     'ModifiedBy' => Auth::id()
                 ]);
             }
@@ -138,7 +139,7 @@ class BudgetLineMappingController extends Controller
                 ->log('Create a budget line mapping');
 
             //return back()->with('success', 'Budget Line Mapping created successfully.');
-            return redirect()->route('budgetlinemapping.index') ->with('success', 'Budget Line Mapping created successfully.');
+            return redirect()->route('budgetlinemapping.index')->with('success', 'Budget Line Mapping created successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
             return $th->getMessage();
@@ -146,16 +147,16 @@ class BudgetLineMappingController extends Controller
                 'error' => $th->getMessage(),
                 'stack' => $th->getTraceAsString()
             ]);
-            return back()->with('error','An Error Occurred. Please try again');
+            return back()->with('error', 'An Error Occurred. Please try again');
         }
 
     }
 
 
-public function update(Request $request, $id)
-{
-    // Check Permissions
-    $this->authorize(PermissionEnum::BudgetSetupUpdate, BudgetLine::class);
+    public function update(Request $request, $id)
+    {
+        // Check Permissions
+        $this->authorize(PermissionEnum::BudgetSetupUpdate, BudgetLine::class);
 
     $validated = $request->validate([
         'BudgetLineCategoryID' => 'required|exists:t_BudgetLineCategories,Id',
@@ -165,16 +166,16 @@ public function update(Request $request, $id)
         'GLS.*' => 'required|integer|exists:t_BudgetGLAccounts,Id',
     ]);
 
-    try {
-        DB::beginTransaction();
+        try {
+            DB::beginTransaction();
 
-        // Find the budget line
-        $budgetLine = BudgetLine::findOrFail($id);
+            // Find the budget line
+            $budgetLine = BudgetLine::findOrFail($id);
 
-        // If marked as default, unset others
-        if ($request->IsDefault) {
-            BudgetLine::where('IsDefault', 1)->where('Id', '!=', $budgetLine->Id)->update(['IsDefault' => 0]);
-        }
+            // If marked as default, unset others
+            if ($request->IsDefault) {
+                BudgetLine::where('IsDefault', 1)->where('Id', '!=', $budgetLine->Id)->update(['IsDefault' => 0]);
+            }
 
         // Update BudgetLine fields
         $budgetLine->update([
@@ -185,59 +186,59 @@ public function update(Request $request, $id)
             'ModifiedBy' => Auth::id()
         ]);
 
-        // Sync GLS mappings
-        $newGLIds = $validated['GLS'];
+            // Sync GLS mappings
+            $newGLIds = $validated['GLS'];
 
-        // Get current mappings
-        $existingGLIds = BudgetLinesGLAccount::where('BudgetLineID', $budgetLine->Id)->pluck('BudgetGLAccountID')->toArray();
+            // Get current mappings
+            $existingGLIds = BudgetLinesGLAccount::where('BudgetLineID', $budgetLine->Id)->pluck('BudgetGLAccountID')->toArray();
 
-        // Delete removed GLs
-        $glsToDelete = array_diff($existingGLIds, $newGLIds);
-        if (!empty($glsToDelete)) {
-            BudgetLinesGLAccount::where('BudgetLineID', $budgetLine->Id)
-                ->whereIn('BudgetGLAccountID', $glsToDelete)
-                ->delete();
-        }
+            // Delete removed GLs
+            $glsToDelete = array_diff($existingGLIds, $newGLIds);
+            if (!empty($glsToDelete)) {
+                BudgetLinesGLAccount::where('BudgetLineID', $budgetLine->Id)
+                    ->whereIn('BudgetGLAccountID', $glsToDelete)
+                    ->delete();
+            }
 
-        // Add new GLs
-        $glsToAdd = array_diff($newGLIds, $existingGLIds);
-        foreach ($glsToAdd as $glId) {
-            BudgetLinesGLAccount::create([
-                'BudgetLineID' => $budgetLine->Id,
-                'BudgetGLAccountID' => $glId,
-                'CreatedBy' => Auth::id(),
-                'ModifiedBy' => Auth::id()
+            // Add new GLs
+            $glsToAdd = array_diff($newGLIds, $existingGLIds);
+            foreach ($glsToAdd as $glId) {
+                BudgetLinesGLAccount::create([
+                    'BudgetLineID' => $budgetLine->Id,
+                    'BudgetGLAccountID' => $glId,
+                    'CreatedBy' => Auth::id(),
+                    'ModifiedBy' => Auth::id()
+                ]);
+            }
+
+            DB::commit();
+
+            // LOG Activity
+            activity()
+                ->performedOn($budgetLine)
+                ->causedBy(Auth::user())
+                ->withProperties(['action' => 'update'])
+                ->log('Updated a budget line mapping');
+
+            return redirect()->route('budgetlinemapping.index')->with('success', 'Budget Line Mapping updated successfully.');
+
+        } catch (\Throwable $th) {
+            DB::rollBack();
+
+            Log::error('Failed to update budget line mapping.', [
+                'error' => $th->getMessage(),
+                'stack' => $th->getTraceAsString()
             ]);
+
+            return back()->with('error', 'An error occurred while updating. Please try again.');
         }
-
-        DB::commit();
-
-        // LOG Activity
-        activity()
-            ->performedOn($budgetLine)
-            ->causedBy(Auth::user())
-            ->withProperties(['action' => 'update'])
-            ->log('Updated a budget line mapping');
-
-        return redirect()->route('budgetlinemapping.index')->with('success', 'Budget Line Mapping updated successfully.');
-
-    } catch (\Throwable $th) {
-        DB::rollBack();
-
-        Log::error('Failed to update budget line mapping.', [
-            'error' => $th->getMessage(),
-            'stack' => $th->getTraceAsString()
-        ]);
-
-        return back()->with('error', 'An error occurred while updating. Please try again.');
     }
-}
 
 
-
-    public function destroy($id){
+    public function destroy($id)
+    {
         //Check if user has permissions
-        $this->authorize(PermissionEnum::BudgetSetupDelete,BudgetLine::class);
+        $this->authorize(PermissionEnum::BudgetSetupDelete, BudgetLine::class);
         //Try deleting the Line and its associated mappings in BudgetLinesGLAccount
         DB::beginTransaction();
         try {
@@ -251,7 +252,7 @@ public function update(Request $request, $id)
             $budgetLine->delete();
 
             DB::commit();
-            //Log the acitivity 
+            //Log the acitivity
             activity()
                 ->performedOn($budgetLine)
                 ->causedBy(Auth::user())

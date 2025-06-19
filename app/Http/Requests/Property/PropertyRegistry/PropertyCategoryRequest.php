@@ -17,8 +17,8 @@ class PropertyCategoryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'Name'=>'required|string|max:50',
-            'Description'=>'nullable|string|max:255',
+            'Name' => 'required|string|max:50',
+            'Description' => 'nullable|string|max:255',
         ];
     }
 }

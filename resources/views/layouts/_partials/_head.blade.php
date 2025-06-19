@@ -19,6 +19,7 @@
 <script src="{{ asset('assets/js/tech-stack.js') }}"></script>
 <link rel="stylesheet" href="{{ asset('assets/css/style-preset.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/libs/dataTables/bootstrap5.min.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/libs/flatpickr/flatpickr.min.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/libs/notyf/notyf.min.css') }}">
 @yield('styles')
 

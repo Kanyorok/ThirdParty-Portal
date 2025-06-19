@@ -38,6 +38,7 @@ return new class extends Migration {
      */
     public function down(): void
     {
+        Schema::dropIfExists('t_ScheduleBoard');
         Schema::dropIfExists('t_MeetingBoard');
     }
 };

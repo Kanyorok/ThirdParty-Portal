@@ -9,13 +9,14 @@ class BusinessAnalyticsDashboardController extends Controller
 {
 
     //
-   public function index()
+    public function index()
     {
         return view('budgetandanalytics.businessintelligenceandanalytics.bianalyticsanddashboard.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('budgetandanalytics.businessintelligenceandanalytics.bianalyticsanddashboard.create');
-    }   
+    }
 
 }

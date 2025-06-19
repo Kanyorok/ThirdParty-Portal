@@ -8,21 +8,21 @@
 <div class="container mt-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
       <h4>✏️ Edit Draft Plan Items </h4>
-    <a href="/planning" class="btn btn-sm btn-outline-secondary" hidden></a>
+      <a href="/planning" class="btn btn-sm btn-outline-secondary" hidden></a>
   </div>
 
   <!-- Summary -->
-  @if($PlanID && $selectedPlan = $availablePlans->firstWhere('PlanID', $PlanID))
-    <div class="alert alert-info">
-        <strong>Status:</strong> {{ strtoupper($selectedPlan->Status->name ?? 'Draft') }}|
-        <strong>Total Items:</strong> {{ $draftItems->count() }} |
-        <strong>Editable:</strong> {{ $selectedPlan->IsEditable ? 'Yes' : 'Yes' }}
-    </div>
-        @else
-            <div class="alert alert-warning">
-                ℹ️ No plan selected. Please choose a draft plan to view summary.
-            </div>
-        @endif
+    @if($PlanID && $selectedPlan = $availablePlans->firstWhere('PlanID', $PlanID))
+        <div class="alert alert-info">
+            <strong>Status:</strong> {{ strtoupper($selectedPlan->Status->name ?? 'Draft') }}|
+            <strong>Total Items:</strong> {{ $draftItems->count() }} |
+            <strong>Editable:</strong> {{ $selectedPlan->IsEditable ? 'Yes' : 'Yes' }}
+        </div>
+    @else
+        <div class="alert alert-warning">
+            ℹ️ No plan selected. Please choose a draft plan to view summary.
+        </div>
+    @endif
 
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -72,7 +72,8 @@
             <th>Item</th>
             <th>From Branch</th>
             <th>Original Qty</th>
-            <th>Planned Qty</th>
+            <th>Current Qty</th>
+            <th>Adjust Qty</th>
             <th>Unit Cost</th>
             <th>Total</th>
             <th>Remarks</th>
@@ -85,6 +86,7 @@
               <td>{{ $index + 1 }}</td>
               <td>{{ $item->item->ItemName ?? 'N/A' }}</td>
               <td>{{ $item->branch->Name ?? 'N/A' }}</td>
+              <td>{{ $item->OriginalQTY }}</td>
               <td>{{ $item->MergedQty }}</td>
               <td>
                   <input type="number" class="form-control form-control-sm" name="qty_{{ $item->LineItemID }}"

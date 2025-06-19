@@ -42,7 +42,7 @@ trait ReportsTrait
         }
         //todo check permissions
 
-        if ( $request->ajax()){
+        if ($request->ajax()) {
             try {
                 $service = new SSRSService();
                 $ssrsReport = $service->getReportByPath($report->Path);

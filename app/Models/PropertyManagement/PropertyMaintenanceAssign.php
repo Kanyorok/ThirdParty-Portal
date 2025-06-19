@@ -30,6 +30,6 @@ class PropertyMaintenanceAssign extends Model
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy'
-        ];
+    ];
 
 }

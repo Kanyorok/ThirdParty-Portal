@@ -30,14 +30,41 @@ class SurveyService
             : null;
     }
 
+    public function trash(User $actor): void
+    {
+        $this->survey->forceFill([
+            'DeletedBy' => $actor->Id,
+            'DeletedOn' => now(),
+        ])->save();
+    }
+
+    public function canApprove(User $actor): bool
+    {
+        return in_array($actor->Id, $this->survey->pendingWorkflows()->get('t_PendingWorkflows.UserId')->pluck('UserId')->toArray(), true) || $actor->hasPermission(PermissionEnum::SurveyApproval->value);
+    }
+
+    public function addQuestion(SurveyQuestionTypeEnum $type, string $question, User $actor, string $help): static
+    {
+        $this->survey->questions()->create([
+            'SurveyQuestionId' => $this->_questionId(),
+            'Type' => $type->value,
+            'Question' => $question,
+            'Notes' => $help,
+            'CreatedBy' => $actor->Id,
+            'ModifiedBy' => $actor->Id,
+        ]);
+
+        return $this;
+    }
+
     public static function create(string $label, Carbon $start, Carbon $end, User $actor, string $notes): SurveyService
     {
         $new = new Survey();
         $new->fill([
-                    'SurveyID'  => Str::upper(self::_ID()),
-                    'Status'    => SurveyStatusEnum::Draft->value,
-                    'CreatedBy' => $actor->Id,
-                   ]);
+            'SurveyID' => Str::upper(self::_ID()),
+            'Status' => SurveyStatusEnum::Draft->value,
+            'CreatedBy' => $actor->Id,
+        ]);
 
         return (new self($new))->update($label, $start, $end, $actor, $notes);
     }
@@ -53,6 +80,19 @@ class SurveyService
         return $slug;
     }
 
+    public function update(string $label, Carbon $start, Carbon $end, User $actor, string $notes): static
+    {
+        $this->survey->fill([
+            'Label' => $label,
+            'Notes' => $notes,
+            'StartOn' => $start,
+            'EndOn' => $end,
+            'ModifiedBy' => $actor->Id,
+        ])->save();
+
+        return $this;
+    }
+
     protected function _questionId(): string
     {
         $number = $this->survey->questions()->count();
@@ -65,60 +105,20 @@ class SurveyService
         return $slug;
     }
 
-    public function update(string $label, Carbon $start, Carbon $end, User $actor, string $notes): static
-    {
-        $this->survey->fill([
-                             'Label'      => $label,
-                             'Notes'      => $notes,
-                             'StartOn'    => $start,
-                             'EndOn'      => $end,
-                             'ModifiedBy' => $actor->Id,
-                            ])->save();
-
-        return $this;
-    }
-
-    public function trash(User $actor): void
-    {
-        $this->survey->forceFill([
-                                  'DeletedBy' => $actor->Id,
-                                  'DeletedOn' => now(),
-                                 ])->save();
-    }
-
-    public function canApprove(User $actor): bool
-    {
-        return in_array($actor->Id, $this->survey->pendingWorkflows()->get('t_PendingWorkflows.UserId')->pluck('UserId')->toArray(), true);
-    }
-
-    public function addQuestion(SurveyQuestionTypeEnum $type, string $question, User $actor, string $help): static
-    {
-        $this->survey->questions()->create([
-                                            'SurveyQuestionId' => $this->_questionId(),
-                                            'Type'             => $type->value,
-                                            'Question'         => $question,
-                                            'Notes'            => $help,
-                                            'CreatedBy'        => $actor->Id,
-                                            'ModifiedBy'       => $actor->Id,
-                                           ]);
-
-        return $this;
-    }
-
     public function submit(User $actor): static
     {
         $this->survey->forceFill([
-                                  'Status' => SurveyStatusEnum::Approval->value,
-                                 ])->save(['timestamps' => false]);
+            'Status' => SurveyStatusEnum::Approval->value,
+        ])->save(['timestamps' => false]);
 
         //add workflow
         $this->survey->workflows()->create([
-                                            'Stage'      => SurveyStatusEnum::Draft->name,
-                                            'Status'     => WorkflowStatus::Submitted->value,
-                                            'Notes'      => 'User Submitted',
-                                            'CreatedBy'  => $actor->Id,
-                                            'ModifiedBy' => $actor->Id,
-                                           ]);
+            'Stage' => SurveyStatusEnum::Draft->name,
+            'Status' => WorkflowStatus::Submitted->value,
+            'Notes' => 'User Submitted',
+            'CreatedBy' => $actor->Id,
+            'ModifiedBy' => $actor->Id,
+        ]);
 
         $users = User::query()->lock('WITH(NOLOCK)')->hasPermission(PermissionEnum::SurveyApproval->value)->get(["Id", "UserID", "Name", "Email"]);
         DB::transaction(function () use ($actor, $users) {
@@ -131,11 +131,11 @@ class SurveyService
                 }
 
                 $this->survey->pendingWorkflows()->lock('WITH(NOLOCK)')->where('Stage', SurveyStatusEnum::Approval)->create([
-                                                                                                                             'Stage'      => SurveyStatusEnum::Approval,
-                                                                                                                             'UserId'     => $user->Id,
-                                                                                                                             'CreatedBy'  => $actor->Id,
-                                                                                                                             'ModifiedBy' => $actor->Id,
-                                                                                                                            ]);
+                    'Stage' => SurveyStatusEnum::Approval,
+                    'UserId' => $user->Id,
+                    'CreatedBy' => $actor->Id,
+                    'ModifiedBy' => $actor->Id,
+                ]);
 
                 //$this->_sendMail($user);
                 (new UserService($user))->sendEmail(
@@ -156,21 +156,21 @@ class SurveyService
     public function workflowApprove(User $actor): static
     {
         $this->survey->forceFill([
-                                  'Status' => SurveyStatusEnum::Active->value,
-                                 ])->save(['timestamps' => false]);
+            'Status' => SurveyStatusEnum::Active->value,
+        ])->save(['timestamps' => false]);
 
         $this->survey->pendingWorkflows()->where('Stage', SurveyStatusEnum::Approval)->update([
-                                                                                               'DeletedOn' => now(),
-                                                                                               'DeletedBy' => $actor->Id,
-                                                                                              ]);
+            'DeletedOn' => now(),
+            'DeletedBy' => $actor->Id,
+        ]);
 
         $this->survey->workflows()->create([
-                                            'Stage'      => SurveyStatusEnum::Approval->name,
-                                            'Status'     => WorkflowStatus::Accepted->value,
-                                            'Notes'      => 'Survey Approval',
-                                            'CreatedBy'  => $actor->Id,
-                                            'ModifiedBy' => $actor->Id,
-                                           ]);
+            'Stage' => SurveyStatusEnum::Approval->name,
+            'Status' => WorkflowStatus::Accepted->value,
+            'Notes' => 'Survey Approval',
+            'CreatedBy' => $actor->Id,
+            'ModifiedBy' => $actor->Id,
+        ]);
 
         $owner = $this->survey->modified;
         if ($owner instanceof User) {
@@ -190,22 +190,22 @@ class SurveyService
     public function workflowReject(User $actor, string $reason): static
     {
         $this->survey->forceFill([
-                                  'Status' => SurveyStatusEnum::Draft,
-                                 ])->save(['timestamps' => false]);
+            'Status' => SurveyStatusEnum::Draft,
+        ])->save(['timestamps' => false]);
 
 
         $this->survey->pendingWorkflows()->where('Stage', SurveyStatusEnum::Approval)->update([
-                                                                                               'DeletedOn' => now(),
-                                                                                               'DeletedBy' => $actor->Id,
-                                                                                              ]);
+            'DeletedOn' => now(),
+            'DeletedBy' => $actor->Id,
+        ]);
 
         $this->survey->workflows()->create([
-                                            'Stage'      => SurveyStatusEnum::Approval->name,
-                                            'Status'     => WorkflowStatus::RejectReturn->value,
-                                            'Notes'      => $reason,
-                                            'CreatedBy'  => $actor->Id,
-                                            'ModifiedBy' => $actor->Id,
-                                           ]);
+            'Stage' => SurveyStatusEnum::Approval->name,
+            'Status' => WorkflowStatus::RejectReturn->value,
+            'Notes' => $reason,
+            'CreatedBy' => $actor->Id,
+            'ModifiedBy' => $actor->Id,
+        ]);
 
         $owner = $this->survey->modified;
         if ($owner instanceof User) {

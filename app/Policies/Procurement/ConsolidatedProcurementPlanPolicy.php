@@ -9,7 +9,7 @@ class ConsolidatedProcurementPlanPolicy
 {
     public function viewAny(User $user)
     {
-        
+
         return $user->can(PermissionEnum::PlanConsolidationRead->value);
     }
 

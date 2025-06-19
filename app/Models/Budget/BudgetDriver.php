@@ -10,14 +10,14 @@ class BudgetDriver extends Model
 {
     use UserActorTrait, SoftDeletes;
 
-    protected $table='t_BudgetDrivers';
+    protected $table = 't_BudgetDrivers';
     protected $primaryKey = 'Id';
-    
+
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
 
-    protected $fillable=[
+    protected $fillable = [
         'DriverName',
         'Description',
         'IsActive',
@@ -29,11 +29,11 @@ class BudgetDriver extends Model
         'DeletedBy',
     ];
 
-    protected $cast=[
-        'IsActive'=>'boolean',
-        'CreatedOn'   => 'datetime',
-        'ModifiedOn'  => 'datetime',
-        'DeletedOn'   => 'datetime',
+    protected $cast = [
+        'IsActive' => 'boolean',
+        'CreatedOn' => 'datetime',
+        'ModifiedOn' => 'datetime',
+        'DeletedOn' => 'datetime',
     ];
 
     public static function getPrimaryKey(): string

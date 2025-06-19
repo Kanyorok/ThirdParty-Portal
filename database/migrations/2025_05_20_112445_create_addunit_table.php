@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -13,9 +12,9 @@ return new class extends Migration
     {
         Schema::create('t_PropertyUnit', function (Blueprint $table) {
             $table->id('Id');
-            $table->foreignId('PropertyID')->constrained('t_PropertyRegistry','Id');
-            $table->foreignId('BlockID')->constrained('t_PropertyBlock','Id');
-            $table->foreignId('FloorID')->constrained('t_PropertyFloor','Id');
+            $table->foreignId('PropertyID')->constrained('t_PropertyRegistry', 'Id');
+            $table->foreignId('BlockID')->constrained('t_PropertyBlock', 'Id');
+            $table->foreignId('FloorID')->constrained('t_PropertyFloor', 'Id');
             $table->string('UnitCode');
             $table->integer('UnitSize');
             $table->boolean('IsRentable');
@@ -36,6 +35,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('t_AddUnit');
+        Schema::dropIfExists('t_PropertyUnit');
     }
 };

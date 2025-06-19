@@ -13,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 use Yajra\DataTables\DataTables;
 
 class SurveyQuestionAnswerController extends Controller
@@ -64,8 +65,8 @@ class SurveyQuestionAnswerController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception $e) {
-            Log::error('Error add option 1-6  to question (' . $question->SurveyQuestionId . ') :  ' . $e->getMessage());
+        } catch (Throwable|Exception $e) {
+            Log::error('Error add option 1-5  to question (' . $question->SurveyQuestionId . ') :  ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }
 

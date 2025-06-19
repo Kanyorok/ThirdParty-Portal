@@ -46,5 +46,4 @@
             <button type="submit" class="btn btn-success">Save Rate</button>
         </form>
     </div>
-</div>
 @endsection

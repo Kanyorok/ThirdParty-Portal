@@ -1,3 +1,4 @@
+@php use App\Enums\CampaignTypeEnum; @endphp
 @extends('layouts.app')
 
 @section('title','Marketing Campaigns')
@@ -9,16 +10,20 @@
         }
     </style>
 @endsection
+@section('breadcrumbs')
+    <li class="breadcrumb-item"><a href="#">CRM</a></li>
+@endsection
 @section('content')
-    <div class="mb-3">
-        <h1 class="h3 d-inline align-middle">@yield('title')</h1>
-        <button class="btn btn-primary float-end ms-2 modal-create-campaign" type="button"><i
-                class="fas fa-plus-circle"></i> Add a Campaign
-        </button>
-    </div>
     <div class="row">
         <div class="col-12">
             <div class="card mb-3">
+                <div class="card-header">
+                    <div class="float-end">
+                        <button class="btn btn-primary float-end ms-2 modal-create-campaign btn-sm" type="button"><i
+                                class="fas fa-plus-circle"></i> Add a Campaign
+                        </button>
+                    </div>
+                </div>
                 <div class="card-body">
                     <table id="campaignTable"
                            class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
@@ -71,7 +76,7 @@
                                 <label for="Type" class="form-label">Type <span class="text-danger">*</span></label>
                                 <select class="form-control" name="Type" id="Type" required>
                                     <option selected disabled>select a Type</option>
-                                    @foreach(\App\Enums\CampaignTypeEnum::cases() as $Type)
+                                    @foreach(CampaignTypeEnum::cases() as $Type)
                                         <option value="{{ $Type->value }}">{{ $Type->name }}</option>
                                     @endforeach
                                 </select>
@@ -103,7 +108,7 @@
 @endsection
 @section('scripts')
     <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
-   
+
     <script> const $Modal = $('#CampaignActionsModal');
         $(function () {
             $.fn.dataTable.ext.errMode = 'none';

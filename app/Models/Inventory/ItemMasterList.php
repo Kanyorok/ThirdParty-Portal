@@ -49,23 +49,23 @@ class ItemMasterList extends Model
     ];
 
     protected $casts = [
-        'ItemCode'        => 'string',
-        'BarCode'         => 'string',
-        'ItemName'        => 'string',
+        'ItemCode' => 'string',
+        'BarCode' => 'string',
+        'ItemName' => 'string',
         'ItemType' => 'integer',
         'UOM' => 'integer',
         'InventoryType' => 'integer',
-        'Category'        => 'integer',
-        'Status'  => 'boolean',
-        'ImageId'         => 'integer',
+        'Category' => 'integer',
+        'Status' => 'boolean',
+        'ImageId' => 'integer',
         'ItemDescription' => 'string',
-        'DocumentUpload'  => 'string',
+        'DocumentUpload' => 'string',
         'ItemPrice' => 'string',
-        'CreatedBy'       => 'integer',
-        'ModifiedBy'      => 'integer',
-        'DeletedBy'       => 'integer',
-        'CreatedOn'       => 'datetime',
-        'ModifiedOn'      => 'datetime',
+        'CreatedBy' => 'integer',
+        'ModifiedBy' => 'integer',
+        'DeletedBy' => 'integer',
+        'CreatedOn' => 'datetime',
+        'ModifiedOn' => 'datetime',
     ];
 
     // Relationships
@@ -94,7 +94,7 @@ class ItemMasterList extends Model
         return $this->belongsTo(UnitOfMeasure::class, 'UOM', 'Id');
     }
 
-     public function price()
+    public function price()
     {
         return $this->belongsTo(PriceManagement::class, 'ItemPrice', 'Id');
     }

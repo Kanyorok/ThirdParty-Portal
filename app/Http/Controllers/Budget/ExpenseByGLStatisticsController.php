@@ -8,12 +8,13 @@ use Illuminate\Http\Request;
 class ExpenseByGLStatisticsController extends Controller
 {
     //
-   public function index()
+    public function index()
     {
         return view('budgetandanalytics.businessintelligenceandanalytics.multidimentionalanalytics.expensesbyglcategory.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('budgetandanalytics.businessintelligenceandanalytics.multidimentionalanalytics.expensesbyglcategory.create');
-    } 
+    }
 }

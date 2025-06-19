@@ -13,7 +13,8 @@ class EvaluationCriteriaSetupController extends Controller
         return view('procurement.tendering.tendersetup.evaluationcriteriasetup.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('procurement.tendering.tendersetup.evaluationcriteriasetup.create');
     }
 }

@@ -35,14 +35,14 @@ class BudgetRatesSeeder extends Seeder
             DB::table('t_BudgetRates')->insert([
                 'RateTypeCode' => $code,
                 'RateTypeName' => $name,
-                'Description'   => $desc,
-                'IsDefault'     => $isDefault,
-                'CreatedBy'     => $userId,
-                'CreatedOn'     => $now,
-                'ModifiedBy'    => $userId,
-                'ModifiedOn'    => $now,
-                'DeletedBy'     => null,
-                'DeletedOn'     => null,
+                'Description' => $desc,
+                'IsDefault' => $isDefault,
+                'CreatedBy' => $userId,
+                'CreatedOn' => $now,
+                'ModifiedBy' => $userId,
+                'ModifiedOn' => $now,
+                'DeletedBy' => null,
+                'DeletedOn' => null,
             ]);
         }
 

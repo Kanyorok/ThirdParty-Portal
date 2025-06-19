@@ -4,6 +4,9 @@
 @section('styles')
 
 @endsection
+@section('breadcrumbs')
+    <li class="breadcrumb-item"><a href="#">CRM</a></li>
+@endsection
 @section('content')
     <div class="row">
         <div class="col-12">
@@ -29,7 +32,7 @@
     </div>
 @endsection
 @section('scripts')
-    <script src="{{ asset('assets/js/datatables.js') }}"></script>
+
     <script>
         let reviewsTable = null;
         $(function () {

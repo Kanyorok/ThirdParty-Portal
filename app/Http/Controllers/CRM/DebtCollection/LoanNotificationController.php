@@ -34,6 +34,7 @@ class LoanNotificationController extends Controller
     {
         $this->middleware('ajax')->only(['messages', 'store']);
     }
+
     /**
      * Display a listing of the resource.
      * @throws Exception
@@ -46,6 +47,51 @@ class LoanNotificationController extends Controller
         }
 
         return view('crm.debt-collection.notifications.index');
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(LoanQueryRequest $request): JsonResponse
+    {
+        $this->authorize('create', BulkNotification::class);
+        $dated = $request->getDated();
+        if (!$dated instanceof Carbon) {
+            throw ValidationException::withMessages(['Label' => 'request date may be invalid']);
+        }
+
+        $loans = $request->applyFilters(
+            (new UserService($request->user()))->hideUsers(DebtProduct::query()->where('processDate', $dated))
+        )->lock('WITH(NOLOCK)')->count();
+        if ($loans === 0) {
+            throw ValidationException::withMessages(['Label' => 'there are no loans in the list to send.']);
+        }
+
+        $actor = $request->user();
+        $values = $request->getValues();
+        //create bulk sms and send one.
+        try {
+            $Bulk = DB::transaction(static function () use ($dated, $loans, $actor, $request, $values) {
+                $Bulk = BulkNotification::create([
+                    'Label' => $request->validated('Label'),
+                    'Module' => LoanService::MODULE,
+                    'Content' => $request->validated('Content'),
+                    'Total' => $loans,
+                    'Extra' => array_merge($values, ['processDate' => $dated->format('Y-m-d')]),
+                    'CreatedBy' => $actor->Id,
+                    'ModifiedBy' => $actor->Id,
+                ]);
+
+                //run event to start work.
+                event(new BulkNotificationEvent($Bulk, $actor, $values, $dated));
+                return $Bulk;
+            });
+        } catch (Exception $e) {
+            Log::error('Error sending loan bulk notification : ' . $e->getMessage());
+            return $this->errored('unexpected error, try again later');
+        }
+
+        return $this->succeeded($loans . ' notifications to be sent', route('debt-notification.show', $Bulk->BulkNotificationID));
     }
 
     /**
@@ -80,51 +126,6 @@ class LoanNotificationController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     */
-    public function store(LoanQueryRequest $request): JsonResponse
-    {
-        $this->authorize('create', BulkNotification::class);
-        $dated = $request->getDated();
-        if (!$dated instanceof Carbon) {
-            throw ValidationException::withMessages(['Label' => 'request date may be invalid']);
-        }
-
-        $loans = $request->applyFilters(
-            (new UserService($request->user()))->hideUsers(DebtProduct::query()->where('processDate', $dated))
-        )->lock('WITH(NOLOCK)')->count();
-        if ($loans === 0) {
-            throw ValidationException::withMessages(['Label' => 'there are no loans in the list to send.']);
-        }
-
-        $actor = $request->user();
-        $values = $request->getValues();
-        //create bulk sms and send one.
-        try {
-            $Bulk = DB::transaction(static function () use ($dated, $loans, $actor, $request, $values) {
-                $Bulk = BulkNotification::create([
-                                                  'Label'      => $request->validated('Label'),
-                                                  'Module'     => LoanService::MODULE,
-                                                  'Content'    => $request->validated('Content'),
-                                                  'Total'      => $loans,
-                                                  'Extra'      => array_merge($values, ['processDate' => $dated->format('Y-m-d')]),
-                                                  'CreatedBy'  => $actor->Id,
-                                                  'ModifiedBy' => $actor->Id,
-                                                 ]);
-
-                //run event to start work.
-                event(new BulkNotificationEvent($Bulk, $actor, $values, $dated));
-                return $Bulk;
-            });
-        } catch (Exception $e) {
-            Log::error('Error sending loan bulk notification : ' . $e->getMessage());
-            return $this->errored('unexpected error, try again later');
-        }
-
-        return $this->succeeded($loans . ' notifications to be sent', route('debt-notification.show', $Bulk->BulkNotificationID));
-    }
-
-    /**
      * Display the specified resource.
      */
     public function show($bulkNotificationID): RedirectResponse|View
@@ -154,11 +155,11 @@ class LoanNotificationController extends Controller
         $done = $bulkNotification->sms()->count();
 
         return $this->succeeded('ok', data: [
-                                             'progress'    => (int) ($total > 0) ? (($done / $total) * 100) : 100,
-                                             'done'        => $done,
-                                             'total'       => (int) $total,
-                                             'description' => 'Sending Messages (' . number_format($done) . ' / ' . number_format($total) . ')',
-                                            ]);
+            'progress' => (int)($total > 0) ? (($done / $total) * 100) : 100,
+            'done' => $done,
+            'total' => (int)$total,
+            'description' => 'Sending Messages (' . number_format($done) . ' / ' . number_format($total) . ')',
+        ]);
     }
 
     /**

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class PropertyFloor extends Model
 {
     use SoftDeletes, UserActorTrait;
+
     //
     protected $table = 't_PropertyFloor';
     public const CREATED_AT = 'CreatedOn';
@@ -30,11 +31,14 @@ class PropertyFloor extends Model
     {
         return 'PropertyFloorId';
     }
-    public function units(){
-        return $this->hasMany(PropertyUnit::class,'FloorID');
-    }
-    public function blocks()
+
+    public function units()
     {
-        return $this->belongsTo(PropertyBlock::class,'BlockID','Id');
+        return $this->hasMany(PropertyUnit::class, 'FloorID');
+    }
+
+    public function block()
+    {
+        return $this->belongsTo(PropertyBlock::class, 'BlockID', 'Id');
     }
 }

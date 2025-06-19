@@ -14,30 +14,31 @@ class PropertyRegistryService
      * Create a new class instance.
      */
     public function __construct(public PropertyRegistry $propertyRegistry)
-    {   
+    {
     }
+
     public static function create(
-    String $PropertyName,
-    String $PropertyCode,
-    PropertyType $PropertyType,
-    CategoryMaster $Category,
-    String $Owner,
-    Carbon $AcquisitionDate,
-    String $Country,
-    Locality $TownCity,
-    String $AreaLocality,
-    String $PropertyDescription = null,
+        string         $PropertyName,
+        string         $PropertyCode,
+        PropertyType   $PropertyType,
+        CategoryMaster $Category,
+        string         $Owner,
+        Carbon         $AcquisitionDate,
+        string         $Country,
+        Locality       $TownCity,
+        string         $AreaLocality,
+        string         $PropertyDescription = null,
     ): self
     {
         $property = PropertyRegistry::create([
             'PropertyName' => $PropertyName,
             'PropertyCode' => $PropertyCode,
-            'PropertyType' => $PropertyType,
-            'Category' => $Category,
+            'PropertyType' => $PropertyType->Id,
+            'Category' => $Category->Id,
             'Owner' => $Owner,
             'AcquisitionDate' => $AcquisitionDate,
             'Country' => $Country,
-            'TownCity' => $TownCity,
+            'TownCity' => $TownCity->ID,
             'AreaLocality' => $AreaLocality,
             'PropertyDescription' => $PropertyDescription,
             'CreatedBy' => auth()->user()->Id,
@@ -45,7 +46,7 @@ class PropertyRegistryService
         ]);
 
         activity()->causedBy(auth()->user()->Id)->performedOn($property)->event('create')->log("Added Property {$property->Id}.");
-        return new self($property); 
+        return new self($property);
     }
 
 }

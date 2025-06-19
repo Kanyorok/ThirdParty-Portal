@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PropertyUnit extends Model
 {
-     use SoftDeletes, UserActorTrait;
+    use SoftDeletes, UserActorTrait;
+
     //
     protected $table = 't_PropertyUnit';
     public const CREATED_AT = 'CreatedOn';
@@ -29,12 +30,14 @@ class PropertyUnit extends Model
         'ModifiedBy',
         'DeletedBy'
     ];
+
     public static function getPrimaryKey(): string
     {
         return 'PropertyUnitId';
     }
+
     public function unit()
     {
-        return $this->belongsTo(PropertyBlock::class,'BlockID','Id');
+        return $this->belongsTo(PropertyBlock::class, 'BlockID', 'Id');
     }
 }

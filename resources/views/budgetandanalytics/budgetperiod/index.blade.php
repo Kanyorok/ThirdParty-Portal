@@ -77,9 +77,9 @@
             </table>
         </div>
         @else
-        <div class="alert alert-info">
-            No Saved Periods
-        </div>
+            <div class="alert alert-info">
+                No Saved Periods
+            </div>
         @endif
     </div>
 </div>

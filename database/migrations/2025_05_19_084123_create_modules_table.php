@@ -16,7 +16,7 @@ return new class extends Migration {
             $table->string('Icon', 100)->nullable();
             $table->string('Description', 200)->nullable();
             $table->string('Route', 200)->nullable();
-            
+
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');

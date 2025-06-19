@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Add Requisition')
 @section('styles')
-    <link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
     <style>
         .select2-container {
             width: 100% !important;
@@ -29,11 +29,9 @@
                                 <th>Category</th>
                                 <th>Item</th>
                                 <th>Description</th>
-                                <th>UOM</th>
                                 <th>Quantity</th>
                                 <th>Estimated Cost</th>
 {{--                                <th>Actual Price</th>--}}
-                                <th>Needed By</th>
                                 <th>Urgency</th>
                                 <th>Status</th>
                                 <th>Created By</th>
@@ -53,10 +51,8 @@
                                     <td>{{ $item->Category }}</td>
                                     <td>{{ $item->ItemName }}</td>
                                     <td>{{ $item->Description }}</td>
-                                    <td>{{ $item->UOMx }}</td>
                                     <td>{{ $item->Quantity }}</td>
                                     <td>{{ number_format($item->ExpectedPrice, 2) }}</td>
-                                    <td>{{ $item->NeededBy }}</td>
                                     <td>{{ $item->Urgency }}</td>
                                     <td>{{ $item->Status }}</td>
                                     <td>{{ $item->UserName }}</td>
@@ -129,7 +125,7 @@
                             <div class="mb-3">
                                 <label class="form-label" for="Quantity">Quantity </label>
 
-                                <input type="number" class="form-control" id="Quantity" name="Quantity" required
+                                <input type="number" class="form-control" id="Quantity" name="Quantity" step="any" required
                                     placeholder="Quantity">
                                 {{-- <textarea name="Quantity" id="Quantity" rows="3" class="form-control"
                                           maxlength="1000"></textarea> --}}
@@ -153,7 +149,7 @@
                                 <label class="form-label" for="EstimatedPrice">Estimated Price </label>
 
                                 <input type="number" class="form-control" id="EstimatedPrice" name="EstimatedPrice"
-                                    readonly required>
+                                       step="any"  readonly required>
 
                                 <p id="EstimatedPrice_error" class="invalid-feedback d-none error col-12" role="alert">
                                 </p>
@@ -201,7 +197,7 @@
     </div>
 @endsection
 @section('scripts')
-    <script src="{{ asset('assets/plugins/select2/js/select2.full.min.js') }}"></script>
+    <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
     <script src="{{ asset('assets/js/datatables.js') }}"></script>
     <script>
         const $Modal = $('#RequisitionItemModal');

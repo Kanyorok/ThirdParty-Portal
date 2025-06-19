@@ -38,11 +38,11 @@
                 <label for="ItemType" class="form-label">Item Type</label>
                 <select name="ItemType" class="form-select" required>
                     <option disabled>Select Type</option>
-                @foreach($itemTypes as $itemType)
-               <option value="{{ $itemType->Id }}" {{ old('ItemType') == $itemType->Id ? 'selected' : '' }}>
-                {{ $itemType->TypeName }}
-               </option>
-               @endforeach
+                    @foreach($itemTypes as $itemType)
+                        <option value="{{ $itemType->Id }}" {{ old('ItemType') == $itemType->Id ? 'selected' : '' }}>
+                            {{ $itemType->TypeName }}
+                        </option>
+                    @endforeach
 
                 </select>
             </div>
@@ -76,9 +76,9 @@
                 <select name="UOM" class="form-select" required>
                     <option disabled>Select UOM</option>
                     @foreach($uoms as $uom)
-                    <option value="{{ $uom->Id }}" {{ old('UOM') == $uom->Id ? 'selected' : '' }}>
-                    {{ $uom->Code }}
-                </option>
+                        <option value="{{ $uom->Id }}" {{ old('UOM') == $uom->Id ? 'selected' : '' }}>
+                            {{ $uom->Code }}
+                        </option>
                     @endforeach
 
                 </select>
@@ -87,11 +87,12 @@
                 <label for="InventoryType" class="form-label">Inventory Type</label>
                 <select name="InventoryType" class="form-select" required>
                     <option disabled>Select Inventory Type</option>
-                    @foreach($inventoryTypes as $inventoryType) 
-                    <option value="{{ $inventoryType->Id }}" {{ old('InventoryType') == $inventoryType->Id ? 'selected' : '' }}>
-                    {{ $inventoryType->Type }}
-                   </option>
-                   @endforeach
+                    @foreach($inventoryTypes as $inventoryType)
+                        <option
+                            value="{{ $inventoryType->Id }}" {{ old('InventoryType') == $inventoryType->Id ? 'selected' : '' }}>
+                            {{ $inventoryType->Type }}
+                        </option>
+                    @endforeach
 
                 </select>
             </div>
@@ -105,29 +106,32 @@
         <div class="mb-3">
             <label for="ImageUpload" class="form-label">Item Image</label>
             <input type="file" name="ImageUpload" class="form-control">
-             @if($item->image)
-        <div class="mt-2" id="current-image-section">
-            <img src="data:{{ $item->image->MIMEType }};base64,{{ $item->image->Image }}" alt="Item Image" style="max-width:200px;">
-            <button type="button" class="btn btn-danger btn-sm ms-2" id="remove-image-btn">Remove Image</button>
-        </div>
-        <input type="hidden" name="remove_image" id="remove-image" value="0">
-    @endif
-
-        <div class="mb-3">
-            <label for="DocumentUpload" class="form-label">Attached Document</label>
-            @if($item->DocumentUpload)
-                <div class="mb-2">
-                    <a href="{{ asset('storage/' . $item->DocumentUpload) }}" target="_blank">View Existing Document</a>
+            @if($item->image)
+                <div class="mt-2" id="current-image-section">
+                    <img src="data:{{ $item->image->MIMEType }};base64,{{ $item->image->Image }}" alt="Item Image"
+                         style="max-width:200px;">
+                    <button type="button" class="btn btn-danger btn-sm ms-2" id="remove-image-btn">Remove Image</button>
                 </div>
+                <input type="hidden" name="remove_image" id="remove-image" value="0">
             @endif
-            <input type="file" name="DocumentUpload" id="DocumentUpload" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx">
-        </div>
-         <div class="col-md-4">
+
+            <div class="mb-3">
+                <label for="DocumentUpload" class="form-label">Attached Document</label>
+                @if($item->DocumentUpload)
+                    <div class="mb-2">
+                        <a href="{{ asset('storage/' . $item->DocumentUpload) }}" target="_blank">View Existing
+                            Document</a>
+                    </div>
+                @endif
+                <input type="file" name="DocumentUpload" id="DocumentUpload" class="form-control"
+                       accept=".pdf,.doc,.docx,.xls,.xlsx">
+            </div>
+            <div class="col-md-4">
                 <label for="Status" class="form-label">Active?</label>
-                    <input type="hidden" name="Status" value="0">
-                    <input class="form-check-input" type="checkbox" name="Status" value="1" id="Status"
-                     {{ old('Status', 1) == 1 ? 'checked' : '' }}>
-                
+                <input type="hidden" name="Status" value="0">
+                <input class="form-check-input" type="checkbox" name="Status" value="1" id="Status"
+                    {{ old('Status', 1) == 1 ? 'checked' : '' }}>
+
             </div>
         </div>
 
@@ -141,16 +145,16 @@
 
 @section('scripts')
 
-<script>
-    $(document).ready(function () {
-        // ...existing category/subcategory code...
+    <script>
+        $(document).ready(function () {
+            // ...existing category/subcategory code...
 
-        $('#remove-image-btn').on('click', function () {
-            $('#current-image-section').hide();
-            $('#remove-image').val('1');
+            $('#remove-image-btn').on('click', function () {
+                $('#current-image-section').hide();
+                $('#remove-image').val('1');
+            });
         });
-    });
-</script>
+    </script>
 <script>
     $(document).ready(function () {
         $('#category').change(function () {
@@ -158,7 +162,7 @@
             $('#subcategory').html('<option value="">Loading...</option>');
 
             $.ajax({
-                url: "{{ route('get.subcategories') }}",
+                url: "{{ route('inventory.getSubcategories') }}",
                 type: 'GET',
                 data: { category_id: categoryId },
                 success: function (data) {

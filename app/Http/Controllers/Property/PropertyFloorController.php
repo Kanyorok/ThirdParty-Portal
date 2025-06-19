@@ -3,50 +3,46 @@
 namespace App\Http\Controllers\Property;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Property\PropertyRegistry\PropertyFloorRequest;
+use App\Services\Property\PropertyRegistry\PropertyFloorService;
 use Illuminate\Http\Request;
 use App\Models\PropertyManagement\PropertyFloor;
-use App\Models\PropertyManagement\PropertyRegistry;  
+use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyBlock;
 
 class PropertyFloorController extends Controller
 {
-    //
+    protected $service;
+    public function __construct(PropertyFloorService $service)
+    {
+        $this->service = $service;
+    }
     public function index()
     {
-         $floors = PropertyFloor::all();
+        $floors = PropertyFloor::all();
         //dd($properties);
         return view('property.propertyregistry.structuralmapping.addfloor.index', compact('floors'));
     }
     public function create(){
-        $blocks = PropertyBlock::all();
-        $properties = PropertyRegistry::all();
-        return view('property.propertyregistry.structuralmapping.addfloor.create', compact('blocks', 'properties'));
+        $properties = PropertyRegistry::with('block')->get();
+        return view('property.propertyregistry.structuralmapping.addfloor.create', compact( 'properties'));
     }
-    public function show($id){
-        $floor = PropertyFloor::find($id);
-        return view('property.propertyregistry.structuralmapping.addfloor.show',compact('floor'));
-    }
-     public function store(Request $request)
+
+    public function show($id)
     {
-        //dd($request->all());
+        $floor = PropertyFloor::find($id);
+        return view('property.propertyregistry.structuralmapping.addfloor.show', compact('floor'));
+    }
 
-        $request->validate([
-            'PropertyID'=>'required|string|max:50',
-            'BlockID'=>'required|string|max:50',
-            'FloorLabel'=>'required|string|max:50',
-            'FloorNotes'=>'required|string|max:100',
-        ]);
+    public function store(PropertyFloorRequest $request)
+    {
+        $this->service->create($request->validated());
+        return redirect()->route('addfloor.index')->with('success', 'property floor created successfully');
+    }
 
-         $floor = PropertyFloor::create([
-            'PropertyID'=> $request->PropertyID,
-            'BlockID'=> $request->BlockID,
-            'FloorLabel'=> $request->FloorLabel,
-            'FloorNotes'=> $request->FloorNotes,
-            'CreatedBy' => auth()->user()->Id,
-            'ModifiedBy' => auth()->user()->Id,
-        ]);
-    
-           return redirect()->route('addfloor.index')->with('success','property floor created successfully');
-           
+    public function getBlockByProperty($propertyId)
+    {
+        $blocks = PropertyBlock::where('PropertyID', $propertyId)->get();
+        return response()->json($blocks);
     }
 }

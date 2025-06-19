@@ -13,11 +13,13 @@ class PrequalifiedSuppliersController extends Controller
         return view('procurement.suppliers.prequalification.prequalifiedsuppliers.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('procurement.suppliers.prequalification.prequalifiedsuppliers.create');
     }
 
-    public function show(){
+    public function show()
+    {
         return view('procurement.suppliers.prequalification.prequalifiedsuppliers.show');
-    }    
+    }
 }

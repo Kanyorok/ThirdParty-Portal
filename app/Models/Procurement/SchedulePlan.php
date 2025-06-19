@@ -20,7 +20,7 @@ class SchedulePlan extends Model
 
 
     protected $fillable = [
-        'ScheduleId', 'PlanId', 'PlanLineId', 'ScheduleQTY', 'Status',
+        'ScheduleId', 'PlanId', 'PlanLineId', 'ScheduleQTY','ScheduleType', 'Status',
         'CreatedBy', 'ModifiedBy', 'DeletedBy'
     ];
 

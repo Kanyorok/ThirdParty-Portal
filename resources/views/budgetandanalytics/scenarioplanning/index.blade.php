@@ -34,25 +34,28 @@
                         @else
                             <td><span class="badge bg-danger">Not Default</span></td>
                         @endif
-                <td>
-                    <div class="d-flex gap-2">
-                    <a href="{{route('budgetscenerios.edit', $scenario->Id)}}" class="btn btn-sm btn-outline-primary">✏️ Edit</a>
+                        <td>
+                            <div class="d-flex gap-2">
+                                <a href="{{route('budgetscenerios.edit', $scenario->Id)}}"
+                                   class="btn btn-sm btn-outline-primary">✏️ Edit</a>
 
-                    <form action="{{ route('budgetscenerios.destroy', $scenario->Id) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Are you sure you want to delete this scenario?');">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-danger btn-sm">🗑 Delete</button>
-                    </form>
-                    </div>
-                </td>
-            </tr>
-            @endforeach
-            </tbody>
-        </table>
+                                <form action="{{ route('budgetscenerios.destroy', $scenario->Id) }}" method="POST"
+                                      style="display:inline-block;"
+                                      onsubmit="return confirm('Are you sure you want to delete this scenario?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-danger btn-sm">🗑 Delete</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </table>
         @else
-        <div class="alert alert-info">
-            No Scenarios Created
-        </div>
+            <div class="alert alert-info">
+                No Scenarios Created
+            </div>
         @endif
     </div>
 @endsection

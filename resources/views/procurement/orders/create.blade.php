@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Purchase Order')
 @section('styles')
-    <link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
     <style>
         .select2-container {
             width: 100% !important;
@@ -117,9 +117,9 @@
                                 @foreach ($itemTypes as $type)
                                     <option value="{{ $type->Id }}">{{ $type->TypeName }}</option>
                                 @endforeach
-{{--                                <option value="Stock">Stock</option>--}}
-{{--                                <option value="Asset">Asset</option>--}}
-{{--                                <option value="Non-Stock">Non-Stock</option>--}}
+                                {{--                                <option value="Stock">Stock</option>--}}
+                                {{--                                <option value="Asset">Asset</option>--}}
+                                {{--                                <option value="Non-Stock">Non-Stock</option>--}}
                             </select>
                         </td>
                         <td class="text-start">
@@ -140,15 +140,15 @@
                             {{--                                name="itemDescription[]" id="Description" readonly> --}}
                         </td>
                         <td class="text-start"><input type="number" class="form-control form-control-sm qty quantity"
-                                                      name="quantity[]" id="Quantity"></td>
+                                                      name="quantity[]" id="Quantity" step="any"></td>
                         <td class="text-start"><input type="number" class="form-control form-control-sm unit-price "
-                                                      name="unitPrice[]" id="Price"></td>
+                                                      name="unitPrice[]" id="Price" step="any"></td>
                         <td class="text-start"><input type="number" class="form-control form-control-sm tax"
-                                                      name="tax[]" id="Tax"></td>
+                                                      name="tax[]" id="Tax" step="any"></td>
                         <td class="text-start"><input type="number" class="form-control form-control-sm discount"
-                                                      name="discount[]" id="Discount"></td>
+                                                      name="discount[]" id="Discount" step="any"></td>
                         <td class="text-start"><input type="number" class="form-control form-control-sm line-total"
-                                                      name="lineTotal[]" id="lineTotal" step=""></td>
+                                                      name="lineTotal[]" id="lineTotal" step="any"></td>
                     </tr>
                     </tbody>
                 </table>

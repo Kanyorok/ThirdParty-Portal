@@ -8,20 +8,21 @@
 <div class="card p-4 shadow rounded-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h4>📋 Manual Entry – Procurement Plan Items</h4>
-    <div class="d-flex gap-2 mb-3">
-  @php
-    $selectedPlan = $plans->firstWhere('PlanID', $planId);
-@endphp
+      <div class="d-flex gap-2 mb-3">
+          @php
+              $selectedPlan = $plans->firstWhere('PlanID', $planId);
+          @endphp
 
-<a href="{{ route('planmanualinput.create', ['plan_id' => $planId, 'title' => $selectedPlan->Title ?? '']) }}" class="btn btn-outline-primary">
-    ➕ Add Item
-</a>
+          <a href="{{ route('planmanualinput.create', ['plan_id' => $planId, 'title' => $selectedPlan->Title ?? '']) }}"
+             class="btn btn-outline-primary">
+              ➕ Add Item
+          </a>
 
 
-    <a href="{{ route('procurementplanmaintain.index') }}" class="btn btn-outline-secondary">
-        <i class="fas fa-arrow-left me-1"></i> Back to Plans
-    </a>
-</div>
+          <a href="{{ route('procurementplanmaintain.index') }}" class="btn btn-outline-secondary">
+              <i class="fas fa-arrow-left me-1"></i> Back to Plans
+          </a>
+      </div>
   </div>
 
   <!-- Plan Filter -->
@@ -49,7 +50,7 @@
               <th>Category</th>
               <th>Qty</th>
               <th>UOM</th>
-              <th>Est. Cost</th>
+              <th>Est. Unit Cost</th>
               <th>Planned Quarter</th>
               <th>Expected Delivery</th>
               <th>Action</th>

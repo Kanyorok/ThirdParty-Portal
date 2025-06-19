@@ -1,11 +1,13 @@
+@php use Carbon\Carbon; @endphp
 @extends('layouts.app')
 @section('title', 'Purchase Order')
 @section('styles')
-    <link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
     <style>
         .select2-container {
             width: 100% !important;
         }
+
         /*!* Improved table layout *!*/
         /*.table-responsive {*/
         /*    overflow-x: auto;*/
@@ -73,25 +75,28 @@
                         <option selected>{{$orderInfo->SupplierName ?? 'N/A'}}</option>
                     </select>
                 </div>
-{{--                <div class="col-md-6">--}}
-{{--                    <label>Address</label>--}}
-{{--                    <input type="text" class="form-control" name="address" placeholder="Supplier address"/>--}}
-{{--                </div>--}}
+                {{--                <div class="col-md-6">--}}
+                {{--                    <label>Address</label>--}}
+                {{--                    <input type="text" class="form-control" name="address" placeholder="Supplier address"/>--}}
+                {{--                </div>--}}
             </div>
 
             <!-- LPO Details -->
             <div class="row mb-4">
                 <div class="col-md-4">
                     <label>LPO Number</label>
-                    <input type="text" name="LPONo" class="form-control" value="{{$orderInfo->OrderNo ?? 'N/A'}}" readonly/>
+                    <input type="text" name="LPONo" class="form-control" value="{{$orderInfo->OrderNo ?? 'N/A'}}"
+                           readonly/>
                 </div>
                 <div class="col-md-4">
                     <label>Date</label>
-                    <input type="date" class="form-control poDate" name="pODate" value="{{ isset($orderInfo->OrderDate) ? \Carbon\Carbon::parse($orderInfo->OrderDate)->format('Y-m-d') : '' }}"/>
+                    <input type="date" class="form-control poDate" name="pODate"
+                           value="{{ isset($orderInfo->OrderDate) ? Carbon::parse($orderInfo->OrderDate)->format('Y-m-d') : '' }}"/>
                 </div>
                 <div class="col-md-4">
                     <label>Reference Number</label>
-                    <input type="text" class="form-control refNo" name="refNo" placeholder="RFQ Number" value="{{$orderInfo->ExtOrdNum ?? 'N/A'}}"/>
+                    <input type="text" class="form-control refNo" name="refNo" placeholder="RFQ Number"
+                           value="{{$orderInfo->ExtOrdNum ?? 'N/A'}}"/>
                 </div>
                 <div class="col-md-4 mt-2">
                     <label>Priority</label>
@@ -101,7 +106,8 @@
                 </div>
                 <div class="col-md-4 mt-2">
                     <label>Payment Terms</label>
-                    <input type="text" name="terms" class="form-control terms" placeholder="e.g., Net 30, 50%" value="{{$orderInfo->Terms ?? 'N/A'}}"/>
+                    <input type="text" name="terms" class="form-control terms" placeholder="e.g., Net 30, 50%"
+                           value="{{$orderInfo->Terms ?? 'N/A'}}"/>
                 </div>
             </div>
 
@@ -132,38 +138,44 @@
 
                     @foreach($lineInfo as $line)
 
-                    <tr>
-                        <td class="line-no">1.</td>
-                        <td class="text-start">
-                            <select class="form-select form-select-sm type" name="type[]" id="Type">
-                                <option  selected>{{$line ->ItemType}}</option>
+                        <tr>
+                            <td class="line-no">1.</td>
+                            <td class="text-start">
+                                <select class="form-select form-select-sm type" name="type[]" id="Type">
+                                    <option selected>{{$line ->ItemType}}</option>
 
-                            </select>
-                        </td>
-                        <td class="text-start">
-                            <select class="form-select form-select-sm itemCode" name="itemCode[]" id="Item">
-                                <option  selected>{{$line ->ItemName}}</option>
-                            </select>
-                        </td>
-                        {{--                    <td><input type="text" class="form-control" name="itemCode[]"></td> --}}
-                        <td class="text-start">
+                                </select>
+                            </td>
+                            <td class="text-start">
+                                <select class="form-select form-select-sm itemCode" name="itemCode[]" id="Item">
+                                    <option selected>{{$line ->ItemName}}</option>
+                                </select>
+                            </td>
+                            {{--                    <td><input type="text" class="form-control" name="itemCode[]"></td> --}}
+                            <td class="text-start">
                                 <textarea class="form-control form-control-sm itemDescription" name="itemDescription[]"
                                           id="Description"
-                                           readonly style="display: flex; align-items: center; justify-content: center; text-align: center; padding: 0; resize: none;">{{$line ->Description}}</textarea>
-                            {{--                            <input type="text" class="form-control form-control-sm itemDescription" --}}
-                            {{--                                name="itemDescription[]" id="Description" readonly> --}}
-                        </td>
-                        <td class="text-start"><input type="number" class="form-control form-control-sm qty quantity"
-                                                      name="quantity[]" id="Quantity" value="{{$line ->fQuantity}}"></td>
-                        <td class="text-start"><input type="number" class="form-control form-control-sm unit-price "
-                                                      name="unitPrice[]" id="Price" value="{{$line ->fUnitPriceExcl}}"></td>
-                        <td class="text-start"><input type="number" class="form-control form-control-sm tax"
-                                                      name="tax[]" id="Tax" value="{{$line ->fTaxRate}}"></td>
-                        <td class="text-start"><input type="number" class="form-control form-control-sm discount"
-                                                      name="discount[]" id="Discount" value="{{$line ->fLineDiscount}}"></td>
-                        <td class="text-start"><input type="number" class="form-control form-control-sm line-total"
-                                                      name="lineTotal[]" id="lineTotal" step="" value="{{$line ->LineTotal}}"></td>
-                    </tr>
+                                          readonly
+                                          style="display: flex; align-items: center; justify-content: center; text-align: center; padding: 0; resize: none;">{{$line ->Description}}</textarea>
+                                {{--                            <input type="text" class="form-control form-control-sm itemDescription" --}}
+                                {{--                                name="itemDescription[]" id="Description" readonly> --}}
+                            </td>
+                            <td class="text-start"><input type="number"
+                                                          class="form-control form-control-sm qty quantity"
+                                                          name="quantity[]" id="Quantity" value="{{$line ->fQuantity}}">
+                            </td>
+                            <td class="text-start"><input type="number" class="form-control form-control-sm unit-price "
+                                                          name="unitPrice[]" id="Price"
+                                                          value="{{$line ->fUnitPriceExcl}}"></td>
+                            <td class="text-start"><input type="number" class="form-control form-control-sm tax"
+                                                          name="tax[]" id="Tax" value="{{$line ->fTaxRate}}"></td>
+                            <td class="text-start"><input type="number" class="form-control form-control-sm discount"
+                                                          name="discount[]" id="Discount"
+                                                          value="{{$line ->fLineDiscount}}"></td>
+                            <td class="text-start"><input type="number" class="form-control form-control-sm line-total"
+                                                          name="lineTotal[]" id="lineTotal" step=""
+                                                          value="{{$line ->LineTotal}}"></td>
+                        </tr>
                     @endforeach
                     </tbody>
                 </table>
@@ -372,10 +384,10 @@
                 </select>
             </td>
             <td><input type="text" class="form-control form-control-sm itemDescription" name="item_description[]" id="Description" readonly></td>
-            <td><input type="number" class="form-control form-control-sm qty quantity" name="quantity[]" id="Quantity" ></td>
-            <td><input type="number" class="form-control form-control-sm unit-price" name="unit_price[]" id="Price" ></td>
-            <td><input type="number" class="form-control form-control-sm tax" name="tax[]" id="Tax" ></td>
-            <td><input type="number" class="form-control form-control-sm discount" name="discount[]" id="Discount" ></td>
+            <td><input type="number" class="form-control form-control-sm qty quantity" name="quantity[]" id="Quantity" step="any" readonly ></td>
+            <td><input type="number" class="form-control form-control-sm unit-price" name="unit_price[]" id="Price" step="any" readonly ></td>
+            <td><input type="number" class="form-control form-control-sm tax" name="tax[]" id="Tax" step="any" readonly ></td>
+            <td><input type="number" class="form-control form-control-sm discount" name="discount[]" id="Discount" step="any" readonly ></td>
             <td><input type="number" class="form-control form-control-sm line-total" name="line_total[]"  id="lineTotal" readonly></td>
         </tr>`;
             document.getElementById('po-items').insertAdjacentHTML('beforeend', row);

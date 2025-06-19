@@ -30,7 +30,7 @@ class ProcurementPlanMaintainController extends Controller
 
     public function store(Request $request)
     {
-         $this->authorize('store', ConsolidatedProcurementPlan::class);
+        $this->authorize('store', ConsolidatedProcurementPlan::class);
         $request->validate([
             'Title' => 'required|string|max:255',
             'FiscalYear' => 'required|integer',
@@ -45,21 +45,21 @@ class ProcurementPlanMaintainController extends Controller
         'Title'           => $request->Title,
         'ReferenceNumber' => 'PLAN/' . $request->FiscalYear . '/' . rand(100, 999),
         'FiscalYear'      => $request->FiscalYear,
-        'Status'          => ProcurementPlanStatusEnum::Draft,
+        'Status' => ProcurementPlanStatusEnum::Draft,
         'CreatedBy'       => $userId,
-        'SubmittedBy'     => $userId, 
+        'SubmittedBy'     => $userId,
         'CreatedDate'     => now(),
         'SubmittedDate'   => now(),
-        'CreatedOn'       => now(),   
+        'CreatedOn'       => now(),
         'ModifiedOn'      => now(),
         'CurrentApprLevel'=> 0,
-        'ModifiedBy' => $userId,  
+        'ModifiedBy' => $userId,
     ]);
 
         activity()->causedBy($user)->performedOn($plan)->event('create')->log('created plan ' . $plan->Id);
         // Redirect to manual entry page with the new plan ID
- return redirect()->route('procurementplanmaintain.index')
-    ->with('success', 'Plan created successfully. You may now proceed to add line items.');
+        return redirect()->route('procurementplanmaintain.index')
+            ->with('success', 'Plan created successfully. You may now proceed to add line items.');
 
     }
     public function create(){
@@ -84,7 +84,7 @@ class ProcurementPlanMaintainController extends Controller
     public function show($id)
     {
         $this->authorize('view', ConsolidatedProcurementPlan::class);
-        $plan = ConsolidatedProcurementPlan::with(['lineItems.item', 'createdBy'])->findOrFail($id);
+        $plan = ConsolidatedProcurementPlan::with(['lineItems.item', 'lineItems.budgetLine','lineItems.procurementMode','createdBy'])->findOrFail($id);
 
         return view('procurement.procurementplan.procurementplanmaintenance.show', compact('plan'));
     }

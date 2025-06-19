@@ -21,7 +21,7 @@
        @foreach($blocks as $block)
        <tr>
         <td>{{ $loop->iteration }}</td>
-        <td>{{ $block->PropertyID }}</td>
+        <td>{{ $block->property->PropertyName }}</td>
         <td>{{ $block->BlockName}}</td>
         <td>{{ $block->Description}}</td>
         <td>

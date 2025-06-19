@@ -36,15 +36,15 @@ class UnitOfMeasure extends Model
     ];
 
     protected $casts = [
-        'Code'  => 'string',
-        'Name'  => 'string',
-        'BaseUnit'  => 'boolean',
-        'Active'  => 'boolean',
-        'CreatedBy'     => 'integer',
-        'ModifiedBy'    => 'integer',
-        'DeletedBy'     => 'integer',
-        'CreatedOn'     => 'datetime',
-        'ModifiedOn'    => 'datetime',
+        'Code' => 'string',
+        'Name' => 'string',
+        'BaseUnit' => 'boolean',
+        'Active' => 'boolean',
+        'CreatedBy' => 'integer',
+        'ModifiedBy' => 'integer',
+        'DeletedBy' => 'integer',
+        'CreatedOn' => 'datetime',
+        'ModifiedOn' => 'datetime',
     ];
 
 }
