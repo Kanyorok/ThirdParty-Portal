@@ -80,7 +80,7 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::get('requisitionItem/getItem/{type}', [RequisitionItemsController::class, 'getItems'])->name('requisitionItem.getItems');
 
     // this route is static affecting orders\create.blade.php & requisitions\show
-    Route::get('requisitionItem/getItemDetails/{item}', 'RequisitionItemsController@getItemDetails')->name('requisitionItem.getItemDetails');
+    Route::get('requisitionItem/getItemDetails/{item}', [RequisitionItemsController::class,'getItemDetails'])->name('requisitionItem.getItemDetails');
 
 //    Route::get('requisitionItem/{id}', [RequisitionItemsController::class, 'show'])->name('requisitionItem.show');
 //    Route::get('requisitionItem/create/{id}', [RequisitionItemsController::class, 'create'])->name('requisitionItems.create');

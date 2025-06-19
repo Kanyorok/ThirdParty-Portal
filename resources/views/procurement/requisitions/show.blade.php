@@ -41,9 +41,7 @@
                         <tbody>
                         @forelse($details as $item)
                             <tr>
-                                <td>{{ $item->Id }}</td>
-                                {{--                                <td>{{ $item->RequisitionID }}</td> --}}
-                                {{--                                    <td>{{ $item->Module }}</td>--}}
+                                <td>{{  $loop->iteration }}</td>
                                 <td>{{ $item->Type }}</td>
 {{--                                <td>{{ $item->Category }}</td>--}}
                                 <td>{{ $item->ItemName }}</td>
@@ -141,25 +139,25 @@
                                 <p id="UOM_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
 
-{{--                            <div class="mb-3">--}}
-{{--                                <label class="form-label" for="EstimatedPrice">Estimated Price </label>--}}
+                            <div class="mb-3">
+                                <label class="form-label" for="EstimatedPrice">Estimated Price </label>
 
-{{--                                <input type="number" class="form-control" id="EstimatedPrice" name="EstimatedPrice"--}}
-{{--                                       readonly required>--}}
+                                <input type="number" class="form-control" id="EstimatedPrice" name="EstimatedPrice" step="any"
+                                       readonly >
 
-{{--                                <p id="EstimatedPrice_error" class="invalid-feedback d-none error col-12" role="alert">--}}
-{{--                                </p>--}}
-{{--                            </div>--}}
+                                <p id="EstimatedPrice_error" class="invalid-feedback d-none error col-12" role="alert">
+                                </p>
+                            </div>
 
-{{--                            <div class="mb-3">--}}
-{{--                                <label class="form-label" for="NeededBy">Needed By </label>--}}
+                            <div class="mb-3">
+                                <label class="form-label" for="LineItemID">LineItemID </label>
 
-{{--                                <input type="date" class="form-control" id="NeededBy" name="NeededBy"--}}
-{{--                                       required>--}}
+                                <input type="number" class="form-control" id="LineItemID" name="LineItemID"
+                                       readonly>
 
-{{--                                <p id="NeededBy_error" class="invalid-feedback d-none error col-12" role="alert">--}}
-{{--                                </p>--}}
-{{--                            </div>--}}
+                                <p id="LineItemID_error" class="invalid-feedback d-none error col-12" role="alert">
+                                </p>
+                            </div>
 
                             <div class="mb-3">
                                 <label class="form-label" for="Urgency">Urgency </label>
@@ -216,7 +214,7 @@
             });
 
             $('form#createRequisitionItemForm').submit(async function(e) {
-                // alert($('#RequisitionID').val());
+
                 e.preventDefault();
                 if (await saveForm($(this), $('#createRequisitionItemBtn'), true, true, true)) {
                     $Modal.modal('hide');
@@ -262,10 +260,11 @@
             $('#Item').on('change', function() {
                 // alert('hello');
                 let item = $(this).val();
+                let requisitionId = getRequisitionIdFromUrl();
 
                 if (item !== '') {
                     $.ajax({
-                        url: `/procurement/requisitionItem/getItemDetails/${item}`,
+                        url: `/procurement/requisitionItem/getItemDetails/${item}?requisition_id=${requisitionId}`,
                         type: 'GET',
                         success: function(response) {
                             if (response.data && response.data.length > 0) {
@@ -273,6 +272,8 @@
                                     $('#UOM').empty().append(
                                         `<option value="${item.UOMID}">${item.UOM}</option>`
                                     );
+                                    $('#EstimatedPrice').val(item.UnitPrice || 0);
+                                    $('#LineItemID').val(item.LineItemID || '');
                                 });
                             }
                         },
@@ -284,8 +285,8 @@
                 } else {
                     $('#UOM').empty().append('<option value="">Select UOM</option>');
                     // $('#Description').val('');
-                    $('#ActualPrice').val('');
-                    $('#CategoryId').val(''); // Clear the hidden CategoryId field
+                    $('#EstimatedPrice').val(0);
+                    $('#LineItemID').val('');
                 }
             })
 

@@ -36,7 +36,7 @@
                         <tbody>
                         @forelse($details as $item)
                             <tr>
-                                <td>{{ $item->Id }}</td>
+                                <td>{{  $loop->iteration }}</td>
                                 <td>{{ $item->OrderNo }}</td>
                                 <td>{{ \Carbon\Carbon::parse($item->OrderDate)->format('d-m-Y') }}</td>
                                 <td>{{ $item->ExtOrdNum }}</td>

@@ -56,6 +56,12 @@ class RequisitionItemsController extends Controller
                 'data' => $items,
             ]);}
         catch(\Exception $e){
+            Log::error('Failed to fetch items', [
+                'type' => $type,
+                'requisition_id' => $request->query('requisition_id'),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch items.',
@@ -64,9 +70,10 @@ class RequisitionItemsController extends Controller
         }
     }
 
-    public function getItemDetails($item): JsonResponse
+    public function getItemDetails($item, Request $request): JsonResponse
     {
         try{
+            $requisitionId = $request->query('requisition_id');
 
             if (empty($item)) {
                 return response()->json([
@@ -75,7 +82,7 @@ class RequisitionItemsController extends Controller
                 ], 400);
             }
 
-            $details = $this->itemService->getItemDetails($item);
+            $details = $this->itemService->getItemDetails($item, $requisitionId);
             return response()->json([
                 'success' => true,
                 'data' => $details,
@@ -157,8 +164,10 @@ class RequisitionItemsController extends Controller
                 $validatedData['RequisitionID'],
                 $validatedData['Item'],
                 $validatedData['Quantity'],
-//                $validatedData['NeededBy'],
                 $validatedData['Urgency'],
+                $validatedData['UOM'],
+                $validatedData['EstimatedPrice'],
+                $validatedData['LineItemID'],
                 $actor
             );
 
