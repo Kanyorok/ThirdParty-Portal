@@ -69,7 +69,7 @@
                 <td>{{ $need->department->Name ?? 'N/A' }}</td>
                 <td>{{ $need->RequestedQty }}</td>
                 <td>{{ number_format($need->RequestedQty * $need->EstimatedUnitCost, 2) }}</td>
-                <td>{{ \Carbon\Carbon::parse($need->RequestedDate)->format('m/d/Y') }}</td>
+                <td>{{ \Carbon\Carbon::parse($need->RequestedDate)->format('d/m/Y') }}</td>
                 <td><span class="badge bg-info">{{ $need->Status->label() }}</span></td>
                 <td>
                     <button
@@ -129,7 +129,7 @@
         // If input is DD/MM/YYYY format (possibly from old('RequestedDate') or Carbon formatting)
         if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
             const [day, month, year] = dateString.split("/");
-            return `${month}/${day}/${year}`;
+            return `${day}/${month}/${year}`;
         }
 
         // Try native parsing as fallback (not recommended)
@@ -138,7 +138,7 @@
             const mm = String(date.getMonth() + 1).padStart(2, '0');
             const dd = String(date.getDate()).padStart(2, '0');
             const yyyy = date.getFullYear();
-            return `${mm}/${dd}/${yyyy}`;
+            return `${dd}/${mm}/${yyyy}`;
         }
 
         // Return as-is if unable to parse
