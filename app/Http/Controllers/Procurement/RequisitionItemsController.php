@@ -142,7 +142,7 @@ class RequisitionItemsController extends Controller
     public function store(RequisitionItemRequest $request): JsonResponse
     {
         $this->authorize('create', RequisitionLine::class);
-//        dd($request->all());
+       dd($request->all());
         try {
             $validatedData = $request->validated();
 
