@@ -50,38 +50,29 @@ class StockTakeController extends Controller
 
         return response()->json($stocks); // Just return raw data
     }
-    
-public function store(StockTakeRequest $request)
-{
-    try {
-        $validated = $request->validated();
 
-        // Fetch the Branch and Store models using the validated IDs
-        $branch = Branch::findOrFail($validated['BranchId']);
-        $store = Store::findOrFail($validated['StoreId']);
+    public function store(StockTakeRequest $request)
+    {
+        $branch = Branch::findOrFail($request->BranchId);
+        $store = Store::findOrFail($request->StoreId);
+        $countedBy = $request->CountedBy;
+        $countDate = Carbon::parse($request->CountDate);
+        $lines = $request->lines;
 
-        $service = StockTakeService::create(
+        // ✅ This is the method that saves both header and lines
+        $stockTake = StockTakeService::createWithLines(
             branch: $branch,
             store: $store,
-            countedBy: $validated['CountedBy'],
-            countDate: Carbon::parse($validated['CountDate']),
+            countedBy: $countedBy,
+            countDate: $countDate,
+            lines: $lines
         );
 
-        foreach ($validated['lines'] as $line) {
-            $service->addLine(
-                itemId: $line['ItemId'],
-                actualQuantity: $line['ActualQuantity'],
-                countedQuantity: $line['CountedQuantity'],
-                remarks: $line['Remarks'] ?? null
-            );
-        }
-
-        return redirect()->route('stocktake.index')->with('success', 'Stock Take and Lines created successfully.');
-    } catch (\Exception $e) {
-        \Log::error('StockTake store error: ' . $e->getMessage());
-        return redirect()->back()->with('error', 'Failed to create Stock Take: ' . $e->getMessage())->withInput();
+        return redirect()
+            ->route('stocktake.index')
+            ->with('success', 'Stock Take recorded successfully.');
     }
-}
+
 
     public function show($id){
         $stock = StockTake::find($id);
