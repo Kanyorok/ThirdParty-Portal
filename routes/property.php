@@ -66,9 +66,19 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::get('propertyaddblock/show', [PropertyBlockController::class,'show'])->name('addblock.show');
 
 
+    //Property Floor
+    //Route::resource('addfloor', PropertyFloorController::class);
+    Route::get('/propertyaddfloor', [PropertyFloorController::class,'index'])->name('addfloor.index');
+    Route::get('/propertyaddfloor/create', [PropertyFloorController::class,'create'])->name('addfloor.create');
+    Route::post('/propertyaddfloor', [PropertyFloorController::class,'store'])->name('addfloor.store');
+    Route::get('/propertyregistry/block/{propertyId}', [PropertyFloorController::class, 'getBlockByProperty'])->name('getblocks');
+    Route::get('/propertyaddfloor/show/{Id}', [PropertyFloorController::class,'show'])->name('addfloor.show');
+    Route::get('/propertyaddfloor/edit/{Id}',[PropertyFloorController::class,'edit'])->name('addfloor.edit');
+    Route::put('/propertyaddfloor/edit/{Id}',[PropertyFloorController::class,'update'])->name('addfloor.update');
+    Route::delete('/propertyaddfloor/delete/{Id}', [PropertyFloorController::class,'destroy'])->name('addfloor.destroy');   
 
 
-    Route::resource('addfloor', PropertyFloorController::class);
+
     Route::resource('addunit', PropertyUnitController::class);
     Route::resource('attachments', PropertyAttachmentsController::class);
     Route::resource('addtenant', PropertyNewTenantController::class);
