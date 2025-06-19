@@ -300,9 +300,7 @@ class InterBranchRequisitionController extends Controller
         } elseif ($categoryId) {
             $itemsQuery->where('t_Items.Category', $categoryId);
         } else {
-            // If neither category nor subcategory is selected, and a branch IS selected,
-            // we should show all items in stock for that branch (if applicable, otherwise return empty message).
-            // For this form flow, a category/subcategory should typically be selected.
+
             return response()->json(['message' => 'Please select a category or subcategory.', 'items' => []]);
         }
 

@@ -59,6 +59,7 @@ class PlanManualInputController extends Controller
         $this->authorize('store', PlanLineItems::class);
 
         $validated = $request->validated();
+        
         $user = $request->user();
 
         $item = $request->getItem();
@@ -86,7 +87,7 @@ class PlanManualInputController extends Controller
         $planLineItem->ProcurementMethod = '';
         $planLineItem->SchedulePeriod = $validated['schedule_period'];
         $planLineItem->ExpectedDeliveryDate = $validated['expected_delivery_date'];
-        $planLineItem->BudgetLineID = $validated['budget_line_id'];
+        $planLineItem->BudgetLineID = (int) $validated['budget_line_id'];
         $planLineItem->ExecutionStatus = 'Pending';
         $planLineItem->ChangeRemarks = $validated['notes'] ?? null;
         $planLineItem->BranchID = $user->employee->BranchId;
