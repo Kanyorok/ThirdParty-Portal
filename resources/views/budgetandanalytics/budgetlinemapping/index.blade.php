@@ -28,7 +28,9 @@
         <th>#</th>
         <th>Line Name</th>
         <th>Department</th>
-        {{-- <th>Products Type</th> --}}
+        <th>GL Account Type</th>
+        <th>GL Sub-Type</th>
+        <th>Is Product Driven</th>
         <th>Description</th>
         <th>CBS GLs Mapped</th>
         <th>Actions</th>
@@ -41,15 +43,22 @@
             <td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ $item->LineName }}">
               {{ $item->LineName }}
             </td>
+            <td>{{ $item->department->Name ?? 'N/A' }}</td>
+            <td>{{ $item->glAccountType->Description ?? 'N/A' }}</td>
+            <td>{{ $item->glAccountSubType->GLAccountSubTypeName ?? 'N/A' }}</td>
+            <td>
+              @if($item->IsProductDriven)
+                <span class="badge bg-success">Yes</span>
+              @else
+                <span class="badge bg-secondary">No</span>
+              @endif
+            </td>
             <td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ $item->Description }}">
               {{ $item->Description }}
             </td>
             <td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-              {{ $item->Description }}
-            </td>
-            <td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
               @foreach($item->glAccounts as $gl)
-                <small><div>GL10014- {{ $gl->Description }}</div></small>
+                <small><div>GL{{ $gl->Id }} - {{ $gl->Description }}</div></small>
               @endforeach
             </td>
             <td>

@@ -14,7 +14,9 @@ use App\Models\Budget\BudgetDriver;
 use App\Models\Budget\BudgetDriverMaster;
 use App\Models\Budget\BudgetDriverProjections;
 use App\Models\Budget\BudgetGLAccount;
+use App\Models\Budget\BudgetGLAccountSubType;
 use App\Models\Budget\BudgetLine;
+use App\Models\Budget\BudgetLineProductTypes;
 use App\Models\Budget\BudgetLinesGLAccount;
 use App\Models\Budget\BudgetPeriods;
 use App\Models\Budget\BudgetPeriodTypes;
@@ -179,6 +181,8 @@ class AppServiceProvider extends ServiceProvider
             BudgetActivity::getPrimaryKey()=>BudgetActivity::class,
             BudgetMonthlyAllocation::getPrimaryKey()=>BudgetMonthlyAllocation::class,
             Budget::getPrimaryKey()=>Budget::class,
+            BudgetGLAccountSubType::getPrimaryKey()=>BudgetGLAccountSubType::class,
+            BudgetLineProductTypes::getPrimaryKey()=>BudgetLineProductTypes::class,
 
           
             CategoryMaster::getPrimaryKey() => CategoryMaster::class,
