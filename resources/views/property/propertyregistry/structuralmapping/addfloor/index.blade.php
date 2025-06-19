@@ -24,7 +24,7 @@
         <tr>
             <td>{{ $loop->iteration }}</td>
             <td>{{ $floor->property->PropertyName }}</td>
-            <td>{{ $floor->blocks->BlockName }}</td>
+            <td>{{ $floor->block->BlockName }}</td>
             <td>{{ $floor->FloorLabel }}</td>
             <td>{{ $floor->FloorNotes }}</td>
         <td>
