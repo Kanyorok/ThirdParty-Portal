@@ -29,8 +29,8 @@
                 <label class="form-label">Budget</label>
                 <select name="BudgetLineID" class="form-select" required>
                     <option disabled selected required>-- Select Budget --</option>
-                    @foreach ($budgetLines as $item)
-                        <option value="{{ $item->Id }}">{{ $item->LineName }}</option>
+                    @foreach ($budgets as $item)
+                        <option value="{{ $item->Id }}">{{ $item->Name }}</option>
                     @endforeach
                 </select>
                 @error('BudgetLineID') <small class="text-danger">{{ $message }}</small> @enderror
@@ -38,8 +38,8 @@
 
             <div class="col-md-6 mb-3">
              <label class="form-label">Budget Line</label>
-                <select name="BudgetLineID" class="form-select" required>
-                    <option disabled selected required>-- Select Budget Line --</option>
+                <select name="BudgetLineID" class="form-select" id="budgetLineSelect" required>
+                    <option disabled selected>-- Select Budget Line --</option>
                     @foreach ($budgetLines as $item)
                         <option value="{{ $item->Id }}">{{ $item->LineName }}</option>
                     @endforeach
@@ -49,15 +49,13 @@
 
             <div class="col-md-6 mb-3">
                 <label class="form-label">Activity</label>
-                <select name="ActivityName" class="form-select" required>
-                    <option disabled selected required>-- Select Activity --</option>
-                    @foreach ($budgetLines as $item)
-                        <option value="{{ $item->Id }}">{{ $item->LineName }}</option>
-                    @endforeach
+                <select name="ActivityID" id="activitySelect" class="form-select" required disabled>
+                    <option selected disabled>-- Select Activity --</option>
                 </select>
-                @error('ActivityName') <small class="text-danger">{{ $message }}</small> @enderror
+                <div id="activity-loading" class="form-text text-muted d-none">Loading activities...</div>
+                @error('ActivityID') <small class="text-danger">{{ $message }}</small> @enderror
             </div>
-            
+
             <div class="col-md-6 mb-3">
                 <label class="form-label">Allocation Type</label>
                 <select name="AllocationType" class="form-select" id="allocationType" required>
@@ -170,6 +168,44 @@
             input.addEventListener('input', calculateMonthlyTotal);
         });
     });
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const budgetLineSelect = document.getElementById('budgetLineSelect');
+    const activitySelect = document.getElementById('activitySelect');
+    const loadingText = document.getElementById('activity-loading');
+
+    budgetLineSelect.addEventListener('change', function () {
+        const budgetLineId = this.value;
+
+        activitySelect.innerHTML = '<option selected disabled>-- Select Activity --</option>';
+        activitySelect.disabled = true;
+        loadingText.classList.remove('d-none');
+
+        fetch(`{{ route('api.budget-activities') }}?budget_line_id=${budgetLineId}`)
+            .then(response => response.json())
+            .then(data => {
+                activitySelect.disabled = false;
+                loadingText.classList.add('d-none');
+
+                if (data.length === 0) {
+                    activitySelect.innerHTML += `<option disabled>No activities found</option>`;
+                }
+
+                data.forEach(activity => {
+                    const option = document.createElement('option');
+                    option.value = activity.Id;
+                    option.textContent = activity.ActivityName;
+                    activitySelect.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Error loading activities:', error);
+                loadingText.textContent = 'Failed to load activities.';
+            });
+    });
+});
 </script>
 
 @endsection

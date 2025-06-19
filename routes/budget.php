@@ -107,7 +107,8 @@ Route::namespace('Budget')->group(function () {
     Route::resource('regulatoryratios', RegulatoryRatiosController::class);
     Route::resource('liquidityratio', LiquidityController::class);
     
-    
+    // API Routes to fetch data
+   Route::get('/api/budget-activities', [BudgetActivitiesController::class, 'fetchActivities'])->name('api.budget-activities');
     
     // Business Intelligence & Deep Analytics
     Route::resource('analyticsdashboard', BusinessAnalyticsDashboardController::class);

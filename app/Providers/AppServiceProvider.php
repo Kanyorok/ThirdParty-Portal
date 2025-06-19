@@ -7,6 +7,7 @@ use App\Models\Auth\User;
 use App\Models\BR\Account;
 use App\Models\BR\Client;
 use App\Models\BR\DebtProduct;
+use App\Models\Budget\Budget;
 use App\Models\Budget\BudgetActivityMaster;
 use App\Models\Budget\BudgetActivity;
 use App\Models\Budget\BudgetDriver;
@@ -179,6 +180,7 @@ class AppServiceProvider extends ServiceProvider
             BudgetTopDownData::getPrimaryKey()=>BudgetTopDownData::class,
             BudgetActivity::getPrimaryKey()=>BudgetActivity::class,
             BudgetMonthlyAllocation::getPrimaryKey()=>BudgetMonthlyAllocation::class,
+            Budget::getPrimaryKey()=>Budget::class,
             BudgetGLAccountSubType::getPrimaryKey()=>BudgetGLAccountSubType::class,
             BudgetLineProductTypes::getPrimaryKey()=>BudgetLineProductTypes::class,
 

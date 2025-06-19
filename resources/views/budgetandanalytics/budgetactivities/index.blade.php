@@ -19,10 +19,11 @@
         <tr>
           <th>#</th>
           <th>Budget</th>
+          <th>Frequency</th>
           {{-- <th>Budget Line</th> --}}
           <th>Activities</th>
-          {{-- <th>Branch</th> --}}
-          <th>Allocation Type</th>
+          <th>Branch</th>
+          {{-- <th>Allocation Type</th> --}}
           <th>Total Allocation</th>
           <th>Actions</th>
         </tr>
@@ -32,27 +33,29 @@
           <tr>
             <td>{{ $loop->iteration }}</td>
             <td>Budget Name</td>
+            <td>11-02-2025 - 11-11-2025</td>
             {{-- <td>{{ $item->budgetLine->LineName }}</td> --}}
             <td>3</td>
             {{-- <td>{{ $item->ActivityName }}</td> --}}
-            {{-- <td>{{ $item->branch->Name }}</td> --}}
-            @if ($item->AllocationType=='monthly')
+            <td>{{ $item->branch->Name }}</td>
+            {{-- @if ($item->AllocationType=='monthly')
               <td>Monthly
                 <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#viewAllocationsModal-{{ $item->Id }}">👁️ View</button>
               </td>
             @else
               <td>Full Allocation</td>
-            @endif
+            @endif --}}
             <td>{{ $item->FullAllocation }}</td>
             <td>
-              <button class="btn btn-sm btn-outline-primary">✏️</button>
-              <button class="btn btn-sm btn-outline-danger custom-delete-btn"
-                      data-bs-toggle="modal"
-                      data-bs-target="#customDeleteConfirmModal"
-                      data-name="{{ $item->budgetLine->LineName }}"
-                      data-route="{{ route('budgetactivities.destroy', $item->Id) }}">
-                🗑️
-              </button>
+              <div class="d-flex gap-2 justify-content-center">
+                  <a href="{{ route('budgetperiod.edit', 1) }}" class="btn btn-sm btn-info">✏️</a>
+
+                  <form action="{{ route('budgetperiod.destroy', 1) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this Period?');">
+                      @csrf
+                      @method('DELETE')
+                      <button type="submit" class="btn btn-danger btn-sm">🗑️</button>
+                  </form>
+              </div>
             </td>
           </tr>
         @endforeach
