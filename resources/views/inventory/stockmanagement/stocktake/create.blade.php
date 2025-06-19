@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('title', 'Physical Stock Take')
-
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 @section('content')
 <div class="container mt-4">
   <h4 class="fw-bold mb-3">📝 Physical Stock Take</h4>
@@ -29,7 +29,12 @@
 
       <div class="col-md-3">
         <label class="form-label">🧑‍💼 Counted By</label>
-        <input type="text" name="CountedBy" class="form-control" placeholder="Enter name">
+        <select name="CountedBy" class="form-select select2" required>
+          <option value="">-- Select User --</option>
+          @foreach ($users as $user)
+            <option value="{{ $user->Id }}">{{ $user->Name }}</option>
+          @endforeach
+        </select>
       </div>
 
       <div class="col-md-3">
@@ -144,4 +149,15 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    $('.select2').select2({
+      placeholder: 'Select user',
+      allowClear: true
+    });
+  });
+</script>
+
 @endsection
