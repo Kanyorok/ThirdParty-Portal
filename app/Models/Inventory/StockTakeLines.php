@@ -42,4 +42,8 @@ class StockTakeLines extends Model
     {
         return $this->belongsTo(StockItem::class, 'ItemId', 'Id');
     }
+    public function itemmaster()
+    {
+        return $this->belongsTo(ItemMasterList::class, 'ItemID', 'Id');
+    }
 }

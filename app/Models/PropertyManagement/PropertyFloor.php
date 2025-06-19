@@ -41,7 +41,7 @@ class PropertyFloor extends Model
         return $this->belongsTo(PropertyRegistry::class,'PropertyID','Id');
     }
 
-    public function blocks()
+    public function block()
     {
         return $this->belongsTo(PropertyBlock::class, 'BlockID', 'Id');
     }

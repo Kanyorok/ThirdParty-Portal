@@ -84,7 +84,7 @@ class PlanManualInputController extends Controller
         $planLineItem->UnitOfMeasure = $validated['unit_of_measure_id'];
         $planLineItem->EstimatedUnitCost = $validated['estimated_cost'];
         $planLineItem->AdjustedCost = 0;
-        $planLineItem->ProcurementMethod = "";
+        $planLineItem->ProcurementMethod = '';
         $planLineItem->SchedulePeriod = $validated['schedule_period'];
         $planLineItem->ExpectedDeliveryDate = $validated['expected_delivery_date'];
         $planLineItem->BudgetLineID = (int) $validated['budget_line_id'];
