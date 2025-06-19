@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('t_RequisitionLines', static function (Blueprint $table) {
             $table->id('Id');
-            $table->integer('RequisitionID')->nullable();
+            $table->unsignedBigInteger('RequisitionID')->nullable();
             $table->string('Type');
             $table->foreignId('Item')->constrained('t_Items', 'Id');
             $table->longText('Description');
