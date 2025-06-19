@@ -348,12 +348,6 @@ enum PermissionEnum: string
     case StockAdjustmentDestroy= 'stockAdjustment-destroy';
    // case StockAdjustmentApproval= 'stockAdjustment-approval';
 
-    
-    case StockTakeView = 'stockTake-view';
-    case StockTakeUpdate = 'stockTake-update';
-    case StockTakeCreate = 'stockTake-create';
-    case StockTakeDestroy= 'stockTake-destroy';
-
     /*
      *
      * ========================================  Property Management  ========================================
