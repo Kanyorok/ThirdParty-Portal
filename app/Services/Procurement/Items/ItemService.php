@@ -28,7 +28,7 @@ class ItemService
                     ->join('t_ItemTypes as f', 't.ItemType', '=', 'f.Id')
                     ->where('pi.PlanID', $requisition->PlanRef)
                     ->where('t.ItemType', $type)
-                    ->select('t.Id', 't.ItemName', 't.ItemCode', 'i.EstimatedUnitCost')
+                    ->select('t.Id', 't.ItemName', 't.ItemCode')
                     ->get();
             }
         }
@@ -44,16 +44,18 @@ class ItemService
 
     public static function getItemDetails($item)
     {
-        return DB::table('t_Items')
-            ->leftJoin('t_ItemCategories', 't_Items.Category', '=', 't_ItemCategories.Id')
-            ->leftJoin('t_uom', 't_Items.UOM', '=', 't_uom.Id')
-            ->where('t_Items.Id', $item)
+        return DB::table('t_Items as items')
+            ->leftJoin('t_PlanLineItem as plan', 'items.Id', '=', 'plan.ItemID')
+            ->leftJoin('t_Pricing as price', 'items.Id', '=', 'price.ItemID')
+            ->leftJoin('t_ItemCategories as cat', 'items.Category', '=', 'cat.Id')
+            ->leftJoin('t_uom as uom', 'items.UOM', '=', 'uom.Id')
+            ->where('items.Id', $item)
             ->select([
-                't_Items.ItemDescription',
-                DB::raw('t_uom.Code AS UOM'),
-                DB::raw('t_uom.Id AS UOMID'),
-                DB::raw('0 AS UnitPrice'),
-                't_ItemCategories.Name AS CategoryName'
+                'items.ItemDescription',
+                DB::raw('COALESCE(uom.Code, "") AS UOM'),
+                DB::raw('uom.Id AS UOMID'),
+                DB::raw('COALESCE(price.EstimatedPrice, plan.EstimatedUnitCost, 0) AS UnitPrice'),
+                'cat.Name AS CategoryName'
             ])
             ->get();
     }

@@ -136,16 +136,8 @@
 
                                 <p id="UOM_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
-
-{{--                            <div class="mb-3">--}}
-{{--                                <label class="form-label" for="EstimatedPrice">Estimated Price </label>--}}
-
-{{--                                <input type="number" class="form-control" id="EstimatedPrice" name="EstimatedPrice"--}}
-{{--                                       readonly required>--}}
-
-{{--                                <p id="EstimatedPrice_error" class="invalid-feedback d-none error col-12" role="alert">--}}
-{{--                                </p>--}}
-{{--                            </div>--}}
+                         
+                            <input type="hidden" name="EstimatedPrice" id="EstimatedPrice">
 
 {{--                            <div class="mb-3">--}}
 {{--                                <label class="form-label" for="NeededBy">Needed By </label>--}}
@@ -255,35 +247,42 @@
             })
 
 
-            $('#Item').on('change', function() {
-                // alert('hello');
-                let item = $(this).val();
+            $('#Item').on('change', function () {
+                let itemId = $(this).val();
 
-                if (item !== '') {
+                if (itemId !== '') {
                     $.ajax({
-                        url: `/procurement/requisitionItem/getItemDetails/${item}`,
+                        url: `/procurement/requisitionItem/getItemDetails/${itemId}`,
                         type: 'GET',
-                        success: function(response) {
+                        success: function (response) {
                             if (response.data && response.data.length > 0) {
-                                $.each(response.data, function(key, item) {
-                                    $('#UOM').empty().append(
-                                        `<option value="${item.UOMID}">${item.UOM}</option>`
-                                    );
-                                });
+                                let itemData = response.data[0];
+
+                                // Set UOM dropdown
+                                $('#UOM').empty().append(
+                                    `<option value="${itemData.UOMID}">${itemData.UOM}</option>`
+                                );
+
+                                // Set hidden field for estimated price
+                                $('#EstimatedPrice').val(itemData.UnitPrice);
+                            } else {
+                                // If no data found
+                                $('#UOM').empty().append('<option value="">Select UOM</option>');
+                                $('#EstimatedPrice').val('');
                             }
                         },
-                        error: function(response) {
+                        error: function (response) {
                             alert('Failed to load item details');
                             console.log(response);
+                            $('#UOM').empty().append('<option value="">Select UOM</option>');
+                            $('#EstimatedPrice').val('');
                         }
                     });
                 } else {
                     $('#UOM').empty().append('<option value="">Select UOM</option>');
-                    // $('#Description').val('');
-                    $('#ActualPrice').val('');
-                    $('#CategoryId').val(''); // Clear the hidden CategoryId field
+                    $('#EstimatedPrice').val('');
                 }
-            })
+            });
 
             $("#MarketingList").select2({
                 dropdownParent: $Modal,
