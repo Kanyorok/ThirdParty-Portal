@@ -72,6 +72,32 @@ class RepositoryService extends PermissionsService
         return new self(self::_create($Name, $actor, $repository, $Description));
     }
 
+    /**
+     * @throws ErroredException
+     */
+    public function update(string $Name, User $actor, string $Description): static
+    {
+        if ($this->isRoot()) {
+            throw new ErroredException('Cannot update root folder');
+        }
+        try {
+            return DB::transaction(function () use ($Name, $Description, $actor) {
+                $this->repo->update([
+                    'Name' => $Name,
+                    'Description' => $Description,
+                    'ModifiedBy' => $actor->Id,
+                ]);
+
+                activity()->causedBy($actor)->performedOn($this->repo)->event('update')->log('Updated folder name : ' . $this->repo->Name);
+                return $this;
+            });
+        } catch (Exception|Throwable $e) {
+            Log::error('Error creating repository: ');
+            Log::error($e);
+            throw new ErroredException();
+        }
+    }
+
     public function parentRoot(): bool
     {
         return ($this->repo->ParentId === self::ROOT);

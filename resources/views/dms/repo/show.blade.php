@@ -122,7 +122,8 @@
             </div>
 
             <div class="collapse show" id="collapseRepositories">
-                <div class="row" data-url="{{ route('repo.show',[$repository->RepositoryId]) }}"
+                <div class="row" style="min-height: 10vh;"
+                     data-url="{{ route('repo.show',[$repository->RepositoryId]) }}"
                      id="repositoriesContents"></div>
                 <div class="d-grid text-center" id="repositoriesMessage"></div>
             </div>
@@ -795,6 +796,56 @@
                             </div>
                         </form>
                     </div>
+                    <div class="onboarding-content with-gradient d-none modal-item" id="updateRepositoryModal">
+                        <form method="post" id="updateRepositoryForm">
+                            @csrf
+                            <div class="mb-3">@method('PUT')
+                                <label class="form-label" for="e_repository_name">Name <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="e_repository_name" name="repository_name"
+                                       placeholder="Name">
+                                <p id="e_repository_name_error" class="invalid-feedback d-none error col-12"
+                                   role="alert"></p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" for="e_repository_description">Description </label>
+                                <textarea name="repository_description" id="e_repository_description" rows="3"
+                                          class="form-control"></textarea>
+                                <p id="e_repository_description_error" class="invalid-feedback d-none error col-12"
+                                   role="alert"></p>
+                            </div>
+                            <hr>
+                            <div class="mt-4">
+                                <button type="button" class="btn btn-secondary float-start" data-bs-dismiss="modal">
+                                    cancel
+                                </button>
+                                <button class="btn btn-primary float-end" id="updateRepositoryBtn" type="submit">
+                                    <i class="fas fa-save"></i> rename
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="onboarding-content with-gradient d-none modal-item text-center"
+                         id="trashRepositoryModal">
+                        <h4 class="text-danger">
+                            Trash Repository <b class="rm-repo-name"></b> ?
+                        </h4>
+                        <div class="alert alert-warning" role="alert">
+                            <b>Note</b> by continuing, this will delete all the files (documents) and folders inside
+                        </div>
+                        <form id="trashRepositoryForm" method="post"> @csrf
+                            <div class="mt-4">@method('delete')
+                                <button type="button" class="btn btn-secondary float-start"
+                                        data-bs-dismiss="modal">
+                                    no, cancel
+                                </button>
+                                <button class="btn btn-danger float-end" id="trashRepositoryBtn"
+                                        type="submit"><i
+                                        class="fas fa-trash"></i> yes, trash
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -824,7 +875,6 @@
                 $("#uploadCard").removeClass('d-none');
 
             });
-
             $(document).on('click', '#uploadCardClose', function () {
                 $("#uploadCard").addClass('d-none');
                 $("#action-file-upload").removeClass('d-none');
@@ -837,7 +887,6 @@
                 $Modal.children().first().removeClass('modal-lg');
                 $Modal.modal('show');
             });
-
             $('form#createRepositoryForm').submit(async function (e) {
                 e.preventDefault();
                 const response = await saveForm($(this), $('#createRepositoryBtn'), false, true, true)
@@ -845,6 +894,44 @@
                     $Modal.modal('hide');
                     _appendRepository(response.data);
 
+                }
+            });
+
+            $(document).on('click', '.repo-action-update', function () {
+                const data = $(this).data('info').split('~');
+                $(".modal-title").html('Update Repo  : ' + data[1]);
+                $("#e_repository_name").val(data[1]);
+                $("#e_repository_description").html(data[2]);
+                $("#updateRepositoryForm").attr('action', data[3]);
+                $(".modal-item").addClass('d-none');
+                $('#updateRepositoryModal').removeClass('d-none');
+                $Modal.modal('show');
+            });
+            $('form#updateRepositoryForm').submit(async function (e) {
+                e.preventDefault();
+                const response = await saveForm($(this), $('#updateRepositoryBtn'), false, true, true, true)
+                if (response) {
+                    $Modal.modal('hide');
+                    $('#' + response.data.id).remove();
+                    _appendRepository(response.data);
+                }
+            });
+
+            $(document).on('click', '.repo-action-trash', function () {
+                const data = $(this).data('info').split('~');
+                $(".modal-title").html('<b class="text-danger">Trash</b> Repository : ' + data[1]);
+                $("#trashRepositoryForm").attr('action', data[2]);
+                $(".rm-repo-name").html(data[1]);
+                $(".modal-item").addClass('d-none');
+                $('#trashRepositoryModal').removeClass('d-none');
+                $Modal.modal('show');
+            });
+            $('form#trashRepositoryForm').submit(async function (e) {
+                e.preventDefault();
+                const response = await saveForm($(this), $('#trashRepositoryBtn'), false, true, true);
+                if (response) {
+                    $('#' + response.data.id).remove();
+                    $Modal.modal('hide');
                 }
             });
 
@@ -871,23 +958,25 @@
                     return;
                 }
                 parent.data('url', url);
-                cmtMsg.html('<button type="button" class="btn btn-primary" onclick="_appendRepository()">Load more</button>');
+                cmtMsg.html('<button type="button" class="btn btn-primary" onclick="fetchRepositories()">Load more</button>');
             }).fail(function (e) {
                 formRequest(e)
             });
         }
 
-
         function _appendRepository(repo) {
-            let content = '<div class="col-md-6 col-xl-3 dbl-click-redirect-data" id="' + repo.id + '"  data-dbl_click_url="' + repo.links.route + '"> ' +
+            let content = '<div class="col-md-6 col-xl-3 dbl-click-redirect-data" id="' + repo.id + '"  data-dbl_click_url="' + repo.links.route + '" > ' +
                 '<div class="card"> <div class="card-body"> <div class="d-flex"> <div class="flex-shrink-0"> <svg class="pc-icon wid-40 hei-40 ';
             content += (repo.visibility.value === '{{ VisibilityEnum::Private->value }}') ? ' text-warning' : ' text-primary';
             content += '"> <use xlink:href="#custom-folder-open"></use> </svg> </div> <div class="flex-grow-1 mx-3">' +
                 '<h5 class="mb-1 d-grid"><span class="text-truncate w-100">' + repo.name + '</span></h5> <p class="mb-0"><small>';
-
             content += (repo.files.count >= 1) ? repo.files.string + ' file(s)' : 'empty';
-            content += '</small></p></div></div> </div> </div> </div>';
-            $('#repositoriesContents').append(content);
+            content += '</small></p></div>' +
+                ' <div class="dropdown"><a class="avtar avtar-xs btn-link-secondary dropdown-toggle arrow-none" href="javascript:void(0)" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="material-icons-two-tone f-18">more_vert</i></a><div class="dropdown-menu dropdown-menu-end">' +
+                '<a class="dropdown-item repo-action-update" data-info="' + repo.id + '~' + repo.name + '~' + repo.description + '~' + repo.links.route + '" href="javascript:void(0)">Rename</a>' +
+                '<a class="dropdown-item click-summary-data" href="javascript:void(0)" data-summary_title="<i class=\'fas fa-folder-open\'></i> ' + repo.name + ' " data-click_url="' + repo.links.summary + '">Permissions</a> ' +
+                '<a class="dropdown-item repo-action-trash" href="javascript:void(0)" data-info="' + repo.id + '~' + repo.name + '~' + repo.links.route + '">Trash</a></div> </div></div> </div> </div> </div>';
+            $('#repositoriesContents').append(content).fadeIn(500);
         }
 
         async function fetchFiles() {

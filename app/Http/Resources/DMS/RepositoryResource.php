@@ -32,7 +32,8 @@ class RepositoryResource extends JsonResource
                 'string' => $this->ModifiedOn->diffForHumans(),
             ],
             'links' => [
-                'route' => route('repo.show', $this->RepositoryId)
+                'route' => route('repo.show', $this->RepositoryId),
+                'summary' => route('repo.edit', $this->RepositoryId)
             ]
         ];
     }

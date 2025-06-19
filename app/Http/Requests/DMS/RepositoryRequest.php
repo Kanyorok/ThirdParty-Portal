@@ -18,11 +18,10 @@ class RepositoryRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        return array_merge_recursive([
             'repository_name' => ['required', 'string', 'min:3', 'max:255'],
-            'repository_parent' => ['required', 'string', 'max:255'],
             'repository_description' => ['nullable', 'string', 'min:3', 'max:255'],
-        ];
+        ], ($this->isMethod('POST') ? ['repository_parent' => ['required', 'string', 'max:255']] : []));
     }
 
     public function getParentRepo(): Repository
