@@ -11,7 +11,6 @@
 @endsection
 @section('content')
     <div class="mb-3">
-        <h1 class="h3 d-inline align-middle">@yield('title')</h1>
         <button class="btn btn-primary float-end ms-2 modal-create-item" type="button"><i
                 class="fas fa-plus-circle"></i> New
             Requisition

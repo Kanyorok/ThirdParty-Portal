@@ -10,7 +10,6 @@
 @endsection
 @section('content')
     <div class="mb-3">
-        <h1 class="h3 d-inline align-middle">@yield('title')</h1>
         <button class="btn btn-primary float-end ms-2 modal-create-item" type="button"><i class="fas fa-plus-circle"></i> Add
             Items
         </button>
@@ -260,7 +259,7 @@
                             // LineItem ID
                             $('#LineItemID').val(itemData.LineItemID || '');
 
-                            // ✅ Remaining Qty logic with color badges
+                            // Remaining Qty logic with color badges
                             let remainingQty = parseFloat(itemData.RemainingQty ?? 0);
                             if (!isNaN(remainingQty)) {
                                 if (remainingQty > 0) {
@@ -269,7 +268,7 @@
                                     );
                                 } else {
                                     $('#QtyAvailable').html(
-                                        `<span class="badge bg-danger">Available Qty: 0</span>`
+                                        `<span class="badge bg-danger">Not Applicable or Available Qty Already Zero</span>`
                                     );
                                 }
                             } else {
