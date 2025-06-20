@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('t_BudgetManualEntryAllocations', function (Blueprint $table) {
             $table->id('Id');
+            $table->foreignId('EntryID')->constrained('t_BudgetManualEntry', 'Id');
             $table->foreignId('BudgetID')->constrained('t_Budgets', 'Id');
             $table->string('Month');
             $table->decimal('Allocation', 15, 2)->default(0);

@@ -13,7 +13,7 @@ class BudgetManualEntryAllocations extends Model
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
-    
+
     protected $table = 't_BudgetManualEntryAllocations';
     protected $primaryKey = 'Id';
 
@@ -23,6 +23,7 @@ class BudgetManualEntryAllocations extends Model
     }
 
     protected $fillable = [
+        'EntryID',
         'BudgetID',
         'Month',
         'Allocation',

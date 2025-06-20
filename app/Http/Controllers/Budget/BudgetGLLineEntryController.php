@@ -63,6 +63,7 @@ public function store(Request $request)
 
         foreach ($request->monthly_allocations as $month => $allocation) {
                 BudgetManualEntryAllocations::create([
+                    'EntryID' => $entry->Id,
                     'BudgetID' => $request->BudgetID,
                     'Month' => str_pad($month, 2, '0', STR_PAD_LEFT),
                     'Allocation' => $allocation,
