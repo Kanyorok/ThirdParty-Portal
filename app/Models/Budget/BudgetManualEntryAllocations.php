@@ -45,4 +45,8 @@ class BudgetManualEntryAllocations extends Model
         return $this->belongsTo(Budget::class, 'BudgetID', 'Id');
     }
 
+    public function entry()
+    {
+        return $this->hasMany(BudgetManualEntry::class, 'EntryID', 'Id');
+    }
 }
