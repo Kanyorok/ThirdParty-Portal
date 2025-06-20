@@ -124,8 +124,7 @@
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label" for="ProcurementPlan">Procurement Plan <span
-                                        class="text-danger">*</span></label>
+                                <label class="form-label" for="ProcurementPlan">Procurement Plan</label>
                                 <select class="form-control" name="ProcurementPlan" id="ProcurementPlan">
                                     <option selected value="">Select Procurement Plan</option>
                                     @foreach ($procurementPlans  as $procurementPlan )
@@ -139,7 +138,10 @@
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label" for="Remarks">Remarks </label>
+                                <div>
+                                    <label class="form-label" for="Remarks">Remarks <span
+                                            class="text-danger">*</span</label>
+                                </div>
                                 <textarea name="Remarks" id="Remarks" rows="3" class="form-control" maxlength="1000"
                                           required></textarea>
                                 <p id="Remarks_error" class="invalid-feedback d-none error col-12" role="alert"></p>

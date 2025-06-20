@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Edit Schedule')
+@section('title', 'Item Scheduling')
 @section('content')
 
     <div class="container mt-4">
@@ -38,6 +38,8 @@
                 <p><strong>Item Name:</strong> {{ $lineItem->item->ItemName ?? 'Unnamed Item' }}</p>
                 <p><strong>Instructions:</strong> Choose whether to break down each item by Quarter or Month, and update
                     the quantity accordingly.</p>
+                <p><strong>Max Amount Available For Schedule:</strong> {{ $lineItem->MergedQty ?? '0' }} units</p>
+                </p>
             </div>
 
             <div class="form-group mb-4">

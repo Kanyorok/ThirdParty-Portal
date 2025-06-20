@@ -8,6 +8,7 @@ use App\Models\Procurement\RequisitionLine;
 use App\Models\Procurement\Requisitions;
 use App\Services\Procurement\Items\ItemService;
 use App\Services\Procurement\Requisition\RequisitionItemService;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -55,7 +56,13 @@ class RequisitionItemsController extends Controller
                 'success' => true,
                 'data' => $items,
             ]);}
-        catch(\Exception $e){
+        catch(Exception $e){
+            Log::error('Failed to fetch items', [
+                'type' => $type,
+                'requisition_id' => $request->query('requisition_id'),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch items.',
@@ -64,10 +71,9 @@ class RequisitionItemsController extends Controller
         }
     }
 
-    public function getItemDetails($item): JsonResponse
+    public function getItemDetails(Request $request, $item): JsonResponse
     {
-        try{
-
+        try {
             if (empty($item)) {
                 return response()->json([
                     'success' => false,
@@ -75,12 +81,23 @@ class RequisitionItemsController extends Controller
                 ], 400);
             }
 
-            $details = $this->itemService->getItemDetails($item);
+
+            // Extract requisition_id from query
+            $requisitionId = $request->query('requisition_id');
+            $planId = null;
+
+            if ($requisitionId) {
+                $planId = DB::table('t_Requisitions')->where('Id', $requisitionId)->value('PlanRef');
+            }
+
+            // Pass planId to the service
+            $details = $this->itemService->getItemDetails($item, $planId);
+
             return response()->json([
                 'success' => true,
                 'data' => $details,
-            ]);}
-        catch(\Exception $e){
+            ]);
+        } catch (Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch items.',
@@ -97,7 +114,7 @@ class RequisitionItemsController extends Controller
                 'success' => true,
                 'data' => $details,
             ]);}
-        catch(\Exception $e){
+        catch(Exception $e){
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch inventory.',
@@ -116,7 +133,7 @@ class RequisitionItemsController extends Controller
         try {
             $details = $this->service->getRequisitionItems();
             return view('procurement.requisitionItems.priorityList', compact('details'));
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return redirect()->back()->with('error', 'Failed to fetch items: ' . $e->getMessage());
         }
     }
@@ -130,7 +147,7 @@ class RequisitionItemsController extends Controller
         try {
             $details = $this->service->getRequisitionItems();
             return view('procurement.requisitionItems.create', compact('details'));
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return redirect()->back()->with('error', 'Failed to fetch items: ' . $e->getMessage());
         }
     }
@@ -142,10 +159,8 @@ class RequisitionItemsController extends Controller
     public function store(RequisitionItemRequest $request): JsonResponse
     {
         $this->authorize('create', RequisitionLine::class);
-//        dd($request->all());
         try {
             $validatedData = $request->validated();
-
 
             $actor = $request->user();
             if (!$actor) {
@@ -157,8 +172,10 @@ class RequisitionItemsController extends Controller
                 $validatedData['RequisitionID'],
                 $validatedData['Item'],
                 $validatedData['Quantity'],
-//                $validatedData['NeededBy'],
                 $validatedData['Urgency'],
+                $validatedData['UOM'],
+                $validatedData['EstimatedPrice'],
+                $validatedData['LineItemID'],
                 $actor
             );
 
@@ -181,7 +198,7 @@ class RequisitionItemsController extends Controller
                 'error' => $requisitionAddLines['error'] ?? 'Unknown error'
             ], 500);
 
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::error('Exception occurred while creating requisitionLines.', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
@@ -197,14 +214,14 @@ class RequisitionItemsController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show($id)
     {
 //        dd($id);
         $this->authorize('view', Requisitions::query()->findOrFail($id));
         try {
             $details = $this->service->getRequisitionRelatedItems($id);
             return view('procurement.requisitionItems.create', compact('details'));
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return redirect()->back()->with('error', 'Failed to fetch items: ' . $e->getMessage());
         }
     }

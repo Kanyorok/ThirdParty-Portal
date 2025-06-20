@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\Property\PropertyRegistryController;
 use App\Http\Controllers\Property\PropertyAttachmentsController;
 use App\Http\Controllers\Property\PropertyBlockController;
 use App\Http\Controllers\Property\PropertyCategoryController;
@@ -17,12 +16,14 @@ use App\Http\Controllers\Property\PropertyNewLeaseController;
 use App\Http\Controllers\Property\PropertyNewTenantController;
 use App\Http\Controllers\Property\PropertyPaymentFrequencyController;
 use App\Http\Controllers\Property\PropertyReceiptController;
+use App\Http\Controllers\Property\PropertyRegistryController;
 use App\Http\Controllers\Property\PropertyReportsController;
 use App\Http\Controllers\Property\PropertyReportsVisualController;
 use App\Http\Controllers\Property\PropertyTenantClearanceController;
 use App\Http\Controllers\Property\PropertyTypeController;
 use App\Http\Controllers\Property\PropertyUnitController;
 use App\Http\Controllers\Property\RentDashboardController;
+use App\Http\Controllers\Property\ReportsController;
 use App\Http\Controllers\Property\TenantStatementController;
 use Illuminate\Support\Facades\Route;
 
@@ -100,4 +101,9 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::resource('propertyanalytics', PropertyReportsVisualController::class);
 
 
+    Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('property-reports.export');
+    Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
+        'index' => 'property-reports.index',
+        'show' => 'property-reports.show'
+    ]);
 });

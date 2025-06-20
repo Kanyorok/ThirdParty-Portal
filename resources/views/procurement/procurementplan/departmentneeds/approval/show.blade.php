@@ -1,3 +1,4 @@
+@php use Carbon\Carbon; @endphp
 @extends('layouts.app')
 @section('title', 'View Procurement Need')
 
@@ -41,13 +42,13 @@
             <div class="col-md-6">
                 <label class="form-label fw-semibold">Required By</label>
                 <div class="form-control-plaintext border rounded bg-light px-3 py-2">
-                    {{ \Carbon\Carbon::parse($need->RequestedDate)->format('d M Y') }}
+                    {{ Carbon::parse($need->RequestedDate)->format('d/m/Y') }}
                 </div>
             </div>
             <div class="col-md-6">
                 <label class="form-label fw-semibold">Submitted On</label>
                 <div class="form-control-plaintext border rounded bg-light px-3 py-2">
-                    {{ \Carbon\Carbon::parse($need->CreatedOn)->format('d M Y') }}
+                    {{ Carbon::parse($need->CreatedOn)->format('d/m/Y') }}
                 </div>
             </div>
 

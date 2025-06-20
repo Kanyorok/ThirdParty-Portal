@@ -47,7 +47,7 @@
             <td>{{ $plan->createdBy->Name ?? 'N/A' }}</td>
             <td>
               @if($plan->CreatedDate)
-                {{ (new DateTime($plan->CreatedDate))->format('Y-m-d') }}
+                    {{ (new DateTime($plan->CreatedDate))->format('d/m/Y') }}
               @else
                 N/A
               @endif
