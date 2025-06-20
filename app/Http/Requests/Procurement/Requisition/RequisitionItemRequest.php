@@ -16,13 +16,15 @@ class RequisitionItemRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'RequisitionID' => ['nullable', 'integer'],
+
+            'RequisitionID' => ['required', 'integer'],
             'Type' => ['required', 'string'],
             'Item' => ['required', 'integer'],
             'Quantity' => ['required', 'numeric'],
             'Urgency' => ['required', 'integer'],
-            'UOM' => ['nullable', 'string'],
-            'CategoryId' => ['nullable', 'integer'],
+            'UOM' => ['required', 'integer'],
+             'EstimatedPrice' => ['nullable', 'numeric'],
+             'LineItemID' => ['nullable', 'integer'],
         ];
     }
 
@@ -37,17 +39,17 @@ class RequisitionItemRequest extends FormRequest
             $requestedQty = $this->input('Quantity');
 
             if ($requisitionId && $itemId && $requestedQty) {
-                // ✅ Fetch PlanRef from requisition
+                // Fetch PlanRef from requisition
                 $planId = DB::table('t_Requisitions')->where('Id', $requisitionId)->value('PlanRef');
 
                 if ($planId) {
-                    // ✅ Fetch original plan quantity
+                    // Fetch original plan quantity
                     $originalQty = DB::table('t_PlanLineItem')
                         ->where('PlanID', $planId)
                         ->where('ItemID', $itemId)
                         ->value('OriginalQty');
 
-                    // ✅ Sum of already requisitioned quantities for this item and plan
+                    // Sum of already requisitioned quantities for this item and plan
                     $alreadyUsedQty = DB::table('t_RequisitionLines as rl')
                         ->join('t_Requisitions as r', 'rl.RequisitionID', '=', 'r.Id')
                         ->where('r.PlanRef', $planId)

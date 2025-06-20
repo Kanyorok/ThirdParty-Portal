@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Add Requisition')
+@section('title', 'Add Requisition Items')
 @section('styles')
     <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
     <style>
@@ -41,9 +41,7 @@
                         <tbody>
                         @forelse($details as $item)
                             <tr>
-                                <td>{{ $item->Id }}</td>
-                                {{--                                <td>{{ $item->RequisitionID }}</td> --}}
-                                {{--                                    <td>{{ $item->Module }}</td>--}}
+                                <td>{{  $loop->iteration }}</td>
                                 <td>{{ $item->Type }}</td>
 {{--                                <td>{{ $item->Category }}</td>--}}
                                 <td>{{ $item->ItemName }}</td>
@@ -141,12 +139,12 @@
                             <input type="hidden" name="EstimatedPrice" id="EstimatedPrice">
 
 {{--                            <div class="mb-3">--}}
-{{--                                <label class="form-label" for="NeededBy">Needed By </label>--}}
+{{--                                <label class="form-label" for="LineItemID">LineItemID </label>--}}
 
-{{--                                <input type="date" class="form-control" id="NeededBy" name="NeededBy"--}}
-{{--                                       required>--}}
+                                <input type="hidden" class="form-control" id="LineItemID" name="LineItemID"
+                                       readonly>
 
-{{--                                <p id="NeededBy_error" class="invalid-feedback d-none error col-12" role="alert">--}}
+{{--                                <p id="LineItemID_error" class="invalid-feedback d-none error col-12" role="alert">--}}
 {{--                                </p>--}}
 {{--                            </div>--}}
 
@@ -203,7 +201,7 @@
                 $('#createRequisitionItem').removeClass('d-none');
                 $Modal.modal('show');
             });
-
+            
             $('form#createRequisitionItemForm').submit(async function (e) {
                 e.preventDefault();
                 if (await saveForm($(this), $('#createRequisitionItemBtn'), true, true, true)) {
@@ -255,9 +253,9 @@
                                 );
 
                                 // Set estimated price
-                                $('#EstimatedPrice').val(itemData.UnitPrice);
-
-                                // ✅ Display available quantity
+                                $('#EstimatedPrice').val(itemData.UnitPrice || 0);
+                                $('#LineItemID').val(item.LineItemID || '');
+                                // Display available quantity
                                 if (itemData.OriginalQty && itemData.OriginalQty > 0) {
                                     $('#QtyAvailable').text(`Available Qty: ${itemData.OriginalQty}`);
                                 } else {
@@ -279,6 +277,9 @@
                     });
                 } else {
                     $('#UOM').empty().append('<option value="">Select UOM</option>');
+                    // $('#Description').val('');
+                    $('#EstimatedPrice').val(0);
+                    $('#LineItemID').val('');
                     $('#EstimatedPrice').val('');
                     $('#QtyAvailable').text('');
                 }
