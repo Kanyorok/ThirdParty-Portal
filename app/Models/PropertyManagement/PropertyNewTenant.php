@@ -23,6 +23,7 @@ class PropertyNewTenant extends Model
         'Nationality',
         'PostalAddress',
         'Remarks',
+        'IsActive',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy'

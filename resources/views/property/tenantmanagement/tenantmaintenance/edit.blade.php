@@ -70,6 +70,7 @@
                     </div>
                 </div>
 
+
                 <!-- Documents Upload -->
                 <div class="mb-3">
                     <label class="form-label">Upload New Documents (optional)</label>
@@ -79,14 +80,11 @@
 
                 <!-- Status -->
                 <div class="row g-3 mb-4">
-                    <div class="col-md-3">
                         <label class="form-label">Status</label>
-                        <select name="Status" class="form-select">
-                            <option value="Active" {{ $newtenant->Status == 'Active' ? 'selected' : '' }}>Active</option>
-                            <option value="Inactive" {{ $newtenant->Status == 'Inactive' ? 'selected' : '' }}>Inactive</option>
-                            <option value="Blacklisted" {{ $newtenant->Status == 'Blacklisted' ? 'selected' : '' }}>Blacklisted</option>
+                        <select class="form-select" name="IsActive">
+                        <option value="1">Active</option>
+                        <option value="0">Inactive</option>
                         </select>
-                    </div>
                 </div>
 
                 <!-- Buttons -->

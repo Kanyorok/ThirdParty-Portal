@@ -234,26 +234,19 @@ class CodeDetailSeeder extends Seeder
 
         ]);
 
-<<<<<<< Updated upstream
+
         //// Budget System Codes
             DB::table('t_CodeDetails')->insert([
             [
                 'CodeID' => "GLAccountType",
                 'Value'=>'A',
                 'Description' => 'Assets',
-=======
-        DB::table('t_CodeDetails')->insert([
-            [
-                'CodeID' => "TenantType",
-                'Description' => 'Individulal',
->>>>>>> Stashed changes
                 'CreatedOn' => $date,
                 'CreatedBy' => $user->Id,
                 'ModifiedOn' => $date,
                 'ModifiedBy' => $user->Id,
             ],
             [
-<<<<<<< Updated upstream
                 'CodeID' => "GLAccountType",
                 'Value'=>'L',
                 'Description' => 'Liabilities',
@@ -275,16 +268,54 @@ class CodeDetailSeeder extends Seeder
                 'CodeID' => "GLAccountType",
                 'Value'=>'E',
                 'Description' => 'Expenses',
-=======
-                'CodeID' => 'TenantType',
-                'Description' => 'Corporate',
->>>>>>> Stashed changes
                 'CreatedOn' => $date,
                 'CreatedBy' => $user->Id,
                 'ModifiedOn' => $date,
                 'ModifiedBy' => $user->Id,
             ],
+        ]);
 
+        DB::table('t_CodeDetails')->insert([
+            [
+                'CodeID' => "TenantType",
+                'Description' => 'Individulal',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+            [
+                'CodeID' => "TenantType",
+                'Description' => 'Corporate',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+            [
+                'CodeID' => "TenantType",
+                'Description' => 'Government',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+            [
+                'CodeID' => "TenantType",
+                'Description' => 'NGO',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+            [
+                'CodeID' => "TenantType",
+                'Description' => 'Other',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
         ]);
     }
 }

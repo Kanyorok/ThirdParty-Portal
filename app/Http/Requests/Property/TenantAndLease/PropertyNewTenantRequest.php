@@ -29,7 +29,8 @@ class PropertyNewTenantRequest extends FormRequest
             'EmailAddress' => 'required|string|max:100',
             'Nationality' => 'required|string|max:50',
             'PostalAddress' => 'required|string|max:50',
-            'Remarks' => 'required|string|max:255'
+            'Remarks' => 'required|string|max:255',
+            'IsActive' => 'boolean'
         ];
     }
 }

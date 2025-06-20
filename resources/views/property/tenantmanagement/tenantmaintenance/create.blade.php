@@ -56,6 +56,13 @@
           <label class="form-label">Remarks</label>
             <input type="text" class="form-control" name="Remarks" placeholder="Optional">
         </div>
+      <div>
+        <label class="form-label">Status</label>
+        <select class="form-select" name="IsActive">
+          <option value="1">Active</option>
+          <option value="0">Inactive</option>
+        </select>
+      </div>
       </div>
 
       <!-- Document Upload -->

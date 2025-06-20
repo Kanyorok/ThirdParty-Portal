@@ -33,10 +33,16 @@
           <td>{{ $newtenant->PhoneNumber ?? '-' }}</td>
           <td>{{ $newtenant->EmailAddress ?? '-' }}</td>
           <td>{{ $newtenant->Remarks ?? '-' }}</td>
-        <td><span class="badge bg-success">Active</span></td>
+          <td>
+            @if($newtenant->IsActive == 1)
+              <span class="badge bg-success">Active</span>
+              @else
+              <span class="badge bg-danger">Inactive</span>
+              @endif
+            </td>
         <td>
-            <a href="{{ route('addtenant.show', $newtenant->Id) }}" class="btn btn-sm btn-info">👁 View</a>
-          <a href="{{ route('addtenant.edit') }}" class="btn btn-sm btn-outline-warning">✏️ Edit</a>
+          <a href="{{ route('addtenant.show', $newtenant->Id) }}" class="btn btn-sm btn-info">👁 View</a>
+          <a href="{{ route('addtenant.edit', $newtenant->Id) }}" class="btn btn-outline-primary btn-sm">✏️ Edit</a>
         </td>
       </tr>
     @endforeach

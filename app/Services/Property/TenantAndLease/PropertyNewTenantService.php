@@ -24,6 +24,7 @@ class PropertyNewTenantService
         string $Nationality,
         string $PostalAddress,
         string $Remarks,
+        bool $IsActive,
         User $user
     ): self {
         $newtenant = PropertyNewTenant::create([
@@ -35,6 +36,7 @@ class PropertyNewTenantService
             'Nationality' => $Nationality,
             'PostalAddress' => $PostalAddress,
             'Remarks' => $Remarks,
+            'IsActive' => $IsActive,
             'CreatedBy' => $user->Id,
             'ModifiedBy' => $user->Id,
         ]);
@@ -56,6 +58,7 @@ class PropertyNewTenantService
         string $Nationality,
         string $PostalAddress,
         string $Remarks,
+        bool $IsActive,
         User $user
     ): self {
         $propertyNewTenant->update([
@@ -67,6 +70,7 @@ class PropertyNewTenantService
             'Nationality' =>$Nationality,
             'PostalAddress' => $PostalAddress,
             'Remarks' => $Remarks,
+            'IsActive' => $IsActive,
             'ModifiedBy' => $user->Id,
         ]);
 

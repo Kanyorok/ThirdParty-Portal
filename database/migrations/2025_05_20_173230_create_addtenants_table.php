@@ -20,13 +20,13 @@ return new class extends Migration {
             $table->string('Nationality');
             $table->string('PostalAddress');
             $table->string('Remarks');
+            $table->boolean('IsActive')->default(true);
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
             $table->dateTime('ModifiedOn');
             $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
             $table->softDeletes('DeletedOn');
-
         });
     }
 

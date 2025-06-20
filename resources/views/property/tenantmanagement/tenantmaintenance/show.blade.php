@@ -27,6 +27,16 @@
 
                 <dt class="col-sm-4">Remarks</dt>
                 <dd class="col-sm-8 text-muted">{{ $newtenant->Remarks ?? '-' }}</dd>
+
+                <dt class="col-sm-4">Status</dt>
+                <dd class="col-sm-8">
+                    @if($newtenant->IsActive == 1)
+                        <span class="badge bg-success">Active</span>
+                    @else
+                        <span class="badge bg-danger">Inactive</span>
+                    @endif
+                </dd>
+
             </dl>
         </div>
         <div class="card-footer bg-light d-flex justify-content-end gap-2">

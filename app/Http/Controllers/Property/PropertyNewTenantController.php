@@ -63,6 +63,7 @@ class PropertyNewTenantController extends Controller
                 $data['Nationality'],
                 $data['PostalAddress'],
                 $data['Remarks'],
+                $data['IsActive'],
                 $request->user()
             );
 
@@ -89,6 +90,7 @@ class PropertyNewTenantController extends Controller
             $data['Nationality'],
             $data['PostalAddress'],
             $data['Remarks'],
+            $data['IsActive'],
             $request->user()
         );
 
