@@ -116,11 +116,6 @@
         </div>
     @endif
  
-    <div class="mt-4 text-end">
-        <a href="{{ route('budgetprojections.create') }}" class="btn btn-success">
-            ➕ Add New Allocation
-        </a>
-    </div>
 </div>
  
  

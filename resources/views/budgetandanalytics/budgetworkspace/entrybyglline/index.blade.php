@@ -2,10 +2,7 @@
 @section('title', 'Budget Entry Listing')
 @section('content')
     <div class="card mt-4">
-        <div class="mb-2 d-flex justify-content-between">
-   <a href="{{ route('entrybyglline.create') }}" class="btn btn-success">➕ Add Entry</a>
-
-        </div>
+      
         <div class="card-header bg-dark text-white">📑 Budget Entries by Line</div>
         <div class="card-body">
             <!-- Filters -->
@@ -21,9 +18,16 @@
                     <button class="btn btn-primary w-100">Filter</button>
                 </div> --}}
             </form>
+            <div>
+                <p class="text-muted">This page lists all budget entries by budget line. You can view, edit, or delete entries as needed.</p>
+            </div>
 
             <!-- Budget Table -->
+              <div class="mb-2 d-flex justify-content-between">
+                    <a href="{{ route('entrybyglline.create') }}" class="btn btn-success">➕ Add Entry</a>
+              </div>
             <div style="overflow-x: auto;">
+                @if($entries->count())
                 <table class="table table-bordered table-striped text-center" style="min-width: 800px;">
                     <thead class="table-light">
                         <tr>
@@ -37,19 +41,26 @@
                         </tr>
                     </thead>
                     <tbody>
+                        @foreach ($entries as $item)
                         <tr>
-                            <td>1</td>
-                            <td>Budget</td>
-                            <td>Main Branch</td>
-                            <td>Salaries – Staff Costs</td>
-                            <td>500,000</td>
+                            <td>{{ $loop->iteration}}</td>
+                            <td>{{$item->budget->Name}}</td>
+                            <td>{{$item->branch->Name}}</td>
+                            <td>{{$item->budgetLine->LineName}}</td>
+                            <td>{{ $item->Amount}}</td>
                             <td>Manual Entry</td>
                             <td>
-                                <a href="{{ route('entrybyglline.show', 1) }}" class="btn btn-sm btn-info">View Allocations</a>
+                                <a href="{{ route('entrybyglline.show', $item->Id) }}" class="btn btn-sm btn-info">View Allocations</a>
                             </td>
                         </tr>
+                        @endforeach
                     </tbody>
                 </table>
+                @else
+                <div class="alert alert-info text-center">
+                    <strong>No budget entries found.</strong> Please add a new entry to get started.
+                </div>
+                @endif
             </div>
 
         </div>

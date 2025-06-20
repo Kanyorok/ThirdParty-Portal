@@ -43,22 +43,22 @@ class YieldRateController extends Controller
 
         //Validate request
         $validated = $request->validate([
-            'PeriodTypeID'   => 'required|integer|exists:t_BudgetPeriodTypes,id',
+            // 'PeriodTypeID'   => 'required|integer|exists:t_BudgetPeriodTypes,id',
             'ProductTypeID'  => 'required|integer|exists:t_BudgetProductTypes,id',
             'RateTypeID'     => 'required|integer|exists:t_BudgetRates,id',
             'RateValue'      => 'required|numeric|min:0|max:100',
-            'EffectiveDate'  => 'required|date',
+            // 'EffectiveDate'  => 'required|date',
             'Source'         => 'required|string|max:100',
         ]);
 
         DB::beginTransaction();
         try {
             $driverRate=BudgetDriverRates::create([
-                'PeriodTypeID'   => $validated['PeriodTypeID'],
+                'PeriodTypeID'   => 1, //for nullable period type
                 'ProductTypeID'  => $validated['ProductTypeID'],
                 'RateTypeID'     => $validated['RateTypeID'],
                 'RateValue'      => $validated['RateValue'],
-                'EffectiveDate'  => $validated['EffectiveDate'],
+                'EffectiveDate'  => 1, //for nullable effective date
                 'Source'         => $validated['Source'],
                 'CreatedBy' =>Auth::Id(),
                 'ModifiedBy' => Auth::Id()

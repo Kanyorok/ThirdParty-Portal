@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Budget;
 
+use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Budget\Budget;
 use App\Models\Budget\BudgetLine;
@@ -18,11 +19,21 @@ class BudgetGLLineEntryController extends Controller
     //
     public function index()
     {
-        return view('budgetandanalytics.budgetworkspace.entrybyglline.index');
+
+        $this->authorize(PermissionEnum::BudgetSetupView, BudgetManualEntry::class);
+
+        $entries = BudgetManualEntry::with([
+            'budget:Id,Name',
+            'branch:Id,Name',
+            'budgetLine:Id,LineName',])
+            ->get();
+
+        return view('budgetandanalytics.budgetworkspace.entrybyglline.index', compact('entries'));
     }
 
     public function create()
     {
+
         $budgets=Budget::select('Id','Name')->get();
         $branches=Branch::select('Id','Name')->get();
         $budgetLines=BudgetLine::select('Id','LineName')->get();
@@ -92,6 +103,18 @@ public function store(Request $request)
         return redirect()->back()->withErrors(['error' => 'Failed to save budget entry. ' . $e->getMessage()]);
     }
 }
+
+    public function show($id)
+    {
+        $entry = BudgetManualEntry::with([
+            'budget:Id,Name',
+            'branch:Id,Name',
+            'budgetLine:Id,LineName',
+        ])->findOrFail($id);
+
+        $monthlyAllocations = BudgetManualEntryAllocations::where('EntryID', $id)->get();
+        return view('budgetandanalytics.budgetworkspace.entrybyglline.show', compact('entry', 'monthlyAllocations'));
+    }
 
 }
 
