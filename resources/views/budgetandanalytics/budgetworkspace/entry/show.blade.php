@@ -76,61 +76,40 @@
     <div class="card p-4">
     <h5>📊 Monthly Budget Allocations</h5>
     <p class="text-muted">Summary of budget allocations for each month</p>
- 
-    @if ($errors->any())
-        <div class="alert alert-danger">
-            <ul>
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
- 
+
     @php
         $months = [
             'Month 1', 'Month 2', 'Month 3', 'Month 4', 'Month 5', 'Month 6',
             'Month 7', 'Month 8', 'Month 9', 'Month 10', 'Month 11', 'Month 12'
         ];
-        // Group allocations by BudgetProjectionID
-        $grouped = $monthlyAllocations->groupBy('BudgetProjectionID');
+        $allocations = $monthlyAllocations;
     @endphp
- 
-    @if($grouped->count())
+
+    @if($allocations->count())
         <div class="alert alert-info">
             <strong>Note:</strong> Monthly allocations are set for the current period.
             You can update them as needed.
         </div>
-        <div class="table-responsive">
         <table class="table table-bordered table-hover align-middle">
             <thead class="table-light">
                 <tr>
-                    <th>#</th>
-                    @foreach ($months as $month)
-                        <th>{{ $month }}</th>
-                    @endforeach
-                    <th>Total</th>
+                    <th>Month</th>
+                    <th>Allocation Amount</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach ($grouped as $projectionId => $allocations)
+                @foreach ($months as $month)
+                    @php
+                        $alloc = $allocations->firstWhere('Month', $month);
+                        $amount = $alloc ? $alloc->Allocation : 0;
+                    @endphp
                     <tr>
-                        <td>{{ $loop->iteration }}</td>
-                        @php $total = 0; @endphp
-                        @foreach ($months as $month)
-                            @php
-                                $alloc = $allocations->firstWhere('Month', $month);
-                                $amount = $alloc ? $alloc->Allocation : 0;
-                                $total += $amount;
-                            @endphp
-                            <td>{{ number_format($amount, 2) }}</td>
-                        @endforeach
-                        <td><strong>{{ number_format($total, 2) }}</strong></td>
+                        <td>{{ $month }}</td>
+                        <td>{{ number_format($amount, 2) }}</td>
                     </tr>
                 @endforeach
             </tbody>
         </table>
-        </div>
     @else
         <div class="alert alert-warning">
             No monthly allocations found. Please add allocations to proceed.

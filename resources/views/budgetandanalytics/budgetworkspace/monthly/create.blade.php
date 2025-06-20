@@ -22,7 +22,8 @@
  
 <form action="{{route('monthly.store')}}" method="POST">
 @csrf
- 
+@method('POST')
+ <input type="hidden" name="projectionID" value="{{ $projectionID }}" >
 <div class="card mt-4 p-4">
     <h5>📆 Monthly Allocations</h5>
     <p class="text-muted">Enter allocation amounts with your Specified Currency</p>

@@ -65,38 +65,45 @@ public function index()
         return view('budgetandanalytics.budgetperiod.create', compact('types'));
     }
 
-    public function store(Request $request){
-        $validated=$request->validate([
-        'fiscalYear'  => 'required|string|max:10',
-        'periodType'  => 'required|string|max:20',
-        'notes'       => 'nullable|string',
+  public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'Name'        => 'required|string|max:255',
+            'FiscalYear'  => 'required|integer|min:2020|max:2100',
+            'From'        => 'required|date',
+            'To'          => 'required|date|after_or_equal:From',
+            'Notes'       => 'nullable|string|max:1000',
         ]);
-
+ 
         DB::beginTransaction();
-
-        try{
-            $period=BudgetPeriods::create([
-            'fiscalYear'  => $validated['fiscalYear'],
-            'periodType'  => $validated['periodType'],
-            'notes'       => $validated['notes'],
-            'CreatedBy' =>Auth::Id(),
-            'ModifiedBy' => Auth::Id()
+ 
+        try {
+            $budget = Budget::create([
+                'Name'        => $validated['Name'],
+                'FiscalYear'  => $validated['FiscalYear'],
+                'From'   => $validated['From'], // ensure your column names match this
+                'To'     => $validated['To'],
+                'Notes'       => $validated['Notes'] ?? null,
+                'CreatedBy'   => Auth::id(),
+                'ModifiedBy'  => Auth::id(),
             ]);
-
+ 
             DB::commit();
-
+ 
             activity()
-             ->performedOn(new BudgetPeriods())
+                ->performedOn($budget)
                 ->causedBy(Auth::user())
                 ->event('create')
                 ->withProperties(['action' => 'create'])
-                ->log('create periods');
-        return redirect()->route('budgetperiod.index')->with('success', 'Budget Period  created successfully.');
-        }catch(\Throwable $th){
+                ->log('Created a budget');
+ 
+            return redirect()->route('budgetperiod.index')->with('success', 'Budget created successfully.');
+ 
+        } catch (\Throwable $th) {
             DB::rollBack();
             Log::error('Failed to create budget: ' . $th->getMessage());
-
-            return back()->withErrors(['error'=>'Failed to create Period'])->withInput();
+ 
+            return back()->withErrors(['error' => 'Failed to create Budget'])->withInput();
         }
     }
 
