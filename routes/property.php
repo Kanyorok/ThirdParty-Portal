@@ -85,7 +85,7 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::put('propertyaddfloor/edit/{Id}',[PropertyFloorController::class,'update'])->name('addfloor.update');
 
 
-    Route::resource('addunit', PropertyUnitController::class);
+    //Route::resource('addunit', PropertyUnitController::class);
     Route::get('propertyaddunit', [PropertyUnitController::class,'index'])->name('addunit.index');
     Route::get('propertyaddunit/create', [PropertyUnitController::class,'create'])->name('addunit.create');
     Route::post('propertyaddunit', [PropertyUnitController::class,'store'])->name('addunit.store');
@@ -97,8 +97,18 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::put('propertyaddunit/edit/{Id}',[PropertyUnitController::class,'update'])->name('addunit.update');
 
 
+    //Route::resource('addtenant', PropertyNewTenantController::class);
+    Route::get('propertyaddtenant', [PropertyNewTenantController::class,'index'])->name('addtenant.index');
+    Route::get('propertyaddtenant/create', [PropertyNewTenantController::class,'create'])->name('addtenant.create');
+    Route::post('propertyaddtenant', [PropertyNewTenantController::class,'store'])->name('addtenant.store');
+    Route::get('propertyaddtenant/show/{id}', [PropertyNewTenantController::class,'show'])->name('addtenant.show');
+    Route::delete('propertyaddtenant/delete/{Id}', [PropertyNewTenantController::class,'destroy'])->name('addtenant.destroy');
+    Route::get('propertyaddtenant/edit/{Id}',[PropertyNewTenantController::class,'edit'])->name('addtenant.edit');
+    Route::put('propertyaddtenant/edit/{Id}',[PropertyNewTenantController::class,'update'])->name('addtenant.update'); 
+
+    
+    
     Route::resource('attachments', PropertyAttachmentsController::class);
-    Route::resource('addtenant', PropertyNewTenantController::class);
     Route::resource('addlease', PropertyNewLeaseController::class);
     Route::resource('schedulelease', PropertyLeaseScheduleController::class);
     Route::resource('renewlease', PropertyLeaseRenewalController::class);

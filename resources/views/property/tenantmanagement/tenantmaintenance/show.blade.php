@@ -1,37 +1,38 @@
 @extends('layouts.app')
-@section('title', 'Patent Details')
+@section('title', 'Property Management')
+
 @section('content')
-    <div class="container mt-5" style="max-width: 700px;">
-        <h3 class="mb-4">Patent Details</h3>
-        <div class="card">
-            <div class="card-body">
-                <dl class="row">
-                    <dt class="col-sm-4">Name</dt>
-                    <dd class="col-sm-8">{{ $newtenant->TenantName }}</dd>
+<div class="container mt-5" style="max-width: 720px;">
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Tenant Details</h5>
+            <span class="badge bg-light text-dark">{{ $newtenant->TenantName }}</span>
+        </div>
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-4">ID / Reg No.</dt>
+                <dd class="col-sm-8 text-muted">{{ $newtenant->IDRegistrationNo ?? '-' }}</dd>
 
-                    <dt class="col-sm-4">ID / Reg No.</dt>
-                    <dd class="col-sm-8">{{ $newtenant->IDRegistrationNo?? '-' }}</dd>
+                <dt class="col-sm-4">Phone</dt>
+                <dd class="col-sm-8 text-muted">{{ $newtenant->PhoneNumber ?? '-' }}</dd>
 
-                    <dt class="col-sm-4">Phone</dt>
-                    <dd class="col-sm-8">{{ $newtenant->PhoneNumber ?? '-' }}</dd>
+                <dt class="col-sm-4">Email</dt>
+                <dd class="col-sm-8 text-muted">{{ $newtenant->EmailAddress ?? '-' }}</dd>
 
-                    <dt class="col-sm-4">Email</dt>
-                    <dd class="col-sm-8">{{ $newtenant->EmailAddress ?? '-' }}</dd>
+                <dt class="col-sm-4">Nationality</dt>
+                <dd class="col-sm-8 text-muted">{{ $newtenant->Nationality ?? '-' }}</dd>
 
-                    <dt class="col-sm-4">Nationality</dt>
-                    <dd class="col-sm-8">{{ $newtenant->Nationality ?? '-' }}</dd>
+                <dt class="col-sm-4">Postal Address</dt>
+                <dd class="col-sm-8 text-muted">{{ $newtenant->PostalAddress ?? '-' }}</dd>
 
-                    <dt class="col-sm-4">Postal Address</dt>
-                    <dd class="col-sm-8">{{ $newtenant->PostalAddress ?? '-' }}</dd>
-
-                    <dt class="col-sm-4">Remarks</dt>
-                    <dd class="col-sm-8">{{ $newtenant->Remarks ?? '-' }}</dd>
-                </dl>
-            </div>
-            <div class="card-footer">
-                <a href="#" class="btn btn-primary">Edit</a>
-                <a href="#" class="btn btn-secondary">Back</a>
-            </div>
+                <dt class="col-sm-4">Remarks</dt>
+                <dd class="col-sm-8 text-muted">{{ $newtenant->Remarks ?? '-' }}</dd>
+            </dl>
+        </div>
+        <div class="card-footer bg-light d-flex justify-content-end gap-2">
+            <a href="{{ route('addtenant.edit', $newtenant->Id) }}" class="btn btn-outline-primary btn-sm">✏️ Edit</a>
+            <a href="{{ route('addtenant.index') }}" class="btn btn-outline-secondary btn-sm">↩️ Back</a>
         </div>
     </div>
+</div>
 @endsection

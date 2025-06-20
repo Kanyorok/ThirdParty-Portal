@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'IProperty Management')
 @section('content')
 <div class="container mt-4">
   <h4 class="fw-bold mb-3">👤 Add New Tenant</h4>
@@ -14,8 +14,10 @@
         <div class="col-md-3">
           <label class="form-label">Tenant Type</label>
             <select class="form-select" name="TenantType">
-            <option>Individual</option>
-            <option>Corporate</option>
+              <option value="">-- Select Tenent Type --</option>
+              @foreach ($tenantTypes as $tenanttype)
+                <option value="{{ $tenanttype->ID }}">{{ $tenanttype->Description }}</option>
+              @endforeach
           </select>
         </div>
         <div class="col-md-5">
