@@ -29,8 +29,8 @@
                         <thead>
                         <tr>
                             <th>#</th>
+                            <th>UserID</th>
                             <th>Name</th>
-                            <th>Branch</th>
                             <th>Email</th>
                             <th>Phone</th>
                             <th>actions</th>
@@ -94,11 +94,11 @@
                         {
                             data: {
                                 _: "photo",
-                                sort: "UserID",
-                            }, name: 'UserID', searchable: false
+                                sort: "Email_Signature",
+                            }, name: 'Email_Signature', searchable: false
                         },
+                        {data: 'UserID', name: 'UserID'},
                         {data: 'Name', name: 'Name'},
-                        {data: 'branch.Name', name: 'branch.Name', orderable: false},
                         {data: 'Email', name: 'Email'},
                         {data: 'Phone', name: 'Phone'},
                         {data: 'action', name: 'action', orderable: false, searchable: false},

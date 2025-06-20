@@ -22,18 +22,11 @@ class PartyTaskRequest extends FormRequest
     public function rules(): array
     {
         return [
-                'task_date'  => 'required|date_format:"Y-m-d"',
-                'task_notes' => [
-                                 'required',
-                                 'min:1',
-                                 'max:1000',
-                                 'string',
-                                ],
-                'task_user'  => [
-                                 Rule::requiredIf($this->isMethod('POST')),
-                                 'string',
-                                ],
-               ];
+            'task_date' => 'required|date_format:"Y-m-d"',
+            'task_notes' => ['required', 'min:1', 'max:1000', 'string',],
+            'task_user' => [Rule::requiredIf($this->isMethod('POST')), 'string',
+            ],
+        ];
     }
 
     public function getAssignee(): User
@@ -63,7 +56,7 @@ class PartyTaskRequest extends FormRequest
      */
     public function getDated(Carbon $current = null): Carbon
     {
-        $date = Carbon::createFromFormat('Y-m-d', $this->input('task_date'));
+        $date = Carbon::createFromFormat('Y-m-d', $this->string('task_date'));
         if (!$date instanceof Carbon) {
             throw ValidationException::withMessages(['task_date' => 'invalid date format']);
         }
