@@ -143,7 +143,7 @@ class RequisitionsController extends Controller
 
     public function approval($id){
         try {
-            $requisition = Requisitions::findOrFail($id); // This will throw 404 if not found
+            $requisition = Requisitions::findOrFail($id); 
             $this->authorize('view', $requisition); // Authorize the order object itself
 
             $requisitionInfo = $this->service->getRelatedRequisition($id);
@@ -165,7 +165,7 @@ class RequisitionsController extends Controller
 
     public function approve(ApproveRequisitionRequest $requisitionRequest, $id)
     {
-//        dd($requisitionRequest->validated()); // if using validation
+        // if using validation
         return $this->documentApprovalService->approve($requisitionRequest, $id);
     }
 

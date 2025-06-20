@@ -23,7 +23,6 @@ class DocumentApprovalService
         try {
             $actor = $request->user();
             $data = $request->validated();
-
             $documentType = $data['document_type'];
             $action = $data['action'] ?? 'approve';
             $orderTotal = (float) $data['order_total'];
