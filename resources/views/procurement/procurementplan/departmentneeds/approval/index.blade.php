@@ -33,8 +33,8 @@
           ? number_format($NeedsApprovalview->RequestedQty * $NeedsApprovalview->EstimatedUnitCost, 2, '.', ',')
       : 'N/A'}}</td>
         <td>{{ $NeedsApprovalview->creator->Name }}</td>
-        <td>{{ \Carbon\Carbon::parse($NeedsApprovalview->CreatedOn)->format('d M Y') }}</td>
-        <td>{{ \Carbon\Carbon::parse($NeedsApprovalview->RequestedDate)->format('d M Y') }}</td>
+        <td>{{ \Carbon\Carbon::parse($NeedsApprovalview->CreatedOn)->format('d/m/Y') }}</td>
+        <td>{{ \Carbon\Carbon::parse($NeedsApprovalview->RequestedDate)->format('d/m/Y') }}</td>
         <td>
 
           <a class="btn btn-sm btn-primary"
