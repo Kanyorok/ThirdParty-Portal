@@ -139,25 +139,25 @@
                                 <p id="UOM_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
 
-                            <div class="mb-3">
-                                <label class="form-label" for="EstimatedPrice">Estimated Price </label>
+{{--                            <div class="mb-3">--}}
+{{--                                <label class="form-label" for="EstimatedPrice">Estimated Price </label>--}}
 
-                                <input type="number" class="form-control" id="EstimatedPrice" name="EstimatedPrice" step="any"
+                                <input type="hidden" class="form-control" id="EstimatedPrice" name="EstimatedPrice" step="any"
                                        readonly >
 
-                                <p id="EstimatedPrice_error" class="invalid-feedback d-none error col-12" role="alert">
-                                </p>
-                            </div>
+{{--                                <p id="EstimatedPrice_error" class="invalid-feedback d-none error col-12" role="alert">--}}
+{{--                                </p>--}}
+{{--                            </div>--}}
 
-                            <div class="mb-3">
-                                <label class="form-label" for="LineItemID">LineItemID </label>
+{{--                            <div class="mb-3">--}}
+{{--                                <label class="form-label" for="LineItemID">LineItemID </label>--}}
 
-                                <input type="number" class="form-control" id="LineItemID" name="LineItemID"
+                                <input type="hidden" class="form-control" id="LineItemID" name="LineItemID"
                                        readonly>
 
-                                <p id="LineItemID_error" class="invalid-feedback d-none error col-12" role="alert">
-                                </p>
-                            </div>
+{{--                                <p id="LineItemID_error" class="invalid-feedback d-none error col-12" role="alert">--}}
+{{--                                </p>--}}
+{{--                            </div>--}}
 
                             <div class="mb-3">
                                 <label class="form-label" for="Urgency">Urgency </label>
