@@ -1,6 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Add Floor to Block')
-
+@section('title', 'Floors Per Block')
 @section('content')
 @if ($errors->any())
     <div class="alert alert-danger">

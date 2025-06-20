@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Edit Category')
+@section('title', 'Floors Per Block')
 @section('content')
 @if ($errors->any())
     <div class="alert alert-danger">
@@ -22,7 +22,7 @@
                 <select name="PropertyID" id="property-select" class="form-select" required>
                   <option value="">-- Select Property --</option>
                     @foreach ($lineentries as $property)
-                        <option value="{{ $property->Id }}">{{ $property->PropertyName }}</option>
+                        <option value="{{ $property->Id }}" {{ old('PropertyID', $floor->PropertyID) == $property->Id ? 'selected' : '' }}>{{ $property->PropertyName }}</option>
                     @endforeach
                 </select>
             </div>
@@ -31,7 +31,10 @@
         <div class="col-md-6">
           <label class="form-label">Select Block</label>
             <select name="BlockID" id="block-select" class="form-select" required>
-                <option value="">-- Select Block --</option>  
+                <option value="">-- Select Block --</option>
+                @foreach ($blocks as $block)
+                    <option value="{{ $block->Id }}" {{ old('BlockID', $floor->BlockID) == $block->Id ? 'selected' : '' }}>{{ $block->BlockName }}</option>
+                @endforeach
             </select>
         </div>
 
