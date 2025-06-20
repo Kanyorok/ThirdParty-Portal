@@ -24,6 +24,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use RuntimeException;
 use Spatie\IcalendarGenerator\Components\Calendar;
 use Spatie\IcalendarGenerator\Components\Event;
 use Spatie\IcalendarGenerator\Enums\ParticipationStatus;
@@ -60,6 +61,7 @@ class ScheduleService
         return match ($this->schedule->Type) {
             Client::getPrimaryKey() => route('client-schedule.destroy', [$modelID, $this->schedule->ScheduleID]),
             Lead::getPrimaryKey() => route('lead-schedule.destroy', [$modelID, $this->schedule->ScheduleID]),
+            User::getPrimaryKey() => route('user-meetings.destroy', [$this->schedule->scheduled?->MeetingID]),
             default => '',
         };
     }
@@ -123,10 +125,10 @@ class ScheduleService
         string $SourceID = null
     ): ScheduleService {
         if (!in_array($scheduledType, [Call::getPrimaryKey(), Meeting::getPrimaryKey()], true)) {
-            throw new \RuntimeException('invalid scheduler');
+            throw new RuntimeException('invalid scheduler');
         }
         if (!in_array($type, [Lead::getPrimaryKey(), Client::getPrimaryKey(), Board::getPrimaryKey(), User::getPrimaryKey()], true)) {
-            throw new \RuntimeException('invalid scheduled');
+            throw new RuntimeException('invalid scheduled');
         }
 
         $dated = now();
