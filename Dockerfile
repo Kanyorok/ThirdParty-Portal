@@ -39,14 +39,15 @@ RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/public|' /etc/apa
 # Set working directory
 WORKDIR /var/www
 
-# Copy Laravel source code
-COPY . .
-
 # Install Composer from official image
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Install Laravel dependencies
+# Copy composer and install dependencies only if composer.lock changes
+COPY composer.json composer.lock ./
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader
+
+# Copy Laravel source code
+COPY . .
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www && \
