@@ -29,27 +29,31 @@
         </tr>
       </thead>
       <tbody>
-        @foreach ($activities as $item)            
+        @php $i = 1; @endphp
+        @foreach ($groupedActivities as $budgetId => $activities)
+          @php $budget = $activities->first()->budget; @endphp
           <tr>
-            <td>{{ $loop->iteration }}</td>
-            <td>Budget Name</td>
-            <td>11-02-2025 - 11-11-2025</td>
-            {{-- <td>{{ $item->budgetLine->LineName }}</td> --}}
-            <td>3</td>
-            {{-- <td>{{ $item->ActivityName }}</td> --}}
-            {{-- <td>{{ $item->branch->Name }}</td> --}}
-            {{-- @if ($item->AllocationType=='monthly')
-              <td>Monthly
-                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#viewAllocationsModal-{{ $item->Id }}">👁️ View</button>
-              </td>
-            @else
-              <td>Full Allocation</td>
-            @endif --}}
-            <td>{{ $item->FullAllocation }}</td>
+            <td>{{ $i++ }}</td>
+            <td>{{ $budget->Name }}</td>
+            <td>{{ $budget->From }} - {{ $budget->To }}</td>
+            {{-- <td>{{ $activities->first()->budgetLine->LineName ?? '' }}</td> --}}
+            {{-- <td>
+              <div class="d-flex flex-column align-items-center">
+                @foreach (
+                  $activities as $activity)
+                  <span class="badge bg-primary mb-1">{{ $activity->Description }}</span>
+                @endforeach
+              </div>
+            </td> --}}
+            <td>
+              <a href="{{ route('budgetactivities.show', $budget->Id) }}" class="btn btn-outline-primary btn-sm">View Activities</a>
+            </td>
+            <td>
+              {{ $activities->sum('FullAllocation') }}
+            </td>
             <td>
               <div class="d-flex gap-2 justify-content-center">
                   <a href="{{ route('budgetperiod.edit', 1) }}" class="btn btn-sm btn-info">✏️</a>
-
                   <form action="{{ route('budgetperiod.destroy', 1) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this Period?');">
                       @csrf
                       @method('DELETE')

@@ -65,6 +65,7 @@ public function index()
         return view('budgetandanalytics.budgetperiod.create', compact('types'));
     }
 
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -74,9 +75,8 @@ public function index()
             'To'          => 'required|date|after_or_equal:From',
             'Notes'       => 'nullable|string|max:1000',
         ]);
-
+ 
         DB::beginTransaction();
-
         try {
             $budget = Budget::create([
                 'Name'        => $validated['Name'],
@@ -87,22 +87,22 @@ public function index()
                 'CreatedBy'   => Auth::id(),
                 'ModifiedBy'  => Auth::id(),
             ]);
-
+ 
             DB::commit();
-
+ 
             activity()
                 ->performedOn($budget)
                 ->causedBy(Auth::user())
                 ->event('create')
                 ->withProperties(['action' => 'create'])
                 ->log('Created a budget');
-
+ 
             return redirect()->route('budgetperiod.index')->with('success', 'Budget created successfully.');
-
+ 
         } catch (\Throwable $th) {
             DB::rollBack();
             Log::error('Failed to create budget: ' . $th->getMessage());
-
+ 
             return back()->withErrors(['error' => 'Failed to create Budget'])->withInput();
         }
     }

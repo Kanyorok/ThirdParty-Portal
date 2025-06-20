@@ -17,39 +17,45 @@
         </div>
     @endif
  
-    @if($monthlyAllocations->count())
+    @if(!$projectionID)
+        <div class="alert alert-warning">
+            Please select a projection to view its monthly allocations.
+        </div>
+    @elseif($monthlyAllocations->count())
         <div class="alert alert-info">
             <strong>Note:</strong> Monthly allocations are set for the current period.
             You can update them as needed.
         </div>
-    <table class="table table-bordered table-hover align-middle">
-        <thead class="table-light">
-            <tr>
-                <th>Month</th>
-                <th>Allocation Amount </th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ($monthlyAllocations as $allocation)
+        <table class="table table-bordered table-hover align-middle">
+            <thead class="table-light">
                 <tr>
-                    <td>{{ $allocation->Month }}</td>
-                    <td>{{ number_format($allocation->Amount, 2) }}</td>
+                    <th>Month</th>
+                    <th>Allocation Amount</th>
                 </tr>
-            @endforeach
-        </tbody>
-        @else
+            </thead>
+            <tbody>
+                @foreach ($monthlyAllocations as $allocation)
+                    <tr>
+                        <td>{{ $allocation->Month }}</td>
+                        <td>{{ number_format($allocation->Allocation, 2) }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+        <div class="mt-4 text-end">
+            <a href="{{ route('monthly.create', ['id' => $projectionID]) }}" class="btn btn-success">
+                ➕ Add New Allocation
+            </a>
+        </div>
+    @else
         <div class="alert alert-warning">
             No monthly allocations found. Please add allocations to proceed.
         </div>
-        @endif
-    </table>
- 
-    <div class="mt-4 text-end">
-        <a href="{{ route('budgetprojections.create') }}" class="btn btn-success">
-            ➕ Add New Allocation
-        </a>
-    </div>
+        <div class="mt-4 text-end">
+            <a href="{{ route('monthly.create', ['id' => $projectionID]) }}" class="btn btn-success">
+                ➕ Add New Allocation
+            </a>
+        </div>
+    @endif
 </div>
 @endsection
- 

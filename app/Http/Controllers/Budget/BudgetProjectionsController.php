@@ -127,7 +127,8 @@ class BudgetProjectionsController extends Controller
         $budget = BudgetDriverProjections::findOrFail($id);
  
         // Fetch all allocations so the view can filter and display as needed
-        $monthlyAllocations = BudgetMonthlyProjectionAllocation::all();
+        $monthlyAllocations = BudgetMonthlyProjectionAllocation::where('BudgetProjectionID', $id)
+            ->get();
  
         return view('budgetandanalytics.budgetworkspace.entry.show', compact('monthlyAllocations','budget'));
     }
