@@ -117,9 +117,9 @@
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label" for="Quantity">Quantity <span
-                                class="text-danger" id="QtyAvailable"></span></label>
-
+                                <label class="form-label" for="Quantity">
+                                    Quantity <span id="QtyAvailable" class="badge bg-info text-dark ms-2"></span>
+                                </label>
                                 <input type="number" class="form-control" id="Quantity" name="Quantity" required step="any"
                                        placeholder="Quantity">
                                 {{-- <textarea name="Quantity" id="Quantity" rows="3" class="form-control"
@@ -180,115 +180,129 @@
     </div>
 @endsection
 @section('scripts')
-    <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
-    <script src="{{ asset('assets/js/datatables.js') }}"></script>
-    <script>
-        const $Modal = $('#RequisitionItemModal');
+<script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
+<script src="{{ asset('assets/js/datatables.js') }}"></script>
+<script>
+    const $Modal = $('#RequisitionItemModal');
 
-        // Inject Requisition ID from URL or backend
-        const requisitionId = "{{ $id ?? '' }}"; // fallback for safety
+    // Get requisition ID from backend or URL
+    const requisitionId = "{{ $id ?? '' }}";
 
-        function getRequisitionIdFromUrl(){
-            // use global if available
-            return requisitionId || window.location.pathname.split('/').pop();
-        }
+    function getRequisitionIdFromUrl() {
+        return requisitionId || window.location.pathname.split('/').pop();
+    }
 
-        $(function () {
-            $(document).on('click', '.modal-create-item', function () {
-                $(".modal-title").html('Add Item');
-                $('#RequisitionID').val(getRequisitionIdFromUrl());
-                $(".modal-item").addClass('d-none');
-                $('#createRequisitionItem').removeClass('d-none');
-                $Modal.modal('show');
-            });
-            
-            $('form#createRequisitionItemForm').submit(async function (e) {
-                e.preventDefault();
-                if (await saveForm($(this), $('#createRequisitionItemBtn'), true, true, true)) {
-                    $Modal.modal('hide');
-                }
-            });
+    $(function () {
+        // Show modal for adding item
+        $(document).on('click', '.modal-create-item', function () {
+            $(".modal-title").html('Add Item');
+            $('#RequisitionID').val(getRequisitionIdFromUrl());
+            $(".modal-item").addClass('d-none');
+            $('#createRequisitionItem').removeClass('d-none');
+            $Modal.modal('show');
+        });
 
-            $('#Type').on('change', function () {
-                let type = $(this).val();
-                let requisitionId = getRequisitionIdFromUrl();
+        // Handle form submission
+        $('form#createRequisitionItemForm').submit(async function (e) {
+            e.preventDefault();
+            if (await saveForm($(this), $('#createRequisitionItemBtn'), true, true, true)) {
+                $Modal.modal('hide');
+            }
+        });
 
-                if (type !== '') {
-                    $.ajax({
-                        url: `/procurement/requisitionItem/getItem/${type}?requisition_id=${requisitionId}`,
-                        type: 'GET',
-                        success: function (response) {
-                            $('#Item').empty().append('<option value="">Select Item</option>');
-                            $.each(response.data, function (key, item) {
-                                $('#Item').append(
-                                    `<option value="${item.Id}">${item.ItemName}</option>`
-                                );
-                            });
-                        },
-                        error: function (response) {
-                            alert('Failed to load items');
-                            console.log(response);
-                        }
-                    });
-                } else {
-                    $('#Item').empty().append('<option value="">Select Item</option>');
-                }
-            });
+        // On type change -> fetch items
+        $('#Type').on('change', function () {
+            let type = $(this).val();
+            let requisitionId = getRequisitionIdFromUrl();
 
-            $('#Item').on('change', function () {
-                let itemId = $(this).val();
-                let requisitionId = getRequisitionIdFromUrl();
+            if (type !== '') {
+                $.ajax({
+                    url: `/procurement/requisitionItem/getItem/${type}?requisition_id=${requisitionId}`,
+                    type: 'GET',
+                    success: function (response) {
+                        $('#Item').empty().append('<option value="">Select Item</option>');
+                        $.each(response.data, function (key, item) {
+                            $('#Item').append(
+                                `<option value="${item.Id}">${item.ItemName}</option>`
+                            );
+                        });
+                    },
+                    error: function () {
+                        alert('Failed to load items');
+                    }
+                });
+            } else {
+                $('#Item').empty().append('<option value="">Select Item</option>');
+            }
+        });
 
-                if (itemId !== '') {
-                    $.ajax({
-                        url: `/procurement/requisitionItem/getItemDetails/${itemId}?requisition_id=${requisitionId}`,
-                        type: 'GET',
-                        success: function (response) {
-                            if (response.data && response.data.length > 0) {
-                                let itemData = response.data[0];
+        // On item change -> fetch item details
+        $('#Item').on('change', function () {
+            let itemId = $(this).val();
+            let requisitionId = getRequisitionIdFromUrl();
 
-                                // Set UOM
-                                $('#UOM').empty().append(
-                                    `<option value="${itemData.UOMID}">${itemData.UOM}</option>`
-                                );
+            if (itemId !== '') {
+                $.ajax({
+                    url: `/procurement/requisitionItem/getItemDetails/${itemId}?requisition_id=${requisitionId}`,
+                    type: 'GET',
+                    success: function (response) {
+                        if (response.data && response.data.length > 0) {
+                            let itemData = response.data[0];
 
-                                // Set estimated price
-                                $('#EstimatedPrice').val(itemData.UnitPrice || 0);
-                                $('#LineItemID').val(item.LineItemID || '');
-                                // Display available quantity
-                                if (itemData.OriginalQty && itemData.OriginalQty > 0) {
-                                    $('#QtyAvailable').text(`Available Qty: ${itemData.OriginalQty}`);
+                            // UOM
+                            $('#UOM').empty().append(
+                                `<option value="${itemData.UOMID}">${itemData.UOM}</option>`
+                            );
+
+                            // Estimated Price
+                            $('#EstimatedPrice').val(itemData.UnitPrice || 0);
+
+                            // LineItem ID
+                            $('#LineItemID').val(itemData.LineItemID || '');
+
+                            // ✅ Remaining Qty logic with color badges
+                            let remainingQty = parseFloat(itemData.RemainingQty ?? 0);
+                            if (!isNaN(remainingQty)) {
+                                if (remainingQty > 0) {
+                                    $('#QtyAvailable').html(
+                                        `<span class="badge bg-info text-dark">Available Qty: ${remainingQty}</span>`
+                                    );
                                 } else {
-                                    $('#QtyAvailable').text('');
+                                    $('#QtyAvailable').html(
+                                        `<span class="badge bg-danger">Available Qty: 0</span>`
+                                    );
                                 }
                             } else {
-                                $('#UOM').empty().append('<option value="">Select UOM</option>');
-                                $('#EstimatedPrice').val('');
-                                $('#QtyAvailable').text('');
+                                $('#QtyAvailable').html('');
                             }
-                        },
-                        error: function (response) {
-                            alert('Failed to load item details');
-                            console.log(response);
+
+                        } else {
+                            // Fallbacks
                             $('#UOM').empty().append('<option value="">Select UOM</option>');
                             $('#EstimatedPrice').val('');
-                            $('#QtyAvailable').text('');
+                            $('#QtyAvailable').html('');
+                            $('#LineItemID').val('');
                         }
-                    });
-                } else {
-                    $('#UOM').empty().append('<option value="">Select UOM</option>');
-                    // $('#Description').val('');
-                    $('#EstimatedPrice').val(0);
-                    $('#LineItemID').val('');
-                    $('#EstimatedPrice').val('');
-                    $('#QtyAvailable').text('');
-                }
-            });
-
-            $("#MarketingList").select2({
-                dropdownParent: $Modal,
-            });
+                    },
+                    error: function () {
+                        alert('Failed to load item details');
+                        $('#UOM').empty().append('<option value="">Select UOM</option>');
+                        $('#EstimatedPrice').val('');
+                        $('#QtyAvailable').html('');
+                        $('#LineItemID').val('');
+                    }
+                });
+            } else {
+                $('#UOM').empty().append('<option value="">Select UOM</option>');
+                $('#EstimatedPrice').val(0);
+                $('#LineItemID').val('');
+                $('#QtyAvailable').html('');
+            }
         });
-</script>
 
+        $("#MarketingList").select2({
+            dropdownParent: $Modal,
+        });
+    });
+</script>
 @endsection
