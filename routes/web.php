@@ -54,7 +54,7 @@ Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function (
                 Route::resource('user-sms', 'UserMessageController')->only(['index', 'store']);
             });
 
-            Route::resource('user-meetings', 'UserMeetingsController')->only('store');
+            Route::resource('user-meetings', 'UserMeetingsController')->only(['store', 'destroy']);
             Route::post('users/notification', 'UserMessagingController')->name('bulk-notification.users');
             Route::get('fetch-users', 'UserSelectController')->name('users.select2');
 

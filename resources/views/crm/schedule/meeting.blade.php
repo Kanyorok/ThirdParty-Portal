@@ -1,29 +1,107 @@
+@php use App\Enums\MeetingStatusEnum; @endphp
+@php use Carbon\CarbonInterface; @endphp
+@php use App\Services\MeetingService; @endphp
+@php use App\Models\BR\Client; @endphp
+@php use App\Models\CRM\Lead; @endphp
+@php use App\Models\Auth\User; @endphp
+<style>
+    /* common */
+    .ribbon {
+        width: 150px;
+        height: 150px;
+        overflow: hidden;
+        position: absolute;
+    }
+
+    .ribbon::before,
+    .ribbon::after {
+        position: absolute;
+        z-index: -1;
+        content: '';
+        display: block;
+        border: 5px solid #2980b9;
+    }
+
+    .ribbon-info span {
+        background-color: rgba(var(--bs-info-rgb));
+        color: #fff;
+    }
+
+    .ribbon-danger span {
+        background-color: rgba(var(--bs-danger-rgb));
+        color: #fff;
+    }
+
+
+    .ribbon span {
+        position: absolute;
+        display: block;
+        width: 225px;
+        padding: 15px 0;
+        box-shadow: 0 5px 10px rgba(0, 0, 0, .1);
+        font: 700 18px/1 'Lato', sans-serif;
+        text-shadow: 0 1px 1px rgba(0, 0, 0, .2);
+        text-transform: uppercase;
+        text-align: center;
+    }
+
+    /* top left*/
+    .ribbon-top-left {
+        top: -10px;
+        left: -10px;
+    }
+
+    .ribbon-top-left::before,
+    .ribbon-top-left::after {
+        border-top-color: transparent;
+        border-left-color: transparent;
+    }
+
+    .ribbon-top-left::before {
+        top: 0;
+        right: 0;
+    }
+
+    .ribbon-top-left::after {
+        bottom: 0;
+        left: 0;
+    }
+
+    .ribbon-top-left span {
+        right: -25px;
+        top: 30px;
+        transform: rotate(-45deg);
+    }
+</style>
 <div>
+    @if($meeting->StatusID->value === MeetingStatusEnum::Canceled->value)
+        <div class="ribbon ribbon-top-left ribbon-danger"><span>Canceled</span></div>
+    @endif
     <ul class="list-group list-group-flush">
         <li class="list-group-item">Start: <span class="float-end">{{ $meeting->StartOn->format('M d, Y h:ia') }}</span>
         </li>
         <li class="list-group-item">End: <span class="float-end">{{ $meeting->EndOn->format('M d, Y h:ia') }}</span>
         </li>
         <li class="list-group-item">Duration: <span
-                class="float-end">{{ $meeting->StartOn->diffForHumans($meeting->EndOn, \Carbon\CarbonInterface::DIFF_ABSOLUTE, short: true,parts: 2) }}</span>
+                class="float-end">{{ $meeting->StartOn->diffForHumans($meeting->EndOn, CarbonInterface::DIFF_ABSOLUTE, short: true,parts: 2) }}</span>
         </li>
         <li class="list-group-item">Location: <span
-                class="float-end">{{ (new \App\Services\MeetingService($meeting))->getVenue(true)  }}</span>
+                class="float-end">{{ (new MeetingService($meeting))->getVenue(true)  }}</span>
         </li>
         <li class="list-group-item">Source : <span
                 class="float-end">{{ $service->source() }}</span></li>
     </ul>
-    @if($parties instanceof \App\Models\BR\Client)
+    @if($parties instanceof Client)
         @php
             $party = $parties;
         @endphp
         @include('snippets.client_summary', ['client'=>$parties])
-    @elseif($parties instanceof \App\Models\CRM\Lead)
+    @elseif($parties instanceof Lead)
         @php
             $party = $parties;
         @endphp
         @include('snippets.lead_summary', ['lead'=>$parties])
-    @elseif($meeting->Type === \App\Models\BR\Client::getPrimaryKey())
+    @elseif($meeting->Type === Client::getPrimaryKey())
         <h4 class="mb-0">members</h4>
         <hr class="mt-0">
         <div class="row">
@@ -45,7 +123,7 @@
                 </div>
             @endif
         </div>
-    @elseif($meeting->Type === \App\Models\Auth\User::getPrimaryKey())
+    @elseif($meeting->Type === User::getPrimaryKey())
         <h4 class="mb-0">Users/staff</h4>
         <hr class="mt-0">
         <div class="row">
@@ -90,9 +168,9 @@
         <div class="col-md-6 col-12">
             <button class="btn btn-success w-100 action-button"
                     @if($service->actionable())
-                        @if($party instanceof \App\Models\BR\Client)
+                        @if($party instanceof Client)
                             onclick="scheduleRedirect('{{ $service->actionLink($party->ClientID) }}')"
-                    @elseif($party instanceof \App\Models\CRM\Lead)
+                    @elseif($party instanceof Lead)
                         onclick="scheduleRedirect('{{ $service->actionLink($party->LeadID) }}')"
                     @endif
                     @else
@@ -116,20 +194,23 @@
             <div class="modal-body">
                 <div class="onboarding-content text-center">
                     <h4 class="text-danger">
-                        Cancel Schedule <b>{{ $schedule->Title }}</b> ?
+                        Cancel Meeting Schedule <b>{{ $schedule->Title }}</b> ?
                     </h4>
                     <div class="mt-2 mb-2">
                         You are about to cancel this schedule, confirm below ?
                     </div>
                     <hr>
                     <form id="deleteCallScheduleForm"
-                          @if($party instanceof \App\Models\BR\Client)
+                          @if($party instanceof Client)
                               action="{{ $service->cancelLink($party->ClientID) }}"
-                          @elseif($party instanceof \App\Models\CRM\Lead)
+                          @elseif($party instanceof Lead)
                               action="{{ $service->cancelLink($party->LeadID) }}"
+                          @elseif($meeting->Type === User::getPrimaryKey())
+                              action="{{ $service->cancelLink('') }}"
                           @else
                               class="d-none"
                           @endif
+
                           method="post"> @csrf
                         <div class="mt-4">@method('delete')
                             <button type="button" class="btn btn-success float-start"
@@ -137,7 +218,7 @@
                                 no, keep
                             </button>
                             <button class="btn btn-danger float-end" id="deleteCallScheduleBtn" type="submit"><i
-                                    class="fas fa-trash"></i> yes, cancel call
+                                    class="fas fa-trash"></i> yes, cancel meeting
                             </button>
                         </div>
                     </form>
