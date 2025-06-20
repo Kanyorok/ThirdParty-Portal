@@ -50,6 +50,7 @@
 </div>
 <script>
     $(document).ready(function () {
+        $.fn.dataTable.ext.errMode = 'none';
         $('#reports-table').DataTable({
             dom: '<"row"<"col-12 mb-2"tr><"col-5 text-center"i><"col-7"p>>',
         });
