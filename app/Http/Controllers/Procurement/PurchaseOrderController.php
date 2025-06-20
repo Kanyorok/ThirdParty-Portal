@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Procurement;
 
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Orders\ApproveOrderRequest;
 use App\Http\Requests\Orders\PurchaseOrderRequest;
 use App\Models\Auth\User;
 use App\Models\Procurement\Order;
 use App\Services\Core\ApprovalService;
+use App\Services\Core\DocumentApprovalService;
 use App\Services\Procurement\Items\ItemService;
 use App\Services\Procurement\Orders\OrderService;
 use App\Services\Procurement\RFQ\RFQService;
@@ -19,10 +21,10 @@ use Illuminate\Support\Facades\Log;
 
 class PurchaseOrderController extends Controller
 {
-    public function __construct(protected ItemService $itemService, protected SupplierService $supplierService, protected OrderService $orderService, protected RFQService $rfqService, protected ApprovalService $approvalService)
+    public function __construct(protected ItemService $itemService, protected SupplierService $supplierService, protected OrderService $orderService, protected RFQService $rfqService, protected DocumentApprovalService $documentApprovalService)
     {
 
-        $this->middleware('ajax')->except(['index', 'create', 'show', 'linkRFQ', 'fetchRFQDetails']);
+        $this->middleware('ajax')->except(['index', 'create', 'show', 'linkRFQ', 'fetchRFQDetails', 'approval', 'approve']);
 //        $this->authorizeResource(Order::class);
     }
 
@@ -329,47 +331,36 @@ class PurchaseOrderController extends Controller
         return view("procurement.orders.rfqlink", compact('RFQ'));
     }
 
-
-    public function approve(Request $request, $id)
+    public function approval($id)
     {
-        $purchaseOrder = Order::findOrFail($id);
-        $actor = $request->user();
 
-        // Record the approval by the current user
-        DB::table('t_Approvals')->updateOrInsert(
-            [
-                'DocType' => 'purchase_order',
-                'DocumentId' => $purchaseOrder->Id,
-                'UserId' => $actor->Id,
-            ],
-            [
-                'CreatedBy' => $actor->Id,
-                'ModifiedBy' => $actor->Id,
-                'CreatedOn' => now(),
-                'ModifiedOn' => now(),
-            ]
-        );
 
-        // Check if the document is fully approved based on approval type (including ALL)
+        try {
+            $order = Order::findOrFail($id); // This will throw 404 if not found
+            $this->authorize('view', $order); // Authorize the order object itself
 
-        $isApproved = $this->approvalService->isDocumentApproved(
-            'purchase_order',
-            $purchaseOrder->total_amount,
-            $actor,
-            $purchaseOrder->Id
-        );
+            $orderInfo = $this->orderService->fetchOrderDetails($id);
+            $lineInfo = $this->orderService->fetchOrderLineDetails($id);
 
-        if ($isApproved) {
-            $purchaseOrder->status = 'approved';
-            $purchaseOrder->save();
+            return view('procurement.orders.approval', compact('orderInfo', 'lineInfo'));
 
-            return response()->json(['message' => 'Document approved']);
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            Log::warning("Unauthorized access attempt to view Order ID: {$id} by user ID: " . auth()->id());
+            return redirect()->back()->with('error', 'Unauthorized access.');
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::error("Order ID {$id} not found. Exception: " . $e->getMessage());
+            return redirect()->back()->with('error', 'Order not found.');
+        } catch (\Exception $e) {
+            Log::error("Failed to fetch order ID {$id}. Exception: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return redirect()->back()->with('error', 'Failed to fetch order.');
         }
 
-
-        return response()->json(['message' => 'Approval recorded, but pending full approval']);
     }
 
+    public function approve(ApproveOrderRequest $orderRequest, $id)
+    {
+        return $this->documentApprovalService->approve($orderRequest, $id);
+    }
 
     public function fetchRFQDetails($id): JsonResponse
     {

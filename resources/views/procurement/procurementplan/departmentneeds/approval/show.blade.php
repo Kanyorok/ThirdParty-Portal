@@ -32,9 +32,9 @@
                 </div>
             </div>
             <div class="col-md-4">
-                <label class="form-label fw-semibold">Estimated Cost</label>
+                <label class="form-label fw-semibold">Est. Unit Cost</label>
                 <div class="form-control-plaintext border rounded bg-light px-3 py-2">
-                    {{ number_format($need->EstimatedUnitCost, 2) }}
+                    {{ number_format($need->EstimatedUnitCost, 2, '.', ',') }}
                 </div>
             </div>
 
@@ -63,7 +63,7 @@
                 <div class="form-control-plaintext border rounded bg-light px-3 py-2">
                     {{ $need->creator->Name ?? 'N/A' }}
                     {{-- <small class="text-muted">
-                      ({{ $need->creator->Department ?? 'Unknown Department' }})
+                          ({{ $need->creator->Department ?? 'Unknown Department' }})
                     </small> --}}
                 </div>
             </div>

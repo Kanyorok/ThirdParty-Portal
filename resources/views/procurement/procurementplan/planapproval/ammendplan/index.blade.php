@@ -72,7 +72,8 @@
             <th>Item</th>
             <th>From Branch</th>
             <th>Original Qty</th>
-            <th>Planned Qty</th>
+              <th>Current Qty</th>
+              <th>Adjust Qty</th>
             <th>Unit Cost</th>
             <th>Total</th>
             <th>Remarks</th>
@@ -85,6 +86,7 @@
               <td>{{ $index + 1 }}</td>
               <td>{{ $item->item->ItemName ?? 'N/A' }}</td>
               <td>{{ $item->branch->Name ?? 'N/A' }}</td>
+              <td>{{ $item->OriginalQTY }}</td>
               <td>{{ $item->MergedQty }}</td>
               <td>
                   <input type="number" class="form-control form-control-sm" name="qty_{{ $item->LineItemID }}"

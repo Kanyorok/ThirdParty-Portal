@@ -3,27 +3,30 @@
 @section('content')
     <div class="container">
         <div class="card">
-            <div class="card-header bg-primary text-white">
+            <div class="card-header bg-info text-white">
                 <h3>Purchase Order Approval</h3>
             </div>
 
             <div class="card-body">
+
                 <!-- PO Summary Section -->
                 <div class="row mb-4">
                     <div class="col-md-6">
                         <h5>Supplier Information</h5>
-                        <p><strong>Supplier:</strong> {{ $purchaseOrder->supplier->name }}</p>
-                        <p><strong>Address:</strong> {{ $purchaseOrder->supplier->address }}</p>
+                        <p><strong>Supplier:</strong> {{$orderInfo->SupplierName ?? 'N/A'}}</p>
+                        {{--                        <p><strong>Address:</strong> {{ $purchaseOrder->supplier->address }}</p>--}}
                     </div>
 
                     <div class="col-md-6">
                         <h5>PO Details</h5>
-                        <p><strong>LPO Number:</strong> {{ $purchaseOrder->lpo_number }}</p>
-                        <p><strong>Date:</strong> {{ $purchaseOrder->date->format('d/m/Y') }}</p>
-                        <p><strong>Reference Number:</strong> {{ $purchaseOrder->reference_number }}</p>
+                        <p><strong>LPO Number:</strong> {{$orderInfo->OrderNo ?? 'N/A'}}</p>
+                        <p>
+                            <strong>Date:</strong> {{ isset($orderInfo->OrderDate) ? \Carbon\Carbon::parse($orderInfo->OrderDate)->format('Y-m-d') : '' }}
+                        </p>
+                        <p><strong>Reference Number:</strong> {{$orderInfo->ExtOrdNum ?? 'N/A'}}</p>
                         <p><strong>Priority:</strong> <span
-                                class="badge badge-danger">{{ $purchaseOrder->priority }}</span></p>
-                        <p><strong>Payment Terms:</strong> {{ $purchaseOrder->payment_terms }}</p>
+                                class="badge badge-danger">{{$orderInfo->Priority ?? 'N/A'}}</span></p>
+                        <p><strong>Payment Terms:</strong> {{$orderInfo->Priority ?? 'N/A'}}</p>
                     </div>
                 </div>
 
@@ -43,16 +46,16 @@
                         </tr>
                         </thead>
                         <tbody>
-                        @foreach($purchaseOrder->items as $item)
+                        @foreach($lineInfo as $line)
                             <tr>
-                                <td>{{ $item->type }}</td>
-                                <td>{{ $item->name }}</td>
-                                <td>{{ $item->description }}</td>
-                                <td>{{ $item->quantity }}</td>
-                                <td>{{ number_format($item->unit_price, 2) }}</td>
-                                <td>{{ number_format($item->tax, 2) }}</td>
-                                <td>{{ number_format($item->discount, 2) }}</td>
-                                <td>{{ number_format($item->line_total, 2) }}</td>
+                                <td>{{$line ->ItemType}}</td>
+                                <td>{{$line ->ItemName}}</td>
+                                <td>{{$line ->Description}}</td>
+                                <td>{{$line ->fQuantity}}</td>
+                                <td>{{ number_format($line ->fUnitPriceExcl, 2) }}</td>
+                                <td>{{ number_format($line ->fTaxRate, 2) }}</td>
+                                <td>{{ number_format($line ->fLineDiscount, 2) }}</td>
+                                <td>{{ number_format($line ->LineTotal, 2) }}</td>
                             </tr>
                         @endforeach
                         </tbody>
@@ -65,26 +68,26 @@
                         <table class="table">
                             <tr>
                                 <th>Exclusive Total:</th>
-                                <td>{{ number_format($purchaseOrder->exclusive_total, 2) }}</td>
+                                <td>{{ number_format($orderInfo->OrdTotExcl, 2) }}</td>
                             </tr>
                             <tr>
                                 <th>Tax Amount:</th>
-                                <td>{{ number_format($purchaseOrder->tax_amount, 2) }}</td>
+                                <td>{{ number_format($orderInfo->OrdTotTax , 2) }}</td>
                             </tr>
                             <tr class="table-active">
                                 <th>Inclusive Total:</th>
-                                <td><strong>{{ number_format($purchaseOrder->inclusive_total, 2) }}</strong></td>
+                                <td><strong>{{ number_format($orderInfo->OrdTotIncl, 2) }}</strong></td>
                             </tr>
                         </table>
                     </div>
                 </div>
 
                 <!-- Notes Section -->
-                @if($purchaseOrder->line_notes)
+                @if($orderInfo->OrderNo)
                     <div class="mb-4">
                         <h5>Notes to Supplier</h5>
                         <div class="alert alert-info">
-                            {{ $purchaseOrder->line_notes }}
+                            {{ $orderInfo->OrderNo }}
                         </div>
                     </div>
                 @endif
@@ -92,9 +95,14 @@
                 <!-- Approval Actions -->
                 <div class="row mt-4">
                     <div class="col-md-12">
-                        <form action="{{ route('purchase-orders.approve', $purchaseOrder->id) }}" method="POST"
+                        <form action="{{ route('purchaseOrder.approve', $orderInfo->Id) }}" method="POST"
                               class="d-inline">
                             @csrf
+
+                            <input type="hidden" name="document_type" value="purchase_order">
+                            <input type="hidden" name="order_total" value="{{ $orderInfo->OrdTotIncl }}">
+                            <input type="hidden" name="order_id" value="{{ $orderInfo->Id }}">
+                            <input type="hidden" name="action" value="approve">
                             <button type="submit" class="btn btn-success btn-lg">
                                 <i class="fas fa-check"></i> Approve PO
                             </button>
@@ -105,10 +113,9 @@
                             <i class="fas fa-times"></i> Reject PO
                         </button>
 
-                        <a href="{{ route('purchase-orders.print', $purchaseOrder->id) }}"
-                           class="btn btn-info btn-lg ml-2">
-                            <i class="fas fa-print"></i> Print PO
-                        </a>
+                        {{--                        <a href="{{ route('purchaseOrder.approve', $orderInfo->Id) }}" class="btn btn-info btn-lg ml-2">--}}
+                        {{--                            <i class="fas fa-print"></i> Print PO--}}
+                        {{--                        </a>--}}
                     </div>
                 </div>
             </div>
@@ -126,7 +133,7 @@
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <form action="{{ route('purchase-orders.reject', $purchaseOrder->id) }}" method="POST">
+                <form action="{{ route('purchaseOrder.approve', $orderInfo->Id) }}" method="POST">
                     @csrf
                     <div class="modal-body">
                         <div class="form-group">
@@ -150,7 +157,6 @@
         .table th {
             white-space: nowrap;
         }
-
         .badge {
             font-size: 0.9em;
         }

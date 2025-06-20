@@ -25,8 +25,10 @@
         @php
             $total = $plan->lineItems->count();
             $budgetLinked = $plan->lineItems->whereNotNull('BudgetLineID')->count();
-            $methodAssigned = $plan->lineItems->whereNotNull('ProcurementMethodID')->count();
-            $scheduled = $plan->lineItems->where('is_scheduled', true)->count();
+            $methodAssigned = $plan->lineItems->whereNotNull('ProcurementMethod')->count();
+            $scheduled = $plan->lineItems->filter(function ($line) {
+            return $line->schedulePlan && $line->schedulePlan->periods->isNotEmpty();
+        })->count();
         @endphp
         <div class="row text-center mb-4">
             <div class="col-md-3">
@@ -77,7 +79,7 @@
                                 <span class="text-danger">Unlinked</span>
                             @endif
                         </td>
-                        <td>{{ $item->setMethod->AssignedMethod ?? '—' }}</td>
+                        <td>{{ $item->procurementMode->Name ?? '—' }}</td>
                         <td>
                             @if ($item->schedulePlan && $item->schedulePlan->periods->isNotEmpty())
                                 @foreach ($item->schedulePlan->periods as $period)
@@ -91,17 +93,21 @@
                         </td>
                         <td>
                             @php
-                                $statusEnum = $item->Status ?? null;
+                                $mergedQty = (int) $item->MergedQty;
+                                $scheduledQty = (int) $item->schedulePlan?->periods->sum('ScheduleQTY');
                             @endphp
 
-                            @if ($statusEnum instanceof \App\Enums\Procurement\SchedulePlanEnum)
-                                <span class="badge bg-{{ $statusEnum->badgeColor() }}">
-                {{ $statusEnum->label() }}
-              </span>
+                            @if ($scheduledQty === 0)
+                                <span class="badge bg-danger">Not Scheduled</span>
+                            @elseif ($scheduledQty < $mergedQty)
+                                <span class="badge bg-warning text-dark">Partially Scheduled</span>
+                            @elseif ($scheduledQty === $mergedQty)
+                                <span class="badge bg-success">Completed</span>
                             @else
-                                —
+                                <span class="badge bg-secondary">Overscheduled</span>
                             @endif
                         </td>
+
                     </tr>
                 @empty
                     <tr>

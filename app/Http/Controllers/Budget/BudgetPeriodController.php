@@ -4,11 +4,11 @@ namespace App\Http\Controllers\Budget;
 
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
-use App\Models\Budget\BudgetLine;
-use Illuminate\Http\Request;
+use App\Models\Budget\Budget;
 use App\Models\Budget\BudgetPeriods;
 use App\Models\Budget\BudgetPeriodTypes;
-use App\Models\Budget\BudgetProductType;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -19,9 +19,42 @@ class BudgetPeriodController extends Controller
     public function index()
     {
         $this->authorize(PermissionEnum::BudgetSetupView, BudgetPeriods::class);
-        $periods = BudgetPeriods::all();
-        //$periods=BudgetPeriods::with('periodType')->get();
-        return view('budgetandanalytics.budgetperiod.index', compact('periods'));
+
+        $budgets = Budget::all()->map(function ($budget) {
+            $today = Carbon::today();
+            $from = $budget->From ? Carbon::parse($budget->From) : null;
+            $to = $budget->To ? Carbon::parse($budget->To) : null;
+
+            $status = 'Unknown';
+            $badgeClass = 'secondary';
+
+            if ($from && $to) {
+                if ($today->between($from, $to)) {
+                    $status = 'Open';
+                    $badgeClass = 'success';
+                } elseif ($today->lt($from)) {
+                    $status = 'Upcoming';
+                    $badgeClass = 'info';
+                } elseif ($today->gt($to)) {
+                    $status = 'Expired';
+                    $badgeClass = 'danger';
+                }
+            } elseif ($to && $today->gt($to)) {
+                $status = 'Expired';
+                $badgeClass = 'danger';
+            } elseif ($from && $today->lt($from)) {
+                $status = 'Upcoming';
+                $badgeClass = 'info';
+            }
+
+            // Append computed values
+            $budget->status = $status;
+            $budget->badgeClass = $badgeClass;
+
+            return $budget;
+        });
+
+        return view('budgetandanalytics.budgetperiod.index', compact('budgets'));
     }
 
     public function create()
@@ -48,16 +81,19 @@ class BudgetPeriodController extends Controller
                 'CreatedBy' => Auth::Id(),
                 'ModifiedBy' => Auth::Id()
             ]);
+
             DB::commit();
+
             activity()
                 ->performedOn(new BudgetPeriods())
                 ->causedBy(Auth::user())
+                ->event('create')
                 ->withProperties(['action' => 'create'])
                 ->log('create periods');
             return redirect()->route('budgetperiod.index')->with('success', 'Budget Period  created successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
-            Log::error('Failed to create period:' . $th->getMessage());
+            Log::error('Failed to create budget: ' . $th->getMessage());
 
             return back()->withErrors(['error' => 'Failed to create Period'])->withInput();
         }

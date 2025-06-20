@@ -613,7 +613,7 @@
                     responsive: true,
                     dom: 't',//'rtip',
                     ajax: {//survey-question/{survey-question}/survey-question-answer
-                        url: '{{ url('/') }}/survey-question/' + questionID + '/survey-question-answer',
+                        url: '{{ url('/') }}/crm/survey-question/' + questionID + '/survey-question-answer',
                         error: function (jqXHR) {
                             codeNotify(jqXHR.status);
                         }

@@ -14,11 +14,23 @@ class DepartmentSeeder extends Seeder
     public function run(): void
     {
         $actor = SystemHelper::user();
+
+        $departments = [
+            ['DepartmentID' => 'D001', 'Name' => 'Marketing'],
+            ['DepartmentID' => 'D002', 'Name' => 'Finance'],
+            ['DepartmentID' => 'D003', 'Name' => 'Procurement'],
+            ['DepartmentID' => 'D004', 'Name' => 'Human Resource'],
+            ['DepartmentID' => 'D005', 'Name' => 'Research and Development'],
+            ['DepartmentID' => 'D006', 'Name' => 'ICT Support'],
+        ];
+
+        foreach ($departments as $dept) {
         Department::create([
-            'DepartmentID' => 'D001',
-            'Name' => 'Marketing',
+            'DepartmentID' => $dept['DepartmentID'],
+            'Name' => $dept['Name'],
             'CreatedBy' => $actor->Id,
             'ModifiedBy' => $actor->Id,
         ]);
     }
+}
 }

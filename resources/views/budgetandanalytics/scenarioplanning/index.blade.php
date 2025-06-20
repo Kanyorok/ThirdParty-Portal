@@ -27,8 +27,8 @@
                         <td>{{$loop->iteration}}</td>
                         <td>{{$scenario->scenarioName ?? '-'}}</td>
                         <td>{{$scenario->description ?? '-'}}</td>
-                        <td>{{$scenario->budgetPeriod ?? '-'}}</td>
-                        <td>{{$scenario->planningMethod ?? '-'}}</td>
+                        <td>{{ $scenario->budgetPeriodRef?->periodType ?? '-' }}</td>
+                        <td>{{ $scenario->planningMethodRef?->MethodName ?? '-' }}</td>
                         @if ($scenario->isDefault)
                             <td><span class="badge bg-success">Default</span></td>
                         @else

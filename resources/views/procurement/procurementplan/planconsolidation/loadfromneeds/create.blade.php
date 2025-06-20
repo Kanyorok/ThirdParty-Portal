@@ -59,7 +59,7 @@
             <div class="col-md-3">
                 <label class="form-label">Branch</label>
                 <select class="form-select filter-input" name="branch_filter" id="branch_filter">
-                    <option value="">Select Branch</option>
+                    <option value="">All Branches</option>
                     @foreach($branches as $branch)
                         <option
                             value="{{ $branch->Id }}" {{ request('branch_filter') == $branch->Id ? 'selected' : '' }}>
@@ -71,7 +71,7 @@
             <div class="col-md-3">
                 <label class="form-label">Department</label>
                 <select class="form-select filter-input" name="department_filter" id="department_filter">
-                    <option value="">Select Department</option>
+                    <option value="">All Departments</option>
                     @foreach($departments as $dept)
                         <option
                             value="{{ $dept->Id }}" {{ request('department_filter') == $dept->Id ? 'selected' : '' }}>
@@ -83,7 +83,7 @@
             <div class="col-md-3">
                 <label class="form-label">Category</label>
                 <select class="form-select filter-input" name="category_id" id="category_id">
-                    <option value="">Select Category</option>
+                    <option value="">All Categories</option>
                     @foreach($categories as $category)
                         <option
                             value="{{ $category->Id }}" {{ request('category_id') == $category->Id ? 'selected' : '' }}>
@@ -141,7 +141,7 @@
                 </table>
 
                 <div class="d-flex justify-content-end mt-3">
-                    <button type="submit" class="btn btn-success" id="submitBtn" name="action" value="submit" disabled>
+                    <button type="submit" class="btn btn-success" id="submitBtn" name="action" value="submit">
                         ➕ Include Selected Items in Draft Plan
                     </button>
                 </div>

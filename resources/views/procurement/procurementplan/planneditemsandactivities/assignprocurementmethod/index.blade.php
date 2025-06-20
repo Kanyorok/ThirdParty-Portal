@@ -10,7 +10,7 @@
         <div class="card-body">
             <div class="row g-3 align-items-end">
                 <div class="col-md-6">
-                    <label class="form-label">Select Approved Plan</label>
+                    <label class="form-label">Select Plan</label>
                     <select class="form-select" id="approved-plan-select">
                         <option selected disabled>-- Choose Plan --</option>
                         @foreach ($approvedPlans as $plan)
@@ -30,6 +30,7 @@
         @csrf
 
         <input type="hidden" name="approved_plan_id" id="approved-plan-id-hidden">
+
         <!-- Items Table -->
         <div class="card shadow-sm mb-4">
             <div class="card-body">
@@ -41,7 +42,7 @@
                             <th>Item</th>
                             <th>Qty</th>
                             <th>Est. Cost</th>
-                            <th>Suggested Method</th>
+                            <th>Assigned Method</th>
                             <th>Assign Method</th>
                             <th>Justification (if override)</th>
                         </tr>
@@ -64,6 +65,8 @@
 
 @push('scripts')
     <script>
+        const procurementModes = @json($procurementModes);
+
         document.addEventListener('DOMContentLoaded', function () {
             const loadBtn = document.getElementById('load-items-btn');
             const planSelect = document.getElementById('approved-plan-select');
@@ -83,6 +86,10 @@
                         const tbody = document.getElementById('items-table-body');
                         tbody.innerHTML = '';
 
+                        const selectOptions = procurementModes.map(mode =>
+                            `<option value="${mode.id}">${mode.Name}</option>`
+                        ).join('');
+
                         data.forEach(line => {
                             const row = `
                             <tr>
@@ -92,10 +99,8 @@
                                 <td><span class="badge bg-secondary">${line.ProcurementMethod || 'N/A'}</span></td>
                                 <td>
                                     <select class="form-select" name="assigned_method[${line.LineItemID}]">
-                                        <option value="Tender">Tender</option>
-                                        <option value="RFQ">RFQ</option>
-                                        <option value="Direct">Direct</option>
-                                        <option value="Framework">Framework</option>
+                                        <option value="" disabled selected>-- Select Method --</option>
+                                        ${selectOptions}
                                     </select>
                                 </td>
                                 <td>

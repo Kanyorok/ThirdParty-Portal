@@ -1,48 +1,62 @@
 @extends('layouts.app')
-@section('title', 'drepositorymanagement')
-@section('content')
-<div class="container mt-5">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h4>📄 Recent Bulk Uploads</h4>
-    <a href="create.php" class="btn btn-success">📤 New Bulk Upload</a>
-  </div>
+@section('title', 'Upload New Document')
 
-  <div class="table-responsive">
-    <table class="table table-bordered table-striped">
-      <thead class="table-light">
-        <tr>
-          <th>#</th>
-          <th>Filename</th>
-          <th>Uploaded By</th>
-          <th>Upload Time</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- Example Static Rows -->
-        <tr>
-          <td>1</td>
-          <td>contract_A.pdf</td>
-          <td>John Doe</td>
-          <td>2025-05-08 14:30</td>
-          <td>
-            <a href="#" class="btn btn-sm btn-info">Download</a>
-            <a href="#" class="btn btn-sm btn-danger">Delete</a>
-          </td>
-        </tr>
-        <tr>
-          <td>2</td>
-          <td>invoice_0425.xlsx</td>
-          <td>Jane Smith</td>
-          <td>2025-05-08 09:10</td>
-          <td>
-            <a href="#" class="btn btn-sm btn-info">Download</a>
-            <a href="#" class="btn btn-sm btn-danger">Delete</a>
-          </td>
-        </tr>
-        <!-- Replace with dynamic PHP content if needed -->
-      </tbody>
-    </table>
-  </div>
+@section('content')
+    <div class="container mt-4">
+        <h4 class="mb-3">➕ Upload New Document</h4>
+
+        <form method="POST" enctype="multipart/form-data" action="#">
+            @csrf
+            <div class="card mb-4">
+                <div class="card-header bg-light">📄 Document Metadata</div>
+                <div class="card-body row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Title</label>
+                        <input type="text" class="form-control" placeholder="e.g. Staff Appraisal Template">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Document Type</label>
+                        <select class="form-select">
+                            <option>Invoice</option>
+                            <option>Contract</option>
+                            <option>Policy</option>
+                        </select>
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" rows="3"
+                                  placeholder="Short description of document content"></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Tags (comma-separated)</label>
+                        <input type="text" class="form-control" placeholder="e.g. finance, supplier, urgent">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Category</label>
+                        <select class="form-select">
+                            <option>Legal</option>
+                            <option>HR</option>
+                            <option>Finance</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header bg-light">📁 Upload File</div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Choose File</label>
+                        <input type="file" class="form-control" name="document_file">
+                        <small class="form-text text-muted">Allowed formats: PDF, DOCX, JPG, PNG. Max size: 20MB</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-end">
+                <a href="{{ route('drepositorymanagement.index') }}" class="btn btn-secondary">Cancel</a>
+                <button class="btn btn-primary">Upload Document</button>
+            </div>
+        </form>
 </div>
 @endsection

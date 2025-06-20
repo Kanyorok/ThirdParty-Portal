@@ -3,17 +3,75 @@
 namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\Inventory\TransactionTransfer;
+use App\Models\Inventory\TransactionReceipt;
+use App\Http\Requests\Inventory\TransactionReceiptRequest;
+use App\Services\Inventory\TransactionReceiptService;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Core\Branch;
+use App\Enums\Inventory\Transfers;
 
 class TransactionReceiptsController extends Controller
 {
-    //
-    public function index()
+    protected TransactionReceiptService $service;
+
+    public function __construct(TransactionReceiptService $service)
     {
-        return view('inventory.transactions.receipts.index');
+        $this->service = $service;
     }
 
-    public function create(){
-        return view('inventory.transactions.receipts.create');
+    public function index()
+    {
+        $receipts = TransactionReceipt::with([
+            'transfer', 'transfer.fromBranch', 'items.transferItem', 'items.item'
+        ])->latest()->paginate(10);
+
+        return view('inventory.transactions.receipts.index', compact('receipts'));
+    }
+
+    public function create()
+    {
+        $this->authorize('create', TransactionReceipt::class);
+        $transfers = TransactionTransfer::with(['items.item'])
+            ->where('Status', Transfers::InTransit)
+            ->get();
+
+        return view('inventory.transactions.receipts.create', compact('transfers'));
+    }
+
+    public function store(TransactionReceiptRequest $request)
+    {
+        $this->authorize('create', TransactionReceipt::class);
+        $validatedData = $request->validated();
+        $items = $validatedData['items'] ?? [];
+        unset($validatedData['items']);
+
+        $receipt = $this->service->createReceipt($validatedData, $items, Auth::user());
+
+        return redirect()->route('transactionsreceipts.index')->with('success', 'Goods receipt posted successfully.');
+    }
+
+    public function show($id)
+    {
+        $this->authorize('view', TransactionReceipt::class);
+        $receipt = TransactionReceipt::with(['transfer', 'items.item'])->findOrFail($id);
+        return view('inventory.transactions.receipts.show', compact('receipt'));
+    }
+
+    public function destroy($id)
+    {
+        $this->authorize('destroy', TransactionReceipt::class);
+        $receipt = TransactionReceipt::findOrFail($id);
+        $this->service->deleteReceipt($receipt);
+        return redirect()->route('transactionsreceipts.index')->with('success', 'Receipt deleted.');
+    }
+
+    public function getTransferItems($id)
+    {
+        $transfer = TransactionTransfer::with('items.item')->findOrFail($id);
+        return response()->json([
+            'items' => $transfer->items,
+            'from_branch' => $transfer->FromBranch,
+        ]);
     }
 }

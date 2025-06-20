@@ -44,7 +44,7 @@
                 <select class="form-select" id="budgetPeriod" name="budgetPeriod">
                     <option disabled selected>Select Period</option>
                     @foreach ($periods as $period)
-                        <option value="{{$period->fiscalYear ?? '-'}}">{{$period->fiscalYear ?? '-'}}</option>
+                        <option value="{{$period->Id ?? '-'}}">{{$period->fiscalYear  ?? '-'}}</option>
                     @endforeach
                 </select>
             </div>
@@ -54,7 +54,7 @@
                 <select class="form-select" id="planningMethod" name="planningMethod">
                     <option disabled selected>Select Method</option>
                     @foreach ($methods as $method)
-                        <option value="{{ $method->MethodName }}">{{ $method->MethodName }}</option>
+                        <option value="{{ $method->Id }}">{{ $method->MethodName }}</option>
                     @endforeach
                 </select>
             </div>

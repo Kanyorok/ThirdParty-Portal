@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->id('Id');
             $table->string('scenarioName');
             $table->text('description');
-            $table->foreignId('budgetPeriod')->constrained('t_BudgetPeriods', 'Id');
+            $table->foreignId('budgetPeriod')->nullable();//constrained('t_BudgetPeriods','Id');
             $table->foreignId('planningMethod')->constrained('t_BudgetPlanningMethods', 'Id');
             $table->boolean('isDefault')->default(false);
 

@@ -16,6 +16,8 @@ use App\Http\Controllers\Inventory\StockTakeController;
 use App\Http\Controllers\Inventory\StockValuationHistoryController;
 use App\Http\Controllers\Inventory\TransactionAdjustmentController;
 use App\Http\Controllers\Inventory\TransactionReceiptsController;
+use App\Http\Controllers\Inventory\StockIssueController;
+use App\Http\Controllers\Inventory\TransactionApprovalController;
 use App\Http\Controllers\Inventory\TransactionTransfersController;
 use App\Http\Controllers\Inventory\UOMConversionController;
 use App\Http\Controllers\Inventory\InventoryTypeController;
@@ -33,11 +35,6 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     // Route::resource('receipts', ReceiptController::class);
 
     Route::get('/itemmaster', [ItemMasterListController::class, 'index'])->name('itemmaster.index');
-
-    Route::resource('transactionsreceipts', TransactionReceiptsController::class);
-    Route::resource('transactionstransfers', TransactionTransfersController::class);
-    Route::resource('transactionsadjustment', TransactionAdjustmentController::class);
-
     //Route::resource('itemmaster', ItemMasterController::class);
     Route::get('/itemmaster', [ItemMasterListController::class, 'index'])->name('itemmaster.index');
     Route::get('/itemmasterlist/create', [ItemMasterListController::class, 'create'])->name('itemmasterlist.create');
@@ -46,7 +43,8 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/itemmasterlist/{Id}/edit', [ItemMasterListController::class, 'edit'])->name('itemmasterlist.edit');
     Route::put('/itemmasterlist/{Id}', [ItemMasterListController::class, 'update'])->name('itemmasterlist.update');
     Route::delete('/itemmasterlist/{Id}', [ItemMasterListController::class, 'destroy'])->name('itemmasterlist.destroy');
-    Route::get('/get-subcategories', [ItemMasterListController::class, 'getSubcategories'])->name('get.subcategories');
+    Route::get('/get-subcategory', [ItemMasterListController::class, 'getSubcategories'])->name('get.subcategories');
+
 
     Route::get('/stores', [StoreController::class, 'index'])->name('stores.index');
     Route::get('/stores/create', [StoreController::class, 'create'])->name('stores.create');
@@ -65,7 +63,7 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::put('/sku/{Id}', [SKUController::class, 'update'])->name('sku.update');
     Route::delete('/sku/{Id}', [SKUController::class, 'destroy'])->name('sku.destroy');
     Route::get('/get-stores', [SKUController::class, 'getStores'])->name('get.stores');
-    Route::get('/get-items', [SKUController::class, 'getItemsByCategoryOrSubcategory'])->name('get.items');
+    Route::get('/info/get-items', [SKUController::class, 'getItemsByCategoryOrSubcategory'])->name('get.items');
 
     //Route::resource('itemcategory', ItemCategoryController::class);
     Route::get('/itemcategory', [ItemCategoryController::class, 'index'])->name('itemcategory.index');
@@ -80,17 +78,44 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/itemsubcategory', [ItemSubCategoryController::class, 'index'])->name('itemsubcategory.index');
     Route::get('/itemsubcategory/create', [ItemSubCategoryController::class, 'create'])->name('itemsubcategory.create');
     Route::post('/itemsubcategory', [ItemSubCategoryController::class, 'store'])->name('itemsubcategory.store');
-    Route::get('/itemsubcategory/{Id}', [ItemSubCategoryController::class, 'show'])->name('itemsubcategory.show');
+    Route::get('/itemsubcategory/{id}', [ItemSubCategoryController::class, 'show'])->name('itemsubcategory.show');
     Route::get('/itemsubcategory/{Id}/edit', [ItemSubCategoryController::class, 'edit'])->name('itemsubcategory.edit');
     Route::put('/itemsubcategory/{Id}', [ItemSubCategoryController::class, 'update'])->name('itemsubcategory.update');
     Route::delete('/itemsubcategory/{Id}', [ItemSubCategoryController::class, 'destroy'])->name('itemsubcategory.destroy');
 
+
+    //Route::resource('openingstock', OpeningStockController::class);
+    Route::get('/openingstock/index', [OpeningStockController::class, 'index'])->name('openingstock.index');
+    Route::get('/openingstock/create', [OpeningStockController::class, 'create'])->name('openingstock.create');
+    Route::get('/downloads/opening-stock-sample', [OpeningStockController::class, 'downloadSampleTemplate'])->name('openingstock.sample');
+    Route::post('/openingstock/upload', [OpeningStockController::class, 'uploadExcel'])->name('openingstock.upload');
+
+    //Route::resource('bintracking', BinTrackingController::class);
+    Route::get('/inventorytracking', [BinTrackingController::class, 'index'])->name('bintracking.index');
+    Route::get('/inventorytracking/create', [BinTrackingController::class, 'create'])->name('bintracking.create');
+
+
+
+
     Route::resource('inventorydashboard', InventoryDashboardController::class);
     Route::resource('movementdashboard', MovementDashboardController::class);
-    Route::resource('stocktake', StockTakeController::class);
-    Route::resource('openingstock', OpeningStockController::class);
+
+    //Route::resource('stocktake', StockTakeController::class);
+    Route::get('/stocktake/index', [StockTakeController::class, 'index'])->name('stocktake.index');
+    Route::get('/stocktake', [StockTakeController::class, 'create'])->name('stocktake.create');
+    Route::post('/stocktake/store', [StockTakeController::class, 'store'])->name('stocktake.store');
+    Route::post('/stocktake/storeline', [StockTakeController::class, 'storeline'])->name('stocktake.storeline');
+    Route::get('/stocktake/show/{Id}', [StockTakeController::class, 'show'])->name('stocktake.show');
+    Route::delete('stocktake/delete/{Id}', [StockTakeController::class, 'destroy'])->name('stocktake.destroy');
+    Route::get('stocktake/edit/{Id}', [StockTakeController::class, 'edit'])->name('stocktake.edit');
+    Route::put('stocktake/edit/{Id}', [StockTakeController::class, 'update'])->name('stocktake.update');
+    Route::get('/stocktake/branches/{storeId}', [StockTakeController::class, 'getStoreByBranch'])->name('getstores');
+    Route::get('/stock-items/{branchId}/{storeId}', [StockTakeController::class, 'getStockItems'])->name('stocktake.items');
+
+
+
+
     Route::resource('uomconversion', UOMConversionController::class);
-    Route::resource('bintracking', BinTrackingController::class);
     Route::resource('stockvaluationhistory', StockValuationHistoryController::class);
     Route::resource('expirytracking', ExpiryBatchTrackingController::class);
     //Route::resource('interbranchrequisition', InterBranchRequisitionController::class);
@@ -102,12 +127,60 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::put('/interbranchrequisition/{Id}', [InterBranchRequisitionController::class, 'update'])->name('interbranchrequisition.update');
     Route::delete('/interbranchrequisition/{Id}', [InterBranchRequisitionController::class, 'destroy'])->name('interbranchrequisition.destroy');
     Route::get('/interbranchrequisition/get-items', [InterBranchRequisitionController::class, 'getItemsByCategoryOrSubcategory'])->name('interbranchrequisition.getItemsByCategoryOrSubcategory');
+    Route::get('/items/code/{Id}', [InterBranchRequisitionController::class, 'getItemCode']);
 
-    Route::get('/inventory/get-subcategories', [InterBranchRequisitionController::class, 'getSubcategories'])->name('inventory.getSubcategories');
+    Route::get('/get-categories-by-branch', [InterBranchRequisitionController::class, 'getCategoriesByBranch'])->name('inventory.get-categories-by-branch');
+    Route::get('/get-subcategories-by-branch-and-category', [InterBranchRequisitionController::class, 'getSubcategoriesByBranchAndCategory'])->name('inventory.get-subcategories-by-branch-and-category');
+    Route::get('/get-items', [InterBranchRequisitionController::class, 'getItemsByBranchAndCategoryOrSubcategory'])->name('inventory.get-items');
+    Route::get('/get-subcategories', [InterBranchRequisitionController::class, 'getSubcategories'])->name('inventory.getSubcategories');
+
+    //Route::resource('transactionstransfers', TransactionTransfersController::class);
+    Route::get('/transactionstransfers', [TransactionTransfersController::class, 'index'])->name('transactionstransfers.index');
+    Route::get('/transactionstransfers/create', [TransactionTransfersController::class, 'create'])->name('transactionstransfers.create');
+    Route::post('/transactionstransfers', [TransactionTransfersController::class, 'store'])->name('transactionstransfers.store');
+    Route::get('/transactionstransfers/{Id}', [TransactionTransfersController::class, 'show'])->name('transactionstransfers.show');
+    Route::get('/transactionstransfers/{Id}/edit', [TransactionTransfersController::class, 'edit'])->name('transactionstransfers.edit');
+    Route::put('/transactionstransfers/{Id}', [TransactionTransfersController::class, 'update'])->name('transactionstransfers.update');
+    Route::delete('/transactionstransfers/{Id}', [TransactionTransfersController::class, 'destroy'])->name('transactionstransfers.destroy');
+    Route::get('/interbranchrequisition/{id}', [TransactionTransfersController::class, 'getRequisitionDetails']);
+
+    //Route::resource('transactionsreceipts', TransactionReceiptsController::class);
+    Route::get('/transactionsreceipts', [TransactionReceiptsController::class, 'index'])->name('transactionsreceipts.index');
+    Route::get('/transactionsreceipts/create', [TransactionReceiptsController::class, 'create'])->name('transactionsreceipts.create');
+    Route::post('/transactionsreceipts', [TransactionReceiptsController::class, 'store'])->name('transactionsreceipts.store');
+    Route::get('/transactionsreceipts/{Id}', [TransactionReceiptsController::class, 'show'])->name('transactionsreceipts.show');
+    Route::get('/transactionsreceipts/{Id}/edit', [TransactionReceiptsController::class, 'edit'])->name('transactionsreceipts.edit');
+    Route::put('/transactionsreceipts/{Id}', [TransactionReceiptsController::class, 'update'])->name('transactionsreceipts.update');
+    Route::delete('/transactionsreceipts/{Id}', [TransactionReceiptsController::class, 'destroy'])->name('transactionsreceipts.destroy');
+    Route::get('/transactionsreceipts/transfer-items/{Id}', [TransactionReceiptsController::class, 'getTransferItems']);
+
+
+    Route::resource('stockissue', StockIssueController::class);
+
+    //Route::resource('transactionsapproval', TransactionApprovalController::class);
+    Route::get('/transactionsapproval', [TransactionApprovalController::class, 'index'])->name('transactionsapproval.index');
+    Route::post('/transactionsapproval/approve/{Id}', [TransactionApprovalController::class, 'approve'])->name('transactionsapproval.approve');
+    Route::post('/transactionsapproval/reject/{Id}', [TransactionApprovalController::class, 'reject'])->name('transactionsapproval.reject');
+
+
+    //Route::resource('transactionsadjustment', TransactionAdjustmentController::class);
+    Route::get('/transactionsadjustment', [TransactionAdjustmentController::class, 'index'])->name('transactionsadjustment.index');
+    Route::get('/transactionsadjustment/create', [TransactionAdjustmentController::class, 'create'])->name('transactionsadjustment.create');
+    Route::post('/transactionsadjustment', [TransactionAdjustmentController::class, 'store'])->name('transactionsadjustment.store');
+    Route::get('/transactionsadjustment/{Id}', [TransactionAdjustmentController::class, 'show'])->name('transactionsadjustment.show');
+    Route::get('/transactionsadjustment/edit/{Id}', [TransactionAdjustmentController::class, 'edit'])->name('transactionsadjustment.edit');
+
+    Route::put('/transactionsadjustment/{Id}', [TransactionAdjustmentController::class, 'update'])->name('transactionsadjustment.update');
+    Route::delete('/transactionsadjustment/{Id}', [TransactionAdjustmentController::class, 'destroy'])->name('transactionsadjustment.destroy');
+    Route::get('/branch-stock/{branchId}', [TransactionAdjustmentController::class, 'getBranchStock'])->name('branch.stock');
+
 
     //Route::resource('interbranchrequisitionapproval', InterBranchRequisitionApprovalController::class);
     Route::get('/interbranchrequisitionapproval', [InterBranchRequisitionApprovalController::class, 'index'])->name('interbranchrequisitionapproval.index');
-    Route::post('interbranchrequisitionapproval/submit', [InterBranchRequisitionApprovalController::class, 'submitDecision'])->name('interbranchrequisitionapproval.submit');    //Route::resource('rentdashboard', RentDashboardController::class);
+    Route::post('interbranchrequisitionapproval/submit', [InterBranchRequisitionApprovalController::class, 'submitDecision'])->name('interbranchrequisitionapproval.submit');
+
+
+    //Route::resource('rentdashboard', RentDashboardController::class);
 
    // Route::resource('unitofmeasure', UOMController::class);
     Route::get('/unitofmeasure', [UOMController::class, 'index'])->name('unitofmeasure.index');
@@ -147,5 +220,7 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
         'index' => 'inventory-reports.index',
         'show' => 'inventory-reports.show'
+
+
     ]);
 });

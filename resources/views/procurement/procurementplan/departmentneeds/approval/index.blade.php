@@ -26,7 +26,12 @@
           <td>{{ $NeedsApprovalview->item->ItemName ?? 'N/A' }}</td>
           <td>{{ $NeedsApprovalview->item->category->Name ?? 'N/A' }}</td>
           <td>{{ $NeedsApprovalview->RequestedQty }}</td>
-          <td>{{ $NeedsApprovalview->EstimatedUnitCost }}</td>
+          <!-- <td>{{ $NeedsApprovalview->EstimatedUnitCost }}</td> -->
+
+          <!-- Include the est. cost as estimatedcost * requestedqty  -->
+          <td>{{isset($NeedsApprovalview->RequestedQty, $NeedsApprovalview->EstimatedUnitCost)
+          ? number_format($NeedsApprovalview->RequestedQty * $NeedsApprovalview->EstimatedUnitCost, 2, '.', ',')
+      : 'N/A'}}</td>
           <td>{{ $NeedsApprovalview->creator->Name }}</td>
           <td>{{ \Carbon\Carbon::parse($NeedsApprovalview->CreatedOn)->format('d M Y') }}</td>
           <td>{{ \Carbon\Carbon::parse($NeedsApprovalview->RequestedDate)->format('d M Y') }}</td>

@@ -4,7 +4,7 @@
 
     <div class="container mt-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h4>✏️ Edit Procurement Item Schedule</h4>
+            <h4>✏️ Procurement Item Schedule</h4>
             <a href="{{ route('Procurement-Plan-Schedule.index') }}" class="btn btn-sm btn-outline-secondary">
                 ← Back
             </a>
@@ -25,20 +25,23 @@
             <input type="hidden" name="lineItemIds[]" value="{{ $lineItem->LineItemID }}">
 
             @php
-                $periods = $lineItem->schedulePlan->periods->keyBy('SchedulePeriod') ?? collect();
+                $periods = $lineItem->schedulePlan && $lineItem->schedulePlan->periods
+                ? $lineItem->schedulePlan->periods->keyBy('SchedulePeriod')
+                : collect();
                 $months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
             @endphp
 
             <div class="mb-4 p-3 border rounded bg-light">
                 <p><strong>Plan:</strong> {{ $plan->ReferenceNumber ?? 'N/A' }}
-                    <strong>Year: </strong> {{ $plan->FiscalYear }}</p>
+                    <strong>Year: </strong> {{ $plan->FiscalYear }}
+                </p>
                 <p><strong>Item Name:</strong> {{ $lineItem->item->ItemName ?? 'Unnamed Item' }}</p>
                 <p><strong>Instructions:</strong> Choose whether to break down each item by Quarter or Month, and update
                     the quantity accordingly.</p>
             </div>
 
             <div class="form-group mb-4">
-                <label for="modeSelect" class="form-label">Mode</label>
+                <label for="modeSelect" class="form-label">Schedule Type</label>
                 <select id="modeSelect" name="mode_{{ $lineItem->LineItemID }}" class="form-control schedule-mode"
                         data-id="{{ $lineItem->LineItemID }}">
                     <option value="quarter"
@@ -71,8 +74,7 @@
                             class="form-control text-center"
                             style="width: 70px;"
                             min="0"
-                            placeholder="0"
-                        >
+                            placeholder="0">
                     @endfor
                 </div>
             </div>
@@ -96,13 +98,12 @@
                             class="form-control text-center"
                             style="width: 70px;"
                             min="0"
-                            placeholder="0"
-                        >
+                            placeholder="0">
                     @endforeach
                 </div>
             </div>
 
-            <button type="submit" class="btn btn-primary">Update Schedule</button>
+            <button type="submit" class="btn btn-primary">Schedule</button>
         </form>
     </div>
 

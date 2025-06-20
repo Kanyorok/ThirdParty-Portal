@@ -233,5 +233,46 @@ class CodeDetailSeeder extends Seeder
             ],
 
         ]);
+
+        //// Budget System Codes
+        DB::table('t_CodeDetails')->insert([
+            [
+                'CodeID' => "GLAccountType",
+                'Value' => 'A',
+                'Description' => 'Assets',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+            [
+                'CodeID' => "GLAccountType",
+                'Value' => 'L',
+                'Description' => 'Liabilities',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+            [
+                'CodeID' => "GLAccountType",
+                'Value' => 'I',
+                'Description' => 'Income',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+            [
+                'CodeID' => "GLAccountType",
+                'Value' => 'E',
+                'Description' => 'Expenses',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+
+        ]);
     }
 }

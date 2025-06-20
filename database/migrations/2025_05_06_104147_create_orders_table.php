@@ -71,6 +71,7 @@ return new class extends Migration
             $table->string('Terms')->nullable();
             $table->string('Priority')->nullable();
             $table->string('BranchID')->nullable();
+            $table->char('DocStatus', 2)->nullable();
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');

@@ -14,7 +14,7 @@ class TenderSubmissionController extends Controller
 {
     public function index()
     {
-        $submissions = BidSubmission::all(); // Fetch all records from bid_submissions table
+        $submissions = BidSubmission::with('submissionMode', 'createdByUser')->get();
         return view('procurement.tendering.suppliermanagement.bidsubmission.index', compact('submissions'));
     }
 
@@ -36,7 +36,7 @@ class TenderSubmissionController extends Controller
 public function edit($Id)
 {
     $submission = BidSubmission::findOrFail($Id);
-    return view('procurement.tendering.suppliermanagement.bidsubmission.edit', compact('submission'));
+    //return view('procurement.tendering.suppliermanagement.bidsubmission.edit', compact('submission'));
 }
 public function store(Request $request)
     {

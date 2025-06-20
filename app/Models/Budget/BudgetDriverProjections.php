@@ -1,0 +1,56 @@
+<?php
+
+namespace App\Models\Budget;
+
+use App\Models\Core\Currency;
+use App\Traits\Model\UserActorTrait;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class BudgetDriverProjections extends Model
+{
+    use UserActorTrait, SoftDeletes;
+
+    const CREATED_AT = 'CreatedOn';
+    const UPDATED_AT = 'ModifiedOn';
+    const DELETED_AT = 'DeletedOn';
+    protected $table = 't_BudgetDriverProjections';
+    protected $primaryKey = 'Id';
+    protected $fillable = [
+        'ScenarioID',
+        'CurrencyID',
+        'PeriodID',
+        'CreatedBy',
+        'ModifiedBy',
+    ];
+
+    public static function getPrimaryKey(): string
+    {
+        return 'BudgetDriverProjectionsId';
+    }
+
+    // Relationships
+
+    public function projections(): HasMany
+    {
+        return $this->hasMany(BudgetDriverProjectionsData::class, 'BudgetDriverProjectionsID', 'Id');
+    }
+
+    public function scenario(): BelongsTo
+    {
+        return $this->belongsTo(BudgetScenarioPlanning::class, 'ScenarioID', 'Id');
+    }
+
+    public function currency(): BelongsTo
+    {
+        return $this->belongsTo(Currency::class, 'CurrencyID', 'Id');
+    }
+
+    public function period(): BelongsTo
+    {
+        return $this->belongsTo(BudgetPeriods::class, 'PeriodID', 'Id');
+    }
+
+}

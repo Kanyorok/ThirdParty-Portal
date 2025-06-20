@@ -2,6 +2,12 @@
 @section('title', 'Add Driver Rate')
 @section('content')
     <div class="card mt-4">
+
+        This form allows you to configure and manage financial rates for products imported from the Core Banking System
+        (CBS).
+        Specify the rate type (e.g., interest, tax, discount), applicable product and source of the rate. These settings
+        will directly
+        impact budget drivers and projections tied to each product.
         <div class="card-header bg-primary text-white">➕ Add Yield / Expense Rate</div>
         <div class="card-body">
             <form>
@@ -41,6 +47,5 @@
                 </div>
                 <button type="submit" class="btn btn-success">Save Rate</button>
             </form>
-        </div>
     </div>
 @endsection

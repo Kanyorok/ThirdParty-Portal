@@ -27,8 +27,8 @@
                             <th>Perishable</th>
                             <th>Saleable</th>
                             <th>Purchasable</th>
-                            <th>Store</th>
                             <th>Branch</th>
+                            <th>Store</th>
                             <th>Current Qty</th>
                             <th>Min</th>
                             <th>Reorder</th>

@@ -1,20 +1,19 @@
 @extends('layouts.app')
-@section('title', 'Consolidated Procurement Plans')
+@section('title', '📂 Consolidated Procurement Plans')
 @section('styles')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 @endsection
 @section('content')
 
     <div class="container mt-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4>📄 Consolidated Procurement Plans</h4>
-      <button type="button" class="btn btn-outline-success btn-sm" data-bs-toggle="modal"
-              data-bs-target="#newPlanModal">
-          + New Plan
-      </button>
-  </div>
+        <div class="d-flex align-items-center mb-3">
+            <button type="button" class="btn btn-outline-success btn-sm ms-auto" data-bs-toggle="modal"
+                    data-bs-target="#newPlanModal">
+                + New Plan
+            </button>
+        </div>
 
-  <!-- Table -->
+        <!-- Table -->
   <div class="table-responsive">
       <table id="procplanmaintainTable" class="table table-bordered table-striped align-middle">
       <thead class="table-light">
@@ -24,7 +23,7 @@
           <th>Title</th>
           <th>Year</th>
           <th>Items</th>
-          <th>Estimated Cost (KES)</th>
+            <th>Estimated Total Cost (KES)</th>
           <th>Status</th>
           <th>Created By</th>
           <th>Created On</th>
@@ -55,9 +54,19 @@
             </td>
               <td>
                   <a href="{{ route('procurementplanmaintain.show', $plan->PlanID) }}"
-                     class="btn btn-sm btn-outline-primary">View To Add Items</a>
-                  <a href="{{ url('/planning/edit-draft/' . $plan->PlanID) }}" class="btn btn-sm btn-outline-success"
-                     hidden>Edit</a>
+                     class="btn btn-sm btn-outline-primary">
+                      @if($plan->Status->value === 'Dr')
+                          View to Add Items
+                      @elseif(in_array($plan->Status->value, ['Su', 'Ap']))
+                          View
+                      @else
+                          View
+                      @endif
+                  </a>
+                  @if($plan->Status->value === 'Dr')
+                      <a href="{{ route('planning.editDraftItems', ['PlanID' => $plan->PlanID]) }}"
+                         class="btn btn-sm btn-outline-success">Edit</a>
+                  @endif
             </td>
           </tr>
       @endforeach

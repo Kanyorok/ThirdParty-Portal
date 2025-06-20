@@ -3,8 +3,12 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Orders\ApproveOrderRequest;
+use App\Http\Requests\Procurement\Requisition\ApproveRequisitionRequest;
 use App\Http\Requests\Procurement\Requisition\RequisitionRequest;
+use App\Models\Procurement\Order;
 use App\Models\Procurement\Requisitions;
+use App\Services\Core\DocumentApprovalService;
 use App\Services\Procurement\Requisition\RequisitionItemService;
 use App\Services\Procurement\Requisition\RequisitionService;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -15,9 +19,9 @@ use App\Enums\ProcurementPlanStatusEnum;
 
 class RequisitionsController extends Controller
 {
-    public function __construct(protected RequisitionService $service,protected RequisitionItemService $requisitionItemService)
+    public function __construct(protected RequisitionService $service, protected RequisitionItemService $requisitionItemService, protected DocumentApprovalService $documentApprovalService)
     {
-        $this->middleware('ajax')->except(['index', 'show', 'create']);
+        $this->middleware('ajax')->except(['index', 'show', 'create', 'approval', 'approve']);
 //         $this->authorizeResource(Requisitions::class); // Uncomment if using authorization
     }
 
@@ -137,6 +141,34 @@ class RequisitionsController extends Controller
         }
     }
 
+    public function approval($id)
+    {
+        try {
+            $requisition = Requisitions::findOrFail($id); // This will throw 404 if not found
+            $this->authorize('view', $requisition); // Authorize the order object itself
+
+            $requisitionInfo = $this->service->getRelatedRequisition($id);
+            $requisitionlineInfo = $this->requisitionItemService->getRequisitionRelatedItems($id);
+
+            return view('procurement.requisitions.approval', compact('requisitionInfo', 'requisitionlineInfo'));
+
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            Log::warning("Unauthorized access attempt to view Requisition ID: {$id} by user ID: " . auth()->id());
+            return redirect()->back()->with('error', 'Unauthorized access.');
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::error("Requisition ID {$id} not found. Exception: " . $e->getMessage());
+            return redirect()->back()->with('error', 'Requisition not found.');
+        } catch (\Exception $e) {
+            Log::error("Failed to fetch Requisition ID {$id}. Exception: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return redirect()->back()->with('error', 'Failed to fetch Requisition.');
+        }
+    }
+
+    public function approve(ApproveRequisitionRequest $requisitionRequest, $id)
+    {
+//        dd($requisitionRequest->validated()); // if using validation
+        return $this->documentApprovalService->approve($requisitionRequest, $id);
+    }
 
     public function getRequisitions(): JsonResponse{
         try{

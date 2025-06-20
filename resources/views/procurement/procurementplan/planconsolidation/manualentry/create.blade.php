@@ -38,6 +38,7 @@
                                 data-uom-name="{{ $item->uom->Name ?? 'N/A' }}"
                                 data-uom-code="{{ $item->uom->Code ?? '' }}"
                                 data-category-id="{{ $item->category->Id ?? '' }}"
+                                data-uom-id="{{ $item->uom->Id ?? '' }}"
                                 data-category-name="{{ $item->category->Name ?? 'N/A' }}"
                             {{ old('ItemID') == $item->Id ? 'selected' : '' }}>
                             {{ $item->ItemName }}
@@ -65,14 +66,14 @@
             <div class="col-md-6">
                 <label class="form-label">Unit of Measure</label>
                 <input type="text" class="form-control" id="display-uom" readonly>
-                <input type="hidden" name="unit_of_measure" id="unit_of_measure">
+                <input type="hidden" name="unit_of_measure_id" id="unit_of_measure_id">
             </div>
         </div>
 
         <!-- Estimated Cost and Schedule -->
         <div class="row mb-3">
             <div class="col-md-6">
-                <label class="form-label">Estimated Cost</label>
+                <label class="form-label">Estimated Unit Cost</label>
                 <input type="number" name="estimated_cost"
                        class="form-control @error('estimated_cost') is-invalid @enderror"
                        placeholder="e.g. 50000" value="{{ old('estimated_cost') }}" required>
@@ -113,8 +114,8 @@
                         class="form-select @error('budget_line_id') is-invalid @enderror" required>
                     <option disabled {{ old('budget_line_id') ? '' : 'selected' }}>Select Budget Line</option>
                     @foreach($budgetLines as $budgetLine)
-                        <option value="{{ $budgetLine->BudgetLineID }}"
-                            {{ old('budget_line_id') == $budgetLine->BudgetLineID ? 'selected' : '' }}>
+                        <option value="{{ $budgetLine->Id}}"
+                            {{ old('budget_line_id') == $budgetLine->Id ? 'selected' : '' }}>
                             {{ $budgetLine->Description }}
                         </option>
                     @endforeach
@@ -169,30 +170,32 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const itemSelect = document.getElementById('item-select');
-        const uomInput = document.getElementById('unit_of_measure'); // hidden field (code)
-        const uomDisplay = document.getElementById('display-uom');   // visible field (name)
+        const uomDisplay = document.getElementById('display-uom');   // Visible UOM code
+        const uomIdInput = document.getElementById('unit_of_measure_id'); // Hidden UOM ID
         const categoryIdInput = document.getElementById('category-id');
         const categoryDisplay = document.getElementById('display-category');
 
-        itemSelect.addEventListener('change', function () {
-            const selected = this.options[this.selectedIndex];
+        function updateItemFields() {
+            const selected = itemSelect.options[itemSelect.selectedIndex];
             const uomCode = selected.getAttribute('data-uom-code');
-            const uomName = selected.getAttribute('data-uom-name');
             const categoryId = selected.getAttribute('data-category-id');
             const categoryName = selected.getAttribute('data-category-name');
+            const uomId = selected.getAttribute('data-uom-id');
 
-            uomInput.value = uomCode || '';
-            uomDisplay.value = uomName || 'N/A';
+            uomIdInput.value = uomId || '';
+            uomDisplay.value = uomCode || 'N/A';
 
             categoryIdInput.value = categoryId || '';
             categoryDisplay.value = categoryName || 'N/A';
+        }
 
-            if (itemSelect.value) {
-                itemSelect.dispatchEvent(new Event('change'));
-            }
-        });
+        itemSelect.addEventListener('change', updateItemFields);
+
+        // Trigger it once on load in case item is pre-selected
+        if (itemSelect.value) {
+            updateItemFields();
+        }
     });
 </script>
-
 
 @endsection

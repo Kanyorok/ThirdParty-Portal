@@ -2,6 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Enums\Core\ModulesEnum;
+use App\Models\Budget\BudgetActivityMaster;
+use App\Models\Budget\BudgetGLAccountSubType;
 use Illuminate\Database\Seeder;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -40,12 +43,20 @@ class DatabaseSeeder extends Seeder
         $this->call(BudgetScenarioPlanningSeeder::class);
         $this->call(BudgetRatesSeeder::class);
         $this->call(BudgetDriverTypes::class);
-        $this->call(BudgetLineSeeder::class);
         $this->call(BudgetGLAccountsSeeder::class);
-        $this->call(BudgetLinesGLAccountsSeeder::class);
+        $this->call(BudgetGLAccountSubTypeSeeder::class);
         $this->call(BudgetProductTypeSeeder::class);
+        $this->call(BudgetLineCategorySeeder::class);
+        $this->call(BudgetLineSeeder::class);
+        $this->call(BudgetLinesGLAccountsSeeder::class);
         $this->call(BudgetProductsSeeder::class);
         $this->call(BudgetDriversMasterSeeder::class);
-        $this->call(RepositorySeeder::class);
+        $this->call(BudgetActivityMasterSeeder::class);
+        $this->call(BudgetDriverRatesSeeder::class);
+        $this->call(BudgetMonthlyAllocationsSeeder::class);
+        $this->call(BudgetSeeder::class);
+        $this->call(BudgetActivitiesSeeder::class);
+        $this->call(BudgetDriverProjectionsSeeder::class);
+        $this->call(BudgetDriverProjectionsDataSeeder::class);
     }
 }

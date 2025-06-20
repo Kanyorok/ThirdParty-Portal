@@ -58,7 +58,7 @@
                 </div>
 
                 <div class="mb-3 col-md-6">
-                    <label for="estimated_cost" class="form-label">Estimated Cost</label>
+                    <label for="estimated_cost" class="form-label">Estimated Unit Cost</label>
                     <input type="number" step="0.01" name="estimated_cost" id="estimated_cost" class="form-control"
                            value="{{ $lineItem->EstimatedUnitCost }}" required>
                 </div>

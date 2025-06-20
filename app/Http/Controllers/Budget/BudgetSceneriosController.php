@@ -18,7 +18,7 @@ class BudgetSceneriosController extends Controller
     public function index()
     {
         $this->authorize(PermissionEnum::BudgetSetupView, BudgetScenarioPlanning::class);
-        $scenarios = BudgetScenarioPlanning::all();
+        $scenarios = BudgetScenarioPlanning::with(['budgetPeriodRef', 'planningMethodRef'])->get();
         return view('budgetandanalytics.scenarioplanning.index', compact('scenarios'));
     }
 
@@ -34,8 +34,8 @@ class BudgetSceneriosController extends Controller
         $validated = $request->validate([
             'scenarioName' => 'required|string|max:100',
             'description' => 'nullable|string',
-            'budgetPeriod' => 'required|integer', // assuming it's an ID or year
-            'planningMethod' => 'required|string|max:50',
+            'budgetPeriod' => 'required|exists:t_BudgetPeriods,Id', // assuming it's an ID or year
+            'planningMethod' => 'required|exists:t_BudgetPlanningMethods,Id',
             //'isDefault'       => 'nullable|boolean',
         ]);
 
@@ -83,8 +83,8 @@ class BudgetSceneriosController extends Controller
         $validated = $request->validate([
             'scenarioName' => 'required|string|max:100',
             'description' => 'nullable|string',
-            'budgetPeriod' => 'required|integer', // assuming it's an ID or year
-            'planningMethod' => 'required|string|max:50',
+            'budgetPeriod' => 'required|exists:t_BudgetPeriods,Id', // assuming it's an ID or year
+            'planningMethod' => 'required|exists:t_BudgetPlanningMethods,Id',
             'isDefault' => 'nullable|boolean',
         ]);
 

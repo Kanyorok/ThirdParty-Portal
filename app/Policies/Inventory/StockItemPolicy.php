@@ -17,9 +17,6 @@ class StockItemPolicy
         return $user->can(PermissionEnum::StockItemView->value);
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
     public function view(User $user, StockItem $stockItem): bool
     {
         return $user->can(PermissionEnum::StockItemView->value);

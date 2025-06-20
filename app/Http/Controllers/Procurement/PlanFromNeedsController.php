@@ -76,44 +76,92 @@ class PlanFromNeedsController extends Controller
     // Store selected needs
     public function store(PlanFromNeedsRequest $request)
     {
+
         $this->authorize('store', PlanLineItems::class);
         $user = $request->user();
 
-        $selectedNeeds = DepartmentNeeds::whereIn('Id', $request->selected_needs)->get();
+        $selectedNeeds = DepartmentNeeds::whereIn('Id', $request->selected_needs)->with('item')->get();
+
+
+        $noFilters = !$request->filled('branch_filter') && !$request->filled('department_filter') && !$request->filled('category_id');
 
         foreach ($selectedNeeds as $need) {
-            $budgetLineId = $request->budget_line_id[$need->Id] ?? null;
+            $budgetLineId = $request->budget_line_id[$need->Id] ?? 0;
+            $categoryFromNeed = $need->item?->Category;
 
-            $planitems = PlanLineItems::create([
-                'PlanID' => $request->plan_id,
-                'ItemID' => $need->ItemID,
-                'BranchID' => $need->BranchID,
-                'DepartmentID' => $need->DepartmentID,
-                'CategoryID' => $request->category_id,
-                'MergedQty' => $need->RequestedQty,
-                'EstimatedUnitCost' => $need->EstimatedUnitCost,
-                'CreatedBy' => Auth::id(),
-                'AdjustedCost' => 0,
-                'UnitOfMeasure' => $need->UnitOfMeasure ?? 'Unit',
-                'ProcurementMethod' => 'Open Tender',
-                'SchedulePeriod' => $request->fiscal_year ?? now()->year,
-                'ExpectedDeliveryDate' => Carbon::parse($need->RequestedDate),
-                'BudgetLineID' => $budgetLineId ?? 0,
-                'ExecutionStatus' => 'Pending',
-                'ChangeRemarks' => $need->Justification,
-                'IsDeleted' => 0,
-                'ModifiedBy' => Auth::id(),
-                'CreatedOn' => now(),
-                'ModifiedOn' => now(),
-            ]);
-            foreach ($selectedNeeds as $need) {
-                activity()
-                    ->causedBy($user)
-                    ->performedOn($need)
-                    ->event('create')
-                    ->log('Created plan line item for: ' . $need->id);
+            if ($noFilters) {
+                $branches = Branch::all();
+                $departments = Department::all();
+
+                foreach ($branches as $branch) {
+                    foreach ($departments as $department) {
+                        $unitOfMeasureId = $need->item?->uom?->Id;
+
+                        PlanLineItems::create([
+                            'PlanID' => $request->plan_id,
+                            'ItemID' => $need->ItemID,
+                            'BranchID' => $branch->Id,
+                            'DepartmentID' => $department->Id,
+                            'CategoryID' => $categoryFromNeed,
+                            'MergedQty' => $need->RequestedQty,
+                            'EstimatedUnitCost' => $need->EstimatedUnitCost,
+                            'CreatedBy' => Auth::id(),
+                            'AdjustedCost' => 0,
+                            'UnitOfMeasure' => $unitOfMeasureId,
+                            'ProcurementMethod' => '',
+                            'SchedulePeriod' => $request->fiscal_year ?? now()->year,
+                            'ExpectedDeliveryDate' => Carbon::parse($need->RequestedDate),
+                            'BudgetLineID' => $budgetLineId,
+                            'ExecutionStatus' => 'Pending',
+                            'ChangeRemarks' => $need->Justification,
+                            'IsDeleted' => 0,
+                            'ModifiedBy' => Auth::id(),
+                            'CreatedOn' => now(),
+                            'ModifiedOn' => now(),
+                            'SourceType' => 'needs',
+                            'OriginalQTY' => $need->RequestedQty,
+                        ]);
+                    }
+                }
+            } else {
+                // Some filters applied – respect filters, fallback to need values
+                $branchId = $request->branch_filter ?? $need->BranchID;
+                $departmentId = $request->department_filter ?? $need->DepartmentID;
+                $categoryId = $request->category_id ?? $categoryFromNeed;
+
+                $unitOfMeasureId = $need->item?->uom?->Id;
+
+                PlanLineItems::create([
+                    'PlanID' => $request->plan_id,
+                    'ItemID' => $need->ItemID,
+                    'BranchID' => $branchId,
+                    'DepartmentID' => $departmentId,
+                    'CategoryID' => $categoryId,
+                    'MergedQty' => $need->RequestedQty,
+                    'EstimatedUnitCost' => $need->EstimatedUnitCost,
+                    'CreatedBy' => Auth::id(),
+                    'AdjustedCost' => 0,
+                    'UnitOfMeasure' => $unitOfMeasureId,
+                    'ProcurementMethod' => '',
+                    'SchedulePeriod' => $request->fiscal_year ?? now()->year,
+                    'ExpectedDeliveryDate' => Carbon::parse($need->RequestedDate),
+                    'BudgetLineID' => $budgetLineId,
+                    'ExecutionStatus' => 'Pending',
+                    'ChangeRemarks' => $need->Justification,
+                    'IsDeleted' => 0,
+                    'ModifiedBy' => Auth::id(),
+                    'CreatedOn' => now(),
+                    'ModifiedOn' => now(),
+                    'SourceType' => 'needs',
+                    'OriginalQTY' => $need->RequestedQty,
+                ]);
             }
 
+            activity()
+                ->causedBy(Auth::user())
+                ->performedOn($need)
+                ->event('create')
+                ->log('Created plan line item for need ID: ' . $need->id);
         }
 
         return redirect()->route('procurementplanmaintain.index')->with('success', 'Selected needs successfully included in the draft plan.');

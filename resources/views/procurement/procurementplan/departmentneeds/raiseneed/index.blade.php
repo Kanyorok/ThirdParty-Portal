@@ -31,7 +31,9 @@
         <td>{{ $departmentneedview->item->ItemName ?? 'N/A' }}</td>
           <td>{{ $departmentneedview->item->category->Name ?? 'N/A' }}</td>
           <td>{{ $departmentneedview->RequestedQty ?? 'N/A' }}</td>
-          <td>{{ $departmentneedview->EstimatedUnitCost ?? 'N/A' }}</td>
+          <td>{{ (isset($departmentneedview->RequestedQty, $departmentneedview->EstimatedUnitCost) && is_numeric($departmentneedview->RequestedQty) && is_numeric($departmentneedview->EstimatedUnitCost))
+                  ? number_format($departmentneedview->RequestedQty * $departmentneedview->EstimatedUnitCost, 2, '.', ',')
+                  : 'N/A' }}</td>
           <td>{{ $departmentneedview->Status->label() ?? 'N/A' }}</td>
           <td>{{ $departmentneedview->creator->Name ?? 'N/A' }}</td>
         <td>
@@ -134,7 +136,7 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script>
-  $(document).ready(function () {
+    $(document).ready(function () {
     $('#raisedneeds').DataTable({
       pageLength: 10,
       ordering: true,

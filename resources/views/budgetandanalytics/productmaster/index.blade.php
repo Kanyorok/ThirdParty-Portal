@@ -3,7 +3,11 @@
 @section('content')
     <div class="card p-3">
         <h5>📦 Product Master (CBS Synced)</h5>
-        <table class="table table-bordered table-striped">
+        <p class="text-muted">
+            Below is a list of Products synced from Core Banking System (CBS).
+        </p>
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped align-middle">
             <thead class="table-light">
             <tr>
                 <th>#</th>
@@ -11,29 +15,28 @@
                 <th>Product Name</th>
                 <th>Product Type</th>
                 <th>GL Code (CBS)</th>
-                <th>Is Budgeted</th>
+                {{-- <th>Is Budgeted</th> --}}
                 <th>Status</th>
-                <th>Actions</th>
+                {{-- <th>Actions</th>  --}}
             </tr>
             </thead>
             <tbody>
             @foreach ($data as $item)
                 <tr>
                     <td>{{ $loop->iteration }}.</td>
-                    <td>{{ $item['Code'] }}</td>
-                    <td>{{ $item['Name'] }}</td>
-                    <td>{{ $item['Type'] }}</td>
-                    <td>{{ $item['GLCode'] }}</td>
-                    <td><span class="badge bg-success">Yes</span></td>
+                    <td class="text-break">{{ $item['Code'] }}</td>
+                    <td class="text-break">{{ $item['Name'] }}</td>
+                    <td class="text-break">{{ $item['Type'] }}</td>
+                    <td class="text-break">{{ $item['GLCode'] }}</td>
+                    {{-- <td><span class="badge bg-success">Yes</span></td> --}}
                     <td><span class="badge bg-primary">Active</span></td>
                     <td>
-                        <button class="btn btn-sm btn-outline-info">👁 View</button>
+                        {{-- <button class="btn btn-sm btn-outline-info">👁 View</button> --}}
                     </td>
                 </tr>
-
             @endforeach
             </tbody>
         </table>
     </div>
-
+    </div>
 @endsection

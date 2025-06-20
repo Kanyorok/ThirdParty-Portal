@@ -12,6 +12,13 @@
         </div>
     @endif
     <div class="card p-3">
+        <div class="card-header bg-dark text-white mb-0">
+            📊 Budget Drivers Setup
+        </div>
+        <div class="card-body mb-0">
+            <p class="text-muted">Business drivers are key factors that influence the financial performance of an
+                organization. They can include operational, financial, or strategic elements that impact budgeting and
+                forecasting.</p>
         <div class="mb-2 d-flex justify-content-between">
             <a href="{{ route('budgetdrivers.create') }}" class="btn btn-success" data-bs-toggle="modal"
                data-bs-target="#addDriverModal">
@@ -23,6 +30,7 @@
             <tr>
                 <th>#</th>
                 <th>Name</th>
+                <th>Description</th>
                 <th>Status</th>
                 <th>Actions</th>
             </tr>
@@ -32,11 +40,13 @@
                 <tr>
                     <td>{{ $loop->index+1 }}.</td>
                     <td>{{ $item->DriverName }}</td>
+                    <td style="white-space: normal; break-word; max-width=300px;">{{ $item->Description ?? '—' }}</td>
                     @if ($item->IsActive==1)
                         <td><span class="badge bg-success">Active</span></td>
                     @else
                         <td><span class="badge bg-danger">Inactive</span></td>
                     @endif
+
                     <td>
                         <button class="btn btn-sm btn-info" data-bs-toggle="modal"
                                 data-bs-target="#editDriverModal-{{ $item->Id }}">
@@ -53,6 +63,7 @@
             @endforeach
             </tbody>
         </table>
+    </div>
     </div>
 
 

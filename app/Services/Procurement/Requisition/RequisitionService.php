@@ -111,6 +111,49 @@ class RequisitionService {
             ->get();
     }
 
+    public static function getRelatedRequisition($RequisitionId)
+    {
+        return DB::table(DB::raw('t_Requisitions WITH (NOLOCK)'))
+            ->leftJoin(DB::raw('t_RequisitionLines WITH (NOLOCK)'), 't_Requisitions.Id', '=', 't_RequisitionLines.RequisitionId')
+            ->leftJoin(DB::raw('t_CodeDetails WITH (NOLOCK)'), 't_Requisitions.StatusID', '=', 't_CodeDetails.ID')
+            ->leftJoin(DB::raw('t_Branches WITH (NOLOCK)'), 't_Requisitions.BranchID', '=', 't_Branches.Id')
+            ->leftJoin(DB::raw('t_Departments WITH (NOLOCK)'), 't_Requisitions.DepartmentID', '=', 't_Departments.Id')
+            ->leftJoin(DB::raw('t_ConsolidatedProcurementPlan WITH (NOLOCK)'), 't_Requisitions.PlanRef', '=', 't_ConsolidatedProcurementPlan.PlanID')
+            ->leftJoin(DB::raw('t_Users WITH (NOLOCK)'), 't_Requisitions.CreatedBy', '=', 't_Users.Id')
+            ->where('t_Requisitions.Id', $RequisitionId)
+            ->select([
+                't_Requisitions.RequisitionNo',
+                DB::raw('COALESCE(t_Branches.Name, t_Requisitions.BranchID) AS BranchID'),
+                DB::raw('COALESCE(t_Departments.Name, t_Requisitions.DepartmentID) AS DepartmentID'),
+                't_Requisitions.Remarks',
+                DB::raw('t_CodeDetails.Description AS Status'),
+                't_Requisitions.CreatedOn',
+                DB::raw('isnull(t_Users.Name, t_Requisitions.CreatedBy) AS CreatedBy'),
+                't_Requisitions.Id',
+                DB::raw('SUM(ISNULL(t_RequisitionLines.ExpectedPrice, 0)) AS ExpectedPrice'),
+                DB::raw('COUNT(t_RequisitionLines.Id) AS itemcount'),
+                DB::raw("t_ConsolidatedProcurementPlan.Title + ' - ' + t_ConsolidatedProcurementPlan.ReferenceNumber AS PlanTitle")
+            ])
+            ->groupBy(
+                't_Requisitions.Id',
+                't_Requisitions.RequisitionNo',
+                't_Requisitions.BranchID',
+                't_Requisitions.DepartmentID',
+                't_Requisitions.Remarks',
+                't_CodeDetails.Description',
+                't_Requisitions.CreatedOn',
+                't_Departments.Name',
+                't_Branches.Name',
+                't_ConsolidatedProcurementPlan.Title',
+                't_ConsolidatedProcurementPlan.ReferenceNumber',
+                't_Requisitions.CreatedBy',
+                't_Users.Name'
+            )
+            ->first();
+
+
+    }
+
     public static function fetchBranches()
     {
         return DB::table(DB::raw('t_Branches WITH (NOLOCK)'))

@@ -25,6 +25,8 @@
                     <th>Quantity</th>
                     <th>Estimated Unit Cost (KES)</th>
                     <th>Estimated Total Cost (KES)</th>
+                    <th>Budget Line</th>
+                    <th>Procurement Method</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -34,6 +36,8 @@
                         <td>{{ $item->MergedQty }}</td>
                         <td>{{ number_format($item->EstimatedUnitCost, 2) }}</td>
                         <td>{{ number_format($item->MergedQty * $item->EstimatedUnitCost, 2) }}</td>
+                        <td>{{ $item->budgetLine->Description ?? 'N/A' }}</td>
+                        <td>{{ $item->procurementMode->Name ?? 'N/A' }}</td>
                     </tr>
                 @endforeach
                 </tbody>
@@ -57,6 +61,11 @@
                    class="btn btn-outline-success">
                     <i class="fas fa-file-import me-1"></i>
                     Generate Items from Needs
+                </a>
+                <a href="{{ route('planmanualinput.index', ['plan_id' => $plan->PlanID, 'title' => $plan->Title]) }}"
+                   class="btn btn-outline-primary">
+                    <i class="fas fa-tasks me-1"></i>
+                    Manage Items
                 </a>
             @endif
         </div>

@@ -54,7 +54,7 @@
             <th>Department</th>
             <th>Qty</th>
             <th>Est. Cost</th>
-            <th>Required By</th>
+            <th>Expected Delivery Date</th>
             <th>Status</th>
             <th>Action</th>
         </tr>
@@ -69,7 +69,7 @@
                 <td>{{ $need->department->Name ?? 'N/A' }}</td>
                 <td>{{ $need->RequestedQty }}</td>
                 <td>{{ number_format($need->RequestedQty * $need->EstimatedUnitCost, 2) }}</td>
-                <td>{{ \Carbon\Carbon::parse($need->CreatedOn)->format('Y-m-d') }}</td>
+                <td>{{ \Carbon\Carbon::parse($need->RequestedDate)->format('d/m/Y') }}</td>
                 <td><span class="badge bg-info">{{ $need->Status->label() }}</span></td>
                 <td>
                     <button
@@ -107,7 +107,8 @@
 
 
     <div class="mt-4 d-flex justify-content-end">
-        <button class="btn btn-outline-secondary">🗃 Export to Excel</button>
+        <a href="{{ route('dashboard.export', request()->query()) }}" class="btn btn-outline-secondary">🗃 Export to
+            Excel</a>
     </div>
 </div>
 @push('scripts')
@@ -139,7 +140,7 @@
                             <li class="list-group-item"><strong>Department:</strong> ${need.DepartmentName}</li>
                             <li class="list-group-item"><strong>Quantity:</strong> ${need.RequestedQty}</li>
                             <li class="list-group-item"><strong>Est. Cost:</strong> ${need.EstimatedCost}</li>
-                            <li class="list-group-item"><strong>Required By:</strong> ${need.CreatedOn}</li>
+                            <li class="list-group-item"><strong>Expected Delivery Date:</strong> ${need.RequestedDate}</li>
                             <li class="list-group-item"><strong>Status:</strong> <span class="badge bg-info">${need.Status}</span></li>
                         </ul>
                     `;
