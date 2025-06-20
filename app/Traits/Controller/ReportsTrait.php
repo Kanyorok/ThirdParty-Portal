@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Throwable;
 use Yajra\DataTables\DataTables;
 
 trait ReportsTrait
@@ -25,7 +26,9 @@ trait ReportsTrait
                 return Datatables::of(Report::query()->where('t_Reports.ModuleId', $module->value)->select('*'))->addIndexColumn()
                     ->addColumn('action', function (Report $report) use ($module) {
                         return '<a href="' . route(Str::lower($module->name) . '-reports.show', [$report->Id]) . '" class="btn btn-info btn-sm"><i class="fas fa-eye"></i> view</a>';
-                    })->make();
+                    })->editColumn('Name', function (Report $report) use ($module) {
+                        return '<a href="' . route(Str::lower($module->name) . '-reports.show', [$report->Id]) . '" class="">' . $report->Name . '</a>';
+                    })->rawColumns(['action', 'Name'])->make();
             } catch (Exception) {
             }
             return $this->errored('cannot retrieve ' . Str::lower($module->description()) . ' reports.');
@@ -60,7 +63,7 @@ trait ReportsTrait
                 return view('snippets.errors')->with('message', 'cannot connect to the report server.');
             } catch (ErroredException $e) {
                 return view('snippets.errors')->with('message', $e->getMessage() ?? 'cannot retrieve report data.');
-            } catch (\Throwable|Exception $e) {
+            } catch (Throwable|Exception $e) {
                 return view('snippets.errors')->with('message', 'cannot retrieve report data.');
             }
 
@@ -82,7 +85,7 @@ trait ReportsTrait
             return redirect()->back()->with('fail', 'cannot connect to the report server.');
         } catch (ErroredException $e) {
             return redirect()->back()->with('fail', $e->getMessage() ?? 'cannot retrieve report data.');
-        } catch (\Throwable|Exception $e) {
+        } catch (Throwable|Exception $e) {
             return redirect()->back()->with('fail', 'cannot retrieve report data.');
         }
 
@@ -108,7 +111,7 @@ trait ReportsTrait
             return redirect()->back()->with('fail', 'cannot connect to the report server.');
         } catch (ErroredException $e) {
             return redirect()->back()->with('fail', $e->getMessage() ?? 'cannot retrieve report data.');
-        } catch (\Throwable|Exception $e) {
+        } catch (Throwable|Exception $e) {
             return redirect()->back()->with('fail', 'cannot retrieve report data.');
         }
     }
