@@ -28,13 +28,13 @@ class ScheduleController extends Controller
 {
     /**
      * Get the middleware that should be assigned to the controller.
-
-    public static function middleware(): array
-    {
-        return [
-            new Middleware(AjaxCheckMiddleware::class, except: ['index']),
-        ];
-    } */
+     *
+     * public static function middleware(): array
+     * {
+     * return [
+     * new Middleware(AjaxCheckMiddleware::class, except: ['index']),
+     * ];
+     * } */
 
     /**
      * Display a listing of the resource.
@@ -47,7 +47,7 @@ class ScheduleController extends Controller
             return new ScheduleCollection(
                 Schedule::query()->whereIn('t_Schedule.ScheduleID', ScheduleUser::query()->where('UserID', $request->user()->Id)->select('t_ScheduleUsers.ScheduleId'))
                     ->whereBetween('t_Schedule.StartOn', [$start, $end])
-                ->lock('WITH(NOLOCK)')->withTrashed()->get()
+                    ->lock('WITH(NOLOCK)')->withTrashed()->get()
             );
         }
 
@@ -88,14 +88,14 @@ class ScheduleController extends Controller
             try {
                 $schedule = DB::transaction(static function () use ($end, $actor, $clients, $start, $request) {
                     $meeting = Meeting::create([
-                                                'Title'      => $request->schedule_title,
-                                                'StartOn'    => $start,
-                                                'EndOn'      => $end,
-                                                'Location'   => $request->schedule_location,
-                                                'Notes'      => $request->notes,
-                                                'CreatedBy'  => $actor->Id,
-                                                'ModifiedBy' => $actor->Id,
-                                               ]);
+                        'Title' => $request->schedule_title,
+                        'StartOn' => $start,
+                        'EndOn' => $end,
+                        'Location' => $request->schedule_location,
+                        'Notes' => $request->notes,
+                        'CreatedBy' => $actor->Id,
+                        'ModifiedBy' => $actor->Id,
+                    ]);
 
                     $description = 'Meeting: ' . $meeting->Title . " - ";
                     $description .= (filter_var($meeting->Location, FILTER_VALIDATE_URL)) ? "Online" : $meeting->Location;
@@ -210,11 +210,11 @@ class ScheduleController extends Controller
         $user = $request->user();
 
         $schedule->update([
-                           'ModifiedBy' => $user->Id,
-                           'ModifiedOn' => now(),
-                           'StartOn'    => $start,
-                           'EndOn'      => $end,
-                          ]);
+            'ModifiedBy' => $user->Id,
+            'ModifiedOn' => now(),
+            'StartOn' => $start,
+            'EndOn' => $end,
+        ]);
 
         return $this->succeeded('updated successfully');
     }
