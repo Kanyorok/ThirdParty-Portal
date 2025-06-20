@@ -64,22 +64,37 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::get('propertyaddblock/create', [PropertyBlockController::class,'create'])->name('addblock.create');
     Route::post('propertyaddblock', [PropertyBlockController::class,'store'])->name('addblock.store');
     Route::get('propertyaddblock/show', [PropertyBlockController::class,'show'])->name('addblock.show');
+    Route::delete('propertyaddblock/delete/{Id}', [PropertyBlockController::class,'destroy'])->name('addblock.destroy');
+    Route::get('propertyaddblock/edit/{Id}',[PropertyBlockController::class,'edit'])->name('addblock.edit');
+    Route::put('propertyaddblock/update/{Id}',[PropertyBlockController::class,'update'])->name('addblock.update');
 
 
-    //Property Floor
-    //Route::resource('addfloor', PropertyFloorController::class);
-    Route::get('/propertyaddfloor', [PropertyFloorController::class,'index'])->name('addfloor.index');
-    Route::get('/propertyaddfloor/create', [PropertyFloorController::class,'create'])->name('addfloor.create');
-    Route::post('/propertyaddfloor', [PropertyFloorController::class,'store'])->name('addfloor.store');
-    Route::get('/propertyregistry/block/{propertyId}', [PropertyFloorController::class, 'getBlockByProperty'])->name('getblocks');
-    Route::get('/propertyaddfloor/show/{Id}', [PropertyFloorController::class,'show'])->name('addfloor.show');
-    Route::get('/propertyaddfloor/edit/{Id}',[PropertyFloorController::class,'edit'])->name('addfloor.edit');
-    Route::put('/propertyaddfloor/edit/{Id}',[PropertyFloorController::class,'update'])->name('addfloor.update');
-    Route::delete('/propertyaddfloor/delete/{Id}', [PropertyFloorController::class,'destroy'])->name('addfloor.destroy');   
 
+
+
+    Route::resource('addfloor', PropertyFloorController::class);
+    Route::get('propertyaddfloor', [PropertyFloorController::class,'index'])->name('addfloor.index');
+    Route::get('propertyaddfloor/create', [PropertyFloorController::class,'create'])->name('addfloor.create');
+    Route::post('propertyaddfloor', [PropertyFloorController::class,'store'])->name('addfloor.store');
+    Route::get('propertyaddfloor/show/', [PropertyFloorController::class,'show'])->name('addfloor.show');
+    Route::get('/propertyaddfloor/{BlockId}', [PropertyFloorController::class, 'getBlockByProperty'])->name('getblockbyproperty');
+    Route::delete('propertyaddfloor/delete/{Id}', [PropertyFloorController::class,'destroy'])->name('addfloor.destroy');
+    Route::get('propertyaddfloor/edit/{Id}',[PropertyFloorController::class,'edit'])->name('addfloor.edit');
+    Route::put('propertyaddfloor/edit/{Id}',[PropertyFloorController::class,'update'])->name('addfloor.update');
 
 
     Route::resource('addunit', PropertyUnitController::class);
+    Route::get('propertyaddunit', [PropertyUnitController::class,'index'])->name('addunit.index');
+    Route::get('propertyaddunit/create', [PropertyUnitController::class,'create'])->name('addunit.create');
+    Route::post('propertyaddunit', [PropertyUnitController::class,'store'])->name('addunit.store');
+    Route::get('propertyaddunit/show', [PropertyUnitController::class,'show'])->name('addunit.show');
+    Route::get('/propertyaddunit/blocks/{PropertyId}', [PropertyUnitController::class, 'getBlockByProperty'])->name('getblockbyproperty');
+    Route::get('/propertyaddunit/floors/{BlockId}', [PropertyUnitController::class, 'getFloorByBlock'])->name('getfloorbyblock');
+    Route::delete('propertyaddunit/delete/{Id}', [PropertyUnitController::class,'destroy'])->name('addunit.destroy');
+    Route::get('propertyaddunit/edit/{Id}',[PropertyUnitController::class,'edit'])->name('addunit.edit');
+    Route::put('propertyaddunit/edit/{Id}',[PropertyUnitController::class,'update'])->name('addunit.update');
+
+
     Route::resource('attachments', PropertyAttachmentsController::class);
     Route::resource('addtenant', PropertyNewTenantController::class);
     Route::resource('addlease', PropertyNewLeaseController::class);

@@ -1,6 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Add Floor to Block')
-
+@section('title', 'Edit Category')
 @section('content')
 @if ($errors->any())
     <div class="alert alert-danger">
@@ -11,27 +10,14 @@
         </ul>
     </div>
 @endif
-<div class="container mt-4">
-    <h4 class="fw-bold mb-3">🏬 Add Floor to Block</h4>
-
-    {{-- Show validation errors --}}
-    @if ($errors->any())
-        <div class="alert alert-danger">
-            <ul class="mb-0">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
-    <form action="{{ route('addfloor.store') }}" method="POST" enctype="multipart/form-data">
+    <h1>Edit Floor</h1>
+    <form action="{{ route('addfloor.update', $floor->Id) }}" method="POST">
         @csrf
-  <div class="card shadow">
-    <div class="card-header bg-light fw-bold">➕ Floor Setup</div>
-    <div class="card-body">
+        @method('PUT')
+     
+   <div class="card-body">
         <div class="row g-3 mb-3">
-            <div class="col-md-6">
+           <div class="col-md-6">
                 <label class="form-label">Select Property</label>
                 <select name="PropertyID" id="property-select" class="form-select" required>
                   <option value="">-- Select Property --</option>
@@ -48,20 +34,22 @@
                 <option value="">-- Select Block --</option>  
             </select>
         </div>
-        <div class="col-md-6">
-          <label class="form-label">Floor Label</label>
-            <input type="text" class="form-control" placeholder="e.g. Ground Floor, 1st Floor" name="FloorLabel">
-        </div>
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Floor Notes</label>
-          <textarea class="form-control" rows="2" placeholder="Optional floor notes" name="FloorNotes"></textarea>
-      </div>
-        <button class="btn btn-success">💾 Save Floor</button>
-    </form>
-</div>
 
-<script>
+        <div class="mb-3">
+            <label for="FloorLabel" class="form-label">Floor Name</label>
+            <input type="text" name="FloorLabel" class="form-control" value="{{ old('FloorLabel', $floor->FloorLabel) }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="FloorNotes" class="form-label">Notes</label>
+            <textarea name="FloorNotes" class="form-control" rows="4">{{ old('FloorNotes', $floor->FloorNotes) }}</textarea>
+        </div>
+
+        <button type="submit" class="btn btn-success">Update Floor</button>
+        <a href="{{ route('addfloor.index') }}" class="btn btn-secondary">Cancel</a>
+    </form>
+
+
+    <script>
 document.addEventListener('DOMContentLoaded', function () {
    const PropertySelect = document.getElementById('property-select');
   const BlockSelect = document.getElementById('block-select');
