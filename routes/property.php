@@ -70,7 +70,9 @@ Route::namespace('Property')->prefix('property')->group(function () {
 
 
 
-
+    //Property Settings
+    Route::resource('propertysettings', PropertyUnitController::class);
+    //Route::get('propertysettings', [PropertyRegistryController::class,'index'])->name('propertysettings.index');
 
     Route::resource('addfloor', PropertyFloorController::class);
     Route::get('propertyaddfloor', [PropertyFloorController::class,'index'])->name('addfloor.index');
