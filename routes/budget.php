@@ -37,8 +37,11 @@ use App\Http\Controllers\Budget\BusinessAnalyticsDashboardController;
 use App\Http\Controllers\Budget\KPIDashboardsController;
 use App\Http\Controllers\Budget\TrendAndGrowthController;
 use App\Http\Controllers\Budget\BranchPerformanceController;
+use App\Http\Controllers\Budget\BudgetActivitiesMasterController;
 use App\Http\Controllers\Budget\BudgetDriversSetupController;
+use App\Http\Controllers\Budget\BudgetLineCategoriesController;
 use App\Http\Controllers\Budget\BudgetLinesController;
+use App\Http\Controllers\Budget\BudgetMonthlyProjectionController;
 use App\Http\Controllers\Budget\ProductProfitabilityController;
 use App\Http\Controllers\Budget\OfficerPerformanceController;
 use App\Http\Controllers\Budget\LoanBookTrendsController;
@@ -72,6 +75,7 @@ use App\Http\Controllers\Budget\DataExportToolsProductController;
 use App\Http\Controllers\Budget\CBSSyncController;
 use App\Http\Controllers\Budget\DataSyncLogsController;
 use App\Http\Controllers\Budget\SystemSettingsController;
+use App\Models\Budget\BudgetActivityMaster;
 
 Route::namespace('Budget')->group(function () {
     Route::resource('budgetline', BudgetLinesController::class);
@@ -81,14 +85,16 @@ Route::namespace('Budget')->group(function () {
     Route::resource('budgetlinemapping', BudgetLineMappingController::class);
     Route::resource('budgetglmapping', BudgetGLMappingController::class);
     Route::resource('budgetdrivers', BudgetDriversController::class);
+    Route::resource('budgetlinecategories', BudgetLineCategoriesController::class);
     Route::resource('budgetactivities', BudgetActivitiesController::class);
     Route::resource('yieldexpenserate', YieldRateController::class);
+    //Route::resource('budgetprojections', BudgetProjectionsController::class);
     Route::resource('budgetprojections', BudgetProjectionsController::class);
-    Route::resource('entrybyproduct', BudgetProductEntryController::class);
     Route::resource('entrybyglline', BudgetGLLineEntryController::class);
     Route::resource('submitapproval', BudgetSubmitController::class);
     Route::resource('budgetapproval', BudgetApprovalController::class);
     Route::resource('topdownallocation', BudgetTopDownAllocationController::class);
+    Route::resource('activitymaster', BudgetActivitiesMasterController::class);
     Route::resource('budgetscenerios', BudgetSceneriosController::class);
     Route::resource('budgetformula', BudgetFormulaController::class);
     Route::resource('budgetconsolidation', BudgetConsolidationController::class);
@@ -96,11 +102,14 @@ Route::namespace('Budget')->group(function () {
     Route::resource('budgetvarianceanalysis', BudgetVarianceAnalysisController::class);
     Route::resource('kpiscorecards', BudgetKPIscorecardsController::class);
     Route::resource('kpiscorecardsofficer', BudgetKPIscorecardsOfficerController::class);
+    Route::resource('monthly', BudgetMonthlyProjectionController::class);
     Route::resource('topcontributors', TopContibutorsController::class);
     Route::resource('regulatoryratios', RegulatoryRatiosController::class);
     Route::resource('liquidityratio', LiquidityController::class);
-
-
+    
+    // API Routes to fetch data
+   Route::get('/api/budget-activities', [BudgetActivitiesController::class, 'fetchActivities'])->name('api.budget-activities');
+    
     // Business Intelligence & Deep Analytics
     Route::resource('analyticsdashboard', BusinessAnalyticsDashboardController::class);
     Route::resource('kpidashboards', KPIDashboardsController::class);
@@ -143,5 +152,6 @@ Route::namespace('Budget')->group(function () {
     Route::resource('planningmethods', BudgetPlanningMethodsController::class);
     Route::resource('periodtypes', BudgetPeriodTypesController::class);
 
-    Route::resource('budgetdriverssetup', BudgetDriversSetupController::class);
+    Route::resource('budgetdriverssetup',BudgetDriversSetupController::class);
+    Route::get('budgetlinemapping/gl-subtypes/{typeId}', [BudgetLineMappingController::class, 'getGLAccountSubTypes']);
 });

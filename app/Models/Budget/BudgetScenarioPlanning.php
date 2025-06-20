@@ -35,8 +35,18 @@ class BudgetScenarioPlanning extends Model
         'ModifiedBy',
     ];
 
-    protected $casts = [
-        'isDefault' => 'boolean',
-    ];
+    public function planningMethodRef(){
 
+        return $this->belongsTo(BudgetPlanningMethods::class , 'planningMethod', 'Id');
+    }
+
+    public function budgetPeriodRef(){
+
+        return $this->belongsTo(BudgetPeriods::class , 'budgetPeriod', 'Id');
+    }
+
+    protected $casts = [
+    'isDefault' => 'boolean',
+];
+ 
 }
