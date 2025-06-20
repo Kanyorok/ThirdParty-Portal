@@ -5,7 +5,7 @@
   <h4 class="fw-bold mb-3">📋 Stock Take Records</h4>
   <a href="{{ route('stocktake.create') }}" class="btn btn-success">➕ Add New Stock Take</a>
   @if($stocks->count())
-  <table class="table table-bordered table-striped align-middle">
+  <table id="stocktake"  class="table table-bordered table-striped align-middle">
     <thead class="table-light">
       <tr>
         <th>#</th>
@@ -13,7 +13,6 @@
         <th>Store</th>
         <th>Counted By</th>
         <th>Date</th>
-        <th>Status</th>
         <th>Posted By</th>
         <th>Posted Date</th>
         <th>Actions</th>
@@ -23,16 +22,14 @@
       @foreach($stocks as $stock)
       <tr>
         <td>{{$loop->iteration}}</td>
-        <td>{{$stock->BranchId}}</td>
-        <td>{{$stock->StoreId}}</td>
-        <td>{{$stock->CountedBy}}</td>
-        <td>{{$stock->CountDate}}</td>
-        <td><span class="badge bg-warning text-dark">Pending</span></td>
-        <td>{{$stock->CreatedBy}}</td>
-        <td>{{$stock->CreatedOn}}</td>
+        <td>{{ $stock->branch->Name }}</td>
+        <td>{{$stock->store->StoreName}}</td>
+        <td>{{$stock->countedby->Name ?? 'N/A'}}</td>
+        <td>{{ \Carbon\Carbon::parse($stock->CountDate)->format('d/m/Y') }}</td>
+        <td>{{$stock->createdby->Name}}</td>
+        <td>{{ \Carbon\Carbon::parse($stock->CreatedOn)->format('d/m/Y') }}</td>
         <td>
           <a href="{{ route('stocktake.show', $stock->Id) }}" class="btn btn-sm btn-info">👁 View</a>
-          <button class="btn btn-sm btn-outline-success">📌 Post</button>
           <a href="{{ route('stocktake.edit', $stock->Id) }}" class="btn btn-sm btn-warning">Edit</a>
           <form action="{{ route('stocktake.destroy', $stock->Id) }}" method="POST" class="d-inline">
               @csrf
@@ -48,4 +45,18 @@
 <p>No property stock registered yet.</p>
 @endif
 </div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        $('#stocktake').DataTable({
+            pageLength: 10,
+            ordering: true,
+            searching: true,
+            lengthChange: true
+        });
+    });
+</script>
 @endsection

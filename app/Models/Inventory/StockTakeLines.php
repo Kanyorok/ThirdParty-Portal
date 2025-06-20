@@ -29,4 +29,21 @@ class StockTakeLines extends Model
        
         ];
 
+    public static function getPrimaryKey(): string
+    {
+        return 'StockTakeLineId';
+    }
+    public function stockTake()
+    {
+        return $this->belongsTo(StockTake::class, 'StockTakeId', 'Id');
+    }
+
+    public function item()
+    {
+        return $this->belongsTo(StockItem::class, 'ItemId', 'Id');
+    }
+    public function itemmaster()
+    {
+        return $this->belongsTo(ItemMasterList::class, 'ItemID', 'Id');
+    }
 }

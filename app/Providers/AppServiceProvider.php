@@ -7,13 +7,25 @@ use App\Models\Auth\User;
 use App\Models\BR\Account;
 use App\Models\BR\Client;
 use App\Models\BR\DebtProduct;
+use App\Models\Budget\Budget;
+use App\Models\Budget\BudgetActivityMaster;
+use App\Models\Budget\BudgetActivity;
 use App\Models\Budget\BudgetDriver;
 use App\Models\Budget\BudgetDriverMaster;
+use App\Models\Budget\BudgetDriverProjections;
 use App\Models\Budget\BudgetGLAccount;
+use App\Models\Budget\BudgetGLAccountSubType;
 use App\Models\Budget\BudgetLine;
+use App\Models\Budget\BudgetLineProductTypes;
 use App\Models\Budget\BudgetLinesGLAccount;
+use App\Models\Budget\BudgetPeriods;
+use App\Models\Budget\BudgetPeriodTypes;
+use App\Models\Budget\BudgetMonthlyAllocation;
 use App\Models\Budget\BudgetProduct;
 use App\Models\Budget\BudgetProductType;
+use App\Models\Budget\BudgetScenarioPlanning;
+use App\Models\Budget\BudgetTopDown;
+use App\Models\Budget\BudgetTopDownData;
 use App\Models\Communication\Call;
 use App\Models\Communication\Comment;
 use App\Models\Communication\Email;
@@ -170,13 +182,25 @@ class AppServiceProvider extends ServiceProvider
             StockAdjustment::getPrimaryKey() => StockAdjustment::class,
           
             ///////// Budget and Analytics /////////
+            BudgetActivityMaster::getPrimaryKey()=>BudgetActivityMaster::class,
             BudgetLinesGLAccount::getPrimaryKey()=>BudgetLinesGLAccount::class,
             BudgetGLAccount::getPrimaryKey()=>BudgetGLAccount::class,
             BudgetLine::getPrimaryKey()=>BudgetLine::class,
+            BudgetPeriods::getPrimaryKey()=>BudgetPeriods::class,
+            BudgetPeriodTypes::getPrimaryKey()=>BudgetPeriodTypes::class,
+            BudgetScenarioPlanning::getPrimaryKey()=>BudgetScenarioPlanning::class,
             BudgetProduct::getPrimaryKey()=>BudgetProduct::class,
             BudgetProductType::getPrimaryKey()=>BudgetProductType::class,
             BudgetDriver::getPrimaryKey()=>BudgetDriver::class,
             BudgetDriverMaster::getPrimaryKey()=>BudgetDriverMaster::class,
+            BudgetDriverProjections::getPrimaryKey()=>BudgetDriverProjections::class,
+            BudgetTopDown::getPrimaryKey()=>BudgetTopDown::class,
+            BudgetTopDownData::getPrimaryKey()=>BudgetTopDownData::class,
+            BudgetActivity::getPrimaryKey()=>BudgetActivity::class,
+            BudgetMonthlyAllocation::getPrimaryKey()=>BudgetMonthlyAllocation::class,
+            Budget::getPrimaryKey()=>Budget::class,
+            BudgetGLAccountSubType::getPrimaryKey()=>BudgetGLAccountSubType::class,
+            BudgetLineProductTypes::getPrimaryKey()=>BudgetLineProductTypes::class,
 
           
             CategoryMaster::getPrimaryKey() => CategoryMaster::class,
