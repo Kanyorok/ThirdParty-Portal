@@ -67,6 +67,9 @@ use App\Http\Controllers\Procurement\PrequalificationApplicationsController;
 use App\Http\Controllers\Procurement\PrequalificationEvaluationController;
 use App\Http\Controllers\Procurement\PrequalificationEvalAprovalController;
 use App\Http\Controllers\Procurement\PrequalifiedSuppliersController;
+use App\Http\Controllers\Procurement\TenderBidResponsivenessController;
+
+use App\Http\Controllers\Procurement\AwardsController;
 
 
 Route::namespace('Procurement')->prefix('procurement')->group(function () {
@@ -372,6 +375,12 @@ Route::prefix('planning')->name('planning.')->group(function () {
  Route::resource('preqevaluation', PrequalificationEvaluationController::class);
  Route::resource('preqevalapproval', PrequalificationEvalAprovalController::class);
  Route::resource('preqsuppliers', PrequalifiedSuppliersController::class);
+ Route::resource('bidresponsiveness', TenderBidResponsivenessController::class);
+ Route::get('/awards-tender/view/{id}', [AwardsController::class, 'view_tender'])->name('awards.view');
+  Route::get('/awards-rfq/view/{id}', [AwardsController::class, 'view_rfq'])->name('awards.view');
+
+  Route::resource('procawards', AwardsController::class);
+ 
 
 
 
