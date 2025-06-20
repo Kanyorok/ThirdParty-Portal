@@ -65,7 +65,8 @@ public function index()
         return view('budgetandanalytics.budgetperiod.create', compact('types'));
     }
 
-  public function store(Request $request)
+
+    public function store(Request $request)
     {
         $validated = $request->validate([
             'Name'        => 'required|string|max:255',
@@ -76,7 +77,6 @@ public function index()
         ]);
  
         DB::beginTransaction();
- 
         try {
             $budget = Budget::create([
                 'Name'        => $validated['Name'],
@@ -121,7 +121,7 @@ public function index()
 
         $validated=$request->validate([
         'fiscalYear'  => 'required|string|max:10',
-        'periodType'  => 'required|string|max:20',
+        'periodType'  => 'required|exists:t_BudgetPeriodTypes,Id',
         'notes'       => 'nullable|string',
     ]);
 
@@ -159,8 +159,8 @@ public function index()
     {
         $this->authorize(PermissionEnum::BudgetSetupDelete, BudgetPeriods::class);
         try{
-            $period=BudgetPeriods::find($id)->delete();
-            //$period->delete();
+            $period = BudgetPeriods::findOrFail($id); // safer: throws 404 if not found
+            $period->delete();
 
             activity()
                 ->performedOn(new BudgetPeriods())
