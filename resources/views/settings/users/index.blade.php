@@ -98,7 +98,7 @@
                             }, name: 'UserID', searchable: false
                         },
                         {data: 'Name', name: 'Name'},
-                        {data: 'branch.Name', name: 'branch.Name', orderable: false},
+                        {data: 'branch.Name', name: 'branch.Name', orderable: false, searchable: false},
                         {data: 'Email', name: 'Email'},
                         {data: 'Phone', name: 'Phone'},
                         {data: 'action', name: 'action', orderable: false, searchable: false},
