@@ -16,6 +16,10 @@ enum PostingEnum: string
 
     case Draft = 'd';
 
+    case Pending = 'pe';
+
+    case Completed = 'co';
+
     public function label(): string
     {
         return match ($this) {
@@ -23,6 +27,8 @@ enum PostingEnum: string
             self::Draft => 'Draft',
             self::Approved => 'Approved',
             self::Submitted => 'Submited',
+            self::Pending => 'Pending',
+            self::Completed => 'Completed',
         };
     }
 
@@ -33,6 +39,8 @@ enum PostingEnum: string
             self::Draft => 'warning',
             self::Approved => 'success',
             self::Submitted => 'warning',
+            self::Pending => 'warning',
+            self::Completed => 'success',
         };
     }
 }

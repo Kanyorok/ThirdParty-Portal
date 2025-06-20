@@ -27,7 +27,7 @@ class PlanFromNeedsRequest extends FormRequest
     {
         return [
             'plan_id' => 'required|integer|exists:t_ConsolidatedProcurementPlan,PlanID',
-            'category_id' => 'required|integer|exists:t_ItemCategories,Id',
+            'category_id' => 'nullable|integer|exists:t_ItemCategories,Id',
             'selected_needs' => 'required|array|min:1',
             'selected_needs.*' => 'required|integer|exists:t_DepartmentNeeds,Id',
             'budget_line_id' => 'required|array',

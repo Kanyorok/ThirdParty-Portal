@@ -115,7 +115,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 301120, 'Name' => 'Approve Needs', 'Icon' => null, 'Description' => '', 'ParentID' => 301100, 'Route' => 'department-need-approval.index'],
             ['ModuleID' => 301200, 'Name' => 'Plan Consolidation', 'Icon' => null, 'Description' => '', 'ParentID' => 301000, 'Route' => null],
             ['ModuleID' => 301210, 'Name' => 'Consolidated Needs', 'Icon' => null, 'Description' => '', 'ParentID' => 301200, 'Route' => 'consolidated.index'],
-            ['ModuleID' => 301220, 'Name' => 'New Plan', 'Icon' => null, 'Description' => '', 'ParentID' => 301200, 'Route' => 'procurementplanmaintain.index'],
+            ['ModuleID' => 301220, 'Name' => 'Plan Management', 'Icon' => null, 'Description' => '', 'ParentID' => 301200, 'Route' => 'procurementplanmaintain.index'],
             ['ModuleID' => 301230, 'Name' => 'Amend Plan', 'Icon' => null, 'Description' => '', 'ParentID' => 301200, 'Route' => 'ammendplan.index'],
             ['ModuleID' => 301240, 'Name' => 'Link Budget Lines', 'Icon' => null, 'Description' => '', 'ParentID' => 301200, 'Route' => 'maptobudget.index'],
             ['ModuleID' => 301250, 'Name' => 'Set Method', 'Icon' => null, 'Description' => '', 'ParentID' => 301200, 'Route' => 'procurement-set-method.index'],
@@ -148,9 +148,6 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 303230, 'Name' => 'Supplier Applications', 'Icon' => null, 'Description' => '', 'ParentID' => 303200, 'Route' => 'preqapplications.index'],
             ['ModuleID' => 303240, 'Name' => 'Evaluation & Approval', 'Icon' => null, 'Description' => '', 'ParentID' => 303200, 'Route' => 'preqevaluation.index'],
             ['ModuleID' => 303250, 'Name' => 'Prequalified Suppliers', 'Icon' => null, 'Description' => '', 'ParentID' => 303200, 'Route' => 'preqsuppliers.index'],
-            ['ModuleID' => 304000, 'Name' => 'Procurement Modes', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
-            ['ModuleID' => 304100, 'Name' => 'List Modes', 'Icon' => null, 'Description' => '', 'ParentID' => 304000, 'Route' => 'procurement-modes.index'],
-            ['ModuleID' => 304200, 'Name' => 'Add Mode', 'Icon' => null, 'Description' => '', 'ParentID' => 304000, 'Route' => 'procurement-modes.create'],
             ['ModuleID' => 305000, 'Name' => 'Tendering', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
 
             // Tender Setup
@@ -196,7 +193,8 @@ class ModuleSeeder extends Seeder
 
             ['ModuleID' => 398000, 'Name' => 'Settings', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 398100, 'Name' => 'Criteria Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'sections.index'],
-
+            ['ModuleID' => 398200, 'Name' => 'Methods Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'procurement-modes.index'],
+           
             ['ModuleID' => 399000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'Description' => '', 'ParentID' => 300000, 'Route' => 'procurement-reports.index'],
         ]);
 
@@ -221,10 +219,6 @@ class ModuleSeeder extends Seeder
 
             ['ModuleID' => 401100, 'Name' => 'Item Master List', 'Icon' => null, 'Description' => 'Item Master List', 'Route' => 'itemmaster.index', 'ParentID' => 401000],
             ['ModuleID' => 401200, 'Name' => 'Stock Item', 'Icon' => null, 'Description' => 'Stock Item Management', 'Route' => 'sku.index', 'ParentID' => 401000],
-            ['ModuleID' => 401300, 'Name' => 'Item Category', 'Icon' => null, 'Description' => 'Item Category Management', 'Route' => 'itemcategory.index', 'ParentID' => 401000],
-            ['ModuleID' => 401700, 'Name' => 'Item Type', 'Icon' => null, 'Description' => 'Item Type Management', 'Route' => 'itemtype.index', 'ParentID' => 401000],
-            ['ModuleID' => 401500, 'Name' => 'Inventory Type', 'Icon' => null, 'Description' => 'Inventory Type Management', 'Route' => 'inventorytype.index', 'ParentID' => 401000],
-            ['ModuleID' => 401600, 'Name' => 'Unit Of Measure', 'Icon' => null, 'Description' => 'Unit of Measure Management', 'Route' => 'unitofmeasure.index', 'ParentID' => 401000],
             ['ModuleID' => 402000, 'Name' => 'InterBranch Requisition', 'Icon' => null, 'Description' => 'InterBranch Requisition Management', 'Route' => null, 'ParentID' => 400000],
             ['ModuleID' => 402100, 'Name' => 'New Requisition', 'Icon' => null, 'Description' => 'Create New Requisition', 'Route' => 'interbranchrequisition.index', 'ParentID' => 402000],
             ['ModuleID' => 402200, 'Name' => 'Requisition Approval', 'Icon' => null, 'Description' => 'Requisition Approval', 'Route' => 'interbranchrequisitionapproval.index', 'ParentID' => 402000],
@@ -232,19 +226,24 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 403100, 'Name' => 'By Branch or Store List', 'Icon' => null, 'Description' => 'Inventory Dashboard By Branch or Store', 'Route' => 'inventorydashboard.index', 'ParentID' => 403000],
             ['ModuleID' => 403200, 'Name' => 'Movement Dashboard', 'Icon' => null, 'Description' => 'Movement Dashboard', 'Route' => 'movementdashboard.index', 'ParentID' => 403000],
             ['ModuleID' => 404000, 'Name' => 'Transactions', 'Icon' => null, 'Description' => 'Inventory Transactions', 'Route' => null, 'ParentID' => 400000],
-            ['ModuleID' => 404100, 'Name' => 'Receipts', 'Icon' => null, 'Description' => 'Transaction Receipts', 'Route' => 'transactionsreceipts.index', 'ParentID' => 404000],
-            ['ModuleID' => 404200, 'Name' => 'Transfers', 'Icon' => null, 'Description' => 'Transaction Transfers', 'Route' => 'transactionstransfers.index', 'ParentID' => 404000],
-            ['ModuleID' => 404300, 'Name' => 'Adjustments', 'Icon' => null, 'Description' => 'Transaction Adjustments', 'Route' => 'transactionsadjustment.index', 'ParentID' => 404000],
+            ['ModuleID' => 404100, 'Name' => 'Stock Issue', 'Icon' => null, 'Description' => 'Stock Issue', 'Route' => 'stockissue.index', 'ParentID' => 404000],
+            ['ModuleID' => 404200, 'Name' => 'Stock Receipts', 'Icon' => null, 'Description' => 'Transaction Receipts', 'Route' => 'transactionsreceipts.index', 'ParentID' => 404000],
+            ['ModuleID' => 404300, 'Name' => 'Stock Transfers', 'Icon' => null, 'Description' => 'Stock Transfers', 'Route' => 'transactionstransfers.index', 'ParentID' => 404000],
+            ['ModuleID' => 404400, 'Name' => 'Stock Adjustments', 'Icon' => null, 'Description' => 'Stock Adjustments', 'Route' => 'transactionsadjustment.index', 'ParentID' => 404000],
+            ['ModuleID' => 404500, 'Name' => 'Transactions Approval', 'Icon' => null, 'Description' => 'Transaction Approvals', 'Route' => 'transactionsapproval.index', 'ParentID' => 404000],
             ['ModuleID' => 405000, 'Name' => 'Stock Management', 'Icon' => null, 'Description' => 'Stock Management', 'Route' => null, 'ParentID' => 400000],
             ['ModuleID' => 405100, 'Name' => 'Stock Take', 'Icon' => null, 'Description' => 'Stock Take Management', 'Route' => 'stocktake.index', 'ParentID' => 405000],
-            ['ModuleID' => 405200, 'Name' => 'Load Opening Stock', 'Icon' => null, 'Description' => 'Load Opening Stock', 'Route' => 'openingstock.index', 'ParentID' => 405000],
-            ['ModuleID' => 405300, 'Name' => 'Location Tracking', 'Icon' => null, 'Description' => 'Location Tracking', 'Route' => 'bintracking.index', 'ParentID' => 405000],
-            ['ModuleID' => 405400, 'Name' => 'Stock Valuation', 'Icon' => null, 'Description' => 'Stock Valuation History', 'Route' => 'stockvaluationhistory.index', 'ParentID' => 405000],
-            ['ModuleID' => 405500, 'Name' => 'Expiry Batch Tracking', 'Icon' => null, 'Description' => 'Expiry Batch Tracking', 'Route' => 'expirytracking.index', 'ParentID' => 405000],
-            ['ModuleID' => 406000, 'Name' => 'Conversion Mapping', 'Icon' => null, 'Description' => 'Conversion Mapping Management', 'Route' => null, 'ParentID' => 400000],
-            ['ModuleID' => 406100, 'Name' => 'Conversion Mapping', 'Icon' => null, 'Description' => 'UOM Conversion Mapping', 'Route' => 'uomconversion.index', 'ParentID' => 406000],
-            ['ModuleID' => 408000, 'Name' => 'Stores', 'Icon' => null, 'Description' => 'List of Stores', 'Route' => 'stores.index', 'ParentID' => 400000],
             ['ModuleID' => 407000, 'Name' => 'Price Management', 'Icon' => null, 'Description' => 'Items Prices', 'Route' => 'pricemanagement.index', 'ParentID' => 400000],
+
+            ['ModuleID' => 498000, 'Name' => 'Settings', 'Icon' => null, 'Description' => 'Inventory Settings', 'Route' => null, 'ParentID' => 400000],
+            ['ModuleID' => 498100, 'Name' => 'Item Master Settings', 'Icon' => null, 'Description' => 'Item Master Settings', 'Route' => null, 'ParentID' => 498000],
+            ['ModuleID' => 498101, 'Name' => 'Item Category', 'Icon' => null, 'Description' => 'Item Category Management', 'Route' => 'itemcategory.index', 'ParentID' => 498100],
+            ['ModuleID' => 498102, 'Name' => 'Item Type', 'Icon' => null, 'Description' => 'Item Type Management', 'Route' => 'itemtype.index', 'ParentID' => 498100],
+            ['ModuleID' => 498103, 'Name' => 'Inventory Type', 'Icon' => null, 'Description' => 'Inventory Type Management', 'Route' => 'inventorytype.index', 'ParentID' => 498100],
+            ['ModuleID' => 498104, 'Name' => 'Unit Of Measure', 'Icon' => null, 'Description' => 'Unit of Measure Management', 'Route' => 'unitofmeasure.index', 'ParentID' => 498100],
+            ['ModuleID' => 498105, 'Name' => 'Conversion Mapping', 'Icon' => null, 'Description' => 'UOM Conversion Mapping', 'Route' => 'uomconversion.index', 'ParentID' => 498100],
+            ['ModuleID' => 498001, 'Name' => 'Stores', 'Icon' => null, 'Description' => 'List of Stores', 'Route' => 'stores.index', 'ParentID' => 498000],
+            ['ModuleID' => 498200, 'Name' => 'Load Opening Stock', 'Icon' => null, 'Description' => 'Load Opening Stock', 'Route' => 'openingstock.create', 'ParentID' => 498000],
 
             ['ModuleID' => 499000, 'Name' => 'Reports', 'Icon' => null, 'Description' => 'Inventory Reports', 'Route' => 'inventory-reports.index', 'ParentID' => 400000],
 
@@ -274,19 +273,24 @@ class ModuleSeeder extends Seeder
 
             // Setup & Structure
             ['ModuleID' => 1201000, 'Name' => 'Setup & Structure', 'Icon' => null, 'Description' => 'Setup Budget Line', 'Route' => null, 'ParentID' => 1200000],
-            ['ModuleID' => 1201100, 'Name' => 'Budget Period', 'Icon' => null, 'Description' => 'Budget Line Period', 'Route' => 'budgetperiod.index', 'ParentID' => 1201000],
-            ['ModuleID' => 1201200, 'Name' => 'Scenario Planning', 'Icon' => null, 'Description' => 'Scenario Planning Budget', 'Route' => 'budgetscenerios.index', 'ParentID' => 1201000],
+            //['ModuleID' => 1201100, 'Name' => 'New Budget', 'Icon' => null, 'Description' => 'New Budget with Period definition', 'Route' => 'budgetperiod.index', 'ParentID' => 1201000],
+            //['ModuleID' => 1201200, 'Name' => 'Scenario Planning', 'Icon' => null, 'Description' => 'Scenario Planning Budget', 'Route' => 'budgetscenerios.index', 'ParentID' => 1201000],
             ['ModuleID' => 1201300, 'Name' => 'CBS Product View', 'Icon' => null, 'Description' => 'Product Master Management', 'Route' => 'budgetproductmaster.index', 'ParentID' => 1201000],
             ['ModuleID' => 1201400, 'Name' => 'CBS GL View', 'Icon' => null, 'Description' => 'GL Mapping Setup', 'Route' => 'budgetglmapping.index', 'ParentID' => 1201000],
-            ['ModuleID' => 1201500, 'Name' => 'Budget Lines', 'Icon' => null, 'Description' => 'Budget Lines Management', 'Route' => 'budgetlinemapping.index', 'ParentID' => 1201000],
-            ['ModuleID' => 1201700, 'Name' => 'Drivers Master', 'Icon' => null, 'Description' => 'Driver Setup', 'Route' => 'budgetdrivers.index', 'ParentID' => 1201000],
-            ['ModuleID' => 1201800, 'Name' => 'Driver Rates', 'Icon' => null, 'Description' => 'Driver Rates Setup', 'Route' => 'yieldexpenserate.index', 'ParentID' => 1201000],
-            ['ModuleID' => 1201900, 'Name' => 'Activities Master', 'Icon' => null, 'Description' => 'Budget Activity Setup', 'Route' => 'budgetactivities.index', 'ParentID' => 1201000],
+            ['ModuleID' => 1201410, 'Name' => 'Budget Line Categories', 'Icon' => null, 'Description' => 'Budget Lines Categories', 'Route' => 'budgetlinecategories.index', 'ParentID' => 1201000],
+            ['ModuleID' => 1201415, 'Name' => 'Budget Lines', 'Icon' => null, 'Description' => 'Budget Lines Management', 'Route' => 'budgetlinemapping.index', 'ParentID' => 1201000],
+            ['ModuleID' => 1201420, 'Name' => 'Activity Master', 'Icon' => null, 'Description' => 'Budget Activity Master', 'Route' => 'activitymaster.index', 'ParentID' => 1201000],
+            ['ModuleID' => 1201425, 'Name' => 'Rates', 'Icon' => null, 'Description' => 'Budget Rates', 'Route' => 'rates.index', 'ParentID' => 1201000],
+            //['ModuleID' => 1201700, 'Name' => 'Drivers Master', 'Icon' => null, 'Description' => 'Driver Setup', 'Route' => 'budgetdrivers.index', 'ParentID' => 1201000],
+            ['ModuleID' => 1201800, 'Name' => 'Products Rates', 'Icon' => null, 'Description' => 'Products Rates Setup', 'Route' => 'yieldexpenserate.index', 'ParentID' => 1201000],
+            //moved this to workspace ['ModuleID' => 1201900, 'Name' => 'Activities Master', 'Icon' => null, 'Description' => 'Budget Activity Setup', 'Route' => 'budgetactivities.index', 'ParentID' => 1201000],
 
             // Budgeting Workspace
             ['ModuleID' => 1202000, 'Name' => 'Budgeting Workspace', 'Icon' => null, 'Description' => 'Workspace for Budgeting Activities', 'Route' => null, 'ParentID' => 1200000],
-            ['ModuleID' => 1202100, 'Name' => 'Driver Projections', 'Icon' => null, 'Description' => 'Driver Projections', 'Route' => 'budgetprojections.index', 'ParentID' => 1202000],
-            ['ModuleID' => 1202200, 'Name' => 'Entry Productwise', 'Icon' => null, 'Description' => 'Entry by Product', 'Route' => 'entrybyproduct.index', 'ParentID' => 1202000],
+            ['ModuleID' => 1202040, 'Name' => 'New Budget', 'Icon' => null, 'Description' => 'New Budget with Period definition', 'Route' => 'budgetperiod.index', 'ParentID' => 1202000],
+            //['ModuleID' => 1202100, 'Name' => 'Driver Projections', 'Icon' => null, 'Description' => 'Driver Projections', 'Route' => 'budgetprojections.index', 'ParentID' => 1202000],
+            ['ModuleID' => 1202050, 'Name' => 'Budget Activities', 'Icon' => null, 'Description' => 'Budget Activity Setup', 'Route' => 'budgetactivities.index', 'ParentID' => 1202000],
+            ['ModuleID' => 1202200, 'Name' => 'Budget Projections', 'Icon' => null, 'Description' => 'Budget Projections', 'Route' => 'budgetprojections.index', 'ParentID' => 1202000],
             ['ModuleID' => 1202300, 'Name' => 'Entry By Lines', 'Icon' => null, 'Description' => 'Entry by GL Lines', 'Route' => 'entrybyglline.index', 'ParentID' => 1202000],
             ['ModuleID' => 1202400, 'Name' => 'Submit For Approval', 'Icon' => null, 'Description' => 'Submit Budget for Approval', 'Route' => 'submitapproval.index', 'ParentID' => 1202000],
             ['ModuleID' => 1202500, 'Name' => 'Approve Branch Budgets', 'Icon' => null, 'Description' => 'Branch Budget Approval', 'Route' => 'budgetapproval.index', 'ParentID' => 1202000],
@@ -309,12 +313,14 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 1205000, 'Name' => 'Admin & Integration', 'Icon' => null, 'Description' => 'System Controls and CBS Integration', 'Route' => null, 'ParentID' => 1200000],
             ['ModuleID' => 1205100, 'Name' => 'CBS Data Sync', 'Icon' => null, 'Description' => 'CBS Product Auto Sync', 'Route' => 'cbssync.index', 'ParentID' => 1205000],
             ['ModuleID' => 1205200, 'Name' => 'Data Sync Logs', 'Icon' => null, 'Description' => 'CBS & System Sync Logs', 'Route' => 'datasynclogs.index', 'ParentID' => 1205000],
-            //Settings
-            ['ModuleID' => 1206000, 'Name' => 'Settings', 'Icon' => null, 'Description' => 'Budget Settings', 'Route' => null, 'ParentID' => 1200000],
-            ['ModuleID' => 1206100, 'Name' => 'Rates', 'Icon' => null, 'Description' => 'Budget Rates', 'Route' => 'rates.index', 'ParentID' => 1206000],
-            ['ModuleID' => 1206200, 'Name' => 'Perod Types', 'Icon' => null, 'Description' => 'Budget Period Types', 'Route' => 'periodtypes.index', 'ParentID' => 1206000],
-            ['ModuleID' => 1206300, 'Name' => 'Planning Methods', 'Icon' => null, 'Description' => 'Budget Planning Methods', 'Route' => 'planningmethods.index', 'ParentID' => 1206000],
-            ['ModuleID' => 1206400, 'Name' => 'Budget Drivers', 'Icon' => null, 'Description' => 'Budet Drivers', 'Route' => 'budgetdriverssetup.index', 'ParentID' => 1206000],
+             //Settings
+           // ['ModuleID' => 1206000, 'Name' => 'Settings', 'Icon' => null, 'Description' => 'Budget Settings', 'Route' => null, 'ParentID' => 1200000],
+            //['ModuleID' => 1206040, 'Name' => 'Budget Line Categories', 'Icon' => null, 'Description' => 'Budget Lines Categories', 'Route' => 'budgetlinecategories.index', 'ParentID' => 1206000],
+            //['ModuleID' => 1206050, 'Name' => 'Activity Master', 'Icon' => null, 'Description' => 'Budget Activity Master', 'Route' => 'activitymaster.index', 'ParentID' => 1206000],
+            //['ModuleID' => 1206100, 'Name' => 'Rates', 'Icon' => null, 'Description' => 'Budget Rates', 'Route' => 'rates.index', 'ParentID' => 1206000],
+           // ['ModuleID' => 1206200, 'Name' => 'Perod Types', 'Icon' => null, 'Description' => 'Budget Period Types', 'Route' => 'periodtypes.index', 'ParentID' => 1206000],
+            //['ModuleID' => 1206300, 'Name' => 'Planning Methods', 'Icon' => null, 'Description' => 'Budget Planning Methods', 'Route' => 'planningmethods.index', 'ParentID' => 1206000],
+            //['ModuleID' => 1206400, 'Name' => 'Budget Drivers', 'Icon' => null, 'Description' => 'Budet Drivers', 'Route' => 'budgetdriverssetup.index', 'ParentID' => 1206000],
         ]);
 
         if ($fresh) {

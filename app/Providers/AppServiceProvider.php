@@ -7,13 +7,25 @@ use App\Models\Auth\User;
 use App\Models\BR\Account;
 use App\Models\BR\Client;
 use App\Models\BR\DebtProduct;
+use App\Models\Budget\Budget;
+use App\Models\Budget\BudgetActivityMaster;
+use App\Models\Budget\BudgetActivity;
 use App\Models\Budget\BudgetDriver;
 use App\Models\Budget\BudgetDriverMaster;
+use App\Models\Budget\BudgetDriverProjections;
 use App\Models\Budget\BudgetGLAccount;
+use App\Models\Budget\BudgetGLAccountSubType;
 use App\Models\Budget\BudgetLine;
+use App\Models\Budget\BudgetLineProductTypes;
 use App\Models\Budget\BudgetLinesGLAccount;
+use App\Models\Budget\BudgetPeriods;
+use App\Models\Budget\BudgetPeriodTypes;
+use App\Models\Budget\BudgetMonthlyAllocation;
 use App\Models\Budget\BudgetProduct;
 use App\Models\Budget\BudgetProductType;
+use App\Models\Budget\BudgetScenarioPlanning;
+use App\Models\Budget\BudgetTopDown;
+use App\Models\Budget\BudgetTopDownData;
 use App\Models\Communication\Call;
 use App\Models\Communication\Comment;
 use App\Models\Communication\Email;
@@ -37,6 +49,7 @@ use App\Models\CRM\Survey;
 use App\Models\CRM\Ticket;
 use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
+use App\Models\Inventory\LoadOpeningStock;
 use App\Models\Procurement\DepartmentNeeds;
 use App\Models\Procurement\Order;
 use App\Models\Procurement\RequisitionLine;
@@ -53,6 +66,7 @@ use App\Models\Settings\APICredential;
 use App\Models\ThirdParies\Board;
 use App\Models\ThirdParies\Competitor;
 use App\Policies\CrmBranchPolicy;
+use App\Policies\Inventory\OpenStockPolicy;
 use App\Policies\Procurement\DepartmentNeedsPolicy;
 use App\Policies\Procurement\OrderPolicy;
 use App\Policies\Procurement\ProcurementMethodPolicy;
@@ -80,14 +94,20 @@ use App\Policies\Inventory\StorePolicy;
 use App\Policies\Inventory\UnitOfMeasurePolicy;
 use App\Policies\Inventory\InterBranchRequisitionPolicy;
 use App\Policies\Inventory\PriceManagementPolicy;
+use App\Policies\Inventory\TransactionReceiptPolicy;
+use App\Policies\Inventory\TransactionTransferPolicy;
+use App\Policies\Inventory\StockAdjustmentPolicy;
 use App\Models\Inventory\ItemType;
 use App\Models\Inventory\ItemMasterList;
+use App\Models\Inventory\TransactionReceipt;
+use App\Models\Inventory\TransactionTransfer;
 use App\Models\Inventory\ItemCategories;
 use App\Models\Inventory\StockItem;
 use App\Models\Inventory\UnitOfMeasure;
 use App\Models\Inventory\Store;
 use App\Models\Inventory\InventoryType;
 use App\Models\Inventory\PriceManagement;
+use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\InterBranchRequisition;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\PlanLineItems;
@@ -157,17 +177,32 @@ class AppServiceProvider extends ServiceProvider
             InterBranchRequisition::getPrimaryKey() => InterBranchRequisition::class,
             ConsolidatedProcurementPlan::getPrimaryKey() => ConsolidatedProcurementPlan::class,
             PlanLineItems::getPrimaryKey() => PlanLineItems::class,
-
+            TransactionReceipt::getPrimaryKey() => TransactionReceipt::class,
+            TransactionTransfer::getPrimaryKey() => TransactionTransfer::class,
+            StockAdjustment::getPrimaryKey() => StockAdjustment::class,
+          
             ///////// Budget and Analytics /////////
-            BudgetLinesGLAccount::getPrimaryKey() => BudgetLinesGLAccount::class,
-            BudgetGLAccount::getPrimaryKey() => BudgetGLAccount::class,
-            BudgetLine::getPrimaryKey() => BudgetLine::class,
-            BudgetProduct::getPrimaryKey() => BudgetProduct::class,
-            BudgetProductType::getPrimaryKey() => BudgetProductType::class,
-            BudgetDriver::getPrimaryKey() => BudgetDriver::class,
-            BudgetDriverMaster::getPrimaryKey() => BudgetDriverMaster::class,
+            BudgetActivityMaster::getPrimaryKey()=>BudgetActivityMaster::class,
+            BudgetLinesGLAccount::getPrimaryKey()=>BudgetLinesGLAccount::class,
+            BudgetGLAccount::getPrimaryKey()=>BudgetGLAccount::class,
+            BudgetLine::getPrimaryKey()=>BudgetLine::class,
+            BudgetPeriods::getPrimaryKey()=>BudgetPeriods::class,
+            BudgetPeriodTypes::getPrimaryKey()=>BudgetPeriodTypes::class,
+            BudgetScenarioPlanning::getPrimaryKey()=>BudgetScenarioPlanning::class,
+            BudgetProduct::getPrimaryKey()=>BudgetProduct::class,
+            BudgetProductType::getPrimaryKey()=>BudgetProductType::class,
+            BudgetDriver::getPrimaryKey()=>BudgetDriver::class,
+            BudgetDriverMaster::getPrimaryKey()=>BudgetDriverMaster::class,
+            BudgetDriverProjections::getPrimaryKey()=>BudgetDriverProjections::class,
+            BudgetTopDown::getPrimaryKey()=>BudgetTopDown::class,
+            BudgetTopDownData::getPrimaryKey()=>BudgetTopDownData::class,
+            BudgetActivity::getPrimaryKey()=>BudgetActivity::class,
+            BudgetMonthlyAllocation::getPrimaryKey()=>BudgetMonthlyAllocation::class,
+            Budget::getPrimaryKey()=>Budget::class,
+            BudgetGLAccountSubType::getPrimaryKey()=>BudgetGLAccountSubType::class,
+            BudgetLineProductTypes::getPrimaryKey()=>BudgetLineProductTypes::class,
 
-
+          
             CategoryMaster::getPrimaryKey() => CategoryMaster::class,
             PropertyType::getPrimaryKey() => PropertyType::class,
             PropertyRegistry::getPrimaryKey() => PropertyRegistry::class,
@@ -194,6 +229,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(SchedulePlan::class, SchedulePlanPolicy::class);
         Gate::policy(PlanLineItems::class, PlanManualInputPolicy::class);
         Gate::policy(InterBranchRequisition::class, InterBranchRequisitionPolicy::class);
+        Gate::policy(TransactionReceipt::class, TransactionReceiptPolicy::class);
+        Gate::policy(StockAdjustment::class, StockAdjustmentPolicy::class);
+        Gate::policy(TransactionTransfer::class, TransactionTransferPolicy::class);
         Gate::policy(CategoryMaster::class, PropertyCategoryPolicy::class);
         Gate::policy(PropertyType::class, PropertyTypePolicy::class);
         Gate::policy(PropertyRegistry::class, PropertyRegistryPolicy::class);

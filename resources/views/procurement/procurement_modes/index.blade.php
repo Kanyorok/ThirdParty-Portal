@@ -1,12 +1,12 @@
 @extends('layouts.app')
-@section('title','Available Procurement Modes')
+@section('title','Available Procurement Methods')
 
 @section('content')
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3>Procurement Modes</h3>
+        <h3>Procurement Methods</h3>
         <a href="{{ route('procurement-modes.create') }}" class="btn btn-primary">
-            + Add Mode
+            + Add Method
         </a>
     </div>
 
@@ -15,13 +15,13 @@
     @endif
 
     @if($modes->isEmpty())
-    <div class="alert alert-info">No procurement modes found.</div>
+    <div class="alert alert-info">No procurement methods found.</div>
     @else
     <table class="table table-bordered table-striped align-middle">
         <thead class="table-light">
             <tr>
                 <th>#</th>
-                <th>PMode id</th>
+                <th>PMethod id</th>
                 <th>Name</th>
                 <th>Description</th>
                 <th>Created At</th>

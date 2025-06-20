@@ -19,6 +19,7 @@ class BudgetDriver extends Model
 
     protected $fillable = [
         'DriverName',
+        'Description',
         'IsActive',
 
         'CreatedBy',

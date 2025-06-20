@@ -18,10 +18,8 @@ class InterBranchRequisitionRequest extends FormRequest
             'ToBranch' => 'required|exists:t_Branches,Id|different:FromBranch',
             'CreatedOn' => 'required|date',
             'items' => 'required|array|min:1',
-            'items.*.Category' => 'required|exists:t_ItemCategories,Id',
-            'items.*.Subcategory' => 'nullable|exists:t_ItemCategories,Id',
             'items.*.Item' => 'required|exists:t_Items,Id',
-            'items.*.UOM' => 'required|exists:t_UOM,Id',
+            'items.*.ItemCode' => 'required|exists:t_Items,ItemCode',
             'items.*.RequestedQty' => 'required|integer|min:1',
             'items.*.Remarks' => 'nullable|string|max:255',
         ];
