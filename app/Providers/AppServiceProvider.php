@@ -47,6 +47,13 @@ use App\Models\CRM\Schedule;
 use App\Models\CRM\Social;
 use App\Models\CRM\Survey;
 use App\Models\CRM\Ticket;
+use App\Models\DMS\DMSTags;
+use App\Models\DMS\Document;
+use App\Models\DMS\DocumentAttribute;
+use App\Models\DMS\DocumentTags;
+use App\Models\DMS\DocumentVersion;
+use App\Models\DMS\Image;
+use App\Models\DMS\Repository;
 use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
 use App\Models\Inventory\InterBranchRequisition;
@@ -54,7 +61,6 @@ use App\Models\Inventory\InventoryType;
 use App\Models\Inventory\ItemCategories;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\ItemType;
-use App\Models\Inventory\LoadOpeningStock;
 use App\Models\Inventory\PriceManagement;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\StockItem;
@@ -68,7 +74,6 @@ use App\Models\Procurement\Order;
 use App\Models\Procurement\PlanLineItems;
 use App\Models\Procurement\ProcurementMethod;
 use App\Models\Procurement\RequisitionLine;
-use App\Models\Procurement\RequisitionLines;
 use App\Models\Procurement\Requisitions;
 use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQLine;
@@ -80,12 +85,13 @@ use App\Models\Settings\APICredential;
 use App\Models\ThirdParies\Board;
 use App\Models\ThirdParies\Competitor;
 use App\Policies\CrmBranchPolicy;
+use App\Policies\DMS\DocumentPolicy;
+use App\Policies\DMS\RepositoryPolicy;
 use App\Policies\Inventory\InterBranchRequisitionPolicy;
 use App\Policies\Inventory\InventoryTypePolicy;
 use App\Policies\Inventory\ItemCategoryPolicy;
 use App\Policies\Inventory\ItemMasterListPolicy;
 use App\Policies\Inventory\ItemTypePolicy;
-use App\Policies\Inventory\OpenStockPolicy;
 use App\Policies\Inventory\PriceManagementPolicy;
 use App\Policies\Inventory\StockAdjustmentPolicy;
 use App\Policies\Inventory\StockItemPolicy;
@@ -207,10 +213,22 @@ class AppServiceProvider extends ServiceProvider
             PropertyType::getPrimaryKey() => PropertyType::class,
             PropertyRegistry::getPrimaryKey() => PropertyRegistry::class,
             PropertyBlock::getPrimaryKey() => PropertyBlock::class,
+
+            //DMS
+            DMSTags::getPrimaryKey() => DMSTags::class,
+            Document::getPrimaryKey() => Document::class,
+            DocumentAttribute::getPrimaryKey() => DocumentAttribute::class,
+            DocumentTags::getPrimaryKey() => DocumentTags::class,
+            DocumentVersion::getPrimaryKey() => DocumentVersion::class,
+            Image::getPrimaryKey() => Image::class,
+            Repository::getPrimaryKey() => Repository::class,
+
         ]);
 
         Gate::policy(Role::class, RolePolicy::class);
         Gate::policy(Branch::class, CrmBranchPolicy::class);
+        Gate::policy(Repository::class, RepositoryPolicy::class);
+        Gate::policy(Document::class, DocumentPolicy::class);
         Gate::policy(Requisitions::class, RequisitionPolicy::class);
         Gate::policy(RequisitionLine::class, RequisitionLinesPolicy::class);
         Gate::policy(ProductDevelopment::class, ProductDevelopmentPolicy::class);

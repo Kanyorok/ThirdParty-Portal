@@ -12,7 +12,7 @@ class RepositoryPolicy
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -20,7 +20,7 @@ class RepositoryPolicy
      */
     public function view(User $user, Repository $repository): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -28,7 +28,7 @@ class RepositoryPolicy
      */
     public function create(User $user): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -36,7 +36,7 @@ class RepositoryPolicy
      */
     public function update(User $user, Repository $repository): bool
     {
-        return false;
+        return true; //todo if public creator or admin
     }
 
     /**
@@ -44,7 +44,7 @@ class RepositoryPolicy
      */
     public function delete(User $user, Repository $repository): bool
     {
-        return false;
+        return true;
     }
 
     /**

@@ -7609,7 +7609,7 @@ fieldset:disabled .introjs-tooltip .introjs-button,
 .offcanvas-md,
 .offcanvas-sm {
   --bs-offcanvas-zindex: 1045;
-  --bs-offcanvas-width: 360px;
+  --bs-offcanvas-width: 460px;
   --bs-offcanvas-height: 33vh;
   --bs-offcanvas-padding-x: 1.25rem;
   --bs-offcanvas-padding-y: 1.25rem;

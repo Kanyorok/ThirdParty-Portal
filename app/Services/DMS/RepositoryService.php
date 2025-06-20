@@ -2,10 +2,13 @@
 
 namespace App\Services\DMS;
 
+use App\Enums\Core\RoleEnum;
 use App\Enums\Core\VisibilityEnum;
 use App\Exceptions\ErroredException;
 use App\Helpers\SystemHelper;
+use App\Models\Auth\Team;
 use App\Models\Auth\User;
+use App\Models\Core\SpecialPermission;
 use App\Models\DMS\Repository;
 use Exception;
 use Illuminate\Support\Facades\DB;
@@ -69,7 +72,8 @@ class RepositoryService extends PermissionsService
      */
     public static function create(Repository $repository, string $Name, User $actor, string $Description = ""): RepositoryService
     {
-        return new self(self::_create($Name, $actor, $repository, $Description));
+        return (new self(self::_create($Name, $actor, $repository, $Description)))
+            ->addPermission($actor, RoleEnum::Admin, $actor, false);
     }
 
     /**
@@ -92,7 +96,7 @@ class RepositoryService extends PermissionsService
                 return $this;
             });
         } catch (Exception|Throwable $e) {
-            Log::error('Error creating repository: ');
+            Log::error('Error update repository: ');
             Log::error($e);
             throw new ErroredException();
         }
@@ -106,5 +110,46 @@ class RepositoryService extends PermissionsService
     public function isRoot(): bool
     {
         return ($this->repo->Id === self::ROOT);
+    }
+
+
+    public function addPermission(User|Team $assignee, RoleEnum $role, User $actor, bool $notify = true): static
+    {
+        $this->_addPermissions($this->repo, $assignee, $role, $actor, $notify);
+        return $this;
+    }
+
+    /**
+     * @throws ErroredException
+     */
+    public function visibility(VisibilityEnum $visibility, User $actor): static
+    {
+        if ($this->isRoot()) {
+            throw new ErroredException('Cannot update root folder');
+        }
+        try {
+            return DB::transaction(function () use ($visibility, $actor) {
+                $this->repo->update([
+                    'Visibility' => $visibility->value,
+                    'ModifiedBy' => $actor->Id,
+                ]);
+
+                activity()->causedBy($actor)->performedOn($this->repo)->event('update')->log('Updated folder ' . $this->repo->Name . ' visibility : ' . $visibility->value);
+                return $this;
+            });
+        } catch (Exception|Throwable $e) {
+            Log::error('Error update repository visibility: ');
+            Log::error($e);
+            throw new ErroredException();
+        }
+    }
+
+    /**
+     * @throws ErroredException
+     */
+    public function removePermission(SpecialPermission $permission, User $actor): static
+    {
+        $this->repo = $this->_trashPermissions($this->repo, $permission, $actor);
+        return $this;
     }
 }

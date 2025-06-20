@@ -59,7 +59,7 @@ class Repository extends Model
 
     public function permissions(): MorphMany
     {
-        return $this->morphMany(SpecialPermission::class, 'party', "Party", "PartyID", 'Id');
+        return $this->morphMany(SpecialPermission::class, 'model', "Model", "ModelID", 'Id');
     }
 
 

@@ -72,17 +72,9 @@ class Document extends Model
         //
     }
 
-    public function users(): BelongsToMany
-    {
-        return $this->belongsToMany(User::class, 't_TeamUser', 'TeamId', 'UserId', $this->primaryKey, 'Id')
-            ->withTimestamps('CreatedOn', 'ModifiedOn')->withPivot(['CreatedBy', 'ModifiedBy']);
-    }
-
-
-
     public function permissions(): MorphMany
     {
-        return $this->morphMany(SpecialPermission::class, 'party', "Party", "PartyID", 'Id');
+        return $this->morphMany(SpecialPermission::class, 'model', "Model", "ModelID", 'Id');
     }
 
     public function current(): HasOne

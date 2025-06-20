@@ -23,8 +23,8 @@ enum VisibilityEnum: string
     public function icon(): string
     {
         return match ($this) {
-            self::Public => '<i class="fas fa-globe" title="Public"></i>',
-            self::Private => '<i class="fas fa-lock" title="Private"></i>',
+            self::Public => '<i class="fas fa-globe text-primary" title="Public"></i>',
+            self::Private => '<i class="fas fa-lock text-secondary" title="Private"></i>',
         };
     }
 }

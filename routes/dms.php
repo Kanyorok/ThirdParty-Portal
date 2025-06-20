@@ -2,9 +2,12 @@
 
 use App\Http\Controllers\DMS\AccessManagementController;
 use App\Http\Controllers\DMS\CategoriesManagementController;
+use App\Http\Controllers\DMS\DocumentController;
 use App\Http\Controllers\DMS\DrepositoryManagementController;
 use App\Http\Controllers\DMS\DtypessetupManagementController;
 use App\Http\Controllers\DMS\RenewalManagementController;
+use App\Http\Controllers\DMS\Repo\RepositoryController;
+use App\Http\Controllers\DMS\Repo\RepositoryPermissionController;
 use App\Http\Controllers\DMS\SearchManagementController;
 use App\Http\Controllers\DMS\TrailManagementController;
 use App\Http\Controllers\DMS\UploadManagementController;
@@ -13,10 +16,13 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::namespace('DMS')->prefix('dms')->group(function () {
-    Route::resource('repo', \App\Http\Controllers\DMS\RepositoryController::class)
+
+    Route::put('repo/{repository}/repo-visibility', [RepositoryPermissionController::class, 'visibility'])->name('repo.visibility');
+    Route::resource('repo/{repository}/repo-permissions', RepositoryPermissionController::class);
+    Route::resource('repo', RepositoryController::class)
         ->parameters(['repo' => 'repository']);
 
-    Route::resource('repo/{repository}/files', \App\Http\Controllers\DMS\DocumentController::class)
+    Route::resource('repo/{repository}/files', DocumentController::class)
         ->parameters(['files' => 'document']);
 
     Route::resource('drepositorymanagement', DrepositoryManagementController::class);

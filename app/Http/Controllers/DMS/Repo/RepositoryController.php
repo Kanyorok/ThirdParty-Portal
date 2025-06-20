@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\DMS;
+namespace App\Http\Controllers\DMS\Repo;
 
 use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
@@ -25,7 +25,6 @@ class RepositoryController extends Controller
     public function index(Request $request)
     {
         return $this->show($request, RepositoryService::root());
-        //return view('dms.repo.show')->with('repository', );
     }
 
     /**
@@ -47,11 +46,13 @@ class RepositoryController extends Controller
     {
         $repository = $request->getParentRepo();
         try {
-            return $this->succeeded('repository created successfully', data: [
-                'data' => new RepositoryResource(
-                    RepositoryService::create($repository, $request->string('repository_name')->trim()->toString(), $request->user(), $request->string('repository_description', '')->trim()->toString())->repo
-                )
-            ]);
+            return DB::transaction(function () use ($request, $repository) {
+                return $this->succeeded('repository created successfully', data: [
+                    'data' => new RepositoryResource(
+                        RepositoryService::create($repository, $request->string('repository_name')->trim()->toString(), $request->user(), $request->string('repository_description', '')->trim()->toString())->repo
+                    )
+                ]);
+            });
         } catch (ErroredException $e) {
             return $e->toJson();
         } catch (Exception|Throwable $e) {
@@ -70,7 +71,7 @@ class RepositoryController extends Controller
     }
 
     /**
-     * Summary
+     * Permissions
      */
     public function edit(Repository $repository)
     {

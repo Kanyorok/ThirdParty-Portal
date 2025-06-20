@@ -66,10 +66,10 @@ class LeadService
             })->editColumn('Name', function (Lead $lead) {
                 return '<a href="#" data-click_url="' . route('leads.summary', $lead->LeadID) . '" data-summary_title="lead summary" class="click-summary-data">' . $lead->Name . '</a>';
             })->setRowClass('mouse_pointer user-select-none dbl-click-redirect-data')->setRowData([
-                                                                                                   'dbl_click_url' => function (Lead $lead) {
-                                                                                                    return route('leads.show', $lead->LeadID);
-                                                                                                   },
-                                                                                                  ])->rawColumns(['Name', 'photo'])->make();
+                'dbl_click_url' => function (Lead $lead) {
+                    return route('leads.show', $lead->LeadID);
+                },
+            ])->rawColumns(['Name', 'photo'])->make();
     }
 
     public static function company(
@@ -78,14 +78,15 @@ class LeadService
         string $phone,
         string $website,
         Carbon $last_contact,
-        User $manager,
-        User $actor,
+        User   $manager,
+        User   $actor,
         Locality $location = null,
         CodeDetail $industry = null,
         CodeDetail $source = null,
         CodeDetail $customerType = null,
         string $notes = ''
-    ): self {
+    ): self
+    {
         $service = self::_create($name, '', $email, $phone, $website, '', $last_contact, LeadTypeEnum::Company, GenderEnum::Other, $actor, $notes, $location, $industry, $source, $customerType);
         if ($manager->Id !== $actor->Id) {
             return $service->assign($manager, $actor);
@@ -94,43 +95,44 @@ class LeadService
     }
 
     private static function _create(
-        string $name,
-        string $other_names,
-        string $email,
-        string $phone,
-        string $website,
-        string $job_title,
-        Carbon $last_contact,
+        string   $name,
+        string   $other_names,
+        string   $email,
+        string   $phone,
+        string   $website,
+        string   $job_title,
+        Carbon   $last_contact,
         LeadTypeEnum $type,
         GenderEnum $gender,
-        User $actor,
-        string $notes,
+        User     $actor,
+        string   $notes,
         Locality $location = null,
         CodeDetail $industry = null,
         CodeDetail $source = null,
         CodeDetail $customerType = null
-    ): self {
+    ): self
+    {
         $lead = new Lead();
         $lead->fill([
-                     "Name"                  => $name,
-                     "Email"                 => $email,
-                     "Phone"                 => $phone,
-                     "Website"               => $website,
-                     "Gender"                => $gender->value,
-                     "Status"                => LeadStatusEnum::Warm->value,
-                     "RelationshipManagerID" => $actor->Id,
-                     "LocationID"            => $location?->ID,
-                     "Industry"              => $industry?->ID,
-                     "Source"                => $source?->ID,
-                     "JobTitle"              => $job_title,
-                     "OtherNames"            => $other_names,
-                     "LastContacted"         => $last_contact,
-                     "CustomerType"          => $customerType?->ID,
-                     "Type"                  => $type->value,
-                     'Notes'                 => $notes,
-                     'CreatedBy'             => $actor->Id,
-                     'ModifiedBy'            => $actor->Id,
-                    ])->save();
+            "Name" => $name,
+            "Email" => $email,
+            "Phone" => $phone,
+            "Website" => $website,
+            "Gender" => $gender->value,
+            "Status" => LeadStatusEnum::Warm->value,
+            "RelationshipManagerID" => $actor->Id,
+            "LocationID" => $location?->ID,
+            "Industry" => $industry?->ID,
+            "Source" => $source?->ID,
+            "JobTitle" => $job_title,
+            "OtherNames" => $other_names,
+            "LastContacted" => $last_contact,
+            "CustomerType" => $customerType?->ID,
+            "Type" => $type->value,
+            'Notes' => $notes,
+            'CreatedBy' => $actor->Id,
+            'ModifiedBy' => $actor->Id,
+        ])->save();
 
         $service = (new self($lead));
         $service->activity($lead->Name . ' added by ' . $actor->UserID, now(), $actor);
@@ -151,18 +153,18 @@ class LeadService
             if (!$leadUser instanceof LeadUser) {
                 $leadUser = new LeadUser();
                 $leadUser->fill([
-                                 'LeadId'    => $this->lead->LeadID,
-                                 'Party'     => Team::getPrimaryKey(),
-                                 'CreatedBy' => $actor->Id,
-                                 'PartyID'   => $watcher->TeamID,
-                                 'CreatedOn' => now(),
-                                ]);
+                    'LeadId' => $this->lead->LeadID,
+                    'Party' => Team::getPrimaryKey(),
+                    'CreatedBy' => $actor->Id,
+                    'PartyID' => $watcher->TeamID,
+                    'CreatedOn' => now(),
+                ]);
             }
             $leadUser->fill([
-                             'Role'       => $role->value,
-                             'ModifiedBy' => $actor->Id,
-                             'ModifiedOn' => now(),
-                            ])->save();
+                'Role' => $role->value,
+                'ModifiedBy' => $actor->Id,
+                'ModifiedOn' => now(),
+            ])->save();
 
             if ($notify) {
                 $users = $watcher->users()->lock('WITH(NOLOCK)')->select(['Email', 'Name'])->lock('WITH(NOLOCK)')->inRandomOrder()->limit(15)->get(['Email', 'Name']);
@@ -191,18 +193,18 @@ class LeadService
         if (!$leadUser instanceof LeadUser) {
             $leadUser = new LeadUser();
             $leadUser->fill([
-                             'LeadId'    => $this->lead->LeadID,
-                             'Party'     => User::getPrimaryKey(),
-                             'CreatedBy' => $actor->Id,
-                             'PartyID'   => $watcher->Id,
-                             'CreatedOn' => now(),
-                            ]);
+                'LeadId' => $this->lead->LeadID,
+                'Party' => User::getPrimaryKey(),
+                'CreatedBy' => $actor->Id,
+                'PartyID' => $watcher->Id,
+                'CreatedOn' => now(),
+            ]);
         }
         $leadUser->fill([
-                         'Role'       => $role->value,
-                         'ModifiedBy' => $actor->Id,
-                         'ModifiedOn' => now(),
-                        ])->save();
+            'Role' => $role->value,
+            'ModifiedBy' => $actor->Id,
+            'ModifiedOn' => now(),
+        ])->save();
 
         if ($notify) {
             CRMEmailService::createUser(
@@ -223,16 +225,16 @@ class LeadService
 
         $this->lead->watchers()->lock('WITH(NOLOCK)')->where('t_LeadUsers.Party', User::getPrimaryKey())
             ->where('t_LeadUsers.PartyID', $this->lead->RelationshipManagerID)->update([
-                                                                                        'Role'       => ($this->lead->RelationshipManagerID === $this->lead->CreatedBy) ? RoleEnum::Write->value : RoleEnum::Read->value,
-                                                                                        'ModifiedBy' => $actor->Id,
-                                                                                       ]);
+                'Role' => ($this->lead->RelationshipManagerID === $this->lead->CreatedBy) ? RoleEnum::Write->value : RoleEnum::Read->value,
+                'ModifiedBy' => $actor->Id,
+            ]);
 
         $this->addWatcher($assignee, RoleEnum::Admin, $actor, false);
 
 
         $this->lead->lock('WITH(NOLOCK)')->update([
-                                                   'RelationshipManagerID' => $assignee->Id,
-                                                  ]);
+            'RelationshipManagerID' => $assignee->Id,
+        ]);
 
         $service = new UserService($assignee);
 
@@ -297,14 +299,15 @@ class LeadService
         string $job_title,
         Carbon $last_contact,
         GenderEnum $gender,
-        User $manager,
-        User $actor,
+        User   $manager,
+        User   $actor,
         Locality $location = null,
         CodeDetail $industry = null,
         CodeDetail $source = null,
         CodeDetail $customerType = null,
         string $notes = ''
-    ): self {
+    ): self
+    {
         $service = self::_create($name, $other_names, $email, $phone, '', $job_title, $last_contact, LeadTypeEnum::Individual, $gender, $actor, $notes, $location, $industry, $source, $customerType);
         if ($manager->Id !== $actor->Id) {
             return $service->assign($manager, $actor);
@@ -315,8 +318,8 @@ class LeadService
     public function won(User $actor): array
     {
         $this->lead->forceFill([
-                                'Status' => LeadStatusEnum::Won->value,
-                               ])->save();
+            'Status' => LeadStatusEnum::Won->value,
+        ])->save();
 
         activity()->causedBy($actor)->performedOn($this->lead)->event('win')->log('Marked lead  (L' . $this->lead->LeadID . ')  as won.');
 
@@ -344,9 +347,9 @@ class LeadService
         activity()->causedBy($actor)->performedOn($this->lead)->event('delete')->log('Removed ' . $service->getName() . ' as a lead (L' . $this->lead->LeadID . ') watcher.');
 
         $leadUser->forceFill([
-                              'DeletedOn' => now(),
-                              'DeletedBy' => $actor->Id,
-                             ])->save();
+            'DeletedOn' => now(),
+            'DeletedBy' => $actor->Id,
+        ])->save();
 
         $service->sendEmail(
             'Notification: Removed as Watchers from Lead ' . $this->lead->Name,

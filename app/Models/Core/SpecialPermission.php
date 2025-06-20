@@ -36,11 +36,11 @@ class SpecialPermission extends Model
 
     public function party(): MorphTo
     {
-        return $this->morphTo(__FUNCTION__, 'Party', 'PartyID')->withTrashed();
+        return $this->morphTo(__FUNCTION__, 'Party', 'PartyID');//->withTrashed();
     }
 
     public function model(): BelongsTo
     {
-        return $this->morphTo(__FUNCTION__, 'Model', 'ModelID')->withTrashed();
+        return $this->morphTo(__FUNCTION__, 'Model', 'ModelID');
     }
 }
