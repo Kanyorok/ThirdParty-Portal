@@ -1,4 +1,11 @@
-@php use App\Enums\Core\VisibilityEnum; @endphp
+@php use App\Enums\Core\RoleEnum; use App\Enums\Core\VisibilityEnum; @endphp
+<link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
+<script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
+<style>
+    .select2-container {
+        width: 100% !important;
+    }
+</style>
 <div class="d-flex flex-column" style="height: 85%; overflow-y: auto;">
     <p>{{ $repository->Description }}</p>
     <h4 class="mb-3">Visibility: <b>{!! $repository->Visibility->icon() !!}
@@ -7,7 +14,9 @@
            onclick="triggerUpdateRepositoryVisibility()"><i class="material-icons-two-tone"> edit</i></a></h4>
     <hr>
     <h4 class=" mb-3">Permissions
-        <button class="btn btn-primary btn-sm float-end"><i class="fas fa-share"></i> share</button>
+        <button class="btn btn-primary btn-sm float-end" onclick="triggerAddRepositoryPermission()" type="button"><i
+                class="fas fa-share"></i> share
+        </button>
     </h4>
     <table id="repoPermissionsTable" class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
         <thead>
@@ -81,8 +90,63 @@
                         </div>
                     </form>
                 </div>
-
-
+                <div class="onboarding-content with-gradient d-none modal-item" id="addRepositoryPermissionModal">
+                    <form action="{{ route('repo-permissions.store',[$repository->RepositoryId]) }}" method="post"
+                          id="addRepositoryPermissionForm">
+                        @csrf
+                        <div class="mb-3">
+                            <label for="share_role" class="form-label">Role <span
+                                    class="text-danger">*</span></label>
+                            <select class="form-control " name="share_role" id="share_role" required>
+                                <option selected disabled>select a role.</option>
+                                @foreach(RoleEnum::getAll() as $role)
+                                    <option value="{{ $role->value }}">{{ $role->name }}</option>
+                                @endforeach
+                            </select>
+                            <p id="share_role_error" class="invalid-feedback d-none error col-12"
+                               role="alert"></p>
+                        </div>
+                        <div class="mb-3">
+                            <label for="share_party" class="form-label">User/Team </label>
+                            <select class="form-control" name="share_party" id="share_party" required>
+                            </select>
+                            <p id="share_party_error" class="invalid-feedback d-none error col-12"
+                               role="alert"></p>
+                        </div>
+                        <hr>
+                        <div class="mt-4">
+                            <button type="button" class="btn btn-secondary float-start"
+                                    data-bs-dismiss="modal">
+                                cancel
+                            </button>
+                            <button class="btn btn-info float-end" id="addRepositoryPermissionBtn" type="submit"><i
+                                    class="fas fa-share-alt"></i> share
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="onboarding-content text-center with-gradient d-none modal-item"
+                     id="trashRepositoryPermissionModal">
+                    <h3 class="h3 text-danger">Remove Permission for <b id="trashRepositoryPermission"></b>
+                        from {{ $repository->Name }} Repository.
+                    </h3>
+                    <div class="mt-2 mb-2">
+                        Are you sure you want to remove this share ?
+                    </div>
+                    <hr>
+                    <form id="trashRepositoryPermissionForm" method="post"> @csrf
+                        <div class="mt-4">@method('delete')
+                            <button type="button" class="btn btn-success float-start"
+                                    data-bs-dismiss="modal">
+                                no, keep
+                            </button>
+                            <button class="btn btn-danger float-end" id="trashRepositoryPermissionBtn"
+                                    type="submit"><i
+                                    class="fas fa-trash"></i> yes, remove
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -92,6 +156,37 @@
     $(function () {
         $.fn.dataTable.ext.errMode = 'none';
         fetchRepoPermissionsTableTable()
+
+        $('#share_party').select2({
+            placeholder: "Search a user or team (t:)", minimumInputLength: 2,
+            dropdownParent: $("#repositoryActionModel"),
+            ajax: {
+                url: '{!! route('users.select2',['with_teams'=>'rzr.co.ke']) !!}',
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    return {q: $.trim(params.term)};
+                },
+                processResults: function (data) {
+                    return {
+                        results: $.map(data, function (item) {
+                            return {text: item.Name, id: item.UserID}
+                        })
+                    };
+                },
+                cache: true
+            }
+        });
+
+        $(document).on('click', '.share-permission-trash', function () {
+            const name = $(this).data('info');
+            $(".modal-item").addClass('d-none');
+            $("#trashRepositoryPermissionForm").attr('action', $(this).data('click_url'));
+            $('#trashRepositoryPermission').html(name);
+            $('#trashRepositoryPermissionModal').removeClass('d-none');
+            $('.modal-title').html('<b>Remove</b> share : ' + name);
+            $("#repositoryActionModel").modal('show');
+        });
 
         $('form#updateRepositoryVisibilityForm').submit(async function (e) {
             e.preventDefault();
@@ -105,27 +200,22 @@
                 }
             }
         });
-        /* $('form#trashRepositoryForm').submit(async function (e) {
-             e.preventDefault();
-             if (await saveForm($(this), $('#trashRepositoryBtn'), false, true, true)) {
-                 $("#repositoryActionModel").modal('hide');
-                 window.bsOffcanvas.hide();
-                 if (typeof fetchRepositorysTable === "function") {
-                     fetchRepositorysTable();
-                 }
-             }
-         });
 
-         $('form#updateRepositoryForm').submit(async function (e) {
-             e.preventDefault();
-             if (await saveForm($(this), $('#updateRepositoryBtn'), false, true, true, true)) {
-                 $("#repositoryActionModel").modal('hide');
-                 window.bsOffcanvas.hide();
-                 if (typeof fetchRepositorysTable === "function") {
-                     fetchRepositorysTable();
-                 }
-             }
-         });*/
+        $('form#addRepositoryPermissionForm').submit(async function (e) {
+            e.preventDefault();
+            if (await saveForm($(this), $('#addRepositoryPermissionBtn'), false, true, true)) {
+                $("#repositoryActionModel").modal('hide');
+                fetchRepoPermissionsTableTable();
+            }
+        });
+
+        $('form#trashRepositoryPermissionForm').submit(async function (e) {
+            e.preventDefault();
+            if (await saveForm($(this), $('#trashRepositoryPermissionBtn'), false, true, true)) {
+                $("#repositoryActionModel").modal('hide');
+                fetchRepoPermissionsTableTable();
+            }
+        });
     });
 
     function fetchRepoPermissionsTableTable() {
@@ -158,12 +248,21 @@
         }
     }
 
+    function triggerAddRepositoryPermission() {
+        $('#share_party').val(null).change();
+        $(".modal-item").addClass('d-none');
+        $('#addRepositoryPermissionModal').removeClass('d-none');
+        $('.modal-title').html('SHARE: repository.');
+        $("#repositoryActionModel").modal('show');
+    }
+
     function triggerUpdateRepositoryVisibility() {
         $(".modal-item").addClass('d-none');
         $('#updateRepositoryVisibilityModal').removeClass('d-none');
         $('.modal-title').html('update repository visibility.');
         $("#repositoryActionModel").modal('show');
     }
+
 
     /*function triggerTrashRepository() {
         $(".modal-item").addClass('d-none');

@@ -18,9 +18,8 @@ use Illuminate\Support\Facades\Route;
 Route::namespace('DMS')->prefix('dms')->group(function () {
 
     Route::put('repo/{repository}/repo-visibility', [RepositoryPermissionController::class, 'visibility'])->name('repo.visibility');
-    Route::resource('repo/{repository}/repo-permissions', RepositoryPermissionController::class);
-    Route::resource('repo', RepositoryController::class)
-        ->parameters(['repo' => 'repository']);
+    Route::resource('repo/{repository}/repo-permissions', RepositoryPermissionController::class)->only(['index', 'store', 'destroy']);
+    Route::resource('repo', RepositoryController::class)->parameters(['repo' => 'repository']);
 
     Route::resource('repo/{repository}/files', DocumentController::class)
         ->parameters(['files' => 'document']);

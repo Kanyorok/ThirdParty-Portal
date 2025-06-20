@@ -119,7 +119,8 @@ abstract class PermissionsService
      */
     protected function _trashPermissions(Repository|Document $child, SpecialPermission $permission, User $actor): Document|Repository
     {
-        if ($permission->ModelID !== $child->Id || $permission->Model !== Repository::getPrimaryKey()) {
+
+        if (bccomp($permission->ModelID, $child->Id) !== 0 || $permission->Model !== Repository::getPrimaryKey()) {
             throw new ErroredException('This permission is not part of this item.');
         }
         $service = new PartyService($permission->party);

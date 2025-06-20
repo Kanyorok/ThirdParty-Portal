@@ -13,7 +13,6 @@
             <li class="breadcrumb-item"><a href="javascript:void(0)">...</a></li>
         @endif
     @endif
-
 @endsection
 @section('styles')
     <link rel="stylesheet" href="{{ asset('assets/libs/dropzone/dropzone.min.css') }}">
@@ -98,7 +97,6 @@
              <hr class="my-3 border border-secondary-subtle">
             --}}
 
-
             <div class="row my-3">
                 <div class="col">
                     <a class="h5 text-hover-primary my-3 d-block" data-bs-toggle="collapse" href="#collapseRepositories"
@@ -106,13 +104,18 @@
                 </div>
                 <div class="col-auto">
                     @if(!($service->isRoot()))
-                        <a href="{{ url()->previous() }}" class="btn btn-primary btn-sm " type="button">
+                        <a href="{{ url()->previous() }}" class="btn btn-secondary btn-sm " type="button">
                             <i class="fas fa-backward"></i>&nbsp; back
                         </a>
                         <a href="{{ route('repo.show',[$repository->parent->RepositoryId]) }}"
-                           class="btn btn-primary btn-sm " type="button">
+                           class="btn btn-secondary btn-sm " type="button">
                             <i class="fas fa-arrow-up"></i>&nbsp; to parent
                         </a>
+
+                        <a class="btn btn-secondary btn-sm click-summary-data" href="javascript:void(0)"
+                           data-summary_title="<i class='fas fa-folder-open'></i> {{ $repository->Name }} "
+                           data-click_url="{{ route('repo.edit', $repository->RepositoryId) }}"><i
+                                class="fas fa-share"></i> Share</a>
                     @endif
 
                     <button class="btn btn-primary btn-sm create-new-repository" type="button">

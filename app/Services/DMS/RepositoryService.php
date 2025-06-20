@@ -24,7 +24,7 @@ class RepositoryService extends PermissionsService
     {
     }
 
-    public static function root()
+    public static function root(): Repository
     {
         return Repository::query()->where('Id', self::ROOT)->withTrashed()->firstOr(function () {
             $actor = SystemHelper::user();
