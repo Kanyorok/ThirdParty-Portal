@@ -23,6 +23,7 @@
             <thead class="table-light">
                 <tr>
                     <th>#</th>
+                     <th>Adjustment Id</th>
                     <th>Date</th>
                     <th>Store</th>
                     <th>Reason</th>
@@ -38,6 +39,7 @@
                     @endphp
                     <tr>
                         <td>{{ $adjustments->firstItem() + $index }}</td>
+                         <td>{{ $adjustment->AdjustmentId}}</>
                         <td>{{ Carbon::parse($adjustment->AdjustmentDate)->format('Y-m-d') }}</td>
                         <td>{{ optional($adjustment->branch)->Name ?? 'N/A' }}</td>
                         <td>{{ $adjustment->Reason }}</td>
@@ -55,8 +57,7 @@
                             <a href="{{ route('transactionsadjustment.show', $adjustment->Id) }}" class="btn btn-sm btn-primary">View</a>
 
                             @if($statusEnum === Transfers::Pending)
-                                <a href="{{ route('transactionsadjustment.edit', $adjustment->Id) }}" class="btn btn-sm btn-secondary">Edit</a>
-
+                                <a href="{{ route('transactionsadjustment.edit', $adjustment->Id) }}" class="btn btn-sm btn-warning">Edit</a>
                                 <form action="{{ route('transactionsadjustment.destroy', $adjustment->Id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this adjustment?');">
                                     @csrf
                                     @method('DELETE')

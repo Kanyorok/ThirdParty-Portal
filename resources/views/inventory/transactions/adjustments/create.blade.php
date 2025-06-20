@@ -106,11 +106,20 @@
     });
 
     function calculateNewQty(input) {
-        const row = input.closest('tr');
-        const currentQty = parseFloat(row.querySelector('td:nth-child(4) input').value) || 0;
-        const adjustmentQty = parseFloat(input.value) || 0;
-        const newQty = currentQty + adjustmentQty;
-        row.querySelector('.new-qty').value = newQty;
+    const row = input.closest('tr');
+    const currentQty = parseFloat(row.querySelector('td:nth-child(4) input').value) || 0;
+    const adjustmentQty = parseFloat(input.value) || 0;
+    const newQty = currentQty + adjustmentQty;
+
+    if (newQty < 0) {
+        alert('❌ Adjustment would result in negative stock. Please enter a valid quantity.');
+        input.value = ''; /
+        row.querySelector('.new-qty').value = currentQty; 
+        return;
     }
+
+    row.querySelector('.new-qty').value = newQty;
+}
+
   </script>
   @endSection

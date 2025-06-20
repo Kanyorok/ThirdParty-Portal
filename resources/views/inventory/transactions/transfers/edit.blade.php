@@ -42,6 +42,7 @@
                         <th>Item Code</th>
                         <th>Approved Qty</th>
                         <th>Dispatched Qty</th>
+                        <th>UOM</th>
                         <th>Remarks</th>
                     </tr>
                 </thead>
@@ -65,6 +66,11 @@
                         <td>
                             <input type="number" name="items[{{ $index }}][dispatched_qty]" class="form-control" value="{{ old("items.$index.dispatched_qty", $item->DispatchedQty) }}" required>
                         </td>
+                        <td>
+                            <input type="text" class="form-control" value="{{ $item->uom->Code ?? 'N/A' }}" readonly>
+                            <input type="hidden" name="items[{{ $index }}][uom]" value="{{ $item->UOM }}">
+                        </td>
+
                         <td>
                             <input type="text" name="items[{{ $index }}][remarks]" class="form-control" value="{{ old("items.$index.remarks", $item->Remarks) }}">
                         </td>

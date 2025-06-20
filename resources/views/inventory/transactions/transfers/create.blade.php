@@ -68,7 +68,8 @@
                         <tr>
                             <th>#</th>
                             <th>Item Name</th>
-                            <th>Item Code</th> {{-- New: Added Item Code column --}}
+                            <th>Item Code</th>
+                            <th>UOM</th>
                             <th>Approved Qty</th>
                             <th>Dispatched Qty</th>
                             <th>Remarks</th>
@@ -86,6 +87,15 @@
                                 {{-- Display Item Code (assuming it's loaded with item relation) --}}
                                 {{ $item->item->ItemCode ?? 'N/A' }}
                             </td>
+                              <td>
+                                
+                                    {{-- Display UOM Code --}}
+                                    {{ $item->item->uom->Code ?? 'N/A' }}
+
+                                    {{-- Save UOM ID in hidden input --}}
+                                    <input type="hidden" name="items[{{ $index }}][uom]" value="{{ $item->item->UOM ?? '' }}">
+                                </td>
+
                             <td>
                                 <input type="number" class="form-control" name="items[{{ $index }}][approved_qty]" value="{{ $item->ApprovedQty }}" min="1" readonly>
                             </td>

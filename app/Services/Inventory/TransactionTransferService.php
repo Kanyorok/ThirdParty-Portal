@@ -86,6 +86,7 @@ class TransactionTransferService
                 'TransferId'    => $transfer->Id,
                 'Item'          => $itemData['item'],
                 'ApprovedQty'   => $itemData['approved_qty'],
+                'UOM'           => $itemData['uom'],
                 'DispatchedQty' => $itemData['dispatched_qty'],
                 'Remarks'       => $itemData['remarks'] ?? null,
                 'CreatedBy'     => Auth::id(),
@@ -133,6 +134,7 @@ public function update(TransactionTransfer $transfer, array $data): TransactionT
                 $item->update([
                     'ApprovedQty'   => $itemData['approved_qty'],
                     'DispatchedQty' => $itemData['dispatched_qty'],
+                    'UOM'   => $itemData['uom'],
                     'Remarks'       => $itemData['remarks'] ?? null,
                     'ModifiedBy'    => Auth::id(),
                     'ModifiedOn'    => Carbon::now(),
@@ -170,87 +172,83 @@ public function update(TransactionTransfer $transfer, array $data): TransactionT
 }
 
 
-    public function approve(int $transferId): void
-    {
-        DB::transaction(function () use ($transferId) {
-            $transfer = TransactionTransfer::with('items')->findOrFail($transferId);
-            $transfer->Status = Transfers::InTransit->value;
-            $transfer->ModifiedBy = Auth::id();
-            $transfer->ModifiedOn = now();
-            $transfer->save();
-            Log::debug("Transaction Transfer {$transfer->TransferId} approved. Status set to InTransit.");
+   public function approve(int $transferId): void
+{
+    DB::transaction(function () use ($transferId) {
+        $transfer = TransactionTransfer::with('items')->findOrFail($transferId);
+        $transfer->Status = Transfers::InTransit->value;
+        $transfer->ModifiedBy = Auth::id();
+        $transfer->ModifiedOn = now();
+        $transfer->save();
+        Log::debug("Transaction Transfer {$transfer->TransferId} approved. Status set to InTransit.");
 
-            foreach ($transfer->items as $item) {
-                Log::debug("Processing item {$item->Item} for deduction from FromBranch {$transfer->FromBranch}. DispatchedQty: {$item->DispatchedQty}");
-                $fromStock = StockItem::where('ItemID', $item->Item)
-                    ->where('Branch', $transfer->FromBranch)
-                    ->first();
+        foreach ($transfer->items as $item) {
+            Log::debug("Processing item {$item->Item} for deduction from FromBranch {$transfer->FromBranch}. DispatchedQty: {$item->DispatchedQty}");
+            $fromStock = StockItem::where('ItemID', $item->Item)
+                ->where('Branch', $transfer->FromBranch)
+                ->first();
 
-                if ($fromStock) {
-                    Log::debug("Found FromBranch StockItem. CurrentQty before deduction: {$fromStock->CurrentQty}");
-                    $fromStock->CurrentQty = max(0, $fromStock->CurrentQty - $item->DispatchedQty);
-                    $fromStock->save();
-                    Log::debug("FromBranch StockItem updated. New CurrentQty: {$fromStock->CurrentQty}");
-                    activity()
-                        ->causedBy(Auth::user())
-                        ->performedOn($fromStock)
-                        ->event('stock_deducted_for_transfer')
-                        ->log("Stock deducted by {$item->DispatchedQty} for Item {$item->Item} in Branch {$transfer->FromBranch} due to transfer {$transfer->TransferId}.");
-                } else {
-
-                    \Log::warning("StockItem not found in FromBranch for deduction: ItemID={$item->Item}, Branch={$transfer->FromBranch}. Transfer ID: {$transfer->Id}. Deduction skipped.");
-                }
-
-                Log::debug("Processing item {$item->Item} for addition to ToBranch {$transfer->ToBranch}. DispatchedQty: {$item->DispatchedQty}");
-                $toStock = StockItem::where('ItemID', $item->Item)
-                    ->where('Branch', $transfer->ToBranch)
-                    ->first();
-
-                if (!$toStock) {
-                    Log::debug("StockItem not found in ToBranch, creating new one for ItemID: {$item->Item}, Branch: {$transfer->ToBranch}");
-                    $toStock = StockItem::create([
-                        'ItemID' => $item->Item,
-                        'Branch' => $transfer->ToBranch,
-                        'CurrentQty' => 0, 
-                    ]);
-                }
-
-                Log::debug("ToBranch StockItem CurrentQty before addition: {$toStock->CurrentQty}");
-                $toStock->CurrentQty += $item->DispatchedQty;
-                $toStock->save();
-                Log::debug("ToBranch StockItem updated. New CurrentQty: {$toStock->CurrentQty}");
-
-                activity()
-                    ->causedBy(Auth::user())
-                    ->performedOn($toStock)
-                    ->event('stock_added_for_transfer_in_transit')
-                    ->log("Stock virtually added by {$item->DispatchedQty} for Item {$item->Item} in Branch {$transfer->ToBranch} (in transit) due to transfer {$transfer->TransferId}.");
+            if (!$fromStock) {
+                \Log::error("StockItem not found in FromBranch for deduction: ItemID={$item->Item}, Branch={$transfer->FromBranch}. Transfer ID: {$transfer->Id}");
+                throw new \Exception("Stock not found in source branch (FromBranch) for Item ID: {$item->Item}");
             }
 
-            Workflow::create([
-                'Source' => 'TransactionTransfer',
-                'SourceID' => $transfer->Id,
-                'Stage' => Transfers::InTransit->label(),
-                'Status' => Transfers::InTransit->value,
-                'Notes' => 'Transfer approved and dispatched, now in transit',
-                'CreatedBy' => Auth::id(),
-                'CreatedOn' => now(),
-                'ModifiedBy' => Auth::id(),
-                'ModifiedOn' => now(),
-            ]);
+            Log::debug("Found FromBranch StockItem. CurrentQty before deduction: {$fromStock->CurrentQty}");
+            $fromStock->CurrentQty = max(0, $fromStock->CurrentQty - $item->DispatchedQty);
+            $fromStock->save();
+            Log::debug("FromBranch StockItem updated. New CurrentQty: {$fromStock->CurrentQty}");
+            activity()
+                ->causedBy(Auth::user())
+                ->performedOn($fromStock)
+                ->event('stock_deducted_for_transfer')
+                ->log("Stock deducted by {$item->DispatchedQty} for Item {$item->Item} in Branch {$transfer->FromBranch} due to transfer {$transfer->TransferId}.");
 
-  
-            PendingWorkflow::where('Source', 'TransactionTransfer')
-                ->where('SourceID', $transfer->Id)
-                ->update(['Stage' => Transfers::InTransit->label()]);
+            Log::debug("Processing item {$item->Item} for addition to ToBranch {$transfer->ToBranch}. DispatchedQty: {$item->DispatchedQty}");
+            $toStock = StockItem::where('ItemID', $item->Item)
+                ->where('Branch', $transfer->ToBranch)
+                ->first();
+
+            if (!$toStock) {
+                \Log::error("StockItem not found in ToBranch for addition: ItemID={$item->Item}, Branch={$transfer->ToBranch}. Transfer ID: {$transfer->Id}");
+                throw new \Exception("Stock not found in destination branch (ToBranch) for Item ID: {$item->Item}");
+            }
+
+            Log::debug("ToBranch StockItem CurrentQty before addition: {$toStock->CurrentQty}");
+            $toStock->CurrentQty += $item->DispatchedQty;
+            $toStock->save();
+            Log::debug("ToBranch StockItem updated. New CurrentQty: {$toStock->CurrentQty}");
 
             activity()
-                ->performedOn($transfer)
                 ->causedBy(Auth::user())
-                ->withProperties(['status' => Transfers::InTransit])
-                ->log("Approved Transaction Transfer {$transfer->TransferId}, now in transit.");
-        });
-    }
+                ->performedOn($toStock)
+                ->event('stock_added_for_transfer_in_transit')
+                ->log("Stock virtually added by {$item->DispatchedQty} for Item {$item->Item} in Branch {$transfer->ToBranch} (in transit) due to transfer {$transfer->TransferId}.");
+        }
+
+        Workflow::create([
+            'Source' => 'TransactionTransfer',
+            'SourceID' => $transfer->Id,
+            'Stage' => Transfers::InTransit->label(),
+            'Status' => Transfers::InTransit->value,
+            'Notes' => 'Transfer approved and dispatched, now in transit',
+            'CreatedBy' => Auth::id(),
+            'CreatedOn' => now(),
+            'ModifiedBy' => Auth::id(),
+            'ModifiedOn' => now(),
+        ]);
+
+        PendingWorkflow::where('Source', 'TransactionTransfer')
+            ->where('SourceID', $transfer->Id)
+            ->update(['Stage' => Transfers::InTransit->label()]);
+
+        activity()
+            ->performedOn($transfer)
+            ->causedBy(Auth::user())
+            ->withProperties(['status' => Transfers::InTransit])
+            ->log("Approved Transaction Transfer {$transfer->TransferId}, now in transit.");
+    });
+}
+
 
  
     public function delete(TransactionTransfer $transfer): void

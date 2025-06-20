@@ -8,6 +8,8 @@ use App\Traits\Model\UserActorTrait;
 use App\Models\Auth\User;
 use App\Models\Core\Branch;
 use App\Models\Inventory\TransactionTransferItem;
+use App\Models\Inventory\TransactionReceipt;
+
 
 class TransactionTransfer extends Model
 {
@@ -27,6 +29,7 @@ class TransactionTransfer extends Model
             'RequisitionId',
             'TransferredBy',
             'DispatchedQty',
+            'UOM',
              'Status',
             'FromBranch',
             'ToBranch',
@@ -38,6 +41,12 @@ class TransactionTransfer extends Model
            'DeletedOn',
 
     ];
+
+    public function receipt()
+    {
+        return $this->hasOne(TransactionReceipt::class, 'TransferId', 'Id');
+    }
+
 
     public function creator()
     {

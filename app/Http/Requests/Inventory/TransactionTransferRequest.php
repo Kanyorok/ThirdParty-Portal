@@ -27,6 +27,7 @@ public function rules()
         'ToBranch' => 'required|exists:t_Branches,Id',
         'items' => 'required|array|min:1',
         'items.*.item' => 'required|exists:t_Items,Id',
+        'items.*.uom' => 'required|exists:t_UOM,Id',
         'items.*.approved_qty' => 'required|numeric|min:1',
         'items.*.dispatched_qty' => 'required|integer|min:0', 
         'items.*.remarks' => 'nullable|string|max:255',

@@ -67,7 +67,7 @@
         <textarea name="GeneralRemarks" class="form-control">{{ old('GeneralRemarks') }}</textarea>
       </div>
 
-      <button type="submit" class="btn btn-success">Post GRN</button>
+      <button type="submit" class="btn btn-success">Post Receipt</button>
     </form>
   </div>
 </div>

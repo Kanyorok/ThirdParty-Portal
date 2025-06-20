@@ -31,7 +31,9 @@ class TransactionTransfersController extends Controller
     public function create(Request $request)
     {
         $this->authorize('create', TransactionTransfer::class);
-        $approvedRequisitions = InterBranchRequisition::where('Status', 'Ap')->get();
+        $approvedRequisitions = InterBranchRequisition::where('Status', 'Ap')
+            ->whereDoesntHave('transfer') 
+            ->get();
         $requisition = null;
 
         if ($request->has('requisition_id')) {

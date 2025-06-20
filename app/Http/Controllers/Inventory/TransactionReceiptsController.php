@@ -32,6 +32,7 @@ class TransactionReceiptsController extends Controller
     public function create()
     {
     $this->authorize('create', TransactionReceipt::class);
+    $transfers = TransactionTransfer::doesntHave('receipt')->get(); 
     $transfers = TransactionTransfer::with(['items.item'])
     ->where('Status', Transfers::InTransit)
     ->get();
