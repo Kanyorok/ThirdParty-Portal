@@ -8,7 +8,7 @@
 
     <div class="card mb-4 shadow">
         <div class="card-body">
-            <p><strong>Transfer Date:</strong> {{ $transferitem->TransferDate ?? 'N/A' }}</p>
+            <p><strong>Transfer Date:</strong>{{ $transferitem->TransferDate ? \Carbon\Carbon::parse($transferitem->TransferDate)->format('d/m/Y') : 'N/A' }}</p>
             <p><strong>From Branch:</strong> {{ $transferitem->fromBranch->Name ?? 'N/A' }}</p>
             <p><strong>To Branch:</strong> {{ $transferitem->toBranch->Name ?? 'N/A' }}</p>
             <p><strong>Transferred By:</strong> {{ $transferitem->TransferredBy ?? 'N/A' }}</p>

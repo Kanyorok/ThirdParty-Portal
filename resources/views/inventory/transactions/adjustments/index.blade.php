@@ -40,10 +40,10 @@
                     <tr>
                         <td>{{ $adjustments->firstItem() + $index }}</td>
                          <td>{{ $adjustment->AdjustmentId}}</>
-                        <td>{{ Carbon::parse($adjustment->AdjustmentDate)->format('Y-m-d') }}</td>
+                        <td>{{ Carbon::parse($adjustment->AdjustmentDate)->format('d/m/Y') }}</td>
                         <td>{{ optional($adjustment->branch)->Name ?? 'N/A' }}</td>
                         <td>{{ $adjustment->Reason }}</td>
-                        <td>{{ $adjustment->AdjustedBy }}</td>
+                        <td>{{$adjustment->adjustedBy->Name ?? 'N/A'}}</td>
                         <td>
                             @if($statusEnum)
                                 <span class="badge bg-{{ $statusEnum->badgeColor() }}">
@@ -84,13 +84,18 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script>
-    $(document).ready(function () {
+       $(document).ready(function () {
+        @if(!$adjustments->isEmpty())
         $('#adjustmentTable').DataTable({
             pageLength: 10,
             ordering: true,
             searching: true,
             lengthChange: true,
+            language: {
+                emptyTable: ""
+            }
         });
+        @endif
     });
 </script>
 @endsection

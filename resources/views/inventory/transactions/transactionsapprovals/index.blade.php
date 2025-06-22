@@ -24,7 +24,6 @@ href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">@endsecti
                 <label>Transaction Type</label>
                 <select name="transaction_type" class="form-select" onchange="this.form.submit()">
                     <option value="Stock Transfer" {{ $transactionType == 'Stock Transfer' ? 'selected' : '' }}>Stock Transfer</option>
-                    <option value="Stock Issue" {{ $transactionType == 'Stock Issue' ? 'selected' : '' }}>Stock Issue</option>
                     <option value="Stock Adjustment" {{ $transactionType == 'Stock Adjustment' ? 'selected' : '' }}>Stock Adjustment</option>
                 </select>
             </div>
@@ -89,7 +88,7 @@ href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">@endsecti
                             {{ $record->branch->Name ?? 'N/A' }}
                         @endif
                     </td>
-                    <td>{{ \Carbon\Carbon::parse($record->CreatedOn)->format('Y-m-d') }}</td>
+                    <td>{{ \Carbon\Carbon::parse($record->CreatedOn)->format('d/m/Y') }}</td>
                     <td>
                         @if($transactionType == 'Stock Transfer')
                             {{ $record->TransferredBy ?? 'N/A' }}

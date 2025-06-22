@@ -58,10 +58,10 @@
                         <tr>
                             <td>{{ $i + 1 }}</td>
                             <td>{{ $transfer->TransferID ?? '-' }}</td>
-                            <td>{{ \Carbon\Carbon::parse($transfer->TransferDate)->format('d/m/y') }}</td>
+                            <td>{{ \Carbon\Carbon::parse($transfer->TransferDate)->format('d/m/Y') }}</td>
                             <td>{{ optional($transfer->fromBranch)->Name ?? '-' }}</td>
                             <td>{{ optional($transfer->toBranch)->Name ?? '-' }}</td>
-                            <td>{{ $transfer->TransferredBy ?? '-' }}</td>
+                            <td>{{$transfer->transferredBy->Name ?? 'N/A'}}</td>
                             <td>
                                 @if($statusEnum)
                                     <span class="badge bg-{{ $statusEnum->badgeColor() }}">

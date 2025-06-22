@@ -27,6 +27,7 @@ class TransactionTransfer extends Model
     protected $fillable = [
             'TransferDate',
             'RequisitionId',
+            'RequisitionType',
             'TransferredBy',
             'DispatchedQty',
             'UOM',
@@ -68,6 +69,10 @@ class TransactionTransfer extends Model
         return $this->belongsTo(InterBranchRequisition::class, 'RequisitionId', 'Id');
     }
 
+     public function transferredBy()
+    {
+        return $this->belongsTo(User::class, 'TransferredBy', 'Id');
+    }
 
      public function items()  
      {

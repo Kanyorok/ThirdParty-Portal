@@ -17,66 +17,76 @@ use Illuminate\Support\Facades\Log;
 class TransactionTransferService
 {
   
-    public function createTransfer(array $data): TransactionTransfer
-    {
-        $data['Status'] = Transfers::Pending;
+   public function createTransfer(array $data): TransactionTransfer
+{
+    $data['Status'] = Transfers::Pending;
+
+    if ($data['RequisitionType'] === 'procurement') {
+        // Procurement requisitions: FromBranch is null, use ToBranch from Requisitions table
+        $requisition = \App\Models\Procurement\Requisitions::findOrFail($data['RequisitionId']);
+        $fromBranch = null;
+        $toBranch = $requisition->BranchID;
+    } else {
+        // Interbranch requisitions: use FromBranch and ToBranch from the requisition
         $requisition = InterBranchRequisition::findOrFail($data['RequisitionId']);
+        $fromBranch = $requisition->FromBranch;
+        $toBranch = $requisition->ToBranch;
+    }
 
-        if (empty($data['TransferDate'])) {
-            throw new \Exception('TransferDate is required.');
-        }
+    if (empty($data['TransferDate'])) {
+        throw new \Exception('TransferDate is required.');
+    }
 
-        $transfer = new TransactionTransfer();
-        $transfer->TransferDate = $data['TransferDate'];
-        $transfer->TransferredBy = $data['TransferredBy'];
-        $transfer->RequisitionId = $data['RequisitionId'];
-        $transfer->FromBranch = $requisition->FromBranch;
-        $transfer->ToBranch = $requisition->ToBranch;
-        $transfer->Status = $data['Status'];
-        $transfer->CreatedBy = Auth::id();
-        $transfer->ModifiedBy = Auth::id();
-        $transfer->CreatedOn = Carbon::now();
-        $transfer->ModifiedOn = Carbon::now();
-        $transfer->save();
+    $transfer = new TransactionTransfer();
+    $transfer->TransferDate = $data['TransferDate'];
+    $transfer->TransferredBy = $data['TransferredBy'];
+    $transfer->RequisitionId = $data['RequisitionId'];
+    $transfer->FromBranch = $fromBranch;
+    $transfer->ToBranch = $toBranch;
+    $transfer->RequisitionType = $data['RequisitionType'];
+    $transfer->Status = $data['Status'];
+    $transfer->CreatedBy = Auth::id();
+    $transfer->ModifiedBy = Auth::id();
+    $transfer->CreatedOn = Carbon::now();
+    $transfer->ModifiedOn = Carbon::now();
+    $transfer->save();
 
-        $transfer->TransferId = $this->generateTransferId($transfer);
-        $transfer->save();
+    $transfer->TransferId = $this->generateTransferId($transfer);
+    $transfer->save();
 
- 
-        Workflow::create([
-            'Source' => 'TransactionTransfer',
-            'SourceID' => $transfer->Id,
+    Workflow::create([
+        'Source' => 'TransactionTransfer',
+        'SourceID' => $transfer->Id,
+        'Stage' => Transfers::Pending->label(),
+        'Status' => Transfers::Pending->value,
+        'Notes' => 'Transaction Transfers Pending',
+        'CreatedBy' => Auth::id(),
+        'CreatedOn' => now(),
+        'ModifiedBy' => Auth::id(),
+        'ModifiedOn' => now(),
+    ]);
+
+    PendingWorkflow::updateOrCreate(
+        ['Source' => 'TransactionTransfer', 'SourceID' => $transfer->Id],
+        [
             'Stage' => Transfers::Pending->label(),
-            'Status' => Transfers::Pending->value,
-            'Notes' => 'Transaction Transfers Pending',
+            'UserId' => Auth::id(),
             'CreatedBy' => Auth::id(),
             'CreatedOn' => now(),
             'ModifiedBy' => Auth::id(),
             'ModifiedOn' => now(),
-        ]);
+        ]
+    );
 
- 
-        PendingWorkflow::updateOrCreate(
-            ['Source' => 'TransactionTransfer', 'SourceID' => $transfer->Id],
-            [
-                'Stage' => Transfers::Pending->label(),
-                'UserId' => Auth::id(),
-                'CreatedBy' => Auth::id(),
-                'CreatedOn' => now(),
-                'ModifiedBy' => Auth::id(),
-                'ModifiedOn' => now(),
-            ]
-        );
+    activity()
+        ->performedOn($transfer)
+        ->causedBy(Auth::user())
+        ->withProperties(['attributes' => $transfer->toArray()])
+        ->log('Created Transaction Transfer');
 
-    
-        activity()
-            ->performedOn($transfer)
-            ->causedBy(Auth::user())
-            ->withProperties(['attributes' => $transfer->toArray()])
-            ->log('Created Transaction Transfer');
+    return $transfer;
+}
 
-        return $transfer;
-    }
 
   
     public function createTransferItems(TransactionTransfer $transfer, array $items): void
@@ -110,42 +120,49 @@ public function update(TransactionTransfer $transfer, array $data): TransactionT
     try {
         $items = $data['items'] ?? [];
         unset($data['items']);
-        $requisition = InterBranchRequisition::findOrFail($data['RequisitionId']);
 
-    
+        if ($data['RequisitionType'] === 'procurement') {
+            $requisition = \App\Models\Procurement\Requisitions::findOrFail($data['RequisitionId']);
+            $fromBranch = null;
+            $toBranch = $requisition->BranchID;
+        } else {
+            $requisition = InterBranchRequisition::findOrFail($data['RequisitionId']);
+            $fromBranch = $requisition->FromBranch;
+            $toBranch = $requisition->ToBranch;
+        }
+
         $transfer->fill($data);
         $transfer->TransferDate = $data['TransferDate'];
         $transfer->TransferredBy = $data['TransferredBy'];
         $transfer->RequisitionId = $data['RequisitionId'];
-        $transfer->FromBranch = $requisition->FromBranch;
-        $transfer->ToBranch = $requisition->ToBranch;
+        $transfer->RequisitionType = $data['RequisitionType'];
+        $transfer->FromBranch = $fromBranch;
+        $transfer->ToBranch = $toBranch;
         $transfer->ModifiedBy = Auth::id();
         $transfer->ModifiedOn = Carbon::now();
         $transfer->save();
 
-        
         foreach ($items as $itemData) {
             $item = TransactionTransferItem::where('TransferId', $transfer->Id)
                 ->where('Item', $itemData['item'])
                 ->first();
 
             if ($item) {
-                // Update existing item
                 $item->update([
                     'ApprovedQty'   => $itemData['approved_qty'],
                     'DispatchedQty' => $itemData['dispatched_qty'],
-                    'UOM'   => $itemData['uom'],
+                    'UOM'           => $itemData['uom'],
                     'Remarks'       => $itemData['remarks'] ?? null,
                     'ModifiedBy'    => Auth::id(),
                     'ModifiedOn'    => Carbon::now(),
                 ]);
             } else {
-                // Optionally create new item if it doesn't exist
                 TransactionTransferItem::create([
                     'TransferId'    => $transfer->Id,
                     'Item'          => $itemData['item'],
                     'ApprovedQty'   => $itemData['approved_qty'],
                     'DispatchedQty' => $itemData['dispatched_qty'],
+                    'UOM'           => $itemData['uom'],
                     'Remarks'       => $itemData['remarks'] ?? null,
                     'CreatedBy'     => Auth::id(),
                     'ModifiedBy'    => Auth::id(),

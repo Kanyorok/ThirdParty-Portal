@@ -16,9 +16,17 @@
 
             <div class="col-md-6">
                 <label for="TransferredBy" class="form-label">Transferred By</label>
-                <input type="text" name="TransferredBy" class="form-control" value="{{ old('TransferredBy', $transferitem->TransferredBy) }}">
+                <select name="TransferredBy" id="TransferredBy" class="form-select select2" required>
+                    <option value="">-- Select User --</option>
+                    @foreach ($users as $user)
+                        <option value="{{ $user->Id }}"
+                            {{ old('TransferredBy', $transferitem->TransferredBy) == $user->Id ? 'selected' : '' }}>
+                            {{ $user->Name }}
+                        </option>
+                    @endforeach
+                </select>
             </div>
-        </div>
+
 
         <div class="row mb-3">
             <div class="col-md-6">
