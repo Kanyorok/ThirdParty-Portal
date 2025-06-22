@@ -1,111 +1,106 @@
-<!-- Blade-compatible HTML with JavaScript enhancements -->
 @extends('layouts.app')
 @section('content')
-<div class="container-fluid mt-4">
-    <h4 class="mb-4">📋 Financial Dashboard – Statement of Financial Position & Income Statement</h4>
+<div class="container-fluid">
+    <h4 class="mb-0">📊 Financial Dashboard – Statement of Financial Position & Income Statement</h4>
 
-    <!-- Year/Scenario/Branch -->
-    <div class="row mb-3">
-        <div class="col-md-3">
-            <label class="form-label">Budget Year</label>
-            <input type="text" class="form-control form-control-lg" value="2025" readonly>
-        </div>
-        <div class="col-md-4">
-            <label class="form-label">Scenario</label>
-            <input type="text" class="form-control form-control-lg" value="Base Scenario" readonly>
-        </div>
-        <div class="col-md-5">
-            <label class="form-label">Branch</label>
-            <input type="text" class="form-control form-control-lg" value="Main Branch" readonly>
-        </div>
-    </div>
-
-    @php
-        $months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-        $sections = [
-            'ASSETS - Cash (Budget Line Items)' => ['Cash on Hand', 'BOT Clearing Account/SMR'],
-            'ASSETS - Investments (Projections)' => ['Placements with Other Banks', 'Treasury Bills', 'Treasury Bond'],
-            'ASSETS - Term Loans (Projections)' => ['Personal Loans', 'Staff Loan', 'Cooperative Loan', 'BAJAJI LOANS', 'SME Loans'],
-            'ASSETS - Overdrafts (Budget Line Items)' => ['Overdraft Facility'],
-            'ASSETS - Other Assets (Budget Line Items)' => ['Prepaid Expenses', 'Receivables'],
-            'LIABILITIES - Savings Deposits (Projections)' => ['Individual', 'Mtoto', 'Vicoba', 'Wekeza', 'Dormant', 'Cooperatives', 'Staff'],
-            'LIABILITIES - Current Accounts (Projections)' => ['Cooperatives', 'Individuals'],
-            'LIABILITIES - Time Deposits (Projections)' => ['Individuals', 'Cooperatives', 'Other Organisation'],
-            'LIABILITIES - Others (Budget Line Items)' => ['Accrued Expenses', 'Deferred Income'],
-            'OWNERS EQUITY (Budget Line Items)' => ['Retained Earnings', 'Capital Reserves'],
-            'INCOME - Financial Income (Budget Line Items)' => ['Interest Income', 'Interest Expenses', 'Net Interest Income', 'Fees and Commission', 'Other Incomes'],
-            'INCOME - Operating Expenses (Budget Line Items)' => ['Staff Expenses', 'Admin Expenses', 'Commissions'],
-            'INCOME - Summary Results (Budget Line Items)' => ['Result Before Allowances', 'Allowances for Loan Losses', 'Provision Other Assets', 'Operating Result', 'Recoveries for NPA', 'Profit Before Tax', 'Taxation', 'Net Profit']
-        ];
-    @endphp
-
-    @foreach($sections as $section => $items)
-    <div class="card mb-5 shadow-sm">
-        <div class="card-header bg-dark text-white fw-semibold">{{ strtoupper($section) }}</div>
-        <div class="card-body p-0 overflow-auto" style="white-space: nowrap;">
-            <table class="table table-bordered table-sm text-center align-middle mb-0" style="min-width: 2000px;">
-                <thead class="table-light">
-                    <tr>
-                        <th class="text-start ps-3" style="min-width: 280px;">{{ str_contains($section, 'Projections') ? 'Product/Projection Item' : 'Budget Line Item' }}</th>
-                        <th style="min-width: 180px;">Prev. Year Closing</th>
-                        @foreach($months as $m)
-                            <th style="min-width: 130px;">{{ $m }}</th>
-                        @endforeach
-                        <th style="min-width: 150px;">Annual Total</th>
-                        <th style="min-width: 150px;">% Change</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($items as $item)
-                    <tr>
-                        <td class="text-start ps-3">{{ $item }}</td>
-                        <td>
-                            <input type="number" class="form-control form-control-lg prev-year text-end" value="1000000" readonly>
-                        </td>
-                        @foreach($months as $m)
-                            <td>
-                                <input type="number" class="form-control form-control-lg month-value text-end" value="0" readonly>
-                            </td>
-                        @endforeach
-                        <td>
-                            <input type="text" class="form-control form-control-lg bg-light fw-bold text-end total" value="0" readonly>
-                        </td>
-                        <td>
-                            <input type="text" class="form-control form-control-lg bg-light text-end percent" value="0%" readonly>
-                        </td>
-                    </tr>
+    <!-- Budget Selection Form -->
+    <form action="{{ route('budgetconsolidation.index') }}" method="POST">
+        @csrf
+        @method('GET')
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <label class="form-label fw-semibold">Select a Budget</label>
+                <select name="BudgetLineID" class="form-select" required onchange="this.form.submit()">
+                    <option disabled selected>-- Select Budget Line --</option>
+                    @foreach ($budgets as $item)
+                        <option value="{{ $item->Id }}">{{ $item->Name }}</option>
                     @endforeach
-                </tbody>
-            </table>
+                </select>
+                @error('BudgetLineID') 
+                    <small class="text-danger">{{ $message }}</small> 
+                @enderror
+            </div>
+        </div>
+    </form>
+
+    @php $months = range(1, 12); @endphp
+
+    @foreach($data as $category => $subTypes)
+    <div class="card mb-5 shadow border-0">
+        <div class="card-header bg-primary text-white fw-bold fs-5">{{ strtoupper($category) }}</div>
+        <div class="card-body p-0 overflow-auto">
+            @php $categoryTotal = 0; @endphp
+            @foreach($subTypes as $subTypeName => $entries)
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm align-middle text-center mb-0" style="min-width: 1800px;">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="text-start ps-3">{{ $subTypeName }}</th>
+                                <th class="bg-warning-subtle">Prev. Year</th>
+                                @foreach($months as $m)
+                                    <th>Month {{ $m }}</th>
+                                @endforeach
+                                <th class="bg-success-subtle">Total</th>
+                                <th class="bg-info-subtle">Actuals</th>
+                                <th class="bg-danger-subtle">% Change</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @php $subTotal = 0; @endphp
+                            @foreach($entries as $entry)
+                            @php
+                                $total = $entry['allocationType'] === 'monthly'
+                                    ? array_sum(array_map('floatval', $entry['allocationValues']))
+                                    : floatval($entry['fullAllocation']);
+                                $subTotal += $total;
+                                $categoryTotal += $total;
+
+                                $prev = floatval($entry['prevYear'] ?? 0);
+                                $actual = floatval($entry['actuals'] ?? 0);
+                                $percentChange = $prev > 0 ? (($total - $prev) / $prev) * 100 : 0;
+                            @endphp
+                            <tr>
+                                <td class="text-start ps-3">{{ $entry['budgetLineName'] }}</td>
+                                <td class="bg-warning-subtle">{{ number_format($prev, 2) }}</td>
+                                @foreach($months as $m)
+                                    <td>
+                                        @if ($entry['allocationType'] === 'monthly')
+                                            {{ isset($entry['allocationValues'][$m]) && $entry['allocationValues'][$m] != '.00'
+                                                ? number_format($entry['allocationValues'][$m], 2)
+                                                : '-' }}
+                                        @else
+                                            {{ $m == 12 ? number_format($entry['fullAllocation'], 2) : '-' }}
+                                        @endif
+                                    </td>
+                                @endforeach
+                                <td class="bg-success-subtle fw-bold">{{ number_format($total, 2) }}</td>
+                                <td class="bg-info-subtle">{{ number_format($actual, 2) }}</td>
+                                <td class="bg-danger-subtle">{{ number_format($percentChange, 2) }}%</td>
+                            </tr>
+                            @endforeach
+                            <tr class="table-secondary fw-semibold">
+                                <td class="text-start ps-3">Subtotal – {{ $subTypeName }}</td>
+                                <td></td>
+                                @foreach($months as $m) <td></td> @endforeach
+                                <td class="text-end pe-2">{{ number_format($subTotal, 2) }}</td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            @endforeach
+
+            <div class="text-end mt-3 pe-3 fw-bold text-primary">
+                Total for {{ $category }}: {{ number_format($categoryTotal, 2) }}
+            </div>
         </div>
     </div>
     @endforeach
 
     <div class="text-end mb-5">
-        <button type="button" class="btn btn-outline-secondary btn-lg" disabled>🔒 View Only</button>
+        {{-- <a href="{{ route('budgetconsolidation.export', ['format' => 'excel']) }}" class="btn btn-success me-2">📥 Export to Excel</a>
+        <a href="{{ route('budgetconsolidation.export', ['format' => 'pdf']) }}" class="btn btn-danger">📄 Export to PDF</a> --}}
     </div>
 </div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const rows = document.querySelectorAll('table tbody tr');
-
-        rows.forEach(row => {
-            const monthInputs = row.querySelectorAll('.month-value');
-            const totalField = row.querySelector('.total');
-            const percentField = row.querySelector('.percent');
-            const prevField = row.querySelector('.prev-year');
-
-            let total = 0;
-            monthInputs.forEach(input => {
-                total += parseFloat(input.value) || 0;
-            });
-            totalField.value = total.toLocaleString();
-
-            const prev = parseFloat(prevField.value) || 0;
-            const change = prev > 0 ? ((total - prev) / prev * 100).toFixed(2) + '%' : '0%';
-            percentField.value = change;
-        });
-    });
-</script>
 @endsection
