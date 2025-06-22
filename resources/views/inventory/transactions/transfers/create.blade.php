@@ -102,6 +102,13 @@
     const transferDetails = document.getElementById('transferDetails');
     const itemsBody = document.getElementById('itemsBody');
 
+    const fromBranchText = document.getElementById('fromBranch');
+    const toBranchText = document.getElementById('toBranch');
+    const fromBranchHidden = document.getElementById('FromBranch');
+    const toBranchHidden = document.getElementById('ToBranch');
+    const requisitionTypeHidden = document.getElementById('RequisitionType');
+    const requisitionIdHidden = document.getElementById('RequisitionId');
+
     let selectedType = '';
 
     const requisitionsBaseUrl = "{{ url(route('requisitions.by-type', ['type' => 'PLACEHOLDER'])) }}";
@@ -109,8 +116,22 @@
 
     requisitionTypeSelect.addEventListener('change', function () {
         selectedType = this.value;
-        document.getElementById('RequisitionType').value = selectedType;
+        requisitionTypeHidden.value = selectedType;
         requisitionIdSelect.innerHTML = '<option value="">Loading...</option>';
+
+        // Reset everything else
+        requisitionIdHidden.value = '';
+        itemsBody.innerHTML = '';
+        fromBranchText.value = '';
+        toBranchText.value = '';
+        fromBranchHidden.value = '';
+        toBranchHidden.value = '';
+        transferDetails.style.display = 'none';
+
+        if (!selectedType) {
+            requisitionIdSelect.innerHTML = '<option value="">Select Requisition</option>';
+            return;
+        }
 
         const url = requisitionsBaseUrl.replace('PLACEHOLDER', selectedType);
 
@@ -131,18 +152,31 @@
 
     requisitionIdSelect.addEventListener('change', function () {
         const id = this.value;
-        if (!id || !selectedType) return;
+
+        // Clear items & branch info
+        itemsBody.innerHTML = '';
+        fromBranchText.value = '';
+        toBranchText.value = '';
+        fromBranchHidden.value = '';
+        toBranchHidden.value = '';
+        transferDetails.style.display = 'none';
+
+        if (!id || !selectedType) {
+            requisitionIdHidden.value = '';
+            return;
+        }
+
+        requisitionIdHidden.value = id;
 
         const detailsUrl = requisitionDetailsBaseUrl.replace('PLACEHOLDER', id) + `?type=${selectedType}`;
 
         fetch(detailsUrl)
             .then(response => response.json())
             .then(data => {
-                document.getElementById('fromBranch').value = data.from_branch?.Name || 'N/A';
-                document.getElementById('FromBranch').value = data.from_branch?.Id || '';
-                document.getElementById('toBranch').value = data.to_branch?.Name || 'N/A';
-                document.getElementById('ToBranch').value = data.to_branch?.Id || '';
-                document.getElementById('RequisitionId').value = data.Id;
+                fromBranchText.value = data.from_branch?.Name || 'N/A';
+                toBranchText.value = data.to_branch?.Name || 'N/A';
+                fromBranchHidden.value = data.from_branch?.Id || '';
+                toBranchHidden.value = data.to_branch?.Id || '';
 
                 itemsBody.innerHTML = '';
                 data.items.forEach((item, index) => {
@@ -155,7 +189,10 @@
                                 <input type="hidden" name="items[${index}][item]" value="${item.Item}">
                             </td>
                             <td>${item.ItemCode}</td>
-                            <td><input type="text" class="form-control" name="items[${index}][uom]" value="${item.UOM}" readonly></td>
+                            <td>
+                                <input type="text" class="form-control" value="${item.UOMCode}" readonly>
+                                <input type="hidden" name="items[${index}][uom]" value="${item.UOM}">
+                            </td>
                             <td><input type="number" class="form-control" name="items[${index}][approved_qty]" value="${item.ApprovedQty}" readonly></td>
                             <td><input type="number" class="form-control" name="items[${index}][dispatched_qty]" value="${dispatchedQty}" min="0" max="${item.ApprovedQty}" required></td>
                             <td><input type="text" class="form-control" name="items[${index}][remarks]" maxlength="255"></td>
@@ -167,7 +204,9 @@
             })
             .catch(error => {
                 console.error('Error loading requisition details:', error);
+                requisitionIdHidden.value = '';
             });
     });
 </script>
+
 @endsection

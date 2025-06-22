@@ -57,7 +57,7 @@ class TransactionReceiptsController extends Controller
     public function show($id)
     {
         $this->authorize('view', TransactionReceipt::class);
-        $receipt = TransactionReceipt::with(['transfer', 'items.item'])->findOrFail($id);
+        $receipt = TransactionReceipt::with(['transfer', 'items.item','receivedBy'])->findOrFail($id);
         return view('inventory.transactions.receipts.show', compact('receipt'));
     }
 

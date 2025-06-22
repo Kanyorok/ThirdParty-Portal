@@ -83,7 +83,7 @@ class TransactionAdjustmentController extends Controller
     public function show($Id)
     {
         $this->authorize('view', StockAdjustment::class);
-        $adjustment = StockAdjustment::with(['branch','items.item'])->findOrFail($Id);
+        $adjustment = StockAdjustment::with(['branch','items.item', 'adjustedBy'])->findOrFail($Id);
         return view('inventory.transactions.adjustments.show', compact('adjustment'));
     }
 

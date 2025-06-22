@@ -8,6 +8,8 @@
         @csrf
         @method('PUT')
 
+        <input type="hidden" name="RequisitionType" value="{{ $transferitem->RequisitionType }}">
+
         <div class="row mb-3">
             <div class="col-md-6">
                 <label for="TransferDate" class="form-label">Transfer Date</label>

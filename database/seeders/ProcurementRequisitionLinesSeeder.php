@@ -10,7 +10,7 @@ class ProcurementRequisitionLinesSeeder extends Seeder
 {
     public function run(): void
     {
-        $requisitionId = DB::table('t_Requisitions')->where('RequisitionNo', 'REQ-2025-TEST')->value('Id');
+        $requisitionId = DB::table('t_Requisitions')->where('RequisitionNo', 'REQ-2025-002')->value('Id');
         $itemId = DB::table('t_Items')->value('Id');
         $urgencyId = DB::table('t_CodeDetails')->where('CodeID', 'RequisitionUrgency')->value('ID');
         $statusId = DB::table('t_CodeDetails')->where('CodeID', 'a')->value('ID');

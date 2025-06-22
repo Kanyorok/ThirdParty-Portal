@@ -13,7 +13,7 @@
                     <strong>Received Date:</strong><br> {{ \Carbon\Carbon::parse($receipt->ReceivedDate)->format('d/m/Y') }}
                 </div>
                 <div class="col-md-4 mb-2">
-                    <strong>Received By:</strong><br> {{ $receipt->ReceivedBy ?? 'N/A' }}
+                   <strong>Received By:</strong> {{ $receipt->receivedBy->Name ?? 'N/A' }}
                 </div>
                 <div class="col-md-4 mb-2">
                     <strong>Transfer Ref:</strong><br> {{ $receipt->transfer->TransferID ?? 'N/A' }}

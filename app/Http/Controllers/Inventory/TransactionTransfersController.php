@@ -57,7 +57,7 @@ class TransactionTransfersController extends Controller
     public function show($Id)
     {
         $this->authorize('view', TransactionTransfer::class);
-        $transferitem = TransactionTransfer::with(['fromBranch', 'toBranch', 'creator', 'items.item'])->findOrFail($Id);
+        $transferitem = TransactionTransfer::with(['fromBranch', 'toBranch', 'creator', 'items.item','transferredBy'])->findOrFail($Id);
         return view('inventory.transactions.transfers.show', compact('transferitem'));
     }
 
@@ -127,7 +127,8 @@ class TransactionTransfersController extends Controller
                     'Item' => $item->Item,
                     'ItemCode' => $item->item->ItemCode ?? '',
                     'ItemName' => $item->item->ItemName ?? '',
-                    'UOM' => $item->item->UOM,
+                    'UOM' => $item->item->UOM, 
+                    'UOMCode' => $item->item->uom->Code ?? 'N/A', 
                     'ApprovedQty' => $item->ApprovedQty,
                 ];
             });
@@ -150,6 +151,7 @@ class TransactionTransfersController extends Controller
                     'ItemCode' => $line->item->ItemCode ?? '',
                     'ItemName' => $line->item->ItemName ?? $line->Description,
                     'UOM' => $line->item->UOM ?? $line->UOM,
+                    'UOMCode' => $line->item->uom->Code ?? 'N/A', 
                     'ApprovedQty' => $line->Quantity,
                 ];
             });

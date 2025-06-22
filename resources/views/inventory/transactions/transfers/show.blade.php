@@ -11,7 +11,7 @@
             <p><strong>Transfer Date:</strong>{{ $transferitem->TransferDate ? \Carbon\Carbon::parse($transferitem->TransferDate)->format('d/m/Y') : 'N/A' }}</p>
             <p><strong>From Branch:</strong> {{ $transferitem->fromBranch->Name ?? 'N/A' }}</p>
             <p><strong>To Branch:</strong> {{ $transferitem->toBranch->Name ?? 'N/A' }}</p>
-            <p><strong>Transferred By:</strong> {{ $transferitem->TransferredBy ?? 'N/A' }}</p>
+           <p><strong>Transferred By:</strong> {{ $transferitem->transferredBy->Name ?? 'N/A' }}</p>
         </div>
     </div>
 
