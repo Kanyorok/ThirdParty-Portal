@@ -84,9 +84,7 @@
                                 <th>Remarks</th>
                             </tr>
                         </thead>
-                        <tbody id="itemsBody">
-                            <!-- Items will be populated dynamically -->
-                        </tbody>
+                        <tbody id="itemsBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -119,7 +117,6 @@
         requisitionTypeHidden.value = selectedType;
         requisitionIdSelect.innerHTML = '<option value="">Loading...</option>';
 
-        // Reset everything else
         requisitionIdHidden.value = '';
         itemsBody.innerHTML = '';
         fromBranchText.value = '';
@@ -153,7 +150,6 @@
     requisitionIdSelect.addEventListener('change', function () {
         const id = this.value;
 
-        // Clear items & branch info
         itemsBody.innerHTML = '';
         fromBranchText.value = '';
         toBranchText.value = '';
@@ -173,9 +169,15 @@
         fetch(detailsUrl)
             .then(response => response.json())
             .then(data => {
-                fromBranchText.value = data.from_branch?.Name || 'N/A';
+                if (selectedType === 'procurement') {
+                    fromBranchText.value = 'Headquarters';
+                    fromBranchHidden.value = '{{ \App\Models\Core\Branch::where("IsHQ", 1)->value("Id") ?? "" }}';
+                } else {
+                    fromBranchText.value = data.from_branch?.Name || 'N/A';
+                    fromBranchHidden.value = data.from_branch?.Id || '';
+                }
+
                 toBranchText.value = data.to_branch?.Name || 'N/A';
-                fromBranchHidden.value = data.from_branch?.Id || '';
                 toBranchHidden.value = data.to_branch?.Id || '';
 
                 itemsBody.innerHTML = '';
@@ -208,5 +210,4 @@
             });
     });
 </script>
-
 @endsection

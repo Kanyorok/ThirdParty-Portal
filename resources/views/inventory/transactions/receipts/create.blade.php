@@ -35,18 +35,16 @@
             @endforeach
           </select>
         </div>
-    <div class="mb-3">
-    <label for="ReceivedBy" class="form-label">Received By</label>
-    <select name="ReceivedBy" id="ReceivedBy" class="form-select select2" required>
-        <option value="">-- Select User --</option>
-        @foreach ($users as $user)
-            <option value="{{ $user->Id }}" 
-                {{ old('ReceivedBy', $receipt->ReceivedBy) == $user->Id ? 'selected' : '' }}>
-                {{ $user->Name }}
-            </option>
-        @endforeach
-    </select>
-</div>
+      <div class="mb-3">
+             <label class="form-label">Received By</label>
+                <select name="ReceivedBy" class="form-select select2" required>
+                  <option value="">-- Select User --</option>
+                  
+                  @foreach ($users as $user)
+                    <option value="{{ $user->Id }}" required>{{ $user->Name }}</option>
+                  @endforeach
+                </select>
+              </div>
 
         <div class="col">
           <label class="form-label">Receive Date</label>
