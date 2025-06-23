@@ -11,7 +11,7 @@
             <div class="col-md-12">
                 <label class="form-label fw-semibold">Select a Budget</label>
                 <select name="BudgetLineID" class="form-select" required onchange="this.form.submit()">
-                    <option disabled selected>-- Select Budget Line --</option>
+                    <option disabled selected>-- Select Budget --</option>
                     @foreach ($budgets as $item)
                         <option value="{{ $item->Id }}">{{ $item->Name }}</option>
                     @endforeach
@@ -91,7 +91,7 @@
                 </div>
             @endforeach
 
-            <div class="text-end mt-3 pe-3 fw-bold text-primary">
+            <div class="text-end mt-3 mb-3 pe-3 fw-bold text-primary">
                 Total for {{ $category }}: {{ number_format($categoryTotal, 2) }}
             </div>
         </div>
