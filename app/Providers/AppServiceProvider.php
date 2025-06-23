@@ -209,8 +209,6 @@ class AppServiceProvider extends ServiceProvider
             Budget::getPrimaryKey()=>Budget::class,
             BudgetGLAccountSubType::getPrimaryKey()=>BudgetGLAccountSubType::class,
             BudgetLineProductTypes::getPrimaryKey()=>BudgetLineProductTypes::class,
-
-          
             CategoryMaster::getPrimaryKey() => CategoryMaster::class,
             PropertyType::getPrimaryKey() => PropertyType::class,
             PropertyRegistry::getPrimaryKey() => PropertyRegistry::class,
