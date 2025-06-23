@@ -18,70 +18,44 @@ class DocumentApprovalService
         //
     }
 
-    public function approve(Request $request, int $id): RedirectResponse
+    public function approve(Request $request, int $id)
     {
-        try {
-            $actor = $request->user();
-            $data = $request->validated();
-            $documentType = $data['document_type'];
-            $action = $data['action'] ?? 'approve';
-            $orderTotal = (float) $data['order_total'];
+        $actor = $request->user();
+        $data = $request->validated();
 
-            $docMap = [
-                'purchase_order' => [
-                    'model' => Order::class,
-                    'route' => 'purchaseOrder.approval',
-                ],
-                'purchase_requisition' => [
-                    'model' => Requisitions::class,
-                    'route' => 'purchaseRequisition.approval',
-                ],
-            ];
+        $documentType = $data['document_type'];
 
-            if (!isset($docMap[$documentType])) {
-                return redirect()->back()->with('error', 'Invalid document type.');
-            }
+        $docMap = [
+            'purchase_order' => [
+                'model' => Order::class,
+                'route' => 'purchaseOrder.approval',
+            ],
+            'purchase_requisition' => [
+                'model' => Requisitions::class,
+                'route' => 'requisition.approval',
+            ],
+        ];
 
-            $modelClass = $docMap[$documentType]['model'];
-            $route = route($docMap[$documentType]['route'], $id);
+        $modelClass = $docMap[$documentType]['model'];
+        $route = route($docMap[$documentType]['route'], $id);
 
-            $document = $modelClass::findOrFail($id);
+        $document = $modelClass::findOrFail($id);
 
-            // Prevent duplicate approval
-            if ($this->approvalService->isFullyApproved($documentType, $id, $orderTotal)) {
-                return redirect($route)->with('info', 'This document is already fully approved.');
-            }
-
-            // Handle rejection
-            if ($action === 'reject') {
-                $this->recordRejection($documentType, $id, $actor, $request->input('rejection_reason'));
-                $document->DocStatus = 'r'; //'r' for rejected
-                $document->save();
-
-                return redirect($route)->with('status', 'Document rejected successfully.');
-            }
-
-            // Record approval
-            $this->recordApproval($documentType, $id, $actor);
-
-            // Check if document is now fully approved
-            if ($this->approvalService->isFullyApproved($documentType, $id, $orderTotal)) {
-                $document->DocStatus = 'a'; // 'a' for approved
-                $document->save();
-
-                return redirect($route)->with('status', 'The document has been fully approved.');
-            }
-
-            return redirect($route)->with('status', 'Approval recorded. Awaiting further approvals.');
-
-        } catch (\Throwable $e) {
-            Log::error('Approval exception', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            return redirect()->back()->with('error', 'Error approving document.');
+        if ($this->approvalService->isFullyApproved($documentType, $id, (float)$data['order_total'])) {
+            dd('❌ Document already fully approved (before recording anything)');
         }
+        
+        $this->recordApproval($documentType, $id, $actor);
+
+        if ($this->approvalService->isFullyApproved($documentType, $id, (float)$data['order_total'])) {
+            $document->DocStatus = 'a'; // 'a' for approved
+            $document->save();
+        
+            dd('✅ Document is now fully approved and status updated');
+        }
+        
+        dd('🕒 Approval recorded, waiting for more approvers');
+        
     }
 
     public function approveDocument(string $docType, float $amount, User $actor, int $documentId): array
