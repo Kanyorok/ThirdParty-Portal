@@ -79,4 +79,28 @@ class YieldRateController extends Controller
         }
     }
 
+    public function destroy($id){
+        $this->authorize(PermissionEnum::BudgetSetupDelete, BudgetDriverRates::class);
+
+       
+        DB::beginTransaction();
+        try{
+        $yieldrate = BudgetDriverRates::findOrFail($id); 
+        $yieldrate->delete();
+        DB::commit();
+        activity()
+            ->performedOn($yieldrate)
+            ->causedBy(Auth::user())
+            ->withProperties(['action' => 'delete'])
+            ->log('Deleted Product Rate: ' . $yieldrate->ProductTypeID);
+
+            return redirect()->route('yieldexpenserate.index')->with('success', 'Yield Expense Rate deleted successfully.');
+    }catch(\Throwable $th){
+        DB::rollBack();
+        Log::error('Failed to delete Product Rate: ' . $th->getMessage());
+        return redirect()->back()->withErrors(['error' => 'Failed to delete Product Rate: ' . $th->getMessage()]);
+        
+    }
+}
+
 }
