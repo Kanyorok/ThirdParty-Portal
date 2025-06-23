@@ -56,6 +56,12 @@ class RequisitionItemsController extends Controller
                 'data' => $items,
             ]);}
         catch(\Exception $e){
+            Log::error('Failed to fetch items', [
+                'type' => $type,
+                'requisition_id' => $request->query('requisition_id'),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch items.',
@@ -74,7 +80,8 @@ class RequisitionItemsController extends Controller
                 ], 400);
             }
 
-            // ✅ Extract requisition_id from query
+
+            // Extract requisition_id from query
             $requisitionId = $request->query('requisition_id');
             $planId = null;
 
@@ -82,7 +89,7 @@ class RequisitionItemsController extends Controller
                 $planId = DB::table('t_Requisitions')->where('Id', $requisitionId)->value('PlanRef');
             }
 
-            // ✅ Pass planId to the service
+            // Pass planId to the service
             $details = $this->itemService->getItemDetails($item, $planId);
 
             return response()->json([
@@ -164,8 +171,10 @@ class RequisitionItemsController extends Controller
                 $validatedData['RequisitionID'],
                 $validatedData['Item'],
                 $validatedData['Quantity'],
-//                $validatedData['NeededBy'],
                 $validatedData['Urgency'],
+                $validatedData['UOM'],
+                $validatedData['EstimatedPrice'],
+                $validatedData['LineItemID'],
                 $actor
             );
 
@@ -204,7 +213,7 @@ class RequisitionItemsController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show($id)
     {
 //        dd($id);
         $this->authorize('view', Requisitions::query()->findOrFail($id));

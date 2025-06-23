@@ -26,35 +26,33 @@ class Meeting extends Model
 
     protected $table = 't_Meetings';
     protected $primaryKey = 'MeetingID';
+    protected $fillable = [
+        'Title',
+        'StartOn',
+        'EndOn',
+        'Location',
+        'Notes',
+        'Type',
+        'StatusID',
+        'MeetingLocationType',
+        'LocationId',
+        'Source',
+        'SourceID',
+        'CreatedBy',
+        'DeletedBy',
+        'ModifiedBy',
+    ];
+    protected $casts = [
+        'StartOn' => 'datetime',
+        'EndOn' => 'datetime',
+        'StatusID' => MeetingStatusEnum::class,
+        'MeetingLocationType' => MeetingLocationEnum::class,
+    ];
 
     public static function getPrimaryKey(): string
     {
         return 'MeetingID';
     }
-
-    protected $fillable = [
-                           'Title',
-                           'StartOn',
-                           'EndOn',
-                           'Location',
-                           'Notes',
-                           'Type',
-                           'StatusID',
-                           'MeetingLocationType',
-                           'LocationId',
-                           'Source',
-                           'SourceID',
-                           'CreatedBy',
-        'DeletedBy',
-                           'ModifiedBy',
-                          ];
-
-    protected $casts = [
-                        'StartOn'             => 'datetime',
-                        'EndOn'               => 'datetime',
-                        'StatusID'            => MeetingStatusEnum::class,
-                        'MeetingLocationType' => MeetingLocationEnum::class,
-                       ];
 
     public function clients(): BelongsToMany
     {

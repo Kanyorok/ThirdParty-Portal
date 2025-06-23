@@ -36,10 +36,12 @@
 
         function fetchReportsTable() {
             if (!$.fn.DataTable.isDataTable('#reportsTable')) {
+                /* let table=*/
                 $('#reportsTable').DataTable({
                     processing: true,
                     serverSide: true,
                     responsive: true,
+                    pageLength: 50,
                     dom: '<"row"<"col-12"r><"col-6"l><"col-6"f><"col-12 w-100 my-3"t><"col-6"i><"col-6"p>>',
                     ajax: {
                         url: getDocumentUrl(),
@@ -58,7 +60,7 @@
                         {data: 'action', name: 'action', orderable: false, searchable: false},
                     ], "language": {
                         emptyTable: function () {
-                            return table.ready() ? "no reports found, under current filter" : "Loading..."
+                            return/* table.ready() ?*/ "no reports found, under current filter"// : "Loading..."
                         },
                     }
                 }).on('error', function () {

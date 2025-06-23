@@ -8,6 +8,7 @@ use App\Models\HRM\Employee;
 use App\Services\BR\BREncryption;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -40,7 +41,9 @@ class LoginRequest extends FormRequest
     public function authenticate(): void
     {
         $this->ensureIsNotRateLimited();
-        $user = User::query()->where('UserID', $this->string('UserID')->upper()->toString())->first();
+        $user = User::query()->where(function (Builder $query) {
+            $query->where('UserID', $this->string('UserID')->upper()->toString())->orWhere('Email', $this->string('UserID')->lower()->toString());
+        })->first();
         if ($user instanceof User && ($user->employee instanceof Employee) && BREncryption::checkAuthUser($user, $this->validated('password'))) {
             //check if user has a employee profile if not fail.
             RateLimiter::clear($this->throttleKey());
