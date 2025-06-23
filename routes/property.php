@@ -74,7 +74,7 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::resource('propertysettings', PropertyUnitController::class);
     //Route::get('propertysettings', [PropertyRegistryController::class,'index'])->name('propertysettings.index');
 
-    Route::resource('addfloor', PropertyFloorController::class);
+    //Route::resource('addfloor', PropertyFloorController::class);
     Route::get('propertyaddfloor', [PropertyFloorController::class,'index'])->name('addfloor.index');
     Route::get('propertyaddfloor/create', [PropertyFloorController::class,'create'])->name('addfloor.create');
     Route::post('propertyaddfloor', [PropertyFloorController::class,'store'])->name('addfloor.store');
@@ -102,11 +102,25 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::get('propertyaddtenant/create', [PropertyNewTenantController::class,'create'])->name('addtenant.create');
     Route::post('propertyaddtenant', [PropertyNewTenantController::class,'store'])->name('addtenant.store');
     Route::get('propertyaddtenant/show/{id}', [PropertyNewTenantController::class,'show'])->name('addtenant.show');
-    Route::delete('propertyaddtenant/delete/{Id}', [PropertyNewTenantController::class,'destroy'])->name('addtenant.destroy');
     Route::get('propertyaddtenant/edit/{Id}',[PropertyNewTenantController::class,'edit'])->name('addtenant.edit');
     Route::put('propertyaddtenant/edit/{Id}',[PropertyNewTenantController::class,'update'])->name('addtenant.update'); 
 
     
+    //Route::resource('tenantclearance', PropertyTenantClearanceController::class);
+    Route::get('propertytenantclearance', [PropertyTenantClearanceController::class,'index'])->name('tenantclearance.index');
+    Route::get('propertytenantclearance/create', [PropertyTenantClearanceController::class,'create'])->name('tenantclearance.create');
+    Route::post('propertytenantclearance', [PropertyTenantClearanceController::class,'store'])->name('tenantclearance.store');
+    Route::get('propertytenantclearance/show/{Id}', [PropertyTenantClearanceController::class,'show'])->name('tenantclearance.show');
+    Route::get('propertytenantclearance/edit/{Id}',[PropertyTenantClearanceController::class,'edit'])->name('tenantclearance.edit');
+    Route::put('propertytenantclearance/edit/{Id}',[PropertyTenantClearanceController::class,'update'])->name('tenantclearance.update');
+    Route::delete('propertytenantclearance/delete/{Id}', [PropertyTenantClearanceController::class,'destroy'])->name('tenantclearance.destroy'); 
+
+
+
+
+
+
+
     
     Route::resource('attachments', PropertyAttachmentsController::class);
     Route::resource('addlease', PropertyNewLeaseController::class);
@@ -118,7 +132,6 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::resource('rentreceipt', PropertyReceiptController::class);
     Route::resource('rentdashboard', RentDashboardController::class);
     Route::resource('tenantledger', TenantStatementController::class);
-    Route::resource('tenantclearance', PropertyTenantClearanceController::class);
     Route::resource('maintenancerequest', PropertyMaintenanceRequestController::class);
     Route::resource('assignrequest', PropertyMaintananceAssignController::class);
     Route::resource('maintenancedashboard', PropertyMaintenanceDashboardController::class);

@@ -317,5 +317,31 @@ class CodeDetailSeeder extends Seeder
                 'ModifiedBy' => $user->Id,
             ],
         ]);
+        DB::table('t_CodeDetails')->insert([
+            [
+                'CodeID' => "DepositRefunded",
+                'Description' => 'Fully Refunded',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+            [
+                'CodeID' => 'DepositRefunded',
+                'Description' => 'Partially Refunded',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+            [
+                'CodeID' => 'DepositRefunded',
+                'Description' => 'Not Refunded',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+        ]);
     }
 }
