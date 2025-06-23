@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Edit Category')
+@section('title', 'Property Blocks')
 @section('content')
 @if ($errors->any())
     <div class="alert alert-danger">
@@ -20,7 +20,7 @@
             <select name="PropertyID" class="form-select" required>
               <option value="#">--Select a property--</option>
               @foreach ($properties as $property)
-                <option value="{{ $property->Id }}">{{ $property->PropertyName }}</option>
+                <option value="{{ $property->Id }}" {{ old('PropertyID', $block->PropertyID) == $property->Id ? 'selected' : '' }}>{{ $property->PropertyName }}</option>
               @endforeach
             </select>
         </div>

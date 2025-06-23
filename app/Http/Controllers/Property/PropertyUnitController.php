@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Property;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
-use App\Enums\PermissionEnum;
+use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Property\PropertyRegistry\PropertyUnitRequest;
+use App\Services\Property\PropertyRegistry\PropertyUnitService;
 use Illuminate\Http\Request;
 use App\Models\PropertyManagement\PropertyUnit;
 use App\Models\PropertyManagement\PropertyFloor;
@@ -23,11 +25,8 @@ class PropertyUnitController extends Controller
         return view('property.propertyregistry.structuralmapping.addunit.index', compact('units'));
     }
 
-    public function create(){
-        // $properties = PropertyRegistry::all();
-        // $blocks = PropertyBlock::all();
-        // $floors = PropertyFloor::all();
-        //$lineentries = PropertyRegistry::with('getBlockByProperty')->get();
+    public function create(){ 
+        $this->authorize(PermissionEnum::PropertyStructuralCreate, PropertyUnit::class);
         $lineentries = PropertyRegistry::with(['getBlockByProperty.getFloorByBlock'])->get();
         return view('property.propertyregistry.structuralmapping.addunit.create', compact('lineentries'));
     }
@@ -41,44 +40,38 @@ class PropertyUnitController extends Controller
         $floors = PropertyFloor::where('BlockID', $blockId)->get();
         return response()->json($floors);
     }
-    
 
-    public function show($id)
-    {
-        $unit = PropertyUnit::find($id);
-        return view('property.propertyregistry.structuralmapping.addunit.show', compact('unit'));
-    }
 
-    public function store(Request $request)
+    public function store(PropertyUnitRequest $request)
     {
+        $this->authorize(PermissionEnum::PropertyStructuralCreate, PropertyUnit::class);
         //dd($request->all());
-        $request->validate([
-            'PropertyID' => 'required|string|max:50',
-            'BlockID' => 'required|string|max:50',
-            'FloorID' => 'required|string|max:50',
-            'UnitCode' => 'required|string|max:50',
-            'UnitSize' => 'required|integer',
-            'IsRentable' => 'required|boolean',
-            'CurrentStatus' => 'required|boolean',
-            'Remarks' => 'required|string|max:50',
-        ]);
+        $validated = $request->validated();
 
-        $unit = PropertyUnit::create([
-            'PropertyID' => $request->PropertyID,
-            'BlockID' => $request->BlockID,
-            'FloorID' => $request->FloorID,
-            'UnitCode' => $request->UnitCode,
-            'UnitSize' => $request->UnitSize,
-            'IsRentable' => $request->IsRentable ? 1 : 0,
-            'CurrentStatus' => $request->CurrentStatus ? 1 : 0,
-            'Remarks' => $request->Remarks,
-            'CreatedBy' => auth()->user()->Id,
-            'ModifiedBy' => auth()->user()->Id,
-        ]);
-        return redirect()->route('addunit.index')->with('success', 'property unit created successfully');
+        try {
+            PropertyUnitService::create(
+                PropertyRegistry::findOrFail($validated['PropertyID']),
+                PropertyBlock::findOrFail($validated['BlockID']),
+                PropertyFloor::findOrFail($validated['FloorID']),
+                $validated['UnitCode'],
+                $validated['UnitSize'],
+                $validated['IsRentable'] ? 1 : 0,
+                $validated['CurrentStatus'] ? 1 : 0,
+                $validated['Remarks'],
+                auth()->user()
+                
+            );
+            return redirect()->route('addunit.index')->with('success', 'property unit Added successfully');
+        } catch (\Exception $e) {
+
+            return back()->withErrors('Failed:'. $e->getMessage())->withInput();
+                
+        }
     }
-     public function edit($id)
+
+    public function edit($id)
     {
+        $this->authorize(PermissionEnum::PropertyStructuralUpdate, PropertyUnit::class);
         //Check if user has permission to edit tender categories
         //$this->authorize(PermissionEnum::PropertyUpdate, PropertyFloor::class);
         $unit = PropertyUnit::findOrFail($id);
@@ -92,7 +85,7 @@ class PropertyUnitController extends Controller
 
     public function update(Request $request, $id)
     {
-        //$this->authorize(PermissionEnum::PropertyUpdate, PropertyFloor::class);
+        $this->authorize(PermissionEnum::PropertyStructuralUpdate, PropertyUnit::class);
         $validated = $request->validate([
             'PropertyID' => 'required|exists:t_PropertyRegistry,Id',
             'BlockID' => 'required|exists:t_PropertyBlock,Id',
@@ -139,7 +132,7 @@ class PropertyUnitController extends Controller
     public function destroy($id)
     {
         //Check if user has permission to delete property categories
-       //$this->authorize(PermissionEnum::PropertyDelete, PropertyFloor::class);
+       $this->authorize(PermissionEnum::PropertyStructuralDelete, PropertyUnit::class);
         try {
             $unit = PropertyUnit::findOrFail($id);
             $unit->delete();

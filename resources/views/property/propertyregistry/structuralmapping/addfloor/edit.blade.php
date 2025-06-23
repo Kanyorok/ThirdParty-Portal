@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Edit Category')
+@section('title', 'Floors Per Block')
 @section('content')
 @if ($errors->any())
     <div class="alert alert-danger">
@@ -14,15 +14,16 @@
     <form action="{{ route('addfloor.update', $floor->Id) }}" method="POST">
         @csrf
         @method('PUT')
-     
-   <div class="card-body">
+    <div class="card shadow">
+    <div class="card-header bg-light fw-bold">➕ Floor Setup</div>
+       <div class="card-body">
         <div class="row g-3 mb-3">
            <div class="col-md-6">
                 <label class="form-label">Select Property</label>
                 <select name="PropertyID" id="property-select" class="form-select" required>
                   <option value="">-- Select Property --</option>
                     @foreach ($lineentries as $property)
-                        <option value="{{ $property->Id }}">{{ $property->PropertyName }}</option>
+                        <option value="{{ $property->Id }}" {{ old('PropertyID', $floor->PropertyID) == $property->Id ? 'selected' : '' }}>{{ $property->PropertyName }}</option>
                     @endforeach
                 </select>
             </div>
@@ -31,10 +32,12 @@
         <div class="col-md-6">
           <label class="form-label">Select Block</label>
             <select name="BlockID" id="block-select" class="form-select" required>
-                <option value="">-- Select Block --</option>  
+                <option value="">-- Select Block --</option>
+                @foreach ($blocks as $block)
+                    <option value="{{ $block->Id }}" {{ old('BlockID', $floor->BlockID) == $block->Id ? 'selected' : '' }}>{{ $block->BlockName }}</option>
+                @endforeach
             </select>
         </div>
-
         <div class="mb-3">
             <label for="FloorLabel" class="form-label">Floor Name</label>
             <input type="text" name="FloorLabel" class="form-control" value="{{ old('FloorLabel', $floor->FloorLabel) }}" required>
@@ -43,10 +46,12 @@
             <label for="FloorNotes" class="form-label">Notes</label>
             <textarea name="FloorNotes" class="form-control" rows="4">{{ old('FloorNotes', $floor->FloorNotes) }}</textarea>
         </div>
-
         <button type="submit" class="btn btn-success">Update Floor</button>
         <a href="{{ route('addfloor.index') }}" class="btn btn-secondary">Cancel</a>
     </form>
+    </div>
+</div>
+</div>
 
 
     <script>
