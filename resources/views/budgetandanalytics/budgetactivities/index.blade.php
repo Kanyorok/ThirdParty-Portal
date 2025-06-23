@@ -3,7 +3,14 @@
 @section('content')
 <div class="container mt-4">
   <div class="card p-4">
-    <h5>📋 Budget Activities Overview</h5>
+    <div class="card-header bg-dark text-white py-4 mb-0" style="font-size: 20px; font-weight: bold;">
+      📊 Budget Activities Overview
+    </div>
+    
+    <div class="card-body mb-0">
+      @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+      @endif
     <p class="text-muted">
       Below is a list of budget activities that have been added and linked to their respective budget lines. Each activity
        represents a planned action or initiative under the budget, including its description, cost, and the period it is 
@@ -53,12 +60,8 @@
             </td>
             <td>
               <div class="d-flex gap-2 justify-content-center">
-                  <a href="{{ route('budgetperiod.edit', 1) }}" class="btn btn-sm btn-info">✏️</a>
-                  <form action="{{ route('budgetperiod.destroy', 1) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this Period?');">
-                      @csrf
-                      @method('DELETE')
-                      <button type="submit" class="btn btn-danger btn-sm">🗑️</button>
-                  </form>
+                  <a href="#" class="btn btn-sm btn-info">✏️</a>
+                  <a href="#" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteConfirmModal" data-id="{{ $budget->Id }}">🗑️</a>
               </div>
             </td>
           </tr>
@@ -112,6 +115,7 @@
               </div>
           </div>
       </div>
+  </div>
   </div>
 @endforeach
 
