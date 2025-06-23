@@ -3,7 +3,6 @@
 namespace App\Http\Resources\DMS;
 
 use App\Http\Resources\UserCollection;
-use App\Models\DMS\Document;
 use App\Services\DMS\DocumentService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -33,7 +32,8 @@ class FileResource extends JsonResource
             'type' => [
                 'mime' => $this->MimeType,
                 'extension' => $this->resource->ext()->value,
-                'icon' => $this->resource->ext()?->getIcon('img')
+                'img' => $this->resource->ext()?->getIcon('img'),
+                'icon' => $this->resource->ext()?->getIcon('fa')
             ],
             'size' => [
                 'string' => Number::fileSize($this->resource->current->Size, 2),
@@ -54,6 +54,9 @@ class FileResource extends JsonResource
                 'total' => $tags->total() - 4,
                 'hasMorePages' => $tags->hasMorePages(),
             ],
+            'links' => [
+                'summary' => route('files.edit', [$this->resource->repository->RepositoryId, $this->DocumentId])
+            ]
         ];
     }
 }

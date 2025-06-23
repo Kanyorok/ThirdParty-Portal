@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\DMS;
+namespace App\Http\Controllers\DMS\Files;
 
 use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
@@ -66,9 +66,14 @@ class DocumentController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Document $document)
+    public function edit(Repository $repository, Document $document)
     {
-        //
+        if ($document->RepositoryId !== $repository->Id) {
+            return $this->errored('file not found');
+        }
+
+        return view('dms.files.summary')
+            ->with('file', $document)->with('service', new DocumentService($document));
     }
 
     /**

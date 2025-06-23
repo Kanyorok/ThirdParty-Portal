@@ -33,6 +33,7 @@ class Document extends Model
     ];
 
     protected $casts = [
+        'RepositoryId' => 'integer',
         'Visibility' => VisibilityEnum::class,
     ];
 

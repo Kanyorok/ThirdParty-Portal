@@ -113,18 +113,18 @@ enum ExtensionsEnum: string
     private function _fa(): string
     {
         return match ($this) {
-            self::Jpeg, self::Png, self::Gif, self::Bmp, self::Svg => '<i class="fa-regular fa-image"></i>',
-            self::Mp4, self::Webm, self::AVI, self::Mpeg => '<i class="fa-regular fa-file-video"></i>',
-            self::Doc, self::Docx, self::RTF, self::Odt => '<i class="fa-regular fa-file-word"></i>',
-            self::Pdf => '<i class="fa-regular fa-file-pdf"></i>',
-            self::Csv, self::Xls, self::Xlsx, self::Ods => '<i class="fa-regular fa-file-excel"></i>',
-            self::PPt, self::Pptx, self::Odp => '<i class="fa-regular fa-file-powerpoint"></i>',
-            self::Txt => '<i class="fa-regular fa-file-lines"></i>',
-            self::ICS => '<i class="fa-regular fa-calendar-alt"></i>',
-            // => '<i class="fa-regular fa-file-csv"></i>',
-            self::Rar, self::Zip, self::SevenZ => '<i class="fa-regular fa-file-archive"></i>',
-            self::Json => '<i class="fa-regular fa-file-code"></i>',
-            self::None => '?',
+            self::Jpeg, self::Png, self::Gif, self::Bmp, self::Svg => '<i class=\'fa-regular fa-image\'></i>',
+            self::Mp4, self::Webm, self::AVI, self::Mpeg => '<i class=\'fa-regular fa-file-video\'></i>',
+            self::Doc, self::Docx, self::RTF, self::Odt => '<i class=\'fa-regular fa-file-word\'></i>',
+            self::Pdf => '<i class=\'fa-regular fa-file-pdf\'></i>',
+            self::Csv, self::Xls, self::Xlsx, self::Ods => '<i class=\'fa-regular fa-file-excel\'></i>',
+            self::PPt, self::Pptx, self::Odp => '<i class=\'fa-regular fa-file-powerpoint\'></i>',
+            self::Txt => '<i class=\'fa-regular fa-file-lines\'></i>',
+            self::ICS => '<i class=\'fa-regular fa-calendar-alt\'></i>',
+            // => '<i class=\'fa-regular fa-file-csv\'></i>',
+            self::Rar, self::Zip, self::SevenZ => '<i class=\'fa-regular fa-file-archive\'></i>',
+            self::Json => '<i class=\'fa-regular fa-file-code\'></i>',
+            self::None => '<i class=\'fa-regular fa-file\'></i>',
         };
     }
 

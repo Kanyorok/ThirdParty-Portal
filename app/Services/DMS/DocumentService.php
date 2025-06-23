@@ -3,6 +3,7 @@
 namespace App\Services\DMS;
 
 use App\Enums\Core\ExtensionsEnum;
+use App\Enums\Core\RoleEnum;
 use App\Enums\Core\VisibilityEnum;
 use App\Enums\DMS\DisksEnum;
 use App\Exceptions\ErroredException;
@@ -10,9 +11,8 @@ use App\Helpers\SystemHelper;
 use App\Models\Auth\Team;
 use App\Models\Auth\User;
 use App\Models\Core\CategoryMaster;
-use App\Models\DMS\DMSTags;
+use App\Models\Core\SpecialPermission;
 use App\Models\DMS\Document;
-use App\Models\DMS\DocumentTags;
 use App\Models\DMS\Repository;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
@@ -83,7 +83,11 @@ class DocumentService extends PermissionsService
 
                 activity()->causedBy($actor)->performedOn($document)->event('upload')->log('Uploaded ' . explode($extension->getMimeType(), '/')[0] . ' to folder ' . $repository->Name);
 
-                return new self($document);
+                $service = new self($document);
+                if ($repository->Visibility->value === VisibilityEnum::Public->value) {
+                    return $service->addPermission($actor, RoleEnum::Admin, $actor, false);
+                }
+                return $service;
             });
         } catch (Exception|Throwable $e) {
             Log::error('Error creating repository: ' . $e->getMessage());
@@ -154,7 +158,43 @@ class DocumentService extends PermissionsService
                 $query->whereIn('t_Teams.TeamID', $this->document->permissions()->where('Party', Team::getPrimaryKey())->select('PartyID'));
             });
         });
+    }
 
+    public function addPermission(User|Team $assignee, RoleEnum $role, User $actor, bool $notify = true): static
+    {
+        $this->_addPermissions($this->document, $assignee, $role, $actor, $notify);
+        return $this;
+    }
+
+    /**
+     * @throws ErroredException
+     */
+    public function visibility(VisibilityEnum $visibility, User $actor): static
+    {
+        try {
+            return DB::transaction(function () use ($visibility, $actor) {
+                $this->document->update([
+                    'Visibility' => $visibility->value,
+                    'ModifiedBy' => $actor->Id,
+                ]);
+
+                activity()->causedBy($actor)->performedOn($this->document)->event('update')->log('Updated file ' . $this->document->Name . ' visibility : ' . $visibility->value);
+                return $this;
+            });
+        } catch (Exception|Throwable $e) {
+            Log::error('Error update document visibility: ');
+            Log::error($e);
+            throw new ErroredException();
+        }
+    }
+
+    /**
+     * @throws ErroredException
+     */
+    public function removePermission(SpecialPermission $permission, User $actor): static
+    {
+        $this->document = $this->_trashPermissions($this->document, $permission, $actor);
+        return $this;
     }
 
 }
