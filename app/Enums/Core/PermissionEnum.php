@@ -379,11 +379,6 @@ enum PermissionEnum: string
     case PropertyStructuralDelete = 'propertystructural-delete';
     case PropertyStructuralView = 'propertystructural-view';
 
-    case PropertyStructuralCreate = 'propertyblock-create';
-    case PropertyStructuralUpdate = 'propertyblock-update';
-    case PropertyStructuralDelete = 'propertyblock-delete';
-    case PropertyStructuralView = 'propertyblock-view';
-
 
     //Tenant Mentenance
     case TenantMentenanceCreate = 'tenantmentenance-create';
