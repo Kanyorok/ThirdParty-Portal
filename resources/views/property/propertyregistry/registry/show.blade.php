@@ -1,8 +1,8 @@
 @extends('layouts.app')
-@section('title', 'Patent Details')
+@section('title', 'Property Registry ')
 @section('content')
 <div class="container mt-5" style="max-width: 700px;">
-  <h3 class="mb-4">Patent Details</h3>
+  <h3 class="mb-4">Property Details</h3>
   <div class="card">
     <div class="card-body">
       <dl class="row">

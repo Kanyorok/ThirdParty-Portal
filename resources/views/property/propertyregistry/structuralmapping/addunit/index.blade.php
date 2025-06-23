@@ -1,5 +1,8 @@
 @extends('layouts.app')
 @section('title', 'Units Per Floor')
+@section('styles')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+@endsection
 @section('content')
 <div class="container mt-4">
 
@@ -7,7 +10,7 @@
 
   <h4 class="fw-bold mb-3">📋 Property Units</h4>
     @if($units->count())
-  <table class="table table-bordered table-striped align-middle">
+  <table id="propertyunits" class="table table-bordered table-striped align-middle">
     <thead class="table-light">
       <tr>
         <th>#</th>
@@ -49,4 +52,18 @@
         <p>No property unit registered yet.</p>
     @endif
 </div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        $('#propertyunits').DataTable({
+            pageLength: 10,
+            ordering: true,
+            searching: true,
+            lengthChange: true
+        });
+    });
+</script>
 @endsection

@@ -29,6 +29,7 @@
         <textarea class="form-control" rows="2" name="Description" placeholder="Optional description"></textarea>
       </div>
         <button class="btn btn-success">💾 Save Block</button>
+         <a href="{{ route('addblock.index') }}" class="btn btn-secondary">Cancel</a>
 </form>
       </div>
     </div>

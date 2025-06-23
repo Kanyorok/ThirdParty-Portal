@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Edit Property Type')
+@section('title', 'Property Type')
 @section('content')
 @if ($errors->any())
     <div class="alert alert-danger">

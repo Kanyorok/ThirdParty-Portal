@@ -12,18 +12,6 @@
 @endif
 <div class="container mt-4">
     <h4 class="fw-bold mb-3">🏬 Add Floor to Block</h4>
-
-    {{-- Show validation errors --}}
-    @if ($errors->any())
-        <div class="alert alert-danger">
-            <ul class="mb-0">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
     <form action="{{ route('addfloor.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
   <div class="card shadow">
@@ -57,6 +45,7 @@
           <textarea class="form-control" rows="2" placeholder="Optional floor notes" name="FloorNotes"></textarea>
       </div>
         <button class="btn btn-success">💾 Save Floor</button>
+         <a href="{{ route('addfloor.index') }}" class="btn btn-secondary">Cancel</a>
     </form>
 </div>
 
