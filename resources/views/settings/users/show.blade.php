@@ -119,14 +119,14 @@
                     <div class="tab-pane" id="tab-3" role="tabpanel">
                         <div class="m-3 text-center">
                             <h4 class="my-2">Attrition</h4>
-                            <p class="lead">You are about to delete this user account, are you sure you want to precede
+                            <p class="lead">You are about to delete this user account. Are you sure you wish to proceed
                                 with this?</p>
 
                             <form id="trashUserForm" method="post"
                                   action="{{ route('users.destroy',$user->UserID) }}"> @csrf
                                 <button class="btn btn-danger w-25 my-3" id="trashUserBtn"
                                         type="submit"><i class="fas fa-trash"></i> trash
-                                </button>
+                                </button>@method('DELETE')
                             </form>
                         </div>
                     </div>
@@ -153,7 +153,7 @@
             });
             $('form#trashUserForm').submit(async function (e) {
                 e.preventDefault();
-                await saveForm($(this), $('#trashUserBtn'), false, true, true);
+                await saveForm($(this), $('#trashUserBtn'), true, true, true);
             });
         });
 

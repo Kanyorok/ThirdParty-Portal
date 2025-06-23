@@ -6,6 +6,7 @@ use App\Enums\Core\ExtensionsEnum;
 use App\Enums\Core\PermissionEnum;
 use App\Enums\EmailPriorityEnum;
 use App\Enums\Employee\GenderEnum;
+use App\Exceptions\ErroredException;
 use App\Helpers\SystemHelper;
 use App\Models\Auth\User;
 use App\Models\BR\BRUser;
@@ -23,9 +24,12 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
+use Throwable;
 use Yajra\DataTables\DataTables;
 
 class UserService
@@ -34,38 +38,6 @@ class UserService
 
     public function __construct(public User $user)
     {
-    }
-
-    public function isManager(): bool
-    {
-        return $this->user->can(PermissionEnum::Managers->value);
-    }
-
-    public function sendMessage(string $message, User $actor, bool $immediate = false, BulkNotification $bulkNotification = null): static
-    {
-        if (SystemHelper::isSystem($this->user)) {
-            return $this;
-        }
-
-        $service = SMSService::createUser($this->user, $message, $actor);
-        if ($bulkNotification instanceof BulkNotification) {
-            $service->setBulk($bulkNotification);
-        }
-        $service->send($immediate);
-
-        return $this;
-    }
-
-    public function isMarketingManager(): bool
-    {
-        return self::marketingManagers(true)->where('Id', $this->user->Id)->exists();
-    }
-
-
-    public static function marketingManagers(bool $query = false): Builder|Collection
-    {
-        $q = User::query()->hasPermission(PermissionEnum::MarketingManager->value)->lock('WITH(NOLOCK)');
-        return ($query) ? $q : $q->get();
     }
 
     public static function ceos(bool $query = false): Builder|Collection
@@ -158,6 +130,32 @@ class UserService
             ])->rawColumns(['action', 'photo'])->make();
     }
 
+    public function sendMessage(string $message, User $actor, bool $immediate = false, BulkNotification $bulkNotification = null): static
+    {
+        if (SystemHelper::isSystem($this->user)) {
+            return $this;
+        }
+
+        $service = SMSService::createUser($this->user, $message, $actor);
+        if ($bulkNotification instanceof BulkNotification) {
+            $service->setBulk($bulkNotification);
+        }
+        $service->send($immediate);
+
+        return $this;
+    }
+
+    public function isMarketingManager(): bool
+    {
+        return self::marketingManagers(true)->where('Id', $this->user->Id)->exists();
+    }
+
+    public static function marketingManagers(bool $query = false): Builder|Collection
+    {
+        $q = User::query()->hasPermission(PermissionEnum::MarketingManager->value)->lock('WITH(NOLOCK)');
+        return ($query) ? $q : $q->get();
+    }
+
     public function setRole(Role $role, User $actor): static
     {
         $this->user->syncRoles($role->name);
@@ -175,9 +173,9 @@ class UserService
         }
 
         $this->user->update([
-             'Linked'   => true,
-             'Password' => $br_user->Password,
-             'ClientID' => $br_user->ClientID,
+            'Linked' => true,
+            'Password' => $br_user->Password,
+            'ClientID' => $br_user->ClientID,
         ]);
 
         if ($pullImages) {
@@ -200,17 +198,17 @@ class UserService
     {
         $email_change = ($this->user->Email === $Email) ? null : $this->user->Email;
         $this->user->update([
-                             'UserID'          => $UserID,
-                             'Name'            => $Name,
-                             'Email'           => $Email,
-                             'Phone'           => $Phone,
-                             'Gender'          => $Gender->value,
+            'UserID' => $UserID,
+            'Name' => $Name,
+            'Email' => $Email,
+            'Phone' => $Phone,
+            'Gender' => $Gender->value,
             'BranchId' => ($branch instanceof Branch) ? $branch->BranchID : $this->user->BranchId,
-                             'Notes'           => $Notes,
-                             'Email_Signature' => $Signature,
-                             'ModifiedBy'      => $actor->Id,
-                             'ModifiedOn'      => now(),
-                            ]);
+            'Notes' => $Notes,
+            'Email_Signature' => $Signature,
+            'ModifiedBy' => $actor->Id,
+            'ModifiedOn' => now(),
+        ]);
         activity()->causedBy($this->user)->performedOn($this->user)->event('update')->log('Update user account');
 
         if (!is_null($email_change)) {
@@ -251,6 +249,14 @@ class UserService
         return $this;
     }
 
+    private function createResetURL(): string
+    {
+        return url(route('password.reset', [
+            'token' => Password::createToken($this->user),
+            'email' => $this->user->Email,
+        ], false));
+    }
+
     public function hideUsers(\Illuminate\Database\Query\Builder|Builder $query, string $ClientID = 'ClientID'): \Illuminate\Database\Query\Builder|Builder
     {
         if ($this->isManager()) {
@@ -261,12 +267,10 @@ class UserService
                 ->whereNotIn($ClientID, Board::query()->select('t_BoardMembers.ClientID'));
         });
     }
-    private function createResetURL(): string
+
+    public function isManager(): bool
     {
-        return url(route('password.reset', [
-                                            'token' => Password::createToken($this->user),
-                                            'email' => $this->user->Email,
-                                           ], false));
+        return $this->user->can(PermissionEnum::Managers->value);
     }
 
     public function sendPasswordResetNotification(): static
@@ -279,14 +283,27 @@ class UserService
         return $this;
     }
 
+    /**
+     * @throws ErroredException
+     */
     public function trash(User $actor): void
     {
+        try {
+            DB::transaction(function () use ($actor) {
+                $this->user->forceFill([
+                    'DeletedOn' => now(),
+                    'DeletedBy' => $actor->Id,
+                ])->save(['timestamps' => false]);
 
-        $this->user->forceFill([
-                                'DeletedOn' => now(),
-                                'DeletedBy' => $actor->Id,
-                               ])->save(['timestamps' => false]);
+                activity()->causedBy($actor)->performedOn($this->user)->event('delete')->log('Deleted user account ' . $this->user->UserID);
 
-        $this->sendEmail('account deleted', '<p>Hello ' . $this->user->Name . '<br>Your account has just been deleted <br> If you have any questions or concerns, feel free to reach out to our support team </p>');
+                $this->sendEmail('account deleted', '<p>Hello ' . $this->user->Name . '<br>Your account has just been deleted <br> If you have any questions or concerns, feel free to reach out to our support team </p>');
+
+            });
+        } catch (Throwable|ErroredException $e) {
+            Log::error('Error delete user ' . $e->getMessage());
+            throw new ErroredException();
+        }
+
     }
 }

@@ -11,6 +11,7 @@ use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class ClientTaskController extends Controller
 {
@@ -46,7 +47,7 @@ class ClientTaskController extends Controller
 
         try {
             $activity = $this->save($client, $notes, $dated, $assignee, $actor);
-        } catch (\Throwable | Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Error adding  Client Task. e: ' . $e->getMessage());
             return $this->errored('unexpected error, try again latter');
         }
@@ -69,7 +70,7 @@ class ClientTaskController extends Controller
             return $this->errored('Task not found');
         }
         $this->authorize('update', $task);
-        $dated = $request->getDated($task->Dated);
+        $dated = $request->getDated(/*$task->Dated*/ now());
         try {
             $this->change($task, $notes, $dated, $actor);
         } catch (Exception $e) {
