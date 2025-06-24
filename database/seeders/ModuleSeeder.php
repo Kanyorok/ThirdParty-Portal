@@ -151,6 +151,8 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 305300, 'Name' => 'Opening', 'Icon' => null, 'Description' => '', 'ParentID' => 305000, 'Route' => null],
             ['ModuleID' => 305310, 'Name' => 'Opening', 'Icon' => null, 'Description' => '', 'ParentID' => 305300, 'Route' => 'tenderopening.index'],
 
+            ['ModuleID' => 305350, 'Name' => 'Responsiveness Check', 'Icon' => null, 'Description' => '', 'ParentID' => 305000, 'Route' => 'bidresponsiveness.index'],
+
             // Evaluation
             ['ModuleID' => 305400, 'Name' => 'Evaluation', 'Icon' => null, 'Description' => '', 'ParentID' => 305000, 'Route' => null],
             ['ModuleID' => 305410, 'Name' => 'Appoint Committee', 'Icon' => null, 'Description' => '', 'ParentID' => 305400, 'Route' => 'tendercommittee.index'],

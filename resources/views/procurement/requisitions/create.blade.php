@@ -27,6 +27,7 @@
                         <tr>
                             <th>#</th>
                             <th>Requisition No</th>
+                            <th>Procurement Plan</th>
                             <th>Requisition Date</th>
                             <th>Branch</th>
                             <th>Department</th>
@@ -44,6 +45,7 @@
                                 {{--                                <td>{{$item->Id}}</td>--}}
                                 <td>{{$loop->iteration }}</td>
                                 <td>{{ $item->RequisitionNo }}</td>
+                                <td>{{ $item->PlanTitle ?? 'N/A' }}</td>
                                 <td>{{ Carbon::parse($item->CreatedOn)->format('d-m-Y') }}</td>
                                 <td>{{ $item->BranchID }}</td>
                                 <td>{{ $item->DepartmentID }}</td>
