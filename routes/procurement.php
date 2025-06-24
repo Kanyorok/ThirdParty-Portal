@@ -37,7 +37,6 @@ use App\Http\Controllers\Procurement\BidEvaluationController;
 use App\Http\Controllers\Procurement\BidScoreConsolidationController;
 use App\Http\Controllers\Procurement\EvaluatorDashboardController;
 use App\Http\Controllers\Procurement\ProcurementReportsController;
-
 use App\Http\Controllers\Procurement\ProcurementPlanMaintainController;
 use App\Http\Controllers\Procurement\ProcurementApprovalController;
 use App\Http\Controllers\Procurement\ConsolidatedDashboardController;
@@ -56,7 +55,6 @@ use App\Http\Controllers\Procurement\PlanEditController;
 use App\Http\Controllers\Procurement\PlanApprovalInboxController;
 use App\Http\Controllers\Procurement\PlanExectionDashboardController;
 use App\Http\Controllers\Procurement\DepartmentNeedApprovalController;
-use App\Models\Procurement\Tender;
 use App\Http\Controllers\Procurement\SectionController;
 use App\Http\Controllers\Procurement\ProcurementSchedulePlanController;
 use App\Http\Controllers\Procurement\ProcurementSubmitPlanController;
@@ -68,7 +66,7 @@ use App\Http\Controllers\Procurement\PrequalificationEvaluationController;
 use App\Http\Controllers\Procurement\PrequalificationEvalAprovalController;
 use App\Http\Controllers\Procurement\PrequalifiedSuppliersController;
 use App\Http\Controllers\Procurement\TenderBidResponsivenessController;
-
+use App\Http\Controllers\Procurement\ApprovalSetupController;
 use App\Http\Controllers\Procurement\AwardsController;
 
 
@@ -92,6 +90,7 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::get('requisition/approval/{id}', [RequisitionsController::class, 'approval'])->name('requisition.approval');
     Route::post('/admin/approval-settings', [ApprovalSetupController::class, 'store'])->name('approval-settings.store');
     Route::post('/admin/approval-limits', [ApprovalSetupController::class, 'storeLimit'])->name('approval-limits.store');
+    Route::get('/admin/approval-settings', [ApprovalSetupController::class, 'index'])->name('approval-setup.index');
 
     //Purchase Order
     Route::get('purchaseOrder/getSuppliers', [PurchaseOrderController::class, 'getSuppliers'])->name('purchaseOrder.getSuppliers');
@@ -101,8 +100,6 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     //this route is static affecting orders/rfqLink
     Route::get('purchaseOrder/rqfDetails/{id}', [PurchaseOrderController::class, 'fetchRFQDetails'])->name('purchaseOrder.RFQ');
     Route::resource('purchaseOrder', 'PurchaseOrderController');
-
-
 
     //Sales Order
     Route::resource('salesOrder', 'SalesOrderController');
@@ -227,7 +224,7 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::post('/sections', [SectionController::class, 'store'])->name('sections.store');
 
 
-//});
+    //});
 
 
     //Route::get('/tenderevaluations', [EvaluationCriteriaController::class, 'tenderEvaluations'])->name('tenderevaluations.index');
@@ -275,10 +272,6 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::get('/Procurement-Plan-Submission/create/{PlanId}', [ProcurementSubmitPlanController::class, 'create'])->name('Procurement-Plan-Submission.create');
     //Route::put('/Procurement-Plan-Submission', [ProcurementSubmitPlanController::class, 'store'])->name('Procurement-Plan-Submission.store');
     Route::put('/Procurement-Plan-Submission/{plan}', [ProcurementSubmitPlanController::class, 'update'])->name('Procurement-Plan-Submission.update');
-
-
-
-
 
     //Procurement Plan, Plan Consolidation
     // Route::resource('procurementplandetails', ProcurementPlanDetailController::class);

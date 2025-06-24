@@ -26,12 +26,8 @@
             </div>
         </div>
 
-        <div class="mb-3">
-            <label>Permission ID (who can approve)</label>
-            <input type="number" name="Permission" class="form-control" required>
-        </div>
-
         <button type="submit" class="btn btn-primary">💾 Save Approval Group</button>
     </form>
+
 </div>
 @endsection

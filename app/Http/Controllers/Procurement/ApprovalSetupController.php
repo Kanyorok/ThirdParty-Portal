@@ -8,21 +8,29 @@ use Illuminate\Support\Facades\DB;
 
 class ApprovalSetupController extends Controller
 {
+    public function index(){
+        return view('procurement.requisitions.approval-setup');
+    }
+
     public function store(Request $request)
     {
         $data = $request->validate([
-            'DocType' => 'required',
+            'DocType' => 'required|string',
             'ApprovalType' => 'required|in:ANY,ALL,MAJ,AMT',
-            'Permission' => 'required|integer',
         ]);
 
         DB::table('t_ApprovalGroups')->updateOrInsert(
             ['DocType' => $data['DocType']],
-            $data
+            [
+                'DocType' => $data['DocType'],
+                'ApprovalType' => $data['ApprovalType'],
+                'Permission' => null  // optional: set to null or auto-resolve later
+            ]
         );
 
         return back()->with('status', 'Approval configuration saved!');
     }
+
 
     public function storeLimit(Request $request)
     {
