@@ -17,7 +17,7 @@
 @section('content')
     <div class="row">
         <div class="col-12 mb-3">
-            <h3>@yield('title')
+            <h3>
                 <span class="small float-end">Dated:
               <span
                   class="text-decoration-underline">{{ ($dated instanceof Carbon\Carbon)? $dated->format('M d, Y'):'?' }}</span>
@@ -228,10 +228,10 @@
             </div>
         </div>
         <div class="col-md-6 col-12">
-            <div class="card mb-3">
-                <div class="card-body">
+            <div class="card mb-3 ">
+                <div class="card-body table-responsive">
                     <table id="productsTable"
-                           class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                           class="table table-striped dataTable no-footer dtr-inline w-100">
                         <thead>
                         <tr>
                             <th>AccountId</th>
@@ -324,6 +324,7 @@
                     processing: true,
                     serverSide: true,
                     responsive: true,
+                    width: '100%',
                     dom: '<"row"<"col-12 mb-1 text-center"i><"col-12 mb-2"tr><"col-12"p>>',
                     ajax: {
                         url: getUrl(getDocumentUrl()),

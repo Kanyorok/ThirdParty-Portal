@@ -4,6 +4,7 @@ namespace App\Models\Procurement;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Inventory\TransactionTransfer;
 
 
 class Requisitions extends Model
@@ -44,6 +45,14 @@ class Requisitions extends Model
     {
         return $this->belongsTo(\App\Models\Procurement\ConsolidatedProcurementPlan::class, 'PlanRef', 'PlanID');
     }
+
+
+
+    public function transfer()
+    {
+        return $this->hasOne(\App\Models\Inventory\TransactionTransfer::class, 'RequisitionId', 'Id');
+    }
+    
 
 
 }

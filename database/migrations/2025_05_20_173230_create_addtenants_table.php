@@ -10,9 +10,9 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('t_AddTenants', function (Blueprint $table) {
-            $table->id();
-            $table->string('TenantType');
+        Schema::create('t_TenantMaintenance', function (Blueprint $table) {
+            $table->id('Id');
+            $table->foreignId('TenantType')->constrained('t_CodeDetails', 'Id');
             $table->string('TenantName');
             $table->string('IDRegistrationNo')->unique();
             $table->string('PhoneNumber')->unique();
@@ -20,13 +20,13 @@ return new class extends Migration {
             $table->string('Nationality');
             $table->string('PostalAddress');
             $table->string('Remarks');
+            $table->boolean('IsActive')->default(true);
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
             $table->dateTime('ModifiedOn');
             $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
             $table->softDeletes('DeletedOn');
-
         });
     }
 
@@ -35,6 +35,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('t_AddTenants');
+        Schema::dropIfExists('t_TenantMaintenance');
     }
 };

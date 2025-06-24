@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Add Block to Property')
+@section('title', 'Property Blocks')
 @section('content')
 <div class="container mt-4">
   <h4 class="fw-bold mb-3">🏢 Add Block to Property</h4>
@@ -29,6 +29,7 @@
         <textarea class="form-control" rows="2" name="Description" placeholder="Optional description"></textarea>
       </div>
         <button class="btn btn-success">💾 Save Block</button>
+         <a href="{{ route('addblock.index') }}" class="btn btn-secondary">Cancel</a>
 </form>
       </div>
     </div>
