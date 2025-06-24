@@ -48,14 +48,8 @@ class PlanFromNeedsController extends Controller
     // Utility to apply filters
     private function getFilteredNeeds(Request $request)
     {
-        $query = DepartmentNeeds::with(['item', 'branch', 'department'])->where('Status', DepartmentNeedsEnum::Approved)
-            ->whereNotExists(function ($subquery) {
-                $subquery->selectRaw(1)
-                    ->from('t_PlanLineItem')
-                    ->whereColumn('t_PlanLineItem.ItemID', 't_DepartmentNeeds.ItemID')
-                    ->whereColumn('t_PlanLineItem.BranchID', 't_DepartmentNeeds.BranchID')
-                    ->whereColumn('t_PlanLineItem.DepartmentID', 't_DepartmentNeeds.DepartmentID');
-            });
+        $query = DepartmentNeeds::with(['item', 'branch', 'department'])->where('Status', DepartmentNeedsEnum::Approved)->where('IsUsed', false);
+
         if ($request->filled('branch_filter')) {
             $query->where('BranchID', $request->branch_filter);
         }
@@ -124,7 +118,7 @@ class PlanFromNeedsController extends Controller
                 'SourceType' => 'needs',
                 'OriginalQTY' => $need->RequestedQty,
             ]);
-
+            $need->update(['IsUsed' => true]);
             activity()
                 ->causedBy($user)
                 ->performedOn($need)
