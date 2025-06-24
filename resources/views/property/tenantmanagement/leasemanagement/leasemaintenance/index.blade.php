@@ -42,7 +42,7 @@
                     <td>{{ $newlease->DueDay ?? '-' }}</td>
                     <td>{{ $newlease->SpecialTerms ?? '-' }}</td>
                     <td>
-                        <a href="{{ route('addlease.show', $newlease->id) }}" class="btn btn-info btn-sm">View</a>
+                        <a href="{{ route('addlease.show', $newlease->Id) }}" class="btn btn-info btn-sm">View</a>
                     </td>
                 </tr>
             @endforeach

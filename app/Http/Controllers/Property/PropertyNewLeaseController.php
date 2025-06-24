@@ -30,14 +30,33 @@ class PropertyNewLeaseController extends Controller
     }
 
     public function create(){
-        $units = PropertyUnit::all();
+        $properties = PropertyRegistry::with('getBlockByProperty.floor.units')->get();
         $newtenants = PropertyNewTenant::all();
-        return view('property.tenantmanagement.leasemanagement.leasemaintenance.create', compact('newtenants', 'units'));
+        $codes = CodeDetail::where('CodeID', 'PaymentFrequency')->get();
+        return view('property.tenantmanagement.leasemanagement.leasemaintenance.create', compact('newtenants', 'properties', 'codes'));
+    }
+    public function getBlockByProperty($propertyId)
+    {
+        $blocks = PropertyBlock::where('PropertyID', $propertyId)->get();
+        //dd($blocks); // check if it's returning correctly
+        return response()->json($blocks);
     }
 
-    public function show($id)
+
+    public function getFloorByBlock($blockId)
     {
-        $newlease = PropertyNewLease::findOrFail($id);
+        $floors = PropertyFloor::where('BlockID', $blockId)->get();
+        return response()->json($floors);
+    }
+    public function getUnitByFloor($floorId)
+    {
+        $units = PropertyUnit::where('FloorId', $floorId)->get();
+        return response()->json($units);
+    }
+
+    public function show($Id)
+    {
+        $newlease = PropertyNewLease::findOrFail($Id);
         return view('property.tenantmanagement.leasemanagement.leasemaintenance.show', compact('newlease'));
     }
 

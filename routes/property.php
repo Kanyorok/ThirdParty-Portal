@@ -121,10 +121,13 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::get('propertyaddlease', [PropertyNewLeaseController::class,'index'])->name('addlease.index');
     Route::get('propertyaddlease/create', [PropertyNewLeaseController::class,'create'])->name('addlease.create');
     Route::post('propertyaddlease', [PropertyNewLeaseController::class,'store'])->name('addlease.store');
-    Route::get('propertyaddlease/show/{id}', [PropertyNewLeaseController::class,'show'])->name('addlease.show');
+    Route::get('propertyaddlease/show/{Id}', [PropertyNewLeaseController::class,'show'])->name('addlease.show');
     Route::get('propertyaddlease/edit/{Id}',[PropertyNewLeaseController::class,'edit'])->name('addlease.edit');
     Route::put('propertyaddlease/edit/{Id}',[PropertyNewLeaseController::class,'update'])->name('addlease.update');
     Route::delete('propertyaddlease/delete/{Id}', [PropertyNewLeaseController::class,'destroy'])->name('addlease.destroy');
+    Route::get('/propertyaddlease/blocks/{PropertyId}', [PropertyNewLeaseController::class, 'getBlockByProperty'])->name('getblockbyproperty');
+    Route::get('/propertyaddlease/floors/{BlockId}', [PropertyNewLeaseController::class, 'getFloorByBlock'])->name('getfloorbyblock');
+    Route::get('/propertyaddlease/Units/{FloorId}', [PropertyNewLeaseController::class, 'getUnitByFloor'])->name('getunitbyfloor');
     
 
     //Route::resource('schedulelease', PropertyLeaseScheduleController::class);
