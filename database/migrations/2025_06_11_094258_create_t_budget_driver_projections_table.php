@@ -12,10 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('t_BudgetDriverProjections', function (Blueprint $table) {
-            $table->id('Id');
-            $table->foreignId('ScenarioID')->constrained('t_BudgetScenarioPlanning' , 'Id');
+            $table->id('Id');            
+            $table->foreignId('BudgetID')->constrained('t_Budgets' , 'Id');
             $table->foreignId('CurrencyID')->constrained('t_Currencies', 'Id');
-            $table->foreignId('PeriodID')->constrained('t_BudgetPeriods', 'Id');
             
 
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');

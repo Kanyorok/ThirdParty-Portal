@@ -77,7 +77,7 @@
                             <td>{{ $requisition->ReqNo ?? '-' }}</td>
                             <td>{{ $requisition->fromBranch->Name ?? '-' }}</td>
                             <td>{{ $requisition->toBranch->Name ?? '-' }}</td>
-                            <td>{{ \Carbon\Carbon::parse($requisition->CreatedOn)->format('Y-m-d') }}</td>
+                            <td>{{ \Carbon\Carbon::parse($requisition->CreatedOn)->format('d/m/Y') }}</td>
                             <td>
                                 @php
                                     $statusEnum = \App\Enums\Inventory\InterBranchRequisitionEnum::tryFrom($requisition->Status);

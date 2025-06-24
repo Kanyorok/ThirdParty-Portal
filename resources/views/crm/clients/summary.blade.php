@@ -1,4 +1,4 @@
-<div class="d-flex flex-column" style="height: 85%">
+<div>
     @include('snippets.client_summary', ['client'=>$client])
     <hr class="m-0">
     <p class="mb-1 h4">Contacts</p>
@@ -37,7 +37,6 @@
         <p class="text-center my-5 ">No activities found <i class="fas fa-sad-tear text-warning"></i></p>
     @endforelse
 
-</div>
-<div class="m-auto">
+
     @include('snippets.behind_scenes',['model'=>$client])
 </div>

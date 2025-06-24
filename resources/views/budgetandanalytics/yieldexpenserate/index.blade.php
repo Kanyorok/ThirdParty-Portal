@@ -48,13 +48,12 @@
                         {{-- <td>{{ \Carbon\Carbon::parse($item->EffectiveDate)->format('d-m-y') }}</td> --}}
                         <td>{{ $item->Source }}</td>
                         <td>
-                            <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#editRaterModal">
-                                ✏️ Edit
-                            </button>
-                            <form method="POST" action="{{ route('budgetlinemapping.destroy',1) }}" class="delete-form d-inline">
+                            <a href="{{route('yieldexpenserate.edit', $item->Id)}}" class="btn btn-sm btn-secondary" >✏️</a>
+                            <form method="POST" action="{{ route('yieldexpenserate.destroy', $item->Id) }}" class="delete-form d-inline" 
+                                onsubmit="return confirm('Are you sure you want to delete this category?');">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-danger delete-btn">🗑 Delete</button>
+                                <button type="submit" class="btn btn-sm btn-danger delete-btn">🗑 </button>
                             </form>
                         </td>
                     </tr>

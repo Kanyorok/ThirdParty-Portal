@@ -15,10 +15,17 @@
         <div class="card mb-3 shadow">
             <div class="card-body">
                 <div class="mb-3">
-                    <label for="ReceivedBy" class="form-label">Received By</label>
-                    <input type="text" class="form-control" name="ReceivedBy" value="{{ old('ReceivedBy', $receipt->ReceivedBy) }}" required>
-                </div>
-
+                <label for="ReceivedBy" class="form-label">Received By</label>
+                <select name="ReceivedBy" id="ReceivedBy" class="form-select select2" required>
+                    <option value="">-- Select User --</option>
+                    @foreach ($users as $user)
+                        <option value="{{ $user->Id }}" 
+                            {{ old('ReceivedBy', $receipt->ReceivedBy) == $user->Id ? 'selected' : '' }}>
+                            {{ $user->Name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
                 <div class="mb-3">
                     <label for="ReceivedDate" class="form-label">Received Date</label>
                     <input type="date" class="form-control" name="ReceivedDate" value="{{ old('ReceivedDate', $receipt->ReceivedDate) }}" required>
@@ -85,7 +92,7 @@
             </tbody>
         </table>
 
-        <div class="d-flex justify-content-between">
+        <div class="d-flex justify-content-start">
             <a href="{{ route('transactionsreceipts.index') }}" class="btn btn-outline-secondary">Back</a>
             <button type="submit" class="btn btn-primary">Update Receipt</button>
         </div>
