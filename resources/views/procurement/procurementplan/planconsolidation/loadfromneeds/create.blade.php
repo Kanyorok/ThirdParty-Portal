@@ -208,15 +208,26 @@
         const selectAll = document.getElementById('selectAll');
         const submitBtn = document.getElementById('submitBtn');
 
-        if (selectAll) {
-            selectAll.addEventListener('click', function () {
-                checkboxes.forEach(cb => cb.checked = this.checked);
-                toggleSubmitButton();
-            });
-        }
+        if (!selectAll || checkboxes.length === 0) return;
+
+        // Remove any existing event listeners by cloning (in case re-renders cause duplicates)
+        const newSelectAll = selectAll.cloneNode(true);
+        selectAll.parentNode.replaceChild(newSelectAll, selectAll);
+
+        newSelectAll.addEventListener('change', function () {
+            checkboxes.forEach(cb => cb.checked = newSelectAll.checked);
+            toggleSubmitButton();
+        });
 
         checkboxes.forEach(cb => {
-            cb.addEventListener('change', toggleSubmitButton);
+            cb.addEventListener('change', () => {
+                if (!cb.checked) {
+                    newSelectAll.checked = false;
+                } else if (Array.from(checkboxes).every(c => c.checked)) {
+                    newSelectAll.checked = true;
+                }
+                toggleSubmitButton();
+            });
         });
 
         function toggleSubmitButton() {
@@ -228,6 +239,7 @@
 
         toggleSubmitButton();
     }
+
 
     // Listen to filter changes
     document.querySelectorAll('.filter-input').forEach(select => {
@@ -254,6 +266,7 @@
             }
         });
         @endif
+        attachCheckboxEvents();
     });
 </script>
 @endsection
