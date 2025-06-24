@@ -117,6 +117,15 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::delete('propertytenantclearance/delete/{Id}', [PropertyTenantClearanceController::class,'destroy'])->name('tenantclearance.destroy'); 
 
 
+    //Route::resource('addlease', PropertyNewLeaseController::class);
+    Route::get('propertyaddlease', [PropertyNewLeaseController::class,'index'])->name('addlease.index');
+    Route::get('propertyaddlease/create', [PropertyNewLeaseController::class,'create'])->name('addlease.create');
+    Route::post('propertyaddlease', [PropertyNewLeaseController::class,'store'])->name('addlease.store');
+    Route::get('propertyaddlease/show/{id}', [PropertyNewLeaseController::class,'show'])->name('addlease.show');
+    Route::get('propertyaddlease/edit/{Id}',[PropertyNewLeaseController::class,'edit'])->name('addlease.edit');
+    Route::put('propertyaddlease/edit/{Id}',[PropertyNewLeaseController::class,'update'])->name('addlease.update');
+    Route::delete('propertyaddlease/delete/{Id}', [PropertyNewLeaseController::class,'destroy'])->name('addlease.destroy');
+    
 
 
 
@@ -124,7 +133,6 @@ Route::namespace('Property')->prefix('property')->group(function () {
 
     
     Route::resource('attachments', PropertyAttachmentsController::class);
-    Route::resource('addlease', PropertyNewLeaseController::class);
     Route::resource('schedulelease', PropertyLeaseScheduleController::class);
     Route::resource('renewlease', PropertyLeaseRenewalController::class);
     Route::resource('terminatelease', PropertyLeaseTerminationController::class);

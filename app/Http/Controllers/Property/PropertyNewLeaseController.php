@@ -3,13 +3,25 @@
 namespace App\Http\Controllers\Property;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\Property\TenantAndLease\PropertyNewLeaseRequest;
+use App\Models\Auth\User;
+use App\Models\Core\CodeDetail;
+use App\Models\PropertyManagement\PropertyBlock;
+use App\Models\PropertyManagement\PropertyFloor;
 use App\Models\PropertyManagement\PropertyNewLease;
 use App\Models\PropertyManagement\PropertyNewTenant;
+use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyUnit;
+use App\Services\Property\TenantAndLease\PropertyNewLeaseService;
 
 class PropertyNewLeaseController extends Controller
 {
+    protected $service;
+
+    public function __construct(PropertyNewLeaseService $service)
+    {
+        $this->service = $service;
+    }
     //
     public function index()
     {
@@ -29,43 +41,32 @@ class PropertyNewLeaseController extends Controller
         return view('property.tenantmanagement.leasemanagement.leasemaintenance.show', compact('newlease'));
     }
 
-    public function store(Request $request)
+    public function store(PropertyNewLeaseRequest $request)
     {
-        //dd($request->all());
-        $request->validate([
-            'Tenant' => 'required|string|max:50',
-            'PropertyID' => 'required|string|max:50',
-            'BlockID' => 'required|string|max:50',
-            'FloorID' => 'required|string|max:50',
-            'Unit' => 'required|string|max:100',
-            'StartDate' => 'required|date',
-            'EndDate' => 'required|date',
-            'PaymentFrequency' => 'required|string|max:50',
-            'MonthlyRent' => 'required|integer',
-            'Deposit' => 'required|integer',
-            'DueDay' => 'required|integer',
-            'SpecialTerms' => 'nullable|string|max:255',
-        ]);
-        //dd('validation passed');
-        $newlease = PropertyNewLease::create([
-            'Tenant' => $request->Tenant,
-            'PropertyID' => $request->PropertyID,
-            'BlockID' => $request->BlockID,
-            'FloorID' => $request->FloorID,
-            'Unit' => $request->Unit,
-            'StartDate' => $request->StartDate,
-            'EndDate' => $request->EndDate,
-            'PaymentFrequency' => $request->PaymentFrequency,
-            'MonthlyRent' => $request->MonthlyRent,
-            'Deposit' => $request->Deposit,
-            'DueDay' => $request->DueDay,
-            'SpecialTerms' => $request->SpecialTerms,
-            'CreatedBy' => auth()->user()->Id,
-            'ModifiedBy' => auth()->user()->Id,
-        ]);
-        //dd('validation passed');
+    
+        $data = $request->validated();
+        $tenant = PropertyNewTenant::findOrFail($data['Tenant']);
+        $property = PropertyRegistry::findOrFail($data['PropertyID']);
+        $block = PropertyBlock::findOrFail($data['BlockID']);
+        $floor = PropertyFloor::findOrFail($data['FloorID']);
+        $unit = PropertyUnit::findOrFail($data['Unit']);
+        $paymentFrequency = CodeDetail::findOrFail($data['PaymentFrequency']);
+        $this->service::create(
+            $tenant,
+            $property,
+            $block,
+            $floor,
+            $unit,
+            $startDate = new \DateTime($data['StartDate']),
+            $endDate = new \DateTime($data['EndDate']),
+            $paymentFrequency,
+            $monthlyRent = $data['MonthlyRent'],
+            $deposit = $data['Deposit'],
+            $dueDay = $data['DueDay'],
+            $specialTerms = $data['SpecialTerms'],
+            $request->user()
+        );
         return redirect()->route('addlease.index')->with('success', 'Lease created successfully');
-
     }
 
 
