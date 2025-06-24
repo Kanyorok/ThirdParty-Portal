@@ -8,10 +8,10 @@
 
     <div class="card mb-4 shadow">
         <div class="card-body">
-            <p><strong>Transfer Date:</strong> {{ $transferitem->TransferDate ?? 'N/A' }}</p>
+            <p><strong>Transfer Date:</strong>{{ $transferitem->TransferDate ? \Carbon\Carbon::parse($transferitem->TransferDate)->format('d/m/Y') : 'N/A' }}</p>
             <p><strong>From Branch:</strong> {{ $transferitem->fromBranch->Name ?? 'N/A' }}</p>
             <p><strong>To Branch:</strong> {{ $transferitem->toBranch->Name ?? 'N/A' }}</p>
-            <p><strong>Transferred By:</strong> {{ $transferitem->TransferredBy ?? 'N/A' }}</p>
+           <p><strong>Transferred By:</strong> {{ $transferitem->transferredBy->Name ?? 'N/A' }}</p>
         </div>
     </div>
 
@@ -24,6 +24,7 @@
                     <th>Item Name</th>
                     <th>Approved Qty</th>
                     <th>Dispatched Qty</th>
+                    <th>UOM</th>
                     <th>Remarks</th>
                 </tr>
             </thead>
@@ -34,6 +35,7 @@
                         <td>{{ $item->item->ItemName ?? 'N/A' }}</td>
                         <td>{{ $item->ApprovedQty ?? 'N/A' }}</td>
                         <td>{{ $item->DispatchedQty ?? 'N/A' }}</td>
+                        <td>{{ $item->uom->Code ?? 'N/A' }}</td>
                         <td>{{ $item->Remarks ?? '-' }}</td>
                     </tr>
                 @empty

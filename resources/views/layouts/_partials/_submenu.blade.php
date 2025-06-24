@@ -1,10 +1,10 @@
 <ul class="pc-submenu">
     @foreach($children as $child)
         <li class="pc-item {{ !empty($child['children']) ? 'pc-hasmenu' : '' }}">
-            <a class="pc-link" href="{{ $child['route'] }}">
+            <a class="pc-link ajax-link" href="{{ $child['route'] }}">
                 <span data-i18n="{{ $child['name'] }}">{{ $child['name'] }}</span>
                 @if(!empty($child['children']))
-                    <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                    <span class="pc-arrow ajax-link"><i data-feather="chevron-right"></i></span>
                 @endif
             </a>
 

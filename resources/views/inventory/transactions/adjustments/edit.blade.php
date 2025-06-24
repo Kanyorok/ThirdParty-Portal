@@ -85,10 +85,17 @@
         </div>
 
         <div class="mb-3">
-            <label for="adjustedBy" class="form-label">Adjusted By</label>
-            <input type="text" class="form-control" id="adjustedBy" name="AdjustedBy"
-                   value="{{ old('AdjustedBy', $adjustment->AdjustedBy) }}" required>
-        </div>
+                    <label for="AdjustedBy" class="form-label">Adjusted By</label>
+                    <select name="AdjustedBy" id="AdjustedBy" class="form-select select2" required>
+                        <option value="">-- Select User --</option>
+                        @foreach ($users as $user)
+                            <option value="{{ $user->Id }}"
+                                {{ old('AdjustedBy', $adjustment->AdjustedBy) == $user->Id ? 'selected' : '' }}>
+                                {{ $user->Name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
 
         <div class="d-flex justify-content-between">
             <a href="{{ route('transactionsadjustment.index') }}" class="btn btn-outline-secondary">Back</a>
