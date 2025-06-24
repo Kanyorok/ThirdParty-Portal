@@ -6,6 +6,7 @@
     <h5>Budget: {{ $budget->Name }}</h5>
     <p class="text-muted">Period: {{ $budget->From }} - {{ $budget->To }}</p>
     <a href="{{ route('budgetactivities.index') }}" class="btn btn-secondary mb-3">&larr; Back to List</a>
+    <div class="table-responsive">
     <table class="table table-bordered table-hover table-striped align-middle text-center">
       <thead class="table-light">
         <tr>
@@ -16,6 +17,7 @@
           <th>Allocation Type</th>
           <th>Full Allocation</th>
           <th>Monthly Allocations</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -65,6 +67,13 @@
                 -
               @endif
             </td>
+            <td>
+              <a href="{{ route('budgetactivities.edit', $activity->Id) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
+              <form action="{{ route('budgetactivities.destroy', $activity->Id) }}" method="POST" class="d-inline">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this activity?')">Delete</button>
+              </form>
           </tr>
         @endforeach
       </tbody>
@@ -75,6 +84,7 @@
         </tr>
       </tfoot>
     </table>
+    </div>
   </div>
 </div>
 @endsection
