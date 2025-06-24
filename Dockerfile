@@ -3,6 +3,8 @@ FROM php:8.3-apache-bullseye
 # Install system dependencies including imap
 RUN apt-get update && apt-get install -y \
     unzip zip curl git gnupg2 \
+    apt-transport-https unixodbc unixodbc-dev \
+    libgssapi-krb5-2 lsb-release \
     libpng-dev libjpeg-dev libfreetype6-dev \
     libxml2-dev libonig-dev libzip-dev \
     libssl-dev software-properties-common \
@@ -10,17 +12,8 @@ RUN apt-get update && apt-get install -y \
     libc-client-dev libkrb5-dev libgssapi-krb5-2 lsb-release \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
-    && docker-php-ext-install -j$(nproc) pdo pdo_mysql mbstring zip exif bcmath gd intl imap
-
-RUN apt-get update && apt-get install -y \
-    unzip zip curl git gnupg2 \
-    libpng-dev libjpeg-dev libfreetype6-dev \
-    libxml2-dev libonig-dev libzip-dev \
-    libssl-dev software-properties-common \
-    apt-transport-https unixodbc unixodbc-dev \
-    libgssapi-krb5-2 lsb-release \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) pdo pdo_mysql mbstring zip exif bcmath gd intl
+    && docker-php-ext-install -j$(nproc) mbstring zip exif bcmath gd intl imap
 
 # Add Microsoft SQL Server repository and key
 RUN curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /etc/apt/trusted.gpg.d/microsoft.gpg && \
