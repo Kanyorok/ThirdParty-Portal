@@ -14,7 +14,7 @@
     <li class="breadcrumb-item"><a href="#">CRM</a></li>
 @endsection
 @section('content')
-    <div class="row">>
+    <div class="row">
         <div class="col-12">
             <div class="card mb-3">
                 <div class="card-header">

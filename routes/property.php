@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\Property\PropertyRegistryController;
 use App\Http\Controllers\Property\PropertyAttachmentsController;
 use App\Http\Controllers\Property\PropertyBlockController;
 use App\Http\Controllers\Property\PropertyCategoryController;
@@ -17,12 +16,14 @@ use App\Http\Controllers\Property\PropertyNewLeaseController;
 use App\Http\Controllers\Property\PropertyNewTenantController;
 use App\Http\Controllers\Property\PropertyPaymentFrequencyController;
 use App\Http\Controllers\Property\PropertyReceiptController;
+use App\Http\Controllers\Property\PropertyRegistryController;
 use App\Http\Controllers\Property\PropertyReportsController;
 use App\Http\Controllers\Property\PropertyReportsVisualController;
 use App\Http\Controllers\Property\PropertyTenantClearanceController;
 use App\Http\Controllers\Property\PropertyTypeController;
 use App\Http\Controllers\Property\PropertyUnitController;
 use App\Http\Controllers\Property\RentDashboardController;
+use App\Http\Controllers\Property\ReportsController;
 use App\Http\Controllers\Property\TenantStatementController;
 use Illuminate\Support\Facades\Route;
 
@@ -64,24 +65,65 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::get('propertyaddblock/create', [PropertyBlockController::class,'create'])->name('addblock.create');
     Route::post('propertyaddblock', [PropertyBlockController::class,'store'])->name('addblock.store');
     Route::get('propertyaddblock/show', [PropertyBlockController::class,'show'])->name('addblock.show');
+    Route::delete('propertyaddblock/delete/{Id}', [PropertyBlockController::class,'destroy'])->name('addblock.destroy');
+    Route::get('propertyaddblock/edit/{Id}',[PropertyBlockController::class,'edit'])->name('addblock.edit');
+    Route::put('propertyaddblock/update/{Id}',[PropertyBlockController::class,'update'])->name('addblock.update');
 
 
-    //Property Floor
+
+    //Property Settings
+    Route::resource('propertysettings', PropertyUnitController::class);
+    //Route::get('propertysettings', [PropertyRegistryController::class,'index'])->name('propertysettings.index');
+
     //Route::resource('addfloor', PropertyFloorController::class);
-    Route::get('/propertyaddfloor', [PropertyFloorController::class,'index'])->name('addfloor.index');
-    Route::get('/propertyaddfloor/create', [PropertyFloorController::class,'create'])->name('addfloor.create');
-    Route::post('/propertyaddfloor', [PropertyFloorController::class,'store'])->name('addfloor.store');
-    Route::get('/propertyregistry/block/{propertyId}', [PropertyFloorController::class, 'getBlockByProperty'])->name('getblocks');
-    Route::get('/propertyaddfloor/show/{Id}', [PropertyFloorController::class,'show'])->name('addfloor.show');
-    Route::get('/propertyaddfloor/edit/{Id}',[PropertyFloorController::class,'edit'])->name('addfloor.edit');
-    Route::put('/propertyaddfloor/edit/{Id}',[PropertyFloorController::class,'update'])->name('addfloor.update');
-    Route::delete('/propertyaddfloor/delete/{Id}', [PropertyFloorController::class,'destroy'])->name('addfloor.destroy');   
+    Route::get('propertyaddfloor', [PropertyFloorController::class,'index'])->name('addfloor.index');
+    Route::get('propertyaddfloor/create', [PropertyFloorController::class,'create'])->name('addfloor.create');
+    Route::post('propertyaddfloor', [PropertyFloorController::class,'store'])->name('addfloor.store');
+    Route::get('propertyaddfloor/show/', [PropertyFloorController::class,'show'])->name('addfloor.show');
+    Route::get('/propertyaddfloor/{BlockId}', [PropertyFloorController::class, 'getBlockByProperty'])->name('getblockbyproperty');
+    Route::delete('propertyaddfloor/delete/{Id}', [PropertyFloorController::class,'destroy'])->name('addfloor.destroy');
+    Route::get('propertyaddfloor/edit/{Id}',[PropertyFloorController::class,'edit'])->name('addfloor.edit');
+    Route::put('propertyaddfloor/edit/{Id}',[PropertyFloorController::class,'update'])->name('addfloor.update');
+
+
+    //Route::resource('addunit', PropertyUnitController::class);
+    Route::get('propertyaddunit', [PropertyUnitController::class,'index'])->name('addunit.index');
+    Route::get('propertyaddunit/create', [PropertyUnitController::class,'create'])->name('addunit.create');
+    Route::post('propertyaddunit', [PropertyUnitController::class,'store'])->name('addunit.store');
+    Route::get('propertyaddunit/show', [PropertyUnitController::class,'show'])->name('addunit.show');
+    Route::get('/propertyaddunit/blocks/{PropertyId}', [PropertyUnitController::class, 'getBlockByProperty'])->name('getblockbyproperty');
+    Route::get('/propertyaddunit/floors/{BlockId}', [PropertyUnitController::class, 'getFloorByBlock'])->name('getfloorbyblock');
+    Route::delete('propertyaddunit/delete/{Id}', [PropertyUnitController::class,'destroy'])->name('addunit.destroy');
+    Route::get('propertyaddunit/edit/{Id}',[PropertyUnitController::class,'edit'])->name('addunit.edit');
+    Route::put('propertyaddunit/edit/{Id}',[PropertyUnitController::class,'update'])->name('addunit.update');
+
+
+    //Route::resource('addtenant', PropertyNewTenantController::class);
+    Route::get('propertyaddtenant', [PropertyNewTenantController::class,'index'])->name('addtenant.index');
+    Route::get('propertyaddtenant/create', [PropertyNewTenantController::class,'create'])->name('addtenant.create');
+    Route::post('propertyaddtenant', [PropertyNewTenantController::class,'store'])->name('addtenant.store');
+    Route::get('propertyaddtenant/show/{id}', [PropertyNewTenantController::class,'show'])->name('addtenant.show');
+    Route::get('propertyaddtenant/edit/{Id}',[PropertyNewTenantController::class,'edit'])->name('addtenant.edit');
+    Route::put('propertyaddtenant/edit/{Id}',[PropertyNewTenantController::class,'update'])->name('addtenant.update'); 
+
+    
+    //Route::resource('tenantclearance', PropertyTenantClearanceController::class);
+    Route::get('propertytenantclearance', [PropertyTenantClearanceController::class,'index'])->name('tenantclearance.index');
+    Route::get('propertytenantclearance/create', [PropertyTenantClearanceController::class,'create'])->name('tenantclearance.create');
+    Route::post('propertytenantclearance', [PropertyTenantClearanceController::class,'store'])->name('tenantclearance.store');
+    Route::get('propertytenantclearance/show/{Id}', [PropertyTenantClearanceController::class,'show'])->name('tenantclearance.show');
+    Route::get('propertytenantclearance/edit/{Id}',[PropertyTenantClearanceController::class,'edit'])->name('tenantclearance.edit');
+    Route::put('propertytenantclearance/edit/{Id}',[PropertyTenantClearanceController::class,'update'])->name('tenantclearance.update');
+    Route::delete('propertytenantclearance/delete/{Id}', [PropertyTenantClearanceController::class,'destroy'])->name('tenantclearance.destroy'); 
 
 
 
-    Route::resource('addunit', PropertyUnitController::class);
+
+
+
+
+    
     Route::resource('attachments', PropertyAttachmentsController::class);
-    Route::resource('addtenant', PropertyNewTenantController::class);
     Route::resource('addlease', PropertyNewLeaseController::class);
     Route::resource('schedulelease', PropertyLeaseScheduleController::class);
     Route::resource('renewlease', PropertyLeaseRenewalController::class);
@@ -91,7 +133,6 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::resource('rentreceipt', PropertyReceiptController::class);
     Route::resource('rentdashboard', RentDashboardController::class);
     Route::resource('tenantledger', TenantStatementController::class);
-    Route::resource('tenantclearance', PropertyTenantClearanceController::class);
     Route::resource('maintenancerequest', PropertyMaintenanceRequestController::class);
     Route::resource('assignrequest', PropertyMaintananceAssignController::class);
     Route::resource('maintenancedashboard', PropertyMaintenanceDashboardController::class);
@@ -100,4 +141,9 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::resource('propertyanalytics', PropertyReportsVisualController::class);
 
 
+    Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('property-reports.export');
+    Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
+        'index' => 'property-reports.index',
+        'show' => 'property-reports.show'
+    ]);
 });

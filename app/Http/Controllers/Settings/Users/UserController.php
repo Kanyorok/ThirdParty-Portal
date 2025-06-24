@@ -149,8 +149,12 @@ class UserController extends Controller
             return $this->errored("how, why you can't delete it? how did you get here");
         }
 
-        (new UserService($user))->trash($request->user());
+        try {
+            (new UserService($user))->trash($request->user());
+        } catch (ErroredException $e) {
+            return $e->toJson();
+        }
 
-        return $this->succeeded('account trashed successfully.', route('settings.users'));
+        return $this->succeeded('account trashed successfully.', route('users.index'));
     }
 }

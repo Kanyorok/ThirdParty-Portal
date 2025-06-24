@@ -47,7 +47,7 @@
         </div>
 
         <div class="form-check mb-3">
-            <input type="checkbox" name="IsActive" id="IsActive" class="form-check-input" value="1" {{ old('IsActive', true) ? 'checked' : '' }}>
+            <input type="checkbox" name="IsActive" id="IsActive" class="form-check-input" {{ old('IsActive', true) ? 'checked' : '' }}>
             <label class="form-check-label" for="IsActive">Is Active</label>
         </div>
 

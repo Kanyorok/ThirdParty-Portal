@@ -23,36 +23,35 @@ class Schedule extends Model
 
     protected $table = 't_Schedule';
     protected $primaryKey = 'ScheduleID';
+    protected $fillable = [
+        'Title',
+        'Notes',
+        'ScheduledType',
+        'ScheduledTypeID',
+        'ScheduleStatusID',
+        'StartOn',
+        'EndOn',
+        'Type',
+        'Source',
+        'SourceID',
+        'CreatedBy',
+        'ModifiedBy',
+        'DeletedBy',
+    ];
+    protected $casts = [
+        'StartOn' => 'datetime',
+        'EndOn' => 'datetime',
+        'ScheduleStatusID' => ScheduleStatusEnum::class,
+    ];
 
     public static function getPrimaryKey(): string
     {
         return 'ScheduleID';
     }
 
-    protected $fillable = [
-                           'Title',
-                           'Notes',
-                           'ScheduledType',
-                           'ScheduledTypeID',
-                           'ScheduleStatusID',
-                           'StartOn',
-                           'EndOn',
-                           'Type',
-                           'Source',
-                           'SourceID',
-                           'CreatedBy',
-                           'ModifiedBy',
-                           'DeletedBy',
-                          ];
-
-    protected $casts = [
-                        'StartOn'          => 'datetime',
-                        'EndOn'            => 'datetime',
-                        'ScheduleStatusID' => ScheduleStatusEnum::class,
-                       ];
-
 
     // (Call, Meeting, Task)
+
     public function scheduled(): MorphTo
     {
         return $this->morphTo(__FUNCTION__, 'ScheduledType', 'ScheduledTypeID');

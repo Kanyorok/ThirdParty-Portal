@@ -48,7 +48,7 @@
                     </div>
                     <div class="col-md-4">
                         <strong>Date:</strong>
-                        <div>{{ \Carbon\Carbon::parse($item->CreatedOn)->format('Y-m-d') }}</div>
+                        <div>{{ \Carbon\Carbon::parse($item->CreatedOn)->format('d/m/Y') }}</div>
                     </div>
                 </div>
                 <div class="row mb-3">
