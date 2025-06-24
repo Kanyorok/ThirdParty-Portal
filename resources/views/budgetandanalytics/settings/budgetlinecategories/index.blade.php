@@ -40,6 +40,7 @@
                     <th>Category Name</th>
                     <th>Description</th>
                     <th>Active</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -51,10 +52,18 @@
                         <td>{{ $category->Description ?? '—' }}</td>
                         <td>
                             @if($category->IsActive)
-                                <span class="badge bg-success">Yes</span>
+                                <span class="badge bg-success" >Yes</span>
                             @else
-                                <span class="badge bg-danger">No</span>
+                                <span class="badge bg-danger" >No</span>
                             @endif
+                        </td>
+                        <td>
+                            <a href="{{ route('budgetlinecategories.edit', $category->Id) }}" class="btn btn-sm btn-info">Edit</a>
+                            <form action="{{ route('budgetlinecategories.destroy', $category->Id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this category?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                            </form>
                         </td>
                     </tr>
                 @endforeach

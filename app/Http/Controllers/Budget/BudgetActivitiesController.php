@@ -21,12 +21,18 @@ class BudgetActivitiesController extends Controller
     public function index()
     {
         $activities = BudgetActivity::with([
+            'budget:Id,Name,From,To',
             'allocations:Id,BudgetActivityID,Month,Amount', 
             'branch:Id,Name', 
             'budgetLine:Id,LineName',
-            'activity:Id,ActivityName'
-            ])->get();
-        return view('budgetandanalytics.budgetactivities.index',compact('activities'));
+        ])->get();
+
+        // Group activities by BudgetID
+        $grouped = $activities->groupBy('BudgetID');
+
+        return view('budgetandanalytics.budgetactivities.index', [
+            'groupedActivities' => $grouped
+        ]);
     }
 
     public function create()
@@ -135,6 +141,15 @@ class BudgetActivitiesController extends Controller
             ->select('Id', 'ActivityName')
             ->get();
         return response()->json($activities);
+    }
+
+    public function show($budgetId)
+    {
+        $budget = Budget::findOrFail($budgetId);
+        $activities = BudgetActivity::with(['budgetLine', 'branch', 'allocations'])
+            ->where('BudgetID', $budgetId)
+            ->get();
+        return view('budgetandanalytics.budgetactivities.show', compact('budget', 'activities'));
     }
 
 }

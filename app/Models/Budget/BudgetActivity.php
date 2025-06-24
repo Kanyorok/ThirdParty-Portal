@@ -66,4 +66,8 @@ class BudgetActivity extends Model
     {
         return $this->belongsTo(BudgetActivityMaster::class,'ActivityID','Id');
     }
+    public function budget():BelongsTo
+    {
+        return $this->belongsTo(Budget::class,'BudgetID','Id');
+    }
 }

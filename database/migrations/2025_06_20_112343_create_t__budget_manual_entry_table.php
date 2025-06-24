@@ -11,12 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('t_BudgetDriverProjections', function (Blueprint $table) {
-            $table->id('Id');            
-            $table->foreignId('BudgetID')->constrained('t_Budgets' , 'Id');
-            $table->foreignId('CurrencyID')->constrained('t_Currencies', 'Id');
-            
-
+        Schema::create('t_BudgetManualEntry', function (Blueprint $table) {
+            $table->id('Id');
+            $table->foreignId('BudgetID')->constrained('t_Budgets', 'Id');
+            $table->foreignId('BranchID')->constrained('t_Branches', 'Id');
+            $table->foreignId('BudgetLineID')->constrained('t_BudgetLines', 'Id');
+            $table->decimal('Amount', 15, 2)->default(0);
+            $table->text('Comments')->nullable();
+           
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
@@ -31,6 +33,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('t_BudgetDriverProjections');
+        Schema::dropIfExists('t_BudgetManualEntry');
     }
 };

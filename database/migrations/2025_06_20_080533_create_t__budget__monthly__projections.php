@@ -1,9 +1,9 @@
-<?php
-
+ <?php
+ 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-
+ 
 return new class extends Migration
 {
     /**
@@ -11,12 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('t_BudgetDriverProjections', function (Blueprint $table) {
-            $table->id('Id');            
-            $table->foreignId('BudgetID')->constrained('t_Budgets' , 'Id');
-            $table->foreignId('CurrencyID')->constrained('t_Currencies', 'Id');
-            
-
+        Schema::create('t_BudgetMonthlyProjectionsAllocation', function (Blueprint $table) {
+            $table->id('Id');
+            $table->foreignId('BudgetID')->constrained('t_Budgets', 'Id');
+            $table->foreignId('BudgetProjectionID')->constrained('t_BudgetDriverProjections', 'Id');
+            $table->string('Month');
+            $table->decimal('Allocation', 15, 2)->default(0);
+           
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
@@ -25,12 +26,12 @@ return new class extends Migration
             $table->softDeletes('DeletedOn');
         });
     }
-
+ 
     /**
      * Reverse the migrations.
      */
     public function down(): void
     {
-        Schema::dropIfExists('t_BudgetDriverProjections');
+        Schema::dropIfExists('t_BudgetMonthlyProjectionsAllocation');
     }
 };
