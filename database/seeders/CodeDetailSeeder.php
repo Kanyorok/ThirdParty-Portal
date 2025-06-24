@@ -343,5 +343,40 @@ class CodeDetailSeeder extends Seeder
                 'ModifiedBy' => $user->Id,
             ],
         ]);
+
+                DB::table('t_CodeDetails')->insert([
+            [
+                'CodeID' => "PaymentFrequency",
+                'Description' => 'Annually',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+            [
+                'CodeID' => "PaymentFrequency",
+                'Description' => 'Bi-Annually',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+            [
+                'CodeID' => 'PaymentFrequency',
+                'Description' => 'Quarterly',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+            [
+                'CodeID' => 'PaymentFrequency',
+                'Description' => 'Monthly',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+        ]);
     }
 }

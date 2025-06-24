@@ -30,8 +30,8 @@ class PropertyNewLeaseRequest extends FormRequest
             'StartDate' => 'required|date',
             'EndDate' => 'required|date',
             'PaymentFrequency' => 'required|exists:t_CodeDetails,ID',
-            'MonthlyRent' => 'required|float|min:0',
-            'Deposit' => 'required|float|min:0',
+            'MonthlyRent' => 'required|numeric|min:0',
+            'Deposit' => 'required|numeric|min:0',
             'DueDay' => 'required|integer',
             'SpecialTerms' => 'nullable|string|max:255',
         ];
