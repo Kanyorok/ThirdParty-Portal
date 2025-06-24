@@ -25,7 +25,7 @@ class PropertyNewLeaseController extends Controller
     //
     public function index()
     {
-        $newleases = PropertyNewLease::all();
+        $newleases = PropertyNewLease::with('tenant', 'property')->get();
         return view('property.tenantmanagement.leasemanagement.leasemaintenance.index', compact('newleases'));
     }
 
@@ -87,6 +87,63 @@ class PropertyNewLeaseController extends Controller
         );
         return redirect()->route('addlease.index')->with('success', 'Lease created successfully');
     }
+
+    public function edit($Id)
+    {
+        $newlease = PropertyNewLease::findOrFail($Id);
+        $properties = PropertyRegistry::with('getBlockByProperty.floor.units')->get();
+        $newtenants = PropertyNewTenant::all();
+        $codes = CodeDetail::where('CodeID', 'PaymentFrequency')->get();
+        return view('property.tenantmanagement.leasemanagement.leasemaintenance.edit', compact(
+            'newlease', 'newtenants', 'properties', 'codes'
+        ));
+    }
+
+    public function update(PropertyNewLeaseRequest $request, $Id)
+    {
+        $data = $request->validated();
+
+        $newlease = PropertyNewLease::findOrFail($Id);
+
+        $newlease->update([
+            'Tenant' => $data['Tenant'],
+            'PropertyID' => $data['PropertyID'],
+            'BlockID' => $data['BlockID'],
+            'FloorID' => $data['FloorID'],
+            'Unit' => $data['Unit'],
+            'StartDate' => $data['StartDate'],
+            'EndDate' => $data['EndDate'],
+            'PaymentFrequency' => $data['PaymentFrequency'],
+            'MonthlyRent' => $data['MonthlyRent'],
+            'Deposit' => $data['Deposit'],
+            'DueDay' => $data['DueDay'],
+            'SpecialTerms' => $data['SpecialTerms'],
+            'ModifiedBy' => $request->user()->Id,
+        ]);
+
+        activity()
+            ->causedBy($request->user()->Id)
+            ->performedOn($newlease)
+            ->event('update')
+            ->log("Updated Lease {$newlease->Id}.");
+
+        return redirect()->route('addlease.index')->with('success', 'Lease updated successfully.');
+    }
+
+    public function destroy($Id)
+    {
+        $newlease = PropertyNewLease::findOrFail($Id);
+        $newlease->delete();
+
+        activity()
+            ->causedBy(auth()->user()->Id)
+            ->performedOn($newlease)
+            ->event('delete')
+            ->log("Deleted Lease {$newlease->Id}.");
+
+        return redirect()->route('addlease.index')->with('success', 'Lease deleted successfully.');
+    }
+
 
 
 }
