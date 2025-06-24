@@ -14,14 +14,15 @@
         <div class="col-md-6">
           <label class="form-label">Tenant / Lease</label>
             <select name="Tenant" class="form-select" required>
+              <option>--Select the tenant</option>
                 @foreach ($newtenants as $newtenant)
-                    <option value="{{ $newtenant->id }}">{{ $newtenant->TenantName }}</option>
+                    <option value="{{ $newtenant->Id }}">{{ $newtenant->TenantName }}</option>
                 @endforeach
             </select>
         </div>
         <div class="col-md-6">
           <label class="form-label">Exit Date</label>
-            <input type="date" class="form-control" value="2025-08-31" name="ExitDate">
+            <input type="date" class="form-control" value="ExitDate" name="ExitDate">
         </div>
       </div>
 
@@ -30,30 +31,31 @@
         <div class="col-md-3">
           <label class="form-label">Final Inspection Done?</label>
             <select class="form-select" name="FinalInspection">
-            <option>Yes</option>
-            <option>No</option>
+            <option value="1">Yes</option>
+            <option value="0">No</option>
           </select>
         </div>
         <div class="col-md-3">
           <label class="form-label">All Dues Paid?</label>
             <select class="form-select" name="AllDuesPaid">
-            <option>Yes</option>
-            <option>No</option>
+            <option value="1">Yes</option>
+            <option value="0">No</option>
           </select>
         </div>
         <div class="col-md-3">
           <label class="form-label">Keys Returned?</label>
             <select class="form-select" name="KeysReturned">
-            <option>Yes</option>
-            <option>No</option>
+            <option value="1">Yes</option>
+            <option value="0">No</option>
           </select>
         </div>
         <div class="col-md-3">
-          <label class="form-label">Deposit Refunded?</label>
-            <select class="form-select" name="DepositRefunded">
-            <option>Fully</option>
-            <option>Partially</option>
-            <option>Not Refunded</option>
+          <label class="form-label">Deposit Refunded?</label>DepositRefunded
+            <select class="form-select" name="DepositRefunded" required>
+            <option>--Select the tenant Type</option>
+                @foreach ($codedetails as $codedetail)
+                    <option value="{{ $codedetail->ID }}">{{ $codedetail->Description }}</option>
+                @endforeach
           </select>
         </div>
       </div>
@@ -68,7 +70,7 @@
           <textarea class="form-control" rows="2" placeholder="Any final notes or clearance details..."
                     name="AdditionalNotes"></textarea>
       </div>
-        <button class="btn btn-danger">✔ Finalize Exit</button>
+        <button class="btn btn-danger"> Finalize Exit</button>
     </form>
     </div>
   </div>

@@ -10,21 +10,19 @@
         </ul>
     </div>
 @endif
-<div class="container mt-4">
-  <h4 class="fw-bold mb-3">🏠 Add Unit to Floor</h4>
-
-    <form action="{{ route('addunit.store') }}" method="POST" enctype="multipart/form-data">
+    <h1>Edit Unit</h1>
+   <form action="{{ route('addunit.update', $unit->Id) }}" method="POST">
         @csrf
-  <div class="card shadow">
-    <div class="card-header bg-light fw-bold">➕ Unit Setup</div>
+        @method('PUT')
+
     <div class="card-body">
       <div class="row g-3 mb-3">
             <div class="col-md-6">
                 <label class="form-label">Select Property</label>
-                <select name="PropertyID" id="property-select" class="form-select" required>
+                <select name="PropertyID" id="property-select" class="form-select" value="{{ old('PropertyID', $unit->PropertyID) }}" required>
                   <option value="">-- Select Property --</option>
                     @foreach ($lineentries as $property)
-                        <option value="{{ $property->Id }}">{{ $property->PropertyName }}</option>
+                        <option value="{{ $property->Id }}" {{ old('PropertyID', $unit->PropertyID) == $property->Id ? 'selected' : '' }}>{{ $property->PropertyName }}</option>
                     @endforeach
                 </select>
             </div>
@@ -33,49 +31,53 @@
         <div class="col-md-6">
           <label class="form-label">Select Block</label>
             <select name="BlockID" id="block-select" class="form-select" required>
-                <option value="">-- Select Block --</option>  
+                <option value="">-- Select Block --</option>
+                @foreach ($blocks as $block)
+                    <option value="{{ $block->Id }}" {{ old('BlockID', $unit->BlockID) == $block->Id ? 'selected' : '' }}>{{ $block->BlockName }}</option>
+                @endforeach
             </select>
         </div>
         <div class="col-md-4">
           <label class="form-label">Select Floor</label>
             <select name="FloorID" id="floor-select" class="form-select" required>
             <option value="">-- Select Floor --</option>
+            @foreach ($floors as $floor)
+                <option value="{{ $floor->Id }}" {{ old('FloorID', $unit->FloorID) == $floor->Id ? 'selected' : '' }}>{{ $floor->FloorLabel }}</option>
+            @endforeach
             </select>
         </div>
         <div class="col-md-4">
           <label class="form-label">Unit Code / Label</label>
-            <input type="text" class="form-control" placeholder="e.g. Unit 101" name="UnitCode">
+            <input type="text" class="form-control" placeholder="e.g. Unit 101" name="UnitCode" value="{{ old('UnitCode', $unit->UnitCode) }}">
         </div>
         <div class="col-md-4">
           <label class="form-label">Unit Size (sq. ft)</label>
-            <input type="number" class="form-control" placeholder="e.g. 1200" name="UnitSize">
+            <input type="number" class="form-control" placeholder="e.g. 1200" name="UnitSize" value="{{ old('UnitSize', $unit->UnitSize) }}">
         </div>
       </div>
 
         <div class="form-check form-check-inline">
           <label class="form-label">Is Rentable?</label>
           <select class="form-select" name="IsRentable" required>
-            <option value="1" {{ old('IsRentable') == '1' ? 'selected' : '' }}>Yes</option>
-            <option value="0" {{ old('IsRentable') == '0' ? 'selected' : '' }}>No</option>
+            <option value="1" {{ old('IsRentable', $unit->IsRentable) == '1' ? 'selected' : '' }}>Yes</option>
+            <option value="0" {{ old('IsRentable', $unit->IsRentable) == '0' ? 'selected' : '' }}>No</option>
           </select>
         </div>
         <div class="col-md-4">
           <label class="form-label">Current Status</label>
             <select class="form-select" name="CurrentStatus">
-            <option value="1" {{ old('CurrentStatus') == '1' ? 'selected' : '' }}>Vacant</option>
-            <option value="0" {{ old('CurrentStatus') == '0' ? 'selected' : '' }}>Occupied</option>
+            <option value="1" {{ old('CurrentStatus', $unit->CurrentStatus) == '1' ? 'selected' : '' }}>Vacant</option>
+            <option value="0" {{ old('CurrentStatus', $unit->CurrentStatus) == '0' ? 'selected' : '' }}>Occupied</option>
           </select>
         </div>
         <div class="col-md-4">
           <label class="form-label">Remarks</label>
-            <input type="text" class="form-control" placeholder="Optional" name="Remarks">
+            <input type="text" class="form-control" placeholder="Optional" name="Remarks" value="{{ old('Remarks', $unit->Remarks) }}">
         </div>
       </div>
-      <button class="btn btn-success">💾 Save Unit</button>
-    </div>
-  </div>
-</div>
-</form>
+        <button type="submit" class="btn btn-success">Update Unit</button>
+        <a href="{{ route('addunit.index') }}" class="btn btn-secondary">Cancel</a>
+    </form>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
