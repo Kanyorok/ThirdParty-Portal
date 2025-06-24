@@ -58,7 +58,7 @@
 
 <script>
     $(document).ready(function () {
-        $('#addproperty').DataTable({
+        $('#addtenant').DataTable({
             pageLength: 10,
             ordering: true,
             searching: true,

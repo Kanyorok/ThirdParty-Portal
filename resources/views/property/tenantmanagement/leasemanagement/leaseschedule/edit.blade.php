@@ -1,17 +1,21 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Lease Schedule')
 @section('content')
-    <div class="container mt-4">
-        <h4 class="fw-bold mb-3">📆 Lease Schedule Generator</h4>
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+    <h1>Edit Lease Schedule</h1>
+    <form action="{{ route('schedulelease.update', $leaseschedules->id) }}" method="POST">
+        @csrf
+        @method('PUT')
 
-        <form action="{{ route('schedulelease.store') }}" method="POST">
-            @csrf
-            <div class="card shadow">
-                <div class="card-header bg-light fw-bold">🧮 Generate Billing Periods</div>
-                <div class="card-body">
-                    <!-- Lease Selection -->
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6">
+         <div class="col-md-6">
                             <label class="form-label">Select Lease Agreement</label>
                             <select name="leaseID" class="form-select" required>
                                 <option>--Select the tenant</option>
@@ -55,10 +59,10 @@
                             <input type="number" class="form-control" value="0" name="OtherCharges">
                         </div>
                     </div>
-                    <button class="btn btn-success">🧾 Generate Schedule</button>
-        </form>
-    </div>
-    </div>
-    </div>
+                    <button type="submit" class="btn btn-success">Update Lease Schedule</button>
+                    <a href="{{ route('schedulelease.index') }}" class="btn btn-secondary">Cancel</a>
+                </form>
+            </div>
+        </div>
     </div>
 @endsection

@@ -50,7 +50,7 @@
           </select>
         </div>
         <div class="col-md-3">
-          <label class="form-label">Deposit Refunded?</label>DepositRefunded
+          <label class="form-label">Deposit Refunded?</label>
             <select class="form-select" name="DepositRefunded" required>
             <option>--Select the tenant Type</option>
                 @foreach ($codedetails as $codedetail)

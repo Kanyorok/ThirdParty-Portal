@@ -7,22 +7,39 @@
             <div class="card-body">
                 <dl class="row">
                     <dt class="col-sm-4">Tenant</dt>
-                    <dd class="col-sm-8">{{ $clearancetenant->Tenant }}</dd>
+                    <dd class="col-sm-8">{{ $clearancetenant->tenant->TenantName }}</dd>
 
                     <dt class="col-sm-4">Exit Date</dt>
                     <dd class="col-sm-8">{{ $clearancetenant->ExitDate ?? '-' }}</dd>
 
                     <dt class="col-sm-4">Final Inspection done</dt>
-                    <dd class="col-sm-8">{{ $clearancetenant->FinalInspection ?? '-' }}</dd>
+                    <dd class="col-sm-8">@if($clearancetenant->FinalInspection) <span class="badge bg-success">Yes</span> @else <span class="badge bg-danger">No</span> @endif</dd>
 
                     <dt class="col-sm-4">Dues Cleared</dt>
-                    <dd class="col-sm-8">{{ $clearancetenant->AllDuesPaid ?? '-' }}</dd>
+                    <dd class="col-sm-8">@if($clearancetenant->AllDuesPaid) <span class="badge bg-success">Yes</span> @else <span class="badge bg-danger">No</span> @endif</dd>
 
                     <dt class="col-sm-4">Keys Returned</dt>
-                    <dd class="col-sm-8">{{ $clearancetenant->KeysReturned ?? '-' }}</dd>
+                    <dd class="col-sm-8">@if($clearancetenant->KeysReturned) <span class="badge bg-success">Yes</span> @else <span class="badge bg-danger">No</span> @endif</dd>
+
+                    <dt class="col-sm-4">Deposit Status</dt>
+                    <dd class="col-sm-8">{{ $clearancetenant->code->Description ?? '-' }}</dd>
 
                     <dt class="col-sm-4">Additional Notes</dt>
                     <dd class="col-sm-8">{{ $clearancetenant->AdditionalNotes ?? '-' }}</dd>
+
+                    <dt class="col-sm-4">Status</dt>
+                    <dd class="col-sm-8">
+                        @if(
+                            $clearancetenant->FinalInspection == 1 &&
+                            $clearancetenant->AllDuesPaid == 1 &&
+                            $clearancetenant->KeysReturned == 1 &&
+                            ($clearancetenant->code->Description ?? '') === 'Fully Refunded'
+                        )
+                            <span class="badge bg-success">Cleared</span>
+                        @else
+                            <span class="badge bg-warning text-dark">Pending</span>
+                        @endif
+                    </dd>
                 </dl>
             </div>
             <div class="card-footer">
