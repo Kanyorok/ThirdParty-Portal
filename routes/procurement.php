@@ -67,6 +67,7 @@ use App\Http\Controllers\Procurement\PrequalificationApplicationsController;
 use App\Http\Controllers\Procurement\PrequalificationEvaluationController;
 use App\Http\Controllers\Procurement\PrequalificationEvalAprovalController;
 use App\Http\Controllers\Procurement\PrequalifiedSuppliersController;
+use App\Http\Controllers\Procurement\ApprovalSetupController;
 
 
 Route::namespace('Procurement')->prefix('procurement')->group(function () {
@@ -87,6 +88,8 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
 
     Route::post('requisition/approve/{id}', [RequisitionsController::class, 'approve'])->name('requisition.approve');
     Route::get('requisition/approval/{id}', [RequisitionsController::class, 'approval'])->name('requisition.approval');
+    Route::post('/admin/approval-settings', [ApprovalSetupController::class, 'store'])->name('approval-settings.store');
+    Route::post('/admin/approval-limits', [ApprovalSetupController::class, 'storeLimit'])->name('approval-limits.store');
 
     //Purchase Order
     Route::get('purchaseOrder/getSuppliers', [PurchaseOrderController::class, 'getSuppliers'])->name('purchaseOrder.getSuppliers');
