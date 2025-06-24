@@ -18,9 +18,11 @@ use App\Models\Budget\BudgetGLAccountSubType;
 use App\Models\Budget\BudgetLine;
 use App\Models\Budget\BudgetLineProductTypes;
 use App\Models\Budget\BudgetLinesGLAccount;
+use App\Models\Budget\BudgetManualEntryAllocations;
 use App\Models\Budget\BudgetPeriods;
 use App\Models\Budget\BudgetPeriodTypes;
 use App\Models\Budget\BudgetMonthlyAllocation;
+use App\Models\Budget\BudgetMonthlyProjectionAllocation;
 use App\Models\Budget\BudgetProduct;
 use App\Models\Budget\BudgetProductType;
 use App\Models\Budget\BudgetScenarioPlanning;
@@ -209,6 +211,8 @@ class AppServiceProvider extends ServiceProvider
             Budget::getPrimaryKey()=>Budget::class,
             BudgetGLAccountSubType::getPrimaryKey()=>BudgetGLAccountSubType::class,
             BudgetLineProductTypes::getPrimaryKey()=>BudgetLineProductTypes::class,
+            BudgetMonthlyProjectionAllocation::getPrimaryKey() => BudgetMonthlyProjectionAllocation::class,
+            BudgetManualEntryAllocations::getPrimaryKey() => BudgetManualEntryAllocations::class,
             CategoryMaster::getPrimaryKey() => CategoryMaster::class,
             PropertyType::getPrimaryKey() => PropertyType::class,
             PropertyRegistry::getPrimaryKey() => PropertyRegistry::class,

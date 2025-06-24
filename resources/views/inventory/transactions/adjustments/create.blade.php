@@ -53,14 +53,19 @@
       </div>
 
       <div class="mb-3">
-        <label for="adjustedBy" class="form-label">Adjusted By</label>
-        <input type="text" class="form-control" id="adjustedBy" name="AdjustedBy" placeholder="e.g. Daniel Mbugua" required>
-      </div>
+             <label class="form-label">Adjusted By</label>
+                <select name="AdjustedBy" class="form-select select2" required>
+                  <option value="">-- Select User --</option>
+                  
+                  @foreach ($users as $user)
+                    <option value="{{ $user->Id }}" required>{{ $user->Name }}</option>
+                  @endforeach
+                </select>
+              </div>
 
       <button type="submit" class="btn btn-primary">✅ Submit Adjustment</button>
     </form>
   </div>
-
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     document.getElementById('branch').addEventListener('change', function () {
@@ -112,5 +117,11 @@
         const newQty = currentQty + adjustmentQty;
         row.querySelector('.new-qty').value = newQty;
     }
+    document.addEventListener('DOMContentLoaded', function () {
+    $('.select2').select2({
+      placeholder: 'Select user',
+      allowClear: true
+    });
+  });
   </script>
   @endSection
