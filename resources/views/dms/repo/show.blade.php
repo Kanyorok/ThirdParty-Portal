@@ -1024,14 +1024,13 @@
                 }
             });
 
-
-            let content = '<tr id="' + file.id + '"> <td> <div class="d-flex align-items-center"><img src="' + file.type.img + '" alt="user-image" class="wid-35">' +
+            let content = '<tr id="' + file.id + '" class="dbl-click-redirect-data" data-dbl_click_url="' + file.links.detail + '"> <td> <div class="d-flex align-items-center"><img src="' + file.type.img + '" alt="user-image" class="wid-35">' +
                 '<h6 class="mb-0 ms-2 text-truncate">' + file.name + '</h6> </div> </td> <td>' + file.size.string + '</td> <td>' + file.dated.datetime + '</td>' +
                 '<td> <div class="user-group p-1">' + usersContent + '  </div> </td>' +
                 '<td> <div class="d-flex flex-wrap gap-2">' + tagsContent + ' </div> </td>' +
                 '<td> <ul class="list-inline text-end"> <li class="list-inline-item mx-2"> ' + file.visibility.icon + ' </li>' +
                 '<li class="list-inline-item"><div class="dropdown"><a class="avtar avtar-xs btn-link-secondary dropdown-toggle arrow-none" href="#" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="material-icons-two-tone f-18">more_vert</i></a><div class="dropdown-menu dropdown-menu-end" style="">' +
-                '<a class="dropdown-item" href="#">Edit</a> ' +
+                '<a class="dropdown-item" href="' + file.links.detail + '">Details</a> ' +
                 '<a class="dropdown-item click-summary-data" href="javascript:void(0)" data-summary_title=" ' + file.type.icon + ' ' + file.name + ' " data-click_url="' + file.links.summary + '"> share </a>' +
                 '<a class="dropdown-item" href="#">Delete</a></div></div></li> </ul> </td> </tr>';
             if (prepend) {

@@ -39,9 +39,31 @@ class DocumentService extends PermissionsService
         $disk = DisksEnum::Local;
         $path = $disk->path() . '/' . Uuid::uuid4()->toString() . '.' . $extension->value;
         $checksum = hash_file('sha256', $file->getRealPath());
+        $properties = (new FileProperties($file, $extension))->properties();
 
         if (Storage::disk($disk->value)->put($path, $file->getContent())) {//for blob use https://github.com/NilGems/laravel-textract
-            return self::_create($repository, $actor, $disk, $file->getClientOriginalName(), $extension, $path, $file->getSize(), $checksum, '');
+            /* $metadata = '';
+
+             if ($extension->isImage()) {
+                 $imageSize = getimagesize($file->getRealPath());
+                 if ($imageSize) {
+                     $metadata = json_encode(['width' => $imageSize[0], 'height' => $imageSize[1]]);
+                 }
+             } elseif ($extension->isVideo()) {
+                 $getID3 = new \getID3;
+                 $fileInfo = $getID3->analyze($file->getRealPath());
+                 if (isset($fileInfo['playtime_seconds'])) {
+                     $metadata = json_encode(['duration' => $fileInfo['playtime_seconds']]);
+                 }
+             } elseif (in_array($extension->value, [ExtensionsEnum::Pdf->value, ExtensionsEnum::Doc->value, ExtensionsEnum::Docx->value])) {
+                 if ($extension->value === ExtensionsEnum::Pdf->value) {
+                     $pdf = new \setasign\Fpdi\Fpdi();
+                     $pageCount = $pdf->setSourceFile($file->getRealPath());
+                     $metadata = json_encode(['pages' => $pageCount]);
+                 }
+             }*/
+
+            return self::_create($repository, $actor, $disk, $file->getClientOriginalName(), $extension, $path, $file->getSize(), $checksum, '', properties: $properties);
         }
 
         throw new ErroredException('Saving file failed.');
@@ -50,10 +72,12 @@ class DocumentService extends PermissionsService
     /**
      * @throws ErroredException
      */
-    private static function _create(Repository $repository, User $actor, DisksEnum $disk, string $name, ExtensionsEnum $extension, string $path, int $sizeInBytes, string $checksum, string $blob, CategoryMaster|null $category = null): DocumentService
+    private static function _create(
+        Repository          $repository, User $actor, DisksEnum $disk, string $name, ExtensionsEnum $extension, string $path, int $sizeInBytes, string $checksum, string $blob, array $properties = [],
+        CategoryMaster|null $category = null): DocumentService
     {
         try {
-            return DB::transaction(static function () use ($blob, $sizeInBytes, $checksum, $disk, $path, $category, $extension, $repository, $name, $actor) {
+            return DB::transaction(static function () use ($properties, $blob, $sizeInBytes, $checksum, $disk, $path, $category, $extension, $repository, $name, $actor) {
                 $document = Document::create([
                     "Name" => $name,
                     "MimeType" => $extension->getMimeType(),
@@ -80,6 +104,17 @@ class DocumentService extends PermissionsService
                     'CreatedBy' => $actor->Id,
                     'ModifiedBy' => $actor->Id,
                 ]);
+
+                $properties = collect($properties)->map(function ($value, $key) use ($actor) {
+                    return [
+                        'DocumentId' => $this->document->Id,
+                        'Name' => $key,
+                        'Value' => $value,
+                        'DataType',
+                        'CreatedBy' => $actor->Id,
+                        'ModifiedBy' => $actor->Id,
+                    ];
+                });
 
                 activity()->causedBy($actor)->performedOn($document)->event('upload')->log('Uploaded ' . explode($extension->getMimeType(), '/')[0] . ' to folder ' . $repository->Name);
 

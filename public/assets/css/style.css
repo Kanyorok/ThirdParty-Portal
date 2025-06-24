@@ -23368,7 +23368,9 @@ fieldset:disabled .introjs-tooltip .introjs-button,
 /**  =====================
     1. Generic-class css end
 ========================== **/
-
+.dbl-click-redirect-data {
+  cursor: pointer;
+}
 /**  =====================
     2. Custom css start
 ==========================  **/

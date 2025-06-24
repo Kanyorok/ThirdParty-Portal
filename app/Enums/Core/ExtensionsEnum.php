@@ -37,6 +37,10 @@ enum ExtensionsEnum: string
     case Ods = 'ods';
     case Odt = 'odt';
     case None = 'n';
+    case Mp3 = 'mp3';
+    case Wav = 'wav';
+    case Ogg = 'ogg';
+    case M4a = 'm4a';
 
     public static function getAllMimeTypes(): array
     {
@@ -80,7 +84,11 @@ enum ExtensionsEnum: string
             self::Zip => 'application/zip',
             self::RTF => 'application/rtf',
             self::SevenZ => 'application/x-7z-compressed',
-            self::None => ''
+            self::None => '',
+            self::Mp3 => 'audio/mpeg',
+            self::Wav => 'audio/wav',
+            self::Ogg => 'audio/ogg',
+            self::M4a => 'audio/mp4'
         };
     }
 
@@ -125,6 +133,7 @@ enum ExtensionsEnum: string
             self::Rar, self::Zip, self::SevenZ => '<i class=\'fa-regular fa-file-archive\'></i>',
             self::Json => '<i class=\'fa-regular fa-file-code\'></i>',
             self::None => '<i class=\'fa-regular fa-file\'></i>',
+            self::Mp3, self::Wav, self::Ogg, self::M4a => '<i class=\'fa-regular fa-file-audio\'></i>',
         };
     }
 
@@ -143,6 +152,7 @@ enum ExtensionsEnum: string
             self::Zip, self::SevenZ => asset('assets/img/files/img-file-zip.svg'),
             self::Json => asset('assets/img/files/img-file-code.svg'),
             self::None => asset('assets/img/files/img-file-blank.svg'),
+            self::Mp3, self::Wav, self::Ogg, self::M4a => asset('assets/img/files/img-file-audio.svg'),
         };
     }
 
@@ -173,5 +183,45 @@ enum ExtensionsEnum: string
     public function isVideo(): bool
     {
         return in_array($this->value, self::getVideos('value'), true);
+    }
+
+    public function isDocument(): bool
+    {
+        return in_array($this->value, [self::Doc->value, self::Docx->value, self::RTF->value, self::Odt->value], true);
+    }
+
+    public function isArchive(): bool
+    {
+        return in_array($this->value, [self::Rar->value, self::Zip->value, self::SevenZ->value], true);
+    }
+
+    public function isText(): bool
+    {
+        return in_array($this->value, [self::Txt->value, self::Csv->value], true);
+    }
+
+    public function isSpreadsheet(): bool
+    {
+        return in_array($this->value, [self::Xls->value, self::Xlsx->value, self::Ods->value], true);
+    }
+
+    public function isPresentation(): bool
+    {
+        return in_array($this->value, [self::PPt->value, self::Pptx->value, self::Odp->value], true);
+    }
+
+    public function isCalendar(): bool
+    {
+        return $this->value === self::ICS->value;
+    }
+
+    public function isCode(): bool
+    {
+        return $this->value === self::Json->value;
+    }
+
+    public function isAudio(): bool
+    {
+        return in_array($this->value, [self::Mp3->value, self::Wav->value, self::Ogg->value, self::M4a->value], true);
     }
 }

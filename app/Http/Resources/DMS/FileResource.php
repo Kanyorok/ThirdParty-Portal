@@ -55,6 +55,7 @@ class FileResource extends JsonResource
                 'hasMorePages' => $tags->hasMorePages(),
             ],
             'links' => [
+                'detail' => route('files.show', [$this->resource->repository->RepositoryId, $this->DocumentId]),
                 'summary' => route('files.edit', [$this->resource->repository->RepositoryId, $this->DocumentId])
             ]
         ];

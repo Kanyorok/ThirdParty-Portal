@@ -10,6 +10,7 @@ use App\Http\Resources\DMS\FilesCollection;
 use App\Models\DMS\Document;
 use App\Models\DMS\Repository;
 use App\Services\DMS\DocumentService;
+use App\Services\DMS\RepositoryService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -58,9 +59,11 @@ class DocumentController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Document $document)
+    public function show(Repository $repository, Document $document)
     {
-        //
+        return view('dms.files.show')
+            ->with('repoService', new RepositoryService($repository))
+            ->with('file', $document);
     }
 
     /**
