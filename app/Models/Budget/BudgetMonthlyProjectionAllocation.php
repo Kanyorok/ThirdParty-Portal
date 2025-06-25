@@ -42,4 +42,9 @@ class BudgetMonthlyProjectionAllocation extends Model
     {
         return $this->belongsTo(BudgetDriverProjections::class, 'BudgetProjectionID', 'Id');
     }
+
+    public function allocation()
+    {
+        return $this->belongsTo(BudgetMonthlyProjectionAllocation::class, 'BudgetProjectionID', 'Id');
+    }
 }

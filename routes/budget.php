@@ -94,6 +94,8 @@ Route::namespace('Budget')->group(function () {
     Route::resource('submitapproval', BudgetSubmitController::class);
     Route::resource('budgetapproval', BudgetApprovalController::class);
     Route::resource('topdownallocation', BudgetTopDownAllocationController::class);
+    Route::post('/topdownallocation/display', [BudgetTopDownAllocationController::class, 'display'])->name('topdownallocation.display');
+    Route::resource('topdownallocation', BudgetTopDownAllocationController::class);
     Route::resource('activitymaster', BudgetActivitiesMasterController::class);
     Route::resource('budgetscenerios', BudgetSceneriosController::class);
     Route::resource('budgetformula', BudgetFormulaController::class);

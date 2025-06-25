@@ -22,9 +22,9 @@ class BudgetActivitiesController extends Controller
     {
         $activities = BudgetActivity::with([
             'budget:Id,Name,From,To',
-            'allocations:Id,BudgetActivityID,Month,Amount', 
-            'branch:Id,Name', 
-            'budgetLine:Id,LineName',
+            //'allocations:Id,BudgetActivityID,Month,Amount', 
+            //'branch:Id,Name', 
+            //'budgetLine:Id,LineName',
         ])->get();
 
         // Group activities by BudgetID
