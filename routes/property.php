@@ -139,7 +139,6 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::resource('schedulelease', PropertyLeaseScheduleController::class);
     Route::resource('renewlease', PropertyLeaseRenewalController::class);
     Route::resource('terminatelease', PropertyLeaseTerminationController::class);
-    Route::resource('paymentfrequency', PropertyPaymentFrequencyController::class);
     Route::resource('rentinvoice', PropertyInvoiceController::class);
     Route::resource('rentreceipt', PropertyReceiptController::class);
     Route::resource('rentdashboard', RentDashboardController::class);
