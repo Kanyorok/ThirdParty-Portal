@@ -45,10 +45,8 @@ class InterBranchRequisitionController extends Controller
     public function create()
     {
         // $this->authorize('create', InterBranchRequisition::class);
-        // Categories are no longer passed directly, they are dynamically loaded by JS
         $branches = Branch::all();
-        $uoms = UnitOfMeasure::all(); // Not directly used for dropdowns, but good to keep if needed elsewhere
-
+        $uoms = UnitOfMeasure::all(); 
         return view('inventory.interbranchrequisition.create', compact('branches', 'uoms'));
     }
 
@@ -57,7 +55,7 @@ class InterBranchRequisitionController extends Controller
         // $this->authorize('create', InterBranchRequisition::class);
         $data = $request->validated();
 
-        // Additional Server-Side Stock Validation before creating the requisition
+
         $fromBranchId = $data['FromBranch'];
         foreach ($data['items'] as $itemData) {
             $itemId = $itemData['Item'];
@@ -70,7 +68,7 @@ class InterBranchRequisitionController extends Controller
 
             if (!$stock || $stock->CurrentQty < $requestedQty) {
                 $itemName = $itemData['item_name'] ?? 'Unknown Item';
-                return back()->withErrors(['items' => "Item '{$itemName}' (ID: {$itemId}) is not sufficiently in stock at the From Branch."])->withInput();
+                return back()->withErrors(['items' => "Item '{$itemName}' (ID: {$itemId}) is insufficient at the From Branch."])->withInput();
             }
         }
 
@@ -105,8 +103,8 @@ class InterBranchRequisitionController extends Controller
             'items.item.category.parent',
         ])->findOrFail($Id);
 
-        // Categories are no longer passed directly, they are dynamically loaded by JS
-        $categories = ItemCategories::whereNull('ParentId')->get(); // Keep this for now for the loop in the template
+      
+        $categories = ItemCategories::whereNull('ParentId')->get(); 
         $branches = Branch::all();
         $uoms = UnitOfMeasure::all();
 

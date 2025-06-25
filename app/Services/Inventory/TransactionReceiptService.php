@@ -3,15 +3,13 @@
 namespace App\Services\Inventory;
 
 use App\Models\Inventory\TransactionReceipt;
-use App\Models\Inventory\TransactionReceiptItem;
-use App\Models\Inventory\TransactionTransfer;
-use App\Models\Inventory\TransactionTransferItem;
-use App\Models\Inventory\InterBranchRequisition;
+use App\Models\Inventory\StockItem;
 use App\Models\Core\Workflow;
 use App\Models\Core\PendingWorkflow;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
+use Illuminate\Validation\ValidationException;
 use App\Enums\Inventory\Transfers;
 
 class TransactionReceiptService
@@ -40,7 +38,6 @@ class TransactionReceiptService
             $receipt->ReceiptId = 'REC/' . now()->format('Ymd') . '/' . str_pad($receipt->Id, 4, '0', STR_PAD_LEFT);
             $receipt->save();
 
-            // Add receipt items
             $this->createReceiptItems($receipt, $items);
 
             Workflow::create([
@@ -79,13 +76,19 @@ class TransactionReceiptService
 
     public function createReceiptItems($receipt, $items)
     {
-        foreach ($items as $itemData) {
-            $item = $receipt->items()->create([
+        $toBranchId = $receipt->transfer->ToBranch;
+
+        foreach ($items as $index => $itemData) {
+            $storeId = $itemData['store_id'];
+            $itemId = $itemData['item'];
+
+            $receiptItem = $receipt->items()->create([
                 'item' => $itemData['item'],
+                'Store' => $storeId,
                 'ReceivedQty' => $itemData['received_qty'],
                 'DispatchedQty' => $itemData['dispatched_qty'] ?? null,
-                'Discrepancy' => isset($itemData['dispatched_qty'], $itemData['received_qty']) 
-                    ? $itemData['dispatched_qty'] - $itemData['received_qty'] 
+                'Discrepancy' => isset($itemData['dispatched_qty'], $itemData['received_qty'])
+                    ? $itemData['dispatched_qty'] - $itemData['received_qty']
                     : null,
                 'DamagedQty' => $itemData['damaged_qty'] ?? 0,
                 'CreatedBy' => Auth::id(),
@@ -94,11 +97,28 @@ class TransactionReceiptService
                 'ModifiedOn' => Carbon::now(),
             ]);
 
+            $stock = StockItem::firstOrNew([
+                'Store' => $storeId,
+                'ItemID' => $itemId,
+            ]);
+
+            $stock->Branch = $toBranchId;
+            $stock->CurrentQty = ($stock->CurrentQty ?? 0) + $itemData['received_qty'];
+            $stock->ModifiedBy = Auth::id();
+            $stock->ModifiedOn = Carbon::now();
+
+            if (!$stock->exists) {
+                $stock->CreatedBy = Auth::id();
+                $stock->CreatedOn = Carbon::now();
+            }
+
+            $stock->save();
+
             activity()
                 ->causedBy(auth()->user())
-                ->performedOn($item)
-                ->withProperties(['attributes' => $item->toArray()])
-                ->log('Receipt item added');
+                ->performedOn($receiptItem)
+                ->withProperties(['attributes' => $receiptItem->toArray()])
+                ->log('Receipt item added and stock updated');
         }
     }
 
