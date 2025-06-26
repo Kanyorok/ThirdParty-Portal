@@ -177,6 +177,15 @@ class CodeDetailSeeder extends Seeder
                 'ModifiedBy' => $user->Id,
             ],
             [
+                'CodeID' => "RequisitionStatus",
+                'Description' => 'Submitted For Approval',
+                'Value' => null,
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+            [
                 'CodeID' => 'RequisitionStatus',
                 'Description' => 'Pending',
                 'Value' => null,

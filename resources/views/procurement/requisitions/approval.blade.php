@@ -95,8 +95,12 @@
                                 </button>
                             </form>
 
-                            <button type="button" class="btn btn-danger btn-lg ml-2" data-toggle="modal" data-target="#rejectModal">
+                            <button type="button" class="btn btn-danger btn-lg ms-2" data-bs-toggle="modal" data-bs-target="#rejectModal">
                                 <i class="fas fa-times"></i> Reject
+                            </button>
+
+                            <button type="button" class="btn btn-warning btn-lg ml-2" data-bs-toggle="modal" data-bs-target="#statusModal">
+                                <i class="fas fa-info-circle"></i> Approval Status
                             </button>
 
                         </div>
@@ -106,6 +110,39 @@
                         This requisition has already been {{ $requisitionInfo->Status }}.
                     </div>
                 @endif
+            </div>
+        </div>
+    </div>
+
+    <!-- Approval Status Modal -->
+    <div class="modal fade" id="statusModal" tabindex="-1" role="dialog" aria-labelledby="statusModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-md" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-secondary text-white">
+                    <h5 class="modal-title" id="statusModalLabel">Approval Status</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <div class="modal-body">
+                    @if(count($approvalStatus))
+                        <ul class="list-group">
+                            @foreach($approvalStatus as $user)
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    {{ $user['name'] }}
+                                    @if($user['approved'])
+                                        <span class="badge bg-success">Approved</span>
+                                    @else
+                                        <span class="badge bg-warning text-dark">Pending</span>
+                                    @endif
+                                </li>
+                            @endforeach
+                        </ul>
+                    @else
+                        <p class="text-muted">No approval configuration found.</p>
+                    @endif
+                </div>
             </div>
         </div>
     </div>
@@ -146,6 +183,9 @@
         }
         .badge {
             font-size: 0.9em;
+        }
+        .modal .list-group-item {
+            font-size: 0.95rem;
         }
     </style>
 @endsection

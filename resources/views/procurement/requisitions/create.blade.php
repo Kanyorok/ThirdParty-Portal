@@ -97,44 +97,36 @@
                             {{--                            </div>--}}
 
 
-                            <div class="mb-3">
-                                <label class="form-label" for="Branch">Branch <span class="text-danger">*</span></label>
-                                <select class="form-control" name="Branch" id="Branch" required>
-                                    <option selected disabled>Select Branch</option>
-                                    @foreach ($branches as $Branch)
-                                        <option value="{{ $Branch->Id }}">{{ $Branch->Name }}</option>
-                                    @endforeach
-                                </select>
-
-                                <p id="Branch_error" class="invalid-feedback d-none error col-12" role="alert"></p>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label" for="Department">Department <span
-                                        class="text-danger">*</span></label>
-                                <select class="form-control" name="Department" id="Department" required>
-                                    <option selected disabled>Select Department</option>
-                                    @foreach ($departments as $Department)
-                                        <option value="{{ $Department->Id }}">{{ $Department->Name }}</option>
-                                    @endforeach
-
-                                </select>
-
-                                <p id="Department_error" class="invalid-feedback d-none error col-12" role="alert"></p>
-                            </div>
-
+                            <!-- Procurement Plan Select First -->
                             <div class="mb-3">
                                 <label class="form-label" for="ProcurementPlan">Procurement Plan</label>
                                 <select class="form-control" name="ProcurementPlan" id="ProcurementPlan">
                                     <option selected value="">Select Procurement Plan</option>
-                                    @foreach ($procurementPlans  as $procurementPlan )
-                                        <option
-                                            value="{{ $procurementPlan->PlanID }}">{{ $procurementPlan->ReferenceNumber }}</option>
+                                    @foreach ($procurementPlans as $procurementPlan)
+                                        <option value="{{ $procurementPlan->PlanID }}">{{ $procurementPlan->ReferenceNumber }}</option>
                                     @endforeach
                                 </select>
+                                <p id="ProcurementPlan_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                            </div>
 
-                                <p id="ProcurementPlan_error" class="invalid-feedback d-none error col-12"
-                                   role="alert"></p>
+                            <!-- Branch -->
+                            <div class="mb-3">
+                                <label class="form-label" for="Branch">Branch <span class="text-danger">*</span></label>
+                                <select class="form-control" name="Branch" id="Branch" required>
+                                    <option selected disabled>Select Branch</option>
+                                    {{-- Will be dynamically populated --}}
+                                </select>
+                                <p id="Branch_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                            </div>
+
+                            <!-- Department -->
+                            <div class="mb-3">
+                                <label class="form-label" for="Department">Department <span class="text-danger">*</span></label>
+                                <select class="form-control" name="Department" id="Department" required>
+                                    <option selected disabled>Select Department</option>
+                                    {{-- Will be dynamically populated --}}
+                                </select>
+                                <p id="Department_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
 
                             <div class="mb-3">
