@@ -65,25 +65,8 @@
         </div>
         <div class="col-md-8 col-xxl-9">
             <div class="card ">
-                <div class="card-body" style="min-height: 100px">
-                    <div class="row">
-                        <div class="col-12">
-                            @if($service->isPrevieable())
-                                @if($service->type->value === App\Enums\Core\ExtensionsEnum::Pdf->value)
-                                    <div>
-                                        {!! $service->preview('width="100%" height="100" style="min-height:70vh;"') !!}
-                                    </div>
-
-                                @elseif($service->type->isImage())
-                                    {!! $service->preview('class="img img-fluid"') !!}
-                                @endif
-
-                            @else
-                                <h6 class="text-center">{!! $service->type->getIcon() !!}</h6>
-                                <h3 class="text-center">No Preview Available Download Below</h3>
-                            @endif
-                        </div>
-                    </div>
+                <div class="card-body" style="min-height: 100px" id="FilePreviewPage">
+                    <p class="text-center m-5"><i class="fas fa-spinner fa-spin fa-5x"></i><br>loading preview</p>
                 </div>
             </div>
 
@@ -179,5 +162,32 @@
 
 @endsection
 @section('scripts')
+    <script>
+        function fetchFilePreview() {
+            const previewContainer = document.getElementById('FilePreviewPage');
 
+            fetch("{{ route('file.preview', [$file->DocumentId]) }}")
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.text();
+                })
+                .then(html => {
+                    previewContainer.innerHTML = html;
+                })
+                .catch(error => {
+                    previewContainer.innerHTML = `
+                        <div class="text-center m-5">
+                            <i class="fas fa-exclamation-triangle fa-3x text-danger"></i>
+                            <p class="mt-2">Error loading preview: ${error.message}</p>
+                        </div>`;
+                });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            fetchFilePreview();
+        });
+
+    </script>
 @endsection

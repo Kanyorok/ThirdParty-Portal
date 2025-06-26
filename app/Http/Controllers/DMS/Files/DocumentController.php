@@ -13,6 +13,7 @@ use App\Services\DMS\DocumentService;
 use App\Services\DMS\RepositoryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class DocumentController extends Controller
 {
@@ -22,14 +23,6 @@ class DocumentController extends Controller
     public function index(Repository $repository): FilesCollection
     {
         return new FilesCollection($repository->documents()->whereHas('current')->with(['current'])->latest('t_Documents.Id')->paginate(50));
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
     }
 
     /**
@@ -47,14 +40,20 @@ class DocumentController extends Controller
     }
 
     /**
+     * Show the form for creating a new resource.
+     */
+    public function preview(Document $document): View
+    {
+        return view('dms.files.preview')->with('file', $document)->with('service', new DocumentService($document));
+    }
+
+    /**
      * Display the specified resource.
      */
-    public function show(Repository $repository, Document $document)
+    public function show(Repository $repository, Document $document): View
     {
         $document->load(['current', 'repository', 'creator', 'category', 'properties'])->withCount('versions');
-        return view('dms.files.show')
-            ->with('repoService', new RepositoryService($repository))
-            ->with('file', $document)->with('service', new DocumentService($document));
+        return view('dms.files.show')->with('repoService', new RepositoryService($repository))->with('file', $document);
     }
 
     /**

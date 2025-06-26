@@ -22,10 +22,11 @@ Route::namespace('DMS')->prefix('dms')->group(function () {
     Route::resource('repo/{repository}/repo-permissions', RepositoryPermissionController::class)->only(['index', 'store', 'destroy']);
     Route::resource('repo', RepositoryController::class)->parameters(['repo' => 'repository']);
 
+    Route::get('document/{document}/preview', [DocumentController::class, 'preview'])->name('file.preview');
     Route::put('document/{document}/file-visibility', [DocumentPermissionController::class, 'visibility'])->name('file.visibility');
     Route::resource('document/{document}/file-permissions', DocumentPermissionController::class)->only(['index', 'store', 'destroy']);
     Route::resource('repo/{repository}/files', DocumentController::class)
-        ->parameters(['files' => 'document']);
+        ->parameters(['files' => 'document'])->except('create');
 
     Route::resource('drepositorymanagement', DrepositoryManagementController::class);
     Route::resource('dtypessetupmanagement', DtypessetupManagementController::class);

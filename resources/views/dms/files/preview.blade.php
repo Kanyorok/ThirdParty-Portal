@@ -12,7 +12,8 @@
             @endif
 
         @else
-            <h6 class="text-center">{!! $service->type->getIcon() !!}</h6>
+            <h6 class="text-center"><img src="{{ $service->type->getIcon('img') }}" alt="user-image" class="wid-75">
+            </h6>
             <h3 class="text-center">No Preview Available Download Below</h3>
         @endif
     </div>
