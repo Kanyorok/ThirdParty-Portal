@@ -122,17 +122,20 @@ href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">@endsecti
 
     <script>
         $(document).ready(function () {
-            $('#adjustmentTable').DataTable({
-                pageLength: 10,
-                ordering: true,
-                searching: true,
-                lengthChange: true,
-                
-            });
+        @if(!$receipts->isEmpty())
+        $('#receiptsTable').DataTable({
+            pageLength: 10,
+            ordering: true,
+            searching: true,
+            lengthChange: true,
+            language: {
+                emptyTable: ""
+            }
         });
-    </script>
+        @endif
+    });
+        
 
-<script>
     $(document).ready(function () {
      
     });
