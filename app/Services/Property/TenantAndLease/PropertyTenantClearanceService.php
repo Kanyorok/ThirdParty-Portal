@@ -2,6 +2,7 @@
 
 namespace App\Services\Property\TenantAndLease;
 
+use App\Enums\Property\TenantClearanceEnum;
 use App\Models\Auth\User;
 use App\Models\Core\CodeDetail;
 use App\Models\PropertyManagement\PropertyNewTenant;
@@ -24,6 +25,7 @@ class PropertyTenantClearanceService
         bool $KeysReturned,
         CodeDetail $DepositRefunded,
         string $AdditionalNotes,
+        TenantClearanceEnum $Status,
         User $user
     ): self {
         $clearance = PropertyTenantClearance::create([
@@ -34,6 +36,7 @@ class PropertyTenantClearanceService
             'KeysReturned' => $KeysReturned,
             'DepositRefunded' => $DepositRefunded->ID,
             'AdditionalNotes' => $AdditionalNotes,
+            'Status' => $Status->value,
             'CreatedBy' => $user->Id,
             'ModifiedBy' => $user->Id,
         ]);

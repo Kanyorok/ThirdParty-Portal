@@ -23,6 +23,10 @@
 
                     <dt class="col-sm-4">Additional Notes</dt>
                     <dd class="col-sm-8">{{ $clearancetenant->AdditionalNotes ?? '-' }}</dd>
+
+                    <dt class="col-sm-4">Status</dt>
+                    <dd class="col-sm-8">    <span class="badge bg-{{ $clearancetenant->Status->badgeColor() }}">{{ $clearancetenant->Status->label() }}</span></dd>
+
                 </dl>
             </div>
             <div class="card-footer">

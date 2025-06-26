@@ -32,18 +32,11 @@
           <td>@if($clearancetenant->KeysReturned) <span class="badge bg-success">Yes</span> @else <span class="badge bg-danger">No</span> @endif</td>
           <td>{{ $clearancetenant->code->Description ?? '-' }}</td>
           <td>{{ $clearancetenant->AdditionalNotes ?? '-' }}</td>
-        <td>
-        @if(
-          $clearancetenant->FinalInspection == 1 &&
-          $clearancetenant->AllDuesPaid == 1 &&
-          $clearancetenant->KeysReturned == 1 &&
-          ($clearancetenant->code->Description ?? '') === 'Fully Refunded'
-        )
-          <span class="badge bg-success">Cleared</span>
-        @else
-          <span class="badge bg-warning text-dark">Pending</span>
-        @endif
-        </td>
+          <td>
+              <span class="badge bg-{{ $clearancetenant->Status->badgeColor() }}">
+                  {{ $clearancetenant->Status->label() }}
+              </span>
+          </td>
         <td>
             <a href="{{ route('tenantclearance.show', $clearancetenant->Id) }}" class="btn btn-sm btn-info">👁 View</a>
         </td>

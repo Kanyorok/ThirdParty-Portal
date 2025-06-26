@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Property\TenantAndLease;
 
+use App\Enums\Property\TenantClearanceEnum;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rules\Enum;
 
 class PropertyTenantClearanceRequest extends FormRequest
 {
@@ -29,6 +31,7 @@ class PropertyTenantClearanceRequest extends FormRequest
             'KeysReturned' => 'required|boolean',
             'DepositRefunded' => 'required|exists:t_CodeDetails,Id',
             'AdditionalNotes' => 'nullable|string',
+            'Status' => ['required', new Enum(TenantClearanceEnum::class)],
         ];
     }
 }

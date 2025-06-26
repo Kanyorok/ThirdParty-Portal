@@ -59,6 +59,15 @@
           </select>
         </div>
       </div>
+      <div class="col-md-3">
+          <label class="form-label">Status</label>
+          <select class="form-select" name="Status" required>
+              <option value="">-- Select Status --</option>
+              @foreach (\App\Enums\Property\TenantClearanceEnum::cases() as $status)
+                  <option value="{{ $status->value }}">{{ $status->label() }}</option>
+              @endforeach
+          </select>
+      </div>
 
       <!-- Upload & Remarks -->
       <div class="mb-3">
