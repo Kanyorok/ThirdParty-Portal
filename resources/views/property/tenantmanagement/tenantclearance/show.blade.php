@@ -28,18 +28,8 @@
                     <dd class="col-sm-8">{{ $clearancetenant->AdditionalNotes ?? '-' }}</dd>
 
                     <dt class="col-sm-4">Status</dt>
-                    <dd class="col-sm-8">
-                        @if(
-                            $clearancetenant->FinalInspection == 1 &&
-                            $clearancetenant->AllDuesPaid == 1 &&
-                            $clearancetenant->KeysReturned == 1 &&
-                            ($clearancetenant->code->Description ?? '') === 'Fully Refunded'
-                        )
-                            <span class="badge bg-success">Cleared</span>
-                        @else
-                            <span class="badge bg-warning text-dark">Pending</span>
-                        @endif
-                    </dd>
+                    <dd class="col-sm-8">    <span class="badge bg-{{ $clearancetenant->Status->badgeColor() }}">{{ $clearancetenant->Status->label() }}</span></dd>
+
                 </dl>
             </div>
             <div class="card-footer">

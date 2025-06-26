@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Property;
 
+use App\Enums\Property\TenantClearanceEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\TenantAndLease\PropertyNewLeaseRequest;
 use App\Models\Core\CodeDetail;
@@ -10,6 +11,7 @@ use App\Models\PropertyManagement\PropertyFloor;
 use App\Models\PropertyManagement\PropertyNewLease;
 use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Models\PropertyManagement\PropertyRegistry;
+use App\Models\PropertyManagement\PropertyTenantClearance;
 use App\Models\PropertyManagement\PropertyUnit;
 use App\Services\Property\TenantAndLease\PropertyNewLeaseService;
 
@@ -30,7 +32,7 @@ class PropertyNewLeaseController extends Controller
 
     public function create(){
         $properties = PropertyRegistry::with('getBlockByProperty.floor.units')->get();
-        $newtenants = PropertyNewTenant::all();
+        $newtenants = PropertyTenantClearance::with('tenant')->where('Status', TenantClearanceEnum::Cleared->value)->get();
         $codes = CodeDetail::where('CodeID', 'PaymentFrequency')->get();
         return view('property.tenantmanagement.leasemanagement.leasemaintenance.create', compact('newtenants', 'properties', 'codes'));
     }
@@ -92,7 +94,7 @@ class PropertyNewLeaseController extends Controller
     {
         $newlease = PropertyNewLease::findOrFail($Id);
         $properties = PropertyRegistry::with('getBlockByProperty.floor.units')->get();
-        $newtenants = PropertyNewTenant::all();
+        $newtenants = PropertyTenantClearance::with('tenant')->where('Status', TenantClearanceEnum::Cleared->value)->get();
         $codes = CodeDetail::where('CodeID', 'PaymentFrequency')->get();
         return view('property.tenantmanagement.leasemanagement.leasemaintenance.edit', compact(
             'newlease', 'newtenants', 'properties', 'codes'

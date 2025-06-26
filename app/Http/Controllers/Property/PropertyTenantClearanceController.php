@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use App\Enums\Core\PermissionEnum;
+use App\Enums\Property\TenantClearanceEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\TenantAndLease\PropertyTenantClearanceRequest;
 use App\Models\Core\CodeDetail;
@@ -48,6 +49,7 @@ class PropertyTenantClearanceController extends Controller
     {
         $this->authorize(PermissionEnum::TenantMentenanceCreate, PropertyTenantClearance::class);
         $validatedData = $request->validated();
+        $statusEnum = TenantClearanceEnum::from($validatedData['Status']);
         $tenant = PropertyNewTenant::findOrFail($validatedData['Tenant']);
         $depositRefunded = $validatedData['DepositRefunded'] ? CodeDetail::findOrFail($validatedData['DepositRefunded']) : null;
         $clearance = $this->service->create(
@@ -58,6 +60,7 @@ class PropertyTenantClearanceController extends Controller
             $validatedData['KeysReturned'],
             $depositRefunded,
             $validatedData['AdditionalNotes'],
+            $statusEnum,
             $request->user()
         );
         return redirect()->route('tenantclearance.index')->with('success', 'Tenant created successfully');
