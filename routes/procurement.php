@@ -88,9 +88,12 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
 
     Route::post('requisition/approve/{id}', [RequisitionsController::class, 'approve'])->name('requisition.approve');
     Route::get('requisition/approval/{id}', [RequisitionsController::class, 'approval'])->name('requisition.approval');
-    Route::post('/admin/approval-settings', [ApprovalSetupController::class, 'store'])->name('approval-settings.store');
-    Route::post('/admin/approval-limits', [ApprovalSetupController::class, 'storeLimit'])->name('approval-limits.store');
-    Route::get('/admin/approval-settings', [ApprovalSetupController::class, 'index'])->name('approval-setup.index');
+    Route::prefix('admin')->group(function () {
+        Route::put('/approval-settings/{id}', [ApprovalSetupController::class, 'update'])->name('approval-setup.update');
+        Route::post('/approval-settings', [ApprovalSetupController::class, 'store'])->name('approval-settings.store');
+        Route::delete('/approval-settings/{id}', [ApprovalSetupController::class, 'destroy'])->name('approval-setup.destroy');
+        Route::get('/approval-settings', [ApprovalSetupController::class, 'index'])->name('approval-setup.index');
+    });
 
     //Purchase Order
     Route::get('purchaseOrder/getSuppliers', [PurchaseOrderController::class, 'getSuppliers'])->name('purchaseOrder.getSuppliers');
