@@ -117,7 +117,6 @@ class InterBranchRequisitionController extends Controller
         $item = InterBranchRequisition::with('items')->findOrFail($Id);
         $data = $request->validated();
 
-        // Additional Server-Side Stock Validation during update
         $fromBranchId = $data['FromBranch'];
         foreach ($data['items'] as $itemData) {
             $itemId = $itemData['Item'];
@@ -154,9 +153,7 @@ class InterBranchRequisitionController extends Controller
         return redirect()->route('interbranchrequisition.index')->with('success', 'Requisition deleted successfully.');
     }
 
-    /**
-     * Original getSubcategories - still included per routes but new JS will use branch-aware version.
-     */
+   
     public function getSubcategories(Request $request)
     {
         $categoryId = $request->get('category_id');
@@ -206,7 +203,7 @@ class InterBranchRequisitionController extends Controller
             ->select(
                 't_ItemCategories.Id',
                 't_ItemCategories.Name',
-                't_ItemCategories.ParentId', // This is the actual ParentId of the current category
+                't_ItemCategories.ParentId', 
                 'parent_category.Name as ParentName'
             )
             ->where('t_Stockitems.Branch', $fromBranchId)
