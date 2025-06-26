@@ -16,6 +16,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Enums\ProcurementPlanStatusEnum;
+use Illuminate\Support\Facades\DB;
 
 class RequisitionsController extends Controller
 {
@@ -143,7 +144,7 @@ class RequisitionsController extends Controller
 
     public function approval($id){
         try {
-            $requisition = Requisitions::findOrFail($id); // This will throw 404 if not found
+            $requisition = Requisitions::findOrFail($id); 
             $this->authorize('view', $requisition); // Authorize the order object itself
 
             $requisitionInfo = $this->service->getRelatedRequisition($id);
@@ -165,7 +166,10 @@ class RequisitionsController extends Controller
 
     public function approve(ApproveRequisitionRequest $requisitionRequest, $id)
     {
-//        dd($requisitionRequest->validated()); // if using validation
+        $hasLines = DB::table('t_RequisitionLines')->where('RequisitionId', $id)->exists();
+        if (!$hasLines) {
+            return back()->with('error','Cannot approve a requisition without items.');
+        }
         return $this->documentApprovalService->approve($requisitionRequest, $id);
     }
 

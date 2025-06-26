@@ -152,6 +152,19 @@ class BudgetLineMappingController extends Controller
 
     }
 
+    public function edit($id)
+    {
+        $budgetLine = BudgetLine::findOrFail($id);
+        $budgetCategories = BudgetLineCategories::all();
+        $gls = BudgetGLAccount::select('Id', 'Description')->get();
+
+        // Get currently selected GLs for this budget line
+        $selectedGLs = BudgetLinesGLAccount::where('BudgetLineID', $budgetLine->Id)
+            ->pluck('BudgetGLAccountID')
+            ->toArray();
+
+        return view('budgetandanalytics.budgetlinemapping.edit', compact('budgetLine', 'budgetCategories', 'gls', 'selectedGLs'));
+    }
 
     public function update(Request $request, $id)
     {

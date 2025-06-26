@@ -27,6 +27,11 @@ class PropertyAttachments extends Model
         'DeletedBy'
     ];
 
+    public static function getPrimaryKey(): string
+    {
+        return 'PropertyAttachmentId';
+    }
+
     public function propertyid()
     {
         return $this->belongsTo(PropertyRegistry::class, 'PropertyID', 'Id');
