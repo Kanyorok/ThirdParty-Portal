@@ -86,17 +86,19 @@ class RequisitionService {
             ->leftJoin(DB::raw('t_CodeDetails WITH (NOLOCK)'), 't_Requisitions.StatusID', '=', 't_CodeDetails.ID')
             ->leftJoin(DB::raw('t_Branches WITH (NOLOCK)'), 't_Requisitions.BranchID', '=', 't_Branches.Id')
             ->leftJoin(DB::raw('t_Departments WITH (NOLOCK)'), 't_Requisitions.DepartmentID', '=', 't_Departments.Id')
+            ->leftJoin(DB::raw('t_ConsolidatedProcurementPlan WITH (NOLOCK)'), 't_Requisitions.PlanRef', '=', 't_ConsolidatedProcurementPlan.PlanID')
             ->select(DB::raw('
-                t_Requisitions.RequisitionNo,
-                COALESCE(t_Branches.Name,t_Requisitions.BranchID) as BranchID ,
-                COALESCE(t_Departments.Name,t_Requisitions.DepartmentID) as DepartmentID ,
-                t_Requisitions.Remarks,
-                t_CodeDetails.Description as Status,
-                t_Requisitions.CreatedOn,
-                t_Requisitions.Id,
-                SUM(isnull(t_RequisitionLines.ExpectedPrice,0)) as ExpectedPrice,
-                COUNT(t_RequisitionLines.Id) as itemcount
-            '))
+            t_Requisitions.RequisitionNo,
+            COALESCE(t_Branches.Name,t_Requisitions.BranchID) as BranchID ,
+            COALESCE(t_Departments.Name,t_Requisitions.DepartmentID) as DepartmentID ,
+            t_Requisitions.Remarks,
+            t_CodeDetails.Description as Status,
+            t_Requisitions.CreatedOn,
+            t_Requisitions.Id,
+            SUM(isnull(t_RequisitionLines.ExpectedPrice,0)) as ExpectedPrice,
+            COUNT(t_RequisitionLines.Id) as itemcount,
+            t_ConsolidatedProcurementPlan.Title + \' - \' + t_ConsolidatedProcurementPlan.ReferenceNumber as PlanTitle
+        '))
             ->groupBy(
                 't_Requisitions.Id',
                 't_Requisitions.RequisitionNo',
@@ -106,10 +108,13 @@ class RequisitionService {
                 't_CodeDetails.Description',
                 't_Requisitions.CreatedOn',
                 't_Departments.Name',
-                't_Branches.Name'
+                't_Branches.Name',
+                't_ConsolidatedProcurementPlan.Title',
+                't_ConsolidatedProcurementPlan.ReferenceNumber'
             )
             ->get();
     }
+
 
     public static function getRelatedRequisition($RequisitionId)
     {

@@ -41,6 +41,11 @@ class Requisitions extends Model
     {
         return $this->hasMany(RequisitionLine::class, 'RequisitionID', 'Id');
     }
+    public function procurementPlan()
+    {
+        return $this->belongsTo(\App\Models\Procurement\ConsolidatedProcurementPlan::class, 'PlanRef', 'PlanID');
+    }
+
 
 
     public function transfer()

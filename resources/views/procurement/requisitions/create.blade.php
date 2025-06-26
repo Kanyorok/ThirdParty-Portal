@@ -11,7 +11,6 @@
 @endsection
 @section('content')
     <div class="mb-3">
-        <h1 class="h3 d-inline align-middle">@yield('title')</h1>
         <button class="btn btn-primary float-end ms-2 modal-create-item" type="button"><i
                 class="fas fa-plus-circle"></i> New
             Requisition
@@ -27,6 +26,7 @@
                         <tr>
                             <th>#</th>
                             <th>Requisition No</th>
+                            <th>Procurement Plan</th>
                             <th>Requisition Date</th>
                             <th>Branch</th>
                             <th>Department</th>
@@ -44,6 +44,7 @@
                                 {{--                                <td>{{$item->Id}}</td>--}}
                                 <td>{{$loop->iteration }}</td>
                                 <td>{{ $item->RequisitionNo }}</td>
+                                <td>{{ $item->PlanTitle ?? 'N/A' }}</td>
                                 <td>{{ Carbon::parse($item->CreatedOn)->format('d-m-Y') }}</td>
                                 <td>{{ $item->BranchID }}</td>
                                 <td>{{ $item->DepartmentID }}</td>
