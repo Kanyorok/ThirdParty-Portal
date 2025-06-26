@@ -54,7 +54,7 @@ class DocumentController extends Controller
         $document->load(['current', 'repository', 'creator', 'category', 'properties'])->withCount('versions');
         return view('dms.files.show')
             ->with('repoService', new RepositoryService($repository))
-            ->with('file', $document);
+            ->with('file', $document)->with('service', new DocumentService($document));
     }
 
     /**

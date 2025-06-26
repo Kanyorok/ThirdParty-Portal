@@ -66,7 +66,24 @@
         <div class="col-md-8 col-xxl-9">
             <div class="card ">
                 <div class="card-body" style="min-height: 100px">
+                    <div class="row">
+                        <div class="col-12">
+                            @if($service->isPrevieable())
+                                @if($service->type->value === App\Enums\Core\ExtensionsEnum::Pdf->value)
+                                    <div>
+                                        {!! $service->preview('width="100%" height="100" style="min-height:70vh;"') !!}
+                                    </div>
 
+                                @elseif($service->type->isImage())
+                                    {!! $service->preview('class="img img-fluid"') !!}
+                                @endif
+
+                            @else
+                                <h6 class="text-center">{!! $service->type->getIcon() !!}</h6>
+                                <h3 class="text-center">No Preview Available Download Below</h3>
+                            @endif
+                        </div>
+                    </div>
                 </div>
             </div>
 

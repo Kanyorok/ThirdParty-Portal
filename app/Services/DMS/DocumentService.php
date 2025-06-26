@@ -28,8 +28,21 @@ use Throwable;
 
 class DocumentService extends PermissionsService
 {
+    public ExtensionsEnum $type;
+
     public function __construct(public Document $document)
     {
+        $this->setType();
+    }
+
+    private function setType(): void
+    {
+        try {
+            $type = ExtensionsEnum::fromMimeType($this->document->MimeType);
+        } catch (ErroredException $e) {
+            $type = ExtensionsEnum::None;
+        }
+        $this->type = $type;
     }
 
     /**
@@ -66,7 +79,34 @@ class DocumentService extends PermissionsService
     {
         $currentVersion = $this->document->current;
         $content = (new EncryptionService())->decrypt(Storage::disk($currentVersion->Disk->value)->get($currentVersion->Path));
-        return ($base64) ? base64_decode($content) : $content;
+        return ($base64) ? base64_encode($content) : $content;
+    }
+
+    public function isPrevieable(): bool
+    {
+        return $this->type->isPreview();
+    }
+
+    public function preview(string $attr): string
+    {
+        if (!$this->isPrevieable()) {
+            return '';
+        }
+
+        if ($this->type->isImage()) {
+            return '<img src="data:' . $this->document->MIMEType . ';base64,' . $this->getFileContent() . '" ' . $attr . ' >';
+        }
+
+        if ($this->type->isVideo()) {
+            return '<video controls src="data:' . $this->document->MIMEType . ';base64,' . $this->getFileContent() . '" ' . $attr . '>Sorry, your browser doesn\'t support embedded videos</video>';
+        }
+
+        if ($this->type->value === ExtensionsEnum::Pdf->value) {
+            return '<iframe src="data:application/pdf;base64,' . $this->getFileContent() . '" ' . $attr . '></iframe>';
+            //return '<embed width="100%" height="100%" "data:application/pdf;base64,'.$this->image->Image.' type="application/pdf" />';
+        }
+
+        return '';
     }
 
     /**
