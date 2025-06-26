@@ -182,9 +182,8 @@ class BudgetTopDownAllocationController extends Controller
             return redirect()->back()->with('success', 'GL Budget Allocations saved successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
-return $e->getMessage();
             // Optional: log error for debugging
-            \Log::error('Budget allocation failed: '.$e->getMessage());
+            Log::error('Budget allocation failed: '.$e->getMessage());
 
             return redirect()->back()->with('error', 'An error occurred while saving budget allocations. Please try again.');
         }
@@ -244,7 +243,7 @@ return $e->getMessage();
         } catch (\Exception $e) {
             DB::rollBack(); // Rollback on error
 
-            \Log::error('Budget Allocation Update Failed: ' . $e->getMessage());
+            Log::error('Budget Allocation Update Failed: ' . $e->getMessage());
 
             return back()
                 ->withInput()
