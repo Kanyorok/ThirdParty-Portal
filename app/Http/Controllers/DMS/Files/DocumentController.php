@@ -11,12 +11,8 @@ use App\Models\DMS\Document;
 use App\Models\DMS\Repository;
 use App\Services\DMS\DocumentService;
 use App\Services\DMS\RepositoryService;
-use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Throwable;
 
 class DocumentController extends Controller
 {
@@ -42,17 +38,11 @@ class DocumentController extends Controller
     public function store(UploadDocumentRequest $request, Repository $repository): JsonResponse
     {
         try {
-            return DB::transaction(function () use ($request, $repository) {
-                $document = DocumentService::createUpload($repository, $request->file('file'), $request->user())->document;
-                return $this->succeeded('document uploaded successfully', data: [
-                    'data' => new FileResource($document)
-                ]);
-            });
+            return $this->succeeded('document uploaded successfully', data: [
+                'data' => new FileResource(DocumentService::createUpload($repository, $request->file('file'), $request->user())->document)
+            ]);
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception|Throwable $e) {
-            Log::error('Error DMS upload document : ' . $e->getMessage());
-            return $this->errored('unexpected error, try again later');
         }
     }
 
@@ -61,6 +51,7 @@ class DocumentController extends Controller
      */
     public function show(Repository $repository, Document $document)
     {
+        $document->load(['current', 'repository', 'creator', 'category', 'properties'])->withCount('versions');
         return view('dms.files.show')
             ->with('repoService', new RepositoryService($repository))
             ->with('file', $document);

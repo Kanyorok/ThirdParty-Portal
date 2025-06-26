@@ -20,11 +20,41 @@
             <div class="card">
                 <div class="card-body">
                     <ul class="list-group list-group-flush">
-                        <li class="list-group-item p-0">Name: <b class="float-end">{{ $file->Name }}</b></li>
-                        <li class="list-group-item p-0">Type : <b class="float-end">{!! $file->ext()->getIcon() !!}
+                        <li class="list-group-item ">Name: <b class="float-end">{{ $file->Name }}</b></li>
+                        <li class="list-group-item">Type : <b class="float-end">{!! $file->ext()->getIcon() !!} &nbsp;
                                 {{$file->ext()->name}}</b></li>
-
+                        <li class="list-group-item">Visibility : <b class="float-end">{!! $file->Visibility->icon() !!}
+                                &nbsp; {{$file->Visibility->name}}</b></li>
+                        <li class="list-group-item">Versions : <b
+                                class="float-end">{{ number_format($file->versions_count) }}</b></li>
+                        <li class="list-group-item">Size : <b
+                                class="float-end">{{  \Illuminate\Support\Number::fileSize( $file->current->Size, 2) }}</b>
+                        </li>
                     </ul>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <div class="accordion accordion-flush" id="filePropertiesAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="filePropertiesHeader">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                        data-bs-target="#flush-fileProperties" aria-expanded="false"
+                                        aria-controls="flush-fileProperties">
+                                    File Properties
+                                </button>
+                            </h2>
+                            <div id="flush-fileProperties" class="accordion-collapse collapse"
+                                 aria-labelledby="filePropertiesHeader" data-bs-parent="#filePropertiesAccordion">
+                                <ul class="list-group list-group-flush">
+                                    @foreach($file->properties as $property)
+                                        <li class="list-group-item ">{{ $property->Name }} : <b
+                                                class="float-end">{{ $property->formated_value }}</b></li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="card">

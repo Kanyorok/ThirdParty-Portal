@@ -32,6 +32,7 @@ use App\Models\Communication\Email;
 use App\Models\Core\Branch;
 use App\Models\Core\CategoryMaster;
 use App\Models\Core\Report;
+use App\Models\Core\SpecialPermission;
 use App\Models\Core\Task;
 use App\Models\CRM\Campaign;
 use App\Models\CRM\CampaignParty;
@@ -50,6 +51,7 @@ use App\Models\CRM\Ticket;
 use App\Models\DMS\DMSTags;
 use App\Models\DMS\Document;
 use App\Models\DMS\DocumentAttribute;
+use App\Models\DMS\DocumentRelation;
 use App\Models\DMS\DocumentTags;
 use App\Models\DMS\DocumentVersion;
 use App\Models\DMS\Image;
@@ -134,30 +136,30 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Relation::morphMap([
-            Account::getPrimaryKey() => Account::class,
+            //Core
+            SpecialPermission::getPrimaryKey() => SpecialPermission::class,
             APICredential::getPrimaryKey() => APICredential::class,
+            Comment::getPrimaryKey() => Comment::class,
+            Report::getPrimaryKey() => Report::class,
+
+            //CRM
+            Account::getPrimaryKey() => Account::class,
             Board::getPrimaryKey() => Board::class,
             Call::getPrimaryKey() => Call::class,
             Campaign::getPrimaryKey() => Campaign::class,
             CampaignParty::getPrimaryKey() => CampaignParty::class,
             Client::getPrimaryKey() => Client::class,
-            Branch::getPrimaryKey() => Branch::class,
             Email::getPrimaryKey() => Email::class,
-            Comment::getPrimaryKey() => Comment::class,
             Competitor::getPrimaryKey() => Competitor::class,
             Contact::getPrimaryKey() => Contact::class,
             DebtProduct::getPrimaryKey() => DebtProduct::class,
             Department::getPrimaryKey() => Department::class,
             Discussion::getPrimaryKey() => Discussion::class,
-            Employee::getPrimaryKey() => Employee::class,
             Lead::getPrimaryKey() => Lead::class,
             MarketingPlanner::getPrimaryKey() => MarketingPlanner::class,
             Meeting::getPrimaryKey() => Meeting::class,
             Notes::getPrimaryKey() => Notes::class,
             ProductDevelopment::getPrimaryKey() => ProductDevelopment::class,
-            Report::getPrimaryKey() => Report::class,
-            RFQ::getPrimaryKey() => RFQ::class,
-            RFQLine::getPrimaryKey() => RFQLine::class,
             Review::getPrimaryKey() => Review::class,
             Schedule::getPrimaryKey() => Schedule::class,
             Social::getPrimaryKey() => Social::class,
@@ -166,11 +168,25 @@ class AppServiceProvider extends ServiceProvider
             Team::getPrimaryKey() => Team::class,
             Ticket::getPrimaryKey() => Ticket::class,
             User::getPrimaryKey() => User::class,
+
+            //hrm
+            Branch::getPrimaryKey() => Branch::class,
+            Employee::getPrimaryKey() => Employee::class,
+
+            //PROCUREMENT
+            RFQ::getPrimaryKey() => RFQ::class,
+            RFQLine::getPrimaryKey() => RFQLine::class,
             Requisitions::getPrimaryKey() => Requisitions::class,
             RequisitionLine::getPrimaryKey() => RequisitionLine::class,
             Order::getPrimaryKey() => Order::class,
             DepartmentNeeds::getPrimaryKey() => DepartmentNeeds::class,
             ProcurementMethod::getPrimaryKey() => ProcurementMethod::class,
+            SchedulePlan::getPrimaryKey() => SchedulePlan::class,
+            InterBranchRequisition::getPrimaryKey() => InterBranchRequisition::class,
+            ConsolidatedProcurementPlan::getPrimaryKey() => ConsolidatedProcurementPlan::class,
+            PlanLineItems::getPrimaryKey() => PlanLineItems::class,
+
+            //iINVENTORY
             ItemMasterList::getPrimaryKey() => ItemMasterList::class,
             ItemCategories::getPrimaryKey() => ItemCategories::class,
             ItemType::getPrimaryKey() => ItemType::class,
@@ -179,10 +195,6 @@ class AppServiceProvider extends ServiceProvider
             Store::getPrimaryKey() => Store::class,
             UnitOfMeasure::getPrimaryKey() => UnitOfMeasure::class,
             PriceManagement::getPrimaryKey() => PriceManagement::class,
-            SchedulePlan::getPrimaryKey() => SchedulePlan::class,
-            InterBranchRequisition::getPrimaryKey() => InterBranchRequisition::class,
-            ConsolidatedProcurementPlan::getPrimaryKey() => ConsolidatedProcurementPlan::class,
-            PlanLineItems::getPrimaryKey() => PlanLineItems::class,
             TransactionReceipt::getPrimaryKey() => TransactionReceipt::class,
             TransactionTransfer::getPrimaryKey() => TransactionTransfer::class,
             StockAdjustment::getPrimaryKey() => StockAdjustment::class,
@@ -218,11 +230,11 @@ class AppServiceProvider extends ServiceProvider
             DMSTags::getPrimaryKey() => DMSTags::class,
             Document::getPrimaryKey() => Document::class,
             DocumentAttribute::getPrimaryKey() => DocumentAttribute::class,
+            DocumentRelation::getPrimaryKey() => DocumentRelation::class,
             DocumentTags::getPrimaryKey() => DocumentTags::class,
             DocumentVersion::getPrimaryKey() => DocumentVersion::class,
             Image::getPrimaryKey() => Image::class,
             Repository::getPrimaryKey() => Repository::class,
-
         ]);
 
         Gate::policy(Role::class, RolePolicy::class);

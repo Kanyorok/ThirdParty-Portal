@@ -220,6 +220,17 @@ enum ExtensionsEnum: string
         return $this->value === self::Json->value;
     }
 
+    public function getDocumentType(): string
+    {
+        return match ($this) {
+            self::Doc => 'MsDoc',
+            self::Docx => 'Word2007',
+            self::RTF => 'RTF',
+            self::Odt => 'ODText',
+            default => ''
+        };
+    }
+
     public function isAudio(): bool
     {
         return in_array($this->value, [self::Mp3->value, self::Wav->value, self::Ogg->value, self::M4a->value], true);

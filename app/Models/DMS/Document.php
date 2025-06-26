@@ -88,7 +88,7 @@ class Document extends Model
         return $this->hasMany(DocumentVersion::class, 'DocumentId', 'Id');
     }
 
-    public function attributes(): HasMany
+    public function properties(): HasMany
     {
         return $this->hasMany(DocumentAttribute::class, 'DocumentId', 'Id');
     }

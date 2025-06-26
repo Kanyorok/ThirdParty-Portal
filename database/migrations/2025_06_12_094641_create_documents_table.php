@@ -88,7 +88,7 @@ return new class extends Migration {
         Schema::create('t_DocumentAttributes', static function (Blueprint $table) {
             $table->id('Id');
             $table->string('Name');
-            $table->string('Value');
+            $table->text('Value');
             $table->char('DataType', 2);
             $table->foreignId('DocumentId')->constrained('t_Documents', 'Id');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
@@ -98,6 +98,21 @@ return new class extends Migration {
             $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
             $table->softDeletes('DeletedOn');
         });
+
+        Schema::create('t_DocumentRelations', static function (Blueprint $table) {
+            $table->id('Id');
+            $table->foreignId('DocumentId')->constrained('t_Documents', 'Id');
+            $table->string("Related");//string or related.
+            $table->string("RelatedID", 100)->nullable();
+            $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('CreatedOn');
+            $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('ModifiedOn');
+            $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
+            $table->softDeletes('DeletedOn');
+
+            $table->index(["Related", "RelatedID"]);
+        });
     }
 
     /**
@@ -105,6 +120,7 @@ return new class extends Migration {
      */
     public function down(): void
     {
+        Schema::dropIfExists('t_DocumentRelations');
         Schema::dropIfExists('t_DocumentAttributes');
         Schema::dropIfExists('t_DocumentTags');
         Schema::dropIfExists('t_DMSTags');

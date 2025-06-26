@@ -2,6 +2,7 @@
 
 namespace App\Services\DMS;
 
+use App\Enums\Core\DataTypesEnum;
 use App\Enums\Core\ExtensionsEnum;
 use App\Helpers\SystemHelper;
 use Carbon\Carbon;
@@ -10,6 +11,7 @@ use getID3;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Log;
+use PhpOffice\PhpPresentation\IOFactory as PptFactory;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
@@ -49,6 +51,11 @@ class FileProperties
             }
 
             if ($this->type->isDocument()) {
+                $this->extractDocumentProperties();
+                return;
+            }
+            if ($this->type->isPresentation()) {
+                $this->extractPresentationProperties();
                 return;
             }
 
@@ -76,10 +83,10 @@ class FileProperties
         $imageInfo = getimagesize($this->file->getRealPath());
         if ($imageInfo) {
             if (is_int($imageInfo[0])) {
-                $this->add('width', $imageInfo[0], 'int');
+                $this->add('width', $imageInfo[0], DataTypesEnum::Integer);
             }
             if (is_int($imageInfo[1])) {
-                $this->add('height', $imageInfo[1], 'int');
+                $this->add('height', $imageInfo[1], DataTypesEnum::Integer);
             }
             if (is_int($imageInfo[2])) {
                 $this->add('image_type', image_type_to_mime_type($imageInfo[2]));
@@ -94,7 +101,10 @@ class FileProperties
                 $exifData = exif_read_data($this->file->getRealPath());
                 if ($exifData) {
                     if (isset($exifData['DateTime'])) {
-                        $this->add('date_taken', $exifData['DateTime'], 'datetime');
+                        try {
+                            $this->add('date_taken', Carbon::parse($exifData['DateTime'])->format(self::DATE_TIME_FORMAT), DataTypesEnum::DateTime);
+                        } catch (Exception) {
+                        }
                     }
                     if (isset($exifData['Make'])) {
                         $this->add('camera_make', $exifData['Make']);
@@ -121,12 +131,12 @@ class FileProperties
         }
     }
 
-    private function add(string $name, string $value, string $type = 'string'): self
+    private function add(string $name, mixed $value, DataTypesEnum $type = DataTypesEnum::String): self
     {
         $this->properties->add([
             'Name' => $name,
             'Value' => $value,
-            'DataType' => $type,
+            'DataType' => $type->value,
         ]);
         return $this;
     }
@@ -134,7 +144,7 @@ class FileProperties
     /**
      * Extract video properties using getID3 (if available)
      */
-    private function extractVideoProperties(): static
+    private function extractVideoProperties(): void
     {
         if (class_exists(getID3::class)) {
             try {
@@ -142,25 +152,25 @@ class FileProperties
                 $fileInfo = $getID3->analyze($this->file->getRealPath());
 
                 if (isset($fileInfo['playtime_seconds'])) {
-                    $this->add('duration', $fileInfo['playtime_seconds'], 'float');
-                    $this->add('duration_formatted', gmdate(self::TIME_FORMAT, $fileInfo['playtime_seconds']), 'time');
+                    $this->add('duration', $fileInfo['playtime_seconds'], DataTypesEnum::Float);
+                    $this->add('duration_formatted', gmdate(self::TIME_FORMAT, $fileInfo['playtime_seconds']), DataTypesEnum::Time);
                 }
 
                 if (isset($fileInfo['video'])) {
                     if (isset($fileInfo['video']['resolution_x'])) {
-                        $this->add('video_width', $fileInfo['video']['resolution_x'], 'int');
+                        $this->add('video_width', $fileInfo['video']['resolution_x'], DataTypesEnum::Integer);
                     }
                     if (isset($fileInfo['video']['resolution_y'])) {
-                        $this->add('video_height', $fileInfo['video']['resolution_y'], 'int');
+                        $this->add('video_height', $fileInfo['video']['resolution_y'], DataTypesEnum::Integer);
                     }
                     if (isset($fileInfo['video']['codec'])) {
                         $this->add('video_codec', $fileInfo['video']['codec']);
                     }
                     if (isset($fileInfo['video']['bitrate'])) {
-                        $this->add('video_bitrate', $fileInfo['video']['bitrate'], 'int');
+                        $this->add('video_bitrate', $fileInfo['video']['bitrate'], DataTypesEnum::Integer);
                     }
                     if (isset($fileInfo['video']['frame_rate'])) {
-                        $this->add('video_frame_rate', $fileInfo['video']['frame_rate'], 'float');
+                        $this->add('video_frame_rate', $fileInfo['video']['frame_rate'], DataTypesEnum::Float);
                     }
                 }
 
@@ -169,13 +179,13 @@ class FileProperties
                         $this->add('audio_codec', $fileInfo['audio']['codec']);
                     }
                     if (isset($fileInfo['audio']['bitrate'])) {
-                        $this->add('audio_bitrate', $fileInfo['audio']['bitrate'], 'int');
+                        $this->add('audio_bitrate', $fileInfo['audio']['bitrate'], DataTypesEnum::Integer);
                     }
                     if (isset($fileInfo['audio']['channels'])) {
-                        $this->add('audio_channels', $fileInfo['audio']['channels'], 'int');
+                        $this->add('audio_channels', $fileInfo['audio']['channels'], DataTypesEnum::Integer);
                     }
                     if (isset($fileInfo['audio']['sample_rate'])) {
-                        $this->add('audio_sample_rate', $fileInfo['audio']['sample_rate'], 'int');
+                        $this->add('audio_sample_rate', $fileInfo['audio']['sample_rate'], DataTypesEnum::Integer);
                     }
                 }
 
@@ -184,7 +194,6 @@ class FileProperties
             }
         }
 
-        return $this;
     }
 
     /**
@@ -209,16 +218,16 @@ class FileProperties
             }
             if ($created = $properties->getCreated()) {
                 try {
-                    $this->add('creation_date', Carbon::createFromFormat('U', (integer)$created)?->format(self::DATE_TIME_FORMAT), 'datetime');
+                    $this->add('creation_date', Carbon::createFromFormat('U', (integer)$created)?->format(self::DATE_TIME_FORMAT), DataTypesEnum::DateTime);
                 } catch (Exception $e) {
                 }
             }
 
             if ($modified = $properties->getModified()) {
-                $this->add('modified_date', Carbon::createFromFormat('U', (integer)$modified)?->format(self::DATE_TIME_FORMAT), 'datetime');
+                $this->add('modified_date', Carbon::createFromFormat('U', (integer)$modified)?->format(self::DATE_TIME_FORMAT), DataTypesEnum::DateTime);
             }
 
-            $this->add('sheet_count', $spreadsheet->getSheetCount(), 'int');
+            $this->add('sheet_count', $spreadsheet->getSheetCount(), DataTypesEnum::Integer);
             $this->add('sheet_names', implode(', ', $spreadsheet->getSheetNames()));
         } catch (Exception $e) {
             Log::warning('Failed to extract spreadsheet properties: ' . $e->getMessage());
@@ -248,8 +257,6 @@ class FileProperties
                 return;
             }
 
-
-            $metadata = [];
             foreach (Str::of($pdfinfo)->trim()->explode("\n") as $line) {
                 // Split on the first colon to separate key and value
                 $colonPos = strpos($line, ':');
@@ -260,20 +267,24 @@ class FileProperties
                 $key = trim(substr($line, 0, $colonPos));
                 $value = trim(substr($line, $colonPos + 1));
 
+                if (empty($value)) {
+                    continue;
+                }
+
                 // Convert numeric values to appropriate types
                 if (is_numeric($value)) {
-                    $this->add($key, $value, 'int');
+                    $this->add($key, (float)$value, (str_contains($value, '.')) ? DataTypesEnum::Integer : DataTypesEnum::Float);
                     continue;
                 }
 
                 if ($value === 'yes' || $value === 'no') {
-                    $this->add($key, ($value === 'yes'), 'boolean');
+                    $this->add($key, (int)($value === 'yes'), DataTypesEnum::Boolean);
                     continue;
                 }
 
                 if (Str::of($key)->contains('Date', true)) {
                     try {
-                        $this->add($key, Carbon::createFromFormat('D M  j H:i:s Y T', $value)?->timezone(config('app.timezone'))->format(self::DATE_TIME_FORMAT), 'datetime');
+                        $this->add($key, Carbon::createFromFormat('D M  j H:i:s Y T', $value)?->timezone(config('app.timezone'))->format(self::DATE_TIME_FORMAT), DataTypesEnum::DateTime);
                     } catch (Exception $e) {
                     }
                     continue;
@@ -294,16 +305,96 @@ class FileProperties
     {
         return $this->add('original_name', $this->file->getClientOriginalName())
             ->add('mime_type', $this->file->getMimeType() ?? $this->file->getClientMimeType())
-            ->add('size', $this->file->getSize(), 'int')
-            ->add('extension', $this->file->getextension());
+            ->add('size', $this->file->getSize(), DataTypesEnum::Integer)
+            ->add('extension', $this->type->value);
     }
 
     /**
      * Extract Office document properties
      */
-    private function extractDocumentProperties(): static
+    private function extractDocumentProperties(): void
     {
-        return $this;
+        try {
+            $reader = $this->type->getDocumentType();
+            if (empty($reader)) {
+                return;
+            }
+            $document = \PhpOffice\PhpWord\IOFactory::load($this->file->getRealPath(), $reader);
+            $properties = $document->getDocInfo();
+
+            if ($creator = $properties->getCreator()) {
+                $this->add('creator', $creator);
+            }
+            if ($company = $properties->getCompany()) {
+                $this->add('company', $company);
+            }
+            if ($title = $properties->getTitle()) {
+                $this->add('title', $title);
+            }
+            if ($description = $properties->getDescription()) {
+                $this->add('description', $description);
+            }
+            if ($lastModifiedBy = $properties->getLastModifiedBy()) {
+                $this->add('modified_by', $lastModifiedBy);
+            }
+            if ($created = $properties->getCreated()) {
+                try {
+                    $this->add('creation_date', Carbon::createFromFormat('U', $created)?->format(self::DATE_TIME_FORMAT), DataTypesEnum::DateTime);
+                } catch (Exception $e) {
+                }
+            }
+            if ($modified = $properties->getModified()) {
+                try {
+                    $this->add('modified_date', Carbon::createFromFormat('U', $modified)?->format(self::DATE_TIME_FORMAT), DataTypesEnum::DateTime);
+                } catch (Exception $e) {
+                }
+            }
+            /* if ($words = $properties->getWords()) {
+                 $this->add('word_count', $words, DataTypesEnum::Integer);
+             }
+             if ($pages = $properties->getPages()) {
+                 $this->add('page_count', $pages, DataTypesEnum::Integer);
+             }*/
+        } catch (Exception $e) {
+            Log::warning('Failed to extract document properties: ' . $e->getMessage());
+        }
+    }
+
+    private function extractPresentationProperties(): void
+    {
+        try {
+            $presentation = PptFactory::load($this->file->getRealPath());
+            $properties = $presentation->getDocumentProperties();
+
+            if ($creator = $properties->getCreator()) {
+                $this->add('creator', $creator);
+            }
+            if ($lastModifiedBy = $properties->getLastModifiedBy()) {
+                $this->add('modified_by', $lastModifiedBy);
+            }
+            if ($title = $properties->getTitle()) {
+                $this->add('title', $title);
+            }
+            if ($description = $properties->getDescription()) {
+                $this->add('description', $description);
+            }
+            if ($created = $properties->getCreated()) {
+                try {
+                    $this->add('creation_date', Carbon::createFromFormat('U', $created)?->format(self::DATE_TIME_FORMAT), DataTypesEnum::DateTime);
+                } catch (Exception $e) {
+                }
+            }
+            if ($modified = $properties->getModified()) {
+                try {
+                    $this->add('modified_date', Carbon::createFromFormat('U', $modified)?->format(self::DATE_TIME_FORMAT), DataTypesEnum::DateTime);
+                } catch (Exception $e) {
+                }
+            }
+
+            $this->add('slide_count', $presentation->getSlideCount(), DataTypesEnum::Integer);
+        } catch (Exception $e) {
+            Log::warning('Failed to extract presentation properties: ' . $e->getMessage());
+        }
     }
 
 

@@ -14,9 +14,11 @@ use App\Models\Core\CategoryMaster;
 use App\Models\Core\SpecialPermission;
 use App\Models\DMS\Document;
 use App\Models\DMS\Repository;
+use DateTime;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Number;
@@ -37,43 +39,41 @@ class DocumentService extends PermissionsService
     {
         $extension = ExtensionsEnum::fromMimeType($file->getMimeType() ?? $file->getClientMimeType());
         $disk = DisksEnum::Local;
-        $path = $disk->path() . '/' . Uuid::uuid4()->toString() . '.' . $extension->value;
+
         $checksum = hash_file('sha256', $file->getRealPath());
-        $properties = (new FileProperties($file, $extension))->properties();
+        $properties = (new FileProperties($file, $extension))->getProperties();
+        $path = self::_saveFile($disk, $file->getContent());
 
-        if (Storage::disk($disk->value)->put($path, $file->getContent())) {//for blob use https://github.com/NilGems/laravel-textract
-            /* $metadata = '';
+        //if (Storage::disk($disk->value)->put($path, $file->getContent())) {//for blob use https://github.com/NilGems/laravel-textract
+        return self::_create($repository, $actor, $disk, $file->getClientOriginalName(), $extension, $path, $file->getSize(), $checksum, '', properties: $properties);
+        //}
+    }
 
-             if ($extension->isImage()) {
-                 $imageSize = getimagesize($file->getRealPath());
-                 if ($imageSize) {
-                     $metadata = json_encode(['width' => $imageSize[0], 'height' => $imageSize[1]]);
-                 }
-             } elseif ($extension->isVideo()) {
-                 $getID3 = new \getID3;
-                 $fileInfo = $getID3->analyze($file->getRealPath());
-                 if (isset($fileInfo['playtime_seconds'])) {
-                     $metadata = json_encode(['duration' => $fileInfo['playtime_seconds']]);
-                 }
-             } elseif (in_array($extension->value, [ExtensionsEnum::Pdf->value, ExtensionsEnum::Doc->value, ExtensionsEnum::Docx->value])) {
-                 if ($extension->value === ExtensionsEnum::Pdf->value) {
-                     $pdf = new \setasign\Fpdi\Fpdi();
-                     $pageCount = $pdf->setSourceFile($file->getRealPath());
-                     $metadata = json_encode(['pages' => $pageCount]);
-                 }
-             }*/
-
-            return self::_create($repository, $actor, $disk, $file->getClientOriginalName(), $extension, $path, $file->getSize(), $checksum, '', properties: $properties);
+    /**
+     * @throws ErroredException
+     */
+    private static function _saveFile(DisksEnum $disk, string $contents): string
+    {
+        // $path = $disk->path() . '/' . Uuid::uuid4()->toString() . '.' . $extension->value;
+        $path = $disk->path() . '/' . Uuid::uuid4()->toString() . '.data';
+        if (!Storage::disk($disk->value)->put($path, (new EncryptionService())->encrypt($contents))) {
+            throw new ErroredException('Saving file failed.');
         }
+        return $path;
+    }
 
-        throw new ErroredException('Saving file failed.');
+    private function getFileContent(bool $base64 = true): string
+    {
+        $currentVersion = $this->document->current;
+        $content = (new EncryptionService())->decrypt(Storage::disk($currentVersion->Disk->value)->get($currentVersion->Path));
+        return ($base64) ? base64_decode($content) : $content;
     }
 
     /**
      * @throws ErroredException
      */
     private static function _create(
-        Repository          $repository, User $actor, DisksEnum $disk, string $name, ExtensionsEnum $extension, string $path, int $sizeInBytes, string $checksum, string $blob, array $properties = [],
+        Repository $repository, User $actor, DisksEnum $disk, string $name, ExtensionsEnum $extension, string $path, int $sizeInBytes, string $checksum, string $blob, Collection $properties,
         CategoryMaster|null $category = null): DocumentService
     {
         try {
@@ -105,16 +105,36 @@ class DocumentService extends PermissionsService
                     'ModifiedBy' => $actor->Id,
                 ]);
 
-                $properties = collect($properties)->map(function ($value, $key) use ($actor) {
+                $date = now();
+                $properties = $properties->map(function ($property) use ($actor, $date, $document) {
+                    $value = $property['Value'] ?? '';
+
+                    // Convert value to string to avoid type conversion issues
+                    if (is_bool($value)) {
+                        $value = $value ? '1' : '0';
+                    } elseif (is_numeric($value)) {
+                        $value = (string)$value;
+                    } elseif ($value instanceof DateTime) {
+                        $value = $value->format('Y-m-d H:i:s');
+                    } else {
+                        $value = (string)$value;
+                    }
+
                     return [
-                        'DocumentId' => $this->document->Id,
-                        'Name' => $key,
-                        'Value' => $value,
-                        'DataType',
-                        'CreatedBy' => $actor->Id,
-                        'ModifiedBy' => $actor->Id,
+                        'DocumentId' => (int)$document->Id,
+                        'CreatedBy' => (int)$actor->Id,
+                        'ModifiedBy' => (int)$actor->Id,
+                        'CreatedOn' => $date,
+                        'ModifiedOn' => $date,
+                        'DataType' => $property['DataType'] ?? 'st',
+                        'Name' => $property['Name'] ?? '',
+                        'Value' => $value
                     ];
                 });
+
+                if ($properties->isNotEmpty()) {
+                    DB::table('t_DocumentAttributes')->insert($properties->toArray());
+                }
 
                 activity()->causedBy($actor)->performedOn($document)->event('upload')->log('Uploaded ' . explode($extension->getMimeType(), '/')[0] . ' to folder ' . $repository->Name);
 
@@ -125,7 +145,8 @@ class DocumentService extends PermissionsService
                 return $service;
             });
         } catch (Exception|Throwable $e) {
-            Log::error('Error creating repository: ' . $e->getMessage());
+            Log::error('Error creating document: ');
+            Log::error($e);
             throw new ErroredException('Saving file failed.');
         }
     }
