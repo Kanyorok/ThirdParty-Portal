@@ -3,13 +3,21 @@
 namespace App\Http\Controllers\Property;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Property\TenantAndLease\PropertyLeaseTerminationRequest;
+use App\Services\Property\TenantAndLease\PropertyLeaseTerminationService;
 use Illuminate\Http\Request;
 use App\Models\PropertyManagement\PropertyLeaseTermination;
 use App\Models\PropertyManagement\PropertyNewTenant;
 
 class PropertyLeaseTerminationController extends Controller
 {
-    //
+    
+    protected $service;
+
+    public function __construct(PropertyLeaseTerminationService $service)
+    {
+        $this->service = $service;
+    }
     public function index()
     {
         $leaseterminations = PropertyLeaseTermination::all();
@@ -21,24 +29,25 @@ class PropertyLeaseTerminationController extends Controller
         return view('property.tenantmanagement.leasemanagement.leasetermination.create', compact('newtenants'));
     }
 
-    public function show($id)
+    public function show($Id)
     {
-        $leasetermination = PropertyLeaseTermination::findOrFail($id);
+        $leasetermination = PropertyLeaseTermination::findOrFail($Id);
         return view('property.tenantmanagement.leasemanagement.leasetermination.show', compact('leasetermination'));
     }
 
-    public function store(Request $request)
+    public function store(PropertyLeaseTerminationRequest $request)
     {
-        //dd('validation');
-        $leasetermination = PropertyLeaseTermination::create([
-            'LeaseID' => $request->LeaseID,
-            'TerminationDate' => $request->TerminationDate,
-            'TerminationReason' => $request->TerminationReason,
-            'Remarks' => $request->Remarks,
-            'CreatedBy' => auth()->user()->Id,
-            'ModifiedBy' => auth()->user()->Id,
-        ]);
-        //dd('Validation');
+
+        $validatedData = $request->validated();
+        $LeaseID = $validatedData['LeaseID'];
+        $TerminationReason = $validatedData['TerminationReason'];
+        $this->service->create(
+            $LeaseID,
+            $TerminationDate = $validatedData['TerminationDate'],
+            $TerminationReason,
+            $Remarks = $validatedData['Remarks'],
+            $request->user()
+        );  
         return redirect()->route('terminatelease.index')->with('success', 'Lease termination created successfully');
     }
 

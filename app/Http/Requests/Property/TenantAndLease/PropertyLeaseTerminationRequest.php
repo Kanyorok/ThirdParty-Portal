@@ -24,7 +24,7 @@ class PropertyLeaseTerminationRequest extends FormRequest
         return [
             'LeaseID' => 'required|exists:t_LeaseCreation,Id',
             'TerminationDate' => 'required|date',
-            'TerminationReason' => 'required|string|max:100',
+            'TerminationReason' => 'required|exists:t_CodeDetails,ID',
             'Remarks' => 'nullable|string|max:100',
         ];
     }
