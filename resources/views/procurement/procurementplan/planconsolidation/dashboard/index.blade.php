@@ -111,48 +111,77 @@
     </div>
 </div>
 @push('scripts')
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
             const modal = document.getElementById("needModal");
             const needDetails = document.getElementById("needDetails");
 
-            document.querySelectorAll('.view-need-btn').forEach(button => {
-                button.addEventListener('click', function () {
-                    const needId = this.getAttribute('data-id');
-                    console.log('Fetching details for needId:', needId);
-                    needDetails.innerHTML = '<p class="text-muted"><i class="spinner-border spinner-border-sm"></i> Loading details...</p>';
+            // ✅ Function to format ISO date string to MM/DD/YYYY
+            function formatToMMDDYYYY(dateString) {
+        if (!dateString) return 'N/A';
 
-                    fetch(`/procurement/dashboard/show/${needId}`)
-                        .then(res => {
-                            if (!res.ok) {
-                                throw new Error(`HTTP error! Status: ${res.status}`);
-                            }
-                            return res.json();
-                        })
-                        .then(data => {
-                            const need = data[0];
+        // If input is YYYY-MM-DD or ISO format
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+            const [year, month, day] = dateString.split("-");
+            return `${month}/${day}/${year}`;
+        }
 
-                            needDetails.innerHTML = `
-                        <ul class="list-group list-group-flush">
-                            <li class="list-group-item"><strong>Item Name:</strong> ${need.ItemName}</li>
-                            <li class="list-group-item"><strong>Branch:</strong> ${need.BranchName}</li>
-                            <li class="list-group-item"><strong>Department:</strong> ${need.DepartmentName}</li>
-                            <li class="list-group-item"><strong>Quantity:</strong> ${need.RequestedQty}</li>
-                            <li class="list-group-item"><strong>Est. Cost:</strong> ${need.EstimatedCost}</li>
-                            <li class="list-group-item"><strong>Expected Delivery Date:</strong> ${need.RequestedDate}</li>
-                            <li class="list-group-item"><strong>Status:</strong> <span class="badge bg-info">${need.Status}</span></li>
-                        </ul>
-                    `;
-                        })
-                        .catch(error => {
-                            console.error('Error fetching data:', error); // Debug: Log errors
-                            needDetails.innerHTML = '<p class="text-danger">Failed to load data. Please try again.</p>';
-                        });
-                });
+        // If input is DD/MM/YYYY format (possibly from old('RequestedDate') or Carbon formatting)
+        if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
+            const [day, month, year] = dateString.split("/");
+            return `${day}/${month}/${year}`;
+        }
+
+        // Try native parsing as fallback (not recommended)
+        const date = new Date(dateString);
+        if (!isNaN(date)) {
+            const mm = String(date.getMonth() + 1).padStart(2, '0');
+            const dd = String(date.getDate()).padStart(2, '0');
+            const yyyy = date.getFullYear();
+            return `${dd}/${mm}/${yyyy}`;
+        }
+
+        // Return as-is if unable to parse
+        return dateString;
+    }
+
+
+        document.querySelectorAll('.view-need-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                const needId = this.getAttribute('data-id');
+                needDetails.innerHTML = '<p class="text-muted"><i class="spinner-border spinner-border-sm"></i> Loading details...</p>';
+
+                fetch(`/procurement/dashboard/show/${needId}`)
+                    .then(res => {
+                        if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+                        return res.json();
+                    })
+                    .then(data => {
+                        const need = data[0];
+                        const formattedDate = formatToMMDDYYYY(need.RequestedDate);
+
+                        needDetails.innerHTML = `
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item"><strong>Item Name:</strong> ${need.ItemName}</li>
+                                <li class="list-group-item"><strong>Branch:</strong> ${need.BranchName}</li>
+                                <li class="list-group-item"><strong>Department:</strong> ${need.DepartmentName}</li>
+                                <li class="list-group-item"><strong>Quantity:</strong> ${need.RequestedQty}</li>
+                                <li class="list-group-item"><strong>Est. Cost:</strong> ${need.EstimatedCost}</li>
+                                <li class="list-group-item"><strong>Expected Delivery Date:</strong> ${formattedDate}</li>
+                                <li class="list-group-item"><strong>Status:</strong> <span class="badge bg-info">${need.Status}</span></li>
+                            </ul>
+                        `;
+                    })
+                    .catch(error => {
+                        console.error('Error fetching data:', error);
+                        needDetails.innerHTML = '<p class="text-danger">Failed to load data. Please try again.</p>';
+                    });
             });
         });
-    </script>
+    });
+</script>
 @endpush
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 

@@ -2,13 +2,23 @@
 
 namespace App\Http\Controllers\Property;
 
+use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\Property\TenantAndLease\PropertyTenantClearanceRequest;
+use App\Models\Core\CodeDetail;
 use App\Models\PropertyManagement\PropertyTenantClearance;
 use App\Models\PropertyManagement\PropertyNewTenant;
+use App\Services\Property\TenantAndLease\PropertyTenantClearanceService;
 
 class PropertyTenantClearanceController extends Controller
 {
+
+    protected $service;
+
+    public function __construct(PropertyTenantClearanceService $service)
+    {
+        $this->service = $service;
+    }
     //
     public function index()
     {
@@ -17,41 +27,35 @@ class PropertyTenantClearanceController extends Controller
     }
 
     public function create(){
-        $newtenants = PropertyNewTenant::all();
-        return view('property.tenantmanagement.tenantclearance.create', compact('newtenants'));
+        $this->authorize(PermissionEnum::PropertyCategoryCreate, PropertyTenantClearance::class);
+        $newtenants = PropertyNewTenant::where('IsActive', true)->get();
+        $codedetails = CodeDetail::where('CodeID', 'DepositRefunded')->get();
+        return view('property.tenantmanagement.tenantclearance.create', compact('newtenants', 'codedetails'));
     }
 
-    public function show($id)
+    public function show($Id)
     {
-        $clearancetenant = PropertyTenantClearance::find($id);
+        $this->authorize(PermissionEnum::PropertyCategoryView, PropertyTenantClearance::class);
+        $clearancetenant = PropertyTenantClearance::find($Id);
         return view('property.tenantmanagement.tenantclearance.show', compact('clearancetenant'));
     }
 
-    public function store(Request $request)
+    public function store(PropertyTenantClearanceRequest $request)
     {
-        //dd($request->all());
-        $request->validate([
-            'Tenant' => 'required|string|max:50',
-            'ExitDate' => 'required|date|max:50',
-            'FinalInspection' => 'required|string|max:50',
-            'AllDuesPaid' => 'required|string|max:50',
-            'KeysReturned' => 'required|string|max:100',
-            'DepositRefunded' => 'required|string|max:50',
-            'AdditionalNotes' => 'required|string|max:50',
-        ]);
-        //dd('validation passed');
-        $clearancetenant = PropertyTenantClearance::create([
-            'Tenant' => $request->Tenant,
-            'ExitDate' => $request->ExitDate,
-            'FinalInspection' => $request->FinalInspection,
-            'AllDuesPaid' => $request->AllDuesPaid,
-            'KeysReturned' => $request->KeysReturned,
-            'DepositRefunded' => $request->DepositRefunded,
-            'AdditionalNotes' => $request->AdditionalNotes,
-            'CreatedBy' => auth()->user()->Id,
-            'ModifiedBy' => auth()->user()->Id,
-        ]);
-        //dd('validation passed');
+        $this->authorize(PermissionEnum::PropertyCategoryCreate, PropertyTenantClearance::class);
+        $validatedData = $request->validated();
+        $tenant = PropertyNewTenant::findOrFail($validatedData['Tenant']);
+        $depositRefunded = $validatedData['DepositRefunded'] ? CodeDetail::findOrFail($validatedData['DepositRefunded']) : null;
+        $clearance = $this->service->create(
+            $tenant,
+            $validatedData['ExitDate'],
+            $validatedData['FinalInspection'],
+            $validatedData['AllDuesPaid'],
+            $validatedData['KeysReturned'],
+            $depositRefunded,
+            $validatedData['AdditionalNotes'],
+            $request->user()
+        );
         return redirect()->route('tenantclearance.index')->with('success', 'Tenant created successfully');
 
     }

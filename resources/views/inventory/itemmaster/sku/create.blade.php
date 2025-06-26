@@ -123,9 +123,9 @@
                                 <input type="number" class="form-control" name="Max" id="Max" value="0">
                             </div>
                             <div class="col-md-6">
-                                <label for="LastReceived" class="form-label">Last Received Date</label>
-                                <input type="date" class="form-control" name="LastReceived" id="LastReceived">
-                            </div>
+                                    <label for="LastReceived" class="form-label">Last Received Date</label>
+                                    <input type="date" class="form-control" name="LastReceived" id="LastReceived" required>
+                                </div>
                         </div>
 
                         <div class="form-check mb-4">
@@ -262,5 +262,14 @@
                 }
             });
         });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('LastReceived').setAttribute('max', today);
+    });
+
+
+
+
     </script>
 @endsection

@@ -11,13 +11,13 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('t_TenantClearance', function (Blueprint $table) {
-            $table->id();
-            $table->string('Tenant');
+            $table->id('Id');
+            $table->foreignId('Tenant')->constrained('t_TenantMaintenance', 'Id');
             $table->date('ExitDate');
-            $table->string('FinalInspection');
-            $table->string('AllDuesPaid');
-            $table->string('KeysReturned');
-            $table->string('DepositRefunded');
+            $table->boolean('FinalInspection');
+            $table->boolean('AllDuesPaid');
+            $table->boolean('KeysReturned');
+            $table->foreignId('DepositRefunded')->constrained('t_CodeDetails', 'Id');
             $table->string('AdditionalNotes');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
