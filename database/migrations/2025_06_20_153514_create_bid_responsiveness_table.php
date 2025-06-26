@@ -4,18 +4,21 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     /**
      * Run the migrations.
      */
     public function up(): void
     {
-        Schema::create('t_PaymentFrequency', function (Blueprint $table) {
-            $table->id();
-            $table->string('FrequencyName');
-            $table->string('FrequencyCode');
-            $table->integer('NumberOfMonths');
-            $table->string('Description');
+        Schema::create('t_BidResponsiveness', static function (Blueprint $table) {
+            $table->id('Id');
+            $table->foreignId('TenderSupplierID')->constrained('t_TenderSuppliers', 'Id');
+            $table->boolean('SubmittedTimely');
+            $table->boolean('HasMandatoryDocuments');
+            $table->boolean('IsEligible');
+            $table->boolean('IsResponsive');
+            $table->text('Remarks')->nullable();
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
@@ -30,6 +33,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('t_PaymentFrequency');
+        Schema::dropIfExists('t_BidResponsiveness');
     }
 };

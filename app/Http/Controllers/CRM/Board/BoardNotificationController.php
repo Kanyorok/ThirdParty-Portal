@@ -15,7 +15,7 @@ class BoardNotificationController extends Controller
 {
     use BulkNotificationTrait;
 
-    public const string MODULE = 'BOARD';
+    public const MODULE = 'BOARD';
 
     public function __construct()
     {

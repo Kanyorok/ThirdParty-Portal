@@ -15,6 +15,7 @@
             <thead class="table-light">
                 <tr>
                     <th>#</th>
+                    <th>Lease Number</th>
                     <th>Tenant</th>
                     <th>Property</th>
                     <th>Start Date</th>
@@ -28,6 +29,7 @@
             @foreach($newleases as $newlease)
                 <tr>
                     <td>{{ $loop->iteration }}</td>
+                    <td>{{ $newlease->LeaseNumber ?? '-' }}</td>
                     <td>{{ $newlease->tenant->TenantName ?? '-' }}</td>
                     <td>{{ $newlease->property->PropertyName ?? '-' }}</td>
                     <td>{{ \Carbon\Carbon::parse($newlease->StartDate)->format('d/m/Y') }}</td>
