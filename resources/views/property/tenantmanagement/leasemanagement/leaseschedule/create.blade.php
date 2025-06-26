@@ -12,7 +12,17 @@
                     <!-- Lease Selection -->
                     <div class="row g-3 mb-3">
                       <div class="col-md-6">
-                            <label class="form-label">Select Lease Agreement</label>
+                            <label class="form-label">Select Lease Number</label>
+                            <select name="LeaseNumber" class="form-select" required>
+                                <option>--Select the lease--</option>
+                                @foreach ($newleases as $newlease)
+                                    <option value="{{ $newlease->Id }}">{{ $newlease->LeaseNumber }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                      <div class="col-md-6">
+                            <label class="form-label">Select Tenant</label>
                             <select name="TenantId" class="form-select" required>
                                 <option>--Select the tenant--</option>
                                 @foreach ($newleases as $newlease)

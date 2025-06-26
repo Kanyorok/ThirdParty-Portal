@@ -10,6 +10,7 @@
             <thead class="table-light">
             <tr>
                 <th>#</th>
+                <th>Lease Number</th>
                 <th>Tenant Name</th>
                 <th>Property Leased</th>
                 <th>Payment Frequency</th>
@@ -26,6 +27,7 @@
             @foreach($leaseschedules as $leaseschedule)
                 <tr>
                     <td>{{ $loop->iteration ?? '-' }}</td>
+                    <td>{{ $leaseschedule->LeaseNumber ?? '-' }}</td>
                     <td>{{ $leaseschedule->tenant->TenantName ?? '-' }}</td>
                     <td>{{ $leaseschedule->property->PropertyName ?? '-' }}</td>
                     <td>{{ $leaseschedule->paymentFrequency->Description ?? '-' }}</td>

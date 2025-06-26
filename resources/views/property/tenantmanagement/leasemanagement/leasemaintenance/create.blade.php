@@ -22,6 +22,11 @@
 
         <!-- Tenant Selection -->
         <div class="row g-3 mb-3">
+          <div class="col-md-4">
+            <label class="form-label">Lease Number</label>
+            <input type="text" class="form-control" placeholder="e.g. 5" name="LeaseNumber" required>
+          </div>
+        </div>
           <div class="col-md-6">
             <label class="form-label">Select Tenant</label>
             <select name="Tenant" class="form-select" required>

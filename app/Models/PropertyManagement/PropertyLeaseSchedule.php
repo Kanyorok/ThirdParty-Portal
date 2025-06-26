@@ -16,6 +16,7 @@ class PropertyLeaseSchedule extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
+        'LeaseNumber',
         'TenantId',
         'PropertyId',
         'PaymentFrequency',
@@ -33,6 +34,10 @@ class PropertyLeaseSchedule extends Model
     public static function getPrimaryKey(): string
     {
         return 'ScheduleLeaseId';
+    }
+    public function lease()
+    {
+        return $this->belongsTo(PropertyNewLease::class, 'LeaseNumber', 'Id');
     }
     public function tenant()
     {

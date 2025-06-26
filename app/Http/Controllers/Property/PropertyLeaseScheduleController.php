@@ -7,12 +7,15 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
 use App\Enums\Core\PermissionEnum;
+use App\Http\Requests\Property\TenantAndLease\PropertyLeaseScheduleRequest;
+use App\Services\Property\TenantAndLease\PropertyLeaseScheduleService;
 use Illuminate\Http\Request;
 use App\Models\Core\CodeDetail;
 use Illuminate\Support\Facades\Validator;
 use App\Models\PropertyManagement\PropertyLeaseSchedule;
 use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Models\PropertyManagement\PropertyNewLease;
+
 
 class PropertyLeaseScheduleController extends Controller
 {
@@ -39,38 +42,30 @@ class PropertyLeaseScheduleController extends Controller
         return view('property.tenantmanagement.leasemanagement.leaseschedule.show', compact('leaseschedule'));
     }
 
-    public function store(Request $request)
+    public function store(PropertyLeaseScheduleRequest $request)
     {
         $this->authorize(PermissionEnum::PropertyLeaseScheduleCreate, PropertyLeaseSchedule::class);
         //dd($request->all());
-        $request->validate([
+         $validated = $request->validated();  
 
-            'TenantId' => 'required|exists:t_LeaseCreation,Id',
-            'PropertyId' => 'required|exists:t_LeaseCreation,Id',
-            'PaymentFrequency' => 'required|string|max:50',
-            'StartDate' => 'required|date',
-            'EndDate' => 'required|date',
-            'BaseRent' => 'required|numeric',
-            'ServiceCharge' => 'required|numeric',
-            'ParkingFee' => 'required|numeric',
-            'OtherCharges' => 'required|numeric',
-        ]);
-        //dd('validation');
-        $leaseschedule = PropertyLeaseSchedule::create([
-            'TenantId' => $request->TenantId,
-            'PropertyId' => $request->PropertyId,
-            'PaymentFrequency' => $request->PaymentFrequency,
-            'StartDate' => $request->StartDate,
-            'EndDate' => $request->EndDate,
-            'BaseRent' => $request->BaseRent,
-            'ServiceCharge' => $request->ServiceCharge,
-            'ParkingFee' => $request->ParkingFee,
-            'OtherCharges' => $request->OtherCharges,
-            'CreatedBy' => auth()->user()->Id,
-            'ModifiedBy' => auth()->user()->Id,
-        ]);
-        //dd('Validation');
-        return redirect()->route('schedulelease.index')->with('success', 'Lease schedule created successfully');
+        try {
+        PropertyLeaseScheduleService::create(
+            $validated['LeaseNumber'],
+            $validated['TenantId'],
+            $validated['PropertyId'],
+            $validated['PaymentFrequency'],
+            $validated['StartDate'],
+            $validated['EndDate'],
+            $validated['BaseRent'],
+            $validated['ServiceCharge'],
+            $validated['ParkingFee'],
+            $validated['OtherCharges'],
+            Auth::user()
+        );
+        return redirect()->route('schedulelease.index')->with('success', 'Lease schedule added!');
+        } catch (\Exception $e) {
+            return back()->withErrors('Failed: ' . $e->getMessage())->withInput();
+        }
     }
     public function edit($id)
     {
@@ -87,6 +82,7 @@ class PropertyLeaseScheduleController extends Controller
 
         $this->authorize(PermissionEnum::PropertyLeaseScheduleUpdate, PropertyLeaseSchedule::class);
         $validated=$request->validate([
+            'LeaseNumber' => 'required|exists:t_LeaseCreation,Id',
             'TenantId' => 'required|exists:t_LeaseCreation,Id',
             'PropertyId' => 'required|exists:t_LeaseCreation,Id',
             'PaymentFrequency' => 'required|string|max:50',
@@ -104,6 +100,7 @@ class PropertyLeaseScheduleController extends Controller
             $leaseschedules = PropertyLeaseSchedule::findOrFail($id);
 
             $leaseschedules->update([
+                'LeaseNumber' => $validated['LeaseNumber'],
                 'TenantId' => $validated['TenantId'],
                 'PropertyId' => $validated['PropertyId'],
                 'PaymentFrequency' => $validated['PaymentFrequency'],

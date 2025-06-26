@@ -12,6 +12,7 @@ return new class extends Migration {
     {
         Schema::create('t_ScheduleLease', function (Blueprint $table) {
             $table->id('Id');
+            $table->foreignId('LeaseNumber')->constrained('t_LeaseCreation', 'Id');
             $table->foreignId('TenantId')->constrained('t_LeaseCreation', 'Id');
             $table->foreignId('PropertyId')->constrained('t_LeaseCreation', 'Id');
             $table->foreignId('PaymentFrequency')->constrained('t_CodeDetails', 'ID');
