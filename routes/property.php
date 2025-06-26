@@ -130,6 +130,13 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::get('/propertyaddlease/Units/{FloorId}', [PropertyNewLeaseController::class, 'getUnitByFloor'])->name('getunitbyfloor');
     
 
+    //Route::resource('terminatelease', PropertyLeaseTerminationController::class);
+    Route::get('propertyterminatelease', [PropertyLeaseTerminationController::class,'index'])->name('terminatelease.index');
+    Route::get('propertyterminatelease/create', [PropertyLeaseTerminationController::class,'create'])->name('terminatelease.create');
+    Route::post('propertyterminatelease', [PropertyLeaseTerminationController::class,'store'])->name('terminatelease.store');
+    Route::get('propertyterminatelease/show/{Id}', [PropertyLeaseTerminationController::class,'show'])->name('terminatelease.show');
+    Route::get('propertyterminatelease/edit/{Id}',[PropertyLeaseTerminationController::class,'edit'])->name('terminatelease.edit');
+    Route::put('propertyterminatelease/edit/{Id}',[PropertyLeaseTerminationController::class,'update'])->name('terminatelease.update');
 
 
 
@@ -138,7 +145,6 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::resource('attachments', PropertyAttachmentsController::class);
     Route::resource('schedulelease', PropertyLeaseScheduleController::class);
     Route::resource('renewlease', PropertyLeaseRenewalController::class);
-    Route::resource('terminatelease', PropertyLeaseTerminationController::class);
     Route::resource('rentinvoice', PropertyInvoiceController::class);
     Route::resource('rentreceipt', PropertyReceiptController::class);
     Route::resource('rentdashboard', RentDashboardController::class);

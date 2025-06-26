@@ -29,13 +29,6 @@ class PropertyLeaseTerminationController extends Controller
 
     public function store(Request $request)
     {
-        //dd($request->all());
-        $request->validate([
-            'LeaseID' => 'required|string|max:50',
-            'TerminationDate' => 'required|date',
-            'TerminationReason' => 'required|string|max:100',
-            'Remarks' => 'nullable|string|max:100',
-        ]);
         //dd('validation');
         $leasetermination = PropertyLeaseTermination::create([
             'LeaseID' => $request->LeaseID,
