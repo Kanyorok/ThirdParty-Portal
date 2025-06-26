@@ -156,6 +156,7 @@ class StockAdjustmentService
                 'ModifiedOn' => now(),
             ]);
 
+            // ... (existing workflow/pending workflow logic)
             Workflow::create([
                 'Source' => 'StockAdjustment',
                 'SourceID' => $adjustment->Id,
@@ -191,6 +192,7 @@ class StockAdjustmentService
                 'ModifiedOn' => now(),
             ]);
 
+            // ... (existing workflow/pending workflow logic)
             Workflow::create([
                 'Source' => 'StockAdjustment',
                 'SourceID' => $adjustment->Id,
