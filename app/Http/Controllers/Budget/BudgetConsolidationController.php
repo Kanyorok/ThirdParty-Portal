@@ -16,11 +16,16 @@ class BudgetConsolidationController extends Controller
     //
     public function index()
     {
-        // /return 1;
+        // /return 1; 
         //Define data array that will store the data for all types entry
         $data = [];
+        $isSet = false;
+        $budgetId = null;
+        $budgetName='';
+        $period = null;
         //check if request comes with a budget id
         if (request()->has('BudgetLineID')) {
+
             $budgetId = request()->get('BudgetLineID');
             $budget = Budget::find($budgetId);
             if (!$budget) {
@@ -28,6 +33,9 @@ class BudgetConsolidationController extends Controller
             }  
             else {
                 //Fetching the GLACCountTypes From Core details
+                $isSet = true;
+                $budgetName = $budget->Name ?? '';
+                $period=$budget->From.' - '.$budget->To;
                 $glAccountTypes = CodeDetail::where('CodeID', 'GLAccountType')->select('Value', 'Description')->get();
                 foreach ($glAccountTypes as $type) {
 
@@ -93,7 +101,7 @@ class BudgetConsolidationController extends Controller
 
         $budgets=Budget::select('Id','Name')->get();
         return view('budgetandanalytics.budgetworkspace.budgetconsolidation.index',
-            compact('budgets','data')
+            compact('budgets','data','isSet', 'budgetId', 'budgetName','period')
         );
     }
 
