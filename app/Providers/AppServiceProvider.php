@@ -65,6 +65,7 @@ use App\Models\PropertyManagement\PropertyBlock;
 use App\Models\PropertyManagement\PropertyFloor;
 use App\Models\PropertyManagement\PropertyUnit;
 use App\Models\PropertyManagement\PropertyNewTenant;
+use App\Models\PropertyManagement\PropertyLeaseSchedule;
 use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyTenantClearance;
 use App\Models\PropertyManagement\PropertyType;
@@ -85,6 +86,7 @@ use App\Policies\PropertyManagement\PropertyNewTenantPolicy;
 use App\Policies\PropertyManagement\PropertyRegistryPolicy;
 use App\Policies\PropertyManagement\PropertyStructuralPolicy;
 use App\Policies\PropertyManagement\PropertyTenantClearancePolicy;
+use App\Policies\PropertyManagement\PropertyLeaseSchedulePolicy;
 use App\Policies\PropertyManagement\PropertyTypePolicy;
 use App\Policies\PropertyManagement\PropertyFloorPolicy;
 use App\Policies\PropertyManagement\PropertyUnitPolicy;        
@@ -221,6 +223,8 @@ class AppServiceProvider extends ServiceProvider
             PropertyTenantClearance::getPrimaryKey() => PropertyTenantClearance::class,
             PropertyFloor::getPrimaryKey() => PropertyFloor::class,
             PropertyUnit::getPrimaryKey() => PropertyUnit::class,
+            PropertyLeaseSchedule::getPrimaryKey() => PropertyLeaseSchedule::class,
+            
         ]);
 
         Gate::policy(Role::class, RolePolicy::class);
@@ -254,6 +258,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PropertyTenantClearance::class, PropertyTenantClearancePolicy::class);
         Gate::policy(PropertyFloor::class, PropertyFloorPolicy::class);
         Gate::policy(PropertyUnit::class, PropertyUnitPolicy::class);
+        Gate::policy(PropertyLeaseSchedule::class, PropertyLeaseSchedulePolicy::class);
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);
          Event::listen(SMSSendEvent::class, SMSSendListener::class);

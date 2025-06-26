@@ -6,8 +6,10 @@
         <div class="card">
             <div class="card-body">
                 <dl class="row">
-                    <dt class="col-sm-4">Lease Name</dt>
-                    <dd class="col-sm-8">{{ $leaseschedule->leaseID }}</dd>
+                    <dt class="col-sm-4">Property Leased</dt>
+                    <dd class="col-sm-8">{{ $leaseschedule->PropertyId ?? '-' }}</dd>
+                    <dt class="col-sm-4">Tenant Name</dt>
+                    <dd class="col-sm-8">{{ $leaseschedule->TenantId ?? '-' }}</dd>
 
                     <dt class="col-sm-4">Payment Frequency</dt>
                     <dd class="col-sm-8">{{ $leaseschedule->PaymentFrequency ?? '-' }}</dd>

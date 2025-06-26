@@ -11,23 +11,37 @@
         </div>
     @endif
     <h1>Edit Lease Schedule</h1>
-    <form action="{{ route('schedulelease.update', $leaseschedules->id) }}" method="POST">
+    <form action="{{ route('schedulelease.update', $leaseschedules->Id) }}" method="POST">
         @csrf
         @method('PUT')
 
-         <div class="col-md-6">
+                    <div class="row g-3 mb-3">
+                      <div class="col-md-6">
                             <label class="form-label">Select Lease Agreement</label>
-                            <select name="leaseID" class="form-select" required>
-                                <option>--Select the tenant</option>
-                                @foreach ($newtenants as $newtenant)
-                                    <option value="{{ $newtenant->Id }}">{{ $newtenant->TenantName }}</option>
+                            <select name="TenantId" class="form-select" required>
+                                <option>--Select the tenant--</option>
+                                @foreach ($newleases as $newlease)
+                                    <option value="{{ $newlease->Id }}">{{ $newlease->Tenant }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Payment Frequency</label>
-                            <input type="text" class="form-control" value="Monthly" name="PaymentFrequency">
+                            <label class="form-label">Select property Leased </label>
+                            <select name="PropertyId" class="form-select" required>
+                                <option>--Select the property--</option>
+                                @foreach ($newleases as $newlease)
+                                    <option value="{{ $newlease->Id }}">{{ $newlease->PropertyID }}</option>
+                                @endforeach
+                            </select>
                         </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Payment Frequency</label>
+                        <select class="form-select" name="PaymentFrequency" required>
+                        <option value="">-- Select Frequency --</option>
+                        @foreach ($codes as $code)
+                            <option value="{{ $code->ID }}">{{ $code->Description }}</option>
+                        @endforeach
+                        </select>
                     </div>
 
                     <!-- Financial Parameters -->

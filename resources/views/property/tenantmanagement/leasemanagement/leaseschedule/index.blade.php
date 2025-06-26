@@ -10,7 +10,8 @@
             <thead class="table-light">
             <tr>
                 <th>#</th>
-                <th>Lease Name</th>
+                <th>Tenant Name</th>
+                <th>Property Leased</th>
                 <th>Payment Frequency</th>
                 <th>Start Date</th>
                 <th>End Date</th>
@@ -25,8 +26,9 @@
             @foreach($leaseschedules as $leaseschedule)
                 <tr>
                     <td>{{ $loop->iteration ?? '-' }}</td>
-                    <td>{{ $leaseschedule->leaseID ?? '-' }}</td>
-                    <td>{{ $leaseschedule->PaymentFrequency ?? '-' }}</td>
+                    <td>{{ $leaseschedule->tenant->TenantName ?? '-' }}</td>
+                    <td>{{ $leaseschedule->property->PropertyName ?? '-' }}</td>
+                    <td>{{ $leaseschedule->paymentFrequency->Description ?? '-' }}</td>
                     <td>{{ $leaseschedule->StartDate ?? '-' }}</td>
                     <td>{{ $leaseschedule->EndDate ?? '-' }}</td>
                     <td>{{ $leaseschedule->BaseRent ?? '-' }}</td>
@@ -34,9 +36,9 @@
                     <td>{{ $leaseschedule->ParkingFee ?? '-' }}</td>
                     <td>{{ $leaseschedule->OtherCharges ?? '-' }}</td>
                     <td>
-            <a href="{{ route('schedulelease.show', $leaseschedule->id) }}" class="btn btn-sm btn-info">👁 View</a>
-            <a href="{{ route('schedulelease.edit', $leaseschedule->id) }}" class="btn btn-sm btn-warning">Edit</a>
-            <form action="{{ route('schedulelease.destroy', $leaseschedule->id) }}" method="POST" class="d-inline">
+            <a href="{{ route('schedulelease.show', $leaseschedule->Id) }}" class="btn btn-sm btn-info">👁 View</a>
+            <a href="{{ route('schedulelease.edit', $leaseschedule->Id) }}" class="btn btn-sm btn-warning">Edit</a>
+            <form action="{{ route('schedulelease.destroy', $leaseschedule->Id) }}" method="POST" class="d-inline">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this lease schedule?');">Delete</button>
