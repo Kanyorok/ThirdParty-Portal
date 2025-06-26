@@ -62,6 +62,7 @@ class PropertyNewLeaseController extends Controller
     public function store(PropertyNewLeaseRequest $request)
     {
     
+
         $data = $request->validated();
         $tenant = PropertyNewTenant::findOrFail($data['Tenant']);
         $property = PropertyRegistry::findOrFail($data['PropertyID']);
@@ -105,7 +106,6 @@ class PropertyNewLeaseController extends Controller
         $newlease = PropertyNewLease::findOrFail($Id);
 
         $newlease->update([
-            'Tenant' => $data['Tenant'],
             'PropertyID' => $data['PropertyID'],
             'BlockID' => $data['BlockID'],
             'FloorID' => $data['FloorID'],

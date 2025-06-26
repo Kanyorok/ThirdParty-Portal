@@ -35,7 +35,14 @@ class PropertyNewLeaseService
         string $SpecialTerms,
         User $user
     ): self {
+
+    $lastLease = PropertyNewLease::orderByDesc('Id')->first();
+    $nextNumber = $lastLease ? ((int) filter_var($lastLease->LeaseNumber, FILTER_SANITIZE_NUMBER_INT)) + 1 : 1;
+    $leaseNumber = 'LEASE-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+
+
         $newlease = PropertyNewLease::create([
+            'LeaseNumber' => $leaseNumber,
             'Tenant' => $Tenant->Id,
             'PropertyID' => $PropertyID->Id,
             'BlockID' => $BlockID->Id,

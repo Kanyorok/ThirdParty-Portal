@@ -16,17 +16,17 @@
         <div class="card shadow-sm border-0">
             <div class="card-body p-4">
 
+                {{-- Lease Number (View Only) --}}
+                <div class="mb-3">
+                    <label class="form-label">Lease Number</label>
+                    <input type="text" class="form-control" value="{{ $newlease->LeaseNumber }}" disabled>
+                </div>
+
                 {{-- Tenant --}}
                 <div class="mb-3">
                     <label class="form-label">Tenant</label>
-                    <select name="Tenant" class="form-select @error('Tenant') is-invalid @enderror">
-                        @foreach($newtenants as $tenant)
-                            <option value="{{ $tenant->Id }}" {{ $tenant->Id == old('Tenant', $newlease->Tenant) ? 'selected' : '' }}>
-                                {{ $tenant->TenantName }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('Tenant') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    <input type="text" class="form-control" value="{{ $newlease->tenant->TenantName ?? '' }}" disabled>
+                    <input type="hidden" name="Tenant" value="{{ $newlease->Tenant }}">
                 </div>
 
                 {{-- Property --}}

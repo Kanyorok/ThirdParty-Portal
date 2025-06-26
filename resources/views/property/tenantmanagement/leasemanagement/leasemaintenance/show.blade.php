@@ -13,6 +13,11 @@
         <div class="card shadow-sm border-0">
             <div class="card-body p-4">
                 <div class="mb-3">
+                    <label class="form-label">Lease Number</label>
+                    <input type="text" class="form-control" value="{{ $newlease->LeaseNumber ?? '-' }}" readonly>
+                </div>
+
+                <div class="mb-3">
                     <label class="form-label">Tenant</label>
                     <input type="text" class="form-control" value="{{ $newlease->tenant->TenantName }}" readonly>
                 </div>

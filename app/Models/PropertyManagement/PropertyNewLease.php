@@ -18,6 +18,7 @@ class PropertyNewLease extends Model
 
     protected $fillable = [
         'Tenant',
+        'LeaseNumber',
         'PropertyID',
         'BlockID',
         'FloorID',
@@ -29,6 +30,7 @@ class PropertyNewLease extends Model
         'Deposit',
         'DueDay',
         'SpecialTerms',
+        'IsActive',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy'

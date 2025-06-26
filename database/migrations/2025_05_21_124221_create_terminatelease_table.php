@@ -11,8 +11,8 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('t_TerminateLease', function (Blueprint $table) {
-            $table->id();
-            $table->string('LeaseID');
+            $table->id('Id');
+            $table->foreignId('LeaseID')->constrained('t_LeaseCreation', 'Id');
             $table->date('TerminationDate');
             $table->string('TerminationReason');
             $table->string('Remarks');

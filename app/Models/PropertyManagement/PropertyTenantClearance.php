@@ -44,5 +44,6 @@ class PropertyTenantClearance extends Model
     {
         return $this->belongsTo(CodeDetail::class,'DepositRefunded','ID');
     }
+    
 
 }

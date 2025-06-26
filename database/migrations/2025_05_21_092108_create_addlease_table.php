@@ -12,6 +12,7 @@ return new class extends Migration {
     {
         Schema::create('t_LeaseCreation', function (Blueprint $table) {
             $table->id('Id');
+            $table->string('LeaseNumber')->unique();
             $table->foreignId('Tenant')->constrained('t_TenantMaintenance', 'Id');
             $table->foreignId('PropertyID')->constrained('t_PropertyRegistry', 'Id');
             $table->foreignId('BlockID')->constrained('t_PropertyRegistry', 'Id');
@@ -24,6 +25,7 @@ return new class extends Migration {
             $table->float('Deposit');
             $table->integer('DueDay');
             $table->string('SpecialTerms');
+            $table->boolean('IsActive')->default(true);
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
