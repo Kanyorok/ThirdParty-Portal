@@ -12,31 +12,26 @@
                     <!-- Lease Selection -->
                     <div class="row g-3 mb-3">
                       <div class="col-md-6">
-                            <label class="form-label">Select Lease Number</label>
-                            <select name="LeaseNumber" class="form-select" required>
-                                <option>--Select the lease--</option>
-                                @foreach ($newleases as $newlease)
-                                    <option value="{{ $newlease->Id }}">{{ $newlease->LeaseNumber }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                      <div class="col-md-6">
                             <label class="form-label">Select Tenant</label>
-                            <select name="TenantId" class="form-select" required>
-                                <option>--Select the tenant--</option>
-                                @foreach ($newleases as $newlease)
-                                    <option value="{{ $newlease->Id }}">{{ $newlease->Tenant }}</option>
-                                @endforeach
+                        <select name="TenantId" id="tenant-select" class="form-select" required>
+                            <option value="">--Select the tenant--</option>
+                            @foreach ($newleases as $newlease)
+                                <option value="{{ $newlease->TenantId }}">
+                                    {{ $newlease->tenant->TenantName ?? 'N/A' }}
+                                </option>
+                            @endforeach
+                        </select>
+                     </div>
+                         <div class="col-md-6">
+                            <label class="form-label">Select property Leased </label>
+                            <select name="PropertyId" id="property-select" class="form-select" required>
+                                         <option value="">-- Select Property --</option>
                             </select>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Select property Leased </label>
-                            <select name="PropertyId" class="form-select" required>
-                                <option>--Select the property--</option>
-                                @foreach ($newleases as $newlease)
-                                    <option value="{{ $newlease->Id }}">{{ $newlease->PropertyID }}</option>
-                                @endforeach
+                      <div class="col-md-6">
+                            <label class="form-label">Select Lease Number</label>
+                            <select name="LeaseNumber" id="lease-select" class="form-select" required>
+                                    <option value="">-- Select Lease --</option>
                             </select>
                         </div>
                     <div class="col-md-4">
@@ -80,8 +75,67 @@
                     </div>
                     <button class="btn btn-success">🧾 Generate Schedule</button>
         </form>
-    </div>
-    </div>
-    </div>
-    </div>
+                </div>
+            </div>
 @endsection
+
+<script>
+  // Define routes with placeholders
+  const routes = {
+    getProperties: "{{ route('getpropertybytenant', ['Id' => '__ID__']) }}",
+    getLeases: "{{ route('getleasebyproperty', ['Id' => '__ID__']) }}"
+  };
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const tenantSelect = document.getElementById('tenant-select');
+    const propertySelect = document.getElementById('property-select');
+    const leaseSelect = document.getElementById('lease-select');
+
+    // Tenant → Property
+    tenantSelect.addEventListener('change', function () {
+      const tenantId = this.value;
+      propertySelect.innerHTML = '<option value="">-- Select a Property --</option>';
+      leaseSelect.innerHTML = '<option value="">-- Select a Lease --</option>';
+
+      if (tenantId) {
+        fetch(routes.getProperties.replace('__ID__', tenantId))
+          .then(res => res.json())
+          .then(data => {
+            data.forEach(property => {
+              const option = document.createElement('option');
+              option.value = property.Id;
+              option.textContent = property.PropertyName;
+              propertySelect.appendChild(option);
+            });
+          })
+          .catch(err => {
+            console.error('Error loading properties:', err);
+            alert('Failed to load properties.');
+          });
+      }
+    });
+
+    // Property → Lease
+    propertySelect.addEventListener('change', function () {
+      const propertyId = this.value;
+      leaseSelect.innerHTML = '<option value="">-- Select Lease --</option>';
+
+      if (propertyId) {
+        fetch(routes.getLeases.replace('__ID__', propertyId))
+          .then(res => res.json())
+          .then(data => {
+            data.forEach(lease => {
+              const option = document.createElement('option');
+              option.value = lease.Id;
+              option.textContent = lease.LeaseNumber;
+              leaseSelect.appendChild(option);
+            });
+          })
+          .catch(err => {
+            console.error('Error loading leases:', err);
+            alert('Failed to load leases.');
+          });
+      }
+    });
+  });
+</script>

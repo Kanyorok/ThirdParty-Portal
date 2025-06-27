@@ -29,10 +29,20 @@ class PropertyLeaseScheduleController extends Controller
     public function create()
     {
         $this->authorize(PermissionEnum::PropertyLeaseScheduleCreate, PropertyLeaseSchedule::class);
-        $newtenants = PropertyNewTenant::all();
-        $newleases = PropertyNewLease::all();
+        $newleases = PropertyNewLease::with(['getPropertyByTenant.getLeaseByProperty'])->get();
         $codes = CodeDetail::where('CodeID', 'PaymentFrequency')->get();
-        return view('property.tenantmanagement.leasemanagement.leaseschedule.create', compact('newtenants', 'newleases', 'codes'));
+        return view('property.tenantmanagement.leasemanagement.leaseschedule.create', compact('newleases', 'codes'));
+    }
+
+    public function getPropertyByTenant($tenantId)
+    {
+        $newlease = PropertyNewLease::where('TenantId', $tenantId)->get();
+        return response()->json($newlease);
+    }
+    public function getLeaseByProperty($propertyId)
+    {
+        $newlease = PropertyNewLease::where('PropertyId', $propertyId)->get();
+        return response()->json($newlease);
     }
 
     public function show($id)

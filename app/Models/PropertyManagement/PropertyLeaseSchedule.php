@@ -5,6 +5,7 @@ namespace App\Models\PropertyManagement;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Core\CodeDetail;
 use App\Traits\Model\UserActorTrait;
+use App\Models\PropertyManagement\PropertyNewLease;
 use Illuminate\Database\Eloquent\SoftDeletes;
 class PropertyLeaseSchedule extends Model
 {
@@ -35,6 +36,14 @@ class PropertyLeaseSchedule extends Model
     {
         return 'ScheduleLeaseId';
     }
+        public function getPropertyByTenant()
+    {
+        return $this->hasMany(PropertyNewLease::class, 'TenantId', 'Id');
+    }
+        public function getLeaseByProperty()
+    {
+        return $this->hasMany(PropertyNewLease::class, 'PropertyId', 'Id');
+    }
     public function lease()
     {
         return $this->belongsTo(PropertyNewLease::class, 'LeaseNumber', 'Id');
@@ -47,7 +56,7 @@ class PropertyLeaseSchedule extends Model
     {
         return $this->belongsTo(PropertyRegistry::class, 'PropertyId', 'Id');
     }
-    public function paymentFrequency()
+     public function paymentFrequency()
     {
         return $this->belongsTo(CodeDetail::class, 'PaymentFrequency', 'ID');
     }

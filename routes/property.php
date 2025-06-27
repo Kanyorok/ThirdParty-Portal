@@ -144,6 +144,8 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::get('schedulelease', [PropertyLeaseScheduleController::class,'index'])->name('schedulelease.index');
     Route::get('schedulelease/create', [PropertyLeaseScheduleController::class,'create'])->name('schedulelease.create');
     Route::post('schedulelease', [PropertyLeaseScheduleController::class,'store'])->name('schedulelease.store');
+    Route::get('schedulelease/property/{Id}', [PropertyLeaseScheduleController::class, 'getPropertyByTenant'])->name('getpropertybytenant');
+    Route::get('schedulelease/lease/{Id}', [PropertyLeaseScheduleController::class, 'getLeaseByProperty'])->name('getleasebyproperty');
     Route::get('schedulelease/show/{id}', [PropertyLeaseScheduleController::class,'show'])->name('schedulelease.show');
     Route::get('schedulelease/edit/{Id}',[PropertyLeaseScheduleController::class,'edit'])->name('schedulelease.edit');
     Route::put('schedulelease/edit/{Id}',[PropertyLeaseScheduleController::class,'update'])->name('schedulelease.update');
