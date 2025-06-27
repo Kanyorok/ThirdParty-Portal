@@ -13,6 +13,11 @@
 @endif
 <div class="container mt-4">
   <div class="card p-4">
+    <div class="card-header bg-dark text-white">
+        ➕ New Budget Activity
+        <a href="{{ route('budgetactivities.index') }}" class="btn btn-secondary btn-sm float-end">← Back to Activities</a>
+    </div>
+  <div class="card-body">
     <p class="muted">
         Please use this form to add a new activity under your selected budget line. An activity represents a specific task or 
         project planned within the broader budget. Make sure to associate it with the appropriate budget and budget line. You can 
@@ -83,8 +88,7 @@
                 @error('Description') <small class="text-danger">{{ $message }}</small> @enderror
             </div>
         </div>
-    </div>
-
+    
         <!-- Full Allocation Fields -->
         <div id="fullAllocationSection" class="mb-3" style="display:none;">
             <h6>Full Allocation (KES)</h6>
@@ -122,6 +126,8 @@
         </div>
     </form>
 
+  </div>
+  </div>
   </div>
 </div>
 

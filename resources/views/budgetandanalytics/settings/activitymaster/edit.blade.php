@@ -1,11 +1,11 @@
 @extends('layouts.app')
-@section('title', ' Edit Budget Activities')
+@section('title', ' Edit Activity')
 
 @section('content')
 
 <div class="card p-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5>📝 Edit Budget Activity</h5>
+    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center mb-3">
+        📝 Edit Activity
     </div>
 
     @if ($errors->any())
@@ -18,6 +18,11 @@
         </div>
     @endif
 
+    <div class="card-body">
+        <p class="text-muted">
+            Use this form to edit the details of the activity. Ensure that all fields are filled out correctly, especially the budget line and activity name.
+            You can also toggle the active status of the activity.
+        </p>
     <form action="{{ route('activitymaster.update', $activity->Id) }}" method="POST">
         @csrf
         @method('PUT')
@@ -53,5 +58,7 @@
             <a href="{{ route('activitymaster.index') }}" class="btn btn-secondary">← Back to List</a>
             <button type="submit" class="btn btn-success" onclick="$this.disabled=true; $this.innerText='Updating...'; $this.form.submit();"> 🔄 Update Activity</button>
         </div>
-
+    </form>
+    </div>
+</div>
 @endsection
