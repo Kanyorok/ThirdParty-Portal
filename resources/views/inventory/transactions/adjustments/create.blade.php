@@ -306,8 +306,7 @@
         }
     }
 
-    // Call reapplyCalculationsAndErrors after the DOM is fully loaded,
-    // and potentially after AJAX content is rendered if a branch was pre-selected due to old input.
+
     window.addEventListener('load', reapplyCalculationsAndErrors); 
 
     // Also call it after the AJAX content is loaded for the branch change
