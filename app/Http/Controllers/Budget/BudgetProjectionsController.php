@@ -127,11 +127,12 @@ class BudgetProjectionsController extends Controller
     }
  
     public function show($id){
- 
         $this->authorize(PermissionEnum::BudgetSetupView, BudgetMonthlyProjectionAllocation::class);
  
         $budget = BudgetDriverProjections::findOrFail($id);
- 
+        
+        $rate=BudgetProduct::with(['rate'])
+            ->get();
         // Fetch all allocations so the view can filter and display as needed
         $monthlyAllocations = BudgetMonthlyProjectionAllocation::where('BudgetProjectionID', $id)
             ->get();

@@ -69,12 +69,13 @@ class BudgetConsolidationController extends Controller
                         ];
                     } 
                     ///////////////////////// Fetching data for Entry By Line //////////////////////////////////////////
-                    $entriesByLine=BudgetManualEntry::select('Id','BudgetID','BudgetLineID','BranchID','Amount','Comments')->where('BudgetID', $budgetId)->get();
+                    $entriesByLine=BudgetManualEntry::select('Id','BudgetID','BudgetLineID','BranchID','Amount','Comments')->where('BudgetID', $budgetId)->latest()->get();
                     //Get allocation for this lines and place them in data array
                     foreach ($entriesByLine as $entry) {
                         $budgetLine = BudgetLine::find($entry->BudgetLineID);
                         if ($budgetLine) {
                             $glAccountSubType = BudgetGLAccountSubType::find($budgetLine->GLAccountSubTypeID)->GLAccountSubTypeName ?? 'N/A';
+                            $budgetLineName = $budgetLine->LineName ?? 'N/A';
                             //fetch allocations
                             $allocationValues = [];
                             $values=BudgetManualEntryAllocations::where('EntryID', $entry->Id)->where('BudgetId', $budgetId)
@@ -86,6 +87,7 @@ class BudgetConsolidationController extends Controller
                                 $allocationValues = $values;
                             }
                             $fullAllocation=BudgetManualEntry::where('Id', $entry->Id)->pluck('Amount')->first() ?? 0;
+                            //return $glAccountSubType;
                             $data[$type->Description][$glAccountSubType][]=[
                                 'budgetLineName'=>$budgetLineName,
                                 'allocationValues'=>$allocationValues,
@@ -94,7 +96,6 @@ class BudgetConsolidationController extends Controller
                             ];
                         }
                     }
-
                 }
             }
         }

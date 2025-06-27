@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Balance Sheet Entries')
+@section('title', 'GL Sheet Entries')
 @section('content')
 <div class="container mt-4">
     {{-- <h4 class="mb-3">📊 Budget Data Entry</h4> --}}

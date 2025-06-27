@@ -54,7 +54,9 @@
                         <th>#</th>
                         <th>Product</th>
                         <th>Volume</th>
+                        <th>Rate %</th>
                         <th>Value</th>
+                        <th>BudgetLine Value</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -65,7 +67,9 @@
                                 {{ $projection->productType->Name }}
                             </td>
                             <td>{{ $projection->Volume }}</td>
+                            <td>5</td>
                             <td>{{ number_format($projection->Value, 2) }}</td>
+                            <td>500</td>
                         </tr>
                     @endforeach
                 </tbody>
