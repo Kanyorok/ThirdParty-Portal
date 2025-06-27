@@ -37,7 +37,7 @@ class PropertyTenantClearanceController extends Controller
     public function show($Id)
     {
         $this->authorize(PermissionEnum::PropertyCategoryView, PropertyTenantClearance::class);
-        $clearancetenant = PropertyTenantClearance::find($Id);
+        $clearancetenant = PropertyTenantClearance::with('tenant')->get()->find($Id);
         return view('property.tenantmanagement.tenantclearance.show', compact('clearancetenant'));
     }
 
@@ -63,4 +63,31 @@ class PropertyTenantClearanceController extends Controller
 
     }
 
+    public function edit($Id)
+    {
+        $this->authorize(PermissionEnum::PropertyCategoryUpdate, PropertyTenantClearance::class);
+        $clearancetenant = PropertyTenantClearance::with('tenant')->get()->find($Id);
+        $codedetails = CodeDetail::where('CodeID', 'DepositRefunded')->get();
+        return view('property.tenantmanagement.tenantclearance.edit', compact('clearancetenant','codedetails'));
+    }
+
+    public function update(PropertyTenantClearanceRequest $request, $Id)
+    {
+        $this->authorize(PermissionEnum::PropertyCategoryUpdate, PropertyTenantClearance::class);
+        $validatedData = $request->validated();
+        $statusEnum = TenantClearanceEnum::from($validatedData['Status']);
+        $depositRefunded = $validatedData['DepositRefunded'] ? CodeDetail::findOrFail($validatedData['DepositRefunded']) : null;
+        $clearance = PropertyTenantClearance::findOrFail($Id);
+        $updatedClearance = $this->service->update(
+            $validatedData['ExitDate'],
+            $validatedData['FinalInspection'],
+            $validatedData['AllDuesPaid'],
+            $validatedData['KeysReturned'],
+            $depositRefunded,
+            $validatedData['AdditionalNotes'],
+            $statusEnum,
+            $request->user()
+        );
+        return redirect()->route('tenantclearance.index')->with('success', 'Tenant Clearance updated successfully');
+    }
 }

@@ -3,46 +3,68 @@
 
 @section('content')
 <div class="container mt-5" style="max-width: 720px;">
-    <div class="card shadow-sm border-0">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Tenant Details</h5>
-            <span class="badge bg-light text-dark">{{ $newtenant->TenantName }}</span>
-        </div>
-        <div class="card-body">
-            <dl class="row mb-0">
-                <dt class="col-sm-4">ID / Reg No.</dt>
-                <dd class="col-sm-8 text-muted">{{ $newtenant->IDRegistrationNo ?? '-' }}</dd>
-
-                <dt class="col-sm-4">Phone</dt>
-                <dd class="col-sm-8 text-muted">{{ $newtenant->PhoneNumber ?? '-' }}</dd>
-
-                <dt class="col-sm-4">Email</dt>
-                <dd class="col-sm-8 text-muted">{{ $newtenant->EmailAddress ?? '-' }}</dd>
-
-                <dt class="col-sm-4">Nationality</dt>
-                <dd class="col-sm-8 text-muted">{{ $newtenant->Nationality ?? '-' }}</dd>
-
-                <dt class="col-sm-4">Postal Address</dt>
-                <dd class="col-sm-8 text-muted">{{ $newtenant->PostalAddress ?? '-' }}</dd>
-
-                <dt class="col-sm-4">Remarks</dt>
-                <dd class="col-sm-8 text-muted">{{ $newtenant->Remarks ?? '-' }}</dd>
-
-                <dt class="col-sm-4">Status</dt>
-                <dd class="col-sm-8">
-                    @if($newtenant->IsActive == 1)
-                        <span class="badge bg-success">Active</span>
-                    @else
-                        <span class="badge bg-danger">Inactive</span>
-                    @endif
-                </dd>
-
-            </dl>
-        </div>
-        <div class="card-footer bg-light d-flex justify-content-end gap-2">
-            <a href="{{ route('addtenant.edit', $newtenant->Id) }}" class="btn btn-outline-primary btn-sm">✏️ Edit</a>
-            <a href="{{ route('addtenant.index') }}" class="btn btn-outline-secondary btn-sm">↩️ Back</a>
-        </div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold">Tenant Details</h3>
+        <a href="{{ route('addtenant.index') }}" class="btn btn-outline-secondary btn-sm">← Back to List</a>
     </div>
+
+    <form>
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <div class="mb-3">
+                    <label class="form-label">Tenant Name</label>
+                    <input type="text" class="form-control" value="{{ $newtenant->TenantName ?? '-' }}" readonly>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">ID / Registration No.</label>
+                    <input type="text" class="form-control" value="{{ $newtenant->IDRegistrationNo ?? '-' }}" readonly>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Phone</label>
+                    <input type="text" class="form-control" value="{{ $newtenant->PhoneNumber ?? '-' }}" readonly>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="text" class="form-control" value="{{ $newtenant->EmailAddress ?? '-' }}" readonly>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Nationality</label>
+                    <input type="text" class="form-control" value="{{ $newtenant->Nationality ?? '-' }}" readonly>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Postal Address</label>
+                    <input type="text" class="form-control" value="{{ $newtenant->PostalAddress ?? '-' }}" readonly>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Remarks</label>
+                    <textarea class="form-control" rows="3" readonly>{{ $newtenant->Remarks ?? '—' }}</textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Status</label>
+                    <div>
+                        @if($newtenant->IsActive == 1)
+                            <span class="badge bg-success">Active</span>
+                        @else
+                            <span class="badge bg-danger">Inactive</span>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-footer bg-light d-flex justify-content-between">
+                <a href="{{ route('addtenant.edit', $newtenant->Id) }}" class="btn btn-outline-primary">
+                    <i class="bi bi-pencil-square"></i> Edit
+                </a>
+                <a href="{{ route('addtenant.index') }}" class="btn btn-outline-secondary">Back</a>
+            </div>
+        </div>
+    </form>
 </div>
 @endsection

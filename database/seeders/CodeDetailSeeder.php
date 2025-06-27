@@ -344,7 +344,7 @@ class CodeDetailSeeder extends Seeder
             ],
         ]);
 
-                DB::table('t_CodeDetails')->insert([
+        DB::table('t_CodeDetails')->insert([
             [
                 'CodeID' => "PaymentFrequency",
                 'Description' => 'Annually',
@@ -372,6 +372,33 @@ class CodeDetailSeeder extends Seeder
             [
                 'CodeID' => 'PaymentFrequency',
                 'Description' => 'Monthly',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+        ]);
+
+        DB::table('t_CodeDetails')->insert([
+            [
+                'CodeID' => "TerminationReason",
+                'Description' => 'Relocation',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+            [
+                'CodeID' => "TerminationReason",
+                'Description' => 'Non Payment',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+            [
+                'CodeID' => 'TerminationReason',
+                'Description' => 'Other',
                 'CreatedOn' => $date,
                 'CreatedBy' => $user->Id,
                 'ModifiedOn' => $date,

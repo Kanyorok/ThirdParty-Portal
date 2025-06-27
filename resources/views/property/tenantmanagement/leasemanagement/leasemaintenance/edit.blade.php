@@ -5,7 +5,7 @@
 @section('content')
 <div class="container mt-5" style="max-width: 800px;">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="fw-bold">✏️ Edit Lease Agreement</h3>
+        <h3 class="fw-bold">Edit Lease Agreement</h3>
         <a href="{{ route('addlease.index') }}" class="btn btn-outline-secondary btn-sm">← Back to List</a>
     </div>
 

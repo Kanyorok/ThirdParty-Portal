@@ -5,7 +5,7 @@
 @section('content')
 <div class="container mt-5" style="max-width: 800px;">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="fw-bold">📄 Lease Agreement Details</h3>
+        <h3 class="fw-bold">Lease Agreement Details</h3>
         <a href="{{ route('addlease.index') }}" class="btn btn-outline-secondary btn-sm">← Back to List</a>
     </div>
 
@@ -45,11 +45,11 @@
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Start Date</label>
-                        <input type="text" class="form-control" value="{{ \Carbon\Carbon::parse($newlease->StartDate)->format('d M Y') }}" readonly>
+                        <input type="text" class="form-control" value="{{ \Carbon\Carbon::parse($newlease->StartDate)->format('d/m/Y') }}" readonly>
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label">End Date</label>
-                        <input type="text" class="form-control" value="{{ \Carbon\Carbon::parse($newlease->EndDate)->format('d M Y') }}" readonly>
+                        <input type="text" class="form-control" value="{{ \Carbon\Carbon::parse($newlease->EndDate)->format('d/m/Y') }}" readonly>
                     </div>
                 </div>
 

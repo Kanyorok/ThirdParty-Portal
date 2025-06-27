@@ -4,13 +4,13 @@
 
 @section('content')
 <div class="container mt-4">
-  <h4 class="fw-bold mb-3">📄 New Lease Agreement</h4>
+  <h4 class="fw-bold mb-3">New Lease Agreement</h4>
 
   <form method="POST" action="{{ route('addlease.store') }}" enctype="multipart/form-data">
     @csrf
 
     <div class="card shadow">
-      <div class="card-header bg-light fw-bold">📝 Lease Details</div>
+      <div class="card-header bg-light fw-bold">Lease Details</div>
       <div class="card-body">
 
         <!-- Tenant Selection -->

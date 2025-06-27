@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Property;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\TenantAndLease\PropertyLeaseTerminationRequest;
+use App\Models\Core\CodeDetail;
+use App\Models\PropertyManagement\PropertyNewLease;
 use App\Services\Property\TenantAndLease\PropertyLeaseTerminationService;
 use Illuminate\Http\Request;
 use App\Models\PropertyManagement\PropertyLeaseTermination;
@@ -20,18 +22,20 @@ class PropertyLeaseTerminationController extends Controller
     }
     public function index()
     {
-        $leaseterminations = PropertyLeaseTermination::all();
+        $leaseterminations = PropertyLeaseTermination::with('lease','lease.tenant','code')->get();
         return view('property.tenantmanagement.leasemanagement.leasetermination.index', compact('leaseterminations'));
     }
 
-    public function create(){
-        $newtenants = PropertyNewTenant::all();
-        return view('property.tenantmanagement.leasemanagement.leasetermination.create', compact('newtenants'));
+    public function create() {
+        $newtenants = PropertyNewLease::where('IsActive','1')->get();
+        $terminationReasons = CodeDetail::where('CodeID', 'TerminationReason')->get();
+        return view('property.tenantmanagement.leasemanagement.leasetermination.create', compact('newtenants', 'terminationReasons'));
     }
+
 
     public function show($Id)
     {
-        $leasetermination = PropertyLeaseTermination::findOrFail($Id);
+        $leasetermination = PropertyLeaseTermination::with('lease','lease.tenant','code')->findOrFail($Id);
         return view('property.tenantmanagement.leasemanagement.leasetermination.show', compact('leasetermination'));
     }
 
@@ -39,8 +43,8 @@ class PropertyLeaseTerminationController extends Controller
     {
 
         $validatedData = $request->validated();
-        $LeaseID = $validatedData['LeaseID'];
-        $TerminationReason = $validatedData['TerminationReason'];
+        $LeaseID = PropertyNewLease::findOrFail($validatedData['LeaseID']);
+        $TerminationReason = CodeDetail::findOrFail($validatedData['TerminationReason']);
         $this->service->create(
             $LeaseID,
             $TerminationDate = $validatedData['TerminationDate'],

@@ -32,6 +32,10 @@ class PropertyLeaseTerminationService
             'ModifiedBy' => $user->Id,
         ]);
 
+        $LeaseID->IsActive = 0; //feature reference 0 means inactive on the leasecreation as it uses boolean for active status
+        $LeaseID->ModifiedBy = $user->Id;
+        $LeaseID->save();
+
 
         activity()->causedBy($user->Id)->performedOn($leasetermination)->event('create')
         ->log("Added New Lease {$leasetermination->Id}.");
