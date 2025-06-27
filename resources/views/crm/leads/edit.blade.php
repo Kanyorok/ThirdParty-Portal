@@ -67,7 +67,7 @@
         </div>--}}
         <hr>@method('put')
         <div class="mt-4">
-            <button type="button" class="btn btn-secondary float-start"
+            <button type="button" class="btn btn-secondary float-start" onclick="window.bsOffcanvas.hide()"
                     data-bs-dismiss="modal">
                 cancel
             </button>

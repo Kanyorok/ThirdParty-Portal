@@ -39,4 +39,9 @@ class LeadProduct extends Model
     {
         return $this->belongsTo(Product::class, 'ProductID', 'ProductID');
     }
+
+    public static function getPrimaryKey(): string
+    {
+        return "LeadProductID";
+    }
 }

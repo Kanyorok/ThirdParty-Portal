@@ -62,7 +62,11 @@ use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQLine;
 use App\Models\Procurement\SchedulePlan;
 use App\Models\PropertyManagement\PropertyBlock;
+use App\Models\PropertyManagement\PropertyFloor;
+use App\Models\PropertyManagement\PropertyUnit;
+use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Models\PropertyManagement\PropertyRegistry;
+use App\Models\PropertyManagement\PropertyTenantClearance;
 use App\Models\PropertyManagement\PropertyType;
 use App\Models\Settings\APICredential;
 use App\Models\ThirdParies\Board;
@@ -77,9 +81,13 @@ use App\Policies\Procurement\RequisitionPolicy;
 use App\Policies\Procurement\SchedulePlanPolicy;
 use App\Policies\ProductDevelopmentPolicy;
 use App\Policies\PropertyManagement\PropertyCategoryPolicy;
+use App\Policies\PropertyManagement\PropertyNewTenantPolicy;
 use App\Policies\PropertyManagement\PropertyRegistryPolicy;
 use App\Policies\PropertyManagement\PropertyStructuralPolicy;
+use App\Policies\PropertyManagement\PropertyTenantClearancePolicy;
 use App\Policies\PropertyManagement\PropertyTypePolicy;
+use App\Policies\PropertyManagement\PropertyFloorPolicy;
+use App\Policies\PropertyManagement\PropertyUnitPolicy;        
 use App\Policies\RolePolicy;
 use App\Policies\Procurement\ProcurementPlanMaintainPolicy;
 use App\Policies\Procurement\PlanManualInputPolicy;
@@ -205,12 +213,14 @@ class AppServiceProvider extends ServiceProvider
             BudgetLineProductTypes::getPrimaryKey()=>BudgetLineProductTypes::class,
             BudgetMonthlyProjectionAllocation::getPrimaryKey() => BudgetMonthlyProjectionAllocation::class,
             BudgetManualEntryAllocations::getPrimaryKey() => BudgetManualEntryAllocations::class,
-
-          
             CategoryMaster::getPrimaryKey() => CategoryMaster::class,
             PropertyType::getPrimaryKey() => PropertyType::class,
             PropertyRegistry::getPrimaryKey() => PropertyRegistry::class,
             PropertyBlock::getPrimaryKey() => PropertyBlock::class,
+            PropertyNewTenant::getPrimaryKey() => PropertyNewTenant::class,
+            PropertyTenantClearance::getPrimaryKey() => PropertyTenantClearance::class,
+            PropertyFloor::getPrimaryKey() => PropertyFloor::class,
+            PropertyUnit::getPrimaryKey() => PropertyUnit::class,
         ]);
 
         Gate::policy(Role::class, RolePolicy::class);
@@ -240,6 +250,10 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PropertyType::class, PropertyTypePolicy::class);
         Gate::policy(PropertyRegistry::class, PropertyRegistryPolicy::class);
         Gate::policy(PropertyBlock::class, PropertyStructuralPolicy::class);
+        Gate::policy(PropertyNewTenant::class, PropertyNewTenantPolicy::class);
+        Gate::policy(PropertyTenantClearance::class, PropertyTenantClearancePolicy::class);
+        Gate::policy(PropertyFloor::class, PropertyFloorPolicy::class);
+        Gate::policy(PropertyUnit::class, PropertyUnitPolicy::class);
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);
          Event::listen(SMSSendEvent::class, SMSSendListener::class);

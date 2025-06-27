@@ -64,17 +64,14 @@ trait TasksTrait
      */
     public function save(Model $model, string $description, Carbon $due, User $assignee, User $actor, string $Source = null, string $SourceID = null): array
     {
-        if (!$model instanceof Lead && !$model instanceof Client) {
-            throw new ErroredException('unknown party given');
-        }
-
         return DB::transaction(static function () use ($SourceID, $Source, $actor, $assignee, $description, $due, $model) {
             if ($model instanceof Lead) {
-                TaskService::createLead(lead: $model, Due: $due, Description: $description, assignee: $assignee, actor: $actor, Source: $Source, SourceID: $SourceID);
+                $service = TaskService::createLead(lead: $model, Due: $due, Description: $description, assignee: $assignee, actor: $actor, Source: $Source, SourceID: $SourceID);
+            } else if ($model instanceof Client) {
+                $service = TaskService::createClient(client: $model, Due: $due, Description: $description, assignee: $assignee, actor: $actor, Source: $Source, SourceID: $SourceID);
+            } else {
+                throw new ErroredException('unknown party given');
             }
-            //if ($model instanceof Client) {
-            $service = TaskService::createClient(client: $model, Due: $due, Description: $description, assignee: $assignee, actor: $actor, Source: $Source, SourceID: $SourceID);
-            //}
 
             return $service->addActivity($actor, 'Task (' . Str::limit($service->task->Notes, 30) . ') Added');
         });

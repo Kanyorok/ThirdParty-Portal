@@ -191,9 +191,7 @@ class RequisitionsController extends Controller
      */
     public function show(string $id)
     {
-//        dd (Requisitions::query()->findOrFail($id));
-
-            $this->authorize('view', Requisitions::query()->findOrFail($id));
+        $this->authorize('view', Requisitions::query()->findOrFail($id));
 
         try {
 

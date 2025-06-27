@@ -43,6 +43,10 @@ class PropertyRegistry extends Model
     {
         return $this->belongsTo(PropertyType::class, 'PropertyType', 'Id');
     }
+    public function getBlockByProperty()
+{
+    return $this->hasMany(PropertyBlock::class, 'PropertyID', 'Id');
+}
     public function propertyCategory()
     {
         return $this->belongsTo(CategoryMaster::class, 'Category', 'Id');
@@ -51,8 +55,12 @@ class PropertyRegistry extends Model
     {
         return $this->belongsTo(Locality::class, 'TownCity', 'Id');
     }
+    public function getFloorByBlock()
+{
+    return $this->hasMany(PropertyFloor::class, 'BlockID', 'Id');
+}
     public function attachment()
     {
-        return $this->hasMany(PropertyAttachments::class,'PropertyID');
+        return $this->hasMany(PropertyAttachments::class,'PropertyID', 'Id');
     }
 }
