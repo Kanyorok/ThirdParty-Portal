@@ -1,79 +1,90 @@
 @extends('layouts.app')
-@section('title', 'Property Tenant Clearance')
+
+@section('title', 'Edit Tenant Clearance')
+
 @section('content')
-    @if ($errors->any())
-        <div class="alert alert-danger">
-            <ul class="mb-0">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-    <h1>Edit Tenant Clearance</h1>
-    <form action="{{ route('tenantclearance.update', $clearancetenant->Id) }}" method="POST">
-        @csrf
-        @method('PUT')
+<div class="container mt-5" style="max-width: 800px;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold">📝 Edit Tenant Clearance</h3>
+        <a href="{{ route('tenantclearance.index') }}" class="btn btn-outline-secondary btn-sm">← Back to List</a>
+    </div>
 
-        <div class="mb-3">
-            <label for="Tenant" class="form-label">Tenant Name:</label>
-            <select name="Tenant" class="form-select" required>
-              <option>--Select the tenant</option>
-                @foreach ($newtenants as $newtenant)
-                    <option value="{{ $newtenant->Id }}" {{ $clearancetenant->Tenant == $newtenant->Id ? 'selected' : '' }}>
-                        {{ $newtenant->TenantName }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
+    <form method="POST" action="{{ route('tenantclearance.update', $clearancetenant->Id) }}">
+    @csrf
+    @method('PUT')
 
-        <div class="mb-3">
-            <label for="ExitDate" class="form-label">Exit Date:</label>
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+            <div class="mb-3">
+                <label class="form-label">Tenant Name: {{ $clearancetenant->tenant->TenantName ?? 'N/A' }}</label>
+            </div>
+
+            <div class="mb-1 text-muted">
+                Current Exit Date: <strong>{{ \Carbon\Carbon::parse($clearancetenant->ExitDate)->format('d/m/Y') }}</strong>
+            </div>
+
             <input type="date" name="ExitDate" class="form-control"
-                   value="{{ old('ExitDate', $clearancetenant->ExitDate) }}" required>
+            value="{{ old('ExitDate', \Carbon\Carbon::parse($clearancetenant->ExitDate)->format('d/m/Y')) }}" required>
+
+            <div class="mb-3">
+                <label class="form-label">Final Inspection Completed</label>
+                <select name="FinalInspection" class="form-select" required>
+                    <option value="1" {{ old('FinalInspection', $clearancetenant->FinalInspection) == 1 ? 'selected' : '' }}>Yes</option>
+                    <option value="0" {{ old('FinalInspection', $clearancetenant->FinalInspection) == 0 ? 'selected' : '' }}>No</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">All Dues Paid</label>
+                <select name="AllDuesPaid" class="form-select" required>
+                    <option value="1" {{ old('AllDuesPaid', $clearancetenant->AllDuesPaid) == 1 ? 'selected' : '' }}>Yes</option>
+                    <option value="0" {{ old('AllDuesPaid', $clearancetenant->AllDuesPaid) == 0 ? 'selected' : '' }}>No</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Keys Returned</label>
+                <select name="KeysReturned" class="form-select" required>
+                    <option value="1" {{ old('KeysReturned', $clearancetenant->KeysReturned) == 1 ? 'selected' : '' }}>Yes</option>
+                    <option value="0" {{ old('KeysReturned', $clearancetenant->KeysReturned) == 0 ? 'selected' : '' }}>No</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Deposit Refunded</label>
+                <select name="DepositRefunded" class="form-select" required>
+                    @foreach ($codedetails as $code)
+                        <option value="{{ $code->ID }}"
+                            {{ old('DepositRefunded', $clearancetenant->DepositRefunded) == $code->ID ? 'selected' : '' }}>
+                            {{ $code->Description }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Additional Notes</label>
+                <textarea name="AdditionalNotes" class="form-control" rows="3">{{ old('AdditionalNotes', $clearancetenant->AdditionalNotes) }}</textarea>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Status</label>
+                <select name="Status" class="form-select" required>
+                    @foreach (\App\Enums\Property\TenantClearanceEnum::cases() as $status)
+                        <option value="{{ $status->value }}"
+                            {{ old('Status', $clearancetenant->Status) == $status->value ? 'selected' : '' }}>
+                            {{ $status->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
         </div>
 
-        <div class="mb-3">
-            <label for="FinalInspection" class="form-label">Final Inspection Done?</label>
-            <select name="FinalInspection" class="form-select" required>
-                <option value="1" {{ $clearancetenant->FinalInspection ? 'selected' : '' }}>Yes</option>
-                <option value="0" {{ !$clearancetenant->FinalInspection ? 'selected' : '' }}>No</option>
-            </select>
+        <div class="card-footer bg-light d-flex justify-content-between">
+            <button type="submit" class="btn btn-success">💾 Save Changes</button>
+            <a href="{{ route('tenantclearance.index') }}" class="btn btn-outline-secondary">Cancel</a>
         </div>
-        <div class="mb-3">
-            <label for="AllDuesPaid" class="form-label">All Dues Paid?</label>
-            <select name="AllDuesPaid" class="form-select" required>
-                <option value="1" {{ $clearancetenant->AllDuesPaid ? 'selected' : '' }}>Yes</option>
-                <option value="0" {{ !$clearancetenant->AllDuesPaid ? 'selected' : '' }}>No</option>
-            </select>
-        </div>
-
-        <div class="mb-3">
-            <label for="KeysReturned" class="form-label">Keys Returned?</label>
-            <select name="KeysReturned" class="form-select" required>
-                <option value="1" {{ $clearancetenant->KeysReturned ? 'selected' : '' }}>Yes</option>
-                <option value="0" {{ !$clearancetenant->KeysReturned ? 'selected' : '' }}>No</option>
-            </select>
-        </div>  
-        <div class="mb-3">
-            <label for="DepositRefunded" class="form-label">Deposit Status:</label>
-            <select name="DepositRefunded" class="form-select" required>
-                <option value="">--Select Deposit Status--</option>
-                @foreach ($codedetails as $codedetail)
-                    <option value="{{ $codedetail->ID }}" {{ $clearancetenant->DepositRefunded == $codedetail->ID ? 'selected' : '' }}>
-                        {{ $codedetail->Description }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-
-        <div class="mb-3">
-            <label for="AdditionalNotes" class="form-label">Additional Notes (optional):</label>
-            <textarea name="AdditionalNotes" class="form-control"
-                      rows="4">{{ old('AdditionalNotes', $clearancetenant->AdditionalNotes) }}</textarea>
-        </div>
-
-        <button type="submit" class="btn btn-success">Update Tenant Clearance</button>
-        <a href="{{ route('tenantclearance.index') }}" class="btn btn-secondary">Cancel</a>
-    </form>
+    </div>
+</form>
+</div>
 @endsection

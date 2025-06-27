@@ -6,7 +6,7 @@
 @section('content')
 <div class="container mt-4">
 <a href="{{ route('tenantclearance.create') }}" class="btn btn-primary mb-3">New Clearance</a>
-  <h4 class="fw-bold mb-3">📋 Tenant Exit & Clearance Records</h4>
+  <h4 class="fw-bold mb-3">Tenant Exit & Clearance Records</h4>
 
     @if($clearancetenants->count())
   <table class="table table-bordered table-striped align-middle" id="tenantclearance">

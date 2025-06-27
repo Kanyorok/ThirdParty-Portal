@@ -1,41 +1,70 @@
 @extends('layouts.app')
-@section('title', 'Patent Details')
+
+@section('title', 'Tenant Details')
+
 @section('content')
-    <div class="container mt-5" style="max-width: 700px;">
-        <h3 class="mb-4">Patent Details</h3>
-        <div class="card">
-            <div class="card-body">
-                <dl class="row">
-                    <dt class="col-sm-4">Tenant</dt>
-                    <dd class="col-sm-8">{{ $clearancetenant->tenant->TenantName }}</dd>
+<div class="container mt-5" style="max-width: 800px;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold">Tenant Clearance Details</h3>
+        <a href="#" class="btn btn-outline-secondary btn-sm">← Back to List</a>
+    </div>
 
-                    <dt class="col-sm-4">Exit Date</dt>
-                    <dd class="col-sm-8">{{ $clearancetenant->ExitDate ?? '-' }}</dd>
+    <form>
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <div class="mb-3">
+                    <label class="form-label">Tenant</label>
+                    <input type="text" class="form-control" value="{{ $clearancetenant->tenant->TenantName ?? '-' }}" readonly>
+                </div>
 
-                    <dt class="col-sm-4">Final Inspection done</dt>
-                    <dd class="col-sm-8">@if($clearancetenant->FinalInspection) <span class="badge bg-success">Yes</span> @else <span class="badge bg-danger">No</span> @endif</dd>
+                <div class="mb-3">
+                    <label class="form-label">Exit Date</label>
+                    <input type="text" class="form-control" 
+                           value="{{ $clearancetenant->ExitDate ? \Carbon\Carbon::parse($clearancetenant->ExitDate)->format('d/m/Y') : '-' }}" 
+                           readonly>
+                </div>
 
-                    <dt class="col-sm-4">Dues Cleared</dt>
-                    <dd class="col-sm-8">@if($clearancetenant->AllDuesPaid) <span class="badge bg-success">Yes</span> @else <span class="badge bg-danger">No</span> @endif</dd>
+                <div class="mb-3">
+                    <label class="form-label">Final Inspection Done</label>
+                    <input type="text" class="form-control" 
+                        value="{{ (int)$clearancetenant->FinalInspection === 1 ? 'Yes' : ((int)$clearancetenant->FinalInspection === 0 ? 'No' : '-') }}" 
+                        readonly>
+                </div>
 
-                    <dt class="col-sm-4">Keys Returned</dt>
-                    <dd class="col-sm-8">@if($clearancetenant->KeysReturned) <span class="badge bg-success">Yes</span> @else <span class="badge bg-danger">No</span> @endif</dd>
+                <div class="mb-3">
+                    <label class="form-label">Dues Cleared</label>
+                    <input type="text" class="form-control" 
+                        value="{{ (int)$clearancetenant->AllDuesPaid === 1 ? 'Yes' : ((int)$clearancetenant->AllDuesPaid === 0 ? 'No' : '-') }}" 
+                        readonly>
+                </div>
 
-                    <dt class="col-sm-4">Deposit Status</dt>
-                    <dd class="col-sm-8">{{ $clearancetenant->code->Description ?? '-' }}</dd>
+                <div class="mb-3">
+                    <label class="form-label">Keys Returned</label>
+                    <input type="text" class="form-control" 
+                        value="{{ (int)$clearancetenant->KeysReturned === 1 ? 'Yes' : ((int)$clearancetenant->KeysReturned === 0 ? 'No' : '-') }}" 
+                        readonly>
+                </div>
 
-                    <dt class="col-sm-4">Additional Notes</dt>
-                    <dd class="col-sm-8">{{ $clearancetenant->AdditionalNotes ?? '-' }}</dd>
+                <div class="mb-3">
+                    <label class="form-label">Additional Notes</label>
+                    <textarea class="form-control" rows="3" readonly>{{ $clearancetenant->AdditionalNotes ?? '—' }}</textarea>
+                </div>
 
-                    <dt class="col-sm-4">Status</dt>
-                    <dd class="col-sm-8">    <span class="badge bg-{{ $clearancetenant->Status->badgeColor() }}">{{ $clearancetenant->Status->label() }}</span></dd>
-
-                </dl>
+                <div class="mb-3">
+                    <label class="form-label">Status</label>
+                    <div>
+                        <span class="badge bg-{{ $clearancetenant->Status->badgeColor() }}">
+                            {{ $clearancetenant->Status->label() }}
+                        </span>
+                    </div>
+                </div>
             </div>
-            <div class="card-footer">
-                <a href="#" class="btn btn-primary">Edit</a>
-                <a href="#" class="btn btn-secondary">Back</a>
+
+            <div class="card-footer bg-light d-flex justify-content-between">
+                <a href="{{ route('tenantclearance.edit', $clearancetenant->Id) }}" class="btn btn-outline-primary"><i class="bi bi-pencil-square"></i> Edit</a>
+                <a href="{{ route('tenantclearance.index') }}" class="btn btn-outline-secondary">Back</a>
             </div>
         </div>
-    </div>
+    </form>
+</div>
 @endsection

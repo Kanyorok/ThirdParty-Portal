@@ -66,80 +66,32 @@ class PropertyTenantClearanceController extends Controller
         return redirect()->route('tenantclearance.index')->with('success', 'Tenant created successfully');
 
     }
-     public function edit($id)
+
+    public function edit($Id)
     {
-        //Check if user has permission to edit tender categories
-        $this->authorize(PermissionEnum::TenantMentenanceUpdate, PropertyTenantClearance::class);
-        $clearancetenant = PropertyTenantClearance::findOrFail($id);
+        $this->authorize(PermissionEnum::PropertyCategoryUpdate, PropertyTenantClearance::class);
+        $clearancetenant = PropertyTenantClearance::with('tenant')->get()->find($Id);
         $codedetails = CodeDetail::where('CodeID', 'DepositRefunded')->get();
-        $newtenants = PropertyNewTenant::where('IsActive', true)->get();
-        return view('property.tenantmanagement.tenantclearance.edit', compact('clearancetenant', 'codedetails', 'newtenants'));
+        return view('property.tenantmanagement.tenantclearance.edit', compact('clearancetenant','codedetails'));
     }
 
-    public function update(Request $request, $id)
+    public function update(PropertyTenantClearanceRequest $request, $Id)
     {
-        $this->authorize(PermissionEnum::TenantMentenanceUpdate, PropertyTenantClearance::class);
-        $validated = $request->validate([
-            'Tenant' => 'required|exists:t_TenantMaintenance,Id',
-            'ExitDate' => 'required|date',
-            'FinalInspection' => 'required|boolean',
-            'AllDuesPaid' => 'required|boolean',
-            'KeysReturned' => 'required|boolean',
-            'DepositRefunded' => 'required|exists:t_CodeDetails,Id',
-            'AdditionalNotes' => 'nullable|string',
-        ]);
-
-        DB::beginTransaction();
-
-        try {
-            $clearancetenant = PropertyTenantClearance::findOrFail($id);
-
-            $clearancetenant->update([
-                'Tenant' => $validated['Tenant'],
-                'ExitDate' => $validated['ExitDate'],
-                'FinalInspection' => $validated['FinalInspection'],
-                'AllDuesPaid' => $validated['AllDuesPaid'],
-                'KeysReturned' => $validated['KeysReturned'],
-                'DepositRefunded' => $validated['DepositRefunded'],
-                'AdditionalNotes' => $validated['AdditionalNotes'],
-                'ModifiedBy' => Auth::Id(),
-            ]);
-
-            DB::commit();
-            activity()
-                ->performedOn($clearancetenant)
-                ->causedBy(Auth::user())
-                ->withProperties(['action' => 'update'])
-                ->log('Updated Tenant Clearance');
-
-            return redirect()->route('tenantclearance.index')->with('success', 'Tenant Clearance updated successfully');
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            Log::error('Failed to Update Tenant Clearance:' . $th->getMessage());
-
-            return back()->withErrors(['error' => 'Failed to update Tenant Clearance'])->withInput();
-        }
+        $this->authorize(PermissionEnum::PropertyCategoryUpdate, PropertyTenantClearance::class);
+        $validatedData = $request->validated();
+        $statusEnum = TenantClearanceEnum::from($validatedData['Status']);
+        $depositRefunded = $validatedData['DepositRefunded'] ? CodeDetail::findOrFail($validatedData['DepositRefunded']) : null;
+        $clearance = PropertyTenantClearance::findOrFail($Id);
+        $updatedClearance = $this->service->update(
+            $validatedData['ExitDate'],
+            $validatedData['FinalInspection'],
+            $validatedData['AllDuesPaid'],
+            $validatedData['KeysReturned'],
+            $depositRefunded,
+            $validatedData['AdditionalNotes'],
+            $statusEnum,
+            $request->user()
+        );
+        return redirect()->route('tenantclearance.index')->with('success', 'Tenant Clearance updated successfully');
     }
-
-    public function destroy($id)
-    {
-        //Check if user has permission to delete property categories
-       $this->authorize(PermissionEnum::TenantMentenanceDelete, PropertyTenantClearance::class);
-        try {
-            $clearancetenant = PropertyTenantClearance::findOrFail($id);
-            $clearancetenant->delete();
-
-            return redirect()->route('tenantclearance.index')
-                ->with('success', 'Tenant Clearance Deleted Successfully!');
-        } catch (\Throwable $th) {
-            // Log the error for debugging
-            Log::error('Error deleting Tenant Clearance: ' . $th->getMessage());
-            return redirect()->back()
-                ->withErrors(['error' => 'Failed to delete Tenant Clearance. Please try again.'])
-                ->withInput();
-        }
-    }
-
 }
-
-

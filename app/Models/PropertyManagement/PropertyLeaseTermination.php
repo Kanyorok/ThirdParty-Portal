@@ -2,6 +2,7 @@
 
 namespace App\Models\PropertyManagement;
 
+use App\Models\Core\CodeDetail;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -32,6 +33,10 @@ class PropertyLeaseTermination extends Model
     public function lease()
     {
         return $this->belongsTo(PropertyNewLease::class, 'LeaseID', 'Id');
+    }
+    public function code()
+    {
+        return $this->belongsTo(CodeDetail::class, 'TerminationReason', 'ID');
     }
 
 }
