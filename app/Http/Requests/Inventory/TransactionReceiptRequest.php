@@ -31,7 +31,7 @@ class TransactionReceiptRequest extends FormRequest
         'items.*.dispatched_qty' => 'nullable|numeric|min:0', 
         'items.*.discrepancy' => 'nullable|numeric',   
         'items.*.received_qty' => 'required|numeric|min:0',
-        'items.*.store_id' => 'required|exists:t_Stores,Id',
+        'items.*.store_id' => 'nullable|exists:t_Stores,Id',
         'items.*.damaged_qty' => 'nullable|numeric|min:0',
      
     ];

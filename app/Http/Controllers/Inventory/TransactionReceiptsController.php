@@ -43,16 +43,43 @@ class TransactionReceiptsController extends Controller
     }
 
     public function store(TransactionReceiptRequest $request)
-    {
-        $this->authorize('create', TransactionReceipt::class);
-        $validatedData = $request->validated();
-        $items = $validatedData['items'] ?? [];
-        unset($validatedData['items']);
+{
+    $this->authorize('create', TransactionReceipt::class);
+    $validatedData = $request->validated();
+    $items = $validatedData['items'] ?? [];
+    unset($validatedData['items']);
 
-        $receipt = $this->service->createReceipt($validatedData, $items, Auth::user());
-
+    try {
+        $receipt = $this->service->createReceipt($validatedData, $items);
         return redirect()->route('transactionsreceipts.index')->with('success', 'Transaction receipt posted successfully.');
-    }
+    } 
+    
+    catch (\Illuminate\Validation\ValidationException $e) {
+    $transferId = $validatedData['TransferID'] ?? null;
+    $transfer = TransactionTransfer::find($transferId);
+    $branchId = $transfer?->ToBranch;
+
+    $itemsWithDetails = collect($items)->map(function ($item) use ($branchId) {
+        $itemModel = \App\Models\Inventory\ItemMasterList::find($item['item']);
+        $item['item_name'] = $itemModel->ItemName ?? 'Unknown';
+        $storeOptions = \App\Models\Inventory\Store::where('BranchID', $branchId)
+            ->get(['Id', 'StoreName'])
+            ->map(fn ($s) => ['Id' => $s->Id, 'StoreName' => $s->StoreName])
+            ->toArray();
+
+        $item['store_options'] = $storeOptions;
+
+        return $item;
+    })->toArray();
+
+    return redirect()
+        ->back()
+        ->withInput(array_merge($validatedData, ['items' => $itemsWithDetails]))
+        ->withErrors($e->validator);
+}
+
+}
+
 
     public function show($id)
     {

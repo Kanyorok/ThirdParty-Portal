@@ -15,11 +15,12 @@
       @endif
       @if ($errors->any())
         <div class="alert alert-danger">
-          <ul>
-            @foreach ($errors->all() as $error)
-              <li>{{ $error }}</li>
-            @endforeach
-          </ul>
+       <ul>
+    @foreach($errors->all() as $error)
+        <li>{!! $error !!}</li>
+    @endforeach
+</ul>
+
         </div>
       @endif
 
@@ -64,13 +65,56 @@
               <th>Qty Received</th>
               <th>Discrepancy</th>
               <th>Qty Damaged</th>
-              <th>Store</th> <!-- ✅ New column -->
+              <th>Store</th>
               <th>Remarks</th>
             </tr>
           </thead>
           <tbody id="itemsTableBody">
-            <!-- Items will be dynamically added here -->
-          </tbody>
+@if(old('items'))
+    @foreach(old('items') as $index => $item)
+        <tr>
+            <td>
+                {{ $item['item_name'] ?? 'Item' }} {{-- Optional: pass ItemName from controller to old input --}}
+                <input type="hidden" name="items[{{ $index }}][item]" value="{{ $item['item'] }}">
+            </td>
+            <td>
+                <input type="number" name="items[{{ $index }}][dispatched_qty]" class="form-control dispatched-qty"
+                       value="{{ $item['dispatched_qty'] ?? 0 }}" readonly>
+            </td>
+            <td>
+                <input type="number" name="items[{{ $index }}][received_qty]" class="form-control received-qty"
+                       value="{{ $item['received_qty'] ?? 0 }}">
+            </td>
+            <td>
+                <input type="number" name="items[{{ $index }}][discrepancy]" class="form-control discrepancy"
+                       value="{{ $item['discrepancy'] ?? 0 }}" readonly>
+            </td>
+            <td>
+                <input type="number" name="items[{{ $index }}][damaged_qty]" class="form-control"
+                       value="{{ $item['damaged_qty'] ?? 0 }}">
+            </td>
+          <td>
+    <select name="items[{{ $index }}][store_id]" class="form-select" >
+        <option value="">-- Select Store --</option>
+        @if(isset($item['store_options']))
+            @foreach($item['store_options'] as $store)
+                <option value="{{ $store['Id'] }}" {{ (string)($item['store_id'] ?? '') === (string)$store['Id'] ? 'selected' : '' }}>
+                    {{ $store['StoreName'] }}
+                </option>
+            @endforeach
+        @endif
+    </select>
+</td>
+
+            <td>
+                <input type="text" name="items[{{ $index }}][remarks]" class="form-control"
+                       value="{{ $item['remarks'] ?? '' }}">
+            </td>
+        </tr>
+    @endforeach
+@endif
+</tbody>
+
         </table>
       </div>
 
@@ -118,7 +162,7 @@
                 <input type="number" name="items[${index}][damaged_qty]" class="form-control" min="0" value="0">
               </td>
               <td>
-                <select name="items[${index}][store_id]" class="form-select" required>
+                <select name="items[${index}][store_id]" class="form-select">
                   <option value="">-- Select Store --</option>
                   ${stores.map(store => `<option value="${store.Id}">${store.StoreName}</option>`).join('')}
                 </select>

@@ -75,52 +75,64 @@ class TransactionReceiptService
     }
 
     public function createReceiptItems($receipt, $items)
-    {
-        $toBranchId = $receipt->transfer->ToBranch;
+{
+    $toBranchId = $receipt->transfer->ToBranch;
 
-        foreach ($items as $index => $itemData) {
-            $storeId = $itemData['store_id'];
-            $itemId = $itemData['item'];
+    foreach ($items as $index => $itemData) {
+        $storeId = $itemData['store_id'] ?? null;
+        $itemId = $itemData['item'];
 
-            $receiptItem = $receipt->items()->create([
-                'item' => $itemData['item'],
-                'Store' => $storeId,
-                'ReceivedQty' => $itemData['received_qty'],
-                'DispatchedQty' => $itemData['dispatched_qty'] ?? null,
-                'Discrepancy' => isset($itemData['dispatched_qty'], $itemData['received_qty'])
-                    ? $itemData['dispatched_qty'] - $itemData['received_qty']
-                    : null,
-                'DamagedQty' => $itemData['damaged_qty'] ?? 0,
-                'CreatedBy' => Auth::id(),
-                'CreatedOn' => Carbon::now(),
-                'ModifiedBy' => Auth::id(),
-                'ModifiedOn' => Carbon::now(),
-            ]);
+        if ($storeId) {
+            $stock = StockItem::where('ItemID', $itemId)
+                ->where('BranchID', $toBranchId)
+                ->where('Store', $storeId)
+                ->first();
 
-            $stock = StockItem::firstOrNew([
-                'Store' => $storeId,
-                'ItemID' => $itemId,
-            ]);
-
-            $stock->Branch = $toBranchId;
-            $stock->CurrentQty = ($stock->CurrentQty ?? 0) + $itemData['received_qty'];
-            $stock->ModifiedBy = Auth::id();
-            $stock->ModifiedOn = Carbon::now();
-
-            if (!$stock->exists) {
-                $stock->CreatedBy = Auth::id();
-                $stock->CreatedOn = Carbon::now();
+            if (!$stock) {
+                throw ValidationException::withMessages([
+                    "items.$index.item" => 'Item not available in the selected <strong>Store</strong> Stock. <a href="' . route('sku.create') . '" target="_blank">Click here to add stock</a>.'
+                ]);
             }
+        } else {
+            $stock = StockItem::where('ItemID', $itemId)
+                ->where('Branch', $toBranchId)
+                ->first();
 
-            $stock->save();
-
-            activity()
-                ->causedBy(auth()->user())
-                ->performedOn($receiptItem)
-                ->withProperties(['attributes' => $receiptItem->toArray()])
-                ->log('Receipt item added and stock updated');
+            if (!$stock) {
+                throw ValidationException::withMessages([
+                    "items.$index.item" => 'Item not available in the selected <strong>Branch</strong> Stock. <a href="' . route('sku.create') . '" target="_blank">Click here to add stock</a>.'
+                ]);
+            }
         }
+
+        $receiptItem = $receipt->items()->create([
+            'item' => $itemId,
+            'Store' => $storeId,
+            'ReceivedQty' => $itemData['received_qty'],
+            'DispatchedQty' => $itemData['dispatched_qty'] ?? null,
+            'Discrepancy' => isset($itemData['dispatched_qty'], $itemData['received_qty'])
+                ? $itemData['dispatched_qty'] - $itemData['received_qty']
+                : null,
+            'DamagedQty' => $itemData['damaged_qty'] ?? 0,
+            'CreatedBy' => Auth::id(),
+            'CreatedOn' => now(),
+            'ModifiedBy' => Auth::id(),
+            'ModifiedOn' => now(),
+        ]);
+
+        
+        $stock->CurrentQty += $itemData['received_qty'];
+        $stock->ModifiedBy = Auth::id();
+        $stock->ModifiedOn = now();
+        $stock->save();
+
+        activity()
+            ->causedBy(auth()->user())
+            ->performedOn($receiptItem)
+            ->withProperties(['attributes' => $receiptItem->toArray()])
+            ->log('Receipt item added and stock updated');
     }
+}
 
     public function updateReceipt($receipt, $data)
     {
