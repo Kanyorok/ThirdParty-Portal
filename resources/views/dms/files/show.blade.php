@@ -69,21 +69,19 @@
                     <p class="text-center m-5"><i class="fas fa-spinner fa-spin fa-5x"></i><br>loading preview</p>
                 </div>
             </div>
-
-
             <div class="card">
                 <div class="card-header p-0">
                     <div class="nav nav-pills card-header py-2">
                         <ul class="nav" role="tablist">
-                            {{-- <li class="nav-item"><a class="nav-link " href="#tab-comments"
-                                                     data-bs-toggle="tab" role="tab" aria-selected="false"
-                                 >comments</a></li>--}}
-                            <li class="nav-item"><a class="nav-link active" href="#tab-watchers" data-bs-toggle="tab"
-                                                    role="tab" aria-selected="false" onclick="fetchWatchersTable()"
-                                >users & teams</a></li>
+                            <li class="nav-item"><a class="nav-link active" href="#tab-usersAndTeams"
+                                                    data-bs-toggle="tab"
+                                                    role="tab" aria-selected="false"
+                                                    onclick="fetchFilePermissionsTableTable()">
+                                    Permissions
+                                </a></li>
                             <li class="nav-item"><a class="nav-link" href="#tab-activities" data-bs-toggle="tab"
                                                     role="tab" aria-selected="false" onclick="fetchActivitiesTable()"
-                                >activities</a></li>
+                                >Activities</a></li>
                             <li class="nav-item"><a class="nav-link" href="#tab-workflow" data-bs-toggle="tab"
                                                     role="tab" aria-selected="false" onclick="fetchWorkflowTable()"
                                 >workflows</a></li>
@@ -92,23 +90,6 @@
                 </div>
                 <div class="card-body pt-0">
                     <div class="tab-content p-0">
-                        {{-- <div class="tab-pane m-2 " id="tab-comments" role="tabpanel">
-                             <div class="pb-1 mb-1 border-bottom">
-                                 Comments
-                                 @if($ticket->Status->value === TicketStatusEnum::Active->value)
-                                     <span class="float-end">
-                                               <button class="btn btn-primary btn-sm new-comment" data-parent="comments"
-                                                       data-route="{{  route('ticket-comment.store',[$ticket->TicketID])  }}"
-                                                       data-title="new comment" type="button">
-                                             <i class="fas fa-plus-circle"></i> new comment
-                                         </button>
-                                     </span>
-                                 @endif
-                             </div>
-                             <div id="comments" class="px-2 pt-0 w-100 comments" style="max-height: 100vh"
-                                  data-url="{{  route('ticket-comment.index',[$ticket->TicketID]) }}"></div>
-                             <div class="d-grid text-center" id="commentsMessage"></div>
-                         </div>--}}
                         <div class="tab-pane m-2 " id="tab-workflow" role="tabpanel">
                             <table id="ticketWorkflowTable"
                                    class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
@@ -139,8 +120,8 @@
                                 <tbody></tbody>
                             </table>
                         </div>
-                        <div class="tab-pane m-2 active show" id="tab-watchers" role="tabpanel">
-                            <table id="ticketWatchersTable"
+                        <div class="tab-pane m-2 active show" id="tab-usersAndTeams" role="tabpanel">
+                            <table id="filePermissionsTable"
                                    class="table table-striped no-footer dtr-inline w-100 table-responsive">
                                 <thead>
                                 <tr>
@@ -186,8 +167,41 @@
         }
 
         document.addEventListener('DOMContentLoaded', function () {
+            fetchFilePermissionsTableTable()
             fetchFilePreview();
         });
+
+        function fetchFilePermissionsTableTable() {
+            if (!$.fn.DataTable.isDataTable('#filePermissionsTable')) {
+                $('#filePermissionsTable').DataTable({
+                    processing: true,
+                    serverSide: true,
+                    responsive: true,
+                    dom: '<"row"<"col-12 mb-2"tr><"col-12"p>>',
+                    "order": [[3, 'desc']],
+                    ajax: {
+                        url: '{{ route('file-permissions.index',[$file->DocumentId]) }}',
+                        error: function (jqXHR) {
+                            codeNotify(jqXHR.status);
+                        }
+                    },
+                    columns: [
+                        {data: "DT_RowIndex", name: 'DT_RowIndex', searchable: false, orderable: false},
+                        {data: 'party', name: 'party'},
+                        {data: 'Role', name: 'Role'},
+                        {data: 'CreatedOn', name: 'CreatedOn'},
+                        {data: 'action', name: 'action', orderable: false, searchable: false},
+                    ], "oLanguage": {
+                        "sEmptyTable": "no permissions under this filter"
+                    }
+                }).on('error', function () {
+                    nWarning("an issue occurred while loading permissions.");
+                    // console.log(er);
+                });
+            } else {
+                $('#filePermissionsTable').DataTable().ajax.reload();
+            }
+        }
 
     </script>
 @endsection

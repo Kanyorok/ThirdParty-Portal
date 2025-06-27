@@ -188,19 +188,6 @@
             $("#fileActionModal").modal('show');
         });
 
-        $('form#updateFileVisibilityForm').submit(async function (e) {
-            e.preventDefault();
-            const response = await saveForm($(this), $('#updateFileVisibilityBtn'), false, true, true, true);
-            if (response) {
-                $("#fileActionModal").modal('hide');
-                window.bsOffcanvas.hide();
-                $('#' + response.data.id).remove();
-                if (typeof appendFiles === "function") {
-                    appendFiles(response.data);
-                }
-            }
-        });
-
         $('form#addFilePermissionForm').submit(async function (e) {
             e.preventDefault();
             if (await saveForm($(this), $('#addFilePermissionBtn'), false, true, true)) {
@@ -214,6 +201,19 @@
             if (await saveForm($(this), $('#trashFilePermissionBtn'), false, true, true)) {
                 $("#fileActionModal").modal('hide');
                 fetchFilePermissionsTableTable();
+            }
+        });
+
+        $('form#updateFileVisibilityForm').submit(async function (e) {
+            e.preventDefault();
+            const response = await saveForm($(this), $('#updateFileVisibilityBtn'), false, true, true, true);
+            if (response) {
+                $("#fileActionModal").modal('hide');
+                window.bsOffcanvas.hide();
+                $('#' + response.data.id).remove();
+                if (typeof appendFiles === "function") {
+                    appendFiles(response.data);
+                }
             }
         });
     });
