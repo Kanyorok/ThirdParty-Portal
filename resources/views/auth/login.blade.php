@@ -36,6 +36,15 @@
                         <h6 class="text-secondary f-w-400 mb-0"><a href="forgot-password-v2.html">Forgot Password?</a>
                         </h6>
                     </div>--}}
+                    <div class="mb-3">
+                        <label for="branch" class="form-label">Login Branch (optional)</label>
+                        <select class="form-control" id="branch" name="branch">
+                            <option value="">-- Use Default Branch --</option>
+                            @foreach ($branches as $branch)
+                                <option value="{{ $branch->Id }}">{{ $branch->Name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                     <div class="d-grid mt-4">
                         <button type="submit" class="btn btn-primary">Login</button>
                     </div>

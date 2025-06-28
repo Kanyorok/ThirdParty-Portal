@@ -159,6 +159,7 @@
     <script src="{{ asset('assets/js/datatables.js') }}"></script>
     <script>
         const $Modal = $('#RequisitionItemModal');
+        
         $(function () {
             // $.fn.dataTable.ext.errMode = 'none';
             // fetchCampaignsTable();
@@ -186,42 +187,39 @@
 
         });
 
-        // function fetchCampaignsTable() {
-        //     if (!$.fn.DataTable.isDataTable('#requsitionTable')) {
-        //         $('#requsitionTable').DataTable({
-        //             processing: true,
-        //             serverSide: true,
-        //             responsive: true,
-        //             // "order": [[3, 'asc']],
-        //             "columnDefs": [
-        //                 {"className": "text-center", "targets": [2]}
-        //             ],
-        //             ajax: {
-        //                 url: getDocumentUrl(),
-        //                 error: function (request) {
-        //                     if (request.status === 400 && request.responseJSON.message) {
-        //                         nWarning(request.responseJSON.message);
-        //                     } else {
-        //                         codeNotify(request.status);
-        //                     }
-        //                 }
-        //             },
-        //             columns: [
-        //                 {data: "DT_RowIndex", name: 'DT_RowIndex', searchable: false, orderable: false},
-        //                 {data: 'Label', name: 'Label'},
-        //                 {data: 'Status', name: 'Status'},
-        //                 {data: 'contacts_count', name: 'contacts_count'},
-        //                 {data: 'CreatedOn', name: 'CreatedOn'},
-        //                 {data: 'action', name: 'action', orderable: false, searchable: false},
-        //             ], "oLanguage": {
-        //                 "sEmptyTable": "no campaigns under this filter"
-        //             }
-        //         }).on('error', function () {
-        //             nWarning("an issue occurred while loading campaigns.");
-        //         });
-        //     } else {
-        //         $('#requsitionTable').DataTable().ajax.reload();
-        //     }
-        // }
+        document.getElementById('ProcurementPlan').addEventListener('change', function () {
+            let planId = this.value;
+            if (!planId) return;
+
+            fetch("{{ route('procurement.plan.details', '__ID__') }}".replace('__ID__', planId))
+                .then(response => response.json())
+                .then(data => {
+                    const branchSelect = document.getElementById('Branch');
+                    const departmentSelect = document.getElementById('Department');
+
+                    // Reset
+                    branchSelect.innerHTML = '<option selected disabled>Select Branch</option>';
+                    departmentSelect.innerHTML = '<option selected disabled>Select Department</option>';
+
+                    // Populate Branches
+                    data.branches.forEach(branch => {
+                        const opt = document.createElement('option');
+                        opt.value = branch.Id;
+                        opt.textContent = branch.Name;
+                        branchSelect.appendChild(opt);
+                    });
+
+                    // Populate Departments
+                    data.departments.forEach(dept => {
+                        const opt = document.createElement('option');
+                        opt.value = dept.Id;
+                        opt.textContent = dept.Name;
+                        departmentSelect.appendChild(opt);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching plan details:', error);
+                });
+        });
     </script>
 @endsection

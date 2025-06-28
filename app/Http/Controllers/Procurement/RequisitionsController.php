@@ -56,6 +56,7 @@ class RequisitionsController extends Controller
      */
     public function create()
     {
+         dd(session()->all());
         try {
             $details = $this->service->fetchRequisition();
             $branches = $this->service->fetchBranches();
