@@ -106,7 +106,16 @@ class UserService
                 if (array_key_exists('action_team', $extra)) {
                     return '<button type="button"  data-action="' . route('team-users.destroy', [$extra['action_team'], $user->UserID]) . '" data-name="' . $user->Name . '" class="btn btn-danger btn-sm modal-trash-team-users"><i class="fas fa-trash"></i></button>';
                 }
-                return '<a  href="' . route('users.show', [$user->UserID]) . '" class="btn btn-info btn-sm"><i class="fas fa-eye"></i> details</button>';
+                return '
+                    <a href="' . route('users.show', [$user->UserID]) . '" class="btn btn-info btn-sm me-1">
+                        <i class="fas fa-eye"></i> Details
+                    </a>
+                    <button type="button"
+                            data-click_url="' . route('roles.edit', [$user->UserID]) . '"
+                            data-summary_title="' . $user->Name . ': Branches"
+                            class="btn btn-primary btn-sm click-summary-data">
+                        <i class="fas fa-edit"></i>
+                    </button>';
             })->editColumn('pivot', function (User $user) use ($extra) {
                 if (!in_array('pivot_date', $extra, true)) {
                     return '';

@@ -37,7 +37,10 @@
                         </div>
                         <div class="flex-grow-1 ms-3 me-2">
                             <h6 class="mb-0">{{ auth()->user()->UserID }}</h6>
-                            <small data-i18n="Administrator">{{ auth()->user()->role()?->name }}</small>
+                            <small data-i18n="Administrator">{{ auth()->user()->role()?->name }}</small><br>
+                            <small data-i18n="Administrator">
+                                {{ session('LoginBranchName') ? 'Branch: ' . session('LoginBranchName') : 'No branch selected' }}
+                            </small>
                         </div>
                         <a class="btn btn-icon btn-link-secondary avtar collapsed" data-bs-toggle="collapse"
                            href="#pc_sidebar_userlink" aria-expanded="false">

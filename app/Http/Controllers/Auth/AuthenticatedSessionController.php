@@ -32,7 +32,7 @@ class AuthenticatedSessionController extends Controller
      * @return RedirectResponse
      * @throws ValidationException
      */
-    public function store(LoginRequest $request): RedirectResponse
+   public function store(LoginRequest $request): RedirectResponse
     {
         // Perform authentication
         $request->authenticate();
@@ -48,15 +48,30 @@ class AuthenticatedSessionController extends Controller
         if (empty($selectedBranchId)) {
             // No branch selected, fetch default from employee record
             $selectedBranchId = DB::table('t_Employees')
-                ->where('Id', $user->employee_id)
+                ->where('Id', $user->EmployeeId)
                 ->value('BranchId');
+
+            if (!$selectedBranchId) {
+                return redirect()->back()->withErrors([
+                    'branch' => 'No branch selected and no default branch found in employee record.'
+                ]);
+            }
         }
 
-        // Save LoginBranchId in session
-        session(['LoginBranchId' => $selectedBranchId]);
+        // Get branch name from the database
+        $branchName = DB::table('t_Branches')
+            ->where('Id', $selectedBranchId)
+            ->value('Name');
+
+        // Save LoginBranchId and LoginBranchName in session
+        session([
+            'LoginBranchId' => $selectedBranchId,
+            'LoginBranchName' => $branchName
+        ]);
 
         return redirect()->intended('/');
     }
+
 
     /**
      * Logout
