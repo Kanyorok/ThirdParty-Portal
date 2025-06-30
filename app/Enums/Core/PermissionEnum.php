@@ -272,6 +272,19 @@ enum PermissionEnum: string
     case ProcurementMethodRead = 'procurementmethod-read';
     case ProcurementMethodWrite = 'procurementmethod-create';
 
+
+    //Prequalification Periods
+    case PrequalificationPeriodRead = 'Prequalificationperiod-read';
+    case PrequalificationPeriodWrite = 'Prequalificationperiod-create';
+    case PrequalificationPeriodUpdate = 'Prequalificationperiod-update';
+    case PrequalificationPeriodDelete = 'Prequalificationperiod-delete';
+
+
+
+
+
+
+
     //ProcurementPlan Procurement Schedule
     //case SchedulePlanRead = 'scheduleplan-read';
     //case SchedulePlanWrite = 'scheduleplan-create';
@@ -461,10 +474,10 @@ enum PermissionEnum: string
             [self::Roles],
  
             [self::DepartmentNeedsRead, self::DepartmentNeedsWrite, self::DepartmentNeedsUpdate, self::DepartmentNeedsDelete, self::DepartmentNeedsApproval,],
-            [self::ProcurementMethodRead, self::ProcurementMethodWrite,],
- 
+            [self::ProcurementMethodRead, self::ProcurementMethodWrite,], 
  
             [self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete, self::Departments],
+            [self::PrequalificationPeriodRead, self::PrequalificationPeriodWrite, self::PrequalificationPeriodUpdate, self::PrequalificationPeriodDelete],
             [self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval, self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval],
             [self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval],
             
@@ -559,6 +572,7 @@ enum PermissionEnum: string
             self::BidSubmissionRead, self::BidSubmissionWrite, self::BidSubmissionUpdate, self::BidSubmissionDelete,
             self::TenderInvitationRead, self::TenderInvitationWrite, self::TenderInvitationUpdate, self::TenderInvitationDelete,
             self::VendorClarificationsRead, self::VendorClarificationsWrite, self::VendorClarificationsUpdate, self::VendorClarificationsDelete,
+            self::PrequalificationPeriodRead, self::PrequalificationPeriodWrite, self::PrequalificationPeriodUpdate, self::PrequalificationPeriodDelete,
             self::PlanMaintenanceRead, self::PlanMaintenanceWrite, self::PlanMaintenanceUpdate, self::PlanMaintenanceDelete,
             self::PlanManualInputRead, self::PlanManualInputWrite, self::PlanManualInputUpdate, self::PlanManualInputDelete,
             self::PlanEditRead, self::PlanEditWrite, self::PlanEditUpdate, self::PlanEditDelete,
@@ -642,6 +656,8 @@ enum PermissionEnum: string
             //Requisition
             self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval, self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval =>'Requisitions',
  
+            //Vendor
+            self::PrequalificationPeriodRead, self::PrequalificationPeriodWrite, self::PrequalificationPeriodUpdate, self::PrequalificationPeriodDelete, => 'Prequalification Periods',
  
             //PurchaseOrder
             self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval => 'Purchase Order',
