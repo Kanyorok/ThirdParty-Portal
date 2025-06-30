@@ -57,6 +57,7 @@ class DocumentController extends Controller
     public function show(Repository $repository, Document $document): View
     {
         $document->load(['current', 'repository', 'creator', 'category', 'properties'])->withCount('versions');
+        activity()->causedBy(auth()->user())->performedOn($document)->event('view')->log('viewed document  ' . $document->Name . '.');
         return view('dms.files.show')->with('repoService', new RepositoryService($repository))->with('file', $document);
     }
 
