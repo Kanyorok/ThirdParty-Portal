@@ -82,31 +82,13 @@
                             <li class="nav-item"><a class="nav-link" href="#tab-activities" data-bs-toggle="tab"
                                                     role="tab" aria-selected="false" onclick="fetchActivitiesTable()"
                                 >Activities</a></li>
-                            <li class="nav-item"><a class="nav-link" href="#tab-workflow" data-bs-toggle="tab"
-                                                    role="tab" aria-selected="false" onclick="fetchWorkflowTable()"
-                                >workflows</a></li>
                         </ul>
                     </div>
                 </div>
                 <div class="card-body pt-0">
                     <div class="tab-content p-0">
-                        <div class="tab-pane m-2 " id="tab-workflow" role="tabpanel">
-                            <table id="ticketWorkflowTable"
-                                   class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                                <thead>
-                                <tr>
-                                    <th>No.</th>
-                                    <th>Stage</th>
-                                    <th>Status</th>
-                                    <th>Dated</th>
-                                    <th>By</th>
-                                </tr>
-                                </thead>
-                                <tbody></tbody>
-                            </table>
-                        </div>
                         <div class="tab-pane m-2" id="tab-activities" role="tabpanel">
-                            <table id="ticketActivitiesTable"
+                            <table id="fileActivitiesTable"
                                    class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
                                 <thead>
                                 <tr>
@@ -171,6 +153,47 @@
             fetchFilePreview();
         });
 
+        function fetchActivitiesTable() {
+            if (!$.fn.DataTable.isDataTable('#fileActivitiesTable')) {
+                $('#fileActivitiesTable').DataTable({
+                    processing: true,
+                    serverSide: true,
+                    responsive: true,
+                    "order": [[4, 'desc']],
+                    columnDefs: [
+                        // {"className": "text-center", "targets": [3]},
+                        {
+                            "render": function (data, type, row) {
+                                return '<p><b>' + row.event + '</b><br/>' + data + '</p>';
+                                //return data + " " + row.OtherNames;
+                            },
+                            "targets": 2 // the place of col2
+                        },
+                        {"visible": false, "targets": [0, 1]}
+                    ],
+                    ajax: {
+                        url: '{{ route('file.activities',[$file->DocumentId]) }}',
+                        error: function (jqXHR) {
+                            codeNotify(jqXHR.status);
+                        }
+                    },
+                    columns: [
+                        {data: "DT_RowIndex", name: 'DT_RowIndex', searchable: false, orderable: false},
+                        {data: 'event', name: 'event'},
+                        {data: 'description', name: 'description'},
+                        {data: 'causer.Name', name: 'causer.Name'},
+                        {data: 'created_at', name: 'created_at'},
+                    ], "oLanguage": {
+                        "sEmptyTable": "no activities under this filter"
+                    }
+                }).on('error', function () {
+                    nWarning("an issue occurred while loading activities.");
+                    // console.log(er);
+                });
+            } else {
+                $('#fileActivitiesTable').DataTable().ajax.reload();
+            }
+        }
         function fetchFilePermissionsTableTable() {
             if (!$.fn.DataTable.isDataTable('#filePermissionsTable')) {
                 $('#filePermissionsTable').DataTable({

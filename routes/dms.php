@@ -4,6 +4,7 @@ use App\Http\Controllers\DMS\AccessManagementController;
 use App\Http\Controllers\DMS\CategoriesManagementController;
 use App\Http\Controllers\DMS\DrepositoryManagementController;
 use App\Http\Controllers\DMS\DtypessetupManagementController;
+use App\Http\Controllers\DMS\Files\DocumentActivityController;
 use App\Http\Controllers\DMS\Files\DocumentController;
 use App\Http\Controllers\DMS\Files\DocumentPermissionController;
 use App\Http\Controllers\DMS\RenewalManagementController;
@@ -22,6 +23,7 @@ Route::namespace('DMS')->prefix('dms')->group(function () {
     Route::resource('repo/{repository}/repo-permissions', RepositoryPermissionController::class)->only(['index', 'store', 'destroy']);
     Route::resource('repo', RepositoryController::class)->parameters(['repo' => 'repository']);
 
+    Route::get('document/{document}/activities', DocumentActivityController::class)->name('file.activities');
     Route::get('document/{document}/preview', [DocumentController::class, 'preview'])->name('file.preview');
     Route::put('document/{document}/file-visibility', [DocumentPermissionController::class, 'visibility'])->name('file.visibility');
     Route::resource('document/{document}/file-permissions', DocumentPermissionController::class)->only(['index', 'store', 'destroy']);
