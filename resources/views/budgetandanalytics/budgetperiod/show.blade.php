@@ -61,9 +61,9 @@
                                 {{ $glAccountTypes->firstWhere('GLAccountTypeID', $gl->GLAccountTypeID)->Description ?? 'Unknown Type' }}
                             </td>
                             <td>
-                                <button type="button" class="btn btn-sm btn-primary edit-gl-btn me-1" data-gl-id="{{ $gl->Id }}" data-description="{{ $gl->Description ?? '' }}">
+                                {{-- <button type="button" class="btn btn-sm btn-primary edit-gl-btn me-1" data-gl-id="{{ $gl->Id }}" data-description="{{ $gl->Description ?? '' }}">
                                     <i class="bi bi-pencil"></i> Edit
-                                </button>
+                                </button> --}}
                                 <button type="button" class="btn btn-sm btn-danger delete-gl-btn" data-gl-id="{{ $gl->Id }}">
                                     <i class="bi bi-trash"></i> Delete
                                 </button>
