@@ -13,8 +13,9 @@ return new class extends Migration
     {
         Schema::create('t_BudgetGLMasterAllocations', function (Blueprint $table) {
             $table->id('Id');
-            $table->foreignId('BudgetID')->constrained('t_Budgets', 'Id')->onDelete('cascade');
-            $table->foreignId('BranchID')->constrained('t_Branches', 'Id')->onDelete('cascade');
+            $table->foreignId('BudgetID')->constrained('t_Budgets', 'Id');//->onDelete('cascade');
+            $table->foreignId('BranchID')->constrained('t_Branches', 'Id');//->onDelete('cascade');
+            $table->foreignId('GLAttachmentID')->constrained('t_BudgetGLsAttachments', 'Id')->onDelete('cascade');
             $table->string('AccountID');
             $table->string('Type')->default('monthly');// monthly or quarterly
             $table->string('Description')->nullable();
@@ -32,6 +33,10 @@ return new class extends Migration
             $table->decimal('Month11', 15, 2)->default(0);
             $table->decimal('Month12', 15, 2)->default(0);
             $table->decimal('Total', 15, 2)->default(0);
+
+            $table->boolean('IsBeingEdited')->default(false);
+            $table->foreignId('IsBeingEditedBy')->nullable()->constrained('t_Users', 'Id');
+
 
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');

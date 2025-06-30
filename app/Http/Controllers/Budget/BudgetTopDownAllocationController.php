@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Budget;
 
 use App\Http\Controllers\Controller;
+use App\Models\Auth\User;
 use App\Models\Budget\Budget;
 use App\Models\Budget\BudgetGLMaster;
 use App\Models\Budget\BudgetGLMasterAllocations;
+use App\Models\Budget\BudgetGLsAttachments;
 use App\Models\Budget\BudgetLine;
 use App\Models\Budget\BudgetPeriods;
 use App\Models\Budget\BudgetScenarioPlanning;
@@ -42,64 +44,84 @@ class BudgetTopDownAllocationController extends Controller
         ));
     }
 
-    public function display(Request $request){
-        $budgets=Budget::all();
-        $branches=Branch::all();
-        //return $request->all();
-        $validated=$request->validate([
+    public function display(Request $request)
+    {
+        $validated = $request->validate([
             'BudgetID' => 'required|exists:t_Budgets,Id',
             'BranchID' => 'required|exists:t_Branches,Id',
         ]);
-        //Check if such data has been created
-        $budgetId=$validated['BudgetID'];
-        $branchId=$validated['BranchID'];
+
+        // //Check if its being edited
+        // $isBeingEdited = BudgetGLMasterAllocations::where('BudgetID', $validated['BudgetID'])
+        //     ->where('BranchID', $validated['BranchID'])
+        //     ->where('IsBeingEdited', true)
+        //     ->exists();
+        // if ($isBeingEdited) {// 
+        //     //get user name who is editing
+        //     $editingUser = BudgetGLMasterAllocations::where('BudgetID', $validated['BudgetID'])
+        //         ->where('BranchID', $validated['BranchID'])
+        //         ->where('IsBeingEdited', true)
+        //         ->value('IsBeingEditedBy');
+        //     // Get the name of the user who is currently editing
+        //     $editingUserName = User::find($editingUser)->name ?? 'Unknown User';
+        //     // Redirect back with an error message
+        //     return redirect()->back()->with('error', "This budget allocation is currently being edited by $editingUserName. Please try again later.");
+        // }else//Set the edit true
+        // {
+        //     // Set the IsBeingEdited flag to true for the current user
+        //     BudgetGLMasterAllocations::where('BudgetID', $validated['BudgetID'])
+        //         ->where('BranchID', $validated['BranchID'])
+        //         ->update([
+        //             'IsBeingEdited' => true,
+        //             'IsBeingEditedBy' => Auth::id(),
+        //             'ModifiedOn' => Carbon::now(),
+        //         ]);
+        // }
+
+        $budgets = Budget::all();
+        $branches = Branch::all();
+
+        $budgetId = $validated['BudgetID'];
+        $branchId = $validated['BranchID'];
         $check = BudgetGLMasterAllocations::where('BudgetID', $budgetId)
             ->where('BranchID', $branchId)
             ->first();
-            if($check){ // Data exists
-                //Read data for GL master
-                $glsMaster=BudgetGLMasterAllocations::where('BudgetID', $budgetId)
-                ->where('BranchID', $branchId)->get();
-                $isExisting = true;
-                $budgetName=Budget::find($budgetId)->Name;
-                $branchName=Branch::find($branchId)->Name;
 
-                return view('budgetandanalytics.budgetworkspace.topdown.exist',compact(
-                    'budgets',
-                    'branches',
-                    'glsMaster',
-                    'isExisting',
-                    'budgetName',
-                    'branchName',
-                    'budgetId',
-                    'branchId'
-                ));
-            }
-            else{
-                //Read data for GL master
-                $budgetName=Budget::find($budgetId)->Name;
-                $branchName=Branch::find($branchId)->Name;
-                $glsMaster=BudgetGLMaster::select(
-                    'BudgetID',
-                    'AccountID',
-                    'Description',
-                    'GLAccountTypeID',
-                    'GLSubAccountTypeID',
-                )->get();
-                $isExisting = false;
-                return view('budgetandanalytics.budgetworkspace.topdown.create',compact(
-                    'budgets',
-                    'branches',
-                    'glsMaster',
-                    'isExisting',
-                    'budgetName',
-                    'branchName',
-                    'budgetId',
-                    'branchId'
+        $budgetName = Budget::find($budgetId)->Name;
+        $branchName = Branch::find($branchId)->Name;
 
-                ));
-            }
-
+        if ($check) {
+            $glsMaster = BudgetGLMasterAllocations::where('BudgetID', $budgetId)
+                ->where('BranchID', $branchId)
+                ->get();
+            $isExisting = true;
+            return view('budgetandanalytics.budgetworkspace.topdown.exist', compact(
+                'budgets',
+                'branches',
+                'glsMaster',
+                'isExisting',
+                'budgetName',
+                'branchName',
+                'budgetId',
+                'branchId'
+            ));
+        } else {
+            $glsMaster = BudgetGLsAttachments::where('BudgetID', $budgetId)
+                ->whereNull('DeletedOn')
+                ->select('AccountID', 'Description', 'GLAccountTypeID')
+                ->get();
+            $isExisting = false;
+            return view('budgetandanalytics.budgetworkspace.topdown.create', compact(
+                'budgets',
+                'branches',
+                'glsMaster',
+                'isExisting',
+                'budgetName',
+                'branchName',
+                'budgetId',
+                'branchId'
+            ));
+        }
     }
 
     public function create(Request $request)
@@ -194,21 +216,22 @@ class BudgetTopDownAllocationController extends Controller
         return redirect()->route('topdownallocation.index');
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request)
     {
+        $validated = $request->validate([
+            'budgetId' => 'required|exists:t_Budgets,Id',
+            'branchId' => 'required|exists:t_Branches,Id',
+            'monthly_allocations' => 'required|array',
+            'monthly_allocations.*' => 'array',
+            'monthly_allocations.*.*' => 'nullable|numeric|min:0|max:234432554',
+        ]);
+
+        DB::beginTransaction();
         try {
-            $request->validate([
-                'budgetId' => 'required|exists:t_Budgets,Id',
-                'branchId' => 'required|exists:t_Branches,Id',
-                'monthly_allocations' => 'required|array',
-            ]);
-
-            DB::beginTransaction(); // Start transaction
-
-            $userId = Auth::user()->Id;
+            $userId = Auth::id();
             $now = Carbon::now();
 
-            foreach ($request->monthly_allocations as $accountID => $months) {
+            foreach ($validated['monthly_allocations'] as $accountID => $months) {
                 $total = 0;
                 $monthData = [];
 
@@ -220,34 +243,42 @@ class BudgetTopDownAllocationController extends Controller
 
                 BudgetGLMasterAllocations::updateOrCreate(
                     [
-                        'BudgetID' => $request->budgetId,
-                        'BranchID' => $request->branchId,
+                        'BudgetID' => $validated['budgetId'],
+                        'BranchID' => $validated['branchId'],
                         'AccountID' => $accountID,
                     ],
                     array_merge([
+                        'Description' => BudgetGLsAttachments::where('BudgetID', $validated['budgetId'])
+                            ->where('AccountID', $accountID)
+                            ->whereNull('DeletedOn')
+                            ->value('Description'),
+                        'GLAccountTypeID' => BudgetGLsAttachments::where('BudgetID', $validated['budgetId'])
+                            ->where('AccountID', $accountID)
+                            ->whereNull('DeletedOn')
+                            ->value('GLAccountTypeID'),
                         'Total' => $total,
                         'ModifiedBy' => $userId,
                         'ModifiedOn' => $now,
                         'CreatedBy' => $userId,
                         'CreatedOn' => $now,
-                        'GLAccountTypeID' => 'NA',
-                        'Description' => null,
                     ], $monthData)
                 );
             }
 
-            DB::commit(); // Commit if all good
+            DB::commit();
 
-            return back()->with('success', 'Budget allocations updated successfully.');
+            activity()
+                ->causedBy(Auth::user())
+                ->event('update')
+                ->withProperties(['action' => 'update_allocations', 'BudgetID' => $validated['budgetId'], 'BranchID' => $validated['branchId']])
+                ->log('Updated budget allocations');
 
-        } catch (\Exception $e) {
-            DB::rollBack(); // Rollback on error
-
-            Log::error('Budget Allocation Update Failed: ' . $e->getMessage());
-
-            return back()
-                ->withInput()
-                ->with('error', 'An error occurred while updating budget allocations. Please try again.');
+            return redirect()->route('budgetperiod.display', ['BudgetID' => $validated['budgetId'], 'BranchID' => $validated['branchId']])
+                ->with('success', 'Budget allocations updated successfully.');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            Log::error('Budget Allocation Update Failed: ' . $th->getMessage());
+            return back()->withInput()->withErrors(['error' => 'An error occurred while updating budget allocations. Please try again.']);
         }
     }
 
