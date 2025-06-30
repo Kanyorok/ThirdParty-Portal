@@ -24,14 +24,15 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasRoles;
+use App\Models\Auth\ModelRole;
 
 class User extends Authenticatable
 {
     use ImageTrait, HasFactory, Notifiable,UserActorTrait, SoftDeletes, HasRoles;
 
-    const string CREATED_AT = 'CreatedOn';
-    const string UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    const CREATED_AT = 'CreatedOn';
+    const UPDATED_AT = 'ModifiedOn';
+    const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Users';
     protected $primaryKey = 'Id';
@@ -105,6 +106,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(TeamUser::class, 'UserId', "Id");
     }
+
+    public function branchRoles()
+    {
+    return $this->hasMany(ModelRole::class, 'model_id')
+        ->where('model_type', self::class)
+        ->with(['role', 'branch']);
+    }
+
 
     public function getEmailForPasswordReset()
     {

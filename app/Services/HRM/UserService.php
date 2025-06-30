@@ -165,11 +165,25 @@ class UserService
         return ($query) ? $q : $q->get();
     }
 
-    public function setRole(Role $role, User $actor): static
+    public function setRole(Role $role, Branch $branch, User $actor): static
     {
+        // Assign system-level role
         $this->user->syncRoles($role->name);
 
-        activity()->causedBy($actor)->performedOn($this->user)->event('update')->log('Updated user ' . $this->user->UserID . ' role to ' . $role->name);
+        // Add branch-level role in t_ModelRoles
+        \App\Models\Auth\ModelRole::firstOrCreate([
+            'model_id' => $this->user->Id,
+            'model_type' => \App\Models\Auth\User::getPrimaryKey(),
+            'role_id' => $role->id,
+            'BranchId' => $branch->Id,
+        ]);
+
+        // Log activity
+        activity()
+            ->causedBy($actor)
+            ->performedOn($this->user)
+            ->event('update')
+            ->log('Assigned role ' . $role->name . ' to user ' . $this->user->UserID . ' for branch ' . $branch->Name);
 
         return $this;
     }

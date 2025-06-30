@@ -99,9 +99,14 @@ class UserController extends Controller
             return view('auth.profile')->with('user', $request->user());
         }
 
-        return view('settings.users.show', compact('user'));
-    }
+        $branches = Branch::all();
+        $roles = Role::all();
 
+        return view('settings.users.show', compact('user', 'branches', 'roles'))
+            ->with('user', $user)
+            ->with('branches', $branches)
+            ->with('roles', $roles);
+    }
 
     public function edit(User $user): View
     {
