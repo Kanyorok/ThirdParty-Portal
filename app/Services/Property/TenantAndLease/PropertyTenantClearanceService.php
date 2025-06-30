@@ -2,7 +2,6 @@
 
 namespace App\Services\Property\TenantAndLease;
 
-use App\Enums\Property\TenantClearanceEnum;
 use App\Models\Auth\User;
 use App\Models\Core\CodeDetail;
 use App\Models\PropertyManagement\PropertyNewTenant;
