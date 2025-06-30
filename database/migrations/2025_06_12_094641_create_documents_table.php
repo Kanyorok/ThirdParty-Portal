@@ -66,6 +66,7 @@ return new class extends Migration {
             $table->string('Name');
             $table->char('Visibility', 3)->comment('pub,pri');
             $table->longText('Description')->nullable();
+            $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
             $table->dateTime('ModifiedOn');
@@ -77,6 +78,32 @@ return new class extends Migration {
             $table->id('Id');
             $table->foreignId('DocId')->constrained('t_Documents', 'Id');
             $table->foreignId('TagId')->nullable()->constrained('t_DMSTags', 'Id');
+            $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('CreatedOn');
+            $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('ModifiedOn');
+            $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
+            $table->softDeletes('DeletedOn');
+        });
+
+        Schema::create('t_DMSTaggingRules', static function (Blueprint $table) {
+            $table->id('Id');
+            $table->foreignId('TagId')->nullable()->constrained('t_DMSTags', 'Id');
+            $table->char('Content')->comment('ContentEnum - body/title');
+            $table->char('Comparison')->comment('StringComparisonEnum - contains, equal');
+            $table->string('Value');
+            $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('CreatedOn');
+            $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('ModifiedOn');
+            $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
+            $table->softDeletes('DeletedOn');
+        });
+
+        Schema::create('t_DocumentTaggingRules', static function (Blueprint $table) {
+            $table->id('Id');
+            $table->foreignId('TagId')->nullable()->constrained('t_DMSTags', 'Id');
+            $table->foreignId('TaggingRuleId')->nullable()->constrained('t_DMSTaggingRules', 'Id');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
@@ -122,6 +149,7 @@ return new class extends Migration {
     {
         Schema::dropIfExists('t_DocumentRelations');
         Schema::dropIfExists('t_DocumentAttributes');
+        Schema::dropIfExists('t_DocumentTaggingRules');
         Schema::dropIfExists('t_DocumentTags');
         Schema::dropIfExists('t_DMSTags');
         Schema::dropIfExists('t_DocumentVersions');

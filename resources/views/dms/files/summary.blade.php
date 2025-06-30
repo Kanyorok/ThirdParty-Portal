@@ -52,7 +52,7 @@
          </div>--}}
     </div>
 </div>
-<div class="modal fade" id="fileActionModal" tabindex="-1" role="dialog" aria-hidden="true"
+<div class="modal fade" id="fileSummaryActionModal" tabindex="-1" role="dialog" aria-hidden="true"
      data-bs-backdrop="false" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
@@ -159,7 +159,7 @@
 
         $('#share_party').select2({
             placeholder: "Search a user or team (t:)", minimumInputLength: 2,
-            dropdownParent: $("#fileActionModal"),
+            dropdownParent: $("#fileSummaryActionModal"),
             ajax: {
                 url: '{!! route('users.select2',['with_teams'=>'rzr.co.ke']) !!}',
                 dataType: 'json',
@@ -185,13 +185,13 @@
             $('#trashFilePermission').html(name);
             $('#trashFilePermissionModal').removeClass('d-none');
             $('.modal-title').html('<b>Remove</b> share : ' + name);
-            $("#fileActionModal").modal('show');
+            $("#fileSummaryActionModal").modal('show');
         });
 
         $('form#addFilePermissionForm').submit(async function (e) {
             e.preventDefault();
             if (await saveForm($(this), $('#addFilePermissionBtn'), false, true, true)) {
-                $("#fileActionModal").modal('hide');
+                $("#fileSummaryActionModal").modal('hide');
                 fetchFilePermissionsTableTable();
             }
         });
@@ -199,7 +199,7 @@
         $('form#trashFilePermissionForm').submit(async function (e) {
             e.preventDefault();
             if (await saveForm($(this), $('#trashFilePermissionBtn'), false, true, true)) {
-                $("#fileActionModal").modal('hide');
+                $("#fileSummaryActionModal").modal('hide');
                 fetchFilePermissionsTableTable();
             }
         });
@@ -208,7 +208,7 @@
             e.preventDefault();
             const response = await saveForm($(this), $('#updateFileVisibilityBtn'), false, true, true, true);
             if (response) {
-                $("#fileActionModal").modal('hide');
+                $("#fileSummaryActionModal").modal('hide');
                 window.bsOffcanvas.hide();
                 $('#' + response.data.id).remove();
                 if (typeof appendFiles === "function") {
@@ -253,13 +253,13 @@
         $(".modal-item").addClass('d-none');
         $('#addFilePermissionModal').removeClass('d-none');
         $('.modal-title').html('SHARE: {{ $file->Name }}.');
-        $("#fileActionModal").modal('show');
+        $("#fileSummaryActionModal").modal('show');
     }
 
     function triggerUpdateFileVisibility() {
         $(".modal-item").addClass('d-none');
         $('#updateFileVisibilityModal').removeClass('d-none');
         $('.modal-title').html('change {{ $file->Name }} visibility.');
-        $("#fileActionModal").modal('show');
+        $("#fileSummaryActionModal").modal('show');
     }
 </script>

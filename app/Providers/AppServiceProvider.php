@@ -87,6 +87,7 @@ use App\Models\Settings\APICredential;
 use App\Models\ThirdParies\Board;
 use App\Models\ThirdParies\Competitor;
 use App\Policies\CrmBranchPolicy;
+use App\Policies\DMS\DMSTagPolicy;
 use App\Policies\DMS\DocumentPolicy;
 use App\Policies\DMS\RepositoryPolicy;
 use App\Policies\Inventory\InterBranchRequisitionPolicy;
@@ -241,6 +242,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Branch::class, CrmBranchPolicy::class);
         Gate::policy(Repository::class, RepositoryPolicy::class);
         Gate::policy(Document::class, DocumentPolicy::class);
+        Gate::policy(DMSTags::class, DMSTagPolicy::class);
         Gate::policy(Requisitions::class, RequisitionPolicy::class);
         Gate::policy(RequisitionLine::class, RequisitionLinesPolicy::class);
         Gate::policy(ProductDevelopment::class, ProductDevelopmentPolicy::class);

@@ -274,7 +274,7 @@ class DocumentService extends PermissionsService
                     'ModifiedBy' => $actor->Id,
                 ]);
 
-                activity()->causedBy($actor)->performedOn($this->document)->event('update')->log('Updated file ' . $this->document->Name . ' visibility : ' . $visibility->value);
+                activity()->causedBy($actor)->performedOn($this->document)->event('update')->log('Updated file ' . $this->document->Name . ' visibility : ' . $visibility->description());
                 return $this;
             });
         } catch (Exception|Throwable $e) {

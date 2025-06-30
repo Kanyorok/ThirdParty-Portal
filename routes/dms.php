@@ -11,6 +11,7 @@ use App\Http\Controllers\DMS\RenewalManagementController;
 use App\Http\Controllers\DMS\Repo\RepositoryController;
 use App\Http\Controllers\DMS\Repo\RepositoryPermissionController;
 use App\Http\Controllers\DMS\SearchManagementController;
+use App\Http\Controllers\DMS\Tags\TagController;
 use App\Http\Controllers\DMS\TrailManagementController;
 use App\Http\Controllers\DMS\UploadManagementController;
 use App\Http\Controllers\DMS\VersioncontrolManagementController;
@@ -29,6 +30,8 @@ Route::namespace('DMS')->prefix('dms')->group(function () {
     Route::resource('document/{document}/file-permissions', DocumentPermissionController::class)->only(['index', 'store', 'destroy']);
     Route::resource('repo/{repository}/files', DocumentController::class)
         ->parameters(['files' => 'document'])->except('create');
+
+    Route::resource('file-tags', TagController::class)->parameters(['file-tags' => 'DMSTag']);
 
     Route::resource('drepositorymanagement', DrepositoryManagementController::class);
     Route::resource('dtypessetupmanagement', DtypessetupManagementController::class);
