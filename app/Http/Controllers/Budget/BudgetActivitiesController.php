@@ -241,4 +241,31 @@ class BudgetActivitiesController extends Controller
             return back()->with('error', 'An error occurred while updating the budget activity. Please try again.');
         }
     }
+
+    public function destroy($id)
+    {
+        $this->authorize(PermissionEnum::BudgetSetupDelete, BudgetActivity::class);
+        try {
+            DB::beginTransaction();
+            $activity = BudgetActivity::findOrFail($id);
+            $activityId=$activity->BudgetActivityID;
+            $activity->allocations()->delete();
+            BudgetMonthlyAllocation::where('BudgetActivityID', $activityId)->delete();
+            $activity->delete();
+            DB::commit();
+            activity()
+                ->performedOn($activity)
+                ->causedBy(Auth::user())
+                ->withProperties(['action' => 'delete'])
+                ->log('Deleted a budget activity');
+            return back()->with('success', 'Budget Activity deleted successfully.');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            Log::error('Failed to delete budget activity.', [
+                'error' => $th->getMessage(),
+                'stack' => $th->getTraceAsString()
+            ]);
+            return back()->with('error', 'An error occurred while deleting the budget activity. Please try again.');
+        }
+    }
 }

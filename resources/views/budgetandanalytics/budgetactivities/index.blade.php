@@ -59,7 +59,11 @@
               {{ $activities->sum('FullAllocation') }}
             </td>
             <td>
-              <button class="btn btn-sm btn-danger">Delete</button>
+              <form action="{{route('budgetactivities.destroy', $budgetId)}}" method="POST" class="d-inline" >
+                @csrf
+                @method('DELETE')
+                <button class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this activity?')">🗑️</button>
+              </form>
             </td>
           </tr>
         @endforeach
