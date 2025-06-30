@@ -17,15 +17,12 @@
         <div class="card-body p-4">
             <div class="mb-3">
                 <label class="form-label">Tenant Name: {{ $clearancetenant->tenant->TenantName ?? 'N/A' }}</label>
+                <input type="hidden" name="Tenant" value="{{ $clearancetenant->Tenant }}">
             </div>
 
-            <div class="mb-1 text-muted">
-                Current Exit Date: <strong>{{ \Carbon\Carbon::parse($clearancetenant->ExitDate)->format('d/m/Y') }}</strong>
-            </div>
-
-            <input type="date" name="ExitDate" class="form-control"
-            value="{{ old('ExitDate', \Carbon\Carbon::parse($clearancetenant->ExitDate)->format('d/m/Y')) }}" required>
-
+            <input type="text" id="exit-date" name="ExitDate" class="form-control"
+                value="{{ old('ExitDate', \Carbon\Carbon::parse($clearancetenant->ExitDate)->format('d/m/Y')) }}" required>
+                        
             <div class="mb-3">
                 <label class="form-label">Final Inspection Completed</label>
                 <select name="FinalInspection" class="form-select" required>
@@ -87,4 +84,13 @@
     </div>
 </form>
 </div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    flatpickr("#exit-date", {
+        dateFormat: "d/m/Y",
+        allowInput: true
+    });
+</script>
 @endsection

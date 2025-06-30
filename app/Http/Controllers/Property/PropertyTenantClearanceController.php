@@ -77,9 +77,10 @@ class PropertyTenantClearanceController extends Controller
         $validatedData = $request->validated();
         $statusEnum = TenantClearanceEnum::from($validatedData['Status']);
         $depositRefunded = $validatedData['DepositRefunded'] ? CodeDetail::findOrFail($validatedData['DepositRefunded']) : null;
-        $clearance = PropertyTenantClearance::findOrFail($Id);
-        $updatedClearance = $this->service->update(
-            $validatedData['ExitDate'],
+        $TenantId = PropertyTenantClearance::where('Id', $Id)->firstOrFail();
+        $this->service->update(
+            $TenantId,
+            $exitdate = \Carbon\Carbon::createFromFormat('d/m/Y', $validatedData['ExitDate']),
             $validatedData['FinalInspection'],
             $validatedData['AllDuesPaid'],
             $validatedData['KeysReturned'],
