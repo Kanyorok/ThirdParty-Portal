@@ -11,9 +11,13 @@ use App\Models\DMS\Document;
 use App\Models\DMS\Repository;
 use App\Services\DMS\DocumentService;
 use App\Services\DMS\RepositoryService;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
+use Throwable;
 
 class DocumentController extends Controller
 {
@@ -80,8 +84,28 @@ class DocumentController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Document $document)
+    public function destroy(Repository $repository, Document $document)
     {
-        //
+        if ($document->RepositoryId !== $repository->Id) {
+            return $this->errored('file not found');
+        }
+
+        try {
+            return DB::transaction(function () use ($document) {
+                $document->forceFill([
+                    'DeletedOn' => now(),
+                    'DeletedBy' => auth()->user()->Id,
+                ])->save();
+
+                activity()->causedBy(auth()->user())->performedOn($document)->event('delete')->log('trashed document  ' . $document->Name . '.');
+                return $this->succeeded('document trashed successfully', data: [
+                    'data' => new FileResource($document)
+                ]);
+            });
+        } catch (Throwable|Exception $e) {
+            Log::error('deleting file failed :');
+            Log::error($e);
+        }
+        return $this->errored('an unexpected error occurred');
     }
 }

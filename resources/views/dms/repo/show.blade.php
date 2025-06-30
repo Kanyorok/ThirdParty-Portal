@@ -849,6 +849,27 @@
                             </div>
                         </form>
                     </div>
+                    <div class="onboarding-content with-gradient d-none modal-item text-center"
+                         id="trashFileModal">
+                        <h4 class="text-danger">
+                            Trash Document <b class="rm-file-name"></b> ?
+                        </h4>
+                        <div class="alert alert-warning" role="alert">
+                            <b>Note</b>This file will be deleted permanently
+                        </div>
+                        <form id="trashFileForm" method="post"> @csrf
+                            <div class="mt-4">@method('delete')
+                                <button type="button" class="btn btn-secondary float-start"
+                                        data-bs-dismiss="modal">
+                                    no, cancel
+                                </button>
+                                <button class="btn btn-danger float-end" id="trashFileBtn"
+                                        type="submit"><i
+                                        class="fas fa-trash"></i> yes, document
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -896,7 +917,6 @@
                 if (response) {
                     $Modal.modal('hide');
                     _appendRepository(response.data);
-
                 }
             });
 
@@ -938,6 +958,23 @@
                 }
             });
 
+            $(document).on('click', '.file-action-trash', function () {
+                $(".modal-title").html('<b class="text-danger">Trash</b>  : ' + $(this).data('title'));
+                $("#trashFileForm").attr('action', $(this).data('url'));
+                $(".rm-repo-name").html($(this).data('title'));
+                $(".modal-item").addClass('d-none');
+                $('#trashFileModal').removeClass('d-none');
+                $Modal.modal('show');
+            });
+
+            $('form#trashFileForm').submit(async function (e) {
+                e.preventDefault();
+                const response = await saveForm($(this), $('#trashFileBtn'), false, true, true);
+                if (response) {
+                    $('#' + response.data.id).remove();
+                    $Modal.modal('hide');
+                }
+            });
             fetchRepositories();
             fetchFiles();
         });
@@ -1032,7 +1069,7 @@
                 '<li class="list-inline-item"><div class="dropdown"><a class="avtar avtar-xs btn-link-secondary dropdown-toggle arrow-none" href="#" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="material-icons-two-tone f-18">more_vert</i></a><div class="dropdown-menu dropdown-menu-end" style="">' +
                 '<a class="dropdown-item" href="' + file.links.detail + '">Details</a> ' +
                 '<a class="dropdown-item click-summary-data" href="javascript:void(0)" data-summary_title=" ' + file.type.icon + ' ' + file.name + ' " data-click_url="' + file.links.summary + '"> share </a>' +
-                '<a class="dropdown-item" href="#">Delete</a></div></div></li> </ul> </td> </tr>';
+                '<a class="dropdown-item file-action-trash" data-title=" ' + file.type.icon + ' ' + file.name + ' " data-url="' + file.links.detail + '" href="#">Delete</a></div></div></li> </ul> </td> </tr>';
             if (prepend) {
                 $('#fileContents').prepend(content);
             } else {
