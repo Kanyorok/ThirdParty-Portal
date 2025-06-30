@@ -46,6 +46,7 @@
             <table class="table table-hover table-bordered rounded-3" id="glAttachmentsTable">
                 <thead class="table-light">
                     <tr>
+                        <th scope="col">Type</th>
                         <th scope="col">Account ID</th>
                         <th scope="col">Description</th>
                         <th scope="col">Account Type</th>
@@ -55,6 +56,7 @@
                 <tbody id="glAttachmentsBody">
                     @foreach ($glAttachments as $gl)
                         <tr data-gl-id="{{ $gl->Id }}">
+                            <td>{{ $gl->GLAccountTypeID }}</td>
                             <td>{{ $gl->AccountID }}</td>
                             <td class="description-cell">{{ $gl->Description ?? 'N/A' }}</td>
                             <td>
@@ -184,7 +186,7 @@
                 let glId = $(this).data('gl-id');
                 if (confirm('Are you sure you want to delete this GL attachment?')) {
                     $.ajax({
-                        url: '{{ url("budget/delete-gl") }}/' + glId,
+                        url: '{{ url("budget/delete-gl-attachment") }}/' + glId,
                         type: 'POST',
                         data: {
                             _token: '{{ csrf_token() }}'

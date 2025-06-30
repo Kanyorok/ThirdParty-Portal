@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Budget;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Budget\Budget;
+use App\Models\Budget\BudgetGLMaster;
+use App\Models\Budget\BudgetGLMasterAllocations;
 use App\Models\Budget\BudgetGLsAttachments;
 use App\Models\Budget\BudgetLine;
 use Illuminate\Http\Request;
@@ -79,9 +81,10 @@ class BudgetPeriodController extends Controller
     }
 
 
+
     public function store(Request $request)
     {
-        $validated = $request->validate([
+         $validated = $request->validate([
             'Name' => 'required|string|max:255',
             'FiscalYear' => 'required|integer|min:2020|max:2100',
             'From' => 'required|date',
@@ -98,7 +101,6 @@ class BudgetPeriodController extends Controller
                 },
             ],
         ]);
-
         DB::beginTransaction();
         try {
             // Create the budget
@@ -149,7 +151,7 @@ class BudgetPeriodController extends Controller
     }
 
 
-        public function show($id)
+    public function show($id)
     {
         try {
             // Fetch the budget
@@ -181,46 +183,51 @@ class BudgetPeriodController extends Controller
         return view('budgetandanalytics.budgetperiod.edit', compact('periods', 'types'));
     }
 
+
     public function update(Request $request, $id)
     {
+       // $this->authorize(PermissionEnum::BudgetSetupUpdate, BudgetPeriods::class);
 
-            $this->authorize(PermissionEnum::BudgetSetupUpdate, BudgetPeriods::class);
-
-            $validated=$request->validate([
-            'fiscalYear'  => 'required|string|max:10',
-            'periodType'  => 'required|exists:t_BudgetPeriodTypes,Id',
-            'notes'       => 'nullable|string',
+        $validated = $request->validate([
+            'Name'        => 'required|string|max:255',
+            'FiscalYear'  => 'required|integer|min:2000|max:2100',
+            'From'        => 'required|date',
+            'To'          => 'required|date|after_or_equal:From',
+            'Notes'       => 'nullable|string|max:1000',
         ]);
 
         DB::beginTransaction();
 
         try {
-            $period = BudgetPeriods::findOrFail($id);
+            $period = Budget::findOrFail($id);
 
             $period->update([
-                'fiscalYear' => $validated['fiscalYear'],
-                'periodType' => $validated['periodType'],
-                'notes' => $validated['notes'],
-                'CreatedBy' => Auth::Id(),
-                'ModifiedBy' => Auth::Id(),
+                'Name'        => $validated['Name'],
+                'FiscalYear'  => $validated['FiscalYear'],
+                'From'        => $validated['From'],
+                'To'          => $validated['To'],
+                'Notes'       => $validated['Notes'] ?? null,
+                'ModifiedBy'  => Auth::id(),
             ]);
 
             DB::commit();
+
             activity()
                 ->performedOn($period)
-                ->causedBy(Auth::user())
+                ->causedBy(Auth::id())
                 ->withProperties(['action' => 'update'])
-                ->log('Updated Period');
+                ->log('Updated Budget Period');
 
-            return redirect()->route('budgetperiod.index')->with('success', 'Period updated successfully');
+            return redirect()->route('budgetperiod.index')->with('success', 'Budget updated successfully');
         } catch (\Throwable $th) {
             DB::rollBack();
-            Log::error('Failed to Update period:' . $th->getMessage());
+            Log::error('Failed to update budget period: ' . $th->getMessage());
 
-            return back()->withErrors(['error' => 'Failed to update period'])->withInput();
+            return back()->withErrors(['error' => 'Failed to update budget'])->withInput();
+        }
     }
 
-    }
+
 
     public function destroy(string $id)
     {
@@ -239,6 +246,31 @@ class BudgetPeriodController extends Controller
         } catch (\Throwable $th) {
             Log::error('---DELETE PERIOD ERROR---' . $th->getMessage());
             return redirect()->route('budgetperiod.index')->with('error', 'Failed to delete Period. Please try again.');
+        }
+    }
+
+
+    public function delGLAttachment($id)
+    {
+        //$this->authorize(PermissionEnum::BudgetSetupDelete, BudgetGLsAttachments::class);
+
+        try {
+            $glAttachment = BudgetGLsAttachments::findOrFail($id);
+            $glAttachment->delete();
+
+            //Delete the associated BudgetGLMasterAllocations if they exist
+            BudgetGLMasterAllocations::where('GLAttachmentID', $id)->delete();
+
+            activity()
+                ->performedOn($glAttachment)
+                ->causedBy(Auth::user())
+                ->withProperties(['action' => 'delete'])
+                ->log('Deleted GL Attachment Successfully: ' . $id);
+
+            return response()->json(['success' => true, 'message' => 'GL Attachment deleted successfully.']);
+        } catch (\Throwable $th) {
+            Log::error('Failed to delete GL Attachment: ' . $th->getMessage());
+            return response()->json(['success' => false, 'message' => 'Failed to delete GL Attachment.'], 500);
         }
     }
 

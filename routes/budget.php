@@ -157,4 +157,5 @@ Route::namespace('Budget')->group(function () {
 
     Route::resource('budgetdriverssetup',BudgetDriversSetupController::class);
     Route::get('budgetlinemapping/gl-subtypes/{typeId}', [BudgetLineMappingController::class, 'getGLAccountSubTypes']);
+    Route::post('budget/delete-gl-attachment/{id}', [BudgetPeriodController::class, 'delGLAttachment']);
 });

@@ -133,7 +133,7 @@
                 </table>
             </div>
             <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-3">
-                <button type="submit" class="btn btn-success btn-sm" id="submit-btn" style="display: none;">
+                <button type="submit" class="btn btn-success btn-sm" id="submit-btn" onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Saving...'; this.form.submit(); }">
                     <i class="fas fa-save me-1"></i> Save Budget
                 </button>
                 <div class="d-flex flex-wrap gap-3 align-items-center">

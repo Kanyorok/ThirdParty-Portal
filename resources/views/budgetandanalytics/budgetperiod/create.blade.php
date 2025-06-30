@@ -17,6 +17,7 @@
 
     <form method="post" action="{{ route('budgetperiod.store') }}">
         @csrf
+        @method('POST')
         <div class="card p-4 shadow-sm border-0 rounded-3">
             <div class="row g-3">
                 <div class="col-md-6 mb-3">

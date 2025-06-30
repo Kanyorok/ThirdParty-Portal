@@ -25,7 +25,7 @@
                     <select class="form-select" name="BudgetLineCategoryID" id="BudgetLineCategoryID" required>
                         <option value="">-- Select Category --</option>
                         @foreach($budgetCategories as $category)
-                            <option value="{{ $category->Id }}" {{ $category->Id == $budgetLine->BudgetLineCategoryID ? 'selected' : '' }}>{{ $cat->CategoryName }}</option>
+                            <option value="{{ $category->Id }}" {{ $category->Id == $budgetLine->BudgetLineCategoryID ? 'selected' : '' }}>{{ $category->CategoryName }}</option>
                         @endforeach
                     </select>
                 </div>
