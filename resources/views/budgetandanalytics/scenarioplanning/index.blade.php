@@ -9,27 +9,27 @@
         </div>
         <h5>📋 Budget Scenarios</h5>
         @if($scenarios->count())
-            <table class="table table-hover table-bordered">
-                <thead class="table-light">
-                <tr>
-                    <th>#</th>
-                    <th>Scenario Name</th>
-                    <th>Description</th>
-                    <th>Budget Period</th>
-                    <th>Planning Method</th>
-                    <th>Default?</th>
-                    <th>Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                @foreach($scenarios as $scenario)
-                    <tr>
-                        <td>{{$loop->iteration}}</td>
-                        <td>{{$scenario->scenarioName ?? '-'}}</td>
-                        <td>{{$scenario->description ?? '-'}}</td>
-                        <td>{{ $scenario->budgetPeriodRef?->periodType ?? '-' }}</td>
-                        <td>{{ $scenario->planningMethodRef?->MethodName ?? '-' }}</td>
-                        @if ($scenario->isDefault)
+        <table class="table table-hover table-bordered">
+            <thead class="table-light">
+            <tr>
+                <th>#</th>
+                <th>Scenario Name</th>
+                <th>Description</th>
+                <th>Budget Period</th>
+                <th>Planning Method</th>
+                <th>Default?</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+              @foreach($scenarios as $scenario)
+            <tr>
+                <td>{{$loop->iteration}}</td>
+                <td>{{$scenario->scenarioName ?? '-'}}</td>
+                <td>{{$scenario->description ?? '-'}}</td>
+                <td>{{ $scenario->budgetPeriodRef?->periodType ?? '-' }}</td>
+                <td>{{ $scenario->planningMethodRef?->MethodName ?? '-' }}</td>
+                    @if ($scenario->isDefault)
                             <td><span class="badge bg-success">Default</span></td>
                         @else
                             <td><span class="badge bg-danger">Not Default</span></td>

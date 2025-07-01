@@ -17,8 +17,8 @@ class BudgetSceneriosController extends Controller
     //
     public function index()
     {
-        $this->authorize(PermissionEnum::BudgetSetupView, BudgetScenarioPlanning::class);
-        $scenarios = BudgetScenarioPlanning::with(['budgetPeriodRef', 'planningMethodRef'])->get();
+        $this->authorize(PermissionEnum::BudgetSetupView , BudgetScenarioPlanning::class);
+        $scenarios=BudgetScenarioPlanning::with(['budgetPeriodRef', 'planningMethodRef'])->get();
         return view('budgetandanalytics.scenarioplanning.index', compact('scenarios'));
     }
 
@@ -29,14 +29,13 @@ class BudgetSceneriosController extends Controller
         return view('budgetandanalytics.scenarioplanning.create', compact('methods', 'periods'));
     }
 
-    public function store(request $request)
-    {
-        $validated = $request->validate([
-            'scenarioName' => 'required|string|max:100',
-            'description' => 'nullable|string',
-            'budgetPeriod' => 'required|exists:t_BudgetPeriods,Id', // assuming it's an ID or year
-            'planningMethod' => 'required|exists:t_BudgetPlanningMethods,Id',
-            //'isDefault'       => 'nullable|boolean',
+    public function store(request $request){
+     $validated = $request->validate([
+        'scenarioName'    => 'required|string|max:100',
+        'description'     => 'nullable|string',
+        'budgetPeriod'    => 'required|exists:t_BudgetPeriods,Id', // assuming it's an ID or year
+        'planningMethod'  => 'required|exists:t_BudgetPlanningMethods,Id',
+        //'isDefault'       => 'nullable|boolean',
         ]);
 
         DB::beginTransaction();
@@ -80,12 +79,12 @@ class BudgetSceneriosController extends Controller
     {
         $this->authorize(PermissionEnum::BudgetSetupUpdate, BudgetScenarioPlanning::class);
 
-        $validated = $request->validate([
-            'scenarioName' => 'required|string|max:100',
-            'description' => 'nullable|string',
-            'budgetPeriod' => 'required|exists:t_BudgetPeriods,Id', // assuming it's an ID or year
-            'planningMethod' => 'required|exists:t_BudgetPlanningMethods,Id',
-            'isDefault' => 'nullable|boolean',
+        $validated=$request->validate([
+            'scenarioName'    => 'required|string|max:100',
+            'description'     => 'nullable|string',
+            'budgetPeriod'    => 'required|exists:t_BudgetPeriods,Id', // assuming it's an ID or year
+            'planningMethod'  => 'required|exists:t_BudgetPlanningMethods,Id',
+            'isDefault'       => 'nullable|boolean',
         ]);
 
         DB::beginTransaction();
