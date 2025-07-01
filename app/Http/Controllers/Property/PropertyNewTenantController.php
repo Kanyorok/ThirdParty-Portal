@@ -2,61 +2,100 @@
 
 namespace App\Http\Controllers\Property;
 
+use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\Property\TenantAndLease\PropertyNewTenantRequest;
+use App\Models\Core\CodeDetail;
 use App\Models\PropertyManagement\PropertyNewTenant;
+use App\Services\Property\TenantAndLease\PropertyNewTenantService;
 
 class PropertyNewTenantController extends Controller
 {
-    //
+    protected $service;
+
+    public function __construct(PropertyNewTenantService $service)
+    {
+        $this->service = $service;
+    }
     public function index()
     {
-        $newtenants = PropertyNewTenant::all();
+        $newtenants = PropertyNewTenant::with('type')->get();
         return view('property.tenantmanagement.tenantmaintenance.index', compact('newtenants'));
     }
 
     public function create(){
-        return view('property.tenantmanagement.tenantmaintenance.create');
+        $this->authorize(PermissionEnum::TenantMentenanceCreate, PropertyNewTenant::class);
+        $tenantTypes = CodeDetail::where('CodeID', 'TenantType')->get();
+        return view('property.tenantmanagement.tenantmaintenance.create', compact('tenantTypes'));
     }
 
-    public function edit(){
-        return view('property.tenantmanagement.tenantmaintenance.edit');
+    public function edit($id)
+    {
+        $this->authorize(PermissionEnum::TenantMentenanceUpdate, PropertyNewTenant::class);
+
+        $newtenant = PropertyNewTenant::findOrFail($id);
+        $tenantTypes = CodeDetail::where('CodeID', 'TenantType')->get();
+
+        return view('property.tenantmanagement.tenantmaintenance.edit', compact('newtenant', 'tenantTypes'));
     }
 
     public function show($id)
     {
+        $this->authorize(PermissionEnum::TenantMentenanceView, PropertyNewTenant::class);
         $newtenant = PropertyNewTenant::findOrFail($id);
         return view('property.tenantmanagement.tenantmaintenance.show', compact('newtenant'));
     }
 
-    public function store(Request $request)
+    public function store(PropertyNewTenantRequest $request)
     {
-        //dd($request->all());
-        $request->validate([
-            'TenantType' => 'required|string|max:50',
-            'TenantName' => 'required|string|max:100',
-            'IDRegistrationNo' => 'required|string|max:50',
-            'PhoneNumber' => 'required|string|max:50',
-            'EmailAddress' => 'required|string|max:100',
-            'Nationality' => 'required|string|max:50',
-            'PostalAddress' => 'required|string|max:50',
-            'Remarks' => 'required|string|max:255',
-        ]);
-        //dd('validation passed');
-        $newtenant = PropertyNewTenant::create([
-            'TenantType' => $request->TenantType,
-            'TenantName' => $request->TenantName,
-            'IDRegistrationNo' => $request->IDRegistrationNo,
-            'PhoneNumber' => $request->PhoneNumber,
-            'EmailAddress' => $request->EmailAddress,
-            'Nationality' => $request->Nationality,
-            'PostalAddress' => $request->PostalAddress,
-            'Remarks' => $request->Remarks,
-            'CreatedBy' => auth()->user()->Id,
-            'ModifiedBy' => auth()->user()->Id,
-        ]);
-        //dd('validation passed');
+        $this->authorize(PermissionEnum::TenantMentenanceCreate, PropertyNewTenant::class);
+
+        $data = $request->validated();
+
+        $tenantTypeModel = CodeDetail::findOrFail($data['TenantType']);
+
+        $this->service::create(
+            $tenantTypeModel,
+            $data['TenantName'],
+            $data['IDRegistrationNo'],
+            $data['PhoneNumber'],
+            $data['EmailAddress'],
+            $data['Nationality'],
+            $data['PostalAddress'],
+            $data['Remarks'],
+            $data['IsActive'],
+            $request->user()
+        );
+
         return redirect()->route('addtenant.index')->with('success', 'Tenant created successfully');
 
     }
+
+    public function update(PropertyNewTenantRequest $request, $id)
+    {
+        $this->authorize(PermissionEnum::TenantMentenanceUpdate, PropertyNewTenant::class);
+        $data = $request->validated();
+
+        $newtenant = PropertyNewTenant::findOrFail($id);
+
+        $tenantTypeModel = CodeDetail::findOrFail($data['TenantType']);
+
+        $this->service::update(
+            $newtenant,
+            $tenantTypeModel,
+            $data['TenantName'],
+            $data['IDRegistrationNo'],
+            $data['PhoneNumber'],
+            $data['EmailAddress'],
+            $data['Nationality'],
+            $data['PostalAddress'],
+            $data['Remarks'],
+            $data['IsActive'],
+            $request->user()
+        );
+
+
+        return redirect()->route('addtenant.index')->with('success', 'Tenant updated successfully.');
+    }
+
 }

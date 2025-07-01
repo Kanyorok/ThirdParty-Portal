@@ -374,10 +374,26 @@ enum PermissionEnum: string
 
 
     //Property Block
-    case PropertyStructuralCreate = 'propertyblock-create';
-    case PropertyStructuralUpdate = 'propertyblock-update';
-    case PropertyStructuralDelete = 'propertyblock-delete';
-    case PropertyStructuralView = 'propertyblock-view';
+    case PropertyStructuralCreate = 'propertystructural-create';
+    case PropertyStructuralUpdate = 'propertystructural-update';
+    case PropertyStructuralDelete = 'propertystructural-delete';
+    case PropertyStructuralView = 'propertystructural-view';
+
+
+    //Tenant Mentenance
+    case TenantMentenanceCreate = 'tenantmentenance-create';
+    case TenantMentenanceUpdate = 'tenantmentenance-update';
+    case TenantMentenanceDelete = 'tenantmentenance-delete';
+    case TenantMentenanceView = 'tenantmentenance-view';
+
+    //Property Tenant Clearance
+    case TenantClearanceCreate = 'tenantclearance-create';
+    case TenantClearanceUpdate = 'tenantclearance-update';
+    case TenantClearanceDelete = 'tenantclearance-delete';
+    case TenantClearanceView = 'tenantclearance-view';
+
+
+
 
 
     /*
@@ -475,6 +491,10 @@ enum PermissionEnum: string
             [self::PropertyTypeView,self::PropertyTypeCreate,self::PropertyTypeUpdate,self::PropertyTypeDelete],
             [self::PropertyRegistryView, self::PropertyRegistryCreate, self::PropertyRegistryUpdate, self::PropertyRegistryDelete],
             [self::PropertyStructuralView, self::PropertyStructuralCreate, self::PropertyStructuralUpdate, self::PropertyStructuralDelete],
+            [self::TenantMentenanceCreate, self::TenantMentenanceUpdate, self::TenantMentenanceDelete, self::TenantMentenanceView],
+            [self::TenantClearanceCreate, self::TenantClearanceUpdate, self::TenantClearanceDelete, self::TenantClearanceView],
+            [self::PropertyRegistryView, self::PropertyRegistryCreate, self::PropertyRegistryUpdate, self::PropertyRegistryDelete],
+            [self::PropertyStructuralView, self::PropertyStructuralCreate, self::PropertyStructuralUpdate, self::PropertyStructuralDelete],
 
         ]);
     }
@@ -553,6 +573,12 @@ enum PermissionEnum: string
             self::PropertyCategoryView,self::PropertyCategoryCreate,self::PropertyCategoryUpdate,self::PropertyCategoryDelete,
             self::PropertyTypeView, self::PropertyTypeCreate, self::PropertyTypeUpdate, self::PropertyTypeDelete,
             self::PropertyRegistryView, self::PropertyRegistryCreate, self::PropertyRegistryUpdate, self::PropertyRegistryDelete,
+            self::PropertyStructuralView, self::PropertyStructuralCreate, self::PropertyStructuralUpdate, self::PropertyStructuralDelete,
+            self::TenantMentenanceCreate, self::TenantMentenanceUpdate, self::TenantMentenanceDelete, self::TenantMentenanceView,
+            self::TenantClearanceCreate, self::TenantClearanceUpdate, self::TenantClearanceDelete, self::TenantClearanceView
+            => ModulesEnum::Property,
+            self::PropertyTypeView, self::PropertyTypeCreate, self::PropertyTypeUpdate, self::PropertyTypeDelete,
+            self::PropertyRegistryView, self::PropertyRegistryCreate, self::PropertyRegistryUpdate, self::PropertyRegistryDelete,
             self::PropertyStructuralView, self::PropertyStructuralCreate, self::PropertyStructuralUpdate, self::PropertyStructuralDelete, => ModulesEnum::Property,
             default => throw new \LogicException("Unhandled PermissionEnum case: {$this->value}"),
 
@@ -624,7 +650,12 @@ enum PermissionEnum: string
             self::InterBranchRequisitionView, self::InterBranchRequisitionUpdate, self::InterBranchRequisitionCreate, self::InterBranchRequisitionDestroy, self::InterBranchRequisitionApproval => 'InterBranch Requisition',
             self::PriceManagementView, self::PriceManagementUpdate, self::PriceManagementCreate, self::PriceManagementDestroy => 'Price Management',
             self::StockTakeView, self::StockTakeCreate, self::StockTakeUpdate, self::StockTakeDestroy => 'Stock Take',
+            self::InterBranchRequisitionView, self::InterBranchRequisitionUpdate, self::InterBranchRequisitionCreate, self::InterBranchRequisitionDestroy, self::InterBranchRequisitionApproval => 'InterBranch Requisition',
+            self::PriceManagementView, self::PriceManagementUpdate, self::PriceManagementCreate, self::PriceManagementDestroy => 'Price Management',
             self::TransactionReceiptView, self::TransactionReceiptUpdate, self::TransactionReceiptCreate, self::TransactionReceiptDestroy => 'Receipt',
+            self::TransactionTransferView, self::TransactionTransferUpdate, self::TransactionTransferCreate, self::TransactionTransferDestroy, self::TransactionTransferApproval => 'Transfer',
+            self::StockAdjustmentView, self::StockAdjustmentUpdate, self::StockAdjustmentCreate, self::StockAdjustmentDestroy => 'StockAdjustment',
+            self::StockTakeView, self::StockTakeCreate, self::StockTakeUpdate, self::StockTakeDestroy => 'Stock Take',
             self::TransactionTransferView, self::TransactionTransferUpdate, self::TransactionTransferCreate, self::TransactionTransferDestroy, self::TransactionTransferApproval => 'Transfer',
             self::StockAdjustmentView, self::StockAdjustmentUpdate, self::StockAdjustmentCreate, self::StockAdjustmentDestroy => 'Stock Adjustment',
 
@@ -636,6 +667,12 @@ enum PermissionEnum: string
             self::PropertyTypeView,self::PropertyTypeCreate,self::PropertyTypeUpdate,self::PropertyTypeDelete => 'Property Type',
             self::PropertyRegistryView, self::PropertyRegistryCreate, self::PropertyRegistryUpdate, self::PropertyRegistryDelete => 'Property Registry',
             self::PropertyStructuralView, self::PropertyStructuralCreate, self::PropertyStructuralUpdate, self::PropertyStructuralDelete => 'Property Structural Mapping',
+        };
+        self::PropertyRegistryView,self::PropertyRegistryCreate,self::PropertyRegistryUpdate,self::PropertyRegistryDelete => 'Property Registry',
+            self::PropertyStructuralView,self::PropertyStructuralCreate,self::PropertyStructuralUpdate,self::PropertyStructuralDelete => 'Property Structural Mapping',
+            self::TenantMentenanceCreate,self::TenantMentenanceUpdate,self::TenantMentenanceDelete,self::TenantMentenanceView => 'Tenant Maintenance',
+            self::TenantClearanceCreate,self::TenantClearanceUpdate,self::TenantClearanceDelete,self::TenantClearanceView=> 'Tenant Clearance',
+            default => throw new \LogicException("Unhandled PermissionEnum case: {$this->value}"),
         };
     }
 }

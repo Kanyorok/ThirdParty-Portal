@@ -6,12 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\TransactionTransfer;
 use App\Models\Inventory\InterBranchRequisition;
+use App\Models\Procurement\Requisitions;
+use App\Models\Procurement\RequisitionLine;
 use App\Http\Requests\Inventory\TransactionTransferRequest;
 use App\Services\Inventory\TransactionTransferService;
 use Illuminate\Http\Request;
 use App\Models\Core\Branch;
+use App\Models\Auth\User;
 use Illuminate\Support\Facades\Auth;
-use App\Enums\Inventory\Transfers;
+use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\DB;
 
 class TransactionTransfersController extends Controller
 {
@@ -31,20 +35,8 @@ class TransactionTransfersController extends Controller
     public function create(Request $request)
     {
         $this->authorize('create', TransactionTransfer::class);
-        $approvedRequisitions = InterBranchRequisition::where('Status', 'Ap')->get();
-        $requisition = null;
-
-        if ($request->has('requisition_id')) {
-            $requisition = InterBranchRequisition::with(['fromBranch', 'toBranch', 'items.item'])
-                ->where('Id', $request->input('requisition_id'))
-                ->first();
-
-            if (!$requisition) {
-                return redirect()->route('transactionstransfers.create')->with('error', 'Selected requisition not found.');
-            }
-        }
-
-        return view('inventory.transactions.transfers.create', compact('approvedRequisitions', 'requisition'));
+        $users = User::all();
+        return view('inventory.transactions.transfers.create', compact('users'));
     }
 
     public function store(TransactionTransferRequest $request)
@@ -55,8 +47,6 @@ class TransactionTransfersController extends Controller
         unset($validatedData['items']);
 
         $transfer = $this->service->createTransfer($validatedData);
-
-
         $this->service->createTransferItems($transfer, $items);
 
         return redirect()
@@ -64,28 +54,10 @@ class TransactionTransfersController extends Controller
             ->with('success', 'Transfer created and submitted for approval.');
     }
 
-
-    public function approve(TransactionTransfer $transactionTransfer)
-    {
-        $this->service->approve($transactionTransfer->Id);
-        return redirect()->back()->with('success', 'Transfer approved and set to In Transit.');
-    }
-
-    public function reject(TransactionTransfer $transactionTransfer, Request $request)
-    {
-        $reason = $request->input('reason');
-        $this->service->reject($transactionTransfer->Id, $reason);
-
-        return redirect()
-            ->back()
-            ->with('success', 'Transfer rejected successfully.');
-    }
-
-
     public function show($Id)
     {
         $this->authorize('view', TransactionTransfer::class);
-        $transferitem = TransactionTransfer::with(['fromBranch', 'toBranch', 'creator', 'items.item'])->findOrFail($Id);
+        $transferitem = TransactionTransfer::with(['fromBranch', 'toBranch', 'creator', 'items.item', 'transferredBy'])->findOrFail($Id);
         return view('inventory.transactions.transfers.show', compact('transferitem'));
     }
 
@@ -93,16 +65,14 @@ class TransactionTransfersController extends Controller
     {
         $this->authorize('update', TransactionTransfer::class);
         $branches = Branch::all();
-        $approvedRequisitions = InterBranchRequisition::where('Status', 'Ap')->get();
         $itemsMasterList = ItemMasterList::all();
-
+        $users = User::all();
         $transferitem = TransactionTransfer::with([
             'fromBranch', 'toBranch', 'creator', 'items.item', 'requisition'
         ])->findOrFail($Id);
 
-        return view('inventory.transactions.transfers.edit', compact('transferitem', 'branches', 'approvedRequisitions', 'itemsMasterList'));
+        return view('inventory.transactions.transfers.edit', compact('transferitem', 'branches', 'itemsMasterList', 'users'));
     }
-
 
     public function update(TransactionTransferRequest $request, $Id)
     {
@@ -114,12 +84,86 @@ class TransactionTransfersController extends Controller
             ->with('success', 'Transfer updated.');
     }
 
-
     public function destroy($Id)
     {
         $this->authorize('destroy', TransactionTransfer::class);
         $transfer = TransactionTransfer::findOrFail($Id);
         $this->service->delete($transfer);
         return redirect()->route('transactionstransfers.index')->with('success', 'Transfer deleted.');
+    }
+
+    public function getRequisitionsByType($type)
+    {
+        if ($type === 'interbranch') {
+            $requisitions = InterBranchRequisition::where('Status', 'Ap')
+                ->whereDoesntHave('transfer')
+                ->get();
+        } elseif ($type === 'procurement') {
+            $statusIds = DB::table('t_CodeDetails')
+                ->where('CodeID', 'a')
+                ->pluck('ID');
+
+            $requisitions = Requisitions::whereIn('StatusID', $statusIds)
+                ->whereNotNull('PlanRef')
+                ->whereDoesntHave('transfer', function ($q) {
+                    $q->where('RequisitionType', 'procurement');
+                })
+                ->get();
+        } else {
+            return response()->json([], 400);
+        }
+
+        return response()->json($requisitions);
+    }
+
+    public function getRequisitionDetails(Request $request, $id)
+    {
+        $type = $request->query('type');
+
+        if ($type === 'interbranch') {
+            $requisition = InterBranchRequisition::with(['fromBranch', 'toBranch', 'items.item'])->findOrFail($id);
+            $items = $requisition->items->map(function ($item) {
+                return [
+                    'Item' => $item->Item,
+                    'ItemCode' => $item->item->ItemCode ?? '',
+                    'ItemName' => $item->item->ItemName ?? '',
+                    'UOM' => $item->item->UOM,
+                    'UOMCode' => $item->item->uom->Code ?? 'N/A',
+                    'ApprovedQty' => $item->ApprovedQty,
+                ];
+            });
+
+            return response()->json([
+                'Id' => $requisition->Id,
+                'from_branch' => $requisition->fromBranch,
+                'to_branch' => $requisition->toBranch,
+                'items' => $items,
+            ]);
+        }
+
+        if ($type === 'procurement') {
+            $requisition = Requisitions::with('requisitionLines.item')->findOrFail($id);
+            $branch = $requisition->BranchID ? Branch::find($requisition->BranchID) : null;
+
+            $items = $requisition->requisitionLines->map(function ($line) {
+                return [
+                    'Item' => $line->Item,
+                    'ItemCode' => $line->item->ItemCode ?? '',
+                    'ItemName' => $line->item->ItemName ?? $line->Description,
+                    'UOM' => $line->item->UOM ?? $line->UOM,
+                    'UOMCode' => $line->item->uom->Code ?? 'N/A',
+                    'ApprovedQty' => $line->Quantity,
+                ];
+            });
+
+            return response()->json([
+                'Id' => $requisition->Id,
+                'from_branch' => null,
+                'to_branch' => $branch,
+                'items' => $items,
+            ]);
+        }
+
+        return response()->json([], 400);
     }
 }

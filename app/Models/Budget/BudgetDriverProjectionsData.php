@@ -10,11 +10,18 @@ class BudgetDriverProjectionsData extends Model
 {
     use UserActorTrait, SoftDeletes;
 
+    protected $table = 't_BudgetDriverProjectionsData';
+    protected $primaryKey = 'Id';
+
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
-    protected $table = 't_BudgetDriverProjectionsData';
-    protected $primaryKey = 'Id';
+
+    public static function getPrimaryKey(): string
+    {
+        return 'BudgetDriverProjectionsDataId';
+    }
+
     protected $fillable = [
         'BudgetDriverProjectionsID',
         'ProductID',
@@ -24,8 +31,8 @@ class BudgetDriverProjectionsData extends Model
         'ModifiedBy',
     ];
 
-    public static function getPrimaryKey(): string
+    public function productType()
     {
-        return 'BudgetDriverProjectionsDataId';
+        return $this->belongsTo(BudgetProductType::class, 'ProductID', 'Id');
     }
 }

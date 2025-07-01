@@ -55,7 +55,7 @@
                                 <td>{{($item->Min)}}</td>
                                 <td>{{($item->Reorder)}}</td>
                                 <td>{{($item->Max)}}</td>
-                                <td>{{($item->LastReceived)}}</td>
+                                <td>{{ \Carbon\Carbon::parse($item->LastReceived)->format('d/m/Y') }}</td>
                                 <td>
               <span class="badge {{ $item->Status ? 'bg-success' : 'bg-warning' }}">
               {{ $item->Status ? 'Active' : 'Inactive' }}

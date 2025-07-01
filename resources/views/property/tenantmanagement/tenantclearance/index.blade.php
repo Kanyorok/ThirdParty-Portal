@@ -25,16 +25,39 @@
     @foreach($clearancetenants as $clearancetenant)
       <tr>
           <td>{{ $loop->iteration ?? '-' }}</td>
-          <td>{{ $clearancetenant->Tenant ?? '-' }}</td>
-          <td>{{ $clearancetenant->ExitDate ?? '-' }}</td>
-          <td>{{ $clearancetenant->FinalInspection?? '-' }}</td>
-          <td>{{ $clearancetenant->AllDuesPaid ?? '-' }}</td>
-          <td>{{ $clearancetenant->KeysReturned ?? '-' }}</td>
-          <td>{{ $clearancetenant->DepositRefunded ?? '-' }}</td>
+          <td>{{ $clearancetenant->tenant->TenantName ?? '-' }}</td>
+          <td>{{ $clearancetenant->ExitDate ? \Carbon\Carbon::parse($clearancetenant->ExitDate)->format('d/m/Y') : '-' }}</td>
+          <td>@if($clearancetenant->FinalInspection)
+                  <span class="badge bg-success">Yes</span>
+              @else
+                  <span class="badge bg-danger">No</span>
+              @endif</td>
+          <td>@if($clearancetenant->AllDuesPaid)
+                  <span class="badge bg-success">Yes</span>
+              @else
+                  <span class="badge bg-danger">No</span>
+              @endif</td>
+          <td>@if($clearancetenant->KeysReturned)
+                  <span class="badge bg-success">Yes</span>
+              @else
+                  <span class="badge bg-danger">No</span>
+              @endif</td>
+          <td>{{ $clearancetenant->code->Description ?? '-' }}</td>
           <td>{{ $clearancetenant->AdditionalNotes ?? '-' }}</td>
-        <td><span class="badge bg-success">Cleared</span></td>
         <td>
-            <a href="{{ route('tenantclearance.show', $clearancetenant->id) }}" class="btn btn-sm btn-info">👁 View</a>
+            @if(
+              $clearancetenant->FinalInspection == 1 &&
+              $clearancetenant->AllDuesPaid == 1 &&
+              $clearancetenant->KeysReturned == 1 &&
+              ($clearancetenant->code->Description ?? '') === 'Fully Refunded'
+            )
+                <span class="badge bg-success">Cleared</span>
+            @else
+                <span class="badge bg-warning text-dark">Pending</span>
+            @endif
+        </td>
+          <td>
+              <a href="{{ route('tenantclearance.show', $clearancetenant->Id) }}" class="btn btn-sm btn-info">👁 View</a>
         </td>
       </tr>
     @endforeach

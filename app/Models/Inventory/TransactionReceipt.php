@@ -58,6 +58,11 @@ class TransactionReceipt extends Model
         return $this->belongsTo(User::class, 'CreatedBy', 'Id');
     }
 
+    public function receivedBy()
+    {
+        return $this->belongsTo(User::class, 'ReceivedBy', 'Id');
+    }
+
     public function modifier()
     {
         return $this->belongsTo(User::class, 'ModifiedBy', 'Id');

@@ -3,19 +3,20 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Orders\ApproveOrderRequest;
 use App\Http\Requests\Procurement\Requisition\ApproveRequisitionRequest;
 use App\Http\Requests\Procurement\Requisition\RequisitionRequest;
+use App\Models\Procurement\Order;
 use App\Models\Procurement\Requisitions;
 use App\Services\Core\DocumentApprovalService;
 use App\Services\Procurement\Requisition\RequisitionItemService;
 use App\Services\Procurement\Requisition\RequisitionService;
-use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Throwable;
+use App\Enums\ProcurementPlanStatusEnum;
+use Illuminate\Support\Facades\DB;
 
 class RequisitionsController extends Controller
 {
@@ -34,7 +35,7 @@ class RequisitionsController extends Controller
         try {
             $details = $this->service->fetchRequisition();
             return view('procurement.requisitions.approval', compact('details'));
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Failed to fetch items: ' . $e->getMessage());
         }
     }
@@ -73,7 +74,7 @@ class RequisitionsController extends Controller
             return view('procurement.requisitions.create', compact(
                 'details', 'branches', 'departments', 'procurementPlans'
             ));
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             Log::error('Data fetch failed: ' . $e->getMessage());
             return view('procurement.requisitions.create', [
                 'details' => [],
@@ -128,7 +129,7 @@ class RequisitionsController extends Controller
                 'error' => $requisitionAdd['error'] ?? 'Unknown error'
             ], 500);
 
-        } catch (Throwable $e) {
+        } catch (\Throwable $e) {
             Log::error('Exception occurred while creating requisition.', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
@@ -144,7 +145,7 @@ class RequisitionsController extends Controller
     public function approval($id)
     {
         try {
-            $requisition = Requisitions::findOrFail($id); // This will throw 404 if not found
+            $requisition = Requisitions::findOrFail($id);
             $this->authorize('view', $requisition); // Authorize the order object itself
 
             $requisitionInfo = $this->service->getRelatedRequisition($id);
@@ -152,13 +153,13 @@ class RequisitionsController extends Controller
 
             return view('procurement.requisitions.approval', compact('requisitionInfo', 'requisitionlineInfo'));
 
-        } catch (AuthorizationException $e) {
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
             Log::warning("Unauthorized access attempt to view Requisition ID: {$id} by user ID: " . auth()->id());
             return redirect()->back()->with('error', 'Unauthorized access.');
-        } catch (ModelNotFoundException $e) {
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             Log::error("Requisition ID {$id} not found. Exception: " . $e->getMessage());
             return redirect()->back()->with('error', 'Requisition not found.');
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             Log::error("Failed to fetch Requisition ID {$id}. Exception: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return redirect()->back()->with('error', 'Failed to fetch Requisition.');
         }
@@ -166,7 +167,10 @@ class RequisitionsController extends Controller
 
     public function approve(ApproveRequisitionRequest $requisitionRequest, $id)
     {
-//        dd($requisitionRequest->validated()); // if using validation
+        $hasLines = DB::table('t_RequisitionLines')->where('RequisitionId', $id)->exists();
+        if (!$hasLines) {
+            return back()->with('error', 'Cannot approve a requisition without items.');
+        }
         return $this->documentApprovalService->approve($requisitionRequest, $id);
     }
 
@@ -176,8 +180,7 @@ class RequisitionsController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => $details,
-            ]);}
-        catch(Exception $e){
+            ]);} catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch items.',
@@ -199,7 +202,7 @@ class RequisitionsController extends Controller
             $details = $this->requisitionItemService->getRequisitionRelatedItems($id);
             $types = $this->service->getItemTypes();
             return view('procurement.requisitions.show', compact('details', 'types'));
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Failed to fetch items: ' . $e->getMessage());
         }
     }

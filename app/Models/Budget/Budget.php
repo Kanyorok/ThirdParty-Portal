@@ -41,4 +41,9 @@ class Budget extends Model
     {
         return 'BudgetId';
     }
+
+    public function activities()
+    {
+        return $this->hasMany(BudgetActivity::class, 'BudgetId', 'Id');
+    }
 }

@@ -1,5 +1,8 @@
 @extends('layouts.app')
 @section('title', 'Floors per Block')
+@section('styles')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+@endsection
 @section('content')
 <div class="container mt-4">
 
@@ -8,7 +11,7 @@
     <h4 class="fw-bold mb-3">📋 Floors per Block</h4>
 
     @if($floors->count())
-  <table class="table table-bordered table-striped align-middle">
+        <table id="propertyfloors" class="table table-bordered table-striped align-middle">
     <thead class="table-light">
       <tr>
           <th>#</th>
@@ -23,13 +26,19 @@
     @foreach($floors as $floor)
         <tr>
             <td>{{ $loop->iteration }}</td>
-            <td>{{ $floor->PropertyID }}</td>
-            <td>{{ $floor->BlockID }}</td>
+            <td>{{ $floor->property->PropertyName }}</td>
+            <td>{{ $floor->block->BlockName }}</td>
             <td>{{ $floor->FloorLabel }}</td>
             <td>{{ $floor->FloorNotes }}</td>
         <td>
-            <a href="{{ route('addfloor.show', $floor->id) }}" class="btn btn-sm btn-info">👁 View</a>
-        </td>
+            <a href="{{ route('addfloor.edit', $floor->Id) }}" class="btn btn-sm btn-warning">Edit</a>
+            <form action="{{ route('addfloor.destroy', $floor->Id) }}" method="POST" class="d-inline">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn btn-sm btn-danger"
+                        onclick="return confirm('Are you sure you want to delete this property?');">Delete
+                </button>
+            </form>
       </tr>
     @endforeach
     </tbody>
@@ -38,4 +47,18 @@
         <p>No property floor registered yet.</p>
     @endif
 </div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        $('#propertyfloors').DataTable({
+            pageLength: 10,
+            ordering: true,
+            searching: true,
+            lengthChange: true
+        });
+    });
+</script>
 @endsection

@@ -77,11 +77,12 @@ class PropertyRegistryController extends Controller
         //Check if user has permission to edit tender categories
         // $this->authorize(PermissionEnum::PropertyTypeUpdate, PropertyType::class);
         $property = PropertyRegistry::findOrFail($id);
-        $localities = Locality::all();
         $types = PropertyType::all();
         $categories = CategoryMaster::all();
+        $lineentries = CategoryMaster::with('propertytypes')->get();
+        $localities = Locality::all();
 
-        return view('property.propertyregistry.registry.edit', compact('property', 'localities', 'types', 'categories'));
+        return view('property.propertyregistry.registry.edit', compact('property', 'localities', 'lineentries', 'types', 'categories'));
     }
 
     public function update(Request $request, $id)

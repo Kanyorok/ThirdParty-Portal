@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Edit Category')
+@section('title', 'Property Type')
 @section('content')
     @if ($errors->any())
         <div class="alert alert-danger">
@@ -10,7 +10,7 @@
             </ul>
         </div>
     @endif
-    <h1>Edit Item Category</h1>
+    <h1>Edit Property Type</h1>
     <form action="{{ route('propertytype.update', $type->Id) }}" method="POST">
         @csrf
         @method('PUT')
@@ -38,7 +38,7 @@
                       rows="4">{{ old('Description', $type->Description) }}</textarea>
         </div>
 
-        <button type="submit" class="btn btn-success">Update Category</button>
+        <button type="submit" class="btn btn-success">Update Type</button>
         <a href="{{ route('propertytype.index') }}" class="btn btn-secondary">Cancel</a>
     </form>
 @endsection

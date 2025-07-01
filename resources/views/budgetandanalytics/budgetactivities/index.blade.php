@@ -3,118 +3,82 @@
 @section('content')
     <div class="container mt-4">
         <div class="card p-4">
-            <h5>📋 Budget Activities Overview</h5>
-            <p class="text-muted">
-                Below is a list of budget activities that have been added and linked to their respective budget lines.
-                Each activity
-                represents a planned action or initiative under the budget, including its description, cost, and the
-                period it is
-                intended to be implemented. This view helps track how funds are allocated across various budget items.
-
-            </p>
-
-            <div class="mb-2 d-flex justify-content-between">
-                <a href="{{ route('budgetactivities.create') }}" class="btn btn-success">➕ New Activity</a>
+            <div class="card-header bg-dark text-white py-4 mb-0" style="font-size: 20px; font-weight: bold;">
+                📊 Budget Activities Overview
             </div>
-            <table class="table table-bordered table-hover table-striped align-middle text-center">
-                <thead class="table-light">
-                <tr>
-                    <th>#</th>
-                    <th>Budget</th>
-                    <th>Frequency</th>
-                    {{-- <th>Budget Line</th> --}}
-                    <th>Activities</th>
-                    <th>Branch</th>
-                    {{-- <th>Allocation Type</th> --}}
-                    <th>Total Allocation</th>
-                    <th>Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                @foreach ($activities as $item)
+
+            <div class="card-body mb-0">
+                @if(session('success'))
+                    <div class="alert alert-success">{{ session('success') }}</div>
+                @endif
+                <p class="text-muted">
+                    Below is a list of budget activities that have been added and linked to their respective budget
+                    lines. Each activity
+                    represents a planned action or initiative under the budget, including its description, cost, and the
+                    period it is
+                    intended to be implemented. This view helps track how funds are allocated across various budget
+                    items.
+
+                </p>
+
+                <div class="mb-2 d-flex justify-content-between">
+                    <a href="{{ route('budgetactivities.create') }}" class="btn btn-success">➕ New Activity</a>
+                </div>
+                <table class="table table-bordered table-hover table-striped align-middle text-center">
+                    <thead class="table-light">
                     <tr>
-                        <td>{{ $loop->iteration }}</td>
-                        <td>Budget Name</td>
-                        <td>11-02-2025 - 11-11-2025</td>
-                        {{-- <td>{{ $item->budgetLine->LineName }}</td> --}}
-                        <td>3</td>
-                        {{-- <td>{{ $item->ActivityName }}</td> --}}
-                        <td>{{ $item->branch->Name }}</td>
-                        {{-- @if ($item->AllocationType=='monthly')
-                          <td>Monthly
-                            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#viewAllocationsModal-{{ $item->Id }}">👁️ View</button>
-                          </td>
-                        @else
-                          <td>Full Allocation</td>
-                        @endif --}}
-                        <td>{{ $item->FullAllocation }}</td>
-                        <td>
-                            <div class="d-flex gap-2 justify-content-center">
-                                <a href="{{ route('budgetperiod.edit', 1) }}" class="btn btn-sm btn-info">✏️</a>
-
-                                <form action="{{ route('budgetperiod.destroy', 1) }}" method="POST"
-                                      onsubmit="return confirm('Are you sure you want to delete this Period?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-danger btn-sm">🗑️</button>
-                                </form>
-                            </div>
-                        </td>
+                        <th>#</th>
+                        <th>Budget</th>
+                        <th>Frequency</th>
+                        {{-- <th>Budget Line</th> --}}
+                        <th>Activities</th>
+                        {{-- <th>Branch</th> --}}
+                        {{-- <th>Allocation Type</th> --}}
+                        <th>Total Allocation</th>
+                        <th>Actions</th>
                     </tr>
-                @endforeach
-                <!-- Add more rows as needed -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-            <div class="mb-2 d-flex justify-content-between">
-                <a href="{{ route('budgetactivities.create') }}" class="btn btn-success">➕ New Activity</a>
+                    </thead>
+                    <tbody>
+                    @php $i = 1; @endphp
+                    @foreach ($groupedActivities as $budgetId => $activities)
+                        @php $budget = $activities->first()->budget; @endphp
+                        <tr>
+                            <td>{{ $i++ }}</td>
+                            <td>{{ $budget->Name }}</td>
+                            <td>{{ $budget->From }} - {{ $budget->To }}</td>
+                            {{-- <td>{{ $activities->first()->budgetLine->LineName ?? '' }}</td> --}}
+                            {{-- <td>
+                              <div class="d-flex flex-column align-items-center">
+                                @foreach (
+                                  $activities as $activity)
+                                  <span class="badge bg-primary mb-1">{{ $activity->Description }}</span>
+                                @endforeach
+                              </div>
+                            </td> --}}
+                            <td>
+                                <a href="{{ route('budgetactivities.show', $budget->Id) }}"
+                                   class="btn btn-outline-primary btn-sm">View Activities</a>
+                            </td>
+                            <td>
+                                {{ $activities->sum('FullAllocation') }}
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2 justify-content-center">
+                                    <a href="#" class="btn btn-sm btn-info">✏️</a>
+                                    <a href="#" class="btn btn-sm btn-danger" data-bs-toggle="modal"
+                                       data-bs-target="#deleteConfirmModal" data-id="{{ $budget->Id }}">🗑️</a>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforeach
+                    <!-- Add more rows as needed -->
+                    </tbody>
+                </table>
             </div>
-            <table class="table table-bordered table-hover table-striped align-middle">
-                <thead class="table-light">
-                <tr>
-                    <th>#</th>
-                    <th>Budget Line</th>
-                    <th>Activity</th>
-                    <th>Owner</th>
-                    <th>Cost Center</th>
-                    <th>Driver-Based</th>
-                    <th>Total Allocation (KES)</th>
-                    <th>Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr>
-                    <td>1</td>
-                    <td>Marketing</td>
-                    <td>Radio Ad Campaign – Q1</td>
-                    <td>Jane Mwangi</td>
-                    <td>Marketing Dept</td>
-                    <td><span class="badge bg-success">Yes</span></td>
-                    <td>250,000</td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-primary">✏️ Edit</button>
-                        <button class="btn btn-sm btn-outline-secondary">📊 View Monthly</button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>2</td>
-                    <td>Training</td>
-                    <td>Branch Staff Training</td>
-                    <td>John Otieno</td>
-                    <td>HR Dept</td>
-                    <td><span class="badge bg-secondary">No</span></td>
-                    <td>180,000</td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-primary">✏️ Edit</button>
-                        <button class="btn btn-sm btn-outline-secondary">📊 View Monthly</button>
-                    </td>
-                </tr>
-                <!-- Add more rows as needed -->
-                </tbody>
-            </table>
         </div>
+
+
+    </div>
     </div>
 
 
@@ -158,6 +122,7 @@
                     </div>
                 </div>
             </div>
+        </div>
         </div>
     @endforeach
 

@@ -72,4 +72,10 @@ class InterBranchRequisition extends Model
     {
         return 'RequisitionId';
     }
+
+    public function transfer()
+    {
+        return $this->hasOne(TransactionTransfer::class, 'RequisitionId', 'Id');
+}
+
 }

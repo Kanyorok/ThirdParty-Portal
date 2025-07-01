@@ -8,10 +8,12 @@ use App\Traits\Model\UserActorTrait;
 use App\Models\Auth\User;
 use App\Models\Core\Branch;
 use App\Models\Inventory\TransactionTransferItem;
+use App\Models\Inventory\TransactionReceipt;
+
 
 class TransactionTransfer extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, UserActorTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -25,8 +27,10 @@ class TransactionTransfer extends Model
     protected $fillable = [
         'TransferDate',
         'RequisitionId',
+        'RequisitionType',
         'TransferredBy',
         'DispatchedQty',
+        'UOM',
         'Status',
         'FromBranch',
         'ToBranch',
@@ -39,10 +43,11 @@ class TransactionTransfer extends Model
 
     ];
 
-    public static function getPrimaryKey(): string
+    public function receipt()
     {
-        return 'TransferId';
+        return $this->hasOne(TransactionReceipt::class, 'TransferId', 'Id');
     }
+
 
     public function creator()
     {
@@ -64,19 +69,29 @@ class TransactionTransfer extends Model
         return $this->belongsTo(InterBranchRequisition::class, 'RequisitionId', 'Id');
     }
 
+    public function transferredBy()
+    {
+        return $this->belongsTo(User::class, 'TransferredBy', 'Id');
+    }
+
     public function items()
     {
         return $this->hasMany(TransactionTransferItem::class, 'TransferId', 'Id')->whereNull('DeletedOn');
     }
 
+
     public function fromBranch()
     {
         return $this->belongsTo(Branch::class, 'FromBranch', 'Id');
     }
-
     public function toBranch()
     {
         return $this->belongsTo(Branch::class, 'ToBranch', 'Id');
+    }
+
+    public static function getPrimaryKey(): string
+    {
+        return 'TransferId';
     }
 
 

@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Budget;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Budget\Budget;
+use App\Models\Budget\BudgetLine;
+use Illuminate\Http\Request;
 use App\Models\Budget\BudgetPeriods;
 use App\Models\Budget\BudgetPeriodTypes;
+use App\Models\Budget\BudgetProductType;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -63,39 +65,45 @@ class BudgetPeriodController extends Controller
         return view('budgetandanalytics.budgetperiod.create', compact('types'));
     }
 
+
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'fiscalYear' => 'required|string|max:10',
-            'periodType' => 'required|string|max:20',
-            'notes' => 'nullable|string',
+            'Name' => 'required|string|max:255',
+            'FiscalYear' => 'required|integer|min:2020|max:2100',
+            'From' => 'required|date',
+            'To' => 'required|date|after_or_equal:From',
+            'Notes' => 'nullable|string|max:1000',
         ]);
 
         DB::beginTransaction();
-
         try {
-            $period = BudgetPeriods::create([
-                'fiscalYear' => $validated['fiscalYear'],
-                'periodType' => $validated['periodType'],
-                'notes' => $validated['notes'],
-                'CreatedBy' => Auth::Id(),
-                'ModifiedBy' => Auth::Id()
+            $budget = Budget::create([
+                'Name' => $validated['Name'],
+                'FiscalYear' => $validated['FiscalYear'],
+                'From' => $validated['From'], // ensure your column names match this
+                'To' => $validated['To'],
+                'Notes' => $validated['Notes'] ?? null,
+                'CreatedBy' => Auth::id(),
+                'ModifiedBy' => Auth::id(),
             ]);
 
             DB::commit();
 
             activity()
-                ->performedOn(new BudgetPeriods())
+                ->performedOn($budget)
                 ->causedBy(Auth::user())
                 ->event('create')
                 ->withProperties(['action' => 'create'])
-                ->log('create periods');
-            return redirect()->route('budgetperiod.index')->with('success', 'Budget Period  created successfully.');
+                ->log('Created a budget');
+
+            return redirect()->route('budgetperiod.index')->with('success', 'Budget created successfully.');
+
         } catch (\Throwable $th) {
             DB::rollBack();
             Log::error('Failed to create budget: ' . $th->getMessage());
 
-            return back()->withErrors(['error' => 'Failed to create Period'])->withInput();
+            return back()->withErrors(['error' => 'Failed to create Budget'])->withInput();
         }
     }
 
@@ -113,7 +121,7 @@ class BudgetPeriodController extends Controller
 
         $validated = $request->validate([
             'fiscalYear' => 'required|string|max:10',
-            'periodType' => 'required|string|max:20',
+            'periodType' => 'required|exists:t_BudgetPeriodTypes,Id',
             'notes' => 'nullable|string',
         ]);
 
@@ -151,8 +159,8 @@ class BudgetPeriodController extends Controller
     {
         $this->authorize(PermissionEnum::BudgetSetupDelete, BudgetPeriods::class);
         try {
-            $period = BudgetPeriods::find($id)->delete();
-            //$period->delete();
+            $period = BudgetPeriods::findOrFail($id); // safer: throws 404 if not found
+            $period->delete();
 
             activity()
                 ->performedOn(new BudgetPeriods())

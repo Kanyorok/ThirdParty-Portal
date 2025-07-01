@@ -2,6 +2,8 @@
 
 @section('title', 'Create Receipt')
 
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+
 @section('content')
     <div class="card mb-4">
         <div class="card-header bg-success text-white">📥 Post Goods Receipt</div>
@@ -33,10 +35,17 @@
                   @endforeach
               </select>
         </div>
-          <div class="col">
+          <div class="mb-3">
               <label class="form-label">Received By</label>
-              <input type="text" name="ReceivedBy" class="form-control" value="{{ old('ReceivedBy') }}" required>
-        </div>
+              <select name="ReceivedBy" class="form-select select2" required>
+                  <option value="">-- Select User --</option>
+
+                  @foreach ($users as $user)
+                      <option value="{{ $user->Id }}" required>{{ $user->Name }}</option>
+                  @endforeach
+              </select>
+          </div>
+
           <div class="col">
               <label class="form-label">Receive Date</label>
               <input type="date" name="ReceivedDate" class="form-control"
@@ -68,7 +77,7 @@
           <textarea name="GeneralRemarks" class="form-control">{{ old('GeneralRemarks') }}</textarea>
       </div>
 
-                <button type="submit" class="btn btn-success">Post GRN</button>
+                <button type="submit" class="btn btn-success">Post Receipt</button>
     </form>
   </div>
     </div>
@@ -132,5 +141,15 @@
                 discrepancyInput.value = discrepancy;
             }
         });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            $('.select2').select2({
+                placeholder: 'Select user',
+                allowClear: true
+            });
+        });
     </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 @endsection

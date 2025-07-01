@@ -25,8 +25,8 @@ class PropertyFloorService
     ): self
     {
         $propertyFloor = PropertyFloor::create([
-            'PropertyID' => $propertyId,
-            'BlockID' => $blockId,
+            'PropertyID' => $propertyId->Id,
+            'BlockID' => $blockId->Id,
             'FloorLabel' => $floorLabel,
             'FloorNotes' => $floorNotes,
             'CreatedBy' => $user->Id,

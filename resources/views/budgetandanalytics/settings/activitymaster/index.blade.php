@@ -29,13 +29,14 @@
                         <th style="white-space: nowrap;">Budget Line</th>
                         <th style="min-width: 300px; white-space: normal;">Description</th>
                         <th style="white-space: nowrap;">Status</th>
+                        <th style="white-space: nowrap;">Actions</th>
                     </tr>
                     </thead>
                     <tbody>
                     @if($activities->count())
-                        @foreach($activities as $activity)
+                        @foreach($activities as $index => $activity)
                             <tr>
-                                <td>{{ $loop->iteration }}</td>
+                                <td>{{ $activities->firstItem() + $index }}</td>
                                 <td>{{ $activity->ActivityName ?? '-' }}</td>
                                 <td>{{ $activity->budgetLine->LineName ?? '-' }}</td>
                                 <td style="white-space: normal; word-break: break-word;">
@@ -43,10 +44,25 @@
                                 </td>
                                 <td>
                                     @if($activity->IsActive)
-                                        <span class="text-success">✅ Active</span>
+                                        <span class="text-success" value="1">✅ Active</span>
                                     @else
-                                        <span class="text-danger">🚫 Inactive</span>
+                                        <span class="text-danger" value="0">🚫 Inactive</span>
                                     @endif
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ route('activitymaster.edit', $activity->Id) }}"
+                                           class="btn btn-sm btn-warning">✏️</a>
+                                        <form action="{{ route('activitymaster.destroy', $activity->Id) }}"
+                                              method="POST"
+                                              onsubmit="return confirm('Are you sure you want to delete this activity?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-danger">
+                                                🗑️
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach
@@ -57,6 +73,11 @@
                     @endif
                     </tbody>
                 </table>
+                {{-- ----Pagination---- --}}
+                <div class="mt-3">
+                    {{ $activities->links() }}
+                </div>
+
             </div>
         </div>
 

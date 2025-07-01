@@ -51,7 +51,7 @@ class ItemService
 
     public static function getItemDetails($itemId, $requisitionId = null, $planId = null)
     {
-        // Check if requisition ID is provided and try to get the PlanRef
+        // Resolve plan ID via requisition if provided
         if ($requisitionId) {
             $requisition = DB::table('t_Requisitions')
                 ->select('PlanRef')
@@ -63,7 +63,7 @@ class ItemService
             }
         }
 
-        // If plan ID is present, attempt to get item details from plan
+        // If we have a plan ID, fetch from plan
         if ($planId) {
             $planItem = DB::table('t_ConsolidatedProcurementPlan as pi')
                 ->join('t_PlanLineItem as i', function ($join) use ($planId) {
@@ -84,15 +84,24 @@ class ItemService
                     'i.LineItemID AS LineItemID',
                     DB::raw('ISNULL(i.OriginalQty, 0) AS OriginalQty')
                 ])
-                ->get();
+                ->first();
 
-            if ($planItem && $planItem->isNotEmpty()) {
-                return $planItem;
+            if ($planItem) {
+                // Calculate already used qty
+                $alreadyUsedQty = DB::table('t_RequisitionLines as rl')
+                    ->join('t_Requisitions as r', 'rl.RequisitionID', '=', 'r.Id')
+                    ->where('r.PlanRef', $planId)
+                    ->where('rl.Item', $itemId)
+                    ->sum('rl.Quantity');
+
+                $planItem->RemainingQty = max(0, $planItem->OriginalQty - $alreadyUsedQty);
+
+                return collect([$planItem]); // Keep return format consistent
             }
         }
 
-        // Fallback to direct item fetch if no plan item found
-        return DB::table('t_Items as t')
+        // Fallback: no plan, basic item fetch
+        $fallbackItem = DB::table('t_Items as t')
             ->leftJoin('t_ItemCategories as c', 't.Category', '=', 'c.Id')
             ->leftJoin('t_uom as u', 't.UOM', '=', 'u.Id')
             ->leftJoin('t_Pricing as p', 't.Id', '=', 'p.ItemID')
@@ -107,7 +116,14 @@ class ItemService
                 DB::raw('NULL AS LineItemID'),
                 DB::raw('0 AS OriginalQty')
             ])
-            ->get();
+            ->first();
+
+        if ($fallbackItem) {
+            $fallbackItem->RemainingQty = 0;
+            return collect([$fallbackItem]);
+        }
+
+        return collect([]);
     }
 
     public static function getTypes()

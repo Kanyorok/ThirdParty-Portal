@@ -234,6 +234,7 @@ class CodeDetailSeeder extends Seeder
 
         ]);
 
+
         //// Budget System Codes
         DB::table('t_CodeDetails')->insert([
             [
@@ -272,7 +273,75 @@ class CodeDetailSeeder extends Seeder
                 'ModifiedOn' => $date,
                 'ModifiedBy' => $user->Id,
             ],
+        ]);
 
+        DB::table('t_CodeDetails')->insert([
+            [
+                'CodeID' => "TenantType",
+                'Description' => 'Individulal',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+            [
+                'CodeID' => "TenantType",
+                'Description' => 'Corporate',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+            [
+                'CodeID' => "TenantType",
+                'Description' => 'Government',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+            [
+                'CodeID' => "TenantType",
+                'Description' => 'NGO',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+            [
+                'CodeID' => "TenantType",
+                'Description' => 'Other',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+        ]);
+        DB::table('t_CodeDetails')->insert([
+            [
+                'CodeID' => "DepositRefunded",
+                'Description' => 'Fully Refunded',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+            [
+                'CodeID' => 'DepositRefunded',
+                'Description' => 'Partially Refunded',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+            [
+                'CodeID' => 'DepositRefunded',
+                'Description' => 'Not Refunded',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
         ]);
     }
 }

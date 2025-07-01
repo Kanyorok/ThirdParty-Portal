@@ -8,6 +8,7 @@ use App\Models\Inventory\TransactionReceipt;
 use App\Http\Requests\Inventory\TransactionReceiptRequest;
 use App\Services\Inventory\TransactionReceiptService;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Auth\User;
 use App\Models\Core\Branch;
 use App\Enums\Inventory\Transfers;
 
@@ -32,11 +33,13 @@ class TransactionReceiptsController extends Controller
     public function create()
     {
         $this->authorize('create', TransactionReceipt::class);
-        $transfers = TransactionTransfer::with(['items.item'])
+        $transfers = TransactionTransfer::doesntHave('receipt')
+            ->with(['items.item'])
             ->where('Status', Transfers::InTransit)
             ->get();
+        $users = User::all();
 
-        return view('inventory.transactions.receipts.create', compact('transfers'));
+        return view('inventory.transactions.receipts.create', compact('transfers', 'users'));
     }
 
     public function store(TransactionReceiptRequest $request)
@@ -54,7 +57,7 @@ class TransactionReceiptsController extends Controller
     public function show($id)
     {
         $this->authorize('view', TransactionReceipt::class);
-        $receipt = TransactionReceipt::with(['transfer', 'items.item'])->findOrFail($id);
+        $receipt = TransactionReceipt::with(['transfer', 'items.item', 'receivedBy'])->findOrFail($id);
         return view('inventory.transactions.receipts.show', compact('receipt'));
     }
 

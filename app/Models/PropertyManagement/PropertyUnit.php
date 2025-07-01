@@ -35,9 +35,31 @@ class PropertyUnit extends Model
     {
         return 'PropertyUnitId';
     }
-
+    // public function getBlockByProperty()
+    // {
+    //     return $this->hasMany(PropertyBlock::class, 'PropertyID', 'Id');
+    // }
+    //     public function getFloorByBlock()
+    // {
+    //     return $this->hasMany(PropertyFloor::class, 'BlockID', 'Id');
+    // }
     public function unit()
     {
         return $this->belongsTo(PropertyBlock::class, 'BlockID', 'Id');
+    }
+
+    public function property()
+    {
+        return $this->belongsTo(PropertyRegistry::class, 'PropertyID', 'Id');
+    }
+
+    public function blocks()
+    {
+        return $this->belongsTo(PropertyBlock::class, 'BlockID', 'Id');
+    }
+
+    public function floors()
+    {
+        return $this->belongsTo(PropertyFloor::class, 'FloorID', 'Id');
     }
 }

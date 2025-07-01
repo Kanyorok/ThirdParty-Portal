@@ -23,6 +23,7 @@
             <thead class="table-light">
             <tr>
                 <th>#</th>
+                <th>Adjustment Id</th>
                 <th>Date</th>
                 <th>Store</th>
                 <th>Reason</th>
@@ -38,10 +39,12 @@
                 @endphp
                 <tr>
                     <td>{{ $adjustments->firstItem() + $index }}</td>
-                    <td>{{ Carbon::parse($adjustment->AdjustmentDate)->format('Y-m-d') }}</td>
+                    <td>{{ $adjustment->AdjustmentId}}</
+                    >
+                    <td>{{ Carbon::parse($adjustment->AdjustmentDate)->format('d/m/Y') }}</td>
                     <td>{{ optional($adjustment->branch)->Name ?? 'N/A' }}</td>
                     <td>{{ $adjustment->Reason }}</td>
-                    <td>{{ $adjustment->AdjustedBy }}</td>
+                    <td>{{$adjustment->adjustedBy->Name ?? 'N/A'}}</td>
                     <td>
                         @if($statusEnum)
                             <span class="badge bg-{{ $statusEnum->badgeColor() }}">
@@ -57,8 +60,7 @@
 
                         @if($statusEnum === Transfers::Pending)
                             <a href="{{ route('transactionsadjustment.edit', $adjustment->Id) }}"
-                               class="btn btn-sm btn-secondary">Edit</a>
-
+                               class="btn btn-sm btn-warning">Edit</a>
                             <form action="{{ route('transactionsadjustment.destroy', $adjustment->Id) }}" method="POST"
                                   class="d-inline" onsubmit="return confirm('Delete this adjustment?');">
                                 @csrf
@@ -87,12 +89,17 @@
         <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
         <script>
             $(document).ready(function () {
+                @if(!$adjustments->isEmpty())
                 $('#adjustmentTable').DataTable({
                     pageLength: 10,
                     ordering: true,
                     searching: true,
                     lengthChange: true,
+                    language: {
+                        emptyTable: ""
+                    }
                 });
+                @endif
             });
         </script>
     @endsection

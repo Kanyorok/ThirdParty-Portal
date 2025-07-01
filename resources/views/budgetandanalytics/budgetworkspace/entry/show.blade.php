@@ -25,112 +25,101 @@
         <h5>Projections Overview</h5>
         <p class="text-muted">The overview of the generated Branch Projections.</p>
 
-        <form action="{{ route('entrybyproduct.store') }}" method="POST">
-            @csrf
-
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label for="scenario" class="form-label">Scenario</label>
-                    <input type="text" name="Scenario" id="scenario" class="form-control" value="Base Case" readonly>
-                </div>
-
-                <div class="col-md-6">
-                    <label for="currency" class="form-label">Currency</label>
-                    <input type="text" name="Currency" id="currency" class="form-control" value="KES" readonly>
-                </div>
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="scenario" class="form-label">Budget</label>
+                <input class="form-control" value="{{ $budget->budget->Name }}" readonly>
             </div>
 
-            <div class="mt-3">
-                <label for="period" class="form-label">Period</label>
-                <input type="text" name="Period" id="period" class="form-control" value="	2025" readonly>
+            <div class="col-md-6">
+                <label for="currency" class="form-label">Currency</label>
+                <div class="input-group">
+                    <input class="form-control" value="{{ $budget->Currency->Code }}" readonly>
+                </div>
             </div>
+            {{--
+                     <div class="mt-3">
+                            <label for="period" class="form-label">Period</label>
+                            <input type="text" name="Period" id="period" class="form-control" value="   2025" readonly>
+                        </div> --}}
 
-            <div class="table-responsive mt-3">
-                <table class="table table-bordered table-hover align-middle">
-                    <thead class="table-light">
+            <div class="mt-4">
+                <h5>Detailed Projections</h5>
+                <p class="text-muted">Breakdown of projections by product.</p>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover align-middle text-center">
+                        <thead>
                     <tr>
                         <th>#</th>
+                        <th>Product</th>
                         <th>Volume</th>
-                        <th>Projected Value (KES)</th>
-                        <th>Status</th>
-                        <th>Actions</th>
+                        <th>Value</th>
                     </tr>
-                    </thead>
-                    <tbody>
-                    <tr>
-                        <td>1</td>
-                        <td>Product A</td>
-                        <td>1,000</td>
-                        <td>250,000.00</td>
-                        <td><span class="badge bg-warning">Pending</span></td>
-                    </tr>
-                    <tr>
-                        <td>2</td>
-                        <td>Product B</td>
-                        <td>2,500</td>
-                        <td>1,200,000.00</td>
-                        <td><span class="badge bg-success">Approved</span></td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div>
-                <table class="table table-bordered table-striped">
-                    <thead class="table-light">
-                    <tr>
-                        <th>#</th>
-                        <th>January</th>
-                        <th>February</th>
-                        <th>March</th>
-                        <th>April</th>
-                        <th>May</th>
-                        <th>June</th>
-                        <th>July</th>
-                        <th>August</th>
-                        <th>September</th>
-                        <th>October</th>
-                        <th>November</th>
-                        <th>December</th>
-                        <th>Total</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr>
-                        <td>1</td>
-                        <td>12000</td>
-                        <td>15000</td>
-                        <td>13000</td>
-                        <td>12500</td>
-                        <td>14000</td>
-                        <td>16000</td>
-                        <td>15500</td>
-                        <td>14500</td>
-                        <td>15000</td>
-                        <td>13500</td>
-                        <td>14800</td>
-                        <td>16000</td>
-                        <td><strong>181800</strong></td>
-                    </tr>
-                    <tr>
-                        <td>2</td>
-                        <td>25000</td>
-                        <td>26000</td>
-                        <td>27000</td>
-                        <td>28000</td>
-                        <td>29000</td>
-                        <td>30000</td>
-                        <td>31000</td>
-                        <td>32000</td>
-                        <td>33000</td>
-                        <td>34000</td>
-                        <td>35000</td>
-                        <td>36000</td>
-                        <td><strong>386000</strong></td>
-                    </tr>
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                        @foreach($budget->projections as $projection)
+                            <tr>
+                                <td>{{ $loop->iteration }}</td>
+                                <td>
+                                    {{ $projection->productType->Name }}
+                                </td>
+                                <td>{{ $projection->Volume }}</td>
+                                <td>{{ number_format($projection->Value, 2) }}</td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
+            <div class="card p-4">
+                <h5>📊 Monthly Budget Allocations</h5>
+                <p class="text-muted">Summary of budget allocations for each month</p>
+
+                @php
+                    $months = [
+                        'Month 1', 'Month 2', 'Month 3', 'Month 4', 'Month 5', 'Month 6',
+                        'Month 7', 'Month 8', 'Month 9', 'Month 10', 'Month 11', 'Month 12'
+                    ];
+                    $allocations = $monthlyAllocations;
+                @endphp
+
+                @if($allocations->count())
+                    <div class="alert alert-info">
+                        <strong>Note:</strong> Monthly allocations are set for the current period.
+                        You can update them as needed.
+                    </div>
+                    <table class="table table-bordered table-hover align-middle">
+                        <thead class="table-light">
+                        <tr>
+                            <th>Month</th>
+                            <th>Allocation Amount</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach ($months as $month)
+                            @php
+                                $alloc = $allocations->firstWhere('Month', $month);
+                                $amount = $alloc ? $alloc->Allocation : 0;
+                            @endphp
+                    <tr>
+                        <td>{{ $month }}</td>
+                        <td>{{ number_format($amount, 2) }}</td>
+                    </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                @else
+                    <div class="alert alert-warning">
+                        No monthly allocations found. Please add allocations to proceed.
+                    </div>
+                @endif
+
+            </div>
+
+
+        </div>
         </form>
     </div>
 @endsection

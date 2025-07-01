@@ -12,7 +12,7 @@
                         Date:</strong> {{ \Carbon\Carbon::parse($adjustment->AdjustmentDate)->format('Y-m-d') }}</p>
                 <p><strong>Branch:</strong> {{ optional($adjustment->branch)->Name ?? 'N/A' }}</p>
                 <p><strong>Reason:</strong> {{ $adjustment->Reason }}</p>
-                <p><strong>Adjusted By:</strong> {{ $adjustment->AdjustedBy }}</p>
+                <p><strong>Adjusted By:</strong> {{ $adjustment->adjustedBy->Name ?? 'N/A' }}</p>
                 <p><strong>Status:</strong>
                     @php
                         $statusEnum = \App\Enums\Inventory\Transfers::tryFrom($adjustment->Status);

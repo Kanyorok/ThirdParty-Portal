@@ -19,9 +19,9 @@ class BudgetDriverProjectionsSeeder extends Seeder
             throw new \Exception('No users found in t_Users table. Please seed t_Users first.');
         }
 
-        $scenarioIds = DB::table('t_BudgetScenarioPlanning')->pluck('Id')->toArray();
-        if (empty($scenarioIds)) {
-            throw new \Exception('No scenarios found in t_BudgetScenarioPlanning table. Please seed t_BudgetScenarioPlanning first.');
+        $budgetIds = DB::table('t_Budgets')->pluck('Id')->toArray();
+        if (empty($budgetIds)) {
+            throw new \Exception('No budgets found in t_Budgets table. Please seed t_Budgets first.');
         }
 
         $currencyIds = DB::table('t_Currencies')->pluck('Id')->toArray();
@@ -29,29 +29,27 @@ class BudgetDriverProjectionsSeeder extends Seeder
             throw new \Exception('No currencies found in t_Currencies table. Please seed t_Currencies first.');
         }
 
-        $periodIds = DB::table('t_BudgetPeriods')->pluck('Id')->toArray();
-        if (empty($periodIds)) {
-            throw new \Exception('No periods found in t_BudgetPeriods table. Please seed t_BudgetPeriods first.');
+        // $periodIds = DB::table('t_BudgetPeriods')->pluck('Id')->toArray();
+        // if (empty($periodIds)) {
+        //     throw new \Exception('No periods found in t_BudgetPeriods table. Please seed t_BudgetPeriods first.');
+        // }
+
+        $productTypeIds = DB::table('t_BudgetProductTypes')->pluck('Id')->toArray();
+        if (empty($productTypeIds)) {
+            throw new \Exception('No product types found in t_BudgetProductTypes table. Please seed t_BudgetProductTypes first.');
         }
 
-        $projections = [
-            ['ScenarioID' => $scenarioIds[0 % count($scenarioIds)], 'CurrencyID' => $currencyIds[0 % count($currencyIds)], 'PeriodID' => $periodIds[0 % count($periodIds)]],
-            ['ScenarioID' => $scenarioIds[1 % count($scenarioIds)], 'CurrencyID' => $currencyIds[1 % count($currencyIds)], 'PeriodID' => $periodIds[1 % count($periodIds)]],
-            ['ScenarioID' => $scenarioIds[2 % count($scenarioIds)], 'CurrencyID' => $currencyIds[0 % count($currencyIds)], 'PeriodID' => $periodIds[2 % count($periodIds)]],
-            ['ScenarioID' => $scenarioIds[0 % count($scenarioIds)], 'CurrencyID' => $currencyIds[2 % count($currencyIds)], 'PeriodID' => $periodIds[3 % count($periodIds)]],
-            ['ScenarioID' => $scenarioIds[1 % count($scenarioIds)], 'CurrencyID' => $currencyIds[1 % count($currencyIds)], 'PeriodID' => $periodIds[0 % count($periodIds)]],
-            ['ScenarioID' => $scenarioIds[2 % count($scenarioIds)], 'CurrencyID' => $currencyIds[0 % count($currencyIds)], 'PeriodID' => $periodIds[1 % count($periodIds)]],
-            ['ScenarioID' => $scenarioIds[0 % count($scenarioIds)], 'CurrencyID' => $currencyIds[2 % count($currencyIds)], 'PeriodID' => $periodIds[2 % count($periodIds)]],
-            ['ScenarioID' => $scenarioIds[1 % count($scenarioIds)], 'CurrencyID' => $currencyIds[1 % count($currencyIds)], 'PeriodID' => $periodIds[3 % count($periodIds)]],
-            ['ScenarioID' => $scenarioIds[2 % count($scenarioIds)], 'CurrencyID' => $currencyIds[0 % count($currencyIds)], 'PeriodID' => $periodIds[0 % count($periodIds)]],
-            ['ScenarioID' => $scenarioIds[0 % count($scenarioIds)], 'CurrencyID' => $currencyIds[2 % count($currencyIds)], 'PeriodID' => $periodIds[1 % count($periodIds)]],
-        ];
+        $faker = \Faker\Factory::create();
+        $projectionCount = 10;
+        for ($i = 0; $i < $projectionCount; $i++) {
+            $budgetId = $budgetIds[$i % count($budgetIds)];
+            $currencyId = $currencyIds[$i % count($currencyIds)];
+            // $periodId = $periodIds[$i % count($periodIds)];
 
-        foreach ($projections as $projection) {
-            DB::table('t_BudgetDriverProjections')->insert([
-                'ScenarioID' => $projection['ScenarioID'],
-                'CurrencyID' => $projection['CurrencyID'],
-                'PeriodID' => $projection['PeriodID'],
+            $projId = DB::table('t_BudgetDriverProjections')->insertGetId([
+                'BudgetID' => $budgetId,
+                'CurrencyID' => $currencyId,
+                // 'PeriodID' => $periodId,
                 'CreatedBy' => $userIds[array_rand($userIds)],
                 'CreatedOn' => Carbon::now()->subDays(rand(1, 30)),
                 'ModifiedBy' => $userIds[array_rand($userIds)],
@@ -59,6 +57,24 @@ class BudgetDriverProjectionsSeeder extends Seeder
                 'DeletedBy' => null,
                 'DeletedOn' => null,
             ]);
+
+            // Attach 1-3 random products for each projection
+            $productCount = rand(1, 3);
+            $selectedProducts = $faker->randomElements($productTypeIds, $productCount);
+            foreach ($selectedProducts as $prodId) {
+                DB::table('t_BudgetDriverProjectionsData')->insert([
+                    'BudgetDriverProjectionsID' => $projId,
+                    'ProductID' => $prodId,
+                    'Volume' => $faker->numberBetween(100, 10000),
+                    'Value' => $faker->randomFloat(2, 10000, 1000000),
+                    'CreatedBy' => $userIds[array_rand($userIds)],
+                    'CreatedOn' => Carbon::now()->subDays(rand(1, 30)),
+                    'ModifiedBy' => $userIds[array_rand($userIds)],
+                    'ModifiedOn' => Carbon::now()->subDays(rand(0, 10)),
+                    'DeletedBy' => null,
+                    'DeletedOn' => null,
+                ]);
+            }
         }
     }
 }

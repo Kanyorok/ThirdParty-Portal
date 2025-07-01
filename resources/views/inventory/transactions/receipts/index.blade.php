@@ -1,6 +1,5 @@
 @extends('layouts.app')
-
-@section('title', 'Goods Receipts')
+@section('title', 'Transactions Transfer Receipts')
 @section('styles')
     <link rel="stylesheet"
           href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
@@ -73,8 +72,8 @@
                             <td>{{ $receipt->ReceiptId ?? 'N/A' }}</td>
                             <td>{{ optional($receipt->transfer)->TransferID ?? 'N/A' }}</td>
                             <td>{{ optional(optional($receipt->transfer)->fromBranch)->Name ?? 'N/A' }}</td>
-                            <td>{{ $receipt->ReceivedBy ?? 'N/A' }}</td>
-                            <td>{{ \Carbon\Carbon::parse($receipt->ReceivedDate)->format('Y-m-d') }}</td>
+                            <td>{{$receipt->receivedBy->Name ?? 'N/A'}}</td>
+                            <td>{{ \Carbon\Carbon::parse($receipt->ReceivedDate)->format('d/m/Y') }}</td>
                             <td>
                                 @php
                                     $statusEnum = $receipt->Status instanceof Transfers

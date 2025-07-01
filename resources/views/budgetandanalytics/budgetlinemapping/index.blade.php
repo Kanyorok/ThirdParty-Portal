@@ -68,10 +68,7 @@
                                 @endforeach
                             </td>
                             <td>
-                                <button class="btn btn-sm btn-warning" data-bs-toggle="modal"
-                                        data-bs-target="#editLineModal{{ $item->Id }}">
-                                    ✏ Edit
-                                </button>
+                                <a href="{{ route('budgetlinemapping.edit', $item->Id) }}" class="btn btn-sm btn-info">✏️</a>
                                 <form method="POST" action="{{ route('budgetlinemapping.destroy',$item->Id) }}"
                                       class="delete-form d-inline">
                                     @csrf

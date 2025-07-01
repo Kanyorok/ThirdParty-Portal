@@ -91,7 +91,7 @@ class RequisitionItemsController extends Controller
             }
 
             // Pass planId to the service
-            $details = $this->itemService->getItemDetails($item, $planId);
+            $details = $this->itemService->getItemDetails($item, $requisitionId, $planId);
 
             return response()->json([
                 'success' => true,

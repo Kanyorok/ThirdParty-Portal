@@ -2,14 +2,18 @@
 
 namespace App\Http\Controllers\Budget;
 
+use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
+use App\Models\Budget\Budget;
+use Illuminate\Http\Request;
 use App\Models\Budget\BudgetDriverProjections;
 use App\Models\Budget\BudgetDriverProjectionsData;
+use App\Models\Budget\BudgetMonthlyProjectionAllocation;
 use App\Models\Budget\BudgetPeriods;
 use App\Models\Budget\BudgetProduct;
+use App\Models\Budget\BudgetProductType;
 use App\Models\Budget\BudgetScenarioPlanning;
 use App\Models\Core\Currency;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -22,9 +26,9 @@ class BudgetProjectionsController extends Controller
         //$projections = BudgetDriverProjections::with(['scenario', 'product', 'period'])->get();
         $projections = BudgetDriverProjections::with(
             'projections',
-            'scenario:Id,scenarioName',
+            'budget:Id,Name',
             'currency:Id,Code',
-            'period:Id,fiscalYear',
+        // 'period:Id,fiscalYear',
         )->get();
 
         // Compute totals for each main projection
@@ -43,13 +47,13 @@ class BudgetProjectionsController extends Controller
     // Show form for new entry
     public function create()
     {
-        $scenarios = BudgetScenarioPlanning::all();
+        $budgets = Budget::all();
         $currencies = Currency::all();
         $products = BudgetProduct::all();
-        $periods = BudgetPeriods::all();
+        // $periods = BudgetPeriods::all();
 
         return view('budgetandanalytics.budgetworkspace.entry.create', compact(
-            'scenarios', 'currencies', 'products', 'periods'
+            'budgets', 'currencies', 'products', // 'periods'
         ));
     }
 
@@ -57,9 +61,9 @@ class BudgetProjectionsController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'ScenarioID' => 'required|exists:t_BudgetScenarioPlanning,Id',
+            'BudgetID' => 'required|exists:t_Budgets,Id',
             'CurrencyID' => 'required|exists:t_Currencies,Id',
-            'PeriodID' => 'required|exists:t_BudgetPeriods,Id',
+            // 'PeriodID'  => 'required|exists:t_BudgetPeriods,Id',
             'Products' => 'required|array|min:1',
             'Products.*.ProductID' => 'required|exists:t_BudgetProductTypes,Id',
             'Products.*.Volume' => 'required|integer|min:0',
@@ -69,15 +73,15 @@ class BudgetProjectionsController extends Controller
         DB::beginTransaction();
 
         try {
-            $ScenarioId = $validated['ScenarioID'];
+            $ScenarioId = $validated['BudgetID'];
             $CurrencyId = $validated['CurrencyID'];
-            $PeriodId = $validated['PeriodID'];
+            // $PeriodId   = $validated['PeriodID'];
 
             //Store T1
             $projection = BudgetDriverProjections::create([
-                'ScenarioID' => $ScenarioId,
+                'BudgetID' => $ScenarioId,
                 'CurrencyID' => $CurrencyId,
-                'PeriodID' => $PeriodId,
+                // 'PeriodID' => $PeriodId,
                 'CreatedBy' => Auth::id(),
                 'ModifiedBy' => Auth::id(),
             ]);
@@ -103,7 +107,7 @@ class BudgetProjectionsController extends Controller
                 ->withProperties(['action' => 'create'])
                 ->log('Created Driver Projections');
 
-            return redirect()->route('entrybyproduct.index')
+            return redirect()->route('budgetprojections.index')
                 ->with('success', 'Driver Projections created successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -117,7 +121,16 @@ class BudgetProjectionsController extends Controller
 
     public function show($id)
     {
-        return view('budgetandanalytics.budgetworkspace.entry.show');
+
+        $this->authorize(PermissionEnum::BudgetSetupView, BudgetMonthlyProjectionAllocation::class);
+
+        $budget = BudgetDriverProjections::findOrFail($id);
+
+        // Fetch all allocations so the view can filter and display as needed
+        $monthlyAllocations = BudgetMonthlyProjectionAllocation::where('BudgetProjectionID', $id)
+            ->get();
+
+        return view('budgetandanalytics.budgetworkspace.entry.show', compact('monthlyAllocations', 'budget'));
     }
 
     public function edit($id)

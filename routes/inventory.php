@@ -90,6 +90,7 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/downloads/opening-stock-sample', [OpeningStockController::class, 'downloadSampleTemplate'])->name('openingstock.sample');
     Route::post('/openingstock/upload', [OpeningStockController::class, 'uploadExcel'])->name('openingstock.upload');
 
+
     //Route::resource('bintracking', BinTrackingController::class);
     Route::get('/inventorytracking', [BinTrackingController::class, 'index'])->name('bintracking.index');
     Route::get('/inventorytracking/create', [BinTrackingController::class, 'create'])->name('bintracking.create');
@@ -108,11 +109,9 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/stocktake/show/{Id}', [StockTakeController::class, 'show'])->name('stocktake.show');
     Route::delete('stocktake/delete/{Id}', [StockTakeController::class, 'destroy'])->name('stocktake.destroy');
     Route::get('stocktake/edit/{Id}', [StockTakeController::class, 'edit'])->name('stocktake.edit');
-    Route::put('stocktake/edit/{Id}', [StockTakeController::class, 'update'])->name('stocktake.update');
+    Route::put('stocktake/update/{Id}', [StockTakeController::class, 'update'])->name('stocktake.update');
     Route::get('/stocktake/branches/{storeId}', [StockTakeController::class, 'getStoreByBranch'])->name('getstores');
     Route::get('/stock-items/{branchId}/{storeId}', [StockTakeController::class, 'getStockItems'])->name('stocktake.items');
-
-
 
 
     Route::resource('uomconversion', UOMConversionController::class);
@@ -142,7 +141,10 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/transactionstransfers/{Id}/edit', [TransactionTransfersController::class, 'edit'])->name('transactionstransfers.edit');
     Route::put('/transactionstransfers/{Id}', [TransactionTransfersController::class, 'update'])->name('transactionstransfers.update');
     Route::delete('/transactionstransfers/{Id}', [TransactionTransfersController::class, 'destroy'])->name('transactionstransfers.destroy');
-    Route::get('/interbranchrequisition/{id}', [TransactionTransfersController::class, 'getRequisitionDetails']);
+    Route::get('/transactionstransfers/requisitions/by-type/{type}', [TransactionTransfersController::class, 'getRequisitionsByType'])->name('requisitions.by-type');
+    Route::get('/transactionstransfers/requisitions/details/{id}', [TransactionTransfersController::class, 'getRequisitionDetails'])
+        ->name('requisitions.details');
+
 
     //Route::resource('transactionsreceipts', TransactionReceiptsController::class);
     Route::get('/transactionsreceipts', [TransactionReceiptsController::class, 'index'])->name('transactionsreceipts.index');
@@ -153,6 +155,7 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::put('/transactionsreceipts/{Id}', [TransactionReceiptsController::class, 'update'])->name('transactionsreceipts.update');
     Route::delete('/transactionsreceipts/{Id}', [TransactionReceiptsController::class, 'destroy'])->name('transactionsreceipts.destroy');
     Route::get('/transactionsreceipts/transfer-items/{Id}', [TransactionReceiptsController::class, 'getTransferItems']);
+
 
 
     Route::resource('stockissue', StockIssueController::class);

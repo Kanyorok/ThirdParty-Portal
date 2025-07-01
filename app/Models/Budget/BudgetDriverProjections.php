@@ -13,34 +13,34 @@ class BudgetDriverProjections extends Model
 {
     use UserActorTrait, SoftDeletes;
 
+    protected $table = 't_BudgetDriverProjections';
+    protected $primaryKey = 'Id';
+
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
-    protected $table = 't_BudgetDriverProjections';
-    protected $primaryKey = 'Id';
-    protected $fillable = [
-        'ScenarioID',
-        'CurrencyID',
-        'PeriodID',
-        'CreatedBy',
-        'ModifiedBy',
-    ];
 
     public static function getPrimaryKey(): string
     {
         return 'BudgetDriverProjectionsId';
     }
 
-    // Relationships
+    protected $fillable = [
+        'BudgetID',
+        'CurrencyID',
+        'CreatedBy',
+        'ModifiedBy',
+    ];
 
+    // Relationships
     public function projections(): HasMany
     {
         return $this->hasMany(BudgetDriverProjectionsData::class, 'BudgetDriverProjectionsID', 'Id');
     }
 
-    public function scenario(): BelongsTo
+    public function budget(): BelongsTo
     {
-        return $this->belongsTo(BudgetScenarioPlanning::class, 'ScenarioID', 'Id');
+        return $this->belongsTo(Budget::class, 'BudgetID', 'Id');
     }
 
     public function currency(): BelongsTo
@@ -51,6 +51,11 @@ class BudgetDriverProjections extends Model
     public function period(): BelongsTo
     {
         return $this->belongsTo(BudgetPeriods::class, 'PeriodID', 'Id');
+    }
+
+    public function productType()
+    {
+        return $this->belongsTo(BudgetProductType::class, 'ProductID', 'Id');
     }
 
 }

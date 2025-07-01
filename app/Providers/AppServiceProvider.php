@@ -8,6 +8,7 @@ use App\Models\BR\Account;
 use App\Models\BR\Client;
 use App\Models\BR\DebtProduct;
 use App\Models\Budget\Budget;
+use App\Models\Budget\BudgetActivityMaster;
 use App\Models\Budget\BudgetActivity;
 use App\Models\Budget\BudgetActivityMaster;
 use App\Models\Budget\BudgetDriver;
@@ -18,9 +19,11 @@ use App\Models\Budget\BudgetGLAccountSubType;
 use App\Models\Budget\BudgetLine;
 use App\Models\Budget\BudgetLineProductTypes;
 use App\Models\Budget\BudgetLinesGLAccount;
-use App\Models\Budget\BudgetMonthlyAllocation;
+use App\Models\Budget\BudgetManualEntryAllocations;
 use App\Models\Budget\BudgetPeriods;
 use App\Models\Budget\BudgetPeriodTypes;
+use App\Models\Budget\BudgetMonthlyAllocation;
+use App\Models\Budget\BudgetMonthlyProjectionAllocation;
 use App\Models\Budget\BudgetProduct;
 use App\Models\Budget\BudgetProductType;
 use App\Models\Budget\BudgetScenarioPlanning;
@@ -76,12 +79,18 @@ use App\Models\Procurement\Order;
 use App\Models\Procurement\PlanLineItems;
 use App\Models\Procurement\ProcurementMethod;
 use App\Models\Procurement\RequisitionLine;
+use App\Models\Procurement\ProcurementMethod;
+use App\Models\Procurement\RequisitionLines;
 use App\Models\Procurement\Requisitions;
 use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQLine;
 use App\Models\Procurement\SchedulePlan;
 use App\Models\PropertyManagement\PropertyBlock;
+use App\Models\PropertyManagement\PropertyFloor;
+use App\Models\PropertyManagement\PropertyUnit;
+use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Models\PropertyManagement\PropertyRegistry;
+use App\Models\PropertyManagement\PropertyTenantClearance;
 use App\Models\PropertyManagement\PropertyType;
 use App\Models\Settings\APICredential;
 use App\Models\ThirdParies\Board;
@@ -112,9 +121,13 @@ use App\Policies\Procurement\RequisitionPolicy;
 use App\Policies\Procurement\SchedulePlanPolicy;
 use App\Policies\ProductDevelopmentPolicy;
 use App\Policies\PropertyManagement\PropertyCategoryPolicy;
+use App\Policies\PropertyManagement\PropertyNewTenantPolicy;
 use App\Policies\PropertyManagement\PropertyRegistryPolicy;
 use App\Policies\PropertyManagement\PropertyStructuralPolicy;
+use App\Policies\PropertyManagement\PropertyTenantClearancePolicy;
 use App\Policies\PropertyManagement\PropertyTypePolicy;
+use App\Policies\PropertyManagement\PropertyFloorPolicy;
+use App\Policies\PropertyManagement\PropertyUnitPolicy;
 use App\Policies\RolePolicy;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
@@ -137,6 +150,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Relation::morphMap([
+
             //Core
             SpecialPermission::getPrimaryKey() => SpecialPermission::class,
             APICredential::getPrimaryKey() => APICredential::class,
@@ -222,6 +236,27 @@ class AppServiceProvider extends ServiceProvider
             BudgetLineProductTypes::getPrimaryKey() => BudgetLineProductTypes::class,
 
 
+            BudgetActivityMaster::getPrimaryKey() => BudgetActivityMaster::class,
+            BudgetLinesGLAccount::getPrimaryKey() => BudgetLinesGLAccount::class,
+            BudgetGLAccount::getPrimaryKey() => BudgetGLAccount::class,
+            BudgetLine::getPrimaryKey() => BudgetLine::class,
+            BudgetPeriods::getPrimaryKey() => BudgetPeriods::class,
+            BudgetPeriodTypes::getPrimaryKey() => BudgetPeriodTypes::class,
+            BudgetScenarioPlanning::getPrimaryKey() => BudgetScenarioPlanning::class,
+            BudgetProduct::getPrimaryKey() => BudgetProduct::class,
+            BudgetProductType::getPrimaryKey() => BudgetProductType::class,
+            BudgetDriver::getPrimaryKey() => BudgetDriver::class,
+            BudgetDriverMaster::getPrimaryKey() => BudgetDriverMaster::class,
+            BudgetDriverProjections::getPrimaryKey() => BudgetDriverProjections::class,
+            BudgetTopDown::getPrimaryKey() => BudgetTopDown::class,
+            BudgetTopDownData::getPrimaryKey() => BudgetTopDownData::class,
+            BudgetActivity::getPrimaryKey() => BudgetActivity::class,
+            BudgetMonthlyAllocation::getPrimaryKey() => BudgetMonthlyAllocation::class,
+            Budget::getPrimaryKey() => Budget::class,
+            BudgetGLAccountSubType::getPrimaryKey() => BudgetGLAccountSubType::class,
+            BudgetLineProductTypes::getPrimaryKey() => BudgetLineProductTypes::class,
+            BudgetMonthlyProjectionAllocation::getPrimaryKey() => BudgetMonthlyProjectionAllocation::class,
+            BudgetManualEntryAllocations::getPrimaryKey() => BudgetManualEntryAllocations::class,
             CategoryMaster::getPrimaryKey() => CategoryMaster::class,
             PropertyType::getPrimaryKey() => PropertyType::class,
             PropertyRegistry::getPrimaryKey() => PropertyRegistry::class,
@@ -236,6 +271,10 @@ class AppServiceProvider extends ServiceProvider
             DocumentVersion::getPrimaryKey() => DocumentVersion::class,
             Image::getPrimaryKey() => Image::class,
             Repository::getPrimaryKey() => Repository::class,
+            PropertyNewTenant::getPrimaryKey() => PropertyNewTenant::class,
+            PropertyTenantClearance::getPrimaryKey() => PropertyTenantClearance::class,
+            PropertyFloor::getPrimaryKey() => PropertyFloor::class,
+            PropertyUnit::getPrimaryKey() => PropertyUnit::class,
         ]);
 
         Gate::policy(Role::class, RolePolicy::class);
@@ -268,6 +307,10 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PropertyType::class, PropertyTypePolicy::class);
         Gate::policy(PropertyRegistry::class, PropertyRegistryPolicy::class);
         Gate::policy(PropertyBlock::class, PropertyStructuralPolicy::class);
+        Gate::policy(PropertyNewTenant::class, PropertyNewTenantPolicy::class);
+        Gate::policy(PropertyTenantClearance::class, PropertyTenantClearancePolicy::class);
+        Gate::policy(PropertyFloor::class, PropertyFloorPolicy::class);
+        Gate::policy(PropertyUnit::class, PropertyUnitPolicy::class);
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);
          Event::listen(SMSSendEvent::class, SMSSendListener::class);

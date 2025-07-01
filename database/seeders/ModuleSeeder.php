@@ -151,6 +151,8 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 305300, 'Name' => 'Opening', 'Icon' => null, 'Description' => '', 'ParentID' => 305000, 'Route' => null],
             ['ModuleID' => 305310, 'Name' => 'Opening', 'Icon' => null, 'Description' => '', 'ParentID' => 305300, 'Route' => 'tenderopening.index'],
 
+            ['ModuleID' => 305350, 'Name' => 'Responsiveness Check', 'Icon' => null, 'Description' => '', 'ParentID' => 305000, 'Route' => 'bidresponsiveness.index'],
+
             // Evaluation
             ['ModuleID' => 305400, 'Name' => 'Evaluation', 'Icon' => null, 'Description' => '', 'ParentID' => 305000, 'Route' => null],
             ['ModuleID' => 305410, 'Name' => 'Appoint Committee', 'Icon' => null, 'Description' => '', 'ParentID' => 305400, 'Route' => 'tendercommittee.index'],
@@ -163,6 +165,9 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 306100, 'Name' => 'View Quotations', 'Icon' => null, 'Description' => '', 'ParentID' => 306000, 'Route' => 'rfqs.index'],
             ['ModuleID' => 306200, 'Name' => 'Quotation Responses', 'Icon' => null, 'Description' => '', 'ParentID' => 306000, 'Route' => 'rfqresponses.index'],
             ['ModuleID' => 306300, 'Name' => 'Quotation Evaluation', 'Icon' => null, 'Description' => '', 'ParentID' => 306000, 'Route' => 'evaluations.index'],
+
+            //Awards
+            ['ModuleID' => 306500, 'Name' => 'Awards', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => 'procawards.index'],
 
             ['ModuleID' => 307000, 'Name' => 'Purchase Order', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 307100, 'Name' => 'View Purchase Orders', 'Icon' => null, 'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.index'],
@@ -177,7 +182,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 398000, 'Name' => 'Settings', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 398100, 'Name' => 'Criteria Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'sections.index'],
             ['ModuleID' => 398200, 'Name' => 'Methods Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'procurement-modes.index'],
-
+            ['ModuleID' => 398300, 'Name' => 'Approval Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'approval-setup.index'],
             ['ModuleID' => 399000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'Description' => '', 'ParentID' => 300000, 'Route' => 'procurement-reports.index'],
         ]);
 
@@ -214,7 +219,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 404300, 'Name' => 'Stock Transfers', 'Icon' => null, 'Description' => 'Stock Transfers', 'Route' => 'transactionstransfers.index', 'ParentID' => 404000],
             ['ModuleID' => 404400, 'Name' => 'Stock Adjustments', 'Icon' => null, 'Description' => 'Stock Adjustments', 'Route' => 'transactionsadjustment.index', 'ParentID' => 404000],
             ['ModuleID' => 404500, 'Name' => 'Transactions Approval', 'Icon' => null, 'Description' => 'Transaction Approvals', 'Route' => 'transactionsapproval.index', 'ParentID' => 404000],
-            ['ModuleID' => 405000, 'Name' => 'Stoc k Management', 'Icon' => null, 'Description' => 'Stock Management', 'Route' => null, 'ParentID' => 400000],
+            ['ModuleID' => 405000, 'Name' => 'Stock Management', 'Icon' => null, 'Description' => 'Stock Management', 'Route' => null, 'ParentID' => 400000],
             ['ModuleID' => 405100, 'Name' => 'Stock Take', 'Icon' => null, 'Description' => 'Stock Take Management', 'Route' => 'stocktake.index', 'ParentID' => 405000],
             ['ModuleID' => 407000, 'Name' => 'Price Management', 'Icon' => null, 'Description' => 'Items Prices', 'Route' => 'pricemanagement.index', 'ParentID' => 400000],
 
@@ -366,6 +371,10 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 504200, 'Name' => 'Assign', 'Icon' => null, 'Description' => '', 'ParentID' => 504000, 'Route' => 'assignrequest.index'],
             ['ModuleID' => 504300, 'Name' => 'Dashboard', 'Icon' => null, 'Description' => '', 'ParentID' => 504000, 'Route' => 'maintenancedashboard.index'],
             ['ModuleID' => 504400, 'Name' => 'Work Completion', 'Icon' => null, 'Description' => '', 'ParentID' => 504000, 'Route' => 'workcompletion.index'],
+
+            // First level - Property Management Settings
+            ['ModuleID' => 505000, 'Name' => 'Settings', 'Icon' => '<i class="fas fa-cog"></i>', 'Description' => '', 'ParentID' => 500000, 'Route' => null],
+            ['ModuleID' => 505100, 'Name' => 'Property Settings', 'Icon' => null, 'Description' => '', 'ParentID' => 505000, 'Route' => 'propertysettings.index'],
 
             // First level - Reports
             ['ModuleID' => 599000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-chart-bar"></i>', 'Description' => '', 'ParentID' => 500000, 'Route' => 'propertyreports.index'],

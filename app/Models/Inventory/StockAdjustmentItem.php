@@ -25,6 +25,7 @@ class StockAdjustmentItem extends Model
         'CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn', 'DeletedBy', 'DeletedOn'
     ];
 
+
     public function adjustment()
     {
         return $this->belongsTo(StockAdjustment::class, 'AdjustmentId', 'Id');

@@ -6,8 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Inventory\TransactionTransfer;
 use Illuminate\Http\Request;
 use App\Enums\Inventory\Transfers;
-use App\Models\Inventory\StockItem;
-use App\Models\Inventory\StockAdjustment;
 use App\Services\Inventory\StockAdjustmentService;
 use App\Services\Inventory\TransactionTransferService;
 
@@ -17,14 +15,13 @@ class TransactionApprovalController extends Controller
     protected $transferService;
 
     public function __construct(
-        StockAdjustmentService     $adjustmentService,
+        StockAdjustmentService $adjustmentService,
         TransactionTransferService $transferService
     )
     {
         $this->adjustmentService = $adjustmentService;
         $this->transferService = $transferService;
     }
-
 
     public function index(Request $request)
     {
@@ -43,6 +40,7 @@ class TransactionApprovalController extends Controller
                         ->orWhere('Id', $branch);
                 });
             }
+
         } elseif ($transactionType === 'Stock Issue') {
             $query = \App\Models\Inventory\StockIssue::with(['branch', 'creator'])
                 ->where('Status', 'Pending');
@@ -53,6 +51,7 @@ class TransactionApprovalController extends Controller
                         ->orWhere('Id', $branch);
                 });
             }
+
         } elseif ($transactionType === 'Stock Adjustment') {
             $query = \App\Models\Inventory\StockAdjustment::with('branch')
                 ->where('Status', Transfers::Pending);
@@ -65,7 +64,7 @@ class TransactionApprovalController extends Controller
             }
 
         } else {
-            $query = collect();
+            $query = collect(); // fallback if type is unknown
         }
 
         if (is_a($query, \Illuminate\Database\Eloquent\Builder::class)) {
@@ -85,33 +84,30 @@ class TransactionApprovalController extends Controller
         return view('inventory.transactions.transactionsapprovals.index', compact('transactionType', 'records'));
     }
 
-
     public function approve(Request $request, $id)
     {
-
         $transactionType = $request->input('transaction_type');
-        if ($transactionType === 'Stock Transfer') {
-            //$this->authorize('approve', TransactionTransfer::class);
-            $this->transferService->approve($id);
 
-            return redirect()->back()->with('success', 'Stock Transfer approved.');
-        }
+        try {
+            if ($transactionType === 'Stock Transfer') {
+                $this->transferService->approve($id);
+                return redirect()->back()->with('success', 'Stock Transfer approved.');
+            }
 
-        if ($transactionType === 'Stock Issue') {
-            $issue = \App\Models\Inventory\StockIssue::findOrFail($id);
-            $issue->Status = 'Approved';
-            $issue->save();
-            return redirect()->back()->with('success', 'Stock Issue approved.');
-        }
-        if ($transactionType === 'Stock Adjustment') {
-            $this->adjustmentService->approve($id);
-            return redirect()->back()->with('success', 'Stock Adjustment approved.');
-        }
-        if ($transactionType === 'Stock Adjustment') {
-            $this->adjustmentService->reject($id);
-            return redirect()->back()->with('success', 'Stock Adjustment rejected.');
-        }
+            if ($transactionType === 'Stock Issue') {
+                $issue = \App\Models\Inventory\StockIssue::findOrFail($id);
+                $issue->Status = 'Approved';
+                $issue->save();
+                return redirect()->back()->with('success', 'Stock Issue approved.');
+            }
 
+            if ($transactionType === 'Stock Adjustment') {
+                $this->adjustmentService->approve($id);
+                return redirect()->back()->with('success', 'Stock Adjustment approved.');
+            }
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
 
         return redirect()->back()->with('error', 'Unknown transaction type.');
     }
@@ -130,8 +126,6 @@ class TransactionApprovalController extends Controller
             return redirect()->back()->with('success', 'Stock Transfer rejected.');
         }
 
-
         return redirect()->back()->with('error', 'Reject not supported for this transaction type.');
     }
-
 }

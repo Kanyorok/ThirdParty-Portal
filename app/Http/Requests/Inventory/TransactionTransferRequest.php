@@ -21,14 +21,16 @@ class TransactionTransferRequest extends FormRequest
         return [
 
             'RequisitionId' => 'required|exists:t_InterBranchRequisition,Id',
+            'RequisitionType' => 'required|string',
             'TransferDate' => 'required|date',
             'TransferredBy' => 'required|string',
-            'FromBranch' => 'required|exists:t_Branches,Id',
-            'ToBranch' => 'required|exists:t_Branches,Id',
+            'FromBranch' => 'nullable|exists:t_Branches,Id',
+            'ToBranch' => 'exists:t_Branches,Id',
             'items' => 'required|array|min:1',
             'items.*.item' => 'required|exists:t_Items,Id',
+            'items.*.uom' => 'required|exists:t_UOM,Id',
             'items.*.approved_qty' => 'required|numeric|min:1',
-            'items.*.dispatched_qty' => 'required|integer|min:0',
+            'items.*.dispatched_qty' => 'required|numeric|min:0',
             'items.*.remarks' => 'nullable|string|max:255',
         ];
 

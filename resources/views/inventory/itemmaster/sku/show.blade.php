@@ -47,7 +47,9 @@
 
             <div class="row mb-3">
                 <div class="col-md-4">
-                    <p><strong>Last Received Date:</strong> {{ $item->LastReceived }}</p>
+                    <p><strong>Last Received
+                            Date:</strong> {{ $item->LastReceived ? \Carbon\Carbon::parse($item->LastReceived)->format('d/m/Y') : 'N/A' }}
+                    </p>
                 </div>
                 <div class="col-md-4">
                     <p><strong>Store:</strong> {{ optional($item->store)->StoreName ?? 'N/A' }}</p>

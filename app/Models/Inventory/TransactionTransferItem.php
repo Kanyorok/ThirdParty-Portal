@@ -26,6 +26,7 @@ class TransactionTransferItem extends Model
         'Item',
         'ApprovedQty',
         'DispatchedQty',
+        'UOM',
         'Remarks',
         'CreatedBy',
         'CreatedOn',
@@ -55,10 +56,14 @@ class TransactionTransferItem extends Model
     {
         return $this->belongsTo(InterBranchRequisition::class, 'RequisitionId', 'Id');
     }
-
     public function item()
     {
         return $this->belongsTo(ItemMasterList::class, 'Item', 'Id');
+    }
+
+    public function uom()
+    {
+        return $this->belongsTo(UnitOfMeasure::class, 'UOM', 'Id');
     }
 
     public function transfer()

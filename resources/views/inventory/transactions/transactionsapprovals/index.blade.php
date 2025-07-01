@@ -5,18 +5,27 @@
 @extends('layouts.app')
 
 @section('title', 'Approve Stock Transactions')
-@section('styles')
-    <link rel="stylesheet"
-          href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-@endsection
 
+@section('styles')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+@endsection
 
 @section('content')
     <div class="container">
         <h4 class="mb-4">Approve Stock Transactions</h4>
 
         @if(session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
         @endif
 
         <form method="GET" class="mb-3">
@@ -26,9 +35,6 @@
                     <select name="transaction_type" class="form-select" onchange="this.form.submit()">
                         <option value="Stock Transfer" {{ $transactionType == 'Stock Transfer' ? 'selected' : '' }}>
                             Stock Transfer
-                        </option>
-                        <option value="Stock Issue" {{ $transactionType == 'Stock Issue' ? 'selected' : '' }}>Stock
-                            Issue
                         </option>
                         <option value="Stock Adjustment" {{ $transactionType == 'Stock Adjustment' ? 'selected' : '' }}>
                             Stock Adjustment
@@ -54,11 +60,9 @@
             </div>
         </form>
 
-
         <div class="table-responsive">
             <table id="approvalsTable" class="table table-bordered table-striped align-middle">
                 <thead class="table-light">
-                <thead>
                 <tr>
                     <th>#</th>
                     <th>TYPE</th>
@@ -97,11 +101,12 @@
                                 {{ $record->branch->Name ?? 'N/A' }}
                             @endif
                         </td>
-                        <td>{{ \Carbon\Carbon::parse($record->CreatedOn)->format('Y-m-d') }}</td>
+                        <td>{{ \Carbon\Carbon::parse($record->CreatedOn)->format('d/m/Y') }}</td>
                         <td>
                             @if($transactionType == 'Stock Transfer')
-                                {{ $record->TransferredBy ?? 'N/A' }}
+                                {{$record->transferredBy->Name ?? 'N/A'}}
                             @elseif($transactionType == 'Stock Adjustment')
+                                {{$record->adjustedBy->Name ?? 'N/A'}}
                                 {{ $record->AdjustedBy ?? 'N/A' }}
                             @else
                                 {{ $record->creator->name ?? 'N/A' }}
@@ -138,28 +143,27 @@
                 </tbody>
             </table>
         </div>
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-        <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    </div>
 
-        <script>
-            $(document).ready(function () {
-                const table = $('#approvalsTable');
-
-                @if(!$records->isEmpty())
-                table.DataTable({
-                    pageLength: 10,
-                    ordering: true,
-                    searching: true,
-                    lengthChange: true,
-                    language: {
-                        emptyTable: "No records available"
-                    },
-                    columnDefs: [
-                        {orderable: false, targets: [7, 8]}
-                    ]
-                });
-                @endif
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            const table = $('#approvalsTable');
+            @if(!$records->isEmpty())
+            table.DataTable({
+                pageLength: 10,
+                ordering: true,
+                searching: true,
+                lengthChange: true,
+                language: {
+                    emptyTable: "No records available"
+                },
+                columnDefs: [
+                    {orderable: false, targets: [7, 8]}
+                ]
             });
-        </script>
-
+            @endif
+        });
+    </script>
 @endsection

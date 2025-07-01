@@ -21,14 +21,10 @@
             <tr>
                 <th>#</th>
                 <th>Budget</th>
-                <th>Branch</th>
-                {{-- <th>Scenario</th> --}}
                 <th>Currency</th>
                 <th>Products</th>
-                {{-- <th>Period</th> --}}
                 <th>No of Accounts</th>
                 <th>Projected Value</th>
-                {{-- <th>Status</th> --}}
                 <th>Actions</th>
             </tr>
             </thead>
@@ -36,26 +32,28 @@
             @foreach ($projections as $projection)
                 <tr>
                     <td>{{ $loop->iteration }}</td>
-                    <td>Budget</td>
-                    <td>Branch</td>
+                    <td>{{ $projection->budget ? $projection->budget->Name : '-' }}</td>
+                    {{-- <td>Branch</td> --}}
                     {{-- <td>{{ $projection->scenario->scenarioName }}</td> --}}
-                    <td>{{ $projection->currency->Code }}</td>
-                    <td>{{ $projection->projections->count() }}</td>
+                    <td>{{ $projection->currency ? $projection->currency->Code : '-' }}</td>
+                    <td>{{ $projection->projections ? $projection->projections->count() : 0 }}</td>
                     {{-- <td>{{ $projection->period->fiscalYear }}</td> --}}
-                    <td>{{ number_format($projection->total_volume) }}</td>
-                    <td>{{ number_format($projection->total_value, 2) }}</td>
+                    <td>{{ isset($projection->total_volume) ? number_format($projection->total_volume) : '0' }}</td>
+                    <td>{{ isset($projection->total_value) ? number_format($projection->total_value, 2) : '0.00' }}</td>
                     {{-- <td><span class="badge bg-warning">Pending</span></td> --}}
                     <td>
-                        <a href="{{route('budgetprojections.show',1)}}" class="btn btn-sm btn-outline-info">👁</a>
+                        <a href="{{route('budgetprojections.show',$projection->Id)}}"
+                           class="btn btn-sm btn-outline-info">👁</a>
                         <form action="#" method="POST" class="d-inline">
                             @csrf @method('DELETE')
                             <button class="btn btn-sm btn-outline-danger"
                                     onclick="return confirm('Delete this entry?')">🗑
                             </button>
                         </form>
-
-                        <a href="{{route('budgetprojections.edit',1)}}" class="btn btn-sm btn-outline-info">🖉 </a>
-                        <a href="{{route('monthly.create',1)}}" class="btn btn-sm btn-outline-info">Monthly</a>
+                        <a href="{{route('budgetprojections.edit',$projection->Id)}}"
+                           class="btn btn-sm btn-outline-info">🖉 </a>
+                        <a href="{{route('monthly.create', ['id'=>$projection->Id])}}"
+                           class="btn btn-sm btn-outline-info">Monthly</a>
                     </td>
                 </tr>
             @endforeach
