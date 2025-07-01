@@ -19,6 +19,7 @@ return new class extends Migration {
             $table->boolean('KeysReturned');
             $table->foreignId('DepositRefunded')->constrained('t_CodeDetails', 'Id');
             $table->string('AdditionalNotes');
+            $table->string('Status')->max(1);
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');

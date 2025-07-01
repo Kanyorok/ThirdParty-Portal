@@ -117,18 +117,34 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::delete('propertytenantclearance/delete/{Id}', [PropertyTenantClearanceController::class,'destroy'])->name('tenantclearance.destroy'); 
 
 
+    //Route::resource('addlease', PropertyNewLeaseController::class);
+    Route::get('propertyaddlease', [PropertyNewLeaseController::class,'index'])->name('addlease.index');
+    Route::get('propertyaddlease/create', [PropertyNewLeaseController::class,'create'])->name('addlease.create');
+    Route::post('propertyaddlease', [PropertyNewLeaseController::class,'store'])->name('addlease.store');
+    Route::get('propertyaddlease/show/{Id}', [PropertyNewLeaseController::class,'show'])->name('addlease.show');
+    Route::get('propertyaddlease/edit/{Id}',[PropertyNewLeaseController::class,'edit'])->name('addlease.edit');
+    Route::put('propertyaddlease/edit/{Id}',[PropertyNewLeaseController::class,'update'])->name('addlease.update');
+    Route::delete('propertyaddlease/delete/{Id}', [PropertyNewLeaseController::class,'destroy'])->name('addlease.destroy');
+    Route::get('/propertyaddlease/blocks/{PropertyId}', [PropertyNewLeaseController::class, 'getBlockByProperty'])->name('getblockbyproperty');
+    Route::get('/propertyaddlease/floors/{BlockId}', [PropertyNewLeaseController::class, 'getFloorByBlock'])->name('getfloorbyblock');
+    Route::get('/propertyaddlease/Units/{FloorId}', [PropertyNewLeaseController::class, 'getUnitByFloor'])->name('getunitbyfloor');
+    
 
+    //Route::resource('terminatelease', PropertyLeaseTerminationController::class);
+    Route::get('propertyterminatelease', [PropertyLeaseTerminationController::class,'index'])->name('terminatelease.index');
+    Route::get('propertyterminatelease/create', [PropertyLeaseTerminationController::class,'create'])->name('terminatelease.create');
+    Route::post('propertyterminatelease', [PropertyLeaseTerminationController::class,'store'])->name('terminatelease.store');
+    Route::get('propertyterminatelease/show/{Id}', [PropertyLeaseTerminationController::class,'show'])->name('terminatelease.show');
+    Route::get('propertyterminatelease/edit/{Id}',[PropertyLeaseTerminationController::class,'edit'])->name('terminatelease.edit');
+    Route::put('propertyterminatelease/edit/{Id}',[PropertyLeaseTerminationController::class,'update'])->name('terminatelease.update');
 
 
 
 
     
     Route::resource('attachments', PropertyAttachmentsController::class);
-    Route::resource('addlease', PropertyNewLeaseController::class);
     Route::resource('schedulelease', PropertyLeaseScheduleController::class);
     Route::resource('renewlease', PropertyLeaseRenewalController::class);
-    Route::resource('terminatelease', PropertyLeaseTerminationController::class);
-    Route::resource('paymentfrequency', PropertyPaymentFrequencyController::class);
     Route::resource('rentinvoice', PropertyInvoiceController::class);
     Route::resource('rentreceipt', PropertyReceiptController::class);
     Route::resource('rentdashboard', RentDashboardController::class);
