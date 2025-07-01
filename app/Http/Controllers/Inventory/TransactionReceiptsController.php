@@ -43,16 +43,43 @@ class TransactionReceiptsController extends Controller
     }
 
     public function store(TransactionReceiptRequest $request)
-    {
-        $this->authorize('create', TransactionReceipt::class);
-        $validatedData = $request->validated();
-        $items = $validatedData['items'] ?? [];
-        unset($validatedData['items']);
+{
+    $this->authorize('create', TransactionReceipt::class);
+    $validatedData = $request->validated();
+    $items = $validatedData['items'] ?? [];
+    unset($validatedData['items']);
 
-        $receipt = $this->service->createReceipt($validatedData, $items, Auth::user());
+    try {
+        $receipt = $this->service->createReceipt($validatedData, $items);
+        return redirect()->route('transactionsreceipts.index')->with('success', 'Transaction receipt posted successfully.');
+    } 
+    
+    catch (\Illuminate\Validation\ValidationException $e) {
+    $transferId = $validatedData['TransferID'] ?? null;
+    $transfer = TransactionTransfer::find($transferId);
+    $branchId = $transfer?->ToBranch;
 
-        return redirect()->route('transactionsreceipts.index')->with('success', 'Goods receipt posted successfully.');
-    }
+    $itemsWithDetails = collect($items)->map(function ($item) use ($branchId) {
+        $itemModel = \App\Models\Inventory\ItemMasterList::find($item['item']);
+        $item['item_name'] = $itemModel->ItemName ?? 'Unknown';
+        $storeOptions = \App\Models\Inventory\Store::where('BranchID', $branchId)
+            ->get(['Id', 'StoreName'])
+            ->map(fn ($s) => ['Id' => $s->Id, 'StoreName' => $s->StoreName])
+            ->toArray();
+
+        $item['store_options'] = $storeOptions;
+
+        return $item;
+    })->toArray();
+
+    return redirect()
+        ->back()
+        ->withInput(array_merge($validatedData, ['items' => $itemsWithDetails]))
+        ->withErrors($e->validator);
+}
+
+}
+
 
     public function show($id)
     {
@@ -69,12 +96,33 @@ class TransactionReceiptsController extends Controller
         return redirect()->route('transactionsreceipts.index')->with('success', 'Receipt deleted.');
     }
 
-    public function getTransferItems($id)
-    {
-        $transfer = TransactionTransfer::with('items.item')->findOrFail($id);
-        return response()->json([
-            'items' => $transfer->items,
-            'from_branch' => $transfer->FromBranch,
-        ]);
-    }
+   public function getTransferItems($id)
+{
+    $transfer = TransactionTransfer::with('items.item')->findOrFail($id);
+    $branchId = $transfer->ToBranch;
+
+    // Fetch all stores in the branch
+    $branchStores = \App\Models\Inventory\Store::where('BranchID', $branchId)
+        ->select('Id', 'StoreName')
+        ->get();
+
+    $itemsWithStores = $transfer->items->map(function ($transferItem) use ($branchStores) {
+        $item = $transferItem->item;
+
+        return [
+            'Item' => $transferItem->Item,
+            'DispatchedQty' => $transferItem->DispatchedQty,
+            'item' => $item,
+            'stores' => $branchStores, // Attach all stores from the branch
+        ];
+    });
+
+    return response()->json([
+        'items' => $itemsWithStores,
+        'from_branch' => $branchId,
+    ]);
 }
+
+}
+
+

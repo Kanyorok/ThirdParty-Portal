@@ -10,11 +10,7 @@ return new class extends Migration
     {
         Schema::table('t_Transfers', function (Blueprint $table) {
             $table->dropForeign(['FromBranch']);
-
-            // Make the column nullable
             $table->foreignId('FromBranch')->nullable()->change();
-
-            // Re-apply the foreign key constraint
             $table->foreign('FromBranch')->references('Id')->on('t_Branches');
         });
     }
@@ -28,4 +24,3 @@ return new class extends Migration
         });
     }
 };
- 
