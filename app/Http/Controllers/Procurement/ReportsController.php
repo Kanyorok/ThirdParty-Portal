@@ -11,7 +11,7 @@ use Illuminate\View\View;
 
 class ReportsController extends Controller
 {
-    protected const ModulesEnum Module = ModulesEnum::Procurement;
+    protected const Module = ModulesEnum::Procurement;
 
     use ReportsTrait;
 

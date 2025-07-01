@@ -20,7 +20,7 @@ class RFQResponseController extends Controller
     }
     public function create()
     {
-        $rfqs = RFQ::all();
+        $rfqs = RFQ::where('Status', 'Approved')->get();
         $currencies = config('app.currencies');
 
         // Get all unique SupplierIds from the pivot table t_RFQ_Supplier
