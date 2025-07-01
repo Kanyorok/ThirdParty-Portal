@@ -11,9 +11,9 @@ return new class extends Migration {
             $table->unsignedBigInteger('BudgetMasterId')->nullable();
 
             $table->foreign('BudgetMasterId')
-                  ->references('Id')
-                  ->on('t_BudgetMaster')
-                  ->onDelete('cascade'); // or restrict/null as needed
+                ->references('Id')
+                ->on('t_BudgetMaster')
+                ->onDelete('cascade'); // or restrict/null as needed
         });
     }
 

@@ -32,14 +32,14 @@ class TransactionReceiptsController extends Controller
 
     public function create()
     {
-    $this->authorize('create', TransactionReceipt::class);
-    $transfers = TransactionTransfer::doesntHave('receipt')
-    ->with(['items.item'])
-    ->where('Status', Transfers::InTransit)
-    ->get();
-    $users = User::all();
+        $this->authorize('create', TransactionReceipt::class);
+        $transfers = TransactionTransfer::doesntHave('receipt')
+            ->with(['items.item'])
+            ->where('Status', Transfers::InTransit)
+            ->get();
+        $users = User::all();
 
-        return view('inventory.transactions.receipts.create', compact('transfers','users'));
+        return view('inventory.transactions.receipts.create', compact('transfers', 'users'));
     }
 
     public function store(TransactionReceiptRequest $request)
@@ -57,7 +57,7 @@ class TransactionReceiptsController extends Controller
     public function show($id)
     {
         $this->authorize('view', TransactionReceipt::class);
-        $receipt = TransactionReceipt::with(['transfer', 'items.item','receivedBy'])->findOrFail($id);
+        $receipt = TransactionReceipt::with(['transfer', 'items.item', 'receivedBy'])->findOrFail($id);
         return view('inventory.transactions.receipts.show', compact('receipt'));
     }
 

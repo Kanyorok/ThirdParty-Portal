@@ -8,7 +8,6 @@ enum Transfers: string
 {
     use UsefulEnumTrait;
 
-   
 
     case Pending = 'pe';
 
@@ -18,7 +17,7 @@ enum Transfers: string
 
     case Rejected = 'Re';
 
-     case Approved = 'Ap';
+    case Approved = 'Ap';
 
     public function label(): string
     {

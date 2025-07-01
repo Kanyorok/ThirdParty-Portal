@@ -6,7 +6,6 @@ use App\Models\Core\CodeDetail;
 use App\Models\HRM\Department;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BudgetLine extends Model
@@ -43,7 +42,7 @@ class BudgetLine extends Model
     ];
 
     protected $casts = [
-        'IsDefault'   => 'boolean',
+        'IsDefault' => 'boolean',
         'IsProductDriven' => 'boolean',
 
         'CreatedOn' => 'datetime',
@@ -78,6 +77,6 @@ class BudgetLine extends Model
 
     public function glAccountType()
     {
-        return $this->belongsTo(CodeDetail::class, 'GLAccountTypeID','Value');
+        return $this->belongsTo(CodeDetail::class, 'GLAccountTypeID', 'Value');
     }
 }

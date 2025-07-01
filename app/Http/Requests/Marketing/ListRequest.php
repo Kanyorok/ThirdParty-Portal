@@ -22,31 +22,12 @@ class ListRequest extends FormRequest
     public function rules(): array
     {
         return [
-                'Label'      => [
-                                 'required',
-                                 'string',
-                                 'min:2',
-                                 'max:100',
-                                ],
-                'Type'       => [
-                                 'nullable',
-                                 Rule::enum(MarketingListEnum::class),
-                                ],
-                'Party'      => [
-                                 'nullable',
-                                 'string',
-                                 'required_if:Type,' . MarketingListEnum::Dynamic->value,
-                                ],
-                'Visibility' => [
-                                 'required',
-                                 Rule::enum(VisibilityEnum::class),
-                                ],
-                'Notes'      => [
-                                 'nullable',
-                                 'string',
-                                 'max:5000',
-                                ],
-               ];
+            'Label' => ['required', 'string', 'min:2', 'max:100',],
+            'Type' => ['nullable', Rule::enum(MarketingListEnum::class),],
+            'Party' => ['nullable', 'string', 'required_if:Type,' . MarketingListEnum::Dynamic->value,],
+            'Visibility' => ['required', Rule::enum(VisibilityEnum::class),],
+            'Notes' => ['nullable', 'string', 'max:5000',],
+        ];
     }
 
     /**
@@ -75,8 +56,8 @@ class ListRequest extends FormRequest
             return MarketingListEnum::fromValue($this->validated('Type'));
         } catch (ErroredException $e) {
             throw ValidationException::withMessages([
-                                                     'Type' => $e->getMessage(),
-                                                    ]);
+                'Type' => $e->getMessage(),
+            ]);
         }
     }
 

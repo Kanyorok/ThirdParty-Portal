@@ -9,9 +9,9 @@ return new class extends Migration {
     {
         Schema::table('t_Transfers', function (Blueprint $table) {
             $table->string('RequisitionType')
-                  ->nullable()
-                  ->after('RequisitionId')
-                  ->comment('Either procurement or interbranch');
+                ->nullable()
+                ->after('RequisitionId')
+                ->comment('Either procurement or interbranch');
         });
     }
 

@@ -2,13 +2,12 @@
 
 namespace App\Http\Controllers\Inventory;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Inventory\InterBranchRequisition;
-use App\Policies\Inventory\InterBranchRequisitionPolicy;
-use App\Services\Inventory\InterBranchRequisitionService;
-use Illuminate\Support\Facades\Auth;
 use App\Enums\Inventory\InterBranchRequisitionEnum;
+use App\Http\Controllers\Controller;
+use App\Models\Inventory\InterBranchRequisition;
+use App\Services\Inventory\InterBranchRequisitionService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class InterBranchRequisitionApprovalController extends Controller
 {
@@ -21,7 +20,7 @@ class InterBranchRequisitionApprovalController extends Controller
 
     public function index(Request $request)
     {
-        
+
         $pendingStatus = InterBranchRequisitionEnum::Submitted->value;
         $pendingRequisitions = InterBranchRequisition::where('Status', $pendingStatus)->get();
 
@@ -43,7 +42,7 @@ class InterBranchRequisitionApprovalController extends Controller
         ]);
     }
 
-    
+
     public function submitDecision(Request $request)
     {
         $request->validate([

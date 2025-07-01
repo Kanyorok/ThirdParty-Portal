@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\Auth\User;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -38,36 +37,36 @@ class BudgetActivitiesSeeder extends Seeder
         $activities = [
             [
                 'ActivityName' => 'Micro Loan Origination',
-                'LineName'     => 'Micro Loan Interest Income',
-                'Description'  => 'Marketing campaign for micro loans',
+                'LineName' => 'Micro Loan Interest Income',
+                'Description' => 'Marketing campaign for micro loans',
                 'AllocationType' => 'monthly',
                 'FullAllocation' => null,
             ],
             [
                 'ActivityName' => 'Payroll Processing',
-                'LineName'     => 'Salaries and Wages',
-                'Description'  => 'Payroll processing for staff',
+                'LineName' => 'Salaries and Wages',
+                'Description' => 'Payroll processing for staff',
                 'AllocationType' => 'monthly',
                 'FullAllocation' => null,
             ],
             [
                 'ActivityName' => 'Digital Ad Campaigns',
-                'LineName'     => 'Marketing Expenses',
-                'Description'  => 'Running monthly marketing campaigns',
+                'LineName' => 'Marketing Expenses',
+                'Description' => 'Running monthly marketing campaigns',
                 'AllocationType' => 'full',
                 'FullAllocation' => 30000.00,
             ],
             [
                 'ActivityName' => 'Server Maintenance',
-                'LineName'     => 'IT Infrastructure Costs',
-                'Description'  => 'Weekly server and network maintenance',
+                'LineName' => 'IT Infrastructure Costs',
+                'Description' => 'Weekly server and network maintenance',
                 'AllocationType' => 'monthly',
                 'FullAllocation' => null,
             ],
             [
                 'ActivityName' => 'Wealth Client Advisory',
-                'LineName'     => 'Wealth Management Fees',
-                'Description'  => 'Client sessions for wealth portfolio advice',
+                'LineName' => 'Wealth Management Fees',
+                'Description' => 'Client sessions for wealth portfolio advice',
                 'AllocationType' => 'full',
                 'FullAllocation' => 15000.00,
             ],
@@ -83,19 +82,19 @@ class BudgetActivitiesSeeder extends Seeder
             }
 
             DB::table('t_BudgetActivities')->insert([
-                'BudgetID'        => $budgets[array_rand($budgets)],
-                'BudgetLineID'    => $line->Id,
-                'BranchID'        => $branchIds[array_rand($branchIds)],
-                'ActivityID'      => $activityMaster->Id,
-                'Description'     => $activity['Description'],
-                'AllocationType'  => $activity['AllocationType'],
-                'FullAllocation'  => $activity['FullAllocation'],
-                'CreatedBy'       => $userIds[array_rand($userIds)],
-                'CreatedOn'       => $now->copy()->subDays(rand(10, 30)),
-                'ModifiedBy'      => $userIds[array_rand($userIds)],
-                'ModifiedOn'      => $now->copy()->subDays(rand(1, 9)),
-                'DeletedBy'       => null,
-                'DeletedOn'       => null,
+                'BudgetID' => $budgets[array_rand($budgets)],
+                'BudgetLineID' => $line->Id,
+                'BranchID' => $branchIds[array_rand($branchIds)],
+                'ActivityID' => $activityMaster->Id,
+                'Description' => $activity['Description'],
+                'AllocationType' => $activity['AllocationType'],
+                'FullAllocation' => $activity['FullAllocation'],
+                'CreatedBy' => $userIds[array_rand($userIds)],
+                'CreatedOn' => $now->copy()->subDays(rand(10, 30)),
+                'ModifiedBy' => $userIds[array_rand($userIds)],
+                'ModifiedOn' => $now->copy()->subDays(rand(1, 9)),
+                'DeletedBy' => null,
+                'DeletedOn' => null,
             ]);
         }
 

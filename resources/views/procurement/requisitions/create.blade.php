@@ -11,7 +11,6 @@
 @endsection
 @section('content')
     <div class="mb-3">
-        <h1 class="h3 d-inline align-middle">@yield('title')</h1>
         <button class="btn btn-primary float-end ms-2 modal-create-item" type="button"><i
                 class="fas fa-plus-circle"></i> New
             Requisition
@@ -27,6 +26,7 @@
                         <tr>
                             <th>#</th>
                             <th>Requisition No</th>
+                            <th>Procurement Plan</th>
                             <th>Requisition Date</th>
                             <th>Branch</th>
                             <th>Department</th>
@@ -44,6 +44,7 @@
                                 {{--                                <td>{{$item->Id}}</td>--}}
                                 <td>{{$loop->iteration }}</td>
                                 <td>{{ $item->RequisitionNo }}</td>
+                                <td>{{ $item->PlanTitle ?? 'N/A' }}</td>
                                 <td>{{ Carbon::parse($item->CreatedOn)->format('d-m-Y') }}</td>
                                 <td>{{ $item->BranchID }}</td>
                                 <td>{{ $item->DepartmentID }}</td>
@@ -52,7 +53,8 @@
                                 <td>{{ number_format($item->ExpectedPrice, 2) }}</td>
                                 <td>{{ $item->Status }}</td>
                                 <td><a href="{{ route('requisition.show',[ $item->Id]) }}" class="btn btn-info btn-sm">View</a>
-                                    <a href="{{ route('requisition.approval',[ $item->Id]) }}" class="btn btn-success btn-sm">Approve</a>
+                                    <a href="{{ route('requisition.approval',[ $item->Id]) }}"
+                                       class="btn btn-success btn-sm">Approve</a>
                                 </td>
 
 
@@ -139,9 +141,10 @@
                             <div class="mb-3">
                                 <div>
                                     <label class="form-label" for="Remarks">Remarks <span
-                                    class="text-danger">*</span</label>
+                                            class="text-danger">*</span</label>
                                 </div>
-                                <textarea name="Remarks" id="Remarks" rows="3" class="form-control" maxlength="1000" required></textarea>
+                                <textarea name="Remarks" id="Remarks" rows="3" class="form-control" maxlength="1000"
+                                          required></textarea>
                                 <p id="Remarks_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
 

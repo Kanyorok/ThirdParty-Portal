@@ -23,22 +23,22 @@ class Comment extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-                           'Notes',
-                           'CommentType',
-                           'CommentTypeID',
-                           'Response',
-                           'RemoteId',
-                           'Source',
-                           'CreatedBy',
-                           'ModifiedBy',
-                           'DeletedBy',
-                          ];
+        'Notes',
+        'CommentType',
+        'CommentTypeID',
+        'Response',
+        'RemoteId',
+        'Source',
+        'CreatedBy',
+        'ModifiedBy',
+        'DeletedBy',
+    ];
 
     protected $casts = [
-                        'Response'   => 'object',
-                        'CreatedBy'  => 'integer',
-                        'ModifiedBy' => 'integer',
-                       ];
+        'Response' => 'object',
+        'CreatedBy' => 'integer',
+        'ModifiedBy' => 'integer',
+    ];
 
     public static function getPrimaryKey(): string
     {

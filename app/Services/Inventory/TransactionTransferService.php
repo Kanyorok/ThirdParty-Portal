@@ -45,17 +45,17 @@ class TransactionTransferService
         }
 
         $transfer = new TransactionTransfer([
-            'TransferDate'     => $data['TransferDate'],
-            'TransferredBy'    => $data['TransferredBy'],
-            'RequisitionId'    => $data['RequisitionId'],
-            'FromBranch'       => $fromBranch,
-            'ToBranch'         => $toBranch,
-            'RequisitionType'  => $data['RequisitionType'],
-            'Status'           => $data['Status'],
-            'CreatedBy'        => Auth::id(),
-            'ModifiedBy'       => Auth::id(),
-            'CreatedOn'        => now(),
-            'ModifiedOn'       => now(),
+            'TransferDate' => $data['TransferDate'],
+            'TransferredBy' => $data['TransferredBy'],
+            'RequisitionId' => $data['RequisitionId'],
+            'FromBranch' => $fromBranch,
+            'ToBranch' => $toBranch,
+            'RequisitionType' => $data['RequisitionType'],
+            'Status' => $data['Status'],
+            'CreatedBy' => Auth::id(),
+            'ModifiedBy' => Auth::id(),
+            'CreatedOn' => now(),
+            'ModifiedOn' => now(),
         ]);
         $transfer->save();
 
@@ -63,13 +63,13 @@ class TransactionTransferService
         $transfer->save();
 
         Workflow::create([
-            'Source'     => 'TransactionTransfer',
-            'SourceID'   => $transfer->Id,
-            'Stage'      => Transfers::Pending->label(),
-            'Status'     => Transfers::Pending->value,
-            'Notes'      => 'Transaction Transfers Pending',
-            'CreatedBy'  => Auth::id(),
-            'CreatedOn'  => now(),
+            'Source' => 'TransactionTransfer',
+            'SourceID' => $transfer->Id,
+            'Stage' => Transfers::Pending->label(),
+            'Status' => Transfers::Pending->value,
+            'Notes' => 'Transaction Transfers Pending',
+            'CreatedBy' => Auth::id(),
+            'CreatedOn' => now(),
             'ModifiedBy' => Auth::id(),
             'ModifiedOn' => now(),
         ]);
@@ -77,10 +77,10 @@ class TransactionTransferService
         PendingWorkflow::updateOrCreate(
             ['Source' => 'TransactionTransfer', 'SourceID' => $transfer->Id],
             [
-                'Stage'      => Transfers::Pending->label(),
-                'UserId'     => Auth::id(),
-                'CreatedBy'  => Auth::id(),
-                'CreatedOn'  => now(),
+                'Stage' => Transfers::Pending->label(),
+                'UserId' => Auth::id(),
+                'CreatedBy' => Auth::id(),
+                'CreatedOn' => now(),
                 'ModifiedBy' => Auth::id(),
                 'ModifiedOn' => now(),
             ]
@@ -97,16 +97,16 @@ class TransactionTransferService
     {
         foreach ($items as $itemData) {
             $created = TransactionTransferItem::create([
-                'TransferId'    => $transfer->Id,
-                'Item'          => $itemData['item'],
-                'ApprovedQty'   => $itemData['approved_qty'],
-                'UOM'           => $itemData['uom'],
+                'TransferId' => $transfer->Id,
+                'Item' => $itemData['item'],
+                'ApprovedQty' => $itemData['approved_qty'],
+                'UOM' => $itemData['uom'],
                 'DispatchedQty' => $itemData['dispatched_qty'],
-                'Remarks'       => $itemData['remarks'] ?? null,
-                'CreatedBy'     => Auth::id(),
-                'ModifiedBy'    => Auth::id(),
-                'CreatedOn'     => now(),
-                'ModifiedOn'    => now(),
+                'Remarks' => $itemData['remarks'] ?? null,
+                'CreatedBy' => Auth::id(),
+                'ModifiedBy' => Auth::id(),
+                'CreatedOn' => now(),
+                'ModifiedOn' => now(),
             ]);
 
             activity()->performedOn($created)->causedBy(Auth::user())
@@ -134,14 +134,14 @@ class TransactionTransferService
             }
 
             $transfer->fill([
-                'TransferDate'     => $data['TransferDate'],
-                'TransferredBy'    => $data['TransferredBy'],
-                'RequisitionId'    => $data['RequisitionId'],
-                'RequisitionType'  => $data['RequisitionType'],
-                'FromBranch'       => $fromBranch,
-                'ToBranch'         => $toBranch,
-                'ModifiedBy'       => Auth::id(),
-                'ModifiedOn'       => now(),
+                'TransferDate' => $data['TransferDate'],
+                'TransferredBy' => $data['TransferredBy'],
+                'RequisitionId' => $data['RequisitionId'],
+                'RequisitionType' => $data['RequisitionType'],
+                'FromBranch' => $fromBranch,
+                'ToBranch' => $toBranch,
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
             ]);
             $transfer->save();
 
@@ -149,15 +149,15 @@ class TransactionTransferService
                 TransactionTransferItem::updateOrCreate(
                     [
                         'TransferId' => $transfer->Id,
-                        'Item'       => $itemData['item'],
+                        'Item' => $itemData['item'],
                     ],
                     [
-                        'ApprovedQty'   => $itemData['approved_qty'],
+                        'ApprovedQty' => $itemData['approved_qty'],
                         'DispatchedQty' => $itemData['dispatched_qty'],
-                        'UOM'           => $itemData['uom'],
-                        'Remarks'       => $itemData['remarks'] ?? null,
-                        'ModifiedBy'    => Auth::id(),
-                        'ModifiedOn'    => now(),
+                        'UOM' => $itemData['uom'],
+                        'Remarks' => $itemData['remarks'] ?? null,
+                        'ModifiedBy' => Auth::id(),
+                        'ModifiedOn' => now(),
                     ]
                 );
             }
@@ -185,13 +185,13 @@ class TransactionTransferService
         $transfer->save();
 
         Workflow::create([
-            'Source'     => 'TransactionTransfer',
-            'SourceID'   => $transfer->Id,
-            'Stage'      => Transfers::Approved->label(),
-            'Status'     => Transfers::Approved->value,
-            'Notes'      => 'Transaction Transfer Approved',
-            'CreatedBy'  => Auth::id(),
-            'CreatedOn'  => now(),
+            'Source' => 'TransactionTransfer',
+            'SourceID' => $transfer->Id,
+            'Stage' => Transfers::Approved->label(),
+            'Status' => Transfers::Approved->value,
+            'Notes' => 'Transaction Transfer Approved',
+            'CreatedBy' => Auth::id(),
+            'CreatedOn' => now(),
             'ModifiedBy' => Auth::id(),
             'ModifiedOn' => now(),
         ]);
@@ -214,13 +214,13 @@ class TransactionTransferService
         $transfer->save();
 
         Workflow::create([
-            'Source'     => 'TransactionTransfer',
-            'SourceID'   => $transfer->Id,
-            'Stage'      => Transfers::Rejected->label(),
-            'Status'     => Transfers::Rejected->value,
-            'Notes'      => 'Transaction Transfer Rejected',
-            'CreatedBy'  => Auth::id(),
-            'CreatedOn'  => now(),
+            'Source' => 'TransactionTransfer',
+            'SourceID' => $transfer->Id,
+            'Stage' => Transfers::Rejected->label(),
+            'Status' => Transfers::Rejected->value,
+            'Notes' => 'Transaction Transfer Rejected',
+            'CreatedBy' => Auth::id(),
+            'CreatedOn' => now(),
             'ModifiedBy' => Auth::id(),
             'ModifiedOn' => now(),
         ]);

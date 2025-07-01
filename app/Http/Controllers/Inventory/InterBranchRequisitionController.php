@@ -2,20 +2,20 @@
 
 namespace App\Http\Controllers\Inventory;
 
-use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
+use App\Enums\Inventory\InterBranchRequisitionEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\InterBranchRequisitionRequest;
+use App\Models\Core\Branch;
 use App\Models\Inventory\InterBranchRequisition;
+use App\Models\Inventory\ItemCategories;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\UnitOfMeasure;
-use App\Models\Inventory\ItemCategories;
-use App\Models\Core\Branch;
+use App\Providers\Inventory\InterBranchRequisitionPolicy;
 use App\Services\Inventory\InterBranchRequisitionService;
 use Illuminate\Http\Request;
-use App\Providers\Inventory\InterBranchRequisitionPolicy;
-use App\Enums\Inventory\InterBranchRequisitionEnum;
-use Illuminate\Support\Facades\DB; // Import DB facade
+use Illuminate\Support\Facades\DB;
+
+// Import DB facade
 
 class InterBranchRequisitionController extends Controller
 {
@@ -64,9 +64,9 @@ class InterBranchRequisitionController extends Controller
             $requestedQty = $itemData['RequestedQty'];
 
             $stock = DB::table('t_Stockitems')
-                        ->where('Branch', $fromBranchId)
-                        ->where('ItemId', $itemId)
-                        ->first();
+                ->where('Branch', $fromBranchId)
+                ->where('ItemId', $itemId)
+                ->first();
 
             if (!$stock || $stock->CurrentQty < $requestedQty) {
                 $itemName = $itemData['item_name'] ?? 'Unknown Item';
@@ -126,9 +126,9 @@ class InterBranchRequisitionController extends Controller
             $requestedQty = $itemData['RequestedQty'];
 
             $stock = DB::table('t_Stockitems')
-                        ->where('Branch', $fromBranchId)
-                        ->where('ItemId', $itemId)
-                        ->first();
+                ->where('Branch', $fromBranchId)
+                ->where('ItemId', $itemId)
+                ->first();
 
             if (!$stock || $stock->CurrentQty < $requestedQty) {
                 $itemName = $itemData['item_name'] ?? 'Unknown Item';
@@ -230,7 +230,7 @@ class InterBranchRequisitionController extends Controller
             }
         }
 
-        usort($uniqueTopLevelCategories, function($a, $b) {
+        usort($uniqueTopLevelCategories, function ($a, $b) {
             return strcmp($a['Name'], $b['Name']);
         });
 
@@ -305,10 +305,10 @@ class InterBranchRequisitionController extends Controller
         }
 
         $items = $itemsQuery->join('t_Stockitems', 't_Items.Id', '=', 't_Stockitems.ItemId')
-                            ->where('t_Stockitems.Branch', $fromBranchId)
-                            ->where('t_Stockitems.CurrentQty', '>', 0)
-                            ->distinct('t_Items.Id')
-                            ->get();
+            ->where('t_Stockitems.Branch', $fromBranchId)
+            ->where('t_Stockitems.CurrentQty', '>', 0)
+            ->distinct('t_Items.Id')
+            ->get();
 
         if ($items->isEmpty()) {
             return response()->json(['message' => 'No items available in stock for the selected category/branch.', 'items' => []]);

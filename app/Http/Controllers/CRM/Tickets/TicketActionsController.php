@@ -6,10 +6,10 @@ use App\Enums\TicketPriorityEnum;
 use App\Enums\TicketStatusEnum;
 use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Base\UploadDocumentRequest;
+use App\Http\Requests\DMS\UploadDocumentRequest;
 use App\Http\Requests\Ticket\NewTicketRequest;
 use App\Models\CRM\Ticket;
-use App\Services\ImageService;
+use App\Services\DMS\ImageService;
 use App\Traits\Controller\ActivitiesTrait;
 use App\Traits\Controller\TicketsTrait;
 use App\Traits\Controller\WorkflowTrait;
@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class TicketActionsController extends Controller
 {
@@ -69,7 +70,7 @@ class TicketActionsController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception $e) {
+        } catch (Exception|Throwable $e) {
             Log::error('Error update ticket assignee ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }
@@ -88,10 +89,10 @@ class TicketActionsController extends Controller
 
         try {
             $priority = TicketPriorityEnum::fromValue($request->get('ticket_priority'));
-        } catch (ErrorException | ErroredException $e) {
+        } catch (ErrorException|ErroredException $e) {
             throw  ValidationException::withMessages([
-                                                      'ticket_priority' => $e->getMessage(),
-                                                     ]);
+                'ticket_priority' => $e->getMessage(),
+            ]);
         }
 
         if ($ticket->Status->value !== TicketStatusEnum::Active->value) {
@@ -105,7 +106,7 @@ class TicketActionsController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception $e) {
+        } catch (Exception|Throwable $e) {
             Log::error('Error update ticket priority ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }
@@ -137,7 +138,7 @@ class TicketActionsController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception $e) {
+        } catch (Exception|Throwable $e) {
             Log::error('Error update ticket priority ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }
@@ -159,13 +160,13 @@ class TicketActionsController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception | \Throwable $e) {
+        } catch (Exception|Throwable $e) {
             Log::error('Error upload ticket document : ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }
 
         return $this->succeeded('document uploaded successfully', data: [
-                                                                         'html' => (new ImageService($document))->summaryList(),
-                                                                        ]);
+            'html' => (new ImageService($document))->summaryList(),
+        ]);
     }
 }

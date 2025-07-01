@@ -5,19 +5,18 @@ namespace App\Http\Controllers\Budget;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Budget\BudgetGLAccount;
+use App\Models\Budget\BudgetGLAccountSubType;
 use App\Models\Budget\BudgetLine;
 use App\Models\Budget\BudgetLineCategories;
+use App\Models\Budget\BudgetLineProductTypes;
 use App\Models\Budget\BudgetLinesGLAccount;
 use App\Models\Budget\BudgetProductType;
 use App\Models\Core\CodeDetail;
+use App\Models\HRM\Department;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use PhpOffice\PhpSpreadsheet\Calculation\Category;
-use App\Models\HRM\Department;
-use App\Models\Budget\BudgetGLAccountSubType;
-use App\Models\Budget\BudgetLineProductTypes;
 
 class BudgetLineMappingController extends Controller
 {
@@ -31,36 +30,36 @@ class BudgetLineMappingController extends Controller
         $budgetLines = BudgetLine::with(['glAccounts', 'category', 'glAccountSubType', 'department', 'glAccountType'])->get();
 
         //Fetch Budget line category
-        $budgetCategories=BudgetLineCategories::all();
+        $budgetCategories = BudgetLineCategories::all();
 
-        //Pull the GLS 
-        $gls=BudgetGLAccount::select('Id','Description','GTType')->get();
-        //Fetch Product type 
-        $productTypes=BudgetProductType::select('Id','Name')->get();
-        return view('budgetandanalytics.budgetlinemapping.index',compact('budgetLines','gls','productTypes','budgetCategories'));
+        //Pull the GLS
+        $gls = BudgetGLAccount::select('Id', 'Description', 'GTType')->get();
+        //Fetch Product type
+        $productTypes = BudgetProductType::select('Id', 'Name')->get();
+        return view('budgetandanalytics.budgetlinemapping.index', compact('budgetLines', 'gls', 'productTypes', 'budgetCategories'));
     }
 
     public function create()
     {
         //Check Permissions
-        $this->authorize(PermissionEnum::BudgetSetupCreate,BudgetLine::class);
-        //Pull the GLS 
-        $gls=BudgetGLAccount::select('Id','Description','GTType')->get();
-        
-        //Fetch Budget line category
-        $budgetCategories=BudgetLineCategories::all();
+        $this->authorize(PermissionEnum::BudgetSetupCreate, BudgetLine::class);
+        //Pull the GLS
+        $gls = BudgetGLAccount::select('Id', 'Description', 'GTType')->get();
 
-        //Fetch Product type 
-        $productTypes=BudgetProductType::select('Id','Name')->get();
+        //Fetch Budget line category
+        $budgetCategories = BudgetLineCategories::all();
+
+        //Fetch Product type
+        $productTypes = BudgetProductType::select('Id', 'Name')->get();
 
         //Fetch GL Account Types
-        $glAccountTypes=CodeDetail::select('Id','CodeID','Value','Description')->where('CodeID','GLAccountType')->get();
+        $glAccountTypes = CodeDetail::select('Id', 'CodeID', 'Value', 'Description')->where('CodeID', 'GLAccountType')->get();
 
         //Fetch GLAccountSubType
-        $glSubtype=BudgetGLAccountSubType::select('Id','GLAccountTypeValue','GLAccountSubTypeName')->get();
+        $glSubtype = BudgetGLAccountSubType::select('Id', 'GLAccountTypeValue', 'GLAccountSubTypeName')->get();
 
         $departments = Department::all();
-        return view('budgetandanalytics.budgetlinemapping.create',compact(
+        return view('budgetandanalytics.budgetlinemapping.create', compact(
             'gls',
             'productTypes',
             'budgetCategories',
@@ -95,12 +94,12 @@ class BudgetLineMappingController extends Controller
             }
             $budgetLine = BudgetLine::create([
                 'BudgetLineCategoryID' => $validated['BudgetLineCategoryID'],
-                'LineName'=>$validated['LineName'],
+                'LineName' => $validated['LineName'],
                 'DepartmentID' => $validated['DepartmentID'],
                 'GLAccountTypeID' => $validated['GLAccountTypeID'],
                 'GLAccountSubTypeID' => $validated['GLAccountSubTypeID'],
-                'Description'=>$validated['Description'],
-                'IsDefault'   => $request->has('IsDefault') ? 1 : 0,
+                'Description' => $validated['Description'],
+                'IsDefault' => $request->has('IsDefault') ? 1 : 0,
                 'IsProductDriven' => $validated['IsProductDriven'],
 
                 'CreatedBy' => Auth::id(),
@@ -157,31 +156,13 @@ class BudgetLineMappingController extends Controller
         $budgetLine = BudgetLine::findOrFail($id);
         $budgetCategories = BudgetLineCategories::all();
         $gls = BudgetGLAccount::select('Id', 'Description')->get();
-        $productTypes = BudgetProductType::select('Id', 'Name')->get();
-        $departments = \App\Models\HRM\Department::all();
-        $glAccountTypes = \App\Models\Core\CodeDetail::select('Id','CodeID','Value','Description')->where('CodeID','GLAccountType')->get();
-        $glSubtype = \App\Models\Budget\BudgetGLAccountSubType::select('Id','GLAccountTypeValue','GLAccountSubTypeName')->get();
 
         // Get currently selected GLs for this budget line
         $selectedGLs = BudgetLinesGLAccount::where('BudgetLineID', $budgetLine->Id)
             ->pluck('BudgetGLAccountID')
             ->toArray();
-        // Get currently selected Product Types for this budget line
-        $selectedProductTypes = \App\Models\Budget\BudgetLineProductTypes::where('BudgetLineId', $budgetLine->Id)
-            ->pluck('ProductTypeId')
-            ->toArray();
 
-        return view('budgetandanalytics.budgetlinemapping.edit', compact(
-            'budgetLine',
-            'budgetCategories',
-            'gls',
-            'selectedGLs',
-            'productTypes',
-            'selectedProductTypes',
-            'departments',
-            'glAccountTypes',
-            'glSubtype'
-        ));
+        return view('budgetandanalytics.budgetlinemapping.edit', compact('budgetLine', 'budgetCategories', 'gls', 'selectedGLs'));
     }
 
     public function update(Request $request, $id)
@@ -192,19 +173,15 @@ class BudgetLineMappingController extends Controller
         $validated = $request->validate([
             'BudgetLineCategoryID' => 'required|exists:t_BudgetLineCategories,Id',
             'LineName' => 'required|string|max:255',
-            'DepartmentID' => 'required|exists:t_Departments,Id',
-            'GLAccountTypeID' => 'required|string',
-            'GLAccountSubTypeID' => 'required|integer',
             'Description' => 'required|string',
-            'IsProductDriven' => 'required|boolean',
             'GLS' => 'required|array|min:1',
             'GLS.*' => 'required|integer|exists:t_BudgetGLAccounts,Id',
-            // Add other fields and validation rules as needed
         ]);
 
         try {
             DB::beginTransaction();
 
+            // Find the budget line
             $budgetLine = BudgetLine::findOrFail($id);
 
             // If marked as default, unset others
@@ -216,24 +193,26 @@ class BudgetLineMappingController extends Controller
             $budgetLine->update([
                 'BudgetLineCategoryID' => $validated['BudgetLineCategoryID'],
                 'LineName' => $validated['LineName'],
-                'DepartmentID' => $validated['DepartmentID'],
-                'GLAccountTypeID' => $validated['GLAccountTypeID'],
-                'GLAccountSubTypeID' => $validated['GLAccountSubTypeID'],
                 'Description' => $validated['Description'],
                 'IsDefault' => $request->has('IsDefault') ? 1 : 0,
-                'IsProductDriven' => $validated['IsProductDriven'],
                 'ModifiedBy' => Auth::id()
             ]);
 
             // Sync GLS mappings
             $newGLIds = $validated['GLS'];
+
+            // Get current mappings
             $existingGLIds = BudgetLinesGLAccount::where('BudgetLineID', $budgetLine->Id)->pluck('BudgetGLAccountID')->toArray();
+
+            // Delete removed GLs
             $glsToDelete = array_diff($existingGLIds, $newGLIds);
             if (!empty($glsToDelete)) {
                 BudgetLinesGLAccount::where('BudgetLineID', $budgetLine->Id)
                     ->whereIn('BudgetGLAccountID', $glsToDelete)
                     ->delete();
             }
+
+            // Add new GLs
             $glsToAdd = array_diff($newGLIds, $existingGLIds);
             foreach ($glsToAdd as $glId) {
                 BudgetLinesGLAccount::create([
@@ -242,21 +221,6 @@ class BudgetLineMappingController extends Controller
                     'CreatedBy' => Auth::id(),
                     'ModifiedBy' => Auth::id()
                 ]);
-            }
-
-            // Sync Product Types mapping
-            // Remove old mappings
-            $productTypes=BudgetLineProductTypes::where('BudgetLineId', $budgetLine->Id)->delete();
-            // Add new mappings if any
-            if ($request->has('ProductTypes') && is_array($request->ProductTypes)) {
-                foreach ($request->ProductTypes as $typeId) {
-                    BudgetLineProductTypes::create([
-                        'BudgetLineId' => $budgetLine->Id,
-                        'ProductTypeId' => $typeId,
-                        'CreatedBy' => Auth::id(),
-                        'ModifiedBy' => Auth::id()
-                    ]);
-                }
             }
 
             DB::commit();

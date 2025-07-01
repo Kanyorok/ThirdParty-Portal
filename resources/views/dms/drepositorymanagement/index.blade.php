@@ -46,39 +46,39 @@
         <div class="card-body table-responsive">
             <table class="table table-striped">
                 <thead class="table-light">
-                    <tr>
-                        <th>#</th>
-                        <th>File Name</th>
-                        <th>Type</th>
-                        <th>Tags</th>
-                        <th>Uploaded By</th>
-                        <th>Modified</th>
-                        <th>Actions</th>
-                    </tr>
+                <tr>
+                    <th>#</th>
+                    <th>File Name</th>
+                    <th>Type</th>
+                    <th>Tags</th>
+                    <th>Uploaded By</th>
+                    <th>Modified</th>
+                    <th>Actions</th>
+                </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>1</td>
-                        <td>contract_supplier_2025.pdf</td>
-                        <td>Contract</td>
-                        <td>supplier, legal</td>
-                        <td>Alice K.</td>
-                        <td>3 days ago</td>
-                        <td>
-                            <a href="#" class="btn btn-sm btn-outline-primary">View</a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>2</td>
-                        <td>invoice_april.pdf</td>
-                        <td>Invoice</td>
-                        <td>finance, april</td>
-                        <td>Daniel M.</td>
-                        <td>1 week ago</td>
-                        <td>
-                            <a href="#" class="btn btn-sm btn-outline-primary">View</a>
-                        </td>
-                    </tr>
+                <tr>
+                    <td>1</td>
+                    <td>contract_supplier_2025.pdf</td>
+                    <td>Contract</td>
+                    <td>supplier, legal</td>
+                    <td>Alice K.</td>
+                    <td>3 days ago</td>
+                    <td>
+                        <a href="#" class="btn btn-sm btn-outline-primary">View</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>invoice_april.pdf</td>
+                    <td>Invoice</td>
+                    <td>finance, april</td>
+                    <td>Daniel M.</td>
+                    <td>1 week ago</td>
+                    <td>
+                        <a href="#" class="btn btn-sm btn-outline-primary">View</a>
+                    </td>
+                </tr>
                 </tbody>
             </table>
         </div>

@@ -13,7 +13,7 @@ class TransactionReceiptItem extends Model
 {
     use SoftDeletes;
 
-    
+
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
@@ -22,20 +22,19 @@ class TransactionReceiptItem extends Model
     protected $connection = 'sqlsrv';
     protected $primaryKey = 'Id';
 
-protected $fillable = [
-    'item',
-    'ReceivedQty',
-    'DamagedQty',
-    'DispatchedQty',   
-    'Discrepancy', 
-    'Remarks',
-    'CreatedBy',
-    'CreatedOn',
-    'ModifiedBy',
-    'ModifiedOn',
-    'ReceiptId',
-];
-
+    protected $fillable = [
+        'item',
+        'ReceivedQty',
+        'DamagedQty',
+        'DispatchedQty',
+        'Discrepancy',
+        'Remarks',
+        'CreatedBy',
+        'CreatedOn',
+        'ModifiedBy',
+        'ModifiedOn',
+        'ReceiptId',
+    ];
 
 
     public function receipt()

@@ -21,6 +21,7 @@ class BudgetActivitiesMasterController extends Controller
         $lines = BudgetActivityMaster::with('budgetLine')->get();
         return view('budgetandanalytics.settings.activitymaster.index', compact('activities', 'lines'));
     }
+
     public function create()
     {
         $lines = BudgetLine::all();
@@ -36,8 +37,8 @@ class BudgetActivitiesMasterController extends Controller
             'BudgetLineID' => 'required|exists:t_BudgetLines,Id',
             //'ActivityCode' => 'required|string|max:20|unique:t_BudgetActivityMaster',
             'ActivityName' => 'required|string|max:255',
-            'Description'  => 'nullable|string',
-            
+            'Description' => 'nullable|string',
+
         ]);
         DB::beginTransaction();
         try {
@@ -45,9 +46,9 @@ class BudgetActivitiesMasterController extends Controller
                 'BudgetLineID' => $validated['BudgetLineID'],
                 //'ActivityCode' => $validated['ActivityCode'],
                 'ActivityName' => $validated['ActivityName'],
-                'Description'  => $validated['Description'],
-                'IsActive'     => $request->IsActive=='on'?true: false,
-                'CreatedBy' =>Auth::Id(),
+                'Description' => $validated['Description'],
+                'IsActive' => $request->IsActive == 'on' ? true : false,
+                'CreatedBy' => Auth::Id(),
                 'ModifiedBy' => Auth::Id(),
             ]);
 
@@ -73,7 +74,8 @@ class BudgetActivitiesMasterController extends Controller
         return view('budgetandanalytics.settings.activitymaster.edit', compact('activity', 'lines'));
     }
 
-    public function update(Request $request, $id){
+    public function update(Request $request, $id)
+    {
 
         $this->authorize(PermissionEnum::BudgetSetupUpdate, BudgetActivityMaster::class);
 
@@ -81,8 +83,8 @@ class BudgetActivitiesMasterController extends Controller
             'BudgetLineID' => 'required|exists:t_BudgetLines,Id',
             //'ActivityCode' => 'required|string|max:20|unique:t_BudgetActivityMaster,ActivityCode,' . $id,
             'ActivityName' => 'required|string|max:255',
-            'Description'  => 'nullable|string',
-            'IsActive'     => 'boolean',
+            'Description' => 'nullable|string',
+            'IsActive' => 'boolean',
         ]);
 
         DB::beginTransaction();
@@ -92,8 +94,8 @@ class BudgetActivitiesMasterController extends Controller
                 'BudgetLineID' => $validated['BudgetLineID'],
                 //'ActivityCode' => $validated['ActivityCode'],
                 'ActivityName' => $validated['ActivityName'],
-                'Description'  => $validated['Description'],
-                'IsActive'     => $validated['IsActive'] ?? true,
+                'Description' => $validated['Description'],
+                'IsActive' => $validated['IsActive'] ?? true,
                 'ModifiedBy' => Auth::id(),
             ]);
 
@@ -109,10 +111,11 @@ class BudgetActivitiesMasterController extends Controller
             DB::rollBack();
             Log::error('Failed to update budget activity: ' . $e->getMessage());
             return redirect()->back()->withErrors(['error' => 'Failed to update budget activity: ' . $e->getMessage()]);
-        }   
+        }
     }
 
-    public function destroy($id){
+    public function destroy($id)
+    {
 
         $this->authorize(PermissionEnum::BudgetSetupDelete, BudgetActivityMaster::class);
         DB::beginTransaction();
@@ -130,6 +133,6 @@ class BudgetActivitiesMasterController extends Controller
             DB::rollBack();
             Log::error('Failed to delete budget activity: ' . $e->getMessage());
             return redirect()->back()->withErrors(['error' => 'Failed to delete budget activity: ' . $e->getMessage()]);
-        }   
+        }
     }
 }

@@ -9,6 +9,7 @@ use App\Models\Core\CodeDetail;
 use App\Models\CRM\ProductDevelopment;
 use App\Models\CRM\ProductDevelopmentFeature;
 use App\Models\DMS\Image;
+use App\Services\DMS\ImageService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
 

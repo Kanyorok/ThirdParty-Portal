@@ -2,14 +2,11 @@
 
 namespace App\Services\Core;
 
-use App\Http\Requests\Orders\ApproveOrderRequest;
 use App\Models\Auth\User;
 use App\Models\Procurement\Order;
 use App\Models\Procurement\Requisitions;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class DocumentApprovalService
 {
@@ -18,71 +15,81 @@ class DocumentApprovalService
         //
     }
 
-    public function approve(Request $request, int $id): RedirectResponse
+    public function approve(Request $request, int $id)
     {
-        try {
-            $actor = $request->user();
-            $data = $request->validated();
+        $actor = $request->user();
+        $data = $request->validated();
+        $documentType = $data['document_type'];
 
-            $documentType = $data['document_type'];
-            $action = $data['action'] ?? 'approve';
-            $orderTotal = (float) $data['order_total'];
+        $docMap = [
+            'purchase_order' => [
+                'model' => Order::class,
+                'route' => 'purchaseOrder.approval',
+                'approved_column' => 'DocStatus',
+                'approved_value' => 'a',
+            ],
+            'purchase_requisition' => [
+                'model' => Requisitions::class,
+                'route' => 'requisition.approval',
+                'approved_column' => 'StatusID',
+                'approved_value' => 26,
+            ],
+        ];
 
-            $docMap = [
-                'purchase_order' => [
-                    'model' => Order::class,
-                    'route' => 'purchaseOrder.approval',
-                ],
-                'purchase_requisition' => [
-                    'model' => Requisitions::class,
-                    'route' => 'purchaseRequisition.approval',
-                ],
-            ];
+        $modelClass = $docMap[$documentType]['model'];
+        $document = $modelClass::findOrFail($id);
 
-            if (!isset($docMap[$documentType])) {
-                return redirect()->back()->with('error', 'Invalid document type.');
-            }
-
-            $modelClass = $docMap[$documentType]['model'];
-            $route = route($docMap[$documentType]['route'], $id);
-
-            $document = $modelClass::findOrFail($id);
-
-            // Prevent duplicate approval
-            if ($this->approvalService->isFullyApproved($documentType, $id, $orderTotal)) {
-                return redirect($route)->with('info', 'This document is already fully approved.');
-            }
-
-            // Handle rejection
-            if ($action === 'reject') {
-                $this->recordRejection($documentType, $id, $actor, $request->input('rejection_reason'));
-                $document->DocStatus = 'r'; //'r' for rejected
-                $document->save();
-
-                return redirect($route)->with('status', 'Document rejected successfully.');
-            }
-
-            // Record approval
-            $this->recordApproval($documentType, $id, $actor);
-
-            // Check if document is now fully approved
-            if ($this->approvalService->isFullyApproved($documentType, $id, $orderTotal)) {
-                $document->DocStatus = 'a'; // 'a' for approved
-                $document->save();
-
-                return redirect($route)->with('status', 'The document has been fully approved.');
-            }
-
-            return redirect($route)->with('status', 'Approval recorded. Awaiting further approvals.');
-
-        } catch (\Throwable $e) {
-            Log::error('Approval exception', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            return redirect()->back()->with('error', 'Error approving document.');
+        // Check if already fully approved
+        if ($this->approvalService->isFullyApproved($documentType, $id, (float)$data['order_total'])) {
+            return redirect()->route($docMap[$documentType]['route'], $id)
+                ->with('warning', 'This document is already fully approved.');
         }
+
+        $isNowFullyApproved = false;
+
+        // Perform insert + update in a transaction
+        DB::transaction(function () use (
+            $documentType, $id, $actor, $data, $docMap, &$isNowFullyApproved
+        ) {
+            // Insert approval only if not already approved by this user
+            $alreadyApproved = DB::table('t_Approvals')
+                ->where('DocType', $documentType)
+                ->where('DocumentId', $id)
+                ->where('UserId', $actor->Id)
+                ->exists();
+
+            if (!$alreadyApproved) {
+                DB::table('t_Approvals')->insert([
+                    'DocType' => $documentType,
+                    'DocumentId' => $id,
+                    'UserId' => $actor->Id,
+                    'Status' => 'approved',
+                    'CreatedBy' => $actor->Id,
+                    'CreatedOn' => now(),
+                    'ModifiedBy' => $actor->Id,
+                    'ModifiedOn' => now(),
+                ]);
+            }
+
+            // After insert, check if this was the final approval
+            $isNowFullyApproved = app(ApprovalService::class)
+                ->isFullyApproved($documentType, $id, (float)$data['order_total']);
+
+            if ($isNowFullyApproved) {
+                // Perform the update via query builder instead of model (safe for transactions)
+                DB::table((new $docMap[$documentType]['model'])->getTable())
+                    ->where('id', $id)
+                    ->update([
+                        $docMap[$documentType]['approved_column'] => $docMap[$documentType]['approved_value'],
+                    ]);
+            }
+        });
+
+        // Redirect response based on approval outcome
+        return redirect()->route($docMap[$documentType]['route'], $id)
+            ->with($isNowFullyApproved ? 'success' : 'info', $isNowFullyApproved
+                ? 'Document fully approved!'
+                : 'Approval recorded, waiting for more approvers.');
     }
 
     public function approveDocument(string $docType, float $amount, User $actor, int $documentId): array
@@ -106,15 +113,15 @@ class DocumentApprovalService
     {
         DB::table('t_Approvals')->updateOrInsert(
             [
-                'DocType'    => $docType,
-                'DocumentId'=> $documentId,
-                'UserId'     => $actor->Id,
+                'DocType' => $docType,
+                'DocumentId' => $documentId,
+                'UserId' => $actor->Id,
             ],
             [
-                'Status'     => 'approved',
-                'CreatedBy'  => $actor->Id,
+                'Status' => 'approved',
+                'CreatedBy' => $actor->Id,
                 'ModifiedBy' => $actor->Id,
-                'CreatedOn'  => now(),
+                'CreatedOn' => now(),
                 'ModifiedOn' => now(),
             ]
         );
@@ -124,17 +131,17 @@ class DocumentApprovalService
     {
         DB::table('t_Approvals')->updateOrInsert(
             [
-                'DocType'    => $docType,
-                'DocumentId'=> $documentId,
-                'UserId'     => $actor->Id,
+                'DocType' => $docType,
+                'DocumentId' => $documentId,
+                'UserId' => $actor->Id,
             ],
             [
-                'Status'           => 'rejected',
-                'RejectionReason'  => $reason,
-                'CreatedBy'        => $actor->Id,
-                'ModifiedBy'       => $actor->Id,
-                'CreatedOn'        => now(),
-                'ModifiedOn'       => now(),
+                'Status' => 'rejected',
+                'RejectionReason' => $reason,
+                'CreatedBy' => $actor->Id,
+                'ModifiedBy' => $actor->Id,
+                'CreatedOn' => now(),
+                'ModifiedOn' => now(),
             ]
         );
     }
