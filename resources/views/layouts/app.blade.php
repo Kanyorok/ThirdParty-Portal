@@ -447,23 +447,7 @@
                     </a>
                     <ul class="pc-submenu">
                         <li class="pc-item"><a class="pc-link" href="{{ route('drepositorymanagement.index') }}"
-                                               data-i18n="drepositorymanagement">Repository Management</a></li>
-                        <li class="pc-item"><a class="pc-link" href="{{ route('dtypessetupmanagement.index') }}"
-                                               data-i18n="dtypessetupmanagement">setup Management</a></li>
-                        <li class="pc-item"><a class="pc-link" href="{{ route('categoriesmanagement.index') }}"
-                                               data-i18n="categoriesmanagement">Categories Management</a></li>
-                        <li class="pc-item"><a class="pc-link" href="{{ route('versioncontrolmanagement.index') }}"
-                                               data-i18n="versioncontrolmanagement">Version Control</a></li>
-                        <li class="pc-item"><a class="pc-link" href="{{ route('searchmanagement.index') }}"
-                                               data-i18n="searchmanagement">Search Management </a></li>
-                        <li class="pc-item"><a class="pc-link" href="{{ route('renewalmanagement.index') }}"
-                                               data-i18n="renewalmanagement"> Renewal Management</a></li>
-                        <li class="pc-item"><a class="pc-link" href="{{ route('accessmanagement.index') }}"
-                                               data-i18n="accessmanagement"> Access Control</a></li>
-                        <li class="pc-item"><a class="pc-link" href="{{ route('trailmanagement.index') }}"
-                                               data-i18n="trailmanagement"> Audit trail</a></li>
-                        <li class="pc-item"><a class="pc-link" href="{{ route('uploadmanagement.index') }}"
-                                               data-i18n="uploadmanagement"> Bulk Upload</a></li>
+
 
                     </ul>
                 </li>
