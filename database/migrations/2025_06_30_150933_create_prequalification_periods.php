@@ -17,6 +17,8 @@ return new class extends Migration
             $table->string('Description');
             $table->dateTime('StartDate');
             $table->dateTime('EndDate');
+            $table->integer('MaxVendors');
+            $table->string('Status');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');

@@ -16,20 +16,20 @@ class PrequalificationPeriodPolicy
         return $user->can(PermissionEnum::PrequalificationPeriodRead->value);
     }
 
-    public function store(User $user, PrequalificationPeriod $procurementMethod): bool
+    public function store(User $user): bool
     {
         return $user->can(PermissionEnum::PrequalificationPeriodWrite->value);
     }
 
-    public function view(User $user, PrequalificationPeriod $procurementMethod): bool
+    public function view(User $user): bool
     {
         return $user->can(PermissionEnum::PrequalificationPeriodRead->value);
     }
-    public function update(User $user, PrequalificationPeriod $procurementMethod): bool
+    public function update(User $user): bool
     {
         return $user->can(PermissionEnum::PrequalificationPeriodWrite->value);
     }
-    public function delete(User $user, PrequalificationPeriod $procurementMethod): bool
+    public function delete(User $user): bool
     {
         return $user->can(PermissionEnum::PrequalificationPeriodDelete->value);
     }

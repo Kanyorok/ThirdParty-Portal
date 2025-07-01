@@ -2,6 +2,7 @@
 
 namespace App\Models\Procurement;
 
+use App\Enums\Procurement\PrequalificationPeriodEnum;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -21,6 +22,8 @@ class PrequalificationPeriod extends Model
         'Description',
         'StartDate',
         'EndDate',
+        'MaxVendors',
+        'Status',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy',
@@ -30,4 +33,7 @@ class PrequalificationPeriod extends Model
     {
         return 'prequalificationperiodId';
     }
+    protected $casts = [
+    'Status' => PrequalificationPeriodEnum::class,
+    ];
 }

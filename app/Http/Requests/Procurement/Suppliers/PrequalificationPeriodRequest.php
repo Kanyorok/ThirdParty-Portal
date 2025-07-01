@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Procurement\Suppliers;
 
+use App\Enums\Procurement\PrequalificationPeriodEnum;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rules\Enum;
 
 class PrequalificationPeriodRequest extends FormRequest
 {
@@ -24,8 +26,10 @@ class PrequalificationPeriodRequest extends FormRequest
         return [
         'Title' => 'required|string',
         'Description' => 'nullable|string',
-        'StartDate' => 'required|date',
-        'EndDate' => 'required|date'
+        'StartDate' => 'required|date_format:d/m/Y',
+        'EndDate' => 'required|date_format:d/m/Y|after_or_equal:StartDate',
+        'MaxVendors' => 'required|integer|min:1',
+        'Status' => ['required', new Enum(PrequalificationPeriodEnum::class)], 
         ];
     }
 }

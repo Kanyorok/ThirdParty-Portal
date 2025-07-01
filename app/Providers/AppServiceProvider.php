@@ -54,6 +54,7 @@ use App\Models\HRM\Employee;
 use App\Models\Inventory\LoadOpeningStock;
 use App\Models\Procurement\DepartmentNeeds;
 use App\Models\Procurement\Order;
+use App\Models\Procurement\PrequalificationPeriod;
 use App\Models\Procurement\RequisitionLine;
 use App\Models\Procurement\ProcurementMethod;
 use App\Models\Procurement\RequisitionLines;
@@ -75,6 +76,7 @@ use App\Policies\CrmBranchPolicy;
 use App\Policies\Inventory\OpenStockPolicy;
 use App\Policies\Procurement\DepartmentNeedsPolicy;
 use App\Policies\Procurement\OrderPolicy;
+use App\Policies\Procurement\PrequalificationPeriodPolicy;
 use App\Policies\Procurement\ProcurementMethodPolicy;
 use App\Policies\Procurement\RequisitionLinesPolicy;
 use App\Policies\Procurement\RequisitionPolicy;
@@ -221,6 +223,7 @@ class AppServiceProvider extends ServiceProvider
             PropertyTenantClearance::getPrimaryKey() => PropertyTenantClearance::class,
             PropertyFloor::getPrimaryKey() => PropertyFloor::class,
             PropertyUnit::getPrimaryKey() => PropertyUnit::class,
+            PrequalificationPeriod::getPrimaryKey() => PrequalificationPeriod::class,
         ]);
 
         Gate::policy(Role::class, RolePolicy::class);
@@ -254,6 +257,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PropertyTenantClearance::class, PropertyTenantClearancePolicy::class);
         Gate::policy(PropertyFloor::class, PropertyFloorPolicy::class);
         Gate::policy(PropertyUnit::class, PropertyUnitPolicy::class);
+        Gate::policy(PrequalificationPeriod::class, PrequalificationPeriodPolicy::class);
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);
          Event::listen(SMSSendEvent::class, SMSSendListener::class);
