@@ -11,14 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('t_Budgets', function (Blueprint $table) {
+        Schema::create('t_BudgetGLsAttachments', function (Blueprint $table) {
             $table->id('Id');
-            $table->string('Name');
-            $table->integer('FiscalYear');
-            $table->date('From');
-            $table->date('To');
-            $table->longText('Notes');
-            $table->string('Status')->default('draft');
+            $table->foreignId('BudgetID')->constrained('t_Budgets', 'Id')->onDelete('cascade');
+            $table->string('GLID')->constrained('t_BudgetGLMaster', 'BudgetGLID')->onDelete('cascade');// store the ID from that table which is called BudgetGLID
+            $table->string('AccountID');
+            $table->string('Description')->nullable();
+            $table->string('GLAccountTypeID',10);// Store like A, E,I,L 
             
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
@@ -34,6 +33,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('t_Budgets');
+        Schema::dropIfExists('t_BudgetGLsAttachments');
     }
 };

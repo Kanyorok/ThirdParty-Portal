@@ -29,6 +29,7 @@ protected $fillable = [
     'DispatchedQty',   
     'Discrepancy', 
     'Remarks',
+    'Store',
     'CreatedBy',
     'CreatedOn',
     'ModifiedBy',

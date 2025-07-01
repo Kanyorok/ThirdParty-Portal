@@ -15,11 +15,12 @@
       @endif
       @if ($errors->any())
         <div class="alert alert-danger">
-          <ul>
-            @foreach ($errors->all() as $error)
-              <li>{{ $error }}</li>
-            @endforeach
-          </ul>
+       <ul>
+    @foreach($errors->all() as $error)
+        <li>{!! $error !!}</li>
+    @endforeach
+</ul>
+
         </div>
       @endif
 
@@ -35,16 +36,18 @@
             @endforeach
           </select>
         </div>
-      <div class="mb-3">
-             <label class="form-label">Received By</label>
-                <select name="ReceivedBy" class="form-select select2" required>
-                  <option value="">-- Select User --</option>
-                  
-                  @foreach ($users as $user)
-                    <option value="{{ $user->Id }}" required>{{ $user->Name }}</option>
-                  @endforeach
-                </select>
-              </div>
+
+        <div class="col">
+          <label class="form-label">Received By</label>
+          <select name="ReceivedBy" class="form-select select2" required>
+            <option value="">-- Select User --</option>
+            @foreach ($users as $user)
+              <option value="{{ $user->Id }}" {{ old('ReceivedBy') == $user->Id ? 'selected' : '' }}>
+                {{ $user->Name }}
+              </option>
+            @endforeach
+          </select>
+        </div>
 
         <div class="col">
           <label class="form-label">Receive Date</label>
@@ -60,14 +63,58 @@
               <th>Product</th>
               <th>Dispatched Qty</th>
               <th>Qty Received</th>
-              <th>Discrepancy</th> 
+              <th>Discrepancy</th>
               <th>Qty Damaged</th>
+              <th>Store</th>
               <th>Remarks</th>
             </tr>
           </thead>
           <tbody id="itemsTableBody">
-       
-          </tbody>
+@if(old('items'))
+    @foreach(old('items') as $index => $item)
+        <tr>
+            <td>
+                {{ $item['item_name'] ?? 'Item' }} {{-- Optional: pass ItemName from controller to old input --}}
+                <input type="hidden" name="items[{{ $index }}][item]" value="{{ $item['item'] }}">
+            </td>
+            <td>
+                <input type="number" name="items[{{ $index }}][dispatched_qty]" class="form-control dispatched-qty"
+                       value="{{ $item['dispatched_qty'] ?? 0 }}" readonly>
+            </td>
+            <td>
+                <input type="number" name="items[{{ $index }}][received_qty]" class="form-control received-qty"
+                       value="{{ $item['received_qty'] ?? 0 }}">
+            </td>
+            <td>
+                <input type="number" name="items[{{ $index }}][discrepancy]" class="form-control discrepancy"
+                       value="{{ $item['discrepancy'] ?? 0 }}" readonly>
+            </td>
+            <td>
+                <input type="number" name="items[{{ $index }}][damaged_qty]" class="form-control"
+                       value="{{ $item['damaged_qty'] ?? 0 }}">
+            </td>
+          <td>
+    <select name="items[{{ $index }}][store_id]" class="form-select" >
+        <option value="">-- Select Store --</option>
+        @if(isset($item['store_options']))
+            @foreach($item['store_options'] as $store)
+                <option value="{{ $store['Id'] }}" {{ (string)($item['store_id'] ?? '') === (string)$store['Id'] ? 'selected' : '' }}>
+                    {{ $store['StoreName'] }}
+                </option>
+            @endforeach
+        @endif
+    </select>
+</td>
+
+            <td>
+                <input type="text" name="items[{{ $index }}][remarks]" class="form-control"
+                       value="{{ $item['remarks'] ?? '' }}">
+            </td>
+        </tr>
+    @endforeach
+@endif
+</tbody>
+
         </table>
       </div>
 
@@ -94,6 +141,7 @@
 
         data.items.forEach((item, index) => {
           const dispatchedQty = item.DispatchedQty ?? 0;
+          const stores = item.stores ?? [];
 
           const row = `
             <tr>
@@ -114,6 +162,12 @@
                 <input type="number" name="items[${index}][damaged_qty]" class="form-control" min="0" value="0">
               </td>
               <td>
+                <select name="items[${index}][store_id]" class="form-select">
+                  <option value="">-- Select Store --</option>
+                  ${stores.map(store => `<option value="${store.Id}">${store.StoreName}</option>`).join('')}
+                </select>
+              </td>
+              <td>
                 <input type="text" name="items[${index}][remarks]" class="form-control">
               </td>
             </tr>
@@ -126,7 +180,7 @@
       });
   });
 
-  // Recalculate discrepancy dynamically when user changes received qty
+  // Recalculate discrepancy when quantity is changed
   document.addEventListener('input', function (event) {
     if (event.target.classList.contains('received-qty')) {
       const row = event.target.closest('tr');
@@ -141,7 +195,7 @@
     }
   });
 
-    document.addEventListener('DOMContentLoaded', function () {
+  document.addEventListener('DOMContentLoaded', function () {
     $('.select2').select2({
       placeholder: 'Select user',
       allowClear: true
@@ -150,5 +204,4 @@
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
 @endsection

@@ -17,6 +17,7 @@ class StockAdjustment extends Model
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
+    
 
     protected $table = 't_StockAdjustments';
     protected $connection = 'sqlsrv';

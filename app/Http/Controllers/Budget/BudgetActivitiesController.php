@@ -22,9 +22,9 @@ class BudgetActivitiesController extends Controller
     {
         $activities = BudgetActivity::with([
             'budget:Id,Name,From,To',
-            'allocations:Id,BudgetActivityID,Month,Amount', 
-            'branch:Id,Name', 
-            'budgetLine:Id,LineName',
+            //'allocations:Id,BudgetActivityID,Month,Amount', 
+            //'branch:Id,Name', 
+            //'budgetLine:Id,LineName',
         ])->get();
 
         // Group activities by BudgetID
@@ -152,4 +152,93 @@ class BudgetActivitiesController extends Controller
         return view('budgetandanalytics.budgetactivities.show', compact('budget', 'activities'));
     }
 
+    public function edit($id)
+    {
+        $activity = BudgetActivity::with(['allocations'])->findOrFail($id);
+        $budgetLines = BudgetLine::select('Id','LineName')->get();
+        $branches = Branch::select('Id','Name')->get();
+        $budgets = Budget::all();
+        $budgetName=Budget::find($activity->BudgetID)->Name;
+        $monthlyAllocations = $activity->allocations->keyBy('Month');
+        return view('budgetandanalytics.budgetactivities.edit', compact(
+            'activity',
+            'budgetLines',
+            'branches',
+            'budgets',
+            'monthlyAllocations',
+            'budgetName'
+        ));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $this->authorize(PermissionEnum::BudgetSetupUpdate, BudgetActivity::class);
+        $validated = $request->validate([
+            // 'BudgetID' => 'required|exists:t_Budgets,Id',
+            'BudgetLineID' => 'required|exists:t_BudgetLines,Id',
+            'ActivityID' => 'required|exists:t_BudgetActivityMaster,Id',
+            'Description' => 'required|string',
+            //'BranchID' => 'required|exists:t_Branches,Id',
+            'AllocationType' => 'required|in:full,monthly',
+            'FullAllocation' => 'nullable|numeric|min:0',
+            'monthly_allocations' => 'nullable|array',
+            'monthly_allocations.*' => 'nullable|numeric|min:0',
+        ]);
+        try {
+            DB::beginTransaction();
+            $userId = Auth::id();
+            $now = now();
+            $activity = BudgetActivity::findOrFail($id);
+            $budgetId=$activity->BudgetID;
+            // Calculate full allocation from monthly if applicable
+            $fullAllocation = 0;
+            if ($validated['AllocationType'] === 'monthly' && !empty($validated['monthly_allocations'])) {
+                $fullAllocation = collect($validated['monthly_allocations'])->sum(function ($value) {
+                    return is_numeric($value) ? floatval($value) : 0;
+                });
+            } elseif ($validated['AllocationType'] === 'full') {
+                $fullAllocation = $validated['FullAllocation'] ?? 0;
+            }
+            $activity->update([
+                'BudgetLineID' => $validated['BudgetLineID'],
+                // 'BudgetID' => $validated['BudgetID'],
+                'ActivityID' => $validated['ActivityID'],
+                'Description' => $validated['Description'],
+                'BranchID' => 1,//$validated['BranchID'],
+                'AllocationType' => $validated['AllocationType'],
+                'FullAllocation' => $fullAllocation,
+                'ModifiedBy' => $userId,
+                'ModifiedOn' => $now,
+            ]);
+            // Handle Monthly Allocations
+            $activity->allocations()->delete();
+            if ($validated['AllocationType'] === 'monthly' && !empty($validated['monthly_allocations'])) {
+                foreach ($validated['monthly_allocations'] as $month => $amount) {
+                    BudgetMonthlyAllocation::create([
+                        'BudgetActivityID' => $activity->Id,
+                        'Month' => (int) $month,
+                        'Amount' => floatval($amount),
+                        'CreatedBy' => $userId,
+                        'ModifiedBy' => $userId,
+                        'CreatedOn' => $now,
+                        'ModifiedOn' => $now,
+                    ]);
+                }
+            }
+            DB::commit();
+            activity()
+                ->performedOn($activity)
+                ->causedBy(Auth::user())
+                ->withProperties(['action' => 'update'])
+                ->log('Updated a budget activity');
+            return redirect()->route('budgetactivities.show',$budgetId)->with('success', 'Budget Activity updated successfully.');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            Log::error('Failed to update budget activity.', [
+                'error' => $th->getMessage(),
+                'stack' => $th->getTraceAsString()
+            ]);
+            return back()->with('error', 'An error occurred while updating the budget activity. Please try again.');
+        }
+    }
 }
