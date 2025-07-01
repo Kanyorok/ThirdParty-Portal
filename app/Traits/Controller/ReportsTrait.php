@@ -10,6 +10,7 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -60,17 +61,22 @@ trait ReportsTrait
                 }
                 $data = $service->parseReportXml($xmlResponse);
             } catch (ConnectionException $e) {
+                Log::error('Error Load Report :');
+                Log::error($e);
                 return view('snippets.errors')->with('message', 'cannot connect to the report server.');
             } catch (ErroredException $e) {
+                Log::error('Error Load Report :');
+                Log::error($e);
                 return view('snippets.errors')->with('message', $e->getMessage() ?? 'cannot retrieve report data.');
             } catch (Throwable|Exception $e) {
+                Log::error('Error Load Report :');
+                Log::error($e);
                 return view('snippets.errors')->with('message', 'cannot retrieve report data.');
             }
 
             return ($data->isEmpty())
                 ? view('snippets.errors')->with('message', 'Report has no data. Please check your report parameters and try again..')
                 : view('reports.table', compact('report', 'data'))->with('params', SSRSService::queryParams(collect($parameters)->put('_key', md5($report->Path))->toArray()));
-
         }
 
         try {
