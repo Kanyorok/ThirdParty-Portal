@@ -23,6 +23,7 @@ class BudgetProjectionsController extends Controller
     // View budget entry list
    public function index()
     {
+        $this->authorize(PermissionEnum::BudgetSetupView, BudgetDriverProjections::class);
         //$projections = BudgetDriverProjections::with(['scenario', 'product', 'period'])->get();
         $projections=BudgetDriverProjections::with(
             'projections',
@@ -30,6 +31,8 @@ class BudgetProjectionsController extends Controller
             'currency:Id,Code',
             // 'period:Id,fiscalYear',
             )->get();
+
+            $groupedProjections = $projections->groupBy('BudgetID');
  
             // Compute totals for each main projection
             foreach ($projections as $proj) {
@@ -40,7 +43,10 @@ class BudgetProjectionsController extends Controller
                     return (float) $item->Value;
                 });
             }
-        return view('budgetandanalytics.budgetworkspace.entry.index', compact('projections'));
+            // return $groupedProjections;
+        return view('budgetandanalytics.budgetworkspace.entry.index', compact(
+            'groupedProjections'
+        ));
     }
  
  
@@ -62,19 +68,19 @@ class BudgetProjectionsController extends Controller
     {
         $validated = $request->validate([
             'BudgetID' => 'required|exists:t_Budgets,Id',
-            'CurrencyID' => 'required|exists:t_Currencies,Id',
+            // 'CurrencyID' => 'required|exists:t_Currencies,Id', (currently we will use 1 as currency)
             // 'PeriodID'  => 'required|exists:t_BudgetPeriods,Id',
             'Products'   => 'required|array|min:1',
             'Products.*.ProductID' => 'required|exists:t_BudgetProductTypes,Id',
             'Products.*.Volume'    => 'required|integer|min:0',
-            'Products.*.Value'     => 'required|numeric|min:0',
+            // 'Products.*.Value'     => 'required|numeric|min:0', (till  futher notice, we will use 1 as value)
         ]);
  
         DB::beginTransaction();
  
         try {
             $ScenarioId = $validated['BudgetID'];
-            $CurrencyId = $validated['CurrencyID'];
+            $CurrencyId = 1;
             // $PeriodId   = $validated['PeriodID'];
  
             //Store T1
@@ -94,7 +100,7 @@ class BudgetProjectionsController extends Controller
                     'BudgetDriverProjectionsID'=>$projection->Id,
                     'ProductID'  => $product['ProductID'],
                     'Volume'     => $product['Volume'],
-                    'Value'      => $product['Value'], // fixed casing
+                    'Value'      => 1, // fixed casing
                     'CreatedBy'  => Auth::id(),
                     'ModifiedBy'  => Auth::id(),
                 ]);
@@ -121,11 +127,12 @@ class BudgetProjectionsController extends Controller
     }
  
     public function show($id){
- 
         $this->authorize(PermissionEnum::BudgetSetupView, BudgetMonthlyProjectionAllocation::class);
  
         $budget = BudgetDriverProjections::findOrFail($id);
- 
+        
+        $rate=BudgetProduct::with(['rate'])
+            ->get();
         // Fetch all allocations so the view can filter and display as needed
         $monthlyAllocations = BudgetMonthlyProjectionAllocation::where('BudgetProjectionID', $id)
             ->get();
@@ -135,6 +142,108 @@ class BudgetProjectionsController extends Controller
  
     public function edit($id)
     {
-        return view('budgetandanalytics.budgetworkspace.entry.edit');
+        $budget = BudgetDriverProjections::with(['projections', 'budget', 'currency'])->findOrFail($id);
+        $monthlyAllocations = BudgetMonthlyProjectionAllocation::where('BudgetProjectionID', $id)->get();
+        $currencies = Currency::all();
+        $products = BudgetProduct::all();
+        $productTypes = BudgetProductType::all();
+        $months = [
+            'Month 1', 'Month 2', 'Month 3', 'Month 4', 'Month 5', 'Month 6',
+            'Month 7', 'Month 8', 'Month 9', 'Month 10', 'Month 11', 'Month 12'
+        ];
+        return view('budgetandanalytics.budgetworkspace.entry.edit', compact('budget', 'monthlyAllocations', 'currencies', 'products', 'months', 'productTypes'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $validated = $request->validate([
+            // 'CurrencyID' => 'nullable|exists:t_Currencies,Id',
+            'Products'   => 'nullable|array',
+            'Products.*.ProductID' => 'required_with:Products|exists:t_BudgetProductTypes,Id',
+            'Products.*.Volume'    => 'required_with:Products|integer|min:0',
+            // 'Products.*.Value'     => 'required_with:Products|numeric|min:0',
+            'MonthlyAllocations'   => 'nullable|array',
+            'MonthlyAllocations.*' => 'nullable|numeric|min:0',
+        ]);
+        DB::beginTransaction();
+        try {
+            // Log::info('BudgetProjectionsController update request', [
+            //     'CurrencyID' => $request->input('CurrencyID'),
+            //     'Products' => $request->input('Products'),
+            //     'MonthlyAllocations' => $request->input('MonthlyAllocations'),
+            // ]);
+            $budget = BudgetDriverProjections::findOrFail($id);
+            // Update currency if present
+            if (isset($validated['CurrencyID'])) {
+                $currencyId = 1;
+                $budget->update([
+                    'CurrencyID' => $currencyId,
+                    'ModifiedBy' => Auth::id(),
+                ]);
+            }
+            // Update products if present
+            if (isset($validated['Products'])) {
+                // Filter out any products with non-numeric ProductID
+                $validProducts = array_filter($validated['Products'], function($product) {
+                    return isset($product['ProductID']) && is_numeric($product['ProductID']);
+                });
+                $budget->projections()->delete();
+                foreach ($validProducts as $product) {
+                    BudgetDriverProjectionsData::create([
+                        'BudgetDriverProjectionsID' => $budget->Id,
+                        'ProductID' =>$product['ProductID'],
+                        'Volume' =>  $product['Volume'],
+                        'Value' =>  1,
+                        'CreatedBy' => Auth::id(),
+                        'ModifiedBy' => Auth::id(),
+                    ]);
+                }
+            }
+            // Update allocations if present
+            if (isset($validated['MonthlyAllocations'])) {
+                $existing = BudgetMonthlyProjectionAllocation::where('BudgetProjectionID', $id)->get()->keyBy('Month');
+                foreach ($validated['MonthlyAllocations'] as $month => $amount) {
+                    $month = (int)$month;
+                    $amount = (float)$amount;
+                    if (isset($existing[$month])) {
+                        $existing[$month]->update([
+                            'Allocation' => $amount,
+                            'ModifiedBy' => Auth::id(),
+                        ]);
+                    } else {
+                        BudgetMonthlyProjectionAllocation::create([
+                            'BudgetID' => $budget->BudgetID,
+                            'BudgetProjectionID' => $id,
+                            'Month' => $month,
+                            'Allocation' => $amount,
+                            'CreatedBy' => Auth::id(),
+                            'ModifiedBy' => Auth::id(),
+                        ]);
+                    }
+                }
+            }
+            DB::commit();
+            return redirect()->route('budgetprojections.index')->with('success', 'Budget entry updated successfully.');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return back()->withErrors(['Error' => 'Failed to update: ' . $th->getMessage()])->withInput();
+        }
+    }
+    public function destroy($id)
+    {
+        DB::beginTransaction();
+        try {
+            $budget = BudgetDriverProjections::findOrFail($id);
+            // Delete related projections and allocations
+            $budget->projections()->delete();
+            BudgetMonthlyProjectionAllocation::where('BudgetProjectionID', $id)->delete();
+            $budget->delete();
+            DB::commit();
+            return redirect()->route('budgetprojections.index')->with('success', 'Budget projection deleted successfully.');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            Log::error('Failed to delete budget projection: ' . $th->getMessage());
+            return back()->withErrors(['Error' => 'Failed to delete: ' . $th->getMessage()]);
+        }
     }
 }

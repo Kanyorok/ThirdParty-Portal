@@ -93,13 +93,6 @@ class TransactionApprovalController extends Controller
                 return redirect()->back()->with('success', 'Stock Transfer approved.');
             }
 
-            if ($transactionType === 'Stock Issue') {
-                $issue = \App\Models\Inventory\StockIssue::findOrFail($id);
-                $issue->Status = 'Approved';
-                $issue->save();
-                return redirect()->back()->with('success', 'Stock Issue approved.');
-            }
-
             if ($transactionType === 'Stock Adjustment') {
                 $this->adjustmentService->approve($id);
                 return redirect()->back()->with('success', 'Stock Adjustment approved.');
