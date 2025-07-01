@@ -11,7 +11,6 @@ use App\Http\Controllers\DMS\Repo\RepositoryPermissionController;
 use App\Http\Controllers\DMS\Tags\TagController;
 use Illuminate\Support\Facades\Route;
 
-
 Route::namespace('DMS')->prefix('dms')->group(function () {
     Route::get('recent', DocumentRecentController::class)->name('repo.recent');
     Route::get('bulk-upload', DocumentUploadController::class)->name('files.upload');
