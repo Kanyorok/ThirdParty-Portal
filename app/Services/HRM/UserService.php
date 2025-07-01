@@ -31,6 +31,7 @@ use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 use Throwable;
 use Yajra\DataTables\DataTables;
+use App\Models\Auth\ModelRole;
 
 class UserService
 {
@@ -171,9 +172,9 @@ class UserService
         $this->user->syncRoles($role->name);
 
         // Add branch-level role in t_ModelRoles
-        \App\Models\Auth\ModelRole::firstOrCreate([
+        ModelRole::firstOrCreate([
             'model_id' => $this->user->Id,
-            'model_type' => \App\Models\Auth\User::getPrimaryKey(),
+            'model_type' => User::getPrimaryKey(),
             'role_id' => $role->id,
             'BranchId' => $branch->Id,
         ]);
