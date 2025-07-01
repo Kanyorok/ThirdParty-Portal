@@ -20,7 +20,7 @@ return new class extends Migration {
             $table->string('Nationality');
             $table->string('PostalAddress');
             $table->string('Remarks');
-            $table->boolean('IsActive')->default(true);
+            $table->boolean('IsActive')->default(1);
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');

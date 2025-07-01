@@ -3,6 +3,7 @@
 @section('title', 'Requisitions')
 @section('styles')
     <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
     <style>
         .select2-container {
             width: 100% !important;
@@ -10,18 +11,20 @@
     </style>
 @endsection
 @section('content')
-    <div class="mb-3">
-        <button class="btn btn-primary float-end ms-2 modal-create-item" type="button"><i
-                class="fas fa-plus-circle"></i> New
-            Requisition
-        </button>
+    <div class="row mb-3">
+        <div class="col-md-12 text-end">
+            <button class="btn btn-primary modal-create-item" type="button">
+                <i class="fas fa-plus-circle"></i> New Requisition
+            </button>
+        </div>
     </div>
+
     <div class="row">
         <div class="col-12">
             <div class="card mb-3">
                 <div class="card-body">
-                    <table id="requsitionTable"
-                           class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                    <div class="table-responsive">
+                    <table id="requisitionTable" class="table table-bordered table-striped align-middle">
                         <thead>
                         <tr>
                             <th>#</th>
@@ -65,6 +68,7 @@
                         @endforelse
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -138,6 +142,7 @@
                                 <p id="Remarks_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
 
+
                             <hr>
                             <div class="mt-4">
                                 <button type="button" class="btn btn-secondary float-start" data-bs-dismiss="modal">
@@ -155,8 +160,14 @@
     </div>
 @endsection
 @section('scripts')
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
     <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
+
     <script src="{{ asset('assets/js/datatables.js') }}"></script>
+
     <script>
         const $Modal = $('#RequisitionItemModal');
         
@@ -164,6 +175,21 @@
             // $.fn.dataTable.ext.errMode = 'none';
             // fetchCampaignsTable();
 
+        $(document).ready(function () {
+
+            @if(!$details->isEmpty())
+            $('#requisitionTable').DataTable({
+                pageLength: 10,
+                ordering: true,
+                searching: true,
+                lengthChange: true,
+                language: {
+                    emptyTable: "No data available"
+                }
+            });
+            @endif
+
+            // Modal open event
             $(document).on('click', '.modal-create-item', function () {
                 $(".modal-title").html('Add Requisition');
                 $(".modal-item").addClass('d-none');
@@ -171,20 +197,17 @@
                 $Modal.modal('show');
             });
 
+            // Form submission
             $('form#createRequisitionForm').submit(async function (e) {
-                // alert('hello');
                 e.preventDefault();
                 if (await saveForm($(this), $('#createRequisitionBtn'), true, true, true)) {
                     $Modal.modal('hide');
                 }
-
             });
-
 
             $("#MarketingList").select2({
                 dropdownParent: $Modal,
             });
-
         });
 
         document.getElementById('ProcurementPlan').addEventListener('change', function () {
@@ -223,3 +246,4 @@
         });
     </script>
 @endsection
+

@@ -9,7 +9,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('t_Transfers', function (Blueprint $table) {
-            // Drop the existing foreign key constraint
             $table->dropForeign(['FromBranch']);
 
             // Make the column nullable
@@ -29,3 +28,4 @@ return new class extends Migration
         });
     }
 };
+ 
