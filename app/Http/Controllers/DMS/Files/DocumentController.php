@@ -44,14 +44,6 @@ class DocumentController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function preview(Document $document): View
-    {
-        return view('dms.files.preview')->with('file', $document)->with('service', new DocumentService($document));
-    }
-
-    /**
      * Display the specified resource.
      */
     public function show(Repository $repository, Document $document): View
