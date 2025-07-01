@@ -29,7 +29,104 @@ class BudgetTopDownAllocationController extends Controller
         $lines = BudgetLine::all();
         $branches = Branch::all();
 
-        return view('budgetandanalytics.budgetworkspace.topdownallocationtool.create', compact('scenarios', 'periods', 'lines', 'branches'));
+        $budgetId = $validated['BudgetID'];
+        $branchId = $validated['BranchID'];
+        $check = BudgetGLMasterAllocations::where('BudgetID', $budgetId)
+            ->where('BranchID', $branchId)
+            ->first();
+
+        $budgetName = Budget::find($budgetId)->Name;
+        $branchName = Branch::find($branchId)->Name;
+
+        if ($check) { // records exist
+
+            // Check if this budget is being edited by another user
+            $isBeingEdited = BudgetGLMasterAllocations::where('BudgetID', $validated['BudgetID'])
+                ->where('BranchID', $validated['BranchID'])
+                ->where('IsBeingEdited', true)
+                ->exists();
+            if ($isBeingEdited) {
+                // Get the user ID of the person currently editing
+                $editingUserId = BudgetGLMasterAllocations::where('BudgetID', $validated['BudgetID'])
+                    ->where('BranchID', $validated['BranchID'])
+                    ->where('IsBeingEdited', true)
+                    ->value('IsBeingEditedBy');
+                // Get the name of the user who is currently editing
+                $editingUserName = User::find($editingUserId)->Name ?? 'Unknown User';
+                // Redirect back with an error message if not the same user
+                if ($editingUserId !== Auth::id()) {
+                    return back()->with('error', "This General Ledger is currently being edited by $editingUserName. Please try again later.");
+                }
+            } else {
+                // Set the IsBeingEdited flag to true for the current user
+                BudgetGLMasterAllocations::where('BudgetID', $validated['BudgetID'])
+                    ->where('BranchID', $validated['BranchID'])
+                    ->update([
+                        'IsBeingEdited' => true,
+                        'IsBeingEditedBy' => Auth::id(),
+                    ]);
+            }
+
+            $glsMaster = BudgetGLMasterAllocations::where('BudgetID', $budgetId)
+                ->where('BranchID', $branchId)
+                ->get();
+            $isExisting = true;
+            return view('budgetandanalytics.budgetworkspace.topdown.exist', compact(
+                'budgets',
+                'branches',
+                'glsMaster',
+                'isExisting',
+                'budgetName',
+                'branchName',
+                'budgetId',
+                'branchId'
+            ));
+        } else {
+            $glsMaster = BudgetGLsAttachments::where('BudgetID', $budgetId)
+                ->whereNull('DeletedOn')
+                ->select('Id','AccountID', 'Description', 'GLAccountTypeID')
+                ->get();
+            $isExisting = false;
+            return view('budgetandanalytics.budgetworkspace.topdown.create', compact(
+                'budgets',
+                'branches',
+                'glsMaster',
+                'isExisting',
+                'budgetName',
+                'branchName',
+                'budgetId',
+                'branchId'
+            ));
+        }
+    }
+
+    public function create(Request $request)
+    {
+        //Check if such data has been created
+        $budgetId = $request->get('BudgetID');
+        $branchId = $request->get('BranchID');
+
+        $topDownData = BudgetGLMasterAllocations::where('BudgetID', $budgetId)
+            ->where('BranchID', $branchId)
+            ->first();
+        if ($topDownData) {
+            //Load existing data
+            $glsMaster = BudgetGLMasterAllocations::where('BudgetID', $budgetId)
+                ->where('BranchID', $branchId)
+                ->get();
+        }else{
+            //Read data for GL masters with already prepopulated alloc
+            $glsMaster=BudgetGLMaster::select(
+                'BudgetGLID',
+                'AccountID_CBS',
+                'Description',
+                'GLAccountTypeID_CBS',
+                'GLSubAccountTypeID_CBS'
+            )->get();
+        }
+
+        return view('budgetandanalytics.budgetworkspace.topdown.create', compact('glsMaster'));
+
     }
 
     public function store(Request $request)
