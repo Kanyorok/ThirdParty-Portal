@@ -20,7 +20,7 @@ trait ReportsTrait
 {
     public function getReports(bool $data): View|JsonResponse
     {
-        $module = self::Module;
+        $module = self::MODULE;
         if ($data) {
             try {
                 return Datatables::of(Report::query()->where('t_Reports.ModuleId', $module->value)->select('*'))->addIndexColumn()
