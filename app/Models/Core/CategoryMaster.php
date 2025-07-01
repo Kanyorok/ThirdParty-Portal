@@ -5,6 +5,7 @@ namespace App\Models\Core;
 use App\Models\PropertyManagement\PropertyType;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CategoryMaster extends Model
@@ -32,7 +33,7 @@ class CategoryMaster extends Model
         return 'CategoryMasterId';
     }
 
-    public function propertytypes()
+    public function propertytypes(): HasMany
     {
         return $this->hasMany(PropertyType::class, 'PropertyCategoryId', 'Id');
     }

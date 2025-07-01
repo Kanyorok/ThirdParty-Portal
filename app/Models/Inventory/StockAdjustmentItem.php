@@ -11,23 +11,20 @@ use App\Models\Auth\User;
 
 class StockAdjustmentItem extends Model
 {
-     use SoftDeletes;
+    use SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
-
+    public $timestamps = false;
     protected $table = 't_StockAdjustmentItems';
     protected $connection = 'sqlsrv';
     protected $primaryKey = 'Id';
-    public $timestamps = false;
-
     protected $fillable = [
         'AdjustmentId', 'Item', 'AdjustmentQty', 'Remarks',
         'CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn', 'DeletedBy', 'DeletedOn'
     ];
 
-    
 
     public function adjustment()
     {
@@ -41,24 +38,28 @@ class StockAdjustmentItem extends Model
 
     public function modifier()
     {
-        return $this->belongsTo(User::class, 'ModifiedBy', 'Id');   
+        return $this->belongsTo(User::class, 'ModifiedBy', 'Id');
 
     }
+
     public function deleter()
     {
         return $this->belongsTo(User::class, 'DeletedBy', 'Id');
     }
-      public function branch()
+
+    public function branch()
     {
         return $this->belongsTo(Branch::class, 'Branch', 'Id');
     }
+
     public function stockItem()
     {
-    return $this->belongsTo(StockItem::class, 'Item', 'ItemID');
-   }
-   public function item()
-   {
-    return $this->belongsTo(ItemMasterList::class, 'Item', 'Id');
-   }
+        return $this->belongsTo(StockItem::class, 'Item', 'ItemID');
+    }
+
+    public function item()
+    {
+        return $this->belongsTo(ItemMasterList::class, 'Item', 'Id');
+    }
 
 }

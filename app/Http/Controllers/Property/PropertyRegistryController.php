@@ -21,14 +21,14 @@ class PropertyRegistryController extends Controller
     //
     public function index()
     {
-         $properties = PropertyRegistry::with('type')->get();
+        $properties = PropertyRegistry::with('type')->get();
         return view('property.propertyregistry.registry.index', compact('properties'));
     }
 
     public function create(){
         $lineentries = CategoryMaster::with('propertytypes')->get();
         $localities = Locality::all();
-        return view('property.propertyregistry.registry.create', compact('lineentries','localities'));
+        return view('property.propertyregistry.registry.create', compact('lineentries', 'localities'));
     }
 
     public function getTypesByCategory($categoryId)
@@ -41,88 +41,93 @@ class PropertyRegistryController extends Controller
         $property = PropertyRegistry::find($id);
         return view('property.propertyregistry.registry.show',compact('property'));
     }
-public function store(PropertyRegistryRequest $request)
-{
-    
-    $validated = $request->validated();
-    //dd($validated);
-    // Fetch model instances based on validated IDs
-    $acquisitionDate = Carbon::parse($validated['AcquisitionDate']);
-    $propertyType = PropertyType::findOrFail($validated['PropertyType']);
-    $category = CategoryMaster::findOrFail($validated['Category']);
-    $townCity = Locality::findOrFail($validated['TownCity']);
+
+    public function store(PropertyRegistryRequest $request)
+    {
+
+        $validated = $request->validated();
+        //dd($validated);
+        // Fetch model instances based on validated IDs
+        $acquisitionDate = Carbon::parse($validated['AcquisitionDate']);
+        $propertyType = PropertyType::findOrFail($validated['PropertyType']);
+        $category = CategoryMaster::findOrFail($validated['Category']);
+        $townCity = Locality::findOrFail($validated['TownCity']);
 
 
-    // Call the service with structured arguments
-    $property = PropertyRegistryService::create(
-        PropertyName: $validated['PropertyName'],
-        PropertyCode: $validated['PropertyCode'],
-        PropertyType: $propertyType,
-        Category: $category,
-        Owner: $validated['Owner'],
-        AcquisitionDate: $acquisitionDate,
-        Country: $validated['Country'],
-        TownCity: $townCity,
-        AreaLocality: $validated['AreaLocality'],
-        PropertyDescription: $validated['PropertyDescription'] ?? '',
-    );
+        // Call the service with structured arguments
+        $property = PropertyRegistryService::create(
+            PropertyName: $validated['PropertyName'],
+            PropertyCode: $validated['PropertyCode'],
+            PropertyType: $propertyType,
+            Category: $category,
+            Owner: $validated['Owner'],
+            AcquisitionDate: $acquisitionDate,
+            Country: $validated['Country'],
+            TownCity: $townCity,
+            AreaLocality: $validated['AreaLocality'],
+            PropertyDescription: $validated['PropertyDescription'] ?? '',
+        );
 
-    return redirect()->route('PropertyRegistry.index')
-        ->with('success', 'Property registry created successfully');
-}
-public function edit($id)
+        return redirect()->route('PropertyRegistry.index')
+            ->with('success', 'Property registry created successfully');
+    }
+
+    public function edit($id)
     {
         //Check if user has permission to edit tender categories
-       // $this->authorize(PermissionEnum::PropertyTypeUpdate, PropertyType::class);
+        // $this->authorize(PermissionEnum::PropertyTypeUpdate, PropertyType::class);
         $property = PropertyRegistry::findOrFail($id);
         $types = PropertyType::all();
         $categories = CategoryMaster::all();
         $lineentries = CategoryMaster::with('propertytypes')->get();
         $localities = Locality::all();
 
-        return view('property.propertyregistry.registry.edit',compact('property','localities','lineentries','types','categories'));
+        return view('property.propertyregistry.registry.edit', compact('property', 'localities', 'lineentries', 'types', 'categories'));
     }
-     public function update(Request $request, $id){ 
-       // $this->authorize(PermissionEnum::PropertyTypeUpdate , PropertyType::class);
-        $validated=$request->validate([
-        'PropertyName'  => 'required|string|max:50',
-        'PropertyType' => 'required|exists:t_PropertyType,Id',
-        'Category' => 'required|exists:t_CategoryMaster,Id',
-        'TownCity' => 'required|exists:t_Localities,Id',
-        'PropertyDescription'  => 'required|string|max:100',
-        
-    ]);
- 
-    DB::beginTransaction();
- 
-    try{
-        $property = PropertyRegistry::findOrFail($id);
 
-        $property->update([
-            'PropertyName'  => $validated['PropertyName'],
-            'Category' => $validated['Category'],
-            'PropertyType' => $validated['PropertyType'],
-            'TownCity' => $validated['TownCity'],
-            'PropertyDescription'  => $validated['PropertyDescription'],  
-            'ModifiedBy' => Auth::Id(),
+    public function update(Request $request, $id)
+    {
+        // $this->authorize(PermissionEnum::PropertyTypeUpdate , PropertyType::class);
+        $validated = $request->validate([
+            'PropertyName' => 'required|string|max:50',
+            'PropertyType' => 'required|exists:t_PropertyType,Id',
+            'Category' => 'required|exists:t_CategoryMaster,Id',
+            'TownCity' => 'required|exists:t_Localities,Id',
+            'PropertyDescription' => 'required|string|max:100',
+
         ]);
- 
-        DB::commit();
-        activity()
+
+        DB::beginTransaction();
+
+        try {
+            $property = PropertyRegistry::findOrFail($id);
+
+            $property->update([
+                'PropertyName' => $validated['PropertyName'],
+                'Category' => $validated['Category'],
+                'PropertyType' => $validated['PropertyType'],
+                'TownCity' => $validated['TownCity'],
+                'PropertyDescription' => $validated['PropertyDescription'],
+                'ModifiedBy' => Auth::Id(),
+            ]);
+
+            DB::commit();
+            activity()
                 ->performedOn($property)
                 ->causedBy(Auth::user())
-                ->withProperties(['action'=>'update'])
+                ->withProperties(['action' => 'update'])
                 ->log('Updated Propeerty Registry');
 
-                return redirect()->route('PropertyRegistry.index')->with('success' , 'property updated successfully');
-            }catch(\Throwable $th) {
-                DB::rollBack();
-                Log::error('Failed to Update type:' . $th->getMessage());
+            return redirect()->route('PropertyRegistry.index')->with('success', 'property updated successfully');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            Log::error('Failed to Update type:' . $th->getMessage());
 
-                return back()->withErrors(['error'=>'Failed to update type'])->withInput();
-            }
-       }
-       public function destroy($id)
+            return back()->withErrors(['error' => 'Failed to update type'])->withInput();
+        }
+    }
+
+    public function destroy($id)
     {
         //Check if user has permission to delete property categories
         //$this->authorize(PermissionEnum::PropertyTypeDelete , PropertyType::class);
@@ -139,7 +144,7 @@ public function edit($id)
                 ->withErrors(['error' => 'Failed to delete Property. Please try again.'])
                 ->withInput();
         }
-    }   
+    }
 
 
 }

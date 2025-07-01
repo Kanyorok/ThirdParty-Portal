@@ -14,10 +14,10 @@
         <div class="col-md-3">
           <label class="form-label">Tenant Type</label>
             <select class="form-select" name="TenantType">
-              <option value="">-- Select Tenent Type --</option>
-              @foreach ($tenantTypes as $tenanttype)
-                <option value="{{ $tenanttype->ID }}">{{ $tenanttype->Description }}</option>
-              @endforeach
+                <option value="">-- Select Tenent Type --</option>
+                @foreach ($tenantTypes as $tenanttype)
+                    <option value="{{ $tenanttype->ID }}">{{ $tenanttype->Description }}</option>
+                @endforeach
           </select>
         </div>
         <div class="col-md-5">
@@ -56,13 +56,13 @@
           <label class="form-label">Remarks</label>
             <input type="text" class="form-control" name="Remarks" placeholder="Optional">
         </div>
-      <div>
-        <label class="form-label">Status</label>
-        <select class="form-select" name="IsActive">
-          <option value="1">Active</option>
-          <option value="0">Inactive</option>
-        </select>
-      </div>
+          <div>
+              <label class="form-label">Status</label>
+              <select class="form-select" name="IsActive">
+                  <option value="1">Active</option>
+                  <option value="0">Inactive</option>
+              </select>
+          </div>
       </div>
 
       <!-- Document Upload -->

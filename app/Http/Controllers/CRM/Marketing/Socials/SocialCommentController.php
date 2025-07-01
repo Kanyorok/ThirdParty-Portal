@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Log;
 
 class SocialCommentController extends Controller
 {
-    private const int PAGINATION = 10;
+    private const PAGINATION = 10;
 
     public function __construct()
     {

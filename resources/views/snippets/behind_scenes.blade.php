@@ -1,3 +1,4 @@
+@php use App\Models\Auth\User; @endphp
 <p class="mb-0 h5">Other Details</p>
 <hr class="mt-0">
 <div class="mb-2">
@@ -5,7 +6,7 @@
         <tr class="border-bottom ">
             <th>Creation</th>
             <td class="float-end">{{ $model->CreatedOn?->format('d M, Y H:i') }} <br>
-                @if($model->creator instanceof \App\Models\Auth\User)
+                @if($model->creator instanceof User)
                     <details>
                         <summary>{{ $model->creator->UserID }}</summary>
                         <p>{{ $model->creator->Name }}</p>
@@ -16,16 +17,20 @@
             </td>
         <tr>
             <th>Modified</th>
-            <td class="float-end">{{ $model->ModifiedOn?->format('d M, Y H:i') }} <br>
-                @if($model->modified instanceof \App\Models\Auth\User)
-                    <details>
-                        <summary>{{ $model->modified->UserID }}</summary>
-                        <p>{{ $model->modified->Name }}</p>
-                    </details>
-                @else
-                    {{ $model->CreatedBy }}
-                @endif
-            </td>
+            @if(!$model->CreatedOn?->eq($model?->ModifiedOn))
+                <td class="float-end">{{ $model->ModifiedOn?->format('d M, Y H:i') }} <br>
+                    @if($model->modified instanceof User)
+                        <details>
+                            <summary>{{ $model->modified->UserID }}</summary>
+                            <p>{{ $model->modified->Name }}</p>
+                        </details>
+                    @else
+                        {{ $model->CreatedBy }}
+                    @endif
+                </td>
+            @else
+                <td class="float-end">--</td>
+            @endif
         </tr>
     </table>
 </div>

@@ -57,10 +57,10 @@
           <a href="{{ route('itemsubcategory.index') }}" class="btn btn-secondary">Back</a>
           <a href="{{ route('itemsubcategory.edit', $item->Id) }}" class="btn btn-warning">Edit Subcategory</a>
 
-        <form action="{{ route('itemsubcategory.destroy', $item->Id) }}" method="POST" style="display:inline;">
+          <form action="{{ route('itemsubcategory.destroy', $item->Id) }}" method="POST" style="display:inline;">
           @csrf
           @method('DELETE')
-            <button type="submit" class="btn btn-danger delete-button">Delete Subcategory</button>
+              <button type="submit" class="btn btn-danger delete-button">Delete Subcategory</button>
         </form>
       </div>
 

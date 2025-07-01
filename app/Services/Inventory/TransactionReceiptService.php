@@ -84,8 +84,8 @@ class TransactionReceiptService
                 'item' => $itemData['item'],
                 'ReceivedQty' => $itemData['received_qty'],
                 'DispatchedQty' => $itemData['dispatched_qty'] ?? null,
-                'Discrepancy' => isset($itemData['dispatched_qty'], $itemData['received_qty']) 
-                    ? $itemData['dispatched_qty'] - $itemData['received_qty'] 
+                'Discrepancy' => isset($itemData['dispatched_qty'], $itemData['received_qty'])
+                    ? $itemData['dispatched_qty'] - $itemData['received_qty']
                     : null,
                 'DamagedQty' => $itemData['damaged_qty'] ?? 0,
                 'CreatedBy' => Auth::id(),

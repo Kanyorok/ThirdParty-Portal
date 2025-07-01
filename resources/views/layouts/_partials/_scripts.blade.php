@@ -54,17 +54,24 @@
             $(document).on("click", ".clear-balance", (function () {
                 "**********" === $(this).html() ? $(this).html($(this).data("bal")) : $(this).html("**********")
             }));
+
             $(document).on('dblclick', '.dbl-click-redirect-data', function () {
                 window.location.href = $(this).data('dbl_click_url');
             });
-            $(document).on('click', '.click-redirect-data', function () {
+            $(document).on('click', '.click-redirect-data', function (event) {
+                if (event.detail !== 1) {
+                    return;
+                }
                 window.location.href = $(this).data('click_url');
             });
             $(document).on('dblclick', '.dbl-click-summary-data', function () {
                 const url = $(this).data('dbl_click_url'), title = $(this).data('summary_title');
                 showOffCanvasMain(title.toString(), url.toString());
             });
-            $(document).on('click', '.click-summary-data', function () {
+            $(document).on('click', '.click-summary-data', function (event) {
+                if (event.detail !== 1) {
+                    return;
+                }
                 const url = $(this).data('click_url'), title = $(this).data('summary_title');
                 showOffCanvasMain(title.toString(), url.toString());
             });

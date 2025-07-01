@@ -5,25 +5,25 @@
     <h4 class="mb-4">Stock Adjustment Form</h4>
 
     <form method="POST" action="{{ route('transactionsadjustment.store') }}">
-      @csrf
+        @csrf
       <div class="row mb-3">
         <div class="col-md-4">
           <label for="adjustmentDate" class="form-label">Adjustment Date</label>
-          <input type="date" class="form-control" id="adjustmentDate" name="AdjustmentDate" required>
+            <input type="date" class="form-control" id="adjustmentDate" name="AdjustmentDate" required>
         </div>
         <div class="col-md-4">
-          
-          <label for="branch" class="form-label">Branch</label>
-          <select class="form-select" id="branch" name="Branch" required>
-            <option selected disabled>Select Branch</option>
-            @foreach($branches as $branch)
-                <option value="{{ $branch->Id }}">{{ $branch->Name }}</option>
-            @endforeach
+
+            <label for="branch" class="form-label">Branch</label>
+            <select class="form-select" id="branch" name="Branch" required>
+                <option selected disabled>Select Branch</option>
+                @foreach($branches as $branch)
+                    <option value="{{ $branch->Id }}">{{ $branch->Name }}</option>
+                @endforeach
           </select>
         </div>
         <div class="col-md-4">
           <label for="reason" class="form-label">Adjustment Reason</label>
-          <select class="form-select" id="reason" name="Reason" required>
+            <select class="form-select" id="reason" name="Reason" required>
             <option>Damage</option>
             <option>Expired</option>
             <option>Shrinkage</option>
@@ -40,34 +40,34 @@
               <th>#</th>
               <th>Item Code</th>
               <th>Item Name</th>
-              <th>Current Qty</th>
+                <th>Current Qty</th>
               <th>Adjustment Qty</th>
-              <th>New Qty</th>
+                <th>New Qty</th>
               <th>Remarks</th>
             </tr>
           </thead>
           <tbody>
-            <!-- Populated by AJAX -->
+          <!-- Populated by AJAX -->
           </tbody>
         </table>
       </div>
 
       <div class="mb-3">
-             <label class="form-label">Adjusted By</label>
-                <select name="AdjustedBy" class="form-select select2" required>
-                  <option value="">-- Select User --</option>
-                  
-                  @foreach ($users as $user)
-                    <option value="{{ $user->Id }}" required>{{ $user->Name }}</option>
-                  @endforeach
-                </select>
-              </div>
+          <label class="form-label">Adjusted By</label>
+          <select name="AdjustedBy" class="form-select select2" required>
+              <option value="">-- Select User --</option>
+
+              @foreach ($users as $user)
+                  <option value="{{ $user->Id }}" required>{{ $user->Name }}</option>
+              @endforeach
+          </select>
+      </div>
 
       <button type="submit" class="btn btn-primary">✅ Submit Adjustment</button>
     </form>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
+<script>
     document.getElementById('branch').addEventListener('change', function () {
         const branchId = this.value;
         if (!branchId) return;
@@ -92,15 +92,15 @@
                                 <input type="number" class="form-control" value="${stock.CurrentQty}" readonly>
                             </td>
                             <td>
-                                <input type="number" class="form-control adjustment-qty" 
-                                       name="items[${index}][AdjustmentQty]" 
+                                <input type="number" class="form-control adjustment-qty"
+                                       name="items[${index}][AdjustmentQty]"
                                        placeholder="+/-"
                                        onchange="calculateNewQty(this)">
                             </td>
                             <td>
                                 <input type="number" class="form-control new-qty" >
                             </td>
-                            
+
                             <td>
                                 <input type="text" class="form-control" name="items[${index}][Remarks]" placeholder="Optional remarks">
                             </td>
@@ -117,11 +117,12 @@
         const newQty = currentQty + adjustmentQty;
         row.querySelector('.new-qty').value = newQty;
     }
+
     document.addEventListener('DOMContentLoaded', function () {
-    $('.select2').select2({
-      placeholder: 'Select user',
-      allowClear: true
+        $('.select2').select2({
+            placeholder: 'Select user',
+            allowClear: true
+        });
     });
-  });
-  </script>
+</script>
   @endSection

@@ -25,16 +25,19 @@ class PropertyUnitController extends Controller
         return view('property.propertyregistry.structuralmapping.addunit.index', compact('units'));
     }
 
-    public function create(){ 
+    public function create()
+    {
         $this->authorize(PermissionEnum::PropertyStructuralCreate, PropertyUnit::class);
         $lineentries = PropertyRegistry::with(['getBlockByProperty.getFloorByBlock'])->get();
         return view('property.propertyregistry.structuralmapping.addunit.create', compact('lineentries'));
     }
+
     public function getBlockByProperty($propertyId)
     {
         $blocks = PropertyBlock::where('PropertyID', $propertyId)->get();
         return response()->json($blocks);
     }
+
     public function getFloorByBlock($blockId)
     {
         $floors = PropertyFloor::where('BlockID', $blockId)->get();
@@ -59,13 +62,13 @@ class PropertyUnitController extends Controller
                 $validated['CurrentStatus'] ? 1 : 0,
                 $validated['Remarks'],
                 auth()->user()
-                
+
             );
             return redirect()->route('addunit.index')->with('success', 'property unit Added successfully');
         } catch (\Exception $e) {
 
-            return back()->withErrors('Failed:'. $e->getMessage())->withInput();
-                
+            return back()->withErrors('Failed:' . $e->getMessage())->withInput();
+
         }
     }
 
@@ -132,7 +135,7 @@ class PropertyUnitController extends Controller
     public function destroy($id)
     {
         //Check if user has permission to delete property categories
-       $this->authorize(PermissionEnum::PropertyStructuralDelete, PropertyUnit::class);
+        $this->authorize(PermissionEnum::PropertyStructuralDelete, PropertyUnit::class);
         try {
             $unit = PropertyUnit::findOrFail($id);
             $unit->delete();

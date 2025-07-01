@@ -9,7 +9,6 @@ use App\Models\Core\Branch;
 use App\Models\Auth\User;
 
 
-
 class StockAdjustment extends Model
 {
     use SoftDeletes;
@@ -17,30 +16,33 @@ class StockAdjustment extends Model
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
-
+    public $timestamps = false;
     protected $table = 't_StockAdjustments';
     protected $connection = 'sqlsrv';
     protected $primaryKey = 'Id';
-    public $timestamps = false;
-
     protected $fillable = [
-        'AdjustmentId', 
-        'AdjustmentDate', 
-        'Branch', 
-        'Reason', 
-        'AdjustedBy', 
+        'AdjustmentId',
+        'AdjustmentDate',
+        'Branch',
+        'Reason',
+        'AdjustedBy',
         'Status',
-        'CreatedBy', 
-        'CreatedOn', 
-        'ModifiedBy', 
-        'ModifiedOn', 
-        'DeletedBy', 
+        'CreatedBy',
+        'CreatedOn',
+        'ModifiedBy',
+        'ModifiedOn',
+        'DeletedBy',
         'DeletedOn'
     ];
-    
+
     public function adjustedBy()
     {
         return $this->belongsTo(User::class, 'AdjustedBy', 'Id');
+    }
+
+    public static function getPrimaryKey(): string
+    {
+        return 'Id';
     }
 
     public function items()
@@ -62,15 +64,11 @@ class StockAdjustment extends Model
     {
         return $this->belongsTo(User::class, 'DeletedBy', 'Id');
     }
-      public function branch()
+
+    public function branch()
     {
         return $this->belongsTo(Branch::class, 'Branch', 'Id');
     }
-    public static function getPrimaryKey(): string
-    {
-        return 'Id';
-    }
-    
 
-    
+
 }

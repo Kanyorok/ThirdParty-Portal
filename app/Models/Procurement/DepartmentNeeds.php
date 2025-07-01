@@ -3,15 +3,15 @@
 namespace App\Models\Procurement;
 
 use App\Enums\Procurement\DepartmentNeedsEnum;
+use App\Models\Core\Branch;
+use App\Models\Core\PendingWorkflow;
+use App\Models\Core\Workflow;
+use App\Models\HRM\Department;
 use App\Models\Inventory\ItemMasterList;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Core\PendingWorkflow;
-use App\Models\Core\Workflow;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
-use App\Models\HRM\Department;
-use App\Models\Core\Branch;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DepartmentNeeds extends Model
 {
@@ -26,7 +26,7 @@ class DepartmentNeeds extends Model
     protected $fillable = [
         'NeedID', 'BranchID', 'DepartmentID', 'ItemID', 'RequestedQty', 'EstimatedUnitCost',
         'Justification', 'Status', 'FiscalYear', 'RequestedDate', 'PriorityLevel', 'IsEmergency',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy'
+        'CreatedBy', 'ModifiedBy', 'DeletedBy', 'IsUsed',
     ];
 
     protected $casts = [

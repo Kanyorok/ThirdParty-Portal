@@ -3,7 +3,7 @@
 @section('title', 'Budget Planning Methods')
 
 @section('content')
-<div class="card p-4">
+    <div class="card p-4">
         <div class="card-header bg-dark text-white mb-0">
             📊 Budget Planning Methods
         </div>
@@ -13,12 +13,13 @@
             <div class="alert alert-success">{{ session('success') }}</div>
         @endif
 
-    <div class="card-body mb-0">
-        <p class="text-muted">Planning methods are used to define how budgets are created and managed within the system. Each method can have a unique name, description, and active status.</p>
-    
-    <div class="mb-3 text-end">
-        <a href="{{ route('planningmethods.create') }}" class="btn btn-sm btn-primary">➕ Add New</a>
-    </div>
+        <div class="card-body mb-0">
+            <p class="text-muted">Planning methods are used to define how budgets are created and managed within the
+                system. Each method can have a unique name, description, and active status.</p>
+
+            <div class="mb-3 text-end">
+                <a href="{{ route('planningmethods.create') }}" class="btn btn-sm btn-primary">➕ Add New</a>
+            </div>
 
         <table class="table table-bordered table-striped">
             <thead class="table-light">
@@ -57,8 +58,8 @@
                     <td colspan="5" class="text-center">No budget planning methods found.</td>
                 </tr>
             @endforelse
-        </tbody>
-    </table>
+            </tbody>
+        </table>
+        </div>
     </div>
-</div>
 @endsection

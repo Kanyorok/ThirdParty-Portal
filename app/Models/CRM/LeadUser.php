@@ -46,7 +46,7 @@ class LeadUser extends Model
 
     protected function getImageName(): string
     {
-        return " Lead User";
+        return "Lead User";
     }
 
     public static function getPrimaryKey(): string
