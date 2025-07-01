@@ -63,6 +63,7 @@ use App\Models\Procurement\RFQLine;
 use App\Models\Procurement\SchedulePlan;
 use App\Models\PropertyManagement\PropertyBlock;
 use App\Models\PropertyManagement\PropertyFloor;
+use App\Models\PropertyManagement\PropertyLeaseRenewal;
 use App\Models\PropertyManagement\PropertyUnit;
 use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Models\PropertyManagement\PropertyLeaseSchedule;
@@ -87,6 +88,7 @@ use App\Policies\PropertyManagement\PropertyRegistryPolicy;
 use App\Policies\PropertyManagement\PropertyStructuralPolicy;
 use App\Policies\PropertyManagement\PropertyTenantClearancePolicy;
 use App\Policies\PropertyManagement\PropertyLeaseSchedulePolicy;
+use App\Policies\PropertyManagement\PropertyLeaseRenewalPolicy;
 use App\Policies\PropertyManagement\PropertyTypePolicy;
 use App\Policies\PropertyManagement\PropertyFloorPolicy;
 use App\Policies\PropertyManagement\PropertyUnitPolicy;        
@@ -224,6 +226,7 @@ class AppServiceProvider extends ServiceProvider
             PropertyFloor::getPrimaryKey() => PropertyFloor::class,
             PropertyUnit::getPrimaryKey() => PropertyUnit::class,
             PropertyLeaseSchedule::getPrimaryKey() => PropertyLeaseSchedule::class,
+            PropertyLeaseRenewal::getPrimaryKey() => PropertyLeaseRenewal::class,
             
         ]);
 
@@ -259,6 +262,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PropertyFloor::class, PropertyFloorPolicy::class);
         Gate::policy(PropertyUnit::class, PropertyUnitPolicy::class);
         Gate::policy(PropertyLeaseSchedule::class, PropertyLeaseSchedulePolicy::class);
+        Gate::policy(PropertyLeaseRenewal::class, PropertyLeaseRenewalPolicy::class);
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);
          Event::listen(SMSSendEvent::class, SMSSendListener::class);

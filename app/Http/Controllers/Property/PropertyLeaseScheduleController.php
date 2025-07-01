@@ -29,7 +29,7 @@ class PropertyLeaseScheduleController extends Controller
     public function create()
     {
         $this->authorize(PermissionEnum::PropertyLeaseScheduleCreate, PropertyLeaseSchedule::class);
-        $newleases = PropertyNewLease::with(['getPropertyByTenant.getLeaseByProperty'])->get();
+        $newleases = PropertyNewLease::with('getPropertyByTenant','getLeaseByProperty')->get();
         $codes = CodeDetail::where('CodeID', 'PaymentFrequency')->get();
         return view('property.tenantmanagement.leasemanagement.leaseschedule.create', compact('newleases', 'codes'));
     }
@@ -52,31 +52,38 @@ class PropertyLeaseScheduleController extends Controller
         return view('property.tenantmanagement.leasemanagement.leaseschedule.show', compact('leaseschedule'));
     }
 
-    public function store(PropertyLeaseScheduleRequest $request)
-    {
-        $this->authorize(PermissionEnum::PropertyLeaseScheduleCreate, PropertyLeaseSchedule::class);
-        //dd($request->all());
-         $validated = $request->validated();  
+public function store(PropertyLeaseScheduleRequest $request)
+{
+    try {
+    $validated = $request->validated();
+    $leaseId = (int) $validated['LeaseId'];
+    $tenantId = (int) $validated['TenantId'];
+    $propertyId = (int) $validated['PropertyId'];
+    $paymentFrequencyId = (int) $validated['PaymentFrequency'];
 
-        try {
-        PropertyLeaseScheduleService::create(
-            $validated['LeaseNumber'],
-            $validated['TenantId'],
-            $validated['PropertyId'],
-            $validated['PaymentFrequency'],
-            $validated['StartDate'],
-            $validated['EndDate'],
-            $validated['BaseRent'],
-            $validated['ServiceCharge'],
-            $validated['ParkingFee'],
-            $validated['OtherCharges'],
-            Auth::user()
-        );
-        return redirect()->route('schedulelease.index')->with('success', 'Lease schedule added!');
-        } catch (\Exception $e) {
-            return back()->withErrors('Failed: ' . $e->getMessage())->withInput();
-        }
+    // Use the lease ID to get the full lease
+    $lease = PropertyNewLease::findOrFail($leaseId);
+    PropertyLeaseScheduleService::create(
+        $leaseId,                  // from DB
+        $tenantId,
+        $propertyId,
+        $paymentFrequencyId,
+        $validated['StartDate'],
+        $validated['EndDate'],
+        $validated['BaseRent'],
+        $validated['ServiceCharge'],
+        $validated['ParkingFee'],
+        $validated['OtherCharges'],
+        Auth::user()
+    );
+
+    return redirect()->route('schedulelease.index')->with('success', 'Lease schedule added!');
+    } catch (\Exception $e) {
+        // Redirect back with error message
+        return redirect()->back()->with('error', $e->getMessage());
     }
+}
+
     public function edit($id)
     {
         //Check if user has permission to edit tender categories
@@ -92,7 +99,7 @@ class PropertyLeaseScheduleController extends Controller
 
         $this->authorize(PermissionEnum::PropertyLeaseScheduleUpdate, PropertyLeaseSchedule::class);
         $validated=$request->validate([
-            'LeaseNumber' => 'required|exists:t_LeaseCreation,Id',
+            'LeaseId' => 'required|exists:t_LeaseCreation,Id',
             'TenantId' => 'required|exists:t_LeaseCreation,Id',
             'PropertyId' => 'required|exists:t_LeaseCreation,Id',
             'PaymentFrequency' => 'required|string|max:50',
@@ -110,7 +117,6 @@ class PropertyLeaseScheduleController extends Controller
             $leaseschedules = PropertyLeaseSchedule::findOrFail($id);
 
             $leaseschedules->update([
-                'LeaseNumber' => $validated['LeaseNumber'],
                 'TenantId' => $validated['TenantId'],
                 'PropertyId' => $validated['PropertyId'],
                 'PaymentFrequency' => $validated['PaymentFrequency'],
