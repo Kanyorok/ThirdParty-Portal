@@ -58,7 +58,7 @@ class Document extends Model
 
     public function getRouteKeyName(): string
     {
-        return 'DocumentId';
+        return self::getPrimaryKey();
     }
 
     public function repository(): BelongsTo
@@ -76,6 +76,11 @@ class Document extends Model
     public function permissions(): MorphMany
     {
         return $this->morphMany(SpecialPermission::class, 'model', "Model", "ModelID", 'Id');
+    }
+
+    public function relations(): MorphMany
+    {
+        return $this->morphMany(DocumentRelation::class, 'related', "Related", "RelatedID", 'Id');
     }
 
     public function current(): HasOne

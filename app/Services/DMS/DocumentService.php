@@ -3,6 +3,7 @@
 namespace App\Services\DMS;
 
 use App\Enums\Core\ExtensionsEnum;
+use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\RoleEnum;
 use App\Enums\Core\VisibilityEnum;
 use App\Enums\DMS\DisksEnum;
@@ -17,6 +18,7 @@ use App\Models\DMS\Repository;
 use DateTime;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -48,18 +50,58 @@ class DocumentService extends PermissionsService
     /**
      * @throws ErroredException
      */
-    public static function createUpload(Repository $repository, UploadedFile $file, User $actor): self
+    public static function createInternal(ModulesEnum $module, UploadedFile $file, User $actor, array|string $permissions, string $Related, string|int $RelatedId): self
+    {
+        $service = self::createUpload(RepositoryService::module($module), $file, $actor, false)
+            ->addPermission($actor, RoleEnum::Admin, $actor, false)->attach($Related, $RelatedId, $actor);
+
+        if (empty($permissions)) {
+            if (is_string($permissions)) {
+                $permissions = explode(',', $permissions);
+            }
+            self::userPermissions($service->document, $permissions, RoleEnum::Read, $actor);
+        }
+        return $service;
+    }
+
+    /**
+     * @throws ErroredException
+     */
+    public function attach(string $Related, string|int $RelatedId, User $actor): self
+    {
+        if (is_null(Relation::getMorphedModel($Related))) {
+            throw new ErroredException('Invalid Related Entity');
+        }
+
+        $this->document->relations()->create([
+            'Related' => $Related,
+            'RelatedId' => $RelatedId,
+            'CreatedBy' => $actor->Id,
+            'ModifiedBy' => $actor->Id,
+        ]);
+
+        activity()->causedBy($actor)->performedOn($this->document)->event('upload')->log('relation added');
+
+        return $this;
+    }
+
+    /**
+     * @throws ErroredException
+     */
+    public static function createUpload(Repository $repository, UploadedFile $file, User $actor, bool $copyRepoPermissions = true): self
     {
         $extension = ExtensionsEnum::fromMimeType($file->getMimeType() ?? $file->getClientMimeType());
         $disk = DisksEnum::Local;
 
-        $checksum = hash_file('sha256', $file->getRealPath());
+        $checksum1 = hash_file('sha256', $file->getRealPath());
+
         $properties = (new FileProperties($file, $extension))->getProperties();
         $path = self::_saveFile($disk, $file->getContent());
-
-        //if (Storage::disk($disk->value)->put($path, $file->getContent())) {//for blob use https://github.com/NilGems/laravel-textract
-        return self::_create($repository, $actor, $disk, $file->getClientOriginalName(), $extension, $path, $file->getSize(), $checksum, '', properties: $properties);
-        //}
+        $checksum2 = hash_file('sha256', $path);
+        $checksum = base64_encode($checksum1 . '|' . $checksum2);
+        //for blob use https://github.com/NilGems/laravel-textract
+        //todo create event for blob and tags
+        return self::_create($repository, $actor, $disk, $file->getClientOriginalName(), $extension, $path, $file->getSize(), $checksum, '', properties: $properties, copyPermissions: $copyRepoPermissions = false);
     }
 
     /**
@@ -106,6 +148,10 @@ class DocumentService extends PermissionsService
             //return '<embed width="100%" height="100%" "data:application/pdf;base64,'.$this->image->Image.' type="application/pdf" />';
         }
 
+
+        if ($this->type->value === ExtensionsEnum::Txt->value) {
+            return '<textarea readonly disabled ' . $attr . '>' . $this->getFileContent(false) . '</textarea>';
+        }
         return '';
     }
 
@@ -114,10 +160,10 @@ class DocumentService extends PermissionsService
      */
     private static function _create(
         Repository $repository, User $actor, DisksEnum $disk, string $name, ExtensionsEnum $extension, string $path, int $sizeInBytes, string $checksum, string $blob, Collection $properties,
-        CategoryMaster|null $category = null): DocumentService
+        CategoryMaster|null $category = null, bool $copyPermissions = true): DocumentService
     {
         try {
-            return DB::transaction(static function () use ($properties, $blob, $sizeInBytes, $checksum, $disk, $path, $category, $extension, $repository, $name, $actor) {
+            return DB::transaction(static function () use ($properties, $blob, $sizeInBytes, $checksum, $disk, $path, $category, $extension, $repository, $name, $actor, $copyPermissions) {
                 $document = Document::create([
                     "Name" => $name,
                     "MimeType" => $extension->getMimeType(),
@@ -129,8 +175,8 @@ class DocumentService extends PermissionsService
                     'ModifiedBy' => $actor->Id,
                 ]);
 
-                if ($repository->Visibility->value === VisibilityEnum::Private->value) {
-                    self::copyRepoPermissions($repository, $document);
+                if ($copyPermissions && $repository->Visibility->value === VisibilityEnum::Private->value) {
+                    self::copyRepoPermissions($repository, $document, $actor);
                 }
 
                 $document->versions()->create([

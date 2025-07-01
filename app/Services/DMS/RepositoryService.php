@@ -2,6 +2,7 @@
 
 namespace App\Services\DMS;
 
+use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\RoleEnum;
 use App\Enums\Core\VisibilityEnum;
 use App\Exceptions\ErroredException;
@@ -18,7 +19,9 @@ use Throwable;
 
 class RepositoryService extends PermissionsService
 {
-    protected const int ROOT = 1;
+    protected const string ROOT = 'root';
+    protected const string Internal = 'internal';
+
 
     public function __construct(public Repository $repo)
     {
@@ -26,26 +29,50 @@ class RepositoryService extends PermissionsService
 
     public static function root(): Repository
     {
-        return Repository::query()->where('Id', self::ROOT)->withTrashed()->firstOr(function () {
+        return Repository::query()->where('RepositoryId', self::ROOT)->withTrashed()->firstOr(function () {
+
+            return self::_create(Name: 'Root', actor: SystemHelper::user(), Description: 'Root', RepoId: self::ROOT);
+        });
+    }
+
+    /**
+     * Internal Repository
+     */
+    public static function internal(): Repository
+    {
+        return Repository::query()->where('RepositoryId', self::Internal)->withTrashed()->firstOr(function () {
             $actor = SystemHelper::user();
-            return self::_create(Name: 'Root', actor: $actor, Description: 'Root');
+            return (new self(self::_create(Name: 'Internal', actor: $actor, repository: self::root(), Description: 'Internal Uploaded', RepoId: self::Internal)))
+                ->visibility(VisibilityEnum::Private, $actor)->repo;
+        });
+    }
+
+    public static function module(ModulesEnum $module): Repository
+    {
+        return Repository::query()->where('RepositoryId', $module->value)->withTrashed()->firstOr(function () use ($module) {
+            $actor = SystemHelper::user();
+            return (new self(self::_create(Name: $module->description(), actor: $actor, repository: self::internal(), Description: $module->description() . ' Uploaded files', RepoId: $module->value)))
+                ->visibility(VisibilityEnum::Private, $actor)->repo;
         });
     }
 
     /**
      * @throws ErroredException
      */
-    private static function _create(string $Name, User $actor, Repository $repository = null, string $Description = ""): Repository
+    private static function _create(string $Name, User $actor, Repository $repository = null, string $Description = "", string $RepoId = null): Repository
     {
+        if (is_null($repository) && $RepoId !== self::ROOT) {
+            throw new ErroredException('Please provide a repository to create a folder under');
+        }
         try {
-            return DB::transaction(static function () use ($repository, $Name, $Description, $actor) {
+            return DB::transaction(static function () use ($repository, $Name, $Description, $actor, $RepoId) {
                 $visibility = (($repository instanceof Repository) && $repository->Visibility->value === VisibilityEnum::Private->value) ?
                     VisibilityEnum::Private : VisibilityEnum::Public;
 
                 $repo = Repository::create([
                     'Name' => $Name,
                     'Description' => $Description,
-                    'RepositoryId' => Uuid::uuid4()->toString(),
+                    'RepositoryId' => $RepoId ?? Uuid::uuid4()->toString(),
                     'ParentId' => $repository->Id ?? null,
                     'Visibility' => $visibility->value,
                     'CreatedBy' => $actor->Id,
@@ -54,7 +81,7 @@ class RepositoryService extends PermissionsService
 
                 //copy permissions
                 if ($visibility->value === VisibilityEnum::Private->value) {
-                    self::copyRepoPermissions($repository, $repo);
+                    self::copyRepoPermissions($repository, $repo, $actor);
                 }
 
                 activity()->causedBy($actor)->performedOn($repo)->event('create')->log('Created folder : ' . $repo->Name);
@@ -104,12 +131,12 @@ class RepositoryService extends PermissionsService
 
     public function parentRoot(): bool
     {
-        return ($this->repo->ParentId === self::ROOT);
+        return ($this->repo->ParentId === self::root()->Id);
     }
 
     public function isRoot(): bool
     {
-        return ($this->repo->Id === self::ROOT);
+        return ($this->repo->RepositoryId === self::ROOT);
     }
 
 

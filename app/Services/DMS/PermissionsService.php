@@ -12,30 +12,62 @@ use App\Models\DMS\Document;
 use App\Models\DMS\Repository;
 use App\Services\CRMEmailService;
 use App\Services\PartyService;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 abstract class PermissionsService
 {
-    protected static function copyRepoPermissions(Repository $repository, Repository|Document $child): bool
+    protected static function copyRepoPermissions(Repository $repository, Repository|Document $child, User $actor): bool
     {
         $date = now();
-        $permissions = $repository->permissions->map(function ($permission) use ($child, $date) {
+        $permissions = $repository->permissions->map(function ($permission) use ($actor, $child, $date) {
             return [
                 'Permission' => $permission->Permission,
                 'Party' => $permission->Party,
                 'PartyID' => $permission->PartyID,
                 'Model' => $child->getMorphClass(),
                 'ModelID' => $child->Id,
-                'CreatedBy' => $permission->CreatedBy,
-                'ModifiedBy' => $permission->ModifiedBy,
+                'CreatedBy' => $actor->Id,
+                'ModifiedBy' => $actor->Id,
                 'CreatedOn' => $date,
                 'ModifiedOn' => $date,
             ];
         });
         if ($permissions->count() > 0) {
-            return DB::table("t_SpecialPermissions")->insert($permissions->toArray());
+            return self::bulkInsert($permissions);
         }
         return true;
+    }
+
+    private static function bulkInsert(Collection $permissions): bool
+    {
+        $result = true;
+        foreach ($permissions->chunk(210) as $chunk) {//MSSQL 2100/10
+            $result = $result && DB::table("t_SpecialPermissions")->insert($chunk->toArray());
+        }
+        return $result;
+    }
+
+    protected static function userPermissions(Repository|Document $child, array $permissions, RoleEnum $role, User $actor): bool
+    {
+        $users = User::query()->lock('WITH(NOLOCK)')
+            ->hasPermission($permissions)->get(["Id", "UserID", "Name", "Email"]);
+        $date = now();
+        $roles = $users->map(function ($user) use ($child, $actor, $date, $role) {
+            return [
+                'Permission' => $role->value,
+                'Party' => User::getPrimaryKey(),
+                'PartyID' => $user->Id,
+                'Model' => $child->getMorphClass(),
+                'ModelID' => $child->Id,
+                'CreatedBy' => $actor->Id,
+                'ModifiedBy' => $actor->Id,
+                'CreatedOn' => $date,
+                'ModifiedOn' => $date,
+            ];
+        });
+
+        return self::bulkInsert($roles);
     }
 
     protected function _addPermissions(Repository|Document $child, User|Team $assignee, RoleEnum $role, User $actor, bool $notify = true): SpecialPermission

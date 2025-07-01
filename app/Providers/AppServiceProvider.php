@@ -146,7 +146,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Relation::morphMap([
+        Relation::enforceMorphMap([
 
             //Core
             SpecialPermission::getPrimaryKey() => SpecialPermission::class,

@@ -12,8 +12,8 @@ trait DocumentsTrait
         return $this->morphMany(SMS::class, 'related', "Related", "RelatedID", 'Id');
     }
 
-    /* public function create()
+    public function newDocument()
      {
          //todo fix this
-     }*/
+     }
 }

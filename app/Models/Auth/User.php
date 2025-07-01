@@ -116,12 +116,15 @@ class User extends Authenticatable
         (new UserService($this))->sendPasswordResetNotification();
     }
 
-    public function scopeHasPermission(Builder $query, string $permission): Builder
+    public function scopeHasPermission(Builder $query, string|array $permissions): Builder
     {
-        return $query->whereHas('roles.permissions', function (Builder $query) use ($permission) {
-            $query->where('name', $permission);
-        })->orWhereHas('permissions', function (Builder $query) use ($permission) {
-            $query->where('name', $permission);
+        if (is_string($permissions)) {
+            $permissions = explode(',', $permissions);
+        }
+        return $query->whereHas('roles.permissions', function (Builder $query) use ($permissions) {
+            $query->whereIn('name', $permissions);
+        })->orWhereHas('permissions', function (Builder $query) use ($permissions) {
+            $query->whereIn('name', $permissions);
         });
     }
 
