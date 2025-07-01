@@ -26,16 +26,16 @@
     <p class="text-muted">The overview of the generated Branch Projections.</p>
  
         <div class="row mb-3">
-            <div class="col-md-6">
+            <div class="col-md-12">
                 <label for="scenario" class="form-label">Budget</label>
-                    <input class="form-control" value="{{ $budget->budget->Name }}" readonly>
+                    <input class="for-control" value="{{ $budget->budget->Name }}" readonly>
             </div>
  
-            <div class="col-md-6">
+            {{-- <div class="col-md-6">
                 <label for="currency" class="form-label">Currency</label>
                 <div class="input-group">
                     <input class="form-control" value="{{ $budget->Currency->Code }}" readonly>
-            </div>
+            </div> --}}
         </div>
 {{--
          <div class="mt-3">
@@ -54,7 +54,9 @@
                         <th>#</th>
                         <th>Product</th>
                         <th>Volume</th>
+                        <th>Rate %</th>
                         <th>Value</th>
+                        <th>BudgetLine Value</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -65,7 +67,9 @@
                                 {{ $projection->productType->Name }}
                             </td>
                             <td>{{ $projection->Volume }}</td>
+                            <td>5</td>
                             <td>{{ number_format($projection->Value, 2) }}</td>
+                            <td>500</td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -82,13 +86,13 @@
             'Month 1', 'Month 2', 'Month 3', 'Month 4', 'Month 5', 'Month 6',
             'Month 7', 'Month 8', 'Month 9', 'Month 10', 'Month 11', 'Month 12'
         ];
-        $allocations = $monthlyAllocations;
+        // Map allocations by month for easy lookup
+        $allocMap = $monthlyAllocations->keyBy('Month');
     @endphp
 
-    @if($allocations->count())
+    @if($monthlyAllocations && $monthlyAllocations->count())
         <div class="alert alert-info">
-            <strong>Note:</strong> Monthly allocations are set for the current period.
-            You can update them as needed.
+            <strong>Note:</strong> Monthly allocations you set for the current period.
         </div>
         <table class="table table-bordered table-hover align-middle">
             <thead class="table-light">
@@ -98,14 +102,10 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach ($months as $month)
-                    @php
-                        $alloc = $allocations->firstWhere('Month', $month);
-                        $amount = $alloc ? $alloc->Allocation : 0;
-                    @endphp
+                @foreach ($months as $i => $month)
                     <tr>
                         <td>{{ $month }}</td>
-                        <td>{{ number_format($amount, 2) }}</td>
+                        <td>{{ isset($allocMap[$i+1]) ? number_format($allocMap[$i+1]->Allocation ?? $allocMap[$i+1]->Amount, 2) : '0.00' }}</td>
                     </tr>
                 @endforeach
             </tbody>

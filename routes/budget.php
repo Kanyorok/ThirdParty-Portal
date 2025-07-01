@@ -91,8 +91,11 @@ Route::namespace('Budget')->group(function () {
     //Route::resource('budgetprojections', BudgetProjectionsController::class);
     Route::resource('budgetprojections', BudgetProjectionsController::class);
     Route::resource('entrybyglline', BudgetGLLineEntryController::class);
+    Route::get('/entrybyglline/glview/{budgetId}', [BudgetGLLineEntryController::class, 'glview'])->name('entrybyglline.glview');
     Route::resource('submitapproval', BudgetSubmitController::class);
     Route::resource('budgetapproval', BudgetApprovalController::class);
+    Route::resource('topdownallocation', BudgetTopDownAllocationController::class);
+    Route::post('/topdownallocation/display', [BudgetTopDownAllocationController::class, 'display'])->name('topdownallocation.display');
     Route::resource('topdownallocation', BudgetTopDownAllocationController::class);
     Route::resource('activitymaster', BudgetActivitiesMasterController::class);
     Route::resource('budgetscenerios', BudgetSceneriosController::class);

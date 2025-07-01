@@ -2,57 +2,67 @@
 
 namespace App\Models\Budget;
 
-use App\Models\Core\Branch;
+use App\Models\Auth\User;
+use App\Models\Core\CodeDetail;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class BudgetManualEntry extends Model
+class BudgetGLsAttachments extends Model
 {
     use UserActorTrait,SoftDeletes;
-    
+
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
-    
-    protected $table = 't_BudgetManualEntry';
-    protected $primaryKey = 'Id';
+
     public static function getPrimaryKey(): string
     {
-        return 'BudgetManualEntryId';
+        return 'BudgetGLsAttachmentsID';
     }
+    protected $table = 't_BudgetGLsAttachments';
+    protected $primaryKey = 'Id';
     protected $fillable = [
         'BudgetID',
-        'BranchID',
-        'BudgetLineID',
-        'Amount',
-        'Comments',
+        'GLID',
+        'AccountID',
+        'Description',
+        'GLAccountTypeID',
+
         'CreatedBy',
         'CreatedOn',
         'ModifiedBy',
         'ModifiedOn',
         'DeletedBy',
-        'DeletedOn'
     ];
     protected $casts = [
         'CreatedOn' => 'datetime',
         'ModifiedOn' => 'datetime',
         'DeletedOn' => 'datetime',
     ];
+
     public function budget()
     {
         return $this->belongsTo(Budget::class, 'BudgetID', 'Id');
     }
-    public function branch()
+
+    public function glMaster()
     {
-        return $this->belongsTo(Branch::class, 'BranchID', 'Id');  
+        return $this->belongsTo(BudgetGLMaster::class, 'GLID', 'BudgetGLID');
     }
-    public function budgetLine()
+
+    public function createdBy()
     {
-        return $this->belongsTo(BudgetLine::class, 'BudgetLineID', 'Id');
+        return $this->belongsTo(User::class, 'CreatedBy', 'Id');
     }
-    public function allocations()
+
+    public function modifiedBy()
     {
-        return $this->hasMany(BudgetManualEntryAllocations::class, 'EntryID', 'Id');
+        return $this->belongsTo(User::class, 'ModifiedBy', 'Id');
+    }
+
+    public function deletedBy()
+    {
+        return $this->belongsTo(User::class, 'DeletedBy', 'Id');
     }
 }

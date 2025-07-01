@@ -27,42 +27,32 @@
                     <a href="{{ route('entrybyglline.create') }}" class="btn btn-success">➕ Add Entry</a>
               </div>
             <div style="overflow-x: auto;">
-                @if($groupedEntries->count())
+                @if($entries->count())
                 <table class="table table-bordered table-striped text-center" style="min-width: 800px;">
                     <thead class="table-light">
                         <tr>
                             <th>#</th>
                             <th>Budget</th>
+                            <th>Branch</th>
                             <th>Budget Line</th>
-                            <th>Total Allocation</th>
-                            <th>Source</th>
+                            <th>Amount</th>
+                            {{-- <th>Source</th> --}}
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-
-                        @foreach ($groupedEntries as $budgetId => $entries)
-                            @php
-                                $item = $entries->first();
-                                $totalAllocation = $entries->flatMap(function($entry) { return $entry->allocations ?? collect(); })->sum('Allocation');
-                            @endphp
-                            <tr>
-                                <td>{{ $loop->iteration }}</td>
-                                <td>{{ $item->budget->Name ?? $item->BudgetID }}</td>
-                                <td>
-                                    <a href="{{ route('entrybyglline.glview', $budgetId) }}" class="btn btn-sm btn-info">View Budget Lines</a>
-                                </td>
-                                <td>{{ number_format($totalAllocation, 2) }}</td>
-                                <td>Manual Entry</td>
-                                <td style="width: 200px; white-space: nowrap;">
-                                    <a href="{{ route('entrybyglline.show', $item->BudgetID) }}" class="btn btn-sm btn-primary">👁️</a>
-                                    <form action="{{ route('entrybyglline.destroy', $item->Id) }}" method="POST" class="d-inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this entry?')">🗑️</button>
-                                    </form>
-                                </td>
-                            </tr>
+                        @foreach ($entries as $item)
+                        <tr>
+                            <td>{{ $loop->iteration}}</td>
+                            <td>{{$item->budget->Name}}</td>
+                            <td>{{$item->branch->Name}}</td>
+                            <td>{{$item->budgetLine->LineName}}</td>
+                            <td>{{ $item->Amount}}</td>
+                            {{-- <td>Manual Entry</td> --}}
+                            <td>
+                                <a href="{{ route('entrybyglline.show', $item->Id) }}" class="btn btn-sm btn-info">View Allocations</a>
+                            </td>
+                        </tr>
                         @endforeach
                     </tbody>
                 </table>
