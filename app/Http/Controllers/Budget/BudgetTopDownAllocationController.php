@@ -105,8 +105,10 @@ class BudgetTopDownAllocationController extends Controller
                     ->value('IsBeingEditedBy');
                 // Get the name of the user who is currently editing
                 $editingUserName = User::find($editingUserId)->Name ?? 'Unknown User';
-                // Redirect back with an error message
-                return back()->with('error', "This General Ledger is currently being edited by $editingUserName. Please try again later.");
+                // Redirect back with an error message if not the same user
+                if ($editingUserId !== Auth::id()) {
+                    return back()->with('error', "This General Ledger is currently being edited by $editingUserName. Please try again later.");
+                }
             } else {
                 // Set the IsBeingEdited flag to true for the current user
                 BudgetGLMasterAllocations::where('BudgetID', $validated['BudgetID'])
