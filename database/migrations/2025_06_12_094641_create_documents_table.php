@@ -150,6 +150,7 @@ return new class extends Migration {
         Schema::dropIfExists('t_DocumentRelations');
         Schema::dropIfExists('t_DocumentAttributes');
         Schema::dropIfExists('t_DocumentTaggingRules');
+        Schema::dropIfExists('t_DMSTaggingRules');
         Schema::dropIfExists('t_DocumentTags');
         Schema::dropIfExists('t_DMSTags');
         Schema::dropIfExists('t_DocumentVersions');
