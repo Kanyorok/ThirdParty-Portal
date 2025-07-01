@@ -38,7 +38,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('t_Tenders', static function (Blueprint $table) {
-            $table->dropColumn('RelatedPRID');
+            $table->dropConstrainedForeignId('RelatedPRID');
         });
         Schema::dropIfExists('t_Requisitions');
     }

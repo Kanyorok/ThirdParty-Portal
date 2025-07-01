@@ -33,9 +33,9 @@ class ModuleSeeder extends Seeder
         $this->_seed($this->_insurance($fresh));
         $this->_seed($this->_hrm($fresh));
         $this->_seed($this->_finance($fresh));
+        $this->_seed($this->_budgetline($fresh));
         $this->_seed($this->_settings($fresh));
         $this->_seed($this->_myAccount($fresh));
-        $this->_seed($this->_budgetline($fresh));
     }
 
     protected function _thirdParty(bool $fresh): Collection
@@ -280,27 +280,27 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 1202050, 'Name' => 'Budget Activities', 'Icon' => null, 'Description' => 'Budget Activity Setup', 'Route' => 'budgetactivities.index', 'ParentID' => 1202000],
             ['ModuleID' => 1202200, 'Name' => 'Budget Projections', 'Icon' => null, 'Description' => 'Budget Projections', 'Route' => 'budgetprojections.index', 'ParentID' => 1202000],
             ['ModuleID' => 1202300, 'Name' => 'Entry By Lines', 'Icon' => null, 'Description' => 'Entry by GL Lines', 'Route' => 'entrybyglline.index', 'ParentID' => 1202000],
-            ['ModuleID' => 1202400, 'Name' => 'Submit For Approval', 'Icon' => null, 'Description' => 'Submit Budget for Approval', 'Route' => 'submitapproval.index', 'ParentID' => 1202000],
-            ['ModuleID' => 1202500, 'Name' => 'Approve Branch Budgets', 'Icon' => null, 'Description' => 'Branch Budget Approval', 'Route' => 'budgetapproval.index', 'ParentID' => 1202000],
+//            ['ModuleID' => 1202400, 'Name' => 'Submit For Approval', 'Icon' => null, 'Description' => 'Submit Budget for Approval', 'Route' => 'submitapproval.index', 'ParentID' => 1202000],
+//            ['ModuleID' => 1202500, 'Name' => 'Approve Branch Budgets', 'Icon' => null, 'Description' => 'Branch Budget Approval', 'Route' => 'budgetapproval.index', 'ParentID' => 1202000],
             ['ModuleID' => 1202600, 'Name' => 'Top-Down Budget', 'Icon' => null, 'Description' => 'Top-Down Allocation Tool', 'Route' => 'topdownallocation.index', 'ParentID' => 1202000],
             ['ModuleID' => 1202700, 'Name' => 'Budget Consolidation', 'Icon' => null, 'Description' => 'Consolidate Budgets', 'Route' => 'budgetconsolidation.index', 'ParentID' => 1202000],
 
             // Monitoring & Execution
-            ['ModuleID' => 1203000, 'Name' => 'Monitoring & Execution', 'Icon' => null, 'Description' => 'Monitor & Execute Budget', 'Route' => null, 'ParentID' => 1200000],
-            ['ModuleID' => 1203100, 'Name' => 'Plan vs Actual Monitoring', 'Icon' => null, 'Description' => 'Plan vs Actual Dashboard', 'Route' => 'budgetvsactualdashboard.index', 'ParentID' => 1203000],
-            ['ModuleID' => 1203200, 'Name' => 'Variance Analysis', 'Icon' => null, 'Description' => 'Analyse Variances', 'Route' => 'budgetvarianceanalysis.index', 'ParentID' => 1203000],
-            ['ModuleID' => 1203300, 'Name' => 'KPI Scorecards', 'Icon' => null, 'Description' => 'KPI Dashboard', 'Route' => 'kpiscorecards.index', 'ParentID' => 1203000],
-            ['ModuleID' => 1203400, 'Name' => 'Deviation Alerts', 'Icon' => null, 'Description' => 'Monitor Deviations', 'Route' => 'submitapproval.index', 'ParentID' => 1203000],
-            ['ModuleID' => 1203500, 'Name' => 'Completion Rate View', 'Icon' => null, 'Description' => 'View Completion Rates', 'Route' => 'submitapproval.index', 'ParentID' => 1203000],
+            /* ['ModuleID' => 1203000, 'Name' => 'Monitoring & Execution', 'Icon' => null, 'Description' => 'Monitor & Execute Budget', 'Route' => null, 'ParentID' => 1200000],
+             ['ModuleID' => 1203100, 'Name' => 'Plan vs Actual Monitoring', 'Icon' => null, 'Description' => 'Plan vs Actual Dashboard', 'Route' => 'budgetvsactualdashboard.index', 'ParentID' => 1203000],
+             ['ModuleID' => 1203200, 'Name' => 'Variance Analysis', 'Icon' => null, 'Description' => 'Analyse Variances', 'Route' => 'budgetvarianceanalysis.index', 'ParentID' => 1203000],
+             ['ModuleID' => 1203300, 'Name' => 'KPI Scorecards', 'Icon' => null, 'Description' => 'KPI Dashboard', 'Route' => 'kpiscorecards.index', 'ParentID' => 1203000],
+             ['ModuleID' => 1203400, 'Name' => 'Deviation Alerts', 'Icon' => null, 'Description' => 'Monitor Deviations', 'Route' => 'submitapproval.index', 'ParentID' => 1203000],
+             ['ModuleID' => 1203500, 'Name' => 'Completion Rate View', 'Icon' => null, 'Description' => 'View Completion Rates', 'Route' => 'submitapproval.index', 'ParentID' => 1203000],*/
 
             // Business Intelligence & Deep Analytics
-            ['ModuleID' => 1204000, 'Name' => 'Business Intelligence & Deep Analytics', 'Icon' => null, 'Description' => 'Performance, Risk, and Compliance Insights', 'Route' => null, 'ParentID' => 1200000],
-            ['ModuleID' => 1204100, 'Name' => 'BI & Analytics Dashboard', 'Icon' => null, 'Description' => 'Analytics Dashboard', 'Route' => 'analyticsdashboard.index', 'ParentID' => 1204000],
+//            ['ModuleID' => 1204000, 'Name' => 'Business Intelligence & Deep Analytics', 'Icon' => null, 'Description' => 'Performance, Risk, and Compliance Insights', 'Route' => null, 'ParentID' => 1200000],
+//            ['ModuleID' => 1204100, 'Name' => 'BI & Analytics Dashboard', 'Icon' => null, 'Description' => 'Analytics Dashboard', 'Route' => 'analyticsdashboard.index', 'ParentID' => 1204000],
 
             // Admin & Integration
-            ['ModuleID' => 1205000, 'Name' => 'Admin & Integration', 'Icon' => null, 'Description' => 'System Controls and CBS Integration', 'Route' => null, 'ParentID' => 1200000],
-            ['ModuleID' => 1205100, 'Name' => 'CBS Data Sync', 'Icon' => null, 'Description' => 'CBS Product Auto Sync', 'Route' => 'cbssync.index', 'ParentID' => 1205000],
-            ['ModuleID' => 1205200, 'Name' => 'Data Sync Logs', 'Icon' => null, 'Description' => 'CBS & System Sync Logs', 'Route' => 'datasynclogs.index', 'ParentID' => 1205000],
+//            ['ModuleID' => 1205000, 'Name' => 'Admin & Integration', 'Icon' => null, 'Description' => 'System Controls and CBS Integration', 'Route' => null, 'ParentID' => 1200000],
+//            ['ModuleID' => 1205100, 'Name' => 'CBS Data Sync', 'Icon' => null, 'Description' => 'CBS Product Auto Sync', 'Route' => 'cbssync.index', 'ParentID' => 1205000],
+//            ['ModuleID' => 1205200, 'Name' => 'Data Sync Logs', 'Icon' => null, 'Description' => 'CBS & System Sync Logs', 'Route' => 'datasynclogs.index', 'ParentID' => 1205000],
             //Settings
             // ['ModuleID' => 1206000, 'Name' => 'Settings', 'Icon' => null, 'Description' => 'Budget Settings', 'Route' => null, 'ParentID' => 1200000],
             //['ModuleID' => 1206040, 'Name' => 'Budget Line Categories', 'Icon' => null, 'Description' => 'Budget Lines Categories', 'Route' => 'budgetlinecategories.index', 'ParentID' => 1206000],
@@ -429,15 +429,10 @@ class ModuleSeeder extends Seeder
     {
         $values = collect([
             ['ModuleID' => 700000, 'Name' => ModulesEnum::DMS->description(), 'Icon' => '<i data-feather="file-text"></i>', 'Description' => '', 'ParentID' => null, 'Route' => null],
-            ['ModuleID' => 701000, 'Name' => 'Repository Management', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'drepositorymanagement.index'],
-            ['ModuleID' => 702000, 'Name' => 'Setup Management', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'dtypessetupmanagement.index'],
-            ['ModuleID' => 703000, 'Name' => 'Categories Management', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'categoriesmanagement.index'],
-            ['ModuleID' => 704000, 'Name' => 'Version Control', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'versioncontrolmanagement.index'],
-            ['ModuleID' => 705000, 'Name' => 'Search Management', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'searchmanagement.index'],
-            ['ModuleID' => 706000, 'Name' => 'Renewal Management', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'renewalmanagement.index'],
-            ['ModuleID' => 707000, 'Name' => 'Access Control', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'accessmanagement.index'],
-            ['ModuleID' => 708000, 'Name' => 'Audit Trail', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'trailmanagement.index'],
-            ['ModuleID' => 709000, 'Name' => 'Bulk Upload', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'uploadmanagement.index'],
+            ['ModuleID' => 701000, 'Name' => 'Recent Documents', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'repo.recent'],
+            ['ModuleID' => 702000, 'Name' => 'Repository', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'repo.index'],
+            ['ModuleID' => 703000, 'Name' => 'Tags', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'file-tags.index'],
+            ['ModuleID' => 704000, 'Name' => 'Bulk Upload', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'files.upload'],
 
             ['ModuleID' => 799000, 'Name' => 'Reports', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'reports.index'],
         ]);

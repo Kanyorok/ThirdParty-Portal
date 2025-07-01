@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class BudgetPeriodController extends Controller
 {
@@ -97,7 +98,7 @@ class BudgetPeriodController extends Controller
 
             return redirect()->route('budgetperiod.index')->with('success', 'Budget created successfully.');
 
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             DB::rollBack();
             Log::error('Failed to create budget: ' . $th->getMessage());
 
@@ -136,15 +137,15 @@ class BudgetPeriodController extends Controller
                 'ModifiedBy' => Auth::Id(),
             ]);
 
-            DB::commit();
+
             activity()
                 ->performedOn($period)
                 ->causedBy(Auth::user())
                 ->withProperties(['action' => 'update'])
                 ->log('Updated Period');
-
+            DB::commit();
             return redirect()->route('budgetperiod.index')->with('success', 'Period updated successfully');
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             DB::rollBack();
             Log::error('Failed to Update period:' . $th->getMessage());
 
@@ -167,7 +168,7 @@ class BudgetPeriodController extends Controller
                 ->log('Deleted Period Successfully:' . $id);
 
             return redirect()->route('budgetperiod.index')->with('Success', 'Period Deleted Successfully');
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             Log::error('---DELETE PERIOD ERROR---' . $th->getMessage());
             return redirect()->route('budgetperiod.index')->with('error', 'Failed to delete Period. Please try again.');
         }
