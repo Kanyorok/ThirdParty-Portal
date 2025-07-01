@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Renew Lease Agreement')
 @section('content')
     @if ($errors->any())
         <div class="alert alert-danger">

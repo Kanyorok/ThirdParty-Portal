@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Scheduled Leases')
 @section('styles')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 @endsection
@@ -31,8 +31,8 @@
                     <td>{{ $leaseschedule->tenant->TenantName ?? '-' }}</td>
                     <td>{{ $leaseschedule->property->PropertyName ?? '-' }}</td>
                     <td>{{ $leaseschedule->paymentFrequency->Description ?? '-' }}</td>
-                    <td>{{ $leaseschedule->StartDate ?? '-' }}</td>
-                    <td>{{ $leaseschedule->EndDate ?? '-' }}</td>
+                    <td>{{ $leaseschedule->StartDate ? \Carbon\Carbon::parse($leaseschedule->StartDate)->format('d m Y') : '-' }}</td>
+                    <td>{{ $leaseschedule->EndDate ? \Carbon\Carbon::parse($leaseschedule->EndDate)->format('d m Y') : '-' }}</td>
                     <td>{{ $leaseschedule->BaseRent ?? '-' }}</td>
                     <td>{{ $leaseschedule->ServiceCharge ?? '-' }}</td>
                     <td>{{ $leaseschedule->ParkingFee ?? '-' }}</td>

@@ -7,22 +7,22 @@
             <div class="card-body">
                 <dl class="row">
                     <dt class="col-sm-4">Property Leased</dt>
-                    <dd class="col-sm-8">{{ $leaseschedule->PropertyId ?? '-' }}</dd>
+                    <dd class="col-sm-8">{{ $leaseschedule->property->PropertyName ?? '-' }}</dd>
                     
                     <dt class="col-sm-4">Lease Number</dt>
-                    <dd class="col-sm-8">{{ $leaseschedule->LeaseNumber ?? '-' }}</dd>
+                    <dd class="col-sm-8">{{ $leaseschedule->lease->LeaseNumber ?? '-' }}</dd>
                     
                     <dt class="col-sm-4">Tenant Name</dt>
-                    <dd class="col-sm-8">{{ $leaseschedule->TenantId ?? '-' }}</dd>
+                    <dd class="col-sm-8">{{ $leaseschedule->tenant->TenantName ?? '-' }}</dd>
 
                     <dt class="col-sm-4">Payment Frequency</dt>
-                    <dd class="col-sm-8">{{ $leaseschedule->PaymentFrequency ?? '-' }}</dd>
+                    <dd class="col-sm-8">{{ $leaseschedule->paymentFrequency->Description ?? '-' }}</dd>
 
                     <dt class="col-sm-4">Start Date</dt>
-                    <dd class="col-sm-8">{{ $leaseschedule->StartDate ?? '-' }}</dd>
+                    <dd class="col-sm-8">{{ $leaseschedule->StartDate ? \Carbon\Carbon::parse($leaseschedule->StartDate)->format('d m Y') : '-' }}</dd>
 
                     <dt class="col-sm-4">End Date</dt>
-                    <dd class="col-sm-8">{{ $leaseschedule->EndDate ?? '-' }}</dd>
+                    <dd class="col-sm-8">{{ $leaseschedule->EndDate ? \Carbon\Carbon::parse($leaseschedule->EndDate)->format('d m Y') : '-' }}</dd>
 
                     <dt class="col-sm-4">Base Rent</dt>
                     <dd class="col-sm-8">{{ $leaseschedule->BaseRent }}</dd>
@@ -40,7 +40,7 @@
             </div>
             <div class="card-footer">
                 <a href="#" class="btn btn-primary">Edit</a>
-                <a href="#" class="btn btn-secondary">Back</a>
+                <a href="{{ route('schedulelease.index') }}" class="btn btn-secondary">Back</a>
             </div>
         </div>
     </div>

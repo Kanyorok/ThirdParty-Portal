@@ -93,10 +93,9 @@
         </div>
     </div>
     <script>
+    // On lease select change, update all related fields
     document.getElementById('lease-select').addEventListener('change', function () {
         const selected = this.options[this.selectedIndex];
-
-        document.getElementById('lease-display').value = selected.getAttribute('data-leasenumber');
         document.getElementById('tenant-id').value = selected.getAttribute('data-tenant-id');
         document.getElementById('tenant-display').value = selected.getAttribute('data-tenant-name');
         document.getElementById('property-id').value = selected.getAttribute('data-property-id');
@@ -104,5 +103,13 @@
         document.getElementById('frequency-id').value = selected.getAttribute('data-frequency-id');
         document.getElementById('frequency-display').value = selected.getAttribute('data-frequency-name');
     });
-</script>
+
+    // On page load, trigger change event to auto-fill fields if a lease is already selected
+    window.addEventListener('DOMContentLoaded', function() {
+        var leaseSelect = document.getElementById('lease-select');
+        if (leaseSelect.value) {
+            leaseSelect.dispatchEvent(new Event('change'));
+        }
+    });
+    </script>
 @endsection
