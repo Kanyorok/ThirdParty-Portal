@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers\Property;
 
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 use App\Enums\Core\PermissionEnum;
 use App\Enums\Property\TenantClearanceEnum;
 use App\Http\Controllers\Controller;
@@ -28,7 +32,7 @@ class PropertyTenantClearanceController extends Controller
     }
 
     public function create(){
-        $this->authorize(PermissionEnum::PropertyCategoryCreate, PropertyTenantClearance::class);
+        $this->authorize(PermissionEnum::TenantMentenanceCreate, PropertyTenantClearance::class);
         $newtenants = PropertyNewTenant::where('IsActive', true)->get();
         $codedetails = CodeDetail::where('CodeID', 'DepositRefunded')->get();
         return view('property.tenantmanagement.tenantclearance.create', compact('newtenants', 'codedetails'));
@@ -36,14 +40,14 @@ class PropertyTenantClearanceController extends Controller
 
     public function show($Id)
     {
-        $this->authorize(PermissionEnum::PropertyCategoryView, PropertyTenantClearance::class);
-        $clearancetenant = PropertyTenantClearance::with('tenant')->get()->find($Id);
+        $this->authorize(PermissionEnum::TenantMentenanceView, PropertyTenantClearance::class);
+        $clearancetenant = PropertyTenantClearance::find($Id);
         return view('property.tenantmanagement.tenantclearance.show', compact('clearancetenant'));
     }
 
     public function store(PropertyTenantClearanceRequest $request)
     {
-        $this->authorize(PermissionEnum::PropertyCategoryCreate, PropertyTenantClearance::class);
+        $this->authorize(PermissionEnum::TenantMentenanceCreate, PropertyTenantClearance::class);
         $validatedData = $request->validated();
         $statusEnum = TenantClearanceEnum::from($validatedData['Status']);
         $tenant = PropertyNewTenant::findOrFail($validatedData['Tenant']);
