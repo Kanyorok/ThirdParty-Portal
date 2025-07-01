@@ -39,25 +39,25 @@
                           placeholder="Describe the scenario purpose or assumptions..."></textarea>
             </div>
 
-            <div class="mb-3">
-                <label for="budgetPeriod" class="form-label">Budget Period</label>
-                <select class="form-select" id="budgetPeriod" name="budgetPeriod">
-                    <option disabled selected>Select Period</option>
-                    @foreach ($periods as $period)
-                        <option value="{{$period->Id ?? '-'}}">{{$period->fiscalYear  ?? '-'}}</option>
-                    @endforeach
-                </select>
-            </div>
+        <div class="mb-3">
+            <label for="budgetPeriod" class="form-label">Budget Period</label>
+            <select class="form-select" id="budgetPeriod" name="budgetPeriod">
+                <option disabled selected>Select Period</option>
+            @foreach ($periods as $period)
+                <option value="{{$period->Id ?? '-'}}">{{$period->fiscalYear  ?? '-'}}</option>                
+            @endforeach
+            </select>
+        </div>
 
-            <div class="mb-3">
-                <label class="form-label">Planning Method</label>
-                <select class="form-select" id="planningMethod" name="planningMethod">
-                    <option disabled selected>Select Method</option>
-                    @foreach ($methods as $method)
-                        <option value="{{ $method->Id }}">{{ $method->MethodName }}</option>
-                    @endforeach
-                </select>
-            </div>
+        <div class="mb-3">
+            <label class="form-label">Planning Method</label>
+            <select class="form-select" id="planningMethod" name="planningMethod">
+                <option disabled selected>Select Method</option>
+                @foreach ($methods as $method)
+                    <option value="{{ $method->Id }}">{{ $method->MethodName }}</option>                  
+                @endforeach
+            </select>
+        </div>
 
             <div class="form-check mb-3">
                 <input class="form-check-input" type="checkbox" id="isDefault" name="isDefault">
