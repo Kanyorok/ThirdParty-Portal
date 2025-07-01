@@ -177,19 +177,43 @@ class TransactionTransferService
     }
 
     public function approve(int $id): void
-    {
-        $transfer = TransactionTransfer::findOrFail($id);
-        $transfer->Status = Transfers::Approved;
+{
+    DB::beginTransaction();
+
+    try {
+        $transfer = TransactionTransfer::with('items')->findOrFail($id);
+        $transfer->Status = Transfers::InTransit;
         $transfer->ModifiedBy = Auth::id();
         $transfer->ModifiedOn = now();
         $transfer->save();
 
+        foreach ($transfer->items as $item) {
+            $stockFrom = StockItem::where('ItemID', $item->Item)
+                ->where('Branch', $transfer->FromBranch)
+                ->first();
+
+            if (!$stockFrom) {
+                throw new \Exception("Stock not found for ItemID {$item->Item} in Branch {$transfer->FromBranch}.");
+            }
+
+            if ($stockFrom->CurrentQty < $item->DispatchedQty) {
+                throw new \Exception("Insufficient stock for ItemID {$item->Item} in Branch {$transfer->FromBranch}.");
+            }
+
+            $stockFrom->CurrentQty -= $item->DispatchedQty;
+            $stockFrom->ModifiedBy = Auth::id();
+            $stockFrom->ModifiedOn = now();
+            $stockFrom->save();
+
+            // ❌ REMOVE ToBranch stock increment logic
+        }
+
         Workflow::create([
             'Source'     => 'TransactionTransfer',
             'SourceID'   => $transfer->Id,
-            'Stage'      => Transfers::Approved->label(),
-            'Status'     => Transfers::Approved->value,
-            'Notes'      => 'Transaction Transfer Approved',
+            'Stage'      => Transfers::InTransit->label(),
+            'Status'     => Transfers::InTransit->value,
+            'Notes'      => 'Transaction Transfer Approved: stock deducted from origin branch',
             'CreatedBy'  => Auth::id(),
             'CreatedOn'  => now(),
             'ModifiedBy' => Auth::id(),
@@ -198,12 +222,23 @@ class TransactionTransferService
 
         PendingWorkflow::where('Source', 'TransactionTransfer')
             ->where('SourceID', $transfer->Id)
-            ->delete();
+            ->update(['Stage' => Transfers::InTransit->label()]);
 
         activity()->performedOn($transfer)->causedBy(Auth::user())
             ->withProperties(['attributes' => $transfer->toArray()])
-            ->log('Approved Transaction Transfer');
+            ->log('Approved Transaction Transfer: stock deducted only from FromBranch');
+
+        DB::commit();
+    } catch (\Throwable $th) {
+        DB::rollBack();
+        Log::error('Transfer approval failed: ' . $th->getMessage(), [
+            'transfer_id' => $id,
+            'user_id' => Auth::id(),
+            'exception' => $th,
+        ]);
+        throw $th;
     }
+}
 
     public function reject(int $id): void
     {
@@ -227,7 +262,7 @@ class TransactionTransferService
 
         PendingWorkflow::where('Source', 'TransactionTransfer')
             ->where('SourceID', $transfer->Id)
-            ->delete();
+            ->update(['Stage' => Transfers::Rejected->label()]);
 
         activity()->performedOn($transfer)->causedBy(Auth::user())
             ->withProperties(['attributes' => $transfer->toArray()])

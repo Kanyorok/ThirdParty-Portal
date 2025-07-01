@@ -3,15 +3,13 @@
 namespace App\Services\Inventory;
 
 use App\Models\Inventory\TransactionReceipt;
-use App\Models\Inventory\TransactionReceiptItem;
-use App\Models\Inventory\TransactionTransfer;
-use App\Models\Inventory\TransactionTransferItem;
-use App\Models\Inventory\InterBranchRequisition;
+use App\Models\Inventory\StockItem;
 use App\Models\Core\Workflow;
 use App\Models\Core\PendingWorkflow;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
+use Illuminate\Validation\ValidationException;
 use App\Enums\Inventory\Transfers;
 
 class TransactionReceiptService
@@ -40,7 +38,6 @@ class TransactionReceiptService
             $receipt->ReceiptId = 'REC/' . now()->format('Ymd') . '/' . str_pad($receipt->Id, 4, '0', STR_PAD_LEFT);
             $receipt->save();
 
-            // Add receipt items
             $this->createReceiptItems($receipt, $items);
 
             Workflow::create([
@@ -78,29 +75,64 @@ class TransactionReceiptService
     }
 
     public function createReceiptItems($receipt, $items)
-    {
-        foreach ($items as $itemData) {
-            $item = $receipt->items()->create([
-                'item' => $itemData['item'],
-                'ReceivedQty' => $itemData['received_qty'],
-                'DispatchedQty' => $itemData['dispatched_qty'] ?? null,
-                'Discrepancy' => isset($itemData['dispatched_qty'], $itemData['received_qty']) 
-                    ? $itemData['dispatched_qty'] - $itemData['received_qty'] 
-                    : null,
-                'DamagedQty' => $itemData['damaged_qty'] ?? 0,
-                'CreatedBy' => Auth::id(),
-                'CreatedOn' => Carbon::now(),
-                'ModifiedBy' => Auth::id(),
-                'ModifiedOn' => Carbon::now(),
-            ]);
+{
+    $toBranchId = $receipt->transfer->ToBranch;
 
-            activity()
-                ->causedBy(auth()->user())
-                ->performedOn($item)
-                ->withProperties(['attributes' => $item->toArray()])
-                ->log('Receipt item added');
+    foreach ($items as $index => $itemData) {
+        $storeId = $itemData['store_id'] ?? null;
+        $itemId = $itemData['item'];
+
+        if ($storeId) {
+            $stock = StockItem::where('ItemID', $itemId)
+                ->where('BranchID', $toBranchId)
+                ->where('Store', $storeId)
+                ->first();
+
+            if (!$stock) {
+                throw ValidationException::withMessages([
+                    "items.$index.item" => 'Item not available in the selected <strong>Store</strong> Stock. <a href="' . route('sku.create') . '" target="_blank">Click here to add stock</a>.'
+                ]);
+            }
+        } else {
+            $stock = StockItem::where('ItemID', $itemId)
+                ->where('Branch', $toBranchId)
+                ->first();
+
+            if (!$stock) {
+                throw ValidationException::withMessages([
+                    "items.$index.item" => 'Item not available in the selected <strong>Branch</strong> Stock. <a href="' . route('sku.create') . '" target="_blank">Click here to add stock</a>.'
+                ]);
+            }
         }
+
+        $receiptItem = $receipt->items()->create([
+            'item' => $itemId,
+            'Store' => $storeId,
+            'ReceivedQty' => $itemData['received_qty'],
+            'DispatchedQty' => $itemData['dispatched_qty'] ?? null,
+            'Discrepancy' => isset($itemData['dispatched_qty'], $itemData['received_qty'])
+                ? $itemData['dispatched_qty'] - $itemData['received_qty']
+                : null,
+            'DamagedQty' => $itemData['damaged_qty'] ?? 0,
+            'CreatedBy' => Auth::id(),
+            'CreatedOn' => now(),
+            'ModifiedBy' => Auth::id(),
+            'ModifiedOn' => now(),
+        ]);
+
+        
+        $stock->CurrentQty += $itemData['received_qty'];
+        $stock->ModifiedBy = Auth::id();
+        $stock->ModifiedOn = now();
+        $stock->save();
+
+        activity()
+            ->causedBy(auth()->user())
+            ->performedOn($receiptItem)
+            ->withProperties(['attributes' => $receiptItem->toArray()])
+            ->log('Receipt item added and stock updated');
     }
+}
 
     public function updateReceipt($receipt, $data)
     {

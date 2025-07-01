@@ -1,10 +1,10 @@
 @extends('layouts.app')
-@section('title', 'Budget Activities')
+@section('title', 'Budget Activity Master')
 
 @section('content')
 <div class="card p-4">
     <div class="card-header bg-dark text-white py-4 mb-0" style="font-size: 20px; font-weight: bold;">
-        📊 Budget Activities
+        📊 Budget Activity Master
     </div>
 
 <div class="card-body mb-0">

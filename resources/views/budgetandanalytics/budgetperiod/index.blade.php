@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Budget Overview')
+@section('title', 'Budgets Overview')
 @section('content')
 @if ($errors->any())
     <div class="alert alert-danger">
@@ -13,9 +13,13 @@
 @endif
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <a href="{{ route('budgetperiod.create') }}" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addBudgetModal">
+        {{-- <a href="{{ route('budgetperiod.create') }}" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addBudgetModal">
             + New Budget
+        </a> --}}
+        <a href="{{ route('budgetperiod.create') }}" class="btn btn-success btn-sm">
+             + New Budget
         </a>
+
     </div>
 
     <div class="card p-3">
@@ -36,7 +40,8 @@
                         <th>From</th>
                         <th>To</th>
                         <th>Status</th>
-                        <th>Approval</th>
+                        {{-- <th>Approval</th> --}}
+                        <th>View GL</th>
                         <th>Notes</th>
                         <th>Actions</th>
                     </tr>
@@ -55,10 +60,15 @@
                             </span>
                         </td>
                         <td>
+                            <a href="{{ route('budgetperiod.show',$budget->Id) }}"><span class="badge rounded-pill bg-info text-white">
+                                View GL
+                            </span></a>
+                        </td>
+                        {{-- <td>
                             <span class="badge rounded-pill bg-info text-white">
                                 Draft
                             </span>
-                        </td>
+                        </td> --}}
                         <td>{{ $budget->Notes ?? '-' }}</td>
                         <td>
                             <div class="d-flex gap-2 justify-content-center">
