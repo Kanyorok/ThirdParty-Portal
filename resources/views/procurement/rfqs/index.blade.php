@@ -31,8 +31,8 @@
                         <td>{{ $loop->iteration }}</td>
                         <td>{{ $rfq->RFQNumber ?? '-' }}</td>
                         <td>{{ $rfq->Status ?? '-' }}</td>
-                        <td>{{ $rfq->SubmissionDeadline ? \Carbon\Carbon::parse($rfq->SubmissionDeadline)->format('d M Y') : '-' }}</td>
-                        <td>{{ $rfq->CreatedOn ? \Carbon\Carbon::parse($rfq->CreatedAt)->format('d M Y') : '-' }}</td>
+                        <td>{{ $rfq->SubmissionDeadline ? \Carbon\Carbon::parse($rfq->SubmissionDeadline)->format('d/m/Y') : '-' }}</td>
+                        <td>{{ $rfq->CreatedOn ? \Carbon\Carbon::parse($rfq->CreatedAt)->format('d/m/Y') : '-' }}</td>
                         <td>
                             <a href="{{ route('rfqs.show', $rfq->Id) }}" class="btn btn-sm btn-info">View</a>
                         </td>
@@ -57,15 +57,16 @@
 
             <div class="modal-body">
                 <!-- Comments -->
+                <!-- Comments -->
                 <div class="mb-3">
-                    <label for="Comments" class="form-label">Comments</label>
-                    <textarea name="Comments" id="Comments" rows="3" class="form-control"></textarea>
+                    <label for="Comments" class="form-label">Comments <span class="text-danger">*</span></label>
+                    <textarea name="Comments" id="Comments" rows="3" class="form-control" required></textarea>
                 </div>
 
                 <!-- Submission Deadline -->
                 <div class="mb-3">
-                    <label for="SubmissionDeadline" class="form-label">Submission Deadline</label>
-                    <input type="date" name="SubmissionDeadline" id="SubmissionDeadline" class="form-control">
+                    <label for="SubmissionDeadline" class="form-label">Submission Deadline <span class="text-danger">*</span></label>
+                    <input type="date" name="SubmissionDeadline" id="SubmissionDeadline" class="form-control" required>
                 </div>
             </div>
 

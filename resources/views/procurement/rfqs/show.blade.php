@@ -7,11 +7,21 @@
             @if($rfq->rfqLines->where('RFQId', $rfq->Id)->count()) disabled @endif>
         + New RFQ Line
     </button>
-
+    <div id="printSection">
     <div class="card mb-3">
         <div class="card-body">
             <p><strong>RFQ Number:</strong> {{ $rfq->RFQNumber }}</p>
             <p><strong>RFQ Comments:</strong> {{ $rfq->Comments }}</p>
+            <p><strong>Status:</strong>
+                <span class="badge
+                    @if($rfq->Status === 'Pending') bg-warning
+                    @elseif($rfq->Status === 'Approved') bg-success
+                    @elseif($rfq->Status === 'Rejected') bg-danger
+                    @else bg-secondary @endif">
+                    {{ $rfq->Status }}
+                </span>
+            </p>
+            <p><strong>RFQ Reject Remarks:</strong> {{ $rfq->Remarks }}</p>
 
         </div>
     </div>
@@ -35,38 +45,56 @@
                     <td>{{ $item->RFQLineNo }}</td>
                     <td>{{ $item->ItemName}}</td>
                     <td>{{ $item->Quantity }}</td>
-                    <td>{{ $item->UOM}}</td>
-                    <td>{{ \Carbon\Carbon::parse($rfq->SubmissionDeadline)->format('d M Y') }}</td>
+                    <td>{{ $item->uom->Name}}</td>
+                    <td>{{ \Carbon\Carbon::parse($rfq->SubmissionDeadline)->format('d/m/Y') }}</td>
                 </tr>
             @endforeach
         </tbody>
         <tfoot>
-            <tr>
-            @if ($rfq->Status === 'Approved')
-                    <td colspan="3" class="text-center">
-                    <button type="button" class="btn btn-primary btn-sm">Save</button>
-                </td>
-                <td colspan="3" class="text-center">
-                    <button type="button" class="btn btn-secondary btn-sm">Print</button>
-                </td>
-            @else
-                <td colspan="4" class="text-center">
+        <tr>
+            <td colspan="2" class="text-center">
+                @if ($rfq->Status === 'Pending')
                     <form id="approveForm" action="{{ route('rfqs.approve', $rfq->Id) }}" method="POST">
                         @csrf
-                        <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#approveModal">
+                        <button type="button"
+                                class="btn btn-success btn-sm"
+                                data-bs-toggle="modal"
+                                data-bs-target="#approveModal"
+                                {{ $rfq->rfqLines->isEmpty() ? 'disabled title=Please add at least one RFQ line' : '' }}>
                             Approve
                         </button>
                     </form>
-                </td>
-                <td colspan="3" class="text-center">
-                    <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                @endif
+
+            </td>
+
+            <td colspan="2" class="text-center">
+                @if ($rfq->Status === 'Pending')
+                    <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#rejectModal"
+                            {{ $rfq->rfqLines->isEmpty() ? 'disabled title=Please add at least one RFQ line' : '' }}>
                         Reject
                     </button>
-                </td>
-            @endif
-            </tr>
+                @endif
+            </td>
+
+{{--            <td class="text-center">--}}
+{{--                @if ($rfq->Status === 'Approved')--}}
+{{--                    <button type="button" class="btn btn-primary btn-sm">Save</button>--}}
+{{--                @endif--}}
+{{--            </td>--}}
+
+
+        </tr>
         </tfoot>
+
     </table>
+    </div>
+    <div class="text-end">
+        @if ($rfq->Status === 'Approved')
+            <button type="button" class="btn btn-secondary btn-sm" onclick="printRFQ()">Print</button>
+
+        @endif
+    </div>
     <!-- Reject Modal -->
     <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -169,5 +197,56 @@
         });
     });
 </script>
+<script>
+    function printRFQ() {
+        const content = document.getElementById('printSection').innerHTML;
+        const printWindow = window.open('', '', 'height=800,width=1000');
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>Print RFQ</title>
+                    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+                    <style>
+                        table, th, td {
+                            border: 1px solid #000;
+                            border-collapse: collapse;
+                        }
+                        th, td {
+                            padding: 8px;
+                            text-align: left;
+                        }
+                        body {
+                            font-family: Arial, sans-serif;
+                            padding: 20px;
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${content}
+                </body>
+            </html>
+        `);
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
+    }
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const approveForm = document.getElementById('supplierSelectionForm');
+        const suppliersSelect = document.getElementById('suppliers');
+
+        approveForm.addEventListener('submit', function (e) {
+            const selected = Array.from(suppliersSelect.options).filter(option => option.selected);
+
+            if (selected.length === 0) {
+                e.preventDefault();
+                alert('Please select at least one supplier before approving.');
+            }
+        });
+    });
+</script>
+
 
 @endsection

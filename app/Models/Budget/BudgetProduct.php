@@ -52,4 +52,16 @@ class BudgetProduct extends Model
         return $this->belongsTo(BudgetGLAccount::class, 'GLAccountID', 'Id');
     }
 
+    public function rate()
+    {
+        return $this->hasOneThrough(
+            BudgetDriverRates::class,         // Final model to get to
+            BudgetProductType::class,         // Intermediate model
+            'Id',                       // Foreign key on ProductType table
+            'ProductTypeID',            // Foreign key on ProductRate table
+            'CBSProductID',            // Local key on Product (this model)
+            'Id'                        // Local key on ProductType
+        );
+    }
+
 }

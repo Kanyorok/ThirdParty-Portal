@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Property;
 
 use App\Enums\Core\PermissionEnum;
+use App\Enums\Property\TenantClearanceEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\TenantAndLease\PropertyTenantClearanceRequest;
 use App\Models\Core\CodeDetail;
@@ -36,7 +37,7 @@ class PropertyTenantClearanceController extends Controller
     public function show($Id)
     {
         $this->authorize(PermissionEnum::PropertyCategoryView, PropertyTenantClearance::class);
-        $clearancetenant = PropertyTenantClearance::find($Id);
+        $clearancetenant = PropertyTenantClearance::with('tenant')->get()->find($Id);
         return view('property.tenantmanagement.tenantclearance.show', compact('clearancetenant'));
     }
 
@@ -44,6 +45,7 @@ class PropertyTenantClearanceController extends Controller
     {
         $this->authorize(PermissionEnum::PropertyCategoryCreate, PropertyTenantClearance::class);
         $validatedData = $request->validated();
+        $statusEnum = TenantClearanceEnum::from($validatedData['Status']);
         $tenant = PropertyNewTenant::findOrFail($validatedData['Tenant']);
         $depositRefunded = $validatedData['DepositRefunded'] ? CodeDetail::findOrFail($validatedData['DepositRefunded']) : null;
         $clearance = $this->service->create(
@@ -54,10 +56,39 @@ class PropertyTenantClearanceController extends Controller
             $validatedData['KeysReturned'],
             $depositRefunded,
             $validatedData['AdditionalNotes'],
+            $statusEnum,
             $request->user()
         );
         return redirect()->route('tenantclearance.index')->with('success', 'Tenant created successfully');
 
     }
 
+    public function edit($Id)
+    {
+        $this->authorize(PermissionEnum::PropertyCategoryUpdate, PropertyTenantClearance::class);
+        $clearancetenant = PropertyTenantClearance::with('tenant')->get()->find($Id);
+        $codedetails = CodeDetail::where('CodeID', 'DepositRefunded')->get();
+        return view('property.tenantmanagement.tenantclearance.edit', compact('clearancetenant','codedetails'));
+    }
+
+    public function update(PropertyTenantClearanceRequest $request, $Id)
+    {
+        $this->authorize(PermissionEnum::PropertyCategoryUpdate, PropertyTenantClearance::class);
+        $validatedData = $request->validated();
+        $statusEnum = TenantClearanceEnum::from($validatedData['Status']);
+        $depositRefunded = $validatedData['DepositRefunded'] ? CodeDetail::findOrFail($validatedData['DepositRefunded']) : null;
+        $TenantId = PropertyTenantClearance::where('Id', $Id)->firstOrFail();
+        $this->service->update(
+            $TenantId,
+            $exitdate = \Carbon\Carbon::createFromFormat('d/m/Y', $validatedData['ExitDate']),
+            $validatedData['FinalInspection'],
+            $validatedData['AllDuesPaid'],
+            $validatedData['KeysReturned'],
+            $depositRefunded,
+            $validatedData['AdditionalNotes'],
+            $statusEnum,
+            $request->user()
+        );
+        return redirect()->route('tenantclearance.index')->with('success', 'Tenant Clearance updated successfully');
+    }
 }

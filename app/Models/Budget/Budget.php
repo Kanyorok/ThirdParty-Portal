@@ -48,4 +48,9 @@ class Budget extends Model
     {
         return $this->hasMany(BudgetActivity::class, 'BudgetId', 'Id');
     }
+
+    public function projections()
+    {
+        return $this->hasMany(BudgetDriverProjections::class, 'BudgetId', 'Id');
+    }
 }

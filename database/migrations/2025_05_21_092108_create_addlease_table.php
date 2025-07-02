@@ -10,20 +10,22 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('t_AddLease', function (Blueprint $table) {
-            $table->id();
-            $table->string('Tenant');
-            $table->string('PropertyID');
-            $table->string('BlockID');
-            $table->string('FloorID');
-            $table->string('Unit');
+        Schema::create('t_LeaseCreation', function (Blueprint $table) {
+            $table->id('Id');
+            $table->string('LeaseNumber')->unique();
+            $table->foreignId('Tenant')->constrained('t_TenantMaintenance', 'Id');
+            $table->foreignId('PropertyID')->constrained('t_PropertyRegistry', 'Id');
+            $table->foreignId('BlockID')->constrained('t_PropertyRegistry', 'Id');
+            $table->foreignId('FloorID')->constrained('t_PropertyFloor', 'Id');
+            $table->foreignId('Unit')->constrained('t_PropertyUnit', 'Id');
             $table->date('StartDate');
             $table->date('EndDate');
-            $table->string('PaymentFrequency');
-            $table->integer('MonthlyRent');
-            $table->integer('Deposit');
+            $table->foreignId('PaymentFrequency')->constrained('t_CodeDetails', 'ID');
+            $table->float('MonthlyRent');
+            $table->float('Deposit');
             $table->integer('DueDay');
             $table->string('SpecialTerms');
+            $table->boolean('IsActive')->default(true);
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
@@ -38,6 +40,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('t_AddLease');
+        Schema::dropIfExists('t_LeaseCreation');
     }
 };

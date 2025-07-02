@@ -59,10 +59,7 @@
               {{ $activities->sum('FullAllocation') }}
             </td>
             <td>
-              <div class="d-flex gap-2 justify-content-center">
-                  <a href="#" class="btn btn-sm btn-info">✏️</a>
-                  <a href="#" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteConfirmModal" data-id="{{ $budget->Id }}">🗑️</a>
-              </div>
+              <button class="btn btn-sm btn-danger">Delete</button>
             </td>
           </tr>
         @endforeach
