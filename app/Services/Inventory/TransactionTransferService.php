@@ -98,33 +98,32 @@ class TransactionTransferService
     public function createTransferItems(TransactionTransfer $transfer, array $items): void
     {
         foreach ($items as $itemData) {
+            $itemId = $itemData['item'];
+            $dispatchedQty = $itemData['dispatched_qty'];
+
+            $fromBranch = $transfer->RequisitionType === 'procurement'
+                ? $this->getHQBranchId()
+                : $transfer->FromBranch;
+
+            $stock = StockItem::where('ItemID', $itemId)
+                ->where('Branch', $fromBranch)
+                ->first();
+
+            if (!$stock || $stock->CurrentQty < $dispatchedQty) {
+                throw new \Exception("Insufficient stock for ItemID {$itemId} in Branch {$fromBranch}.");
+            }
+
             $created = TransactionTransferItem::create([
                 'TransferId'    => $transfer->Id,
-                'Item'          => $itemData['item'],
+                'Item'          => $itemId,
                 'ApprovedQty'   => $itemData['approved_qty'],
                 'UOM'           => $itemData['uom'],
-                'DispatchedQty' => $itemData['dispatched_qty'],
+                'DispatchedQty' => $dispatchedQty,
                 'Remarks'       => $itemData['remarks'] ?? null,
                 'CreatedBy'     => Auth::id(),
                 'ModifiedBy'    => Auth::id(),
                 'CreatedOn'     => now(),
                 'ModifiedOn'    => now(),
-            ]);
-
-            // Insert into InventoryHold
-            InventoryHold::create([
-                'ItemID'     => $itemData['item'],
-                'BranchID'   => $transfer->ToBranch,
-                'Quantity'   => $itemData['dispatched_qty'],
-                'Reason'     => CodeDetail::where('CodeID', 'AdjustmentReason')->where('Description', 'In Transit')->value('ID'),
-                'Source'     => CodeDetail::where('CodeID', 'Source')->where('Description', 'Transaction Transfer')->value('ID'),
-                'SourceID'   => $transfer->Id,
-                'Status'     => Transfers::InTransit->value,
-                'Remarks'    => $itemData['remarks'] ?? null,
-                'CreatedBy'  => Auth::id(),
-                'CreatedOn'  => now(),
-                'ModifiedBy' => Auth::id(),
-                'ModifiedOn' => now(),
             ]);
 
             activity()->performedOn($created)->causedBy(Auth::user())
@@ -133,69 +132,76 @@ class TransactionTransferService
         }
     }
 
-      public function approve(int $id): void
-{
-    DB::beginTransaction();
+    public function approve(int $id): void
+    {
+        DB::beginTransaction();
 
-    try {
-        $transfer = TransactionTransfer::with('items')->findOrFail($id);
-        $transfer->Status = Transfers::InTransit;
-        $transfer->ModifiedBy = Auth::id();
-        $transfer->ModifiedOn = now();
-        $transfer->save();
+        try {
+            $transfer = TransactionTransfer::with('items')->findOrFail($id);
+            $transfer->Status = Transfers::InTransit;
+            $transfer->ModifiedBy = Auth::id();
+            $transfer->ModifiedOn = now();
+            $transfer->save();
 
-        foreach ($transfer->items as $item) {
-            $stockFrom = StockItem::where('ItemID', $item->Item)
-                ->where('Branch', $transfer->FromBranch)
-                ->first();
+            foreach ($transfer->items as $item) {
+                $stockFrom = StockItem::where('ItemID', $item->Item)
+                    ->where('Branch', $transfer->FromBranch)
+                    ->first();
 
-            if (!$stockFrom) {
-                throw new \Exception("Stock not found for ItemID {$item->Item} in Branch {$transfer->FromBranch}.");
+                if ($stockFrom) {
+                    $stockFrom->CurrentQty -= $item->DispatchedQty;
+                    $stockFrom->ModifiedBy = Auth::id();
+                    $stockFrom->ModifiedOn = now();
+                    $stockFrom->save();
+                }
+
+                InventoryHold::create([
+                    'ItemID'     => $item->Item,
+                    'BranchID'   => $transfer->ToBranch,
+                    'Quantity'   => $item->DispatchedQty,
+                    'Reason'     => CodeDetail::where('CodeID', 'AdjustmentReason')->where('Description', 'In Transit')->value('ID'),
+                    'Source'     => CodeDetail::where('CodeID', 'Source')->where('Description', 'Transaction Transfer')->value('ID'),
+                    'SourceID'   => $transfer->Id,
+                    'Status'     => Transfers::InTransit->value,
+                    'Remarks'    => $item->Remarks,
+                    'CreatedBy'  => Auth::id(),
+                    'CreatedOn'  => now(),
+                    'ModifiedBy' => Auth::id(),
+                    'ModifiedOn' => now(),
+                ]);
             }
 
-            if ($stockFrom->CurrentQty < $item->DispatchedQty) {
-                throw new \Exception("Insufficient stock for ItemID {$item->Item} in Branch {$transfer->FromBranch}.");
-            }
+            Workflow::create([
+                'Source'     => 'TransactionTransfer',
+                'SourceID'   => $transfer->Id,
+                'Stage'      => Transfers::InTransit->label(),
+                'Status'     => Transfers::InTransit->value,
+                'Notes'      => 'Transaction Transfer Approved: stock deducted from origin branch',
+                'CreatedBy'  => Auth::id(),
+                'CreatedOn'  => now(),
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
+            ]);
 
-            $stockFrom->CurrentQty -= $item->DispatchedQty;
-            $stockFrom->ModifiedBy = Auth::id();
-            $stockFrom->ModifiedOn = now();
-            $stockFrom->save();
+            PendingWorkflow::where('Source', 'TransactionTransfer')
+                ->where('SourceID', $transfer->Id)
+                ->update(['Stage' => Transfers::InTransit->label()]);
 
-            
+            activity()->performedOn($transfer)->causedBy(Auth::user())
+                ->withProperties(['attributes' => $transfer->toArray()])
+                ->log('Approved Transaction Transfer: stock deducted only from FromBranch');
+
+            DB::commit();
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            Log::error('Transfer approval failed: ' . $th->getMessage(), [
+                'transfer_id' => $id,
+                'user_id' => Auth::id(),
+                'exception' => $th,
+            ]);
+            throw $th;
         }
-
-        Workflow::create([
-            'Source'     => 'TransactionTransfer',
-            'SourceID'   => $transfer->Id,
-            'Stage'      => Transfers::InTransit->label(),
-            'Status'     => Transfers::InTransit->value,
-            'Notes'      => 'Transaction Transfer Approved: stock deducted from origin branch',
-            'CreatedBy'  => Auth::id(),
-            'CreatedOn'  => now(),
-            'ModifiedBy' => Auth::id(),
-            'ModifiedOn' => now(),
-        ]);
-
-        PendingWorkflow::where('Source', 'TransactionTransfer')
-            ->where('SourceID', $transfer->Id)
-            ->update(['Stage' => Transfers::InTransit->label()]);
-
-        activity()->performedOn($transfer)->causedBy(Auth::user())
-            ->withProperties(['attributes' => $transfer->toArray()])
-            ->log('Approved Transaction Transfer: stock deducted only from FromBranch');
-
-        DB::commit();
-    } catch (\Throwable $th) {
-        DB::rollBack();
-        Log::error('Transfer approval failed: ' . $th->getMessage(), [
-            'transfer_id' => $id,
-            'user_id' => Auth::id(),
-            'exception' => $th,
-        ]);
-        throw $th;
     }
-}
 
     public function reject(int $id): void
     {
@@ -225,7 +231,6 @@ class TransactionTransferService
             ->withProperties(['attributes' => $transfer->toArray()])
             ->log('Rejected Transaction Transfer');
     }
-
 
     protected function generateTransferId(TransactionTransfer $transfer): string
     {

@@ -3,19 +3,6 @@
 @section('title', 'Create Transfer')
 
 @section('content')
-@if($errors->any())
-    <div class="alert alert-danger">
-        <ul>
-            @foreach($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
-@if(session('error'))
-    <div class="alert alert-danger">{{ session('error') }}</div>
-@endif
-
 <div class="container bg-white shadow rounded p-4">
     <h4 class="mb-4">Select Requisition Type and Number</h4>
 
@@ -89,6 +76,7 @@
                 </div>
             </div>
 
+            <div id="ajax-error" class="alert alert-danger d-none"></div>
             <button type="submit" class="btn btn-primary" id="submitBtn">✅ Submit Transfer</button>
         </div>
     </form>
@@ -208,6 +196,42 @@
                 console.error('Error loading requisition details:', error);
                 requisitionIdHidden.value = '';
             });
+    });
+
+    // AJAX Form Submission
+    document.getElementById('transferForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const form = e.target;
+        const formData = new FormData(form);
+        const submitBtn = document.getElementById('submitBtn');
+        const errorBox = document.getElementById('ajax-error');
+
+        submitBtn.disabled = true;
+        errorBox.classList.add('d-none');
+        errorBox.innerHTML = '';
+
+        fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': formData.get('_token'),
+            },
+            body: formData,
+        })
+        .then(async (response) => {
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.message || 'An error occurred.');
+            }
+            window.location.href = data.redirect;
+        })
+        .catch(error => {
+            errorBox.innerHTML = `<strong>Error:</strong> ${error.message}`;
+            errorBox.classList.remove('d-none');
+        })
+        .finally(() => {
+            submitBtn.disabled = false;
+        });
     });
 </script>
 @endsection
