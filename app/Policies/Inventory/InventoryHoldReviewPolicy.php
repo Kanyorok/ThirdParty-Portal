@@ -20,7 +20,7 @@ class InventoryHoldReviewPolicy
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, InventoryHoldReview $inventoryHoldReview): bool
+    public function view(User $user): bool
     {
         return $user->can(PermissionEnum::InventoryHoldReviewView->value);
     }
@@ -52,9 +52,9 @@ class InventoryHoldReviewPolicy
     /**
      * Determine whether the user can restore the model.
      */
-    public function edit(User $user, InventoryHoldReview $inventoryHoldReview): bool
+    public function edit(User $user): bool
     {
-        return $user->can(PermissionEnum::InventoryHoldReviewDestroy->value);
+        return $user->can(PermissionEnum::InventoryHoldReviewUpdate->value);
     }
 
    
