@@ -18,8 +18,9 @@ class FileResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $users = (new DocumentService($this->resource))->users()->with('photo')->paginate(7, ['ImageId', 'UserID', 'Name']);
-        $tags = $this->resource->tags()->paginate(4, ['TagID', 'Name', 'Visibility']);
+        $service = new DocumentService($this->resource);
+        $users = $service->users()->with('photo')->paginate(7, ['ImageId', 'UserID', 'Name']);
+        $tags = $service->tags(auth()->user())->paginate(4, ['TagID', 'Name', 'Visibility']);
 
         return [
             'id' => $this->DocumentId,

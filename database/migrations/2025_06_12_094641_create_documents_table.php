@@ -51,7 +51,7 @@ return new class extends Migration {
             $table->unsignedBigInteger('Size');
             $table->foreignId('DocumentId')->constrained('t_Documents', 'Id');
             $table->longText('Description')->nullable();
-            $table->longText('Blob')->nullable();
+            $table->longText('Blob')->nullable()->index();
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
@@ -88,7 +88,7 @@ return new class extends Migration {
 
         Schema::create('t_DMSTaggingRules', static function (Blueprint $table) {
             $table->id('Id');
-            $table->foreignId('TagId')->nullable()->constrained('t_DMSTags', 'Id');
+            $table->foreignId('TagId')->constrained('t_DMSTags', 'Id');
             $table->char('Content')->comment('ContentEnum - body/title');
             $table->char('Comparison')->comment('StringComparisonEnum - contains, equal');
             $table->string('Value');

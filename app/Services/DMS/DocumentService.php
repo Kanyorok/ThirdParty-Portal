@@ -7,6 +7,7 @@ use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\RoleEnum;
 use App\Enums\Core\VisibilityEnum;
 use App\Enums\DMS\DisksEnum;
+use App\Events\DMS\DocumentCreatedEvent;
 use App\Exceptions\ErroredException;
 use App\Helpers\SystemHelper;
 use App\Models\Auth\Team;
@@ -18,6 +19,7 @@ use App\Models\DMS\Repository;
 use DateTime;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
@@ -117,7 +119,7 @@ class DocumentService extends PermissionsService
         return $path;
     }
 
-    private function getFileContent(bool $base64 = true): string
+    public function getFileContent(bool $base64 = true): string
     {
         $currentVersion = $this->document->current;
         $content = (new EncryptionService())->decrypt(Storage::disk($currentVersion->Disk->value)->get($currentVersion->Path));
@@ -224,6 +226,8 @@ class DocumentService extends PermissionsService
 
                 activity()->causedBy($actor)->performedOn($document)->event('upload')->log('Uploaded ' . explode($extension->getMimeType(), '/')[0] . ' to folder ' . $repository->Name);
 
+                event(new DocumentCreatedEvent($document));
+
                 $service = new self($document);
                 if ($repository->Visibility->value === VisibilityEnum::Public->value) {
                     return $service->addPermission($actor, RoleEnum::Admin, $actor, false);
@@ -255,9 +259,20 @@ class DocumentService extends PermissionsService
 
     }
 
+    public function tags(User $user): BelongsToMany
+    {
+        return $this->document->tags()->where(function (Builder $query) use ($user) {
+            $query->where('Visibility', VisibilityEnum::Public->value)
+                ->orWhere(function (Builder $query) use ($user) {
+                    $query->where('Visibility', VisibilityEnum::Private->value)
+                        ->where('t_DMSTags.CreatedBy', $user->Id);
+                });
+        });
+    }
+
     private function _tagsHtml(): string
     {
-        /*return  $this->document->tags()->paginate(5)->map(function ($tag) {
+        /*return  ->paginate(5)->map(function ($tag) {
             return ($tag->Visibility->value === VisibilityEnum::Private->value)
                 ? '<span class="badge rounded-pill text-bg-danger">'.$tag->Name.'</span>'
                 : '<span class="badge rounded-pill text-bg-primary">'.$tag->Name.'</span>';

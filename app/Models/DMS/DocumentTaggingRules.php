@@ -6,6 +6,7 @@ use App\Enums\DMS\ContentEnum;
 use App\Enums\DMS\StringComparisonEnum;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DocumentTaggingRules extends Model
@@ -32,5 +33,10 @@ class DocumentTaggingRules extends Model
     public static function getPrimaryKey(): string
     {
         return 'DocumentTaggingRulesId';
+    }
+
+    public function tag(): BelongsTo
+    {
+        return $this->belongsTo(DMSTags::class, 'TagId', 'Id');
     }
 }
