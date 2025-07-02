@@ -144,13 +144,14 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($user->branchRoles as $assignment)
+                             @foreach($user->branchRoles as $assignment)
                                 <tr>
                                     <td>{{ $assignment->branch->Name ?? '—' }}</td>
                                     <td>{{ $assignment->role->name ?? '—' }}</td>
                                     <td>
-                                        <form method="POST" action="{{ route('user_roles.delete', $assignment->id) }}">
-                                            @csrf @method('DELETE')
+                                        <form method="POST" action="#">
+                                            @csrf
+                                            @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
                                         </form>
                                     </td>

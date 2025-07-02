@@ -32,38 +32,44 @@ class AuthenticatedSessionController extends Controller
      * @return RedirectResponse
      * @throws ValidationException
      */
-   public function store(LoginRequest $request): RedirectResponse
+    public function store(LoginRequest $request): RedirectResponse
     {
         // Perform authentication
         $request->authenticate();
-
         $user = $request->user();
 
         // Clear navbar cache
         ModuleService::clearNavbarCache($user);
 
-        // Determine branch to use
+        // Validate branch selection
         $selectedBranchId = $request->input('branch');
 
         if (empty($selectedBranchId)) {
-            // No branch selected, fetch default from employee record
-            $selectedBranchId = DB::table('t_Employees')
-                ->where('Id', $user->EmployeeId)
-                ->value('BranchId');
-
-            if (!$selectedBranchId) {
-                return redirect()->back()->withErrors([
-                    'branch' => 'No branch selected and no default branch found in employee record.'
-                ]);
-            }
+            Auth::logout(); // Logout since session is authenticated but invalid
+            return redirect()->back()->withErrors([
+                'branch' => 'You must select a login branch.'
+            ]);
         }
 
-        // Get branch name from the database
+        // Check if selected branch is valid for this user via ModelRoles
+        $hasAccess = DB::table('t_ModelRoles')
+            ->where('model_id', $user->EmployeeId)
+            ->where('BranchId', $selectedBranchId)
+            ->exists();
+
+        if (!$hasAccess) {
+            Auth::logout();
+            return redirect()->back()->withErrors([
+                'branch' => 'You do not have access to the selected branch.'
+            ]);
+        }
+
+        // Get branch name
         $branchName = DB::table('t_Branches')
             ->where('Id', $selectedBranchId)
             ->value('Name');
 
-        // Save LoginBranchId and LoginBranchName in session
+        // Store in session
         session([
             'LoginBranchId' => $selectedBranchId,
             'LoginBranchName' => $branchName
@@ -71,7 +77,6 @@ class AuthenticatedSessionController extends Controller
 
         return redirect()->intended('/');
     }
-
 
     /**
      * Logout

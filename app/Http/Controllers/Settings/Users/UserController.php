@@ -95,17 +95,18 @@ class UserController extends Controller
      */
     public function show(Request $request, User $user): View
     {
+        // If the user is viewing their own profile, show profile view
         if ($request->user()->UserID === $user->UserID) {
             return view('auth.profile')->with('user', $request->user());
         }
 
+        // Eager load branchRoles with branch and role relationships
+        $user->load(['branchRoles.branch', 'branchRoles.role']);
+
         $branches = Branch::all();
         $roles = Role::all();
 
-        return view('settings.users.show', compact('user', 'branches', 'roles'))
-            ->with('user', $user)
-            ->with('branches', $branches)
-            ->with('roles', $roles);
+        return view('settings.users.show', compact('user', 'branches', 'roles'));
     }
 
     public function edit(User $user): View

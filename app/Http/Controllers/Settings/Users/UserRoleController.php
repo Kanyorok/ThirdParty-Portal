@@ -28,14 +28,15 @@ class UserRoleController extends Controller
      * Handle the incoming request.
      * @throws ValidationException
      */
-    public function store(Request $request, User $user): JsonResponse
+    public function store(Request $request, User $user)
     {
+      
         $validated = $request->validate([
             'role_id' => ['required', 'string'],
             'BranchId' => ['required', 'exists:t_Branches,Id'],
         ]);
 
-        $role = Role::query()->where('t_Roles.id', $validated['role_id'])->first(); // assuming alias or exact table
+        $role = Role::query()->where('id', $validated['role_id'])->first(); // assuming alias or exact table
 
         // Fetch the correct Branch model (App\Models\Core\Branch)
         /** @var \App\Models\Core\Branch|null $branch */
@@ -47,30 +48,17 @@ class UserRoleController extends Controller
 
         (new UserService($user))->setRole($role, $branch, $request->user());
 
-        return $this->succeeded('role updated successfully', route('users.show', [$user->UserID]));
+        return back()->with('success', 'Role and Branch created successfully.');
+        
     }
 
-    public function storeBranch(Request $request)
+    public function destroy(ModelRole $modelRole)
     {
-        dd($request->all());
-        $validator = Validator::make($request->all(), [
-            'model_id' => 'required|exists:t_Users,UserID',
-            'model_type' => 'required|in:App\Models\Auth\User',
-            'BranchId' => 'required|exists:t_Branches,Id',
-            'role_id' => 'required|exists:roles,id',
-        ]);
-
-        if ($validator->fails()) {
-            return back()->withErrors($validator)->withInput();
+        try {
+            $modelRole->delete();
+            return back()->with('success', 'Role assignment deleted successfully.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to delete role assignment.');
         }
-
-        ModelRole::create([
-            'model_id' => $request->model_id,
-            'model_type' => $request->model_type,
-            'role_id' => $request->role_id,
-            'BranchId' => $request->BranchId,
-        ]);
-
-        return back()->with('success', 'Branch role assigned successfully.');
     }
 }

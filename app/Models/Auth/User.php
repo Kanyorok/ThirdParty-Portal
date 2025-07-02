@@ -137,9 +137,9 @@ class User extends Authenticatable
 
     public function branchRoles()
     {
-    return $this->hasMany(ModelRole::class, 'model_id')
-        ->where('model_type', self::class)
-        ->with(['role', 'branch']);
+        return $this->hasMany(ModelRole::class, 'model_id')
+            ->where('model_type', self::getPrimaryKey())
+            ->with(['role', 'branch']);
     }
 
 

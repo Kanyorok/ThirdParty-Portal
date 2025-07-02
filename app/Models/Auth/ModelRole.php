@@ -27,12 +27,12 @@ class ModelRole extends Model
     
     public function branch()
     {
-        return $this->belongsTo(Branch::class, 'BranchId');
+        return $this->belongsTo(\App\Models\Core\Branch::class, 'BranchId', 'Id');
     }
 
     public function role()
     {
-        return $this->belongsTo(Role::class, 'role_id');
+        return $this->belongsTo(\Spatie\Permission\Models\Role::class, 'role_id', 'id');
     }
 
 }

@@ -169,7 +169,7 @@ class UserService
     public function setRole(Role $role, Branch $branch, User $actor): static
     {
         // Assign system-level role using Spatie (optional if you're not using permission checks globally)
-        $this->user->syncRolesWithBranch(['admin'], $branch->Id, $actor->Id);
+        $this->user->syncRolesWithBranch([$role->name], $branch->Id, $actor->Id);
         // Log activity
         activity()
             ->causedBy($actor)
