@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Procurement;
+namespace App\Http\Controllers\Budget;
 
 use App\Enums\Core\ModulesEnum;
 use App\Http\Controllers\Controller;
@@ -12,8 +12,7 @@ use Illuminate\View\View;
 class ReportsController extends Controller
 {
     use ReportsTrait;
-
-    protected const ModulesEnum MODULE = ModulesEnum::Procurement;
+    protected const ModulesEnum MODULE = ModulesEnum::BudgetLine;
 
     public function index(Request $request): JsonResponse|View
     {
