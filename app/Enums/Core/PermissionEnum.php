@@ -49,6 +49,7 @@ use App\Models\Inventory\PriceManagement;
 use App\Models\Inventory\TransactionReceipt;
 use App\Models\Inventory\TransactionTransfer;
 use App\Models\Inventory\StockAdjustment;
+use App\Models\Inventory\InventoryHoldReview;
  
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\PlanLineItems;
@@ -348,6 +349,11 @@ enum PermissionEnum: string
     case StockAdjustmentDestroy= 'stockAdjustment-destroy';
    // case StockAdjustmentApproval= 'stockAdjustment-approval';
 
+    case InventoryHoldReviewView = 'inventoryHoldReview-view';
+    case InventoryHoldReviewUpdate = 'inventoryHoldReview-update';
+    case InventoryHoldReviewCreate = 'inventoryHoldReview-create';
+    case InventoryHoldReviewDestroy= 'inventoryHoldReview-destroy';
+
     /*
      *
      * ========================================  Property Management  ========================================
@@ -471,6 +477,7 @@ enum PermissionEnum: string
             [self::TransactionReceiptView, self::TransactionReceiptUpdate, self::TransactionReceiptCreate, self::TransactionReceiptDestroy],
             [self::TransactionTransferView, self::TransactionTransferUpdate, self::TransactionTransferCreate, self::TransactionTransferDestroy, self::TransactionTransferApproval],
             [self::StockAdjustmentView, self::StockAdjustmentUpdate, self::StockAdjustmentCreate, self::StockAdjustmentDestroy],
+            [self::InventoryHoldReviewView, self::InventoryHoldReviewUpdate, self::InventoryHoldReviewCreate, self::InventoryHoldReviewDestroy],
 
             [self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete],
             [self::PlanLineItemsRead, self::PlanLineItemsWrite, self::PlanLineItemsUpdate, self::PlanLineItemsDelete],
@@ -565,8 +572,9 @@ enum PermissionEnum: string
             self::StockTakeView, self::StockTakeCreate, self::StockTakeUpdate, self::StockTakeDestroy,
             self::TransactionReceiptView, self::TransactionReceiptUpdate, self::TransactionReceiptCreate, self::TransactionReceiptDestroy,
             self::TransactionTransferView, self::TransactionTransferUpdate, self::TransactionTransferCreate, self::TransactionTransferDestroy,self::TransactionTransferApproval,
-            self::StockAdjustmentView, self::StockAdjustmentUpdate, self::StockAdjustmentCreate, self::StockAdjustmentDestroy => ModulesEnum::Inventory,
-            
+            self::StockAdjustmentView, self::StockAdjustmentUpdate, self::StockAdjustmentCreate, self::StockAdjustmentDestroy,
+            self::InventoryHoldReviewView, self::InventoryHoldReviewUpdate, self::InventoryHoldReviewCreate, self::InventoryHoldReviewDestroy => ModulesEnum::Inventory,
+
           //Property Management
             self::PropertyCategoryView,self::PropertyCategoryCreate,self::PropertyCategoryUpdate,self::PropertyCategoryDelete,
             self::PropertyTypeView,self::PropertyTypeCreate,self::PropertyTypeUpdate,self::PropertyTypeDelete,
@@ -648,6 +656,7 @@ enum PermissionEnum: string
             self::TransactionTransferView, self::TransactionTransferUpdate, self::TransactionTransferCreate, self::TransactionTransferDestroy,self::TransactionTransferApproval => 'Transfer',
             self::StockAdjustmentView, self::StockAdjustmentUpdate, self::StockAdjustmentCreate, self::StockAdjustmentDestroy => 'StockAdjustment',
             self::StockTakeView, self::StockTakeCreate, self::StockTakeUpdate, self::StockTakeDestroy => 'Stock Take',
+            self::InventoryHoldReviewView, self::InventoryHoldReviewUpdate, self::InventoryHoldReviewCreate, self::InventoryHoldReviewDestroy => 'InventoryHold Review',
 
             ////////////////////////// Budget and Analytics //////////////////////////////
             self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate,self::BudgetSetupDelete =>'Budget Setup',

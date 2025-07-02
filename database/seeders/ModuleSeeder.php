@@ -230,6 +230,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 498103, 'Name' => 'Inventory Type', 'Icon' => null, 'Description' => 'Inventory Type Management', 'Route' => 'inventorytype.index', 'ParentID' => 498100],
             ['ModuleID' => 498104, 'Name' => 'Unit Of Measure', 'Icon' => null, 'Description' => 'Unit of Measure Management', 'Route' => 'unitofmeasure.index', 'ParentID' => 498100],
             ['ModuleID' => 498105, 'Name' => 'Conversion Mapping', 'Icon' => null, 'Description' => 'UOM Conversion Mapping', 'Route' => 'uomconversion.index', 'ParentID' => 498100],
+            ['ModuleID' => 498106, 'Name' => 'Inventory Hold', 'Icon' => null, 'Description' => 'Inventory Hold Review', 'Route' => 'inventoryholdreview.index', 'ParentID' => 498100],
             ['ModuleID' => 498001, 'Name' => 'Stores', 'Icon' => null, 'Description' => 'List of Stores', 'Route' => 'stores.index', 'ParentID' => 498000],
             ['ModuleID' => 498200, 'Name' => 'Load Opening Stock', 'Icon' => null, 'Description' => 'Load Opening Stock', 'Route' => 'openingstock.create', 'ParentID' => 498000],
 

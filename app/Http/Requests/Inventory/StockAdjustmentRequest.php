@@ -29,7 +29,7 @@ class StockAdjustmentRequest extends FormRequest
         return [
             'AdjustmentDate' => ['required', 'date'],
             'Branch' => ['required', 'integer', 'exists:t_Branches,Id'],
-            'Reason' => ['required', 'string', 'max:255'],
+            'Reason' => ['required', 'integer', 'exists:t_CodeDetails,ID'],
             'AdjustedBy' => ['required', 'integer', 'exists:t_Users,Id'], 
             'items' => ['required', 'array', 'min:1'],
             'items.*.Item' => ['required', 'integer', 'exists:t_Items,Id'],

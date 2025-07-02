@@ -14,6 +14,8 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use App\Enums\Inventory\Transfers;
 use App\Models\Core\Branch;
+use App\Models\Inventory\InventoryHold;
+use App\Models\Core\CodeDetail;
 
 class TransactionTransferService
 {
@@ -109,74 +111,29 @@ class TransactionTransferService
                 'ModifiedOn'    => now(),
             ]);
 
+            // Insert into InventoryHold
+            InventoryHold::create([
+                'ItemID'     => $itemData['item'],
+                'BranchID'   => $transfer->ToBranch,
+                'Quantity'   => $itemData['dispatched_qty'],
+                'Reason'     => CodeDetail::where('CodeID', 'AdjustmentReason')->where('Description', 'In Transit')->value('ID'),
+                'Source'     => CodeDetail::where('CodeID', 'Source')->where('Description', 'Transaction Transfer')->value('ID'),
+                'SourceID'   => $transfer->Id,
+                'Status'     => Transfers::InTransit->value,
+                'Remarks'    => $itemData['remarks'] ?? null,
+                'CreatedBy'  => Auth::id(),
+                'CreatedOn'  => now(),
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
+            ]);
+
             activity()->performedOn($created)->causedBy(Auth::user())
                 ->withProperties(['attributes' => $itemData])
                 ->log('Created Transaction Transfer Item');
         }
     }
 
-    public function update(TransactionTransfer $transfer, array $data): TransactionTransfer
-    {
-        DB::beginTransaction();
-
-        try {
-            $items = $data['items'] ?? [];
-            unset($data['items']);
-
-            if ($data['RequisitionType'] === 'procurement') {
-                $requisition = \App\Models\Procurement\Requisitions::findOrFail($data['RequisitionId']);
-                $fromBranch = $this->getHQBranchId();
-                $toBranch = $requisition->BranchID;
-            } else {
-                $requisition = InterBranchRequisition::findOrFail($data['RequisitionId']);
-                $fromBranch = $requisition->FromBranch;
-                $toBranch = $requisition->ToBranch;
-            }
-
-            $transfer->fill([
-                'TransferDate'     => $data['TransferDate'],
-                'TransferredBy'    => $data['TransferredBy'],
-                'RequisitionId'    => $data['RequisitionId'],
-                'RequisitionType'  => $data['RequisitionType'],
-                'FromBranch'       => $fromBranch,
-                'ToBranch'         => $toBranch,
-                'ModifiedBy'       => Auth::id(),
-                'ModifiedOn'       => now(),
-            ]);
-            $transfer->save();
-
-            foreach ($items as $itemData) {
-                TransactionTransferItem::updateOrCreate(
-                    [
-                        'TransferId' => $transfer->Id,
-                        'Item'       => $itemData['item'],
-                    ],
-                    [
-                        'ApprovedQty'   => $itemData['approved_qty'],
-                        'DispatchedQty' => $itemData['dispatched_qty'],
-                        'UOM'           => $itemData['uom'],
-                        'Remarks'       => $itemData['remarks'] ?? null,
-                        'ModifiedBy'    => Auth::id(),
-                        'ModifiedOn'    => now(),
-                    ]
-                );
-            }
-
-            DB::commit();
-
-            activity()->performedOn($transfer)->causedBy(Auth::user())
-                ->withProperties(['attributes' => $data, 'items' => $items])
-                ->log('Updated Transaction Transfer');
-
-            return $transfer;
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            Log::error('Failed to update transaction transfer: ' . $th->getMessage());
-            throw $th;
-        }
-    }
-
-    public function approve(int $id): void
+      public function approve(int $id): void
 {
     DB::beginTransaction();
 
@@ -205,7 +162,7 @@ class TransactionTransferService
             $stockFrom->ModifiedOn = now();
             $stockFrom->save();
 
-            // ❌ REMOVE ToBranch stock increment logic
+            
         }
 
         Workflow::create([
@@ -268,6 +225,7 @@ class TransactionTransferService
             ->withProperties(['attributes' => $transfer->toArray()])
             ->log('Rejected Transaction Transfer');
     }
+
 
     protected function generateTransferId(TransactionTransfer $transfer): string
     {
