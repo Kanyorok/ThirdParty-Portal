@@ -118,10 +118,19 @@ class User extends Authenticatable
         return $this->hasMany(LoanAssignment::class, 'UserId', 'Id');
     }
 
-    public function role(): ?Role
+    public function role(): ?\Spatie\Permission\Models\Role
     {
-        $role = $this->roles()->first();
-        return ($role instanceof Role) ? $role : null;
+        $branchId = session('LoginBranchId');
+
+        if (!$branchId) {
+            return null; // No branch selected, cannot determine role
+        }
+
+        return \App\Models\Auth\ModelRole::where('model_id', $this->Id)
+            ->where('model_type', 'UserID')
+            ->where('BranchId', $branchId)
+            ->with('role')
+            ->first()?->role;
     }
 
     public function teams(): BelongsToMany
