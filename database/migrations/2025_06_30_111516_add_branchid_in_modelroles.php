@@ -13,9 +13,7 @@ return new class extends Migration
     {
         Schema::table('t_ModelRoles', function (Blueprint $table) {
             $table->foreignId('BranchId')
-                ->nullable()
-                ->constrained('t_Branches', 'Id')
-                ->onDelete('set null'); // optional: handle deletions
+                ->constrained('t_Branches', 'Id');
         });
     }
 

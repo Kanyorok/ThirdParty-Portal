@@ -23,12 +23,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Models\Role;
-use Spatie\Permission\Traits\HasRoles;
+use App\Traits\Controller\HasBranchRoles;
 use App\Models\Auth\ModelRole;
+use Illuminate\Support\Collection;
 
 class User extends Authenticatable
 {
-    use ImageTrait, HasFactory, Notifiable,UserActorTrait, SoftDeletes, HasRoles;
+    use ImageTrait, HasFactory, Notifiable,UserActorTrait, SoftDeletes, HasBranchRoles;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -54,6 +55,33 @@ class User extends Authenticatable
         'Linked'    => 'bool',
         'CreatedBy' => 'integer',
     ];
+
+    public function syncRolesWithBranch(array|Collection $roles, int $branchId, int $actorId = 1): void
+    {
+        // Remove existing roles for this user + branch
+        ModelRole::where([
+            'model_id'   => $this->Id,
+            'model_type' => self::class,
+            'BranchId'   => $branchId,
+        ])->delete();
+
+        foreach ($roles as $role) {
+            $roleModel = $role instanceof Role
+                ? $role
+                : Role::where('name', $role)->firstOrFail();
+
+            ModelRole::create([
+                'model_id'   => $this->Id,
+                'model_type' => self::getPrimaryKey(),
+                'role_id'    => $roleModel->id,
+                'BranchId'   => $branchId,
+                'CreatedBy'  => $actorId,
+                'CreatedOn'  => now(),
+                'ModifiedBy' => $actorId,
+                'ModifiedOn' => now(),
+            ]);
+        }
+    }
 
     public static function getPrimaryKey(): string
     {

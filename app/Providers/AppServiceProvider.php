@@ -121,6 +121,7 @@ use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\InterBranchRequisition;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\PlanLineItems;
+use App\Models\Auth\ModelRole;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -190,6 +191,7 @@ class AppServiceProvider extends ServiceProvider
             TransactionReceipt::getPrimaryKey() => TransactionReceipt::class,
             TransactionTransfer::getPrimaryKey() => TransactionTransfer::class,
             StockAdjustment::getPrimaryKey() => StockAdjustment::class,
+            ModelRole::getPrimaryKey() => ModelRole::class,
           
             ///////// Budget and Analytics /////////
             BudgetActivityMaster::getPrimaryKey()=>BudgetActivityMaster::class,

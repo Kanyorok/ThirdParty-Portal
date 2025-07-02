@@ -168,17 +168,8 @@ class UserService
 
     public function setRole(Role $role, Branch $branch, User $actor): static
     {
-        // Assign system-level role
-        $this->user->syncRoles($role->name);
-
-        // Add branch-level role in t_ModelRoles
-        ModelRole::firstOrCreate([
-            'model_id' => $this->user->Id,
-            'model_type' => User::getPrimaryKey(),
-            'role_id' => $role->id,
-            'BranchId' => $branch->Id,
-        ]);
-
+        // Assign system-level role using Spatie (optional if you're not using permission checks globally)
+        $this->user->syncRolesWithBranch(['admin'], $branch->Id, $actor->Id);
         // Log activity
         activity()
             ->causedBy($actor)
