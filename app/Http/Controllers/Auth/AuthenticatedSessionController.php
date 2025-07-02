@@ -53,7 +53,7 @@ class AuthenticatedSessionController extends Controller
 
         // Check if selected branch is valid for this user via ModelRoles
         $hasAccess = DB::table('t_ModelRoles')
-            ->where('model_id', $user->EmployeeId)
+            ->where('model_id', $user->Id)
             ->where('BranchId', $selectedBranchId)
             ->exists();
 

@@ -126,7 +126,7 @@ class User extends Authenticatable
             return null; // No branch selected, cannot determine role
         }
 
-        return \App\Models\Auth\ModelRole::where('model_id', $this->Id)
+        return ModelRole::where('model_id', $this->Id)
             ->where('model_type', 'UserID')
             ->where('BranchId', $branchId)
             ->with('role')
