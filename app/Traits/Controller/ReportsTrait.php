@@ -41,7 +41,7 @@ trait ReportsTrait
 
     public function show(Request $request, Report $report): View|RedirectResponse
     {
-        if ($report->ModuleId !== self::Module->value) {
+        if ($report->ModuleId !== self::MODULE->value) {
             return redirect()->back()->with('fail', 'invalid report.');
         }
         //todo check permissions
@@ -100,7 +100,7 @@ trait ReportsTrait
 
     public function export(Request $request, Report $report, string $format): StreamedResponse|RedirectResponse
     {
-        if ($report->ModuleId !== self::Module->value) {
+        if ($report->ModuleId !== self::MODULE->value) {
             return redirect()->back()->with('fail', 'invalid report.');
         }
         //todo check permissions

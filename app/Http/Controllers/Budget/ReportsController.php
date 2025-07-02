@@ -11,10 +11,8 @@ use Illuminate\View\View;
 
 class ReportsController extends Controller
 {
-    protected const ModulesEnum MODULE = ModulesEnum::BudgetLine;
-
-
     use ReportsTrait;
+    protected const ModulesEnum MODULE = ModulesEnum::BudgetLine;
 
     public function index(Request $request): JsonResponse|View
     {
