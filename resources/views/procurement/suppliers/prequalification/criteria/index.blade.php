@@ -50,7 +50,7 @@
 
                             <a href="{{ route('preqcriteria.edit', $section->RoundId) }}"
                                class="btn btn-sm btn-outline-warning">
-                               ✏️ Edit All
+                               Edit All
                             </a>
 
                             <form action="{{ route('preqcriteria.destroy', $section->Id) }}" method="POST" class="d-inline"
@@ -58,7 +58,7 @@
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-outline-danger">
-                                    🗑️ Delete Round
+                                    Delete Round
                                 </button>
                             </form>
                         </td>
