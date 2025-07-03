@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Support\Facades\Route;
+
 use App\Http\Controllers\Procurement\ApprovalSetupController;
 use App\Http\Controllers\Procurement\AwardsController;
 use App\Http\Controllers\Procurement\BidEvaluationController;
@@ -25,6 +27,9 @@ use App\Http\Controllers\Procurement\PlanvsActualController;
 use App\Http\Controllers\Procurement\PrequalificationApplicationsController;
 use App\Http\Controllers\Procurement\PrequalificationEvalAprovalController;
 use App\Http\Controllers\Procurement\PrequalificationEvaluationController;
+use App\Http\Controllers\Procurement\PrequalificationPeriodController;
+use App\Http\Controllers\Procurement\PrequalificationCriteriaController;
+use App\Http\Controllers\Procurement\PrequalificationCriteriaSetupController;
 use App\Http\Controllers\Procurement\PrequalifiedSuppliersController;
 use App\Http\Controllers\Procurement\ProcurementApprovalController;
 use App\Http\Controllers\Procurement\ProcurementModeController;
@@ -63,33 +68,7 @@ use App\Http\Controllers\Procurement\TenderResponseController;
 use App\Http\Controllers\Procurement\TenderSubmissionController;
 use App\Http\Controllers\Procurement\TenderTypeController;
 use App\Http\Controllers\Procurement\TimelineController;
-use Illuminate\Support\Facades\Route;
 
-// use App\Http\Controllers\procurement\SectionController;
-use App\Http\Controllers\Procurement\CalenderBasedController;
-use App\Http\Controllers\Procurement\DelayedItemsController;
-use App\Http\Controllers\Procurement\PlanvsActualController;
-use App\Http\Controllers\Procurement\PlanFromNeedsController;
-use App\Http\Controllers\Procurement\PlanManualInputController;
-use App\Http\Controllers\Procurement\SubmitForApprovalController;
-use App\Http\Controllers\Procurement\PlanEditController;
-use App\Http\Controllers\Procurement\PlanApprovalInboxController;
-use App\Http\Controllers\Procurement\PlanExectionDashboardController;
-use App\Http\Controllers\Procurement\DepartmentNeedApprovalController;
-use App\Http\Controllers\Procurement\SectionController;
-use App\Http\Controllers\Procurement\ProcurementSchedulePlanController;
-use App\Http\Controllers\Procurement\ProcurementSubmitPlanController;
-use App\Http\Controllers\Procurement\SupplierListingController;
-use App\Http\Controllers\Procurement\PrequalificationCriteriaController;
-use App\Http\Controllers\Procurement\PrequalificationApplicationsController;
-use App\Http\Controllers\Procurement\PrequalificationEvaluationController;
-use App\Http\Controllers\Procurement\PrequalificationEvalAprovalController;
-use App\Http\Controllers\Procurement\PrequalifiedSuppliersController;
-use App\Http\Controllers\Procurement\TenderBidResponsivenessController;
-use App\Http\Controllers\Procurement\ApprovalSetupController;
-use App\Http\Controllers\Procurement\AwardsController;
-use App\Http\Controllers\Procurement\PrequalificationPeriodController;
-use App\Http\Controllers\Procurement\PrequalificationCriteriaSetupController;
 
 
 Route::namespace('Procurement')->prefix('procurement')->group(function () {
