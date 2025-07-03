@@ -10,12 +10,18 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('t_PaymentFrequency', function (Blueprint $table) {
-            $table->id();
-            $table->string('FrequencyName');
-            $table->string('FrequencyCode');
-            $table->integer('NumberOfMonths');
-            $table->string('Description');
+        Schema::create('t_ScheduleLease', function (Blueprint $table) {
+            $table->id('Id');
+            $table->foreignId('LeaseNumber')->constrained('t_LeaseCreation', 'Id');
+            $table->foreignId('TenantId')->constrained('t_LeaseCreation', 'Id');
+            $table->foreignId('PropertyId')->constrained('t_LeaseCreation', 'Id');
+            $table->foreignId('PaymentFrequency')->constrained('t_CodeDetails', 'ID');
+            $table->date('StartDate');
+            $table->date('EndDate');
+            $table->float('BaseRent');
+            $table->float('ServiceCharge');
+            $table->float('ParkingFee');
+            $table->float('OtherCharges');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
@@ -30,6 +36,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('t_PaymentFrequency');
+        Schema::dropIfExists('t_ScheduleLease');
     }
 };

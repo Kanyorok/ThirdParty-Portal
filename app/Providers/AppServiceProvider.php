@@ -75,7 +75,8 @@ use App\Models\Inventory\UnitOfMeasure;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\DepartmentNeeds;
 use App\Models\Procurement\Order;
-use App\Models\Procurement\PlanLineItems;
+use App\Models\Procurement\PrequalificationPeriod;
+use App\Models\Procurement\RequisitionLine;
 use App\Models\Procurement\ProcurementMethod;
 use App\Models\Procurement\RequisitionLine;
 use App\Models\Procurement\Requisitions;
@@ -84,7 +85,10 @@ use App\Models\Procurement\RFQLine;
 use App\Models\Procurement\SchedulePlan;
 use App\Models\PropertyManagement\PropertyBlock;
 use App\Models\PropertyManagement\PropertyFloor;
+use App\Models\PropertyManagement\PropertyLeaseRenewal;
+use App\Models\PropertyManagement\PropertyUnit;
 use App\Models\PropertyManagement\PropertyNewTenant;
+use App\Models\PropertyManagement\PropertyLeaseSchedule;
 use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyTenantClearance;
 use App\Models\PropertyManagement\PropertyType;
@@ -110,7 +114,7 @@ use App\Policies\Inventory\TransactionTransferPolicy;
 use App\Policies\Inventory\UnitOfMeasurePolicy;
 use App\Policies\Procurement\DepartmentNeedsPolicy;
 use App\Policies\Procurement\OrderPolicy;
-use App\Policies\Procurement\PlanManualInputPolicy;
+use App\Policies\Procurement\PrequalificationPeriodPolicy;
 use App\Policies\Procurement\ProcurementMethodPolicy;
 use App\Policies\Procurement\ProcurementPlanMaintainPolicy;
 use App\Policies\Procurement\RequisitionLinesPolicy;
@@ -123,6 +127,8 @@ use App\Policies\PropertyManagement\PropertyNewTenantPolicy;
 use App\Policies\PropertyManagement\PropertyRegistryPolicy;
 use App\Policies\PropertyManagement\PropertyStructuralPolicy;
 use App\Policies\PropertyManagement\PropertyTenantClearancePolicy;
+use App\Policies\PropertyManagement\PropertyLeaseSchedulePolicy;
+use App\Policies\PropertyManagement\PropertyLeaseRenewalPolicy;
 use App\Policies\PropertyManagement\PropertyTypePolicy;
 use App\Policies\PropertyManagement\PropertyUnitPolicy;
 use App\Policies\RolePolicy;
@@ -130,6 +136,35 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Permission\Models\Role;
+use App\Policies\Inventory\ItemMasterListPolicy;
+use App\Policies\Inventory\ItemCategoryPolicy;
+use App\Policies\Inventory\ItemTypePolicy;
+use App\Policies\Inventory\StockItemPolicy;
+use App\Policies\Inventory\InventoryTypePolicy;
+use App\Policies\Inventory\StorePolicy;
+use App\Policies\Inventory\UnitOfMeasurePolicy;
+use App\Policies\Inventory\InterBranchRequisitionPolicy;
+use App\Policies\Inventory\PriceManagementPolicy;
+use App\Policies\Inventory\TransactionReceiptPolicy;
+use App\Policies\Inventory\TransactionTransferPolicy;
+use App\Policies\Inventory\StockAdjustmentPolicy;
+use App\Policies\Inventory\InventoryHoldReviewPolicy;
+use App\Models\Inventory\ItemType;
+use App\Models\Inventory\ItemMasterList;
+use App\Models\Inventory\TransactionReceipt;
+use App\Models\Inventory\TransactionTransfer;
+use App\Models\Inventory\ItemCategories;
+use App\Models\Inventory\StockItem;
+use App\Models\Inventory\UnitOfMeasure;
+use App\Models\Inventory\Store;
+use App\Models\Inventory\InventoryType;
+use App\Models\Inventory\PriceManagement;
+use App\Models\Inventory\StockAdjustment;
+use App\Models\Inventory\InventoryHoldReview;
+use App\Models\Inventory\InterBranchRequisition;
+use App\Models\Procurement\ConsolidatedProcurementPlan;
+use App\Models\Procurement\PlanLineItems;
+
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -210,7 +245,8 @@ class AppServiceProvider extends ServiceProvider
             TransactionReceipt::getPrimaryKey() => TransactionReceipt::class,
             TransactionTransfer::getPrimaryKey() => TransactionTransfer::class,
             StockAdjustment::getPrimaryKey() => StockAdjustment::class,
-
+            InventoryHoldReview::getPrimaryKey() => InventoryHoldReview::class,
+          
             ///////// Budget and Analytics /////////
             BudgetActivityMaster::getPrimaryKey() => BudgetActivityMaster::class,
             BudgetLinesGLAccount::getPrimaryKey() => BudgetLinesGLAccount::class,
@@ -272,6 +308,10 @@ class AppServiceProvider extends ServiceProvider
             PropertyTenantClearance::getPrimaryKey() => PropertyTenantClearance::class,
             PropertyFloor::getPrimaryKey() => PropertyFloor::class,
             PropertyUnit::getPrimaryKey() => PropertyUnit::class,
+            PropertyLeaseSchedule::getPrimaryKey() => PropertyLeaseSchedule::class,
+            PropertyLeaseRenewal::getPrimaryKey() => PropertyLeaseRenewal::class,
+            
+            PrequalificationPeriod::getPrimaryKey() => PrequalificationPeriod::class,
         ]);
 
         Gate::policy(Role::class, RolePolicy::class);
@@ -299,6 +339,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(InterBranchRequisition::class, InterBranchRequisitionPolicy::class);
         Gate::policy(TransactionReceipt::class, TransactionReceiptPolicy::class);
         Gate::policy(StockAdjustment::class, StockAdjustmentPolicy::class);
+        Gate::policy(InventoryHoldReview::class, InventoryHoldReviewPolicy::class);
         Gate::policy(TransactionTransfer::class, TransactionTransferPolicy::class);
         Gate::policy(CategoryMaster::class, PropertyCategoryPolicy::class);
         Gate::policy(PropertyType::class, PropertyTypePolicy::class);
@@ -308,6 +349,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PropertyTenantClearance::class, PropertyTenantClearancePolicy::class);
         Gate::policy(PropertyFloor::class, PropertyFloorPolicy::class);
         Gate::policy(PropertyUnit::class, PropertyUnitPolicy::class);
+        Gate::policy(PropertyLeaseSchedule::class, PropertyLeaseSchedulePolicy::class);
+        Gate::policy(PropertyLeaseRenewal::class, PropertyLeaseRenewalPolicy::class);
+        Gate::policy(PrequalificationPeriod::class, PrequalificationPeriodPolicy::class);
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);
          Event::listen(SMSSendEvent::class, SMSSendListener::class);

@@ -2,8 +2,8 @@
 @section('title', 'Property Management')
 
 @section('content')
-    <div class="container mt-5" style="max-width: 850px;">
-        <h4 class="fw-bold mb-4">✏️ Edit Tenant Details</h4>
+<div class="container mt-5" style="max-width: 850px;">
+    <h4 class="fw-bold mb-4">Edit Tenant Details</h4>
 
         <div class="card shadow border-0">
             <div class="card-header bg-light fw-semibold text-primary">
@@ -29,11 +29,10 @@
                             </select>
                         </div>
 
-                        <div class="col-md-5">
-                            <label class="form-label">Tenant Name</label>
-                            <input type="text" name="TenantName" class="form-control"
-                                   value="{{ old('TenantName', $newtenant->TenantName) }}">
-                        </div>
+                    <div class="col-md-5">
+                        <label class="form-label">Tenant Name</label>
+                        <input type="text" name="TenantName" class="form-control" value="{{ old('TenantName', $newtenant->TenantName) }}" >
+                    </div>
 
                         <div class="col-md-3">
                             <label class="form-label">ID/Registration No.</label>
@@ -95,13 +94,13 @@
                         </select>
                     </div>
 
-                    <!-- Buttons -->
-                    <div class="text-end">
-                        <button type="submit" class="btn btn-success">💾 Update Tenant</button>
-                        <a href="{{ route('addtenant.index') }}" class="btn btn-outline-secondary">↩ Cancel</a>
-                    </div>
+                <!-- Buttons -->
+                <div class="text-end">
+                    <button type="submit" class="btn btn-success">Update Tenant</button>
+                    <a href="{{ route('addtenant.index') }}" class="btn btn-outline-secondary">Cancel</a>
                 </div>
-            </form>
-        </div>
+            </div>
+        </form>
+    </div>
 </div>
 @endsection

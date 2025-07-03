@@ -1,52 +1,90 @@
 @extends('layouts.app')
-@section('title', 'Patent Details')
+
+@section('title', 'Lease Details')
+
 @section('content')
-    <div class="container mt-5" style="max-width: 700px;">
-        <h3 class="mb-4">Patent Details</h3>
-        <div class="card">
-            <div class="card-body">
-                <dl class="row">
-                    <dt class="col-sm-4">Tenant</dt>
-                    <dd class="col-sm-8">{{ $newlease->Tenant }}</dd>
+<div class="container mt-5" style="max-width: 800px;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold">Lease Agreement Details</h3>
+        <a href="{{ route('addlease.index') }}" class="btn btn-outline-secondary btn-sm">← Back to List</a>
+    </div>
 
-                    <dt class="col-sm-4">Property ID</dt>
-                    <dd class="col-sm-8">{{ $newlease->PropertyID ?? '-' }}</dd>
+    <form>
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <div class="mb-3">
+                    <label class="form-label">Lease Number</label>
+                    <input type="text" class="form-control" value="{{ $newlease->LeaseNumber ?? '-' }}" readonly>
+                </div>
 
-                    <dt class="col-sm-4">Block ID</dt>
-                    <dd class="col-sm-8">{{ $newlease->BlockID ?? '-' }}</dd>
+                <div class="mb-3">
+                    <label class="form-label">Tenant</label>
+                    <input type="text" class="form-control" value="{{ $newlease->tenant->TenantName }}" readonly>
+                </div>
 
-                    <dt class="col-sm-4">Floor ID</dt>
-                    <dd class="col-sm-8">{{ $newlease->FloorID ?? '-' }}</dd>
+                <div class="mb-3">
+                    <label class="form-label">Property</label>
+                    <input type="text" class="form-control" value="{{ $newlease->property->PropertyName ?? '-' }}" readonly>
+                </div>
 
-                    <dt class="col-sm-4">Unit</dt>
-                    <dd class="col-sm-8">{{ $newlease->Unit ?? '-' }}</dd>
+                <div class="mb-3">
+                    <label class="form-label">Block</label>
+                    <input type="text" class="form-control" value="{{ $newlease->block->BlockName ?? '-' }}" readonly>
+                </div>
 
-                    <dt class="col-sm-4">Start date</dt>
-                    <dd class="col-sm-8">{{ $newlease->StartDate ?? '-' }}</dd>
+                <div class="mb-3">
+                    <label class="form-label">Floor</label>
+                    <input type="text" class="form-control" value="{{ $newlease->floor->FloorLabel ?? '-' }}" readonly>
+                </div>
 
-                    <dt class="col-sm-4">End Date</dt>
-                    <dd class="col-sm-8">{{ $newlease->EndDate ?? '-' }}</dd>
+                <div class="mb-3">
+                    <label class="form-label">Unit</label>
+                    <input type="text" class="form-control" value="{{ $newlease->unit->UnitCode ?? '-' }}" readonly>
+                </div>
 
-                    <dt class="col-sm-4">Payment Frequency</dt>
-                    <dd class="col-sm-8">{{ $newlease->PaymentFrequency ?? '-' }}</dd>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Start Date</label>
+                        <input type="text" class="form-control" value="{{ \Carbon\Carbon::parse($newlease->StartDate)->format('d/m/Y') }}" readonly>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">End Date</label>
+                        <input type="text" class="form-control" value="{{ \Carbon\Carbon::parse($newlease->EndDate)->format('d/m/Y') }}" readonly>
+                    </div>
+                </div>
 
-                    <dt class="col-sm-4">Monthly Rent</dt>
-                    <dd class="col-sm-8">{{ $newlease->MonthlyRent ?? '-' }}</dd>
+                <div class="mb-3">
+                    <label class="form-label">Payment Frequency</label>
+                    <input type="text" class="form-control" value="{{ $newlease->code->Description ?? '-' }}" readonly>
+                </div>
 
-                    <dt class="col-sm-4">Deposit</dt>
-                    <dd class="col-sm-8">{{ $newlease->Deposit ?? '-' }}</dd>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Monthly Rent (KES)</label>
+                        <input type="text" class="form-control" value="{{ number_format($newlease->MonthlyRent, 2) }}" readonly>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Deposit (KES)</label>
+                        <input type="text" class="form-control" value="{{ number_format($newlease->Deposit, 2) }}" readonly>
+                    </div>
+                </div>
 
-                    <dt class="col-sm-4">Due Day</dt>
-                    <dd class="col-sm-8">{{ $newlease->DueDay ?? '-' }}</dd>
+                <div class="mb-3">
+                    <label class="form-label">Due Day</label>
+                    <input type="text" class="form-control" value="{{ $newlease->DueDay }}" readonly>
+                </div>
 
-                    <dt class="col-sm-4">Special Terms</dt>
-                    <dd class="col-sm-8">{{ $newlease->SpecialTerms ?? '-' }}</dd>
-                </dl>
+                <div class="mb-3">
+                    <label class="form-label">Special Terms</label>
+                    <textarea class="form-control" rows="3" readonly>{{ $newlease->SpecialTerms ?? '—' }}</textarea>
+                </div>
             </div>
-            <div class="card-footer">
-                <a href="#" class="btn btn-primary">Edit</a>
-                <a href="#" class="btn btn-secondary">Back</a>
+
+            <div class="card-footer bg-light d-flex justify-content-between">
+                <a href="{{ route('addlease.edit', $newlease->Id) }}" class="btn btn-outline-primary"><i class="bi bi-pencil-square"></i> Edit</a>
+                <a href="{{ route('addlease.index') }}" class="btn btn-outline-secondary">Back</a>
             </div>
         </div>
-    </div>
+    </form>
+</div>
 @endsection

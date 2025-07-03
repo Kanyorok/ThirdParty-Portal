@@ -11,13 +11,15 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('t_RenewLease', function (Blueprint $table) {
-            $table->id();
-            $table->string('CurrentLease');
+            $table->id('Id');
+            $table->foreignId('LeaseNumber')->constrained('t_LeaseCreation', 'Id');
+            $table->foreignId('TenantId')->constrained('t_LeaseCreation', 'Id');
+            $table->foreignId('PropertyId')->constrained('t_LeaseCreation', 'Id');
+            $table->foreignId('PaymentFrequency')->constrained('t_CodeDetails', 'ID');
             $table->date('EndDateCurrentLease');
             $table->date('NewStartDate');
             $table->date('NewEndDate');
             $table->integer('NewMonthlyRent');
-            $table->string('PaymentFrequency');
             $table->string('Remarks');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');

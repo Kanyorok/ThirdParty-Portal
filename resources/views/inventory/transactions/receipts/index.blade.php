@@ -124,22 +124,25 @@
             <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
             <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
-            <script>
-                $(document).ready(function () {
-                    $('#adjustmentTable').DataTable({
-                        pageLength: 10,
-                        ordering: true,
-                        searching: true,
-                        lengthChange: true,
+    <script>
+        $(document).ready(function () {
+        @if(!$receipts->isEmpty())
+        $('#receiptsTable').DataTable({
+            pageLength: 10,
+            ordering: true,
+            searching: true,
+            lengthChange: true,
+            language: {
+                emptyTable: ""
+            }
+        });
+        @endif
+    });
+        
 
-                    });
-                });
-            </script>
-
-            <script>
-                $(document).ready(function () {
-
-                });
+    $(document).ready(function () {
+     
+    });
 
 
                 function confirmDelete(id) {

@@ -104,10 +104,10 @@
                         <td>{{ \Carbon\Carbon::parse($record->CreatedOn)->format('d/m/Y') }}</td>
                         <td>
                             @if($transactionType == 'Stock Transfer')
-                                {{$record->transferredBy->Name ?? 'N/A'}}
+                                {{ $record->transferredBy->Name ?? 'N/A'}}
                             @elseif($transactionType == 'Stock Adjustment')
-                                {{$record->adjustedBy->Name ?? 'N/A'}}
-                                {{ $record->AdjustedBy ?? 'N/A' }}
+                                {{-- CORRECTED LINE: Only display the user's Name via the relationship --}}
+                                {{ $record->adjustedBy->Name ?? 'N/A' }}
                             @else
                                 {{ $record->creator->name ?? 'N/A' }}
                             @endif
