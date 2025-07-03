@@ -11,6 +11,12 @@ use Spatie\Activitylog\Exceptions\InvalidConfiguration;
 trait UserActorTrait
 {
     abstract public static function getPrimaryKey(): string;
+
+    public function getMorphClass(): string
+    {
+        return self::getPrimaryKey();
+    }
+
     /* public function getMorphClass()
      {
          return $this->primaryKey;

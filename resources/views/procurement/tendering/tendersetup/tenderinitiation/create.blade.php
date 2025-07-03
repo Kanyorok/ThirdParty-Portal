@@ -237,19 +237,19 @@
     </form>
 
 </div>
- 
+
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    // Toggle supplier section based on tender type
-    const open = document.getElementById('openTender');
-    const restricted = document.getElementById('restrictedTender');
-    const section = document.getElementById('restrictedSuppliersSection');
+    document.addEventListener('DOMContentLoaded', function () {
+        // Toggle supplier section based on tender type
+        const open = document.getElementById('openTender');
+        const restricted = document.getElementById('restrictedTender');
+        const section = document.getElementById('restrictedSuppliersSection');
 
-    open.addEventListener('change', () => section.style.display = 'none');
-    restricted.addEventListener('change', () => section.style.display = 'block');
-});
+        open.addEventListener('change', () => section.style.display = 'none');
+        restricted.addEventListener('change', () => section.style.display = 'block');
+    });
 
-let manualItemIndex = 1;
+    let manualItemIndex = 1;
 
     function addManualItemRow() {
         const tableBody = document.getElementById('manualItemsBody');
@@ -282,55 +282,55 @@ let manualItemIndex = 1;
         manualItemIndex++;
     }
 
-// ----- Procurement Plan Section -----
-const procurementPlans = @json($procurementPlansOutput);
-const planItemData = @json($planItemData);
+    // ----- Procurement Plan Section -----
+    const procurementPlans = @json($procurementPlansOutput);
+    const planItemData = @json($planItemData);
 
-// Track added items by string ID
-const addedPlanItems = new Set();
+    // Track added items by string ID
+    const addedPlanItems = new Set();
 
-function loadPlanItemsForPlan() {
-    const planId = document.getElementById('selectedProcurementPlan').value;
-    const select = document.getElementById('planItemSelect');
-    select.innerHTML = `<option selected disabled>-- Select Item --</option>`;
+    function loadPlanItemsForPlan() {
+        const planId = document.getElementById('selectedProcurementPlan').value;
+        const select = document.getElementById('planItemSelect');
+        select.innerHTML = `<option selected disabled>-- Select Item --</option>`;
 
-    if (procurementPlans[planId]) {
-        procurementPlans[planId].forEach(item => {
-            const opt = document.createElement('option');
-            opt.value = item.itemId;
-            opt.textContent = `${item.name} (${item.plannedQty})`;
-            select.appendChild(opt);
-        });
-    }
-}
-
-function addPlanItemToGrid() {
-    const planId = document.getElementById('selectedProcurementPlan').value;
-    const select = document.getElementById('planItemSelect');
-    const itemId = select.value;
-    const tbody = document.querySelector('#planItemsGrid tbody');
-
-    if (!planId || !itemId) {
-        alert('Please select both a plan and an item.');
-        return;
+        if (procurementPlans[planId]) {
+            procurementPlans[planId].forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item.itemId;
+                opt.textContent = `${item.name} (${item.plannedQty})`;
+                select.appendChild(opt);
+            });
+        }
     }
 
-    const uniqueKey = `${planId}-${itemId}`;
+    function addPlanItemToGrid() {
+        const planId = document.getElementById('selectedProcurementPlan').value;
+        const select = document.getElementById('planItemSelect');
+        const itemId = select.value;
+        const tbody = document.querySelector('#planItemsGrid tbody');
 
-    if (addedPlanItems.has(uniqueKey)) {
-        alert('Item already added for this plan.');
-        return;
-    }
+        if (!planId || !itemId) {
+            alert('Please select both a plan and an item.');
+            return;
+        }
 
-    const itemList = planItemData[planId] || [];
-    const item = itemList.find(obj => obj.itemId == itemId);
+        const uniqueKey = `${planId}-${itemId}`;
 
-    if (!item) {
-        alert('Item not found in plan data.');
-        return;
-    }
+        if (addedPlanItems.has(uniqueKey)) {
+            alert('Item already added for this plan.');
+            return;
+        }
 
-    const row = `
+        const itemList = planItemData[planId] || [];
+        const item = itemList.find(obj => obj.itemId == itemId);
+
+        if (!item) {
+            alert('Item not found in plan data.');
+            return;
+        }
+
+        const row = `
         <tr data-id="${uniqueKey}">
             <td>${item.name}</td>
             <td>${item.plannedQty}</td>
@@ -350,17 +350,17 @@ function addPlanItemToGrid() {
         </tr>
     `;
 
-    tbody.insertAdjacentHTML('beforeend', row);
-    addedPlanItems.add(uniqueKey);
-    select.selectedIndex = 0;
-}
+        tbody.insertAdjacentHTML('beforeend', row);
+        addedPlanItems.add(uniqueKey);
+        select.selectedIndex = 0;
+    }
 
 
-function removePlanItemFromGrid(uniqueKey) {
-    const row = document.querySelector(`#planItemsGrid tr[data-id="${uniqueKey}"]`);
-    if (row) row.remove();
-    addedPlanItems.delete(uniqueKey);
-}
+    function removePlanItemFromGrid(uniqueKey) {
+        const row = document.querySelector(`#planItemsGrid tr[data-id="${uniqueKey}"]`);
+        if (row) row.remove();
+        addedPlanItems.delete(uniqueKey);
+    }
 </script>
 
 <script>
@@ -459,6 +459,5 @@ function removePlanItemFromGrid(uniqueKey) {
         });
     });
 </script>
-
 
 @endsection

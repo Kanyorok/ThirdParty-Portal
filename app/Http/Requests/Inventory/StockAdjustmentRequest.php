@@ -22,7 +22,7 @@ class StockAdjustmentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            
+
             'AdjustmentDate' => 'required|date',
             'Branch' => 'required|exists:t_Branches,Id',
             'Reason' => 'required|string|max:255',

@@ -15,6 +15,7 @@ class PropertyNewTenantService
     {
         // Initialize the service with the PropertyNewTenant model instance
     }
+
     public static function create(
         CodeDetail $TenantType,
         string $TenantName,
@@ -24,9 +25,10 @@ class PropertyNewTenantService
         string $Nationality,
         string $PostalAddress,
         string $Remarks,
-        bool $IsActive,
-        User $user
-    ): self {
+        bool   $IsActive,
+        User   $user
+    ): self
+    {
         $newtenant = PropertyNewTenant::create([
             'TenantType' => $TenantType->ID,
             'TenantName' => $TenantName,
@@ -51,23 +53,24 @@ class PropertyNewTenantService
     public static function update(
         PropertyNewTenant $propertyNewTenant,
         CodeDetail $TenantType,
-        string $TenantName,
-        string $IDRegistrationNo,
-        string $PhoneNumber,
-        string $EmailAddress,
-        string $Nationality,
-        string $PostalAddress,
-        string $Remarks,
-        bool $IsActive,
-        User $user
-    ): self {
+        string     $TenantName,
+        string     $IDRegistrationNo,
+        string     $PhoneNumber,
+        string     $EmailAddress,
+        string     $Nationality,
+        string     $PostalAddress,
+        string     $Remarks,
+        bool       $IsActive,
+        User       $user
+    ): self
+    {
         $propertyNewTenant->update([
             'TenantType' => $TenantType->ID,
             'TenantName' => $TenantName,
             'IDRegistrationNo' => $IDRegistrationNo,
             'PhoneNumber' => $PhoneNumber,
             'EmailAddress' => $EmailAddress,
-            'Nationality' =>$Nationality,
+            'Nationality' => $Nationality,
             'PostalAddress' => $PostalAddress,
             'Remarks' => $Remarks,
             'IsActive' => $IsActive,

@@ -9,6 +9,7 @@ use App\Models\Auth\User;
 use App\Models\Communication\Comment;
 use App\Models\CRM\Social;
 use App\Models\DMS\Image;
+use App\Services\DMS\ImageService;
 use App\Services\ThirdParty\FacebookService;
 use App\Services\ThirdParty\TwitterService;
 use Carbon\Carbon;

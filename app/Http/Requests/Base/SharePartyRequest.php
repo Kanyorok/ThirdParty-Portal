@@ -22,12 +22,9 @@ class SharePartyRequest extends FormRequest
     public function rules(): array
     {
         return [
-                'share_party' => ['required'],
-                'share_role'  => [
-                                  'required',
-                                  Rule::in(RoleEnum::values()),
-                                 ],
-               ];
+            'share_party' => ['required'],
+            'share_role' => ['required', Rule::in(RoleEnum::values()),],
+        ];
     }
 
     /**

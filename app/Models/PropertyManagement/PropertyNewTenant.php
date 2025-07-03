@@ -33,6 +33,7 @@ class PropertyNewTenant extends Model
     {
         return 'TenantMaintenanceId';
     }
+
     public function type()
     {
         return $this->belongsTo(CodeDetail::class, 'TenantType', 'ID');

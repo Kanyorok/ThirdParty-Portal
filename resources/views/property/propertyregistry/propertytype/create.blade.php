@@ -26,8 +26,8 @@
           <div class="col-md-6">
             <label for="PropertyCategoryId" class="form-label">Category</label>
             <select name="PropertyCategoryId" class="form-select" required>
-              <option value="">-- Select Category --</option>
-              @foreach ($categories as $category)
+                <option value="">-- Select Category --</option>
+                @foreach ($categories as $category)
                 <option value="{{ $category->Id }}">{{ $category->Name }}</option>
               @endforeach
             </select>
@@ -41,7 +41,7 @@
           <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
             ➕ Add TYPE
         </button>
-        <a href="{{ route('propertytype.index') }}" class="btn btn-secondary">Cancel</a>
+            <a href="{{ route('propertytype.index') }}" class="btn btn-secondary">Cancel</a>
         </div>
       </div>
     </div>

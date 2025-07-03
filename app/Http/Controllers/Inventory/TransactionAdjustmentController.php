@@ -34,18 +34,18 @@ class TransactionAdjustmentController extends Controller
         $this->authorize('create', StockAdjustment::class);
         $branches = \App\Models\Core\Branch::all();
         $users = User::all();
-        return view('inventory.transactions.adjustments.create', compact('branches','users'));
+        return view('inventory.transactions.adjustments.create', compact('branches', 'users'));
     }
-    
+
 
     public function store(StockAdjustmentRequest $request)
-    
+
     {
-    
-    $this->authorize('create', StockAdjustment::class);
-    $this->service->create($request->validated(), $request->user());
-    
-    return redirect()->route('transactionsadjustment.index')->with('success', 'Stock adjustment recorded.');
+
+        $this->authorize('create', StockAdjustment::class);
+        $this->service->create($request->validated(), $request->user());
+
+        return redirect()->route('transactionsadjustment.index')->with('success', 'Stock adjustment recorded.');
     }
 
 
@@ -66,8 +66,8 @@ class TransactionAdjustmentController extends Controller
 
     public function edit($id)
     {
-        $adjustment = StockAdjustment::with([ 'items.item', 'items.stockItem','branch'])->findOrFail($id);
-        $stockItems = StockItem::with('item') ->where('Branch', $adjustment->Branch)->get();
+        $adjustment = StockAdjustment::with(['items.item', 'items.stockItem', 'branch'])->findOrFail($id);
+        $stockItems = StockItem::with('item')->where('Branch', $adjustment->Branch)->get();
         $branches = \App\Models\Core\Branch::all();
         $users = User::all();
         return view('inventory.transactions.adjustments.edit', compact('adjustment', 'stockItems', 'branches', 'users'));
@@ -83,23 +83,24 @@ class TransactionAdjustmentController extends Controller
     public function show($Id)
     {
         $this->authorize('view', StockAdjustment::class);
-        $adjustment = StockAdjustment::with(['branch','items.item', 'adjustedBy'])->findOrFail($Id);
+        $adjustment = StockAdjustment::with(['branch', 'items.item', 'adjustedBy'])->findOrFail($Id);
         return view('inventory.transactions.adjustments.show', compact('adjustment'));
     }
 
 
-     public function destroy(StockAdjustment $adjustment)
-     {
-         $this->authorize('destroy', $adjustment);
-         $adjustment->items()->delete();
-         $adjustment->delete();
+    public function destroy(StockAdjustment $adjustment)
+    {
+        $this->authorize('destroy', $adjustment);
+        $adjustment->items()->delete();
+        $adjustment->delete();
 
-    return redirect()->route('transactionsadjustment.index')->with('success', 'Stock adjustment deleted.');
+        return redirect()->route('transactionsadjustment.index')->with('success', 'Stock adjustment deleted.');
     }
-        public function reject(StockAdjustment $adjustment)
-            {
-                $this->service->reject($adjustment->Id);
-                return redirect()->back()->with('success', 'Stock adjustment rejected.');
-            }
+
+    public function reject(StockAdjustment $adjustment)
+    {
+        $this->service->reject($adjustment->Id);
+        return redirect()->back()->with('success', 'Stock adjustment rejected.');
+    }
 
 }

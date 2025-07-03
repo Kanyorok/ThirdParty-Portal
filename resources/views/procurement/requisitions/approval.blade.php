@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Requisition Approval')
+
 @section('content')
     <div class="container">
         <div class="card">
@@ -13,7 +15,9 @@
                     <div class="col-md-6">
                         <h5>Requisition Information</h5>
                         <p><strong>Requisition Number:</strong> {{ $requisitionInfo->RequisitionNo ?? 'N/A' }}</p>
-                        <p><strong>Date:</strong> {{ isset($requisitionInfo->CreatedOn) ? \Carbon\Carbon::parse($requisitionInfo->CreatedOn)->format('d/m/Y') : '' }}</p>
+                        <p>
+                            <strong>Date:</strong> {{ isset($requisitionInfo->CreatedOn) ? \Carbon\Carbon::parse($requisitionInfo->CreatedOn)->format('d/m/Y') : '' }}
+                        </p>
                         <p><strong>Branch:</strong> {{ $requisitionInfo->BranchID ?? 'N/A' }}</p>
                         <p><strong>Department:</strong> {{ $requisitionInfo->DepartmentID ?? 'N/A' }}</p>
                     </div>
@@ -55,7 +59,7 @@
                         @endforeach
                         <tr>
                             <td colspan="5">
-                              <b>  Total Amount</b>
+                                <b> Total Amount</b>
                             </td>
                             <td colspan="2" style="text-align: right;">
                                 <b>{{ $requisitionInfo->ExpectedPrice ?? 'N/A' }}</b>
@@ -79,28 +83,32 @@
                 @if($requisitionInfo->Status == 'pending' || $requisitionInfo->Status == 'Pending')
                     <div class="row mt-4">
                         <div class="col-md-12">
-                            <form action="{{ route('requisition.approve', $requisitionInfo->Id) }}" method="POST" class="d-inline">
+                            <form action="{{ route('requisition.approve', $requisitionInfo->Id) }}" method="POST"
+                                  class="d-inline">
                                 @csrf
-{{--                                <input type="text" name="action" value="approve">--}}
-{{--                                @csrf--}}
+                                {{--                                <input type="text" name="action" value="approve">--}}
+                                {{--                                @csrf--}}
 
                                 <input type="hidden" name="document_type" value="purchase_requisition">
-                                <input type="hidden" name="order_total" value="{{ $requisitionInfo->ExpectedPrice ?? 'N/A' }}">
+                                <input type="hidden" name="order_total"
+                                       value="{{ $requisitionInfo->ExpectedPrice ?? 'N/A' }}">
                                 <input type="hidden" name="order_id" value="{{$requisitionInfo->Id}}">
                                 <input type="hidden" name="action" value="approve">
-                               <button type="submit" class="btn btn-success btn-lg">
+                                <button type="submit" class="btn btn-success btn-lg">
                                     <i class="fas fa-check"></i> Approve
                                 </button>
                             </form>
 
-                            <button type="button" class="btn btn-danger btn-lg ml-2" data-toggle="modal" data-target="#rejectModal">
+                            <button type="button" class="btn btn-danger btn-lg ml-2" data-toggle="modal"
+                                    data-target="#rejectModal">
                                 <i class="fas fa-times"></i> Reject
                             </button>
 
                         </div>
                     </div>
                 @else
-                    <div class="alert alert-{{ $requisitionInfo->Status == 'approved' || $requisitionInfo->Status == 'Approved' ? 'success' : 'danger' }}">
+                    <div
+                        class="alert alert-{{ $requisitionInfo->Status == 'approved' || $requisitionInfo->Status == 'Approved' ? 'success' : 'danger' }}">
                         This requisition has already been {{ $requisitionInfo->Status }}.
                     </div>
                 @endif
@@ -109,7 +117,8 @@
     </div>
 
     <!-- Reject Modal -->
-    <div class="modal fade" id="rejectModal" tabindex="-1" role="dialog" aria-labelledby="rejectModalLabel" aria-hidden="true">
+    <div class="modal fade" id="rejectModal" tabindex="-1" role="dialog" aria-labelledby="rejectModalLabel"
+         aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -123,7 +132,8 @@
                     <div class="modal-body">
                         <div class="form-group">
                             <label for="rejection_reason">Reason for Rejection</label>
-                            <textarea class="form-control" id="rejection_reason" name="rejection_reason" rows="3" required></textarea>
+                            <textarea class="form-control" id="rejection_reason" name="rejection_reason" rows="3"
+                                      required></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -142,6 +152,7 @@
         .table th {
             white-space: nowrap;
         }
+
         .badge {
             font-size: 0.9em;
         }

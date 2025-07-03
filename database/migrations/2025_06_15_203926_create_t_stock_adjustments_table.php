@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -16,7 +15,7 @@ return new class extends Migration
             $table->string('AdjustmentId')->nullable();
             $table->date('AdjustmentDate');
             $table->string('Branch')->constrained('t_Branches', 'Id');
-            $table->string('Reason');   
+            $table->string('Reason');
             $table->string('AdjustedBy');
             $table->string('Status');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');

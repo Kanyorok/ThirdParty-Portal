@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    protected const int MONTHS = 6;
+    protected const MONTHS = 6;
     /**
      * Handle the incoming request.
      *
