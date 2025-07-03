@@ -122,13 +122,18 @@
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script>
         $(document).ready(function () {
+            @if(!$transfers->isEmpty())
             $('#transferTable').DataTable({
                 pageLength: 10,
                 ordering: true,
                 searching: true,
-                lengthChange: false,
-                dom: 'rt<"bottom"ip><"clear">'
+                lengthChange: true,
+                dom: 'rt<"bottom"ip><"clear">',
+                language: {
+                    emptyTable: "No transfers available"
+                }
             });
+            @endif
         });
 
         function confirmDelete(id) {
@@ -149,4 +154,5 @@
             document.getElementById('customErrorContainer').style.display = 'none';
         }
     </script>
+
 @endsection

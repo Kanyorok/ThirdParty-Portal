@@ -12,7 +12,8 @@ use Illuminate\Http\Request;
 use App\Enums\Inventory\Transfers;
 use App\Models\Core\Branch;
 use App\Models\Auth\User;
-
+use App\Models\Core\CodeDetail;
+use Illuminate\Support\Facades\Log;
 
 class TransactionAdjustmentController extends Controller
 {
@@ -28,26 +29,23 @@ class TransactionAdjustmentController extends Controller
         $adjustments = StockAdjustment::with('items')->latest('CreatedOn')->paginate(20);
         return view('inventory.transactions.adjustments.index', compact('adjustments'));
     }
-
     public function create()
     {
         $this->authorize('create', StockAdjustment::class);
-        $branches = \App\Models\Core\Branch::all();
+        $branches = Branch::all();
         $users = User::all();
-        return view('inventory.transactions.adjustments.create', compact('branches', 'users'));
+        $reasons = CodeDetail::where('CodeID', 'AdjustmentReason')->get();
+
+        return view('inventory.transactions.adjustments.create', compact('branches', 'users', 'reasons'));
     }
 
-
     public function store(StockAdjustmentRequest $request)
-
     {
-
         $this->authorize('create', StockAdjustment::class);
         $this->service->create($request->validated(), $request->user());
 
         return redirect()->route('transactionsadjustment.index')->with('success', 'Stock adjustment recorded.');
     }
-
 
     public function getBranchStock($branchId)
     {
@@ -58,49 +56,74 @@ class TransactionAdjustmentController extends Controller
         return response()->json($stockItems);
     }
 
-    public function approve(StockAdjustment $adjustment)
+    public function approve(StockAdjustment $stockAdjustment)
     {
-        $this->service->approve($adjustment->Id);
+        $this->service->approve($stockAdjustment->Id);
         return redirect()->back()->with('success', 'Stock adjustment approved.');
     }
 
-    public function edit($id)
+    public function edit(StockAdjustment $stockAdjustment)
     {
-        $adjustment = StockAdjustment::with(['items.item', 'items.stockItem', 'branch'])->findOrFail($id);
-        $stockItems = StockItem::with('item')->where('Branch', $adjustment->Branch)->get();
-        $branches = \App\Models\Core\Branch::all();
+        $this->authorize('update', $stockAdjustment);
+
+        $adjustment = $stockAdjustment->load(['items.item', 'branch']);
+
+        $itemIdsInAdjustment = $adjustment->items->pluck('Item')->toArray();
+
+        $currentStocksInBranch = StockItem::where('Branch', $adjustment->Branch)
+            ->whereIn('ItemID', $itemIdsInAdjustment)
+            ->pluck('CurrentQty', 'ItemID');
+        $adjustment->items->each(function ($adjItem) use ($currentStocksInBranch) {
+
+            $adjItem->current_stock_qty = $currentStocksInBranch->get($adjItem->Item, 0);
+        });
+
+        $branches = Branch::all();
         $users = User::all();
-        return view('inventory.transactions.adjustments.edit', compact('adjustment', 'stockItems', 'branches', 'users'));
+        $reasons = CodeDetail::where('CodeID', 'AdjustmentReason')->get();
+        return view('inventory.transactions.adjustments.edit', compact('adjustment', 'branches', 'users', 'reasons'));
+
     }
 
-    public function update(StockAdjustmentRequest $request, StockAdjustment $adjustment)
+    public function update(StockAdjustmentRequest $request, StockAdjustment $stockAdjustment)
     {
+        \Log::info('TransactionAdjustmentController@update: Attempting to update StockAdjustment ID: ' . $stockAdjustment->Id);
         $validated = $request->validated();
-        return $this->service->update($adjustment, $validated);
+        $this->service->update($stockAdjustment, $validated);
+        return redirect()->route('transactionsadjustment.index')->with('success', 'Stock adjustment updated successfully.');
     }
 
-
-    public function show($Id)
+    public function show(StockAdjustment $stockAdjustment)
     {
-        $this->authorize('view', StockAdjustment::class);
-        $adjustment = StockAdjustment::with(['branch', 'items.item', 'adjustedBy'])->findOrFail($Id);
+        $this->authorize('view', $stockAdjustment);
+
+        $adjustment = $stockAdjustment->load(['branch', 'items.item', 'adjustedBy']);
+
+        $itemIdsInAdjustment = $adjustment->items->pluck('Item')->toArray();
+
+        $currentStocksInBranch = StockItem::where('Branch', $adjustment->Branch)
+            ->whereIn('ItemID', $itemIdsInAdjustment)
+            ->pluck('CurrentQty', 'ItemID');
+
+        $adjustment->items->each(function ($adjItem) use ($currentStocksInBranch) {
+            $adjItem->current_stock_qty = $currentStocksInBranch->get($adjItem->Item, 0);
+        });
+
         return view('inventory.transactions.adjustments.show', compact('adjustment'));
     }
 
-
-    public function destroy(StockAdjustment $adjustment)
+    public function destroy(StockAdjustment $stockAdjustment)
     {
-        $this->authorize('destroy', $adjustment);
-        $adjustment->items()->delete();
-        $adjustment->delete();
+        $this->authorize('destroy', $stockAdjustment);
+        $stockAdjustment->items()->delete();
+        $stockAdjustment->delete();
 
         return redirect()->route('transactionsadjustment.index')->with('success', 'Stock adjustment deleted.');
     }
 
-    public function reject(StockAdjustment $adjustment)
+    public function reject(StockAdjustment $stockAdjustment)
     {
-        $this->service->reject($adjustment->Id);
+        $this->service->reject($stockAdjustment->Id);
         return redirect()->back()->with('success', 'Stock adjustment rejected.');
     }
-
 }

@@ -2,12 +2,12 @@
 @section('title', 'IProperty Management')
 @section('content')
 <div class="container mt-4">
-  <h4 class="fw-bold mb-3">👤 Add New Tenant</h4>
+    <h4 class="fw-bold mb-3">Add New Tenant</h4>
 
     <form action="{{ route('addtenant.store') }}" method="POST">
         @csrf
   <div class="card shadow">
-    <div class="card-header bg-light fw-bold">➕ Tenant Registration</div>
+      <div class="card-header bg-light fw-bold">Tenant Registration</div>
     <div class="card-body">
       <!-- Tenant Type -->
       <div class="row g-3 mb-3">
@@ -71,7 +71,7 @@
         <input type="file" class="form-control" multiple>
         <small class="text-muted">e.g. ID copy, Certificate of Incorporation</small>
       </div>
-        <button class="btn btn-success">💾 Save Tenant</button>
+        <button class="btn btn-success">Save Tenant</button>
     </form>
     </div>
   </div>

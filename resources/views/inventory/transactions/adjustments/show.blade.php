@@ -11,7 +11,7 @@
                 <p><strong>Adjustment
                         Date:</strong> {{ \Carbon\Carbon::parse($adjustment->AdjustmentDate)->format('Y-m-d') }}</p>
                 <p><strong>Branch:</strong> {{ optional($adjustment->branch)->Name ?? 'N/A' }}</p>
-                <p><strong>Reason:</strong> {{ $adjustment->Reason }}</p>
+                <p><strong>Reason:</strong> {{ optional($adjustment->reason)->Description ?? 'N/A' }}</p>
                 <p><strong>Adjusted By:</strong> {{ $adjustment->adjustedBy->Name ?? 'N/A' }}</p>
                 <p><strong>Status:</strong>
                     @php
@@ -33,7 +33,8 @@
                     <th>#</th>
                     <th>Item Code</th>
                     <th>Item Name</th>
-                    <th>Adjustment Qty</th>
+                    <th>Current Qty</th>
+                    <th>Adjusted Qty</th>
                     <th>Remarks</th>
                 </tr>
                 </thead>
@@ -41,8 +42,10 @@
                 @foreach($adjustment->items as $index => $item)
                     <tr>
                         <td>{{ $index + 1 }}</td>
-                        <td>{{ $item->item->ItemCode}}</td>
+                        <td>{{ $item->item->ItemCode ?? 'N/A'}}</td>
                         <td>{{ $item->item->ItemName ?? 'N/A' }}</td>
+                        {{-- THIS IS THE CRUCIAL CHANGE: Access the 'current_stock_qty' attribute --}}
+                        <td>{{ $item->current_stock_qty ?? 0 }}</td>
                         <td>{{ $item->AdjustmentQty }}</td>
                         <td>{{ $item->Remarks ?? '-' }}</td>
                     </tr>

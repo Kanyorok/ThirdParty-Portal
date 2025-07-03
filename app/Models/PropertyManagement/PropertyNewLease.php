@@ -2,12 +2,16 @@
 
 namespace App\Models\PropertyManagement;
 
+use App\Models\Core\CodeDetail;
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PropertyNewLease extends Model
 {
-    //
-    protected $table = 't_AddLease';
+    use SoftDeletes, UserActorTrait;
+
+    protected $table = 't_LeaseCreation';
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
     const string DELETED_AT = 'DeletedOn';
@@ -15,6 +19,7 @@ class PropertyNewLease extends Model
 
     protected $fillable = [
         'Tenant',
+        'LeaseNumber',
         'PropertyID',
         'BlockID',
         'FloorID',
@@ -26,9 +31,55 @@ class PropertyNewLease extends Model
         'Deposit',
         'DueDay',
         'SpecialTerms',
+        'IsActive',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy'
     ];
+
+    public static function getPrimaryKey(): string
+    {
+        return 'LeaseId';
+    }
+
+    public function getPropertyByTenant()
+    {
+        return $this->hasMany(PropertyNewLease::class, 'Id', 'Tenant');
+    }
+
+    public function getLeaseByProperty()
+    {
+        return $this->hasMany(PropertyNewLease::class, 'Id', 'PropertyID');
+    }
+
+    public function tenant()
+    {
+        return $this->belongsTo(PropertyNewTenant::class, 'Tenant', 'Id');
+    }
+
+    public function property()
+    {
+        return $this->belongsTo(PropertyRegistry::class, 'PropertyID', 'Id');
+    }
+
+    public function block()
+    {
+        return $this->belongsTo(PropertyBlock::class, 'BlockID', 'Id');
+    }
+
+    public function floor()
+    {
+        return $this->belongsTo(PropertyFloor::class, 'FloorID', 'Id');
+    }
+
+    public function unit()
+    {
+        return $this->belongsTo(PropertyUnit::class, 'Unit', 'Id');
+    }
+
+    public function code()
+    {
+        return $this->belongsTo(CodeDetail::class, 'PaymentFrequency', 'ID');
+    }
 
 }

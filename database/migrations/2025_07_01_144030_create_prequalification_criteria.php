@@ -10,12 +10,12 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('t_PaymentFrequency', function (Blueprint $table) {
-            $table->id();
-            $table->string('FrequencyName');
-            $table->string('FrequencyCode');
-            $table->integer('NumberOfMonths');
-            $table->string('Description');
+        Schema::create('t_PrequalificationRoundCriteria', function (Blueprint $table) {
+            $table->id('Id');
+            $table->foreignId('RoundId')->constrained('t_PrequalificationPeriod', 'Id');
+            $table->foreignId('SectionId')->constrained('t_Sections', 'id');
+            $table->foreignId('CriteriaId')->constrained('t_Criterias', 'id');
+            $table->boolean('Included');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
@@ -30,6 +30,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('t_PaymentFrequency');
+        Schema::dropIfExists('t_PrequalificationRoundCriteria');
     }
 };

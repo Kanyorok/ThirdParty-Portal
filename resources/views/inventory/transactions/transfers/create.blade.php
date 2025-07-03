@@ -3,19 +3,6 @@
 @section('title', 'Create Transfer')
 
 @section('content')
-    @if($errors->any())
-        <div class="alert alert-danger">
-            <ul>
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-    @if(session('error'))
-        <div class="alert alert-danger">{{ session('error') }}</div>
-    @endif
-
 <div class="container bg-white shadow rounded p-4">
     <h4 class="mb-4">Select Requisition Type and Number</h4>
 
@@ -89,101 +76,102 @@
                 </div>
             </div>
 
+            <div id="ajax-error" class="alert alert-danger d-none"></div>
             <button type="submit" class="btn btn-primary" id="submitBtn">✅ Submit Transfer</button>
         </div>
     </form>
 </div>
 
-    <script>
-        const requisitionTypeSelect = document.getElementById('requisition_type');
-        const requisitionIdSelect = document.getElementById('requisition_id');
-        const transferDetails = document.getElementById('transferDetails');
-        const itemsBody = document.getElementById('itemsBody');
+<script>
+    const requisitionTypeSelect = document.getElementById('requisition_type');
+    const requisitionIdSelect = document.getElementById('requisition_id');
+    const transferDetails = document.getElementById('transferDetails');
+    const itemsBody = document.getElementById('itemsBody');
 
-        const fromBranchText = document.getElementById('fromBranch');
-        const toBranchText = document.getElementById('toBranch');
-        const fromBranchHidden = document.getElementById('FromBranch');
-        const toBranchHidden = document.getElementById('ToBranch');
-        const requisitionTypeHidden = document.getElementById('RequisitionType');
-        const requisitionIdHidden = document.getElementById('RequisitionId');
+    const fromBranchText = document.getElementById('fromBranch');
+    const toBranchText = document.getElementById('toBranch');
+    const fromBranchHidden = document.getElementById('FromBranch');
+    const toBranchHidden = document.getElementById('ToBranch');
+    const requisitionTypeHidden = document.getElementById('RequisitionType');
+    const requisitionIdHidden = document.getElementById('RequisitionId');
 
-        let selectedType = '';
+    let selectedType = '';
 
-        const requisitionsBaseUrl = "{{ url(route('requisitions.by-type', ['type' => 'PLACEHOLDER'])) }}";
-        const requisitionDetailsBaseUrl = "{{ url(route('requisitions.details', ['id' => 'PLACEHOLDER'])) }}";
+    const requisitionsBaseUrl = "{{ url(route('requisitions.by-type', ['type' => 'PLACEHOLDER'])) }}";
+    const requisitionDetailsBaseUrl = "{{ url(route('requisitions.details', ['id' => 'PLACEHOLDER'])) }}";
 
-        requisitionTypeSelect.addEventListener('change', function () {
-            selectedType = this.value;
-            requisitionTypeHidden.value = selectedType;
-            requisitionIdSelect.innerHTML = '<option value="">Loading...</option>';
+    requisitionTypeSelect.addEventListener('change', function () {
+        selectedType = this.value;
+        requisitionTypeHidden.value = selectedType;
+        requisitionIdSelect.innerHTML = '<option value="">Loading...</option>';
 
-            requisitionIdHidden.value = '';
-            itemsBody.innerHTML = '';
-            fromBranchText.value = '';
-            toBranchText.value = '';
-            fromBranchHidden.value = '';
-            toBranchHidden.value = '';
-            transferDetails.style.display = 'none';
+        requisitionIdHidden.value = '';
+        itemsBody.innerHTML = '';
+        fromBranchText.value = '';
+        toBranchText.value = '';
+        fromBranchHidden.value = '';
+        toBranchHidden.value = '';
+        transferDetails.style.display = 'none';
 
-            if (!selectedType) {
+        if (!selectedType) {
+            requisitionIdSelect.innerHTML = '<option value="">Select Requisition</option>';
+            return;
+        }
+
+        const url = requisitionsBaseUrl.replace('PLACEHOLDER', selectedType);
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
                 requisitionIdSelect.innerHTML = '<option value="">Select Requisition</option>';
-                return;
-            }
-
-            const url = requisitionsBaseUrl.replace('PLACEHOLDER', selectedType);
-
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    requisitionIdSelect.innerHTML = '<option value="">Select Requisition</option>';
-                    data.forEach(req => {
-                        const text = selectedType === 'interbranch' ? req.ReqNo : req.RequisitionNo;
-                        requisitionIdSelect.innerHTML += `<option value="${req.Id}">${text}</option>`;
-                    });
-                })
-                .catch(error => {
-                    console.error('Error fetching requisitions:', error);
-                    requisitionIdSelect.innerHTML = '<option value="">Failed to load</option>';
+                data.forEach(req => {
+                    const text = selectedType === 'interbranch' ? req.ReqNo : req.RequisitionNo;
+                    requisitionIdSelect.innerHTML += `<option value="${req.Id}">${text}</option>`;
                 });
-        });
+            })
+            .catch(error => {
+                console.error('Error fetching requisitions:', error);
+                requisitionIdSelect.innerHTML = '<option value="">Failed to load</option>';
+            });
+    });
 
-        requisitionIdSelect.addEventListener('change', function () {
-            const id = this.value;
+    requisitionIdSelect.addEventListener('change', function () {
+        const id = this.value;
 
-            itemsBody.innerHTML = '';
-            fromBranchText.value = '';
-            toBranchText.value = '';
-            fromBranchHidden.value = '';
-            toBranchHidden.value = '';
-            transferDetails.style.display = 'none';
+        itemsBody.innerHTML = '';
+        fromBranchText.value = '';
+        toBranchText.value = '';
+        fromBranchHidden.value = '';
+        toBranchHidden.value = '';
+        transferDetails.style.display = 'none';
 
-            if (!id || !selectedType) {
-                requisitionIdHidden.value = '';
-                return;
-            }
+        if (!id || !selectedType) {
+            requisitionIdHidden.value = '';
+            return;
+        }
 
-            requisitionIdHidden.value = id;
+        requisitionIdHidden.value = id;
 
-            const detailsUrl = requisitionDetailsBaseUrl.replace('PLACEHOLDER', id) + `?type=${selectedType}`;
+        const detailsUrl = requisitionDetailsBaseUrl.replace('PLACEHOLDER', id) + `?type=${selectedType}`;
 
-            fetch(detailsUrl)
-                .then(response => response.json())
-                .then(data => {
-                    if (selectedType === 'procurement') {
-                        fromBranchText.value = 'Headquarters';
-                        fromBranchHidden.value = '{{ \App\Models\Core\Branch::where("IsHQ", 1)->value("Id") ?? "" }}';
-                    } else {
-                        fromBranchText.value = data.from_branch?.Name || 'N/A';
-                        fromBranchHidden.value = data.from_branch?.Id || '';
-                    }
+        fetch(detailsUrl)
+            .then(response => response.json())
+            .then(data => {
+                if (selectedType === 'procurement') {
+                    fromBranchText.value = 'Headquarters';
+                    fromBranchHidden.value = '{{ \App\Models\Core\Branch::where("IsHQ", 1)->value("Id") ?? "" }}';
+                } else {
+                    fromBranchText.value = data.from_branch?.Name || 'N/A';
+                    fromBranchHidden.value = data.from_branch?.Id || '';
+                }
 
-                    toBranchText.value = data.to_branch?.Name || 'N/A';
-                    toBranchHidden.value = data.to_branch?.Id || '';
+                toBranchText.value = data.to_branch?.Name || 'N/A';
+                toBranchHidden.value = data.to_branch?.Id || '';
 
-                    itemsBody.innerHTML = '';
-                    data.items.forEach((item, index) => {
-                        const dispatchedQty = item.DispatchedQty ?? item.ApprovedQty;
-                        itemsBody.innerHTML += `
+                itemsBody.innerHTML = '';
+                data.items.forEach((item, index) => {
+                    const dispatchedQty = item.DispatchedQty ?? item.ApprovedQty;
+                    itemsBody.innerHTML += `
                         <tr>
                             <td>${index + 1}</td>
                             <td>
@@ -200,14 +188,50 @@
                             <td><input type="text" class="form-control" name="items[${index}][remarks]" maxlength="255"></td>
                         </tr>
                     `;
-                    });
-
-                    transferDetails.style.display = 'block';
-                })
-                .catch(error => {
-                    console.error('Error loading requisition details:', error);
-                    requisitionIdHidden.value = '';
                 });
-        });
-    </script>
+
+                transferDetails.style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error loading requisition details:', error);
+                requisitionIdHidden.value = '';
+            });
+    });
+
+    // AJAX Form Submission
+    document.getElementById('transferForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const form = e.target;
+        const formData = new FormData(form);
+        const submitBtn = document.getElementById('submitBtn');
+        const errorBox = document.getElementById('ajax-error');
+
+        submitBtn.disabled = true;
+        errorBox.classList.add('d-none');
+        errorBox.innerHTML = '';
+
+        fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': formData.get('_token'),
+            },
+            body: formData,
+        })
+            .then(async (response) => {
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.message || 'An error occurred.');
+                }
+                window.location.href = data.redirect;
+            })
+            .catch(error => {
+                errorBox.innerHTML = `<strong>Error:</strong> ${error.message}`;
+                errorBox.classList.remove('d-none');
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+            });
+    });
+</script>
 @endsection

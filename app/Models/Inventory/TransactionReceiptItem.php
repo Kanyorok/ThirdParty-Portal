@@ -29,6 +29,7 @@ class TransactionReceiptItem extends Model
         'DispatchedQty',
         'Discrepancy',
         'Remarks',
+        'Store',
         'CreatedBy',
         'CreatedOn',
         'ModifiedBy',

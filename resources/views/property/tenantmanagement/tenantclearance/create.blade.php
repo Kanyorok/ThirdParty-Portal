@@ -3,12 +3,12 @@
 @section('content')
 <div class="container mt-4">
 
-  <h4 class="fw-bold mb-3">🚪 Tenant Exit & Clearance Checklist</h4>
+    <h4 class="fw-bold mb-3">Tenant Exit & Clearance Checklist</h4>
 
     <form action="{{ route('tenantclearance.store') }}" method="POST">
         @csrf
   <div class="card shadow">
-    <div class="card-header bg-light fw-bold">📋 Exit Process</div>
+      <div class="card-header bg-light fw-bold"> Exit Process</div>
     <div class="card-body">
       <div class="row g-3 mb-3">
         <div class="col-md-6">
@@ -50,7 +50,7 @@
           </select>
         </div>
         <div class="col-md-3">
-            <label class="form-label">Deposit Refunded?</label>DepositRefunded
+            <label class="form-label">Deposit Refunded?</label>
             <select class="form-select" name="DepositRefunded" required>
                 <option>--Select the tenant Type</option>
                 @foreach ($codedetails as $codedetail)
@@ -59,6 +59,15 @@
           </select>
         </div>
       </div>
+        <div class="col-md-3">
+            <label class="form-label">Status</label>
+            <select class="form-select" name="Status" required>
+                <option value="">-- Select Status --</option>
+                @foreach (\App\Enums\Property\TenantClearanceEnum::cases() as $status)
+                    <option value="{{ $status->value }}">{{ $status->label() }}</option>
+                @endforeach
+            </select>
+        </div>
 
       <!-- Upload & Remarks -->
       <div class="mb-3">

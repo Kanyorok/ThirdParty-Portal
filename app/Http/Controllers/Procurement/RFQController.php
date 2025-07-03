@@ -87,6 +87,11 @@ class RFQController extends Controller
 
         $rfq = RFQ::findOrFail($id);
 
+        // Check if RFQ has at least one line item
+        if ($rfq->rfqLines()->count() < 1) {
+            return redirect()->back()->with('error', 'Cannot approve an RFQ without any items.');
+        }
+
         // Update RFQ status to Approved
         $rfq->update(['Status' => 'Approved']);
 
@@ -112,9 +117,14 @@ class RFQController extends Controller
         ]);
 
         $rfq = RFQ::findOrFail($id);
+
+        //Check if RFQ has at least one line item
+        if ($rfq->rfqLines()->count() < 1) {
+            return redirect()->back()->with('error', 'Cannot reject an RFQ without any items.');
+        }
         $rfq->update([
             'Status' => 'Rejected',
-            'Comments' => $request->RejectionReason,
+            'Remarks' => $request->RejectionReason,
         ]);
 
         return redirect()->back()->with('success', 'RFQ has been rejected successfully.');
@@ -126,7 +136,7 @@ class RFQController extends Controller
     public function show($id)
     {
         // Get the RFQ and its associated RFQLines
-        $rfq = RFQ::with('rfqLines')->findOrFail($id);
+        $rfq = RFQ::with('rfqLines', 'rfqLines.uom')->findOrFail($id);
 
         // Get unique itemCategoryIds from the RFQLines
         $itemCategoryIds = $rfq->rfqLines->pluck('ItemCategoryId')->unique();

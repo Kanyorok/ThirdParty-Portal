@@ -126,17 +126,20 @@
 
             <script>
                 $(document).ready(function () {
-                    $('#adjustmentTable').DataTable({
+                    @if(!$receipts->isEmpty())
+                    $('#receiptsTable').DataTable({
                         pageLength: 10,
                         ordering: true,
                         searching: true,
                         lengthChange: true,
-
+                        language: {
+                            emptyTable: ""
+                        }
                     });
+                    @endif
                 });
-            </script>
 
-            <script>
+
                 $(document).ready(function () {
 
                 });

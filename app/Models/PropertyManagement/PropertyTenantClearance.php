@@ -2,7 +2,7 @@
 
 namespace App\Models\PropertyManagement;
 
-use App\Http\Controllers\Property\PropertyNewLeaseController;
+use App\Enums\Property\TenantClearanceEnum;
 use App\Models\Core\CodeDetail;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
@@ -25,6 +25,7 @@ class PropertyTenantClearance extends Model
         'KeysReturned',
         'DepositRefunded',
         'AdditionalNotes',
+        'Status',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy'
@@ -36,6 +37,10 @@ class PropertyTenantClearance extends Model
         return 'TenantClearanceId';
     }
 
+    protected $casts = [
+        'Status' => TenantClearanceEnum::class,
+    ];
+
     public function tenant()
     {
         return $this->belongsTo(PropertyNewTenant::class, 'Tenant', 'Id');
@@ -45,5 +50,6 @@ class PropertyTenantClearance extends Model
     {
         return $this->belongsTo(CodeDetail::class, 'DepositRefunded', 'ID');
     }
+
 
 }

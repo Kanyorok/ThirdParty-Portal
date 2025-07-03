@@ -60,7 +60,7 @@
     @endif
 </td>
 
-<td>{{ $deliveryDate->format('d M Y') }}</td
+                    <td>{{ $deliveryDate->format('d/m/Y') }}</td
                     <td>
 
                     </td>

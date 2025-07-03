@@ -26,7 +26,7 @@ class RFQ extends Model
     }
 
     protected $fillable = [
-        'RFQNumber', 'Comments', 'Status', 'SubmissionDeadline', 'CreatedBy', 'ModifiedBy'
+        'RFQNumber', 'Comments', 'Status', 'SubmissionDeadline', 'CreatedBy', 'ModifiedBy', 'Remarks'
     ];
 
     public function rfqLines()

@@ -10,20 +10,14 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('t_AddLease', function (Blueprint $table) {
-            $table->id();
-            $table->string('Tenant');
-            $table->string('PropertyID');
-            $table->string('BlockID');
-            $table->string('FloorID');
-            $table->string('Unit');
-            $table->date('StartDate');
-            $table->date('EndDate');
-            $table->string('PaymentFrequency');
-            $table->integer('MonthlyRent');
-            $table->integer('Deposit');
-            $table->integer('DueDay');
-            $table->string('SpecialTerms');
+        Schema::create('t_PrequalificationPeriod', function (Blueprint $table) {
+            $table->id('Id');
+            $table->string('Title');
+            $table->string('Description');
+            $table->dateTime('StartDate');
+            $table->dateTime('EndDate');
+            $table->integer('MaxVendors');
+            $table->string('Status');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
@@ -38,6 +32,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('t_AddLease');
+        Schema::dropIfExists('t_PrequalificationPeriod');
     }
 };
