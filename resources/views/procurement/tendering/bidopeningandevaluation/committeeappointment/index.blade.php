@@ -26,7 +26,7 @@
                     <td>{{$loop->index+1}}</td>
                     <td>{{$item->tender->TenderNo}}</td>
                     <td>{{$item->members_count}}</td>
-                    <td>{{$item->AppointmentDate->format('jS F Y')}}</td>
+                    <td>{{$item->AppointmentDate->format('d/m/Y')}}</td>
                     <td>
                         <a href="{{route('tendercommittee.show',$item->tender->Id)}}">
                             <button class="btn btn-sm btn-outline-info">View</button>

@@ -40,6 +40,7 @@ class PlanEditController extends Controller
 
         $user = auth()->user();
         $itemIds = $request->input('lineItemIds', []);
+        $errors = [];
 
         foreach ($itemIds as $id) {
             $item = PlanLineItems::findOrFail($id);
@@ -50,6 +51,11 @@ class PlanEditController extends Controller
 
             $qty = (int)$qty;
             $cost = (float)$cost;
+
+            if ($qty > $item->OriginalQTY) {
+                $errors[] = "Cannot set quantity for item '{$item->item->ItemName}' (ID: $id) greater than original quantity ({$item->OriginalQTY}).";
+                continue;
+            }
 
             PlanLineItems::where('LineItemID', $id)->update([
                 'MergedQty' => $qty,
@@ -65,6 +71,9 @@ class PlanEditController extends Controller
                 ->event('update')
                 ->log("Updated draft item: LineItemID {$id}");
     }
+        if (count($errors) > 0) {
+            return redirect()->back()->with('error', implode(' ', $errors));
+        }
 
         return redirect()->back()->with('success', 'Draft plan items updated successfully.');
     }

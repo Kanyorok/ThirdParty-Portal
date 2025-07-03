@@ -43,7 +43,7 @@
                                 <th>Est. Cost</th>
                                 <th>Assigned Method</th>
                                 <th>Assign Method</th>
-                                <th>Justification (if override)</th>
+                                <th class="d-none">Justification (if override)</th>
                             </tr>
                         </thead>
                         <tbody id="items-table-body">
@@ -86,8 +86,9 @@
                     tbody.innerHTML = '';
 
                     const selectOptions = procurementModes.map(mode =>
-                        `<option value="${mode.id}">${mode.Name}</option>`
+                        `<option value="${mode.ID}">${mode.Description}</option>`
                     ).join('');
+
 
                     data.forEach(line => {
                         const row = `
@@ -102,7 +103,7 @@
                                         ${selectOptions}
                                     </select>
                                 </td>
-                                <td>
+                                <td class="d-none">
                                     <input type="text" class="form-control" name="justification[${line.LineItemID}]" placeholder="Only if changing from suggestion">
                                 </td>
                             </tr>

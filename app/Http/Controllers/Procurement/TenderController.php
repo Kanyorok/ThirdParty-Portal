@@ -307,7 +307,14 @@ class TenderController extends Controller
         if ($tender->ApprovalStatus === TenderApprovalStatusEnum::REJECTED || $tender->ApprovalStatus === TenderApprovalStatusEnum::APPROVED) {
             $show = true;
         }
-        $items = TenderItems::where('TenderID', $id)->get();
+        $items = TenderItems::where('TenderID', $id)->with(['item', 'category','item.price'])->get();
+
+        $totalEstimatedCost = $items->sum(function ($item) {
+            $qty = $item->QtyToTender ?? 0;
+            $price = $item->item?->price?->ActualPrice ?? 0;
+            return $qty * $price;
+        });
+
         $suppliers = TenderSupplier::where('TenderID', $id)->with('supplier')->get();
         //Extract item names from TenderItems using relationship
         $tenderCategory = TenderCategory::find($tender->tender_category_id);
@@ -337,7 +344,8 @@ class TenderController extends Controller
             'manualItems',
             'items',
             'suppliers',
-            'show' // Pass the show variable to the view
+            'show',
+            'totalEstimatedCost'// Pass the show variable to the view
         ));
     }
 

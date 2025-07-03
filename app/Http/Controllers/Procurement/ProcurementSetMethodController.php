@@ -9,6 +9,7 @@ use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\PlanLineItems;
 use App\Services\Procurement\ProcurementPlan\ProcurementMethodService;
 use Illuminate\Http\Request;
+use App\Models\Core\CodeDetail;
 use App\Models\Procurement\ProcurementMode;
 
 
@@ -18,7 +19,7 @@ class ProcurementSetMethodController extends Controller
     public function index()
     {
         $approvedPlans = ConsolidatedProcurementPlan::where('Status', ProcurementPlanStatusEnum::Draft)->get();
-        $procurementModes = ProcurementMode::all();
+        $procurementModes = CodeDetail::where('CodeID', 'ProcurementMethod')->get();
         return view('procurement.procurementplan.planneditemsandactivities.assignprocurementmethod.index', compact('approvedPlans','procurementModes'));
     }
 
@@ -29,18 +30,23 @@ class ProcurementSetMethodController extends Controller
 
     public function getPlanItems($planId)
     {
-        $Lines = PlanLineItems::with('item', 'procurementMode')->where('PlanID', $planId)->get()
+        $Lines = PlanLineItems::with('item', 'procurementMode')
+            ->where('PlanID', $planId)
+            ->where('ProcurementMethod',0)
+            ->get()
             ->map(function ($lineItem) {
                 return [
                     'LineItemID' => $lineItem->LineItemID,
                     'item_name' => optional($lineItem->item)->ItemName,
                     'MergedQty' => $lineItem->MergedQty,
                     'EstimatedUnitCost' => $lineItem->EstimatedUnitCost,
-                     'ProcurementMethod' => optional($lineItem->procurementMode)->Name,
+                    'ProcurementMethod' => optional($lineItem->procurementMode)->Name,
                 ];
             });
+
         return response()->json($Lines);
     }
+
 
     public function store(Request $request, ProcurementMethodService $service)
     {

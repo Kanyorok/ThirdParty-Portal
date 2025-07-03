@@ -62,7 +62,7 @@
                             <td>{{ $index + 1 }}</td>
                             <td>{{ $bid->supplier->SupplierName ?? '-' }}</td>
                             <td>{{ $bid->tender->TenderNo ?? '-' }}</td>
-                            <td>{{ \Carbon\Carbon::parse($bid->CreatedOn)->format('Y-m-d') }}</td>
+                            <td>{{ \Carbon\Carbon::parse($bid->CreatedOn)->format('d/m/Y') }}</td>
                             <td>
                                 @if($bid->bidResponsiveness)
                                     {{ $bid->bidResponsiveness->SubmittedTimely ? '✅' : '❌' }}

@@ -134,7 +134,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             <tr>
                                 <td>${index + 1}</td>
                                 <td><input type="text" name="RequisitionItems[${index}][name]" value="${item.ItemName}" class="form-control" readonly></td>
-                                <td><input type="text" name="RequisitionItems[${index}][uom]" value="${item.UOM || ''}" class="form-control" readonly></td>
+                                <td><input type="text" name="RequisitionItems[${index}][uom]" value="${item.UOMName}" class="form-control" readonly></td>
                                 <td><input type="number" name="RequisitionItems[${index}][quantity]" value="${item.Quantity}" class="form-control" readonly></td>
                                 <td><input type="number" name="RequisitionItems[${index}][quotedprice]" data-index="${index}" class="form-control quotedprice" required></td>
                                 <td><input type="number" name="DurationDays" class="form-control" required></td>
