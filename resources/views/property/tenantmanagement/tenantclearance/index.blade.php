@@ -30,9 +30,21 @@
           <td>{{ $loop->iteration ?? '-' }}</td>
           <td>{{ $clearancetenant->tenant->TenantName ?? '-' }}</td>
           <td>{{ $clearancetenant->ExitDate ? \Carbon\Carbon::parse($clearancetenant->ExitDate)->format('d/m/Y') : '-' }}</td>
-          <td>@if($clearancetenant->FinalInspection) <span class="badge bg-success">Yes</span> @else <span class="badge bg-danger">No</span> @endif</td>
-          <td>@if($clearancetenant->AllDuesPaid) <span class="badge bg-success">Yes</span> @else <span class="badge bg-danger">No</span> @endif</td>
-          <td>@if($clearancetenant->KeysReturned) <span class="badge bg-success">Yes</span> @else <span class="badge bg-danger">No</span> @endif</td>
+          <td>@if($clearancetenant->FinalInspection)
+                  <span class="badge bg-success">Yes</span>
+              @else
+                  <span class="badge bg-danger">No</span>
+              @endif</td>
+          <td>@if($clearancetenant->AllDuesPaid)
+                  <span class="badge bg-success">Yes</span>
+              @else
+                  <span class="badge bg-danger">No</span>
+              @endif</td>
+          <td>@if($clearancetenant->KeysReturned)
+                  <span class="badge bg-success">Yes</span>
+              @else
+                  <span class="badge bg-danger">No</span>
+              @endif</td>
           <td>{{ $clearancetenant->code->Description ?? '-' }}</td>
           <td>{{ $clearancetenant->AdditionalNotes ?? '-' }}</td>
           <td>

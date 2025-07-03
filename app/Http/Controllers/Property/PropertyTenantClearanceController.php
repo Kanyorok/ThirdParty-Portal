@@ -54,7 +54,7 @@ class PropertyTenantClearanceController extends Controller
         $depositRefunded = $validatedData['DepositRefunded'] ? CodeDetail::findOrFail($validatedData['DepositRefunded']) : null;
         $clearance = $this->service->create(
             $tenant,
-            $validatedData['ExitDate'],
+            $exitdate = \Carbon\Carbon::createFromFormat('d/m/Y', $validatedData['ExitDate']),
             $validatedData['FinalInspection'],
             $validatedData['AllDuesPaid'],
             $validatedData['KeysReturned'],

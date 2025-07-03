@@ -68,7 +68,7 @@
                                     <i class="fas fa-times"></i> reject
                                 </button>
                             @endif
-                            @break
+                                @break
                         @case(PlannerStatus::Active->value)
                             <a href="{{ route('planner.document',[$planner->PlannerID]) }}"
                                class="btn btn-info w-100 m-2" download target="_blank"><i class="fas fa-download"></i>
@@ -250,7 +250,7 @@
                                     </form>
                                 </div>
                             @endif
-                            @break
+                                @break
                         @case(PlannerStatus::MarketingManager->value)
                             @if($canApprove)
                                 <div class="onboarding-content with-gradient d-none modal-item text-center"
@@ -306,7 +306,7 @@
                                     </form>
                                 </div>
                             @endif
-                            @break
+                                @break
                         @case(PlannerStatus::Ceo->value)
                             @if($canApprove)
                                 <div class="onboarding-content with-gradient d-none modal-item text-center"

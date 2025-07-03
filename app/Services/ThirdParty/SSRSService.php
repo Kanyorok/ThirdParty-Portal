@@ -66,7 +66,7 @@ class SSRSService
         $this->_serverAPIUrl = Str::rtrim($this->serverURL, '/') . "/reports/api/v2.0/";
 
         $this->_query = Http::withCookies(request()->cookie(), parse_url($this->serverURL, PHP_URL_HOST))
-            ->withHeaders(request()->header())->retry(3, 100)->timeout(15)
+            ->withHeaders(request()->header())->retry(3, 100)->timeout(60 * 10)
             ->withBasicAuth($username, $password)->withOptions(['auth' => [$username, $password, 'ntlm']]);
 
     }
@@ -212,19 +212,28 @@ class SSRSService
                 $xpath->registerNamespace('ns', $defaultNs);
             }
 
-            // Find all Details elements - using namespace-aware query
-            $detailsNodes = $xpath->query('//ns:Details');
-
-            // If no nodes found, try without namespace
-            if (!$detailsNodes || $detailsNodes->length === 0) {
-                $detailsNodes = $xpath->query('//Details');
-            }
-
             // Create a new collection to hold our results
             $collection = collect();
 
+            // Try different patterns for detail elements
+            $detailsPatterns = [
+                '//ns:Details',      // Standard Details with namespace
+                '//ns:Details1',     // Details1 with namespace
+                '//Details',         // Standard Details without namespace
+                '//Details1',        // Details1 without namespace
+                '//*[starts-with(local-name(), "Details")]' // Any element starting with "Details"
+            ];
+
+            $detailsNodes = null;
+            foreach ($detailsPatterns as $pattern) {
+                $detailsNodes = $xpath->query($pattern);
+                if ($detailsNodes && $detailsNodes->length > 0) {
+                    break;
+                }
+            }
+
             // Process each Details node
-            if ($detailsNodes) {
+            if ($detailsNodes && $detailsNodes->length > 0) {
                 foreach ($detailsNodes as $node) {
                     $item = [];
 
@@ -235,8 +244,10 @@ class SSRSService
                         }
                     }
 
-                    // Add item to collection
-                    $collection->push($item);
+                    // Add item to collection if it has any attributes
+                    if (!empty($item)) {
+                        $collection->push($item);
+                    }
                 }
             }
 
@@ -248,9 +259,9 @@ class SSRSService
             // Log::error('XML Parsing Error: ' . $e->getMessage());
             libxml_clear_errors();
             throw new ErroredException('Failed to parse report ');
-            // return collect();
         }
     }
+
 
     /**
      * Get content type based on export format
@@ -338,20 +349,20 @@ class SSRSService
         return $response->json()['value'] ?? [];
     }
 
-
     /**
      * @throws ConnectionException
      * @throws ErroredException
      */
-    public function getReportParametersValidated(string $id, array $requestParameters): array
+    public function getReportParametersValidated(string $id, array $requestParameters): Collection
     {
         $finalParameters = collect();
         $parameters = $this->getReportParameters($id);
-        //dd($parameters, $requestParameters);
+
         foreach ($parameters as $parameter) {
             if (isset($requestParameters[$parameter['Name']])) {
                 $value = $requestParameters[$parameter['Name']];
                 if ($parameter['ParameterType'] === 'DateTime') {
+
                     if (strtotime($value)) {
                         $finalParameters->put($parameter['Name'], $value);
                         continue;
@@ -361,7 +372,7 @@ class SSRSService
 
                 if ($parameter['ParameterType'] === 'Boolean') {
                     if (in_array(strtolower($value), ['true', 'false', '1', '0'], true)) {
-                        $finalParameters->put($parameter['Name'], in_array(strtolower($value), ['true', '1'], true) ? 'true' : 'false');;
+                        $finalParameters->put($parameter['Name'], in_array(strtolower($value), ['true', '1'], true) ? 'true' : 'false');
                         continue;
                     }
                     throw new ErroredException("Parameter {$parameter['Name']} must be a valid boolean value.");
@@ -415,7 +426,8 @@ class SSRSService
                 throw new ErroredException("Parameter {$parameter['Name']} is required.");
             }
         }
-        return $finalParameters->toArray();
+
+        return $finalParameters;
     }
 
     /**

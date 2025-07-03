@@ -2,27 +2,34 @@
 
 namespace App\Models\Budget;
 
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BudgetLineProductTypes extends Model
 {
-    protected $table = 't_BudgetLineProductTypes';
-    protected $primaryKey = 'Id';
+    use UserActorTrait, SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
-
-    public static function getPrimaryKey(): string
-    {
-        return 'BudgetLineProductTypesId';
-    }
-
+    protected $table = 't_BudgetLineProductTypes';
+    protected $primaryKey = 'Id';
     protected $fillable = [
         'BudgetLineId',
         'ProductTypeId',
         'CreatedBy',
         'ModifiedBy',
     ];
-    
+
+    public static function getPrimaryKey(): string
+    {
+        return 'BudgetLineProductTypesId';
+    }
+
+    public function products()
+    {
+        return $this->belongsTo(BudgetProductType::class, 'ProductTypeId', 'Id');
+    }
+
 }

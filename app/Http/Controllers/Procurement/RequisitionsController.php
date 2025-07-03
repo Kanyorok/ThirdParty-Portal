@@ -20,9 +20,9 @@ use Illuminate\Support\Facades\DB;
 
 class RequisitionsController extends Controller
 {
-    public function __construct(protected RequisitionService $service,protected RequisitionItemService $requisitionItemService,protected DocumentApprovalService $documentApprovalService)
+    public function __construct(protected RequisitionService $service, protected RequisitionItemService $requisitionItemService, protected DocumentApprovalService $documentApprovalService)
     {
-        $this->middleware('ajax')->except(['index', 'show', 'create','approval','approve']);
+        $this->middleware('ajax')->except(['index', 'show', 'create', 'approval', 'approve']);
 //         $this->authorizeResource(Requisitions::class); // Uncomment if using authorization
     }
 
@@ -143,9 +143,10 @@ class RequisitionsController extends Controller
         }
     }
 
-    public function approval($id){
+    public function approval($id)
+    {
         try {
-            $requisition = Requisitions::findOrFail($id); 
+            $requisition = Requisitions::findOrFail($id);
             $this->authorize('view', $requisition); // Authorize the order object itself
 
             $requisitionInfo = $this->service->getRelatedRequisition($id);
@@ -170,7 +171,7 @@ class RequisitionsController extends Controller
     {
         $hasLines = DB::table('t_RequisitionLines')->where('RequisitionId', $id)->exists();
         if (!$hasLines) {
-            return back()->with('error','Cannot approve a requisition without items.');
+            return back()->with('error', 'Cannot approve a requisition without items.');
         }
         return $this->documentApprovalService->approve($requisitionRequest, $id);
     }
@@ -241,8 +242,8 @@ class RequisitionsController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => $details,
-            ]);}
-        catch(\Exception $e){
+            ]);
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch items.',

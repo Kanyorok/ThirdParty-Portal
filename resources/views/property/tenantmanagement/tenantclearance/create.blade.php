@@ -1,6 +1,15 @@
 @extends('layouts.app')
 @section('title', 'Tenant Exit')
 @section('content')
+@if ($errors->any())
+    <div class="alert alert-danger">
+        <ul class="mb-0">
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
 <div class="container mt-4">
 
   <h4 class="fw-bold mb-3">Tenant Exit & Clearance Checklist</h4>
@@ -14,15 +23,15 @@
         <div class="col-md-6">
           <label class="form-label">Tenant / Lease</label>
             <select name="Tenant" class="form-select" required>
-              <option>--Select the tenant</option>
+                <option>--Select the tenant</option>
                 @foreach ($newtenants as $newtenant)
                     <option value="{{ $newtenant->Id }}">{{ $newtenant->TenantName }}</option>
                 @endforeach
             </select>
         </div>
         <div class="col-md-6">
-          <label class="form-label">Exit Date</label>
-            <input type="date" class="form-control" value="ExitDate" name="ExitDate">
+          <label class="form-label" id="exit-date">Exit Date</label>
+            <input type="date" class="form-control" id="exit-date" value="ExitDate" name="ExitDate">
         </div>
       </div>
 
@@ -31,28 +40,28 @@
         <div class="col-md-3">
           <label class="form-label">Final Inspection Done?</label>
             <select class="form-select" name="FinalInspection">
-            <option value="1">Yes</option>
-            <option value="0">No</option>
+                <option value="1">Yes</option>
+                <option value="0">No</option>
           </select>
         </div>
         <div class="col-md-3">
           <label class="form-label">All Dues Paid?</label>
             <select class="form-select" name="AllDuesPaid">
-            <option value="1">Yes</option>
-            <option value="0">No</option>
+                <option value="1">Yes</option>
+                <option value="0">No</option>
           </select>
         </div>
         <div class="col-md-3">
           <label class="form-label">Keys Returned?</label>
             <select class="form-select" name="KeysReturned">
-            <option value="1">Yes</option>
-            <option value="0">No</option>
+                <option value="1">Yes</option>
+                <option value="0">No</option>
           </select>
         </div>
         <div class="col-md-3">
           <label class="form-label">Deposit Refunded?</label>
             <select class="form-select" name="DepositRefunded" required>
-            <option>--Select the tenant Type</option>
+                <option>--Select the tenant Type</option>
                 @foreach ($codedetails as $codedetail)
                     <option value="{{ $codedetail->ID }}">{{ $codedetail->Description }}</option>
                 @endforeach
@@ -85,4 +94,13 @@
   </div>
 </div>
 
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    flatpickr("#exit-date", {
+        dateFormat: "d/m/Y",
+        allowInput: true
+    });
+</script>
 @endsection

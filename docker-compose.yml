@@ -1,23 +1,23 @@
 version: '3.8'
 
 services:
-  laravel:
+    laravel:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: BRERP
     ports:
-      - "80:80"
+        - "80:80"
     volumes:
-      - .:/var/www
-      - logs:/var/www/logs
+        - .:/var/www
+        - logs:/var/www/logs
     working_dir: /var/www
     networks:
-      - Applications
+        - Applications
 
 networks:
-  Applications:
-    external: true
+    Applications:
+        external: true
 
 volumes:
-  logs:
+    logs:

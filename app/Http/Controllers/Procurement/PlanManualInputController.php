@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Procurement;
 
+use App\Enums\ProcurementPlanStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Procurement\PlanManualInputRequest;
-use App\Models\Auth\User;
 use App\Models\Inventory\ItemCategories;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Procurement\BudgetMaster;
@@ -12,9 +12,6 @@ use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\PlanLineItems;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use App\Models\Inventory\UnitOfMeasure;
-use App\Enums\ProcurementPlanStatusEnum;
-use App\Policies\Procurement\PlanManualInputPolicy;
 
 
 class PlanManualInputController extends Controller
@@ -59,7 +56,7 @@ class PlanManualInputController extends Controller
         $this->authorize('store', PlanLineItems::class);
 
         $validated = $request->validated();
-        
+
         $user = $request->user();
 
         $item = $request->getItem();
@@ -87,7 +84,7 @@ class PlanManualInputController extends Controller
         $planLineItem->ProcurementMethod = '';
         $planLineItem->SchedulePeriod = $validated['schedule_period'];
         $planLineItem->ExpectedDeliveryDate = $validated['expected_delivery_date'];
-        $planLineItem->BudgetLineID = (int) $validated['budget_line_id'];
+        $planLineItem->BudgetLineID = (int)$validated['budget_line_id'];
         $planLineItem->ExecutionStatus = 'Pending';
         $planLineItem->ChangeRemarks = $validated['notes'] ?? null;
         $planLineItem->BranchID = $user->employee->BranchId;

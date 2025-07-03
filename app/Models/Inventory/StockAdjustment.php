@@ -23,28 +23,26 @@ class StockAdjustment extends Model
     protected $table = 't_StockAdjustments';
     protected $connection = 'sqlsrv';
     protected $primaryKey = 'Id';
-    public $timestamps = false;
-
     protected $fillable = [
-        'AdjustmentId', 
-        'AdjustmentDate', 
-        'Branch', 
-        'Reason', 
-        'AdjustedBy', 
+        'AdjustmentId',
+        'AdjustmentDate',
+        'Branch',
+        'Reason',
+        'AdjustedBy',
         'Status',
-        'CreatedBy', 
-        'CreatedOn', 
-        'ModifiedBy', 
-        'ModifiedOn', 
-        'DeletedBy', 
+        'CreatedBy',
+        'CreatedOn',
+        'ModifiedBy',
+        'ModifiedOn',
+        'DeletedBy',
         'DeletedOn'
     ];
-    
+
     public function adjustedBy()
     {
         return $this->belongsTo(User::class, 'AdjustedBy', 'Id');
     }
-
+    
     public function items()
     {
         return $this->hasMany(StockAdjustmentItem::class, 'AdjustmentId', 'Id');
@@ -64,7 +62,8 @@ class StockAdjustment extends Model
     {
         return $this->belongsTo(User::class, 'DeletedBy', 'Id');
     }
-      public function branch()
+
+    public function branch()
     {
         return $this->belongsTo(Branch::class, 'Branch', 'Id');
     }
@@ -79,5 +78,5 @@ class StockAdjustment extends Model
 
     
 
-    
+
 }

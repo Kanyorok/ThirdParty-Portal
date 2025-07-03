@@ -27,12 +27,12 @@
                 <span class="fw-bold">{{ $branch ? $branch->Name : 'N/A' }}</span>
             </div>
         </div>
-        <div class="col-md-3">
+        {{-- <div class="col-md-3">
             <label class="form-label fw-medium">Frequency</label>
             <div class="border rounded p-2 bg-light">
                 <span class="fw-bold">Monthly</span>
             </div>
-        </div>
+        </div> --}}
     </div>
 
     <form method="POST" action="{{ route('topdownallocation.store') }}">
@@ -78,6 +78,7 @@
                                             {{ $item->Description }} <b>({{ $item->GLAccountTypeID ?? 'NA' }})</b>
                                         </td>
                                         <input type="hidden" name="gl_data[{{ $item->AccountID }}][Description]" value="{{ $item->Description }}">
+                                        <input type="hidden" name="gl_data[{{ $item->AccountID }}][AttachID]" value="{{ $item->Id }}">
                                         <input type="hidden" name="gl_data[{{ $item->AccountID }}][GLAccountTypeID]" value="{{ $item->GLAccountTypeID ?? 'NA' }}">
                                         @for ($m = 1; $m <= 12; $m++)
                                             <td>

@@ -14,15 +14,18 @@
                     <div class="col-md-6">
                         <h5>Supplier Information</h5>
                         <p><strong>Supplier:</strong> {{$orderInfo->SupplierName ?? 'N/A'}}</p>
-{{--                        <p><strong>Address:</strong> {{ $purchaseOrder->supplier->address }}</p>--}}
+                        {{--                        <p><strong>Address:</strong> {{ $purchaseOrder->supplier->address }}</p>--}}
                     </div>
 
                     <div class="col-md-6">
                         <h5>PO Details</h5>
                         <p><strong>LPO Number:</strong> {{$orderInfo->OrderNo ?? 'N/A'}}</p>
-                        <p><strong>Date:</strong> {{ isset($orderInfo->OrderDate) ? \Carbon\Carbon::parse($orderInfo->OrderDate)->format('Y-m-d') : '' }}</p>
+                        <p>
+                            <strong>Date:</strong> {{ isset($orderInfo->OrderDate) ? \Carbon\Carbon::parse($orderInfo->OrderDate)->format('Y-m-d') : '' }}
+                        </p>
                         <p><strong>Reference Number:</strong> {{$orderInfo->ExtOrdNum ?? 'N/A'}}</p>
-                        <p><strong>Priority:</strong> <span class="badge badge-danger">{{$orderInfo->Priority ?? 'N/A'}}</span></p>
+                        <p><strong>Priority:</strong> <span
+                                class="badge badge-danger">{{$orderInfo->Priority ?? 'N/A'}}</span></p>
                         <p><strong>Payment Terms:</strong> {{$orderInfo->Priority ?? 'N/A'}}</p>
                     </div>
                 </div>
@@ -92,7 +95,8 @@
                 <!-- Approval Actions -->
                 <div class="row mt-4">
                     <div class="col-md-12">
-                        <form action="{{ route('purchaseOrder.approve', $orderInfo->Id) }}" method="POST" class="d-inline">
+                        <form action="{{ route('purchaseOrder.approve', $orderInfo->Id) }}" method="POST"
+                              class="d-inline">
                             @csrf
 
                             <input type="hidden" name="document_type" value="purchase_order">
@@ -104,13 +108,14 @@
                             </button>
                         </form>
 
-                        <button type="button" class="btn btn-danger btn-lg ml-2" data-toggle="modal" data-target="#rejectModal">
+                        <button type="button" class="btn btn-danger btn-lg ml-2" data-toggle="modal"
+                                data-target="#rejectModal">
                             <i class="fas fa-times"></i> Reject PO
                         </button>
 
-{{--                        <a href="{{ route('purchaseOrder.approve', $orderInfo->Id) }}" class="btn btn-info btn-lg ml-2">--}}
-{{--                            <i class="fas fa-print"></i> Print PO--}}
-{{--                        </a>--}}
+                        {{--                        <a href="{{ route('purchaseOrder.approve', $orderInfo->Id) }}" class="btn btn-info btn-lg ml-2">--}}
+                        {{--                            <i class="fas fa-print"></i> Print PO--}}
+                        {{--                        </a>--}}
                     </div>
                 </div>
             </div>
@@ -118,7 +123,8 @@
     </div>
 
     <!-- Reject Modal -->
-    <div class="modal fade" id="rejectModal" tabindex="-1" role="dialog" aria-labelledby="rejectModalLabel" aria-hidden="true">
+    <div class="modal fade" id="rejectModal" tabindex="-1" role="dialog" aria-labelledby="rejectModalLabel"
+         aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -132,7 +138,8 @@
                     <div class="modal-body">
                         <div class="form-group">
                             <label for="rejection_reason">Reason for Rejection</label>
-                            <textarea class="form-control" id="rejection_reason" name="rejection_reason" rows="3" required></textarea>
+                            <textarea class="form-control" id="rejection_reason" name="rejection_reason" rows="3"
+                                      required></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">

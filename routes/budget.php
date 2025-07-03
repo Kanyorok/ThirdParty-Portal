@@ -147,9 +147,10 @@ Route::namespace('Budget')->prefix('budget')->group(function () {
     Route::resource('budgetdriverssetup',BudgetDriversSetupController::class);
     Route::get('budgetlinemapping/gl-subtypes/{typeId}', [BudgetLineMappingController::class, 'getGLAccountSubTypes']);
 
-    Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('budget-reports.export');
+    Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('budgetline-reports.export');
     Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
-        'index' => 'budget-reports.index',
-        'show' => 'budget-reports.show'
+        'index' => 'budgetline-reports.index',
+        'show' => 'budgetline-reports.show'
     ]);
+    Route::delete('budget/delete-gl-attachment/{id}', [BudgetPeriodController::class, 'delGLAttachment'])->name('budget.delete-gl-attachment');
 });

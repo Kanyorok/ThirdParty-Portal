@@ -11,6 +11,7 @@
       <thead class="table-light">
         <tr>
           <th>#</th>
+          <th>Activity Name</th>
           <th>Description</th>
           <th>Budget Line</th>
           <th>Branch</th>
@@ -26,7 +27,10 @@
           @php $total += $activity->FullAllocation; @endphp
           <tr>
             <td>{{ $i + 1 }}</td>
-            <td>{{ $activity->Description }}</td>
+            <td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ $activity->activity->ActivityName }}">
+              {{ $activity->activity->ActivityName }}
+            </td>
+            <td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ $activity->Description}}">{{ $activity->Description }}</td>
             <td>{{ $activity->budgetLine->LineName ?? '-' }}</td>
             <td>{{ $activity->branch->Name ?? '-' }}</td>
             <td>{{ ucfirst($activity->AllocationType) }}</td>
@@ -68,11 +72,11 @@
               @endif
             </td>
             <td>
-              <a href="{{ route('budgetactivities.edit', $activity->Id) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
+              <a href="{{ route('budgetactivities.edit', $activity->Id) }}" class="btn btn-sm btn-primary">🖉</a>
               <form action="{{ route('budgetactivities.destroy', $activity->Id) }}" method="POST" class="d-inline">
                 @csrf
                 @method('DELETE')
-                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this activity?')">Delete</button>
+                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this activity?')">🗑️</button>
               </form>
           </tr>
         @endforeach
