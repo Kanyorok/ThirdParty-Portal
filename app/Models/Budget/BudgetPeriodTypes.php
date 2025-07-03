@@ -11,7 +11,7 @@ class BudgetPeriodTypes extends Model
     use UserActorTrait, SoftDeletes;
 
     protected $primaryKey = 'Id';
-    
+
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';

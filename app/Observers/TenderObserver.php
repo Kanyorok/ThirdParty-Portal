@@ -3,23 +3,18 @@
 namespace App\Observers;
 
 use App\Models\Procurement\Tender;
-use Illuminate\Support\Facades\DB;
+use App\Services\Procurement\Tendering\TenderService;
 
-class TenderObserver {
+class TenderObserver
+{
     /**
      * Handle the Tender "create" event.
      *
-     * @param  \App\Models\Procurement\Tender  $tender
+     * @param Tender $tender
      * @return void
      */
-    public function creating(Tender $tender)
+    public function creating(Tender $tender): void
     {
-        $year = now()->year;
-        $lastTender = DB::table('t_Tenders')
-            ->where('TenderNo', 'like', "TENDER-$year%")
-            ->orderBy('TenderNo', 'desc')
-            ->first();
-        $nextNumber = $lastTender ? (int) substr($lastTender->TenderNo, -4) + 1 : 1;
-        $tender->TenderNo = sprintf('TENDER-%d-%04d', $year, $nextNumber);
+        $tender->TenderNo = TenderService::ID();
     }
 }

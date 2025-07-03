@@ -33,7 +33,7 @@ class ApprovalLimits extends Model
     protected $casts = [
         // 'Status' => CampaignStatusEnum::class,
         // 'Type' => CampaignTypeEnum::class,
-        'CreatedBy'  => 'integer',
+        'CreatedBy' => 'integer',
         'ModifiedBy' => 'integer',//,
         // 'Processing' => 'boolean'
     ];

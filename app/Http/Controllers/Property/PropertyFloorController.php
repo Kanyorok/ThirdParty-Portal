@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers\Property;
 
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth; 
-use App\Enums\Core\PermissionEnum;  
+use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\PropertyRegistry\PropertyFloorRequest;
-use App\Services\Property\PropertyRegistry\PropertyFloorService;
-use Illuminate\Http\Request;
+use App\Models\PropertyManagement\PropertyBlock;
 use App\Models\PropertyManagement\PropertyFloor;
 use App\Models\PropertyManagement\PropertyRegistry;
-use App\Models\PropertyManagement\PropertyBlock;
+use App\Services\Property\PropertyRegistry\PropertyFloorService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PropertyFloorController extends Controller
 {
@@ -30,11 +30,12 @@ class PropertyFloorController extends Controller
 
     public function create(){
         $this->authorize(PermissionEnum::PropertyStructuralCreate, PropertyFloor::class);
-         $lineentries = PropertyRegistry::with('getBlockByProperty')->get();
-         
+        $lineentries = PropertyRegistry::with('getBlockByProperty')->get();
+
 
         return view('property.propertyregistry.structuralmapping.addfloor.create', compact('lineentries'));
     }
+
     public function getBlockByProperty($propertyId)
     {
         $blocks = PropertyBlock::where('PropertyID', $propertyId)->get();

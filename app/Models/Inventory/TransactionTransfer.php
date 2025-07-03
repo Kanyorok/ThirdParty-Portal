@@ -13,7 +13,7 @@ use App\Models\Inventory\TransactionReceipt;
 
 class TransactionTransfer extends Model
 {
-      use SoftDeletes,UserActorTrait;
+    use SoftDeletes, UserActorTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -22,24 +22,24 @@ class TransactionTransfer extends Model
     protected $table = 't_Transfers';
     protected $connection = 'sqlsrv';
     protected $primaryKey = 'Id';
-  
-  
+
+
     protected $fillable = [
-            'TransferDate',
-            'RequisitionId',
-            'RequisitionType',
-            'TransferredBy',
-            'DispatchedQty',
-            'UOM',
-             'Status',
-            'FromBranch',
-            'ToBranch',
-            'CreatedBy',
-            'CreatedOn',
-            'ModifiedBy',
-            'ModifiedOn',
-           'DeletedBy',
-           'DeletedOn',
+        'TransferDate',
+        'RequisitionId',
+        'RequisitionType',
+        'TransferredBy',
+        'DispatchedQty',
+        'UOM',
+        'Status',
+        'FromBranch',
+        'ToBranch',
+        'CreatedBy',
+        'CreatedOn',
+        'ModifiedBy',
+        'ModifiedOn',
+        'DeletedBy',
+        'DeletedOn',
 
     ];
 
@@ -63,32 +63,33 @@ class TransactionTransfer extends Model
     {
         return $this->belongsTo(User::class, 'DeletedBy', 'Id');
     }
-     
+
     public function requisition()
     {
         return $this->belongsTo(InterBranchRequisition::class, 'RequisitionId', 'Id');
     }
 
-     public function transferredBy()
+    public function transferredBy()
     {
         return $this->belongsTo(User::class, 'TransferredBy', 'Id');
     }
 
-     public function items()  
-     {
-      return $this->hasMany(TransactionTransferItem::class, 'TransferId', 'Id')->whereNull('DeletedOn');
-     }
+    public function items()
+    {
+        return $this->hasMany(TransactionTransferItem::class, 'TransferId', 'Id')->whereNull('DeletedOn');
+    }
 
 
     public function fromBranch()
     {
-    return $this->belongsTo(Branch::class, 'FromBranch', 'Id');
+        return $this->belongsTo(Branch::class, 'FromBranch', 'Id');
     }
     public function toBranch()
     {
-    return $this->belongsTo(Branch::class, 'ToBranch', 'Id');
+        return $this->belongsTo(Branch::class, 'ToBranch', 'Id');
     }
-     public static function getPrimaryKey(): string
+
+    public static function getPrimaryKey(): string
     {
         return 'TransferId';
     }

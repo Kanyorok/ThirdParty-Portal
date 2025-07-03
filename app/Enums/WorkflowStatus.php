@@ -17,6 +17,12 @@ enum WorkflowStatus: string
 
     case Pending = 'pe';
 
+    case UnderReview = 'rv';
+
+    case UnderRepair = 'ur';
+
+    case Disposed = 'di';
+
     case InTransit = 'it';
 
     case Delivered = 'de';

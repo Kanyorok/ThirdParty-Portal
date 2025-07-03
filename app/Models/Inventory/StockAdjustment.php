@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Model\UserActorTrait;
 use App\Models\Core\Branch;
 use App\Models\Auth\User;
+use App\Models\Core\CodeDetail;
 
 
 
@@ -22,26 +23,29 @@ class StockAdjustment extends Model
     protected $table = 't_StockAdjustments';
     protected $connection = 'sqlsrv';
     protected $primaryKey = 'Id';
-    public $timestamps = false;
-
     protected $fillable = [
-        'AdjustmentId', 
-        'AdjustmentDate', 
-        'Branch', 
-        'Reason', 
-        'AdjustedBy', 
+        'AdjustmentId',
+        'AdjustmentDate',
+        'Branch',
+        'Reason',
+        'AdjustedBy',
         'Status',
-        'CreatedBy', 
-        'CreatedOn', 
-        'ModifiedBy', 
-        'ModifiedOn', 
-        'DeletedBy', 
+        'CreatedBy',
+        'CreatedOn',
+        'ModifiedBy',
+        'ModifiedOn',
+        'DeletedBy',
         'DeletedOn'
     ];
-    
+
     public function adjustedBy()
     {
         return $this->belongsTo(User::class, 'AdjustedBy', 'Id');
+    }
+
+    public static function getPrimaryKey(): string
+    {
+        return 'Id';
     }
 
     public function items()
@@ -63,7 +67,8 @@ class StockAdjustment extends Model
     {
         return $this->belongsTo(User::class, 'DeletedBy', 'Id');
     }
-      public function branch()
+
+    public function branch()
     {
         return $this->belongsTo(Branch::class, 'Branch', 'Id');
     }
@@ -71,7 +76,12 @@ class StockAdjustment extends Model
     {
         return 'Id';
     }
-    
+    public function reason()
+{
+    return $this->belongsTo(CodeDetail::class, 'Reason', 'Id');
+}
 
     
+
+
 }

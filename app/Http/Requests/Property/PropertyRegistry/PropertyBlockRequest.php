@@ -22,9 +22,9 @@ class PropertyBlockRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'PropertyID'=>'required|exists:t_PropertyRegistry,Id',
-            'BlockName'=>'required|string|max:50',
-            'Description'=>'required|string|max:100',
+            'PropertyID' => 'required|exists:t_PropertyRegistry,Id',
+            'BlockName' => 'required|string|max:50',
+            'Description' => 'required|string|max:100',
         ];
     }
 }

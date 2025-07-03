@@ -46,14 +46,13 @@
                                     data-bs-toggle="modal"
                                     data-bs-target="#deleteSectionModal"
                                     data-id="{{ $item->id }}"
-                                    data-name="{{ $item->SectionName }}"
-                                >
+                                    data-name="{{ $item->SectionName }}">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
 
                                 <a href="{{ route('criterias.show', $item->id) }}"
                                    class="btn btn-sm btn-outline-success">
-                                    View Criterias
+                                    Add Criterias on section
                                 </a>
                             </td>
                         </tr>

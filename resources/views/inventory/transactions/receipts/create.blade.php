@@ -2,7 +2,7 @@
 
 @section('title', 'Create Receipt')
 
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
 
 @section('content')
 <div class="card mb-4">
@@ -25,16 +25,16 @@
       @endif
 
       <div class="row mb-3">
-        <div class="col">
-          <label class="form-label">Transfer Ref</label>
-          <select id="transferId" name="TransferID" class="form-select" required>
-            <option value="">Select Transfer</option>
-            @foreach($transfers as $transfer)
-              <option value="{{ $transfer->Id }}" {{ old('TransferID') == $transfer->Id ? 'selected' : '' }}>
-                {{ $transfer->TransferID }}
-              </option>
-            @endforeach
-          </select>
+          <div class="col">
+              <label class="form-label">Transfer Ref</label>
+              <select id="transferId" name="TransferID" class="form-select" required>
+                  <option value="">Select Transfer</option>
+                  @foreach($transfers as $transfer)
+                      <option value="{{ $transfer->Id }}" {{ old('TransferID') == $transfer->Id ? 'selected' : '' }}>
+                          {{ $transfer->TransferID }}
+                      </option>
+                  @endforeach
+              </select>
         </div>
 
         <div class="col">
@@ -49,16 +49,17 @@
           </select>
         </div>
 
-        <div class="col">
-          <label class="form-label">Receive Date</label>
-          <input type="date" name="ReceivedDate" class="form-control" value="{{ old('ReceivedDate', date('Y-m-d')) }}" required>
+          <div class="col">
+              <label class="form-label">Receive Date</label>
+              <input type="date" name="ReceivedDate" class="form-control"
+                     value="{{ old('ReceivedDate', date('Y-m-d')) }}" required>
         </div>
       </div>
 
-      <div class="mb-3">
-        <label class="form-label">Items Received</label>
-        <table class="table table-bordered">
-          <thead>
+                <div class="mb-3">
+                    <label class="form-label">Items Received</label>
+                    <table class="table table-bordered">
+                        <thead>
             <tr>
               <th>Product</th>
               <th>Dispatched Qty</th>
@@ -119,31 +120,31 @@
       </div>
 
       <div class="mb-3">
-        <label class="form-label">General Remarks</label>
-        <textarea name="GeneralRemarks" class="form-control">{{ old('GeneralRemarks') }}</textarea>
+          <label class="form-label">General Remarks</label>
+          <textarea name="GeneralRemarks" class="form-control">{{ old('GeneralRemarks') }}</textarea>
       </div>
 
-      <button type="submit" class="btn btn-success">Post Receipt</button>
+                <button type="submit" class="btn btn-success">Post Receipt</button>
     </form>
   </div>
-</div>
+    </div>
 
-<script>
-  document.getElementById('transferId').addEventListener('change', function () {
-    const transferId = this.value;
-    if (!transferId) return;
+    <script>
+        document.getElementById('transferId').addEventListener('change', function () {
+            const transferId = this.value;
+            if (!transferId) return;
 
-    fetch(`/inventory/transactionsreceipts/transfer-items/${transferId}`)
-      .then(response => response.json())
-      .then(data => {
-        const tableBody = document.getElementById('itemsTableBody');
-        tableBody.innerHTML = "";
+            fetch(`/inventory/transactionsreceipts/transfer-items/${transferId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.getElementById('itemsTableBody');
+                    tableBody.innerHTML = "";
 
         data.items.forEach((item, index) => {
           const dispatchedQty = item.DispatchedQty ?? 0;
           const stores = item.stores ?? [];
 
-          const row = `
+                        const row = `
             <tr>
               <td>
                 ${item.item?.ItemName ?? 'N/A'}
@@ -172,13 +173,13 @@
               </td>
             </tr>
           `;
-          tableBody.innerHTML += row;
+                        tableBody.innerHTML += row;
+                    });
+                })
+                .catch(error => {
+                    console.error("Error fetching transfer data:", error);
+                });
         });
-      })
-      .catch(error => {
-        console.error("Error fetching transfer data:", error);
-      });
-  });
 
   // Recalculate discrepancy when quantity is changed
   document.addEventListener('input', function (event) {
@@ -187,13 +188,13 @@
       const dispatchedInput = row.querySelector('.dispatched-qty');
       const discrepancyInput = row.querySelector('.discrepancy');
 
-      const dispatched = parseFloat(dispatchedInput.value) || 0;
-      const received = parseFloat(event.target.value) || 0;
-      const discrepancy = dispatched - received;
+                const dispatched = parseFloat(dispatchedInput.value) || 0;
+                const received = parseFloat(event.target.value) || 0;
+                const discrepancy = dispatched - received;
 
-      discrepancyInput.value = discrepancy;
-    }
-  });
+                discrepancyInput.value = discrepancy;
+            }
+        });
 
   document.addEventListener('DOMContentLoaded', function () {
     $('.select2').select2({

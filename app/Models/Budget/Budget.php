@@ -8,23 +8,21 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Budget extends Model
 {
-    use UserActorTrait,SoftDeletes;
-    
-    protected $table='t_Budgets';
-    protected $primaryKey = 'Id';
-    
+    use UserActorTrait, SoftDeletes;
+
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
-
-    protected $fillable=[
+    protected $table = 't_Budgets';
+    protected $primaryKey = 'Id';
+    protected $fillable = [
         'Name',
         'FiscalYear',
         'From',
         'To',
         'Notes',
         'Status',
-        
+
         'CreatedBy',
         'CreatedOn',
         'ModifiedBy',
@@ -32,13 +30,13 @@ class Budget extends Model
         'DeletedBy',
     ];
 
-    protected $cast=[
-        'CreatedOn'   => 'datetime',
-        'ModifiedOn'  => 'datetime',
-        'DeletedOn'   => 'datetime',
+    protected $cast = [
+        'CreatedOn' => 'datetime',
+        'ModifiedOn' => 'datetime',
+        'DeletedOn' => 'datetime',
     ];
 
-    
+
     public static function getPrimaryKey(): string
     {
         return 'BudgetId';

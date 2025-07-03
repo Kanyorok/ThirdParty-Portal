@@ -50,7 +50,7 @@
                         <div class="col-md-4">
                             <label class="form-label">Date</label>
                             <input type="date" name="CreatedOn" class="form-control"
-                                       value="{{ old('CreatedOn', now()->toDateString()) }}" required>
+                                   value="{{ old('CreatedOn', now()->toDateString()) }}" required>
                         </div>
                     </div>
 
@@ -75,13 +75,15 @@
                     <div class="col-md-2">
                         <label class="form-label">Parent Category</label>
                         {{-- Categories will be dynamically populated by JS --}}
-                        <select name="items[__INDEX__][Category]" class="form-select category-select" data-initial="" required>
+                        <select name="items[__INDEX__][Category]" class="form-select category-select" data-initial=""
+                                required>
                             <option value="">-- Select Category --</option>
                         </select>
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">Category</label>
-                        <select name="items[__INDEX__][Subcategory]" class="form-select subcategory-select" data-initial="">
+                        <select name="items[__INDEX__][Subcategory]" class="form-select subcategory-select"
+                                data-initial="">
                             <option value="">-- Select Subcategory --</option>
                         </select>
                     </div>
@@ -95,7 +97,8 @@
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">Item Code</label>
-                        <input type="text" name="items[__INDEX__][ItemCode]" class="form-control item-code" value="" readonly>
+                        <input type="text" name="items[__INDEX__][ItemCode]" class="form-control item-code" value=""
+                               readonly>
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">UOM</label>
@@ -103,7 +106,8 @@
                     </div>
                     <div class="col-md-1">
                         <label class="form-label">Requested Qty</label>
-                        <input type="number" name="items[__INDEX__][RequestedQty]" class="form-control item-qty" value="1" min="1" required>
+                        <input type="number" name="items[__INDEX__][RequestedQty]" class="form-control item-qty"
+                               value="1" min="1" required>
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">Remarks</label>
@@ -285,17 +289,17 @@
                         });
 
                         if (currentItem && !hasCurrent && data.items.length > 0) {
-                             const originalItemName = entry.querySelector('.item-name-hidden').value || '[Original Item]';
-                             const option = new Option(originalItemName, currentItem, true, true);
-                             itemSelect.add(option);
-                             fetchItemCodeAndUom(currentItem, entry);
-                           } else if (itemSelect.value) {
-                             fetchItemCodeAndUom(itemSelect.value, entry);
-                           } else {
-                             entry.querySelector('.item-code').value = '';
-                             entry.querySelector('.item-uom').value = '';
-                             entry.querySelector('.item-name-hidden').value = '';
-                           }
+                            const originalItemName = entry.querySelector('.item-name-hidden').value || '[Original Item]';
+                            const option = new Option(originalItemName, currentItem, true, true);
+                            itemSelect.add(option);
+                            fetchItemCodeAndUom(currentItem, entry);
+                        } else if (itemSelect.value) {
+                            fetchItemCodeAndUom(itemSelect.value, entry);
+                        } else {
+                            entry.querySelector('.item-code').value = '';
+                            entry.querySelector('.item-uom').value = '';
+                            entry.querySelector('.item-name-hidden').value = '';
+                        }
 
                     })
                     .catch(error => {
@@ -436,11 +440,11 @@
 
             // Initial load: Add first item automatically if no old inputs (fresh form) or repopulate from old input
             @if (!old('items'))
-                addItem();
+            addItem();
             @else
-                @foreach (old('items', []) as $index => $oldItem)
-                    addItem(@json($oldItem));
-                @endforeach
+            @foreach (old('items', []) as $index => $oldItem)
+            addItem(@json($oldItem));
+            @endforeach
             @endif
         </script>
     @endpush

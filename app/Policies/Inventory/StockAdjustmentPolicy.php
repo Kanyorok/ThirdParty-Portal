@@ -56,23 +56,23 @@ class StockAdjustmentPolicy
     {
         return $user->can(PermissionEnum::StockAdjustmentRestore->value);
     }
-   //  public function approve(User $user, TransactionTransfer $transfer): bool
-   // {
-        // Don't allow approving if already approved or rejected
-       // if (
-          //  $transfer->Status === Transfers::Approved->value ||
-          //  $transfer->Status === Transfers::Rejected->value
-        //) {
-           // return false;
-       // }
+    //  public function approve(User $user, TransactionTransfer $transfer): bool
+    // {
+    // Don't allow approving if already approved or rejected
+    // if (
+    //  $transfer->Status === Transfers::Approved->value ||
+    //  $transfer->Status === Transfers::Rejected->value
+    //) {
+    // return false;
+    // }
 
-        // Don't allow approving your own requisition
-        // if ($requisition->CreatedBy === $user->Id) {
-        //    return false;
-        // }
+    // Don't allow approving your own requisition
+    // if ($requisition->CreatedBy === $user->Id) {
+    //    return false;
+    // }
 
-        // Must have the approval permission
-       // return $user->can(PermissionEnum::TransactionTransferApproval->value);
+    // Must have the approval permission
+    // return $user->can(PermissionEnum::TransactionTransferApproval->value);
     //}
 
 }

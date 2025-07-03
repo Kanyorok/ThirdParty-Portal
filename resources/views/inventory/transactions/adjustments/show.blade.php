@@ -10,7 +10,7 @@
             <p><strong>Adjustment ID:</strong> {{ $adjustment->AdjustmentId }}</p>
             <p><strong>Adjustment Date:</strong> {{ \Carbon\Carbon::parse($adjustment->AdjustmentDate)->format('Y-m-d') }}</p>
             <p><strong>Branch:</strong> {{ optional($adjustment->branch)->Name ?? 'N/A' }}</p>
-            <p><strong>Reason:</strong> {{ $adjustment->Reason }}</p>
+            <p><strong>Reason:</strong> {{ optional($adjustment->reason)->Description ?? 'N/A' }}</p>
             <p><strong>Adjusted By:</strong> {{ $adjustment->adjustedBy->Name ?? 'N/A' }}</p>
             <p><strong>Status:</strong>
                 @php
@@ -25,19 +25,19 @@
         </div>
     </div>
 
-    <div class="table-responsive">
-        <table class="table table-bordered">
-            <thead class="table-light">
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead class="table-light">
                 <tr>
                     <th>#</th>
                     <th>Item Code</th>
                     <th>Item Name</th>
-                    <th>Current Qty</th> {{-- This column header is for the original stock quantity --}}
+                    <th>Current Qty</th> 
                     <th>Adjusted Qty</th>
                     <th>Remarks</th>
                 </tr>
-            </thead>
-            <tbody>
+                </thead>
+                <tbody>
                 @foreach($adjustment->items as $index => $item)
                 <tr>
                     <td>{{ $index + 1 }}</td>
@@ -49,10 +49,10 @@
                     <td>{{ $item->Remarks ?? '-' }}</td>
                 </tr>
                 @endforeach
-            </tbody>
-        </table>
-    </div>
+                </tbody>
+            </table>
+        </div>
 
-    <a href="{{ route('transactionsadjustment.index') }}" class="btn btn-secondary mt-3">← Back to List</a>
-</div>
+        <a href="{{ route('transactionsadjustment.index') }}" class="btn btn-secondary mt-3">← Back to List</a>
+    </div>
 @endsection

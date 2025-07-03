@@ -58,7 +58,7 @@ class TenderController extends Controller
         $tenderCategories = TenderCategory::select('Id', 'TenderCategory')->get();
         $AllItemsCategories = ItemCategories::select('Id', 'Name')->whereNull('ParentId')->get();
         $allItemsWithCategoryIds = ItemMasterList::select('Id', 'ItemName', 'Category')->get();
-        $procurementPlan= ConsolidatedProcurementPlan::select('PlanID','ReferenceNumber','Title')->where('Status', ProcurementPlanStatusEnum::Approved) 
+        $procurementPlan = ConsolidatedProcurementPlan::select('PlanID', 'ReferenceNumber', 'Title')->where('Status', ProcurementPlanStatusEnum::Approved)
             ->get();
 
         $allCurrency = Currency::select('Id', 'Name', 'Code', 'Symbol')->get();
@@ -66,9 +66,9 @@ class TenderController extends Controller
         //return$allItemsWithCategoryIds = Item::select('Id', 'ItemName', 'Category')->get()->groupBy('Category');
 
         // Fetch procurement plans
-        $procurementPlans = ConsolidatedProcurementPlan::select('PlanID', 'ReferenceNumber', 'Title')->where('Status', ProcurementPlanStatusEnum::Approved) 
+        $procurementPlans = ConsolidatedProcurementPlan::select('PlanID', 'ReferenceNumber', 'Title')->where('Status', ProcurementPlanStatusEnum::Approved)
             ->get()
-            ->keyBy('PlanID'); 
+            ->keyBy('PlanID');
 
         // Fetch plan line items with related item details
         $itemsCategories = PlanLineItems::select('LineItemID', 'PlanID', 'ItemID', 'MergedQty')
@@ -101,7 +101,7 @@ class TenderController extends Controller
 
             // Add to planItemData
             $planItemData[$planId][] = [
-                'itemId'=>$item->Id,
+                'itemId' => $item->Id,
                 'name' => $item->ItemName,
                 'plannedQty' => $lineItem->MergedQty,
             ];
@@ -117,7 +117,7 @@ class TenderController extends Controller
             ->withProperties(['action' => 'create'])
             ->log('View tender creation');
         //return $procurementPlansOutput;
-        //return $planItemData; 
+        //return $planItemData;
         return view('procurement.tendering.tendersetup.tenderinitiation.create', compact(
             'procurementModes',
             'currencies',
@@ -209,7 +209,7 @@ class TenderController extends Controller
             if (!empty($request->plan_items)) {
                 foreach ($request->plan_items as $compositeKey => $item) {
                     $split = explode('-', $compositeKey);
-                    $planItemId = (int) end($split);
+                    $planItemId = (int)end($split);
                     TenderItems::create([
                         'TenderID' => $tenderId,
                         'SourceType' => 'PLAN',
@@ -580,17 +580,17 @@ class TenderController extends Controller
                         ->withProperties(['action' => 'delete'])
                         ->log('Tender Supplier deleted successfully with ID: ' . $tenderSupplier->Id);
 
-                return redirect()->route('initiatetender.edit', $id)->with('success', 'Tender Supplier deleted successfully.');
-            } catch (\Exception $e) {
-                DB::rollBack();
-                Log::error("--- DELETE TENDER SUPPLIER ERROR --- " . $e->getMessage());
-                Log::error($e);
-                return redirect()->route('initiatetender.edit', $id)->with('error', 'Failed to delete Tender Supplier. Please try again.');
+                    return redirect()->route('initiatetender.edit', $id)->with('success', 'Tender Supplier deleted successfully.');
+                } catch (\Exception $e) {
+                    DB::rollBack();
+                    Log::error("--- DELETE TENDER SUPPLIER ERROR --- " . $e->getMessage());
+                    Log::error($e);
+                    return redirect()->route('initiatetender.edit', $id)->with('error', 'Failed to delete Tender Supplier. Please try again.');
+                }
             }
         }
-    }    
-    
-    return redirect()->route('initiatetender.index')->with('error', 'Invalid request type.');
+
+        return redirect()->route('initiatetender.index')->with('error', 'Invalid request type.');
 
 
         $validated = $request->validate([

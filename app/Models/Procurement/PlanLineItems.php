@@ -49,7 +49,7 @@ class PlanLineItems extends Model
         'OriginalQTY',
 
     ];
-    
+
     protected $dates = ['ExpectedDeliveryDate'];
 
     // Relationships
