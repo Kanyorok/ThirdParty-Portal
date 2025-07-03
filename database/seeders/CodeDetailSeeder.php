@@ -351,6 +351,113 @@ class CodeDetailSeeder extends Seeder
                 'ModifiedOn' => $date,
                 'ModifiedBy' => $user->Id,
             ],
+            
+        ]);
+        DB::table('t_CodeDetails')->insert([
+            [
+                'CodeID' => "Source",
+                'Description' => 'Transfer Receipts',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+            [
+                'CodeID' => 'Source',
+                'Description' => 'Stock Adjustment',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+            [
+                'CodeID' => 'Source',
+                'Description' => 'Transaction Transfer',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+            
+        ]);
+        DB::table('t_CodeDetails')->insert([
+            [
+                'CodeID' => "DefectsCondition",
+                'Description' => 'Contaminated',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+            [
+                'CodeID' => 'DefectsCondition',
+                'Description' => 'Irreparable',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+            
+        ]);
+         DB::table('t_CodeDetails')->insert([
+            [
+                'CodeID' => "AdjustmentReason",
+                'Description' => 'Damage',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+             [
+                'CodeID' => "AdjustmentReason",
+                'Description' => 'Damaged in Transit',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+            [
+                'CodeID' => 'AdjustmentReason',
+                'Description' => 'Stock Found',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+
+             [
+                'CodeID' => 'AdjustmentReason',
+                'Description' => 'Expired',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+            [
+                'CodeID' => 'AdjustmentReason',
+                'Description' => 'Shrinkage',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+            [
+                'CodeID' => 'AdjustmentReason',
+                'Description' => 'Other',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+            [
+                'CodeID' => 'AdjustmentReason',
+                'Description' => 'In Transit',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+            
         ]);
 
         DB::table('t_CodeDetails')->insert([

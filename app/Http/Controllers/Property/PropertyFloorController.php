@@ -63,16 +63,12 @@ class PropertyFloorController extends Controller
             auth()->user()
         );
         return redirect()->route('addfloor.index')->with('success', 'Floor added!');
-    } catch (\Exception $e) {
-        return back()->withErrors('Failed: ' . $e->getMessage())->withInput();
+        } catch (\Exception $e) {
+            return back()->withErrors('Failed: ' . $e->getMessage())->withInput();
+        }
     }
 
-        //return redirect()->route('addfloor.index')->with('success', 'property floor created successfully');
-
-    }
-
-    
-       public function edit($id)
+    public function edit($id)
     {
         //Check if user has permission to edit tender categories
         $this->authorize(PermissionEnum::PropertyStructuralUpdate, PropertyFloor::class);

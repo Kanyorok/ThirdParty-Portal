@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\DB;
 
 class ModuleSeeder extends Seeder
 {
-
     /**
      * Run the database seeds.
      */
@@ -33,9 +32,9 @@ class ModuleSeeder extends Seeder
         $this->_seed($this->_insurance($fresh));
         $this->_seed($this->_hrm($fresh));
         $this->_seed($this->_finance($fresh));
+        $this->_seed($this->_budgetline($fresh));
         $this->_seed($this->_settings($fresh));
         $this->_seed($this->_myAccount($fresh));
-        $this->_seed($this->_budgetline($fresh));
     }
 
     protected function _thirdParty(bool $fresh): Collection
@@ -168,7 +167,7 @@ class ModuleSeeder extends Seeder
 
             //Awards
             ['ModuleID' => 306500, 'Name' => 'Awards', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => 'procawards.index'],
-            
+
             ['ModuleID' => 307000, 'Name' => 'Purchase Order', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 307100, 'Name' => 'View Purchase Orders', 'Icon' => null, 'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.index'],
             ['ModuleID' => 307200, 'Name' => 'Create Purchase Orders', 'Icon' => null, 'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.create'],
@@ -230,14 +229,10 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 498103, 'Name' => 'Inventory Type', 'Icon' => null, 'Description' => 'Inventory Type Management', 'Route' => 'inventorytype.index', 'ParentID' => 498100],
             ['ModuleID' => 498104, 'Name' => 'Unit Of Measure', 'Icon' => null, 'Description' => 'Unit of Measure Management', 'Route' => 'unitofmeasure.index', 'ParentID' => 498100],
             ['ModuleID' => 498105, 'Name' => 'Conversion Mapping', 'Icon' => null, 'Description' => 'UOM Conversion Mapping', 'Route' => 'uomconversion.index', 'ParentID' => 498100],
+            ['ModuleID' => 498106, 'Name' => 'Inventory Hold', 'Icon' => null, 'Description' => 'Inventory Hold Review', 'Route' => 'inventoryholdreview.index', 'ParentID' => 498100],
             ['ModuleID' => 498001, 'Name' => 'Stores', 'Icon' => null, 'Description' => 'List of Stores', 'Route' => 'stores.index', 'ParentID' => 498000],
             ['ModuleID' => 498200, 'Name' => 'Load Opening Stock', 'Icon' => null, 'Description' => 'Load Opening Stock', 'Route' => 'openingstock.create', 'ParentID' => 498000],
-
             ['ModuleID' => 499000, 'Name' => 'Reports', 'Icon' => null, 'Description' => 'Inventory Reports', 'Route' => 'inventory-reports.index', 'ParentID' => 400000],
-
-
-
-
         ]);
 
         if ($fresh) {
@@ -309,6 +304,7 @@ class ModuleSeeder extends Seeder
            // ['ModuleID' => 1206200, 'Name' => 'Perod Types', 'Icon' => null, 'Description' => 'Budget Period Types', 'Route' => 'periodtypes.index', 'ParentID' => 1206000],
             //['ModuleID' => 1206300, 'Name' => 'Planning Methods', 'Icon' => null, 'Description' => 'Budget Planning Methods', 'Route' => 'planningmethods.index', 'ParentID' => 1206000],
             //['ModuleID' => 1206400, 'Name' => 'Budget Drivers', 'Icon' => null, 'Description' => 'Budet Drivers', 'Route' => 'budgetdriverssetup.index', 'ParentID' => 1206000],
+            ['ModuleID' => 1299000, 'Name' => 'Reports', 'Icon' => null, 'Description' => 'Budget Reports', 'Route' => 'budget-reports.index', 'ParentID' => 1200000],
         ]);
 
         if ($fresh) {
@@ -373,7 +369,7 @@ class ModuleSeeder extends Seeder
             // First level - Property Management Settings
             ['ModuleID' => 505000, 'Name' => 'Settings', 'Icon' => '<i class="fas fa-cog"></i>', 'Description' => '', 'ParentID' => 500000, 'Route' => null],
             ['ModuleID' => 505100, 'Name' => 'Property Settings', 'Icon' => null, 'Description' => '', 'ParentID' => 505000, 'Route' => 'propertysettings.index'],
-            
+
             // First level - Reports
             ['ModuleID' => 599000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-chart-bar"></i>', 'Description' => '', 'ParentID' => 500000, 'Route' => 'propertyreports.index'],
             /* ['ModuleID' => 50510, 'Name' => 'Reports', 'Icon' => null, 'Description' => '', 'ParentID' => 50500, 'Route' =>],
