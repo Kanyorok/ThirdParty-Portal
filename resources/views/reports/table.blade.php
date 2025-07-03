@@ -1,18 +1,18 @@
 <div class="card-header">
     <div class="float-end">
-        <a href="{{ route('inventory-reports.export',[$report->Id,'IMAGE'])."?".$params}}" target="_blank"
+        <a href="{{ route($module.'-reports.export',[$report->Id,'IMAGE'])."?".$params}}" target="_blank"
            class="btn btn-secondary">
             <i class="fas fa-file-image"></i> Image
         </a>
-        <a href="{{ route('inventory-reports.export',[$report->Id,'PDF'])."?".$params }}" target="_blank"
+        <a href="{{ route($module.'-reports.export',[$report->Id,'PDF'])."?".$params }}" target="_blank"
            class="btn btn-secondary">
             <i class="fas fa-file-pdf"></i> PDF
         </a>
-        <a href="{{ route('inventory-reports.export',[$report->Id,'EXCELOPENXML'])."?".$params}}"
+        <a href="{{ route($module.'-reports.export',[$report->Id,'EXCELOPENXML'])."?".$params}}"
            target="_blank" class="btn btn-secondary">
             <i class="fas fa-file-excel"></i> Excel
         </a>
-        <a href="{{ route('inventory-reports.index') }}" class="btn btn-info">
+        <a href="{{ route($module.'-reports.index') }}" class="btn btn-info">
             <i class="fas fa-arrow-left"></i>
         </a>
     </div>
@@ -29,24 +29,30 @@
 
     {{-- <iframe id="reportIframe" width="100%" height="600px" frameborder="0"
              src="{{ url('ReportServer/Pages/ReportViewer.aspx?/BRERP/Inventory/ItemCatalogue&rs:embed=true') }}"></iframe>--}}
-    <table class="table table-bordered table-responsive w-100" id="reports-table">
-        <thead>
-        <tr>
-            @foreach(array_keys($data->first()) as $key)
-                <th>{{ ucfirst($key) }}</th>
-            @endforeach
-        </tr>
-        </thead>
-        <tbody>
-        @foreach($data as $user)
-            <tr>
-                @foreach($user as $value)
-                    <td>{{ $value }}</td>
+    @if($data->isEmpty())
+        @include('snippets.errors')
+    @else
+        <div class="table-responsive">
+            <table class="table table-bordered  w-100" id="reports-table">
+                <thead>
+                <tr>
+                    @foreach(array_keys( $data->sortByDesc(function ($item) {return count($item);})->first()) as $key)
+                        <th>{{ ucfirst($key) }}</th>
+                    @endforeach
+                </tr>
+                </thead>
+                <tbody>
+                @foreach($data as $user)
+                    <tr>
+                        @foreach($user as $value)
+                            <td>{{ $value }}</td>
+                        @endforeach
+                    </tr>
                 @endforeach
-            </tr>
-        @endforeach
-        </tbody>
-    </table>
+                </tbody>
+            </table>
+        </div>
+    @endif
 </div>
 <script>
     $(document).ready(function () {
