@@ -10,9 +10,21 @@ use Illuminate\Support\Facades\DB;
 
 class RFQLinesController extends Controller
 {
-    public function create()
+    public function create($rfqId)
     {
-        return view('procurement.rfqlines.create');
+        // Get the linked requisition for this RFQ
+        $requisition = DB::table('t_Requisition')
+            ->where('Id', function ($query) use ($rfqId) {
+                $query->select('RequisitionId')
+                    ->from('t_RFQ')
+                    ->where('Id', $rfqId);
+            })
+            ->first();
+
+        return view('procurement.rfqlines.create', [
+            'rfqId' => $rfqId,
+            'requisition' => $requisition,
+        ]);
     }
 
     public function store(Request $request)
@@ -72,25 +84,24 @@ class RFQLinesController extends Controller
         return redirect()->route('rfqs.show', $request->RFQId)->with('success', 'RFQ line(s) created successfully.');
     }
 
-    public function getCategories()
+    public function getRequisitionCategories($requisitionId)
     {
-        // Step 1: Get IDs of RequisitionLines already used in RFQ lines
-        $excludedLineIds = DB::table('t_RFQLines')->pluck('RequisitionLineId');
-        
-        // Step 2: Eager-load item and category, filter out already-used lines
-        $lines = RequisitionLine::with(['item.category'])
-            ->whereNotIn('Id', $excludedLineIds)
-            ->whereHas('item.category') // Ensure category exists to skip nulls early
-            ->get();
+        try {
+            $excludedLineIds = DB::table('t_RFQLines')->pluck('RequisitionLineId');
 
-        // Step 3: Extract and deduplicate categories
-        $categories = $lines
-            ->pluck('item.category')
-            ->unique('Id') // Ensure correct key here, 'id' is default for most models
-            ->values();
+            $categories = DB::table('t_RequisitionLines as rl')
+                ->join('t_Items as i', 'rl.Item', '=', 'i.Id')
+                ->join('t_ItemCategories as c', 'i.Category', '=', 'c.Id')
+                ->where('rl.RequisitionID', $requisitionId)
+                ->whereNotIn('rl.Id', $excludedLineIds)
+                ->select('c.Id', 'c.Name')
+                ->distinct()
+                ->get();
 
-        return response()->json($categories);
+            return response()->json($categories);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
-
 
 }
