@@ -1,22 +1,20 @@
 @extends('layouts.app')
-@section('title', 'Setup Evaluation Structure')
+@section('title', 'Edit Evaluation Structure')
 @section('content')
 
 <div class="card">
-    <div class="card-header bg-primary text-white">Evaluation Sections & Criteria Setup</div>
+    <div class="card-header bg-warning text-white">Edit Evaluation Sections & Criteria</div>
     <div class="card-body">
 
-        <form id="setupForm" method="post" action="{{ route('preqcriteria.store') }}">
+        <form id="setupForm" method="post" action="{{ route('preqcriteria.update', $round->Id) }}">
             @csrf
+            @method('PUT')
+
+            <input type="hidden" name="round_id" value="{{ $round->Id }}">
 
             <div class="mb-3">
-                <label for="round_id" class="form-label">Prequalification Round</label>
-                <select id="round_id" name="round_id" class="form-select">
-                    <option selected disabled>Select Round</option>
-                    @foreach($rounds as $round)
-                        <option value="{{ $round->Id }}">{{ $round->Title }}</option>
-                    @endforeach
-                </select>
+                <label class="form-label">Prequalification Round</label>
+                <input type="text" class="form-control" value="{{ $round->Title }}" disabled>
             </div>
 
             <table class="table table-bordered">
@@ -30,13 +28,19 @@
                 </thead>
                 <tbody>
                     @foreach ($sections as $section)
+                        @php
+                            $selected = $selectedSections->firstWhere('SectionId', $section->id);
+                        @endphp
                         <tr>
                             <td>
-                                <input type="checkbox" name="sections[]" value="{{ $section->id }}" class="form-check-input">
+                                <input type="checkbox" name="sections[]" value="{{ $section->id }}" class="form-check-input"
+                                    {{ $selected ? 'checked' : '' }}>
                             </td>
                             <td>{{ $section->SectionName }}</td>
                             <td>
-                                <input type="number" name="weights[{{ $section->id }}]" class="form-control">
+                                <input type="number" name="weights[{{ $section->id }}]" class="form-control"
+                                    value="{{ $selected ? $selected->Weight : '' }}">
+                            </td>
                             <td>
                                 @if ($section->criteria->count() > 0)
                                     <ul class="mb-0">
@@ -57,13 +61,12 @@
             </table>
 
             <div class="text-end">
-                <button type="submit" class="btn btn-success">Save Sections</button>
+                <button type="submit" class="btn btn-primary">Update Sections</button>
             </div>
         </form>
 
     </div>
 </div>
-
 
 @section('scripts')
 <script>

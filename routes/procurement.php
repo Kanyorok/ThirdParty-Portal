@@ -67,6 +67,7 @@ use App\Http\Controllers\Procurement\TenderBidResponsivenessController;
 use App\Http\Controllers\Procurement\ApprovalSetupController;
 use App\Http\Controllers\Procurement\AwardsController;
 use App\Http\Controllers\Procurement\PrequalificationPeriodController;
+use App\Http\Controllers\Procurement\PrequalificationCriteriaSetupController;
 
 
 Route::namespace('Procurement')->prefix('procurement')->group(function () {
@@ -376,11 +377,23 @@ Route::put('preqrounds/{Id}', [PrequalificationPeriodController::class, 'update'
 Route::delete('preqrounds/{Id}', [PrequalificationPeriodController::class, 'destroy'])->name('preqrounds.destroy');
 
 
+//Route::resource('preqcriteria', PrequalificationCriteriaSetupController::class);
+Route::get('preqcriteria', [PrequalificationCriteriaSetupController::class, 'index'])->name('preqcriteria.index');
+Route::get('preqcriteria/criteria/{round_id}/{section_id}', [PrequalificationCriteriaSetupController::class, 'getCriteriabySection'])->name('getCriteriabySection');
+Route::get('preqcriteria/section/create', [PrequalificationCriteriaSetupController::class, 'create'])->name('preqcriteria.create');
+Route::post('preqcriteria/store', [PrequalificationCriteriaSetupController::class, 'store'])->name('preqcriteria.store');
+Route::get('preqcriteria/{Id}', [PrequalificationCriteriaSetupController::class, 'show'])->name('preqcriteria.show');
+Route::get('preqcriteria/edit/{Id}', [PrequalificationCriteriaSetupController::class, 'edit'])->name('preqcriteria.edit');
+Route::put('preqcriteria/update/{id}', [PrequalificationCriteriaSetupController::class, 'update'])->name('preqcriteria.update');
+Route::delete('preqcriteria/destroy/{id}', [PrequalificationCriteriaSetupController::class, 'destroy'])->name('preqcriteria.destroy');
+
+
+
+
 
 
 
 Route::resource('supplierslist', SupplierListingController::class);
- Route::resource('preqcriteria', PrequalificationCriteriaController::class);
  Route::resource('preqapplications', PrequalificationApplicationsController::class);
  Route::resource('preqevaluation', PrequalificationEvaluationController::class);
  Route::resource('preqevalapproval', PrequalificationEvalAprovalController::class);
