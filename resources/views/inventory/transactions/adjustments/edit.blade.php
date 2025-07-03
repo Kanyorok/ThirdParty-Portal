@@ -51,22 +51,22 @@
                 @enderror
             </div>
             <div class="col-md-4">
-                <label for="reason" class="form-label">Adjustment Reason</label>
-                <select class="form-select @error('Reason') is-invalid @enderror" id="reason" name="Reason" required>
-                    {{-- Use old() for repopulation, fallback to existing adjustment reason --}}
-                    <option value="Damage" {{ old('Reason', $adjustment->Reason) == 'Damage' ? 'selected' : '' }}>Damage</option>
-                    <option value="Expired" {{ old('Reason', $adjustment->Reason) == 'Expired' ? 'selected' : '' }}>Expired</option>
-                    <option value="Shrinkage" {{ old('Reason', $adjustment->Reason) == 'Shrinkage' ? 'selected' : '' }}>Shrinkage</option>
-                    <option value="Stock Found" {{ old('Reason', $adjustment->Reason) == 'Stock Found' ? 'selected' : '' }}>Stock Found</option>
-                    <option value="Other" {{ old('Reason', $adjustment->Reason) == 'Other' ? 'selected' : '' }}>Other</option>
-                </select>
-                @error('Reason')
-                    <div class="invalid-feedback">
-                        {{ $message }}
-                    </div>
-                @enderror
-            </div>
+            <label for="reason" class="form-label">Adjustment Reason</label>
+            <select class="form-select @error('Reason') is-invalid @enderror" id="reason" name="Reason" required>
+                <option disabled selected>Select Reason</option>
+                @foreach($reasons as $reason)
+                    <option value="{{ $reason->ID }}" {{ old('Reason', $adjustment->Reason) == $reason->ID ? 'selected' : '' }}>
+                        {{ $reason->Description }}
+                    </option>
+                @endforeach
+            </select>
+            @error('Reason')
+                <div class="invalid-feedback">
+                    {{ $message }}
+                </div>
+            @enderror
         </div>
+
 
         <h5 class="mb-3">Adjustment Items</h5>
 

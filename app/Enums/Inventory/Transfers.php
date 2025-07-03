@@ -18,7 +18,13 @@ enum Transfers: string
 
     case Rejected = 'Re';
 
-     case Approved = 'Ap';
+    case Approved = 'Ap';
+
+    case UnderReview = 'rv';
+
+    //case UnderRepair = 'ur';
+
+    case Disposed = 'di';
 
     public function label(): string
     {
@@ -28,6 +34,9 @@ enum Transfers: string
             self::Delivered => 'Delivered',
             self::Rejected => 'Rejected',
             self::Approved => 'Approved',
+            self::UnderReview => 'Under Review',
+            self::Disposed => 'Disposed',
+            //self::UnderRepair => 'Under Repair',
         };
     }
 
@@ -39,6 +48,9 @@ enum Transfers: string
             self::Delivered => 'success',
             self::Rejected => 'danger',
             self::Approved => 'success',
+            self::UnderReview => 'info',
+            self::Disposed => 'danger',
+            //self::UnderRepair => 'warning',
         };
     }
 }

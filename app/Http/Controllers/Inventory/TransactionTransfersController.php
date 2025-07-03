@@ -40,19 +40,49 @@ class TransactionTransfersController extends Controller
     }
 
     public function store(TransactionTransferRequest $request)
-    {
-        $this->authorize('create', TransactionTransfer::class);
-        $validatedData = $request->validated();
-        $items = $validatedData['items'] ?? [];
-        unset($validatedData['items']);
+{
+    $this->authorize('create', TransactionTransfer::class);
+
+    $validatedData = $request->validated();
+    $items = $validatedData['items'] ?? [];
+    unset($validatedData['items']);
+
+    try {
+        foreach ($items as $item) {
+            $itemId = $item['item'];
+            $qty = $item['dispatched_qty'];
+
+            $branch = $validatedData['RequisitionType'] === 'procurement'
+                ? app(TransactionTransferService::class)->getHQBranchId()
+                : $validatedData['FromBranch'];
+
+            $stock = \App\Models\Inventory\StockItem::where('ItemID', $itemId)
+                ->where('Branch', $branch)
+                ->first();
+
+            if (!$stock || $stock->CurrentQty < $qty) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => "Insufficient stock for ItemID {$itemId} in Branch {$branch}.",
+                ], 422);
+            }
+        }
 
         $transfer = $this->service->createTransfer($validatedData);
         $this->service->createTransferItems($transfer, $items);
 
-        return redirect()
-            ->route('transactionstransfers.index')
-            ->with('success', 'Transfer created and submitted for approval.');
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Transfer created successfully.',
+            'redirect' => route('transactionstransfers.index'),
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+        ], 500);
     }
+}
 
     public function show($Id)
     {
@@ -85,12 +115,19 @@ class TransactionTransfersController extends Controller
     }
 
     public function destroy($Id)
-    {
-        $this->authorize('destroy', TransactionTransfer::class);
-        $transfer = TransactionTransfer::findOrFail($Id);
-        $this->service->delete($transfer);
-        return redirect()->route('transactionstransfers.index')->with('success', 'Transfer deleted.');
-    }
+{
+    $this->authorize('destroy', TransactionTransfer::class);
+
+    DB::transaction(function () use ($Id) {
+        $transactionTransfer = TransactionTransfer::findOrFail($Id);
+
+        $transactionTransfer->items()->delete();
+        $transactionTransfer->delete();
+    });
+
+    return redirect()->route('transactionstransfers.index')->with('success', 'Transfer deleted.');
+}
+
 
   public function getRequisitionsByType($type)
 {
