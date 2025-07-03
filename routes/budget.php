@@ -109,10 +109,10 @@ Route::namespace('Budget')->group(function () {
     Route::resource('topcontributors', TopContibutorsController::class);
     Route::resource('regulatoryratios', RegulatoryRatiosController::class);
     Route::resource('liquidityratio', LiquidityController::class);
-    
+
     // API Routes to fetch data
    Route::get('/api/budget-activities', [BudgetActivitiesController::class, 'fetchActivities'])->name('api.budget-activities');
-    
+
     // Business Intelligence & Deep Analytics
     Route::resource('analyticsdashboard', BusinessAnalyticsDashboardController::class);
     Route::resource('kpidashboards', KPIDashboardsController::class);
@@ -157,5 +157,5 @@ Route::namespace('Budget')->group(function () {
 
     Route::resource('budgetdriverssetup',BudgetDriversSetupController::class);
     Route::get('budgetlinemapping/gl-subtypes/{typeId}', [BudgetLineMappingController::class, 'getGLAccountSubTypes']);
-    Route::post('budget/delete-gl-attachment/{id}', [BudgetPeriodController::class, 'delGLAttachment']);
+    Route::delete('budget/delete-gl-attachment/{id}', [BudgetPeriodController::class, 'delGLAttachment'])->name('budget.delete-gl-attachment');
 });
