@@ -5,6 +5,7 @@ use App\Http\Controllers\Inventory\ExpiryBatchTrackingController;
 use App\Http\Controllers\Inventory\InterBranchRequisitionApprovalController;
 use App\Http\Controllers\Inventory\InterBranchRequisitionController;
 use App\Http\Controllers\Inventory\InventoryDashboardController;
+use App\Http\Controllers\Inventory\InventoryHoldReviewController;
 use App\Http\Controllers\Inventory\InventoryTypeController;
 use App\Http\Controllers\Inventory\ItemCategoryController;
 use App\Http\Controllers\Inventory\ItemMasterListController;
@@ -25,12 +26,7 @@ use App\Http\Controllers\Inventory\TransactionReceiptsController;
 use App\Http\Controllers\Inventory\TransactionTransfersController;
 use App\Http\Controllers\Inventory\UOMController;
 use App\Http\Controllers\Inventory\UOMConversionController;
-use App\Http\Controllers\Inventory\InventoryTypeController;
-use App\Http\Controllers\Inventory\StoreController;
-use App\Http\Controllers\Inventory\UOMController;
-use App\Http\Controllers\Inventory\ItemTypeController;
-use App\Http\Controllers\Inventory\InventoryHoldReviewController;
-use App\Http\Controllers\Inventory\PriceManagementController;
+
 
 use Illuminate\Support\Facades\Route;
 
