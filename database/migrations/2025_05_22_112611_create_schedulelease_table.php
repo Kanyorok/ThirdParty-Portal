@@ -15,7 +15,7 @@ return new class extends Migration {
             $table->foreignId('LeaseNumber')->constrained('t_LeaseCreation', 'Id');
             $table->foreignId('TenantId')->constrained('t_LeaseCreation', 'Id');
             $table->foreignId('PropertyId')->constrained('t_LeaseCreation', 'Id');
-            $table->foreignId('PaymentFrequency')->constrained('t_CodeDetails', 'ID');
+            $table->foreignId('PaymentFrequency')->constrained('t_CodeDetails', 'Id');
             $table->date('StartDate');
             $table->date('EndDate');
             $table->float('BaseRent');

@@ -74,6 +74,8 @@ use App\Models\PropertyManagement\PropertyFloor;
 use App\Models\PropertyManagement\PropertyLeaseRenewal;
 use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Models\PropertyManagement\PropertyLeaseSchedule;
+use App\Models\PropertyManagement\PropertyInvoice;
+use App\Models\PropertyManagement\PropertyReceipt;
 use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyTenantClearance;
 use App\Models\PropertyManagement\PropertyType;
@@ -102,6 +104,8 @@ use App\Policies\PropertyManagement\PropertyStructuralPolicy;
 use App\Policies\PropertyManagement\PropertyTenantClearancePolicy;
 use App\Policies\PropertyManagement\PropertyLeaseSchedulePolicy;
 use App\Policies\PropertyManagement\PropertyLeaseRenewalPolicy;
+use App\Policies\PropertyManagement\PropertyInvoicePolicy;
+use App\Policies\PropertyManagement\PropertyReceiptPolicy;
 use App\Policies\PropertyManagement\PropertyTypePolicy;
 use App\Policies\PropertyManagement\PropertyUnitPolicy;
 use App\Policies\RolePolicy;
@@ -284,6 +288,8 @@ class AppServiceProvider extends ServiceProvider
             PropertyUnit::getPrimaryKey() => PropertyUnit::class,
             PropertyLeaseSchedule::getPrimaryKey() => PropertyLeaseSchedule::class,
             PropertyLeaseRenewal::getPrimaryKey() => PropertyLeaseRenewal::class,
+            PropertyInvoice::getPrimaryKey() => PropertyInvoice::class,
+
             
             PrequalificationPeriod::getPrimaryKey() => PrequalificationPeriod::class,
         ]);
@@ -325,6 +331,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PropertyUnit::class, PropertyUnitPolicy::class);
         Gate::policy(PropertyLeaseSchedule::class, PropertyLeaseSchedulePolicy::class);
         Gate::policy(PropertyLeaseRenewal::class, PropertyLeaseRenewalPolicy::class);
+        Gate::policy(PropertyInvoice::class, PropertyInvoicePolicy::class);
+        Gate::policy(PropertyReceipt::class, PropertyReceiptPolicy::class);
         Gate::policy(PrequalificationPeriod::class, PrequalificationPeriodPolicy::class);
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);

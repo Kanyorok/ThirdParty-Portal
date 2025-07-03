@@ -27,7 +27,7 @@
             <select name="Tenant" class="form-select" required>
               <option value="">-- Select Tenant --</option>
               @foreach ($newtenants as $newtenant)
-                <option value="{{ $newtenant->Tenant }}">{{ $newtenant->tenant->TenantName }}</option>
+                <option value="{{ $newtenant->Id }}">{{ $newtenant->TenantName }}</option>
               @endforeach
             </select>
           </div>

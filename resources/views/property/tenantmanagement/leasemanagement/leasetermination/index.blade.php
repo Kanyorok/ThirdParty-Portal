@@ -28,7 +28,7 @@
           <td>{{ $leasetermination->TerminationDate ? \Carbon\Carbon::parse($leasetermination->TerminationDate)->format('d/m/Y') : '-' }}</td>
           <td>{{ $leasetermination->code->Description ?? '-' }}</td>
           <td>{{ $leasetermination->Remarks ?? '-' }}</td>
-          <td><a href="{{ route('terminatelease.show', $leasetermination->id) }}"
+          <td><a href="{{ route('terminatelease.show', $leasetermination->Id) }}"
                  class="btn btn-sm btn-outline-secondary">View</a></td>
       </tr>
     @endforeach
