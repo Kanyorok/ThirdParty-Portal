@@ -4,18 +4,17 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
     public function up(): void
     {
         Schema::create('t_BudgetDriverProjections', function (Blueprint $table) {
-            $table->id('Id');            
-            $table->foreignId('BudgetID')->constrained('t_Budgets' , 'Id');
+            $table->id('Id');
+            $table->foreignId('BudgetID')->constrained('t_Budgets', 'Id');
             $table->foreignId('CurrencyID')->constrained('t_Currencies', 'Id');
-            
+
 
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');

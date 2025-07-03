@@ -11,18 +11,11 @@ class BudgetActivityMaster extends Model
     use SoftDeletes;
     use UserActorTrait;
 
-    public static function getPrimaryKey() :string
-    {
-        return 't_BudgetActivityMasterId';
-    }
-
-    protected $table = 't_BudgetActivityMaster';
-    protected $primaryKey = 'Id';
-
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
-
+    protected $table = 't_BudgetActivityMaster';
+    protected $primaryKey = 'Id';
     protected $fillable = [
         'BudgetLineID',
         //'ActivityCode',
@@ -33,6 +26,11 @@ class BudgetActivityMaster extends Model
         'ModifiedBy',
         'DeletedBy',
     ];
+
+    public static function getPrimaryKey(): string
+    {
+        return 't_BudgetActivityMasterId';
+    }
 
     public function budgetLine()
     {

@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -29,7 +28,7 @@ class BudgetRatesSeeder extends Seeder
             ['RATE-003', 'Inflation Rate', 'Represents the annual percentage increase in the price of goods and services. Used to adjust historical costs and forecast future pricing.', false],
             ['RATE-004', 'Discount Rate', 'Used to calculate the present value of future cash flows. It reflects the time value of money and investment risk.', false],
             ['RATE-005', 'Tax Rate', 'Represents the percentage of tax levied on income, goods, or services. Helps estimate tax liabilities in financial plans.', true],
-            ];
+        ];
 
         foreach ($rateTypes as [$code, $name, $desc, $isDefault]) {
             DB::table('t_BudgetRates')->insert([

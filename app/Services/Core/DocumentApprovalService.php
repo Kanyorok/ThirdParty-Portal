@@ -2,7 +2,6 @@
 
 namespace App\Services\Core;
 
-use App\Http\Requests\Orders\ApproveOrderRequest;
 use App\Models\Auth\User;
 use App\Models\Procurement\Order;
 use App\Models\Procurement\Requisitions;
@@ -41,7 +40,7 @@ class DocumentApprovalService
         $document = $modelClass::findOrFail($id);
 
         // Check if already fully approved
-        if ($this->approvalService->isFullyApproved($documentType, $id, (float) $data['order_total'])) {
+        if ($this->approvalService->isFullyApproved($documentType, $id, (float)$data['order_total'])) {
             return redirect()->route($docMap[$documentType]['route'], $id)
                 ->with('warning', 'This document is already fully approved.');
         }
@@ -61,20 +60,20 @@ class DocumentApprovalService
 
             if (!$alreadyApproved) {
                 DB::table('t_Approvals')->insert([
-                    'DocType'     => $documentType,
-                    'DocumentId'  => $id,
-                    'UserId'      => $actor->Id,
-                    'Status'      => 'approved',
-                    'CreatedBy'   => $actor->Id,
-                    'CreatedOn'   => now(),
-                    'ModifiedBy'  => $actor->Id,
-                    'ModifiedOn'  => now(),
+                    'DocType' => $documentType,
+                    'DocumentId' => $id,
+                    'UserId' => $actor->Id,
+                    'Status' => 'approved',
+                    'CreatedBy' => $actor->Id,
+                    'CreatedOn' => now(),
+                    'ModifiedBy' => $actor->Id,
+                    'ModifiedOn' => now(),
                 ]);
             }
 
             // After insert, check if this was the final approval
             $isNowFullyApproved = app(ApprovalService::class)
-                ->isFullyApproved($documentType, $id, (float) $data['order_total']);
+                ->isFullyApproved($documentType, $id, (float)$data['order_total']);
 
             if ($isNowFullyApproved) {
                 // Perform the update via query builder instead of model (safe for transactions)

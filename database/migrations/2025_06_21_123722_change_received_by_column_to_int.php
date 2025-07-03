@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     public function up(): void
     {
         Schema::table('t_TransactionReceipts', function (Blueprint $table) {
@@ -13,12 +12,12 @@ return new class extends Migration
             $table->dropColumn('ReceivedBy');
         });
 
-       Schema::table('t_TransactionReceipts', function (Blueprint $table) {
-                $table->foreignId('ReceivedBy')
-                    ->nullable() // Allow nulls first
-                    ->after('TransferId')
-                    ->constrained('t_Users', 'Id');
-});
+        Schema::table('t_TransactionReceipts', function (Blueprint $table) {
+            $table->foreignId('ReceivedBy')
+                ->nullable() // Allow nulls first
+                ->after('TransferId')
+                ->constrained('t_Users', 'Id');
+        });
 
     }
 

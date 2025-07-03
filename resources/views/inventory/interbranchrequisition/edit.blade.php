@@ -13,8 +13,8 @@
         </div>
     @endif
 
-<div class="container mt-4">
-    <h4 class="fw-bold mb-3">Edit Inter-Branch Requisition</h4>
+    <div class="container mt-4">
+        <h4 class="fw-bold mb-3">Edit Inter-Branch Requisition</h4>
 
         <form action="{{ route('interbranchrequisition.update', $item->Id) }}" method="POST">
             @csrf
@@ -51,8 +51,8 @@
                         <div class="col-md-4">
                             <label class="form-label">Date</label>
                             <input type="date" name="CreatedOn" class="form-control"
-                                       value="{{ old('CreatedOn', \Carbon\Carbon::parse($item->CreatedOn)->format('Y-m-d')) }}"
-                                       required>
+                                   value="{{ old('CreatedOn', \Carbon\Carbon::parse($item->CreatedOn)->format('Y-m-d')) }}"
+                                   required>
                         </div>
                     </div>
 
@@ -60,69 +60,87 @@
                         <button type="button" class="btn btn-outline-primary" id="addItemBtn">➕ Add Item</button>
                     </div>
 
-                <div id="itemsContainer">
-                    {{-- Existing items will be rendered here by Laravel --}}
-                    @foreach(old('items', $item->items) as $index => $line)
-                        @php
-                            // Handle both model objects (from $item->items) and arrays (from old input)
-                            $lineObject = (object) $line; // Cast to object for consistent property access
-                            $selectedItem = property_exists($lineObject, 'item') ? $lineObject->item : null;
-                            $selectedSubcategory = ($selectedItem && property_exists($selectedItem, 'category')) ? $selectedItem->category : null;
-                            $selectedCategory = ($selectedSubcategory && property_exists($selectedSubcategory, 'parent')) ? $selectedSubcategory->parent : null;
+                    <div id="itemsContainer">
+                        {{-- Existing items will be rendered here by Laravel --}}
+                        @foreach(old('items', $item->items) as $index => $line)
+                            @php
+                                // Handle both model objects (from $item->items) and arrays (from old input)
+                                $lineObject = (object) $line; // Cast to object for consistent property access
+                                $selectedItem = property_exists($lineObject, 'item') ? $lineObject->item : null;
+                                $selectedSubcategory = ($selectedItem && property_exists($selectedItem, 'category')) ? $selectedItem->category : null;
+                                $selectedCategory = ($selectedSubcategory && property_exists($selectedSubcategory, 'parent')) ? $selectedSubcategory->parent : null;
 
-                            $selectedCategoryId = $selectedCategory->Id ?? (property_exists($lineObject, 'Category') ? $lineObject->Category : '');
-                            $selectedSubcategoryId = $selectedSubcategory->Id ?? (property_exists($lineObject, 'Subcategory') ? $lineObject->Subcategory : '');
-                            $selectedItemId = $selectedItem->Id ?? (property_exists($lineObject, 'Item') ? $lineObject->Item : '');
-                        @endphp
-                        <div class="card mb-3 item-entry" data-index="{{ $index }}">
-                            <div class="card-body border">
-                                <div class="row g-3 align-items-end">
-                                    {{-- Hidden input for existing item ID, or empty for new items from old input --}}
-                                    <input type="hidden" name="items[{{ $index }}][Id]" value="{{ $lineObject->Id ?? '' }}">
+                                $selectedCategoryId = $selectedCategory->Id ?? (property_exists($lineObject, 'Category') ? $lineObject->Category : '');
+                                $selectedSubcategoryId = $selectedSubcategory->Id ?? (property_exists($lineObject, 'Subcategory') ? $lineObject->Subcategory : '');
+                                $selectedItemId = $selectedItem->Id ?? (property_exists($lineObject, 'Item') ? $lineObject->Item : '');
+                            @endphp
+                            <div class="card mb-3 item-entry" data-index="{{ $index }}">
+                                <div class="card-body border">
+                                    <div class="row g-3 align-items-end">
+                                        {{-- Hidden input for existing item ID, or empty for new items from old input --}}
+                                        <input type="hidden" name="items[{{ $index }}][Id]"
+                                               value="{{ $lineObject->Id ?? '' }}">
 
-                                    <div class="col-md-2">
-                                        <label class="form-label">Parent Category</label>
-                                        <select name="items[{{ $index }}][Category]" class="form-select category-select" data-initial="{{ $selectedCategoryId }}" required>
-                                            <option value="">-- Select Category --</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <label class="form-label">Category</label>
-                                        <select name="items[{{ $index }}][Subcategory]" class="form-select subcategory-select" data-initial="{{ $selectedSubcategoryId }}">
-                                            <option value="">-- Select Subcategory --</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label class="form-label">Item</label>
-                                        <select name="items[{{ $index }}][Item]" class="form-select item-select" data-initial="{{ $selectedItemId }}" required>
-                                            <option value="">-- Select Item --</option>
-                                        </select>
-                                        <input type="hidden" name="items[{{ $index }}][item_name]" class="item-name-hidden" value="{{ $selectedItem->ItemName ?? (property_exists($lineObject, 'item_name') ? $lineObject->item_name : '') }}">
-                                    </div>
-                                    <div class="col-md-1">
-                                        <label class="form-label">Code</label>
-                                        <input type="text" name="items[{{ $index }}][ItemCode]" class="form-control item-code" value="{{ $selectedItem->ItemCode ?? (property_exists($lineObject, 'ItemCode') ? $lineObject->ItemCode : '') }}" readonly>
-                                    </div>
-                                    <div class="col-md-1">
-                                        <label class="form-label">UOM</label>
-                                        <input type="text" class="form-control item-uom" value="{{ $selectedItem->UOM ?? (property_exists($lineObject, 'item_uom') ? $lineObject->item_uom : '') }}" readonly>
-                                    </div>
-                                    <div class="col-md-1">
-                                        <label class="form-label">Qty</label>
-                                        <input type="number" name="items[{{ $index }}][RequestedQty]" class="form-control item-qty" value="{{ old("items.{$index}.RequestedQty", $lineObject->RequestedQty) }}" min="1" required>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <label class="form-label">Remarks</label>
-                                        <input type="text" name="items[{{ $index }}][Remarks]" class="form-control" value="{{ old("items.{$index}.Remarks", $lineObject->Remarks) }}">
-                                    </div>
-                                    <div class="col-md-1 d-flex align-items-end">
-                                        <button type="button" class="btn btn-danger btn-sm remove-item-btn">✖</button>
+                                        <div class="col-md-2">
+                                            <label class="form-label">Parent Category</label>
+                                            <select name="items[{{ $index }}][Category]"
+                                                    class="form-select category-select"
+                                                    data-initial="{{ $selectedCategoryId }}" required>
+                                                <option value="">-- Select Category --</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label">Category</label>
+                                            <select name="items[{{ $index }}][Subcategory]"
+                                                    class="form-select subcategory-select"
+                                                    data-initial="{{ $selectedSubcategoryId }}">
+                                                <option value="">-- Select Subcategory --</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Item</label>
+                                            <select name="items[{{ $index }}][Item]" class="form-select item-select"
+                                                    data-initial="{{ $selectedItemId }}" required>
+                                                <option value="">-- Select Item --</option>
+                                            </select>
+                                            <input type="hidden" name="items[{{ $index }}][item_name]"
+                                                   class="item-name-hidden"
+                                                   value="{{ $selectedItem->ItemName ?? (property_exists($lineObject, 'item_name') ? $lineObject->item_name : '') }}">
+                                        </div>
+                                        <div class="col-md-1">
+                                            <label class="form-label">Code</label>
+                                            <input type="text" name="items[{{ $index }}][ItemCode]"
+                                                   class="form-control item-code"
+                                                   value="{{ $selectedItem->ItemCode ?? (property_exists($lineObject, 'ItemCode') ? $lineObject->ItemCode : '') }}"
+                                                   readonly>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <label class="form-label">UOM</label>
+                                            <input type="text" class="form-control item-uom"
+                                                   value="{{ $selectedItem->UOM ?? (property_exists($lineObject, 'item_uom') ? $lineObject->item_uom : '') }}"
+                                                   readonly>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <label class="form-label">Qty</label>
+                                            <input type="number" name="items[{{ $index }}][RequestedQty]"
+                                                   class="form-control item-qty"
+                                                   value="{{ old("items.{$index}.RequestedQty", $lineObject->RequestedQty) }}"
+                                                   min="1" required>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label">Remarks</label>
+                                            <input type="text" name="items[{{ $index }}][Remarks]" class="form-control"
+                                                   value="{{ old("items.{$index}.Remarks", $lineObject->Remarks) }}">
+                                        </div>
+                                        <div class="col-md-1 d-flex align-items-end">
+                                            <button type="button" class="btn btn-danger btn-sm remove-item-btn">✖
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    @endforeach
-                </div>
+                        @endforeach
+                    </div>
 
                     <div class="text-end">
                         <button type="submit" class="btn btn-success">Update Requisition</button>
@@ -132,54 +150,55 @@
         </form>
     </div>
 
-<template id="itemTemplate">
-    <div class="card mb-3 item-entry">
-        <div class="card-body border">
-            <div class="row g-3 align-items-end">
-                {{-- No hidden ID for new items initially, it will be added when they are saved --}}
-                <input type="hidden" name="items[__INDEX__][Id]" value="">
-                <div class="col-md-2">
-                    <label class="form-label">Parent Category</label>
-                    <select name="items[__INDEX__][Category]" class="form-select category-select" required>
-                        <option value="">-- Select Category --</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">Category</label>
-                    <select name="items[__INDEX__][Subcategory]" class="form-select subcategory-select">
-                        <option value="">-- Select Subcategory --</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Item</label>
-                    <select name="items[__INDEX__][Item]" class="form-select item-select" required>
-                        <option value="">-- Select Item --</option>
-                    </select>
-                    <input type="hidden" name="items[__INDEX__][item_name]" class="item-name-hidden">
-                </div>
-                <div class="col-md-1">
-                    <label class="form-label">Code</label>
-                    <input type="text" name="items[__INDEX__][ItemCode]" class="form-control item-code" readonly>
-                </div>
-                <div class="col-md-1">
-                    <label class="form-label">UOM</label>
-                    <input type="text" class="form-control item-uom" readonly>
-                </div>
-                <div class="col-md-1">
-                    <label class="form-label">Qty</label>
-                    <input type="number" name="items[__INDEX__][RequestedQty]" class="form-control item-qty" value="1" min="1" required>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">Remarks</label>
-                    <input type="text" name="items[__INDEX__][Remarks]" class="form-control">
-                </div>
-                <div class="col-md-1 d-flex align-items-end">
-                    <button type="button" class="btn btn-danger btn-sm remove-item-btn">✖</button>
+    <template id="itemTemplate">
+        <div class="card mb-3 item-entry">
+            <div class="card-body border">
+                <div class="row g-3 align-items-end">
+                    {{-- No hidden ID for new items initially, it will be added when they are saved --}}
+                    <input type="hidden" name="items[__INDEX__][Id]" value="">
+                    <div class="col-md-2">
+                        <label class="form-label">Parent Category</label>
+                        <select name="items[__INDEX__][Category]" class="form-select category-select" required>
+                            <option value="">-- Select Category --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Category</label>
+                        <select name="items[__INDEX__][Subcategory]" class="form-select subcategory-select">
+                            <option value="">-- Select Subcategory --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Item</label>
+                        <select name="items[__INDEX__][Item]" class="form-select item-select" required>
+                            <option value="">-- Select Item --</option>
+                        </select>
+                        <input type="hidden" name="items[__INDEX__][item_name]" class="item-name-hidden">
+                    </div>
+                    <div class="col-md-1">
+                        <label class="form-label">Code</label>
+                        <input type="text" name="items[__INDEX__][ItemCode]" class="form-control item-code" readonly>
+                    </div>
+                    <div class="col-md-1">
+                        <label class="form-label">UOM</label>
+                        <input type="text" class="form-control item-uom" readonly>
+                    </div>
+                    <div class="col-md-1">
+                        <label class="form-label">Qty</label>
+                        <input type="number" name="items[__INDEX__][RequestedQty]" class="form-control item-qty"
+                               value="1" min="1" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Remarks</label>
+                        <input type="text" name="items[__INDEX__][Remarks]" class="form-control">
+                    </div>
+                    <div class="col-md-1 d-flex align-items-end">
+                        <button type="button" class="btn btn-danger btn-sm remove-item-btn">✖</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</template>
+    </template>
 
     @push('scripts')
         <script>
@@ -347,9 +366,9 @@
                         } else if (itemSelect.value) { // If an item is selected from the new list (or was just set)
                             fetchItemDetails(itemSelect.value, entry);
                         } else { // No item selected, clear details
-                             entry.querySelector('.item-code').value = '';
-                             entry.querySelector('.item-uom').value = '';
-                             entry.querySelector('.item-name-hidden').value = '';
+                            entry.querySelector('.item-code').value = '';
+                            entry.querySelector('.item-uom').value = '';
+                            entry.querySelector('.item-name-hidden').value = '';
                         }
                     })
                     .catch(error => {
@@ -434,7 +453,7 @@
                 if (values.item_uom) { // Note: 'item_uom' comes from old input, 'UOM' from model
                     newEntry.querySelector('.item-uom').value = values.item_uom;
                 }
-                 if (values.UOM) { // For cases where it might be a model object
+                if (values.UOM) { // For cases where it might be a model object
                     newEntry.querySelector('.item-uom').value = values.UOM;
                 }
                 if (values.item_name) {

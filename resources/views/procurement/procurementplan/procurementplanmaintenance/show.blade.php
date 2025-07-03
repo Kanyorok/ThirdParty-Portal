@@ -62,7 +62,8 @@
                     <i class="fas fa-file-import me-1"></i>
                     Generate Items from Needs
                 </a>
-                <a href="{{ route('planmanualinput.index', ['plan_id' => $plan->PlanID, 'title' => $plan->Title]) }}" class="btn btn-outline-primary">
+                <a href="{{ route('planmanualinput.index', ['plan_id' => $plan->PlanID, 'title' => $plan->Title]) }}"
+                   class="btn btn-outline-primary">
                     <i class="fas fa-tasks me-1"></i>
                     Manage Items
                 </a>

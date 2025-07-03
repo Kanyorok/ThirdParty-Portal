@@ -59,10 +59,11 @@
               {{ $activities->sum('FullAllocation') }}
             </td>
             <td>
-              <div class="d-flex gap-2 justify-content-center">
-                  <a href="#" class="btn btn-sm btn-info">✏️</a>
-                  <a href="#" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteConfirmModal" data-id="{{ $budget->Id }}">🗑️</a>
-              </div>
+              <form action="{{route('budgetactivities.destroy', $budgetId)}}" method="POST" class="d-inline" >
+                @csrf
+                @method('DELETE')
+                <button class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this activity?')">🗑️</button>
+              </form>
             </td>
           </tr>
         @endforeach

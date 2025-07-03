@@ -5,6 +5,7 @@ namespace App\Models\HRM;
 use App\Enums\Employee\GenderEnum;
 use App\Models\Auth\User;
 use App\Models\Core\Branch;
+use App\Traits\Model\DocumentsTrait;
 use App\Traits\Model\ImageTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
@@ -14,7 +15,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Employee extends Model
 {
-    use UserActorTrait, SoftDeletes, ImageTrait;
+    use UserActorTrait, SoftDeletes, ImageTrait, DocumentsTrait;
 
     const string CREATED_AT = 'CreatedOn';
     const string UPDATED_AT = 'ModifiedOn';

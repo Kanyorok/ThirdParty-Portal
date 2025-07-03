@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Budget;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Budget\Budget;
+use App\Models\Budget\BudgetGLMaster;
+use App\Models\Budget\BudgetGLMasterAllocations;
+use App\Models\Budget\BudgetGLsAttachments;
 use App\Models\Budget\BudgetLine;
 use Illuminate\Http\Request;
 use App\Models\Budget\BudgetPeriods;
@@ -18,94 +21,160 @@ use Illuminate\Support\Facades\Log;
 class BudgetPeriodController extends Controller
 {
     //
-public function index()
-{
-    $this->authorize(PermissionEnum::BudgetSetupView, BudgetPeriods::class);
+    public function index()
+    {
+        $this->authorize(PermissionEnum::BudgetSetupView, BudgetPeriods::class);
 
-    $budgets = Budget::all()->map(function ($budget) {
-        $today = Carbon::today();
-        $from = $budget->From ? Carbon::parse($budget->From) : null;
-        $to = $budget->To ? Carbon::parse($budget->To) : null;
+        $budgets = Budget::all()->map(function ($budget) {
+            $today = Carbon::today();
+            $from = $budget->From ? Carbon::parse($budget->From) : null;
+            $to = $budget->To ? Carbon::parse($budget->To) : null;
 
-        $status = 'Unknown';
-        $badgeClass = 'secondary';
+            $status = 'Unknown';
+            $badgeClass = 'secondary';
 
-        if ($from && $to) {
-            if ($today->between($from, $to)) {
-                $status = 'Open';
-                $badgeClass = 'success';
-            } elseif ($today->lt($from)) {
-                $status = 'Upcoming';
-                $badgeClass = 'info';
-            } elseif ($today->gt($to)) {
+            if ($from && $to) {
+                if ($today->between($from, $to)) {
+                    $status = 'Open';
+                    $badgeClass = 'success';
+                } elseif ($today->lt($from)) {
+                    $status = 'Upcoming';
+                    $badgeClass = 'info';
+                } elseif ($today->gt($to)) {
+                    $status = 'Expired';
+                    $badgeClass = 'danger';
+                }
+            } elseif ($to && $today->gt($to)) {
                 $status = 'Expired';
                 $badgeClass = 'danger';
+            } elseif ($from && $today->lt($from)) {
+                $status = 'Upcoming';
+                $badgeClass = 'info';
             }
-        } elseif ($to && $today->gt($to)) {
-            $status = 'Expired';
-            $badgeClass = 'danger';
-        } elseif ($from && $today->lt($from)) {
-            $status = 'Upcoming';
-            $badgeClass = 'info';
-        }
 
-        // Append computed values
-        $budget->status = $status;
-        $budget->badgeClass = $badgeClass;
+            // Append computed values
+            $budget->status = $status;
+            $budget->badgeClass = $badgeClass;
 
-        return $budget;
-    });
+            return $budget;
+        });
 
-    return view('budgetandanalytics.budgetperiod.index', compact('budgets'));
-}
+        return view('budgetandanalytics.budgetperiod.index', compact('budgets'));
+    }
 
     public function create()
     {
+        // Fetch Budget Period Types (if still needed for the commented-out periodType dropdown)
         $types = BudgetPeriodTypes::all();
-        return view('budgetandanalytics.budgetperiod.create', compact('types'));
+
+        // Fetch all GL Subtypes
+        $glSubtypes = DB::table('t_BudgetGLSubTypes')
+            ->select('Id', 'GLAccountTypeID', 'GLSubAccountTypeID', 'Description')
+            ->get();
+
+        // Fetch all GL Accounts with GLAccountTypeID
+        $glAccounts = DB::table('t_BudgetGLMaster')
+            ->select('AccountID', 'Description', 'GLSubAccountTypeID', 'GLAccountTypeID')
+            ->get();
+
+        return view('budgetandanalytics.budgetperiod.create', compact('types', 'glSubtypes', 'glAccounts'));
     }
+
 
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'Name'        => 'required|string|max:255',
-            'FiscalYear'  => 'required|integer|min:2020|max:2100',
-            'From'        => 'required|date',
-            'To'          => 'required|date|after_or_equal:From',
-            'Notes'       => 'nullable|string|max:1000',
+         $validated = $request->validate([
+            'Name' => 'required|string|max:255',
+            'FiscalYear' => 'required|integer|min:2020|max:2100',
+            'From' => 'required|date',
+            'To' => 'required|date|after_or_equal:From',
+            'Notes' => 'nullable|string|max:1000',
+            'selected_gls' => [
+                'required',
+                'string',
+                function ($attribute, $value, $fail) {
+                    $gls = json_decode($value, true);
+                    if (!is_array($gls) || empty($gls)) {
+                        $fail('At least one GL account must be selected.');
+                    }
+                },
+            ],
         ]);
- 
         DB::beginTransaction();
         try {
+            // Create the budget
             $budget = Budget::create([
-                'Name'        => $validated['Name'],
-                'FiscalYear'  => $validated['FiscalYear'],
-                'From'   => $validated['From'], // ensure your column names match this
-                'To'     => $validated['To'],
-                'Notes'       => $validated['Notes'] ?? null,
-                'CreatedBy'   => Auth::id(),
-                'ModifiedBy'  => Auth::id(),
+                'Name' => $validated['Name'],
+                'FiscalYear' => $validated['FiscalYear'],
+                'From' => $validated['From'],
+                'To' => $validated['To'],
+                'Notes' => $validated['Notes'] ?? null,
+                'CreatedBy' => Auth::id(),
+                'ModifiedBy' => Auth::id(),
+                'CreatedOn' => now(),
+                'ModifiedOn' => now(),
             ]);
- 
+
+            // Handle selected GLs
+            $selectedGls = json_decode($validated['selected_gls'], true);
+            foreach ($selectedGls as $gl) {
+                BudgetGLsAttachments::create([
+                    'BudgetID' => $budget->Id,
+                    'GLID' => $gl['AccountID'], // Assuming AccountID maps to BudgetGLID
+                    'AccountID' => $gl['AccountID'],
+                    'Description' => $gl['Description'] ?? null,
+                    'GLAccountTypeID' => $gl['GLAccountTypeID'],
+                    'CreatedBy' => Auth::id(),
+                    'CreatedOn' => now(),
+                    'ModifiedBy' => Auth::id(),
+                    'ModifiedOn' => now(),
+                ]);
+            }
+
             DB::commit();
- 
+
             activity()
                 ->performedOn($budget)
                 ->causedBy(Auth::user())
                 ->event('create')
                 ->withProperties(['action' => 'create'])
                 ->log('Created a budget');
- 
+
             return redirect()->route('budgetperiod.index')->with('success', 'Budget created successfully.');
- 
         } catch (\Throwable $th) {
             DB::rollBack();
             Log::error('Failed to create budget: ' . $th->getMessage());
- 
+
             return back()->withErrors(['error' => 'Failed to create Budget'])->withInput();
         }
     }
+
+
+    public function show($id)
+    {
+        try {
+            // Fetch the budget
+            $budget = Budget::findOrFail($id);
+
+            // Fetch attached GLs (excluding soft-deleted)
+            $glAttachments = BudgetGLsAttachments::where('BudgetID', $id)
+                ->whereNull('DeletedOn')
+                ->get();
+
+            // Fetch GL Account Types for description mapping
+            $glAccountTypes = DB::table('t_BudgetGLSubTypes')
+                ->select('GLAccountTypeID', 'Description')
+                ->distinct()
+                ->get();
+
+            return view('budgetandanalytics.budgetperiod.show', compact('budget', 'glAttachments', 'glAccountTypes'));
+        } catch (\Throwable $th) {
+            Log::error('Failed to load budget: ' . $th->getMessage());
+            return redirect()->route('budgetperiod.index')->withErrors(['error' => 'Failed to load budget']);
+        }
+    }
+
 
     public function edit($id)
     {
@@ -114,46 +183,51 @@ public function index()
         return view('budgetandanalytics.budgetperiod.edit', compact('periods', 'types'));
     }
 
+
     public function update(Request $request, $id)
     {
+       // $this->authorize(PermissionEnum::BudgetSetupUpdate, BudgetPeriods::class);
 
-        $this->authorize(PermissionEnum::BudgetSetupUpdate, BudgetPeriods::class);
-
-        $validated=$request->validate([
-        'fiscalYear'  => 'required|string|max:10',
-        'periodType'  => 'required|exists:t_BudgetPeriodTypes,Id',
-        'notes'       => 'nullable|string',
-    ]);
+        $validated = $request->validate([
+            'Name'        => 'required|string|max:255',
+            'FiscalYear'  => 'required|integer|min:2000|max:2100',
+            'From'        => 'required|date',
+            'To'          => 'required|date|after_or_equal:From',
+            'Notes'       => 'nullable|string|max:1000',
+        ]);
 
         DB::beginTransaction();
 
         try {
-            $period = BudgetPeriods::findOrFail($id);
+            $period = Budget::findOrFail($id);
 
             $period->update([
-                'fiscalYear' => $validated['fiscalYear'],
-                'periodType' => $validated['periodType'],
-                'notes' => $validated['notes'],
-                'CreatedBy' => Auth::Id(),
-                'ModifiedBy' => Auth::Id(),
+                'Name'        => $validated['Name'],
+                'FiscalYear'  => $validated['FiscalYear'],
+                'From'        => $validated['From'],
+                'To'          => $validated['To'],
+                'Notes'       => $validated['Notes'] ?? null,
+                'ModifiedBy'  => Auth::id(),
             ]);
 
             DB::commit();
+
             activity()
                 ->performedOn($period)
-                ->causedBy(Auth::user())
+                ->causedBy(Auth::id())
                 ->withProperties(['action' => 'update'])
-                ->log('Updated Period');
+                ->log('Updated Budget Period');
 
-            return redirect()->route('budgetperiod.index')->with('success', 'Period updated successfully');
+            return redirect()->route('budgetperiod.index')->with('success', 'Budget updated successfully');
         } catch (\Throwable $th) {
             DB::rollBack();
-            Log::error('Failed to Update period:' . $th->getMessage());
+            Log::error('Failed to update budget period: ' . $th->getMessage());
 
-            return back()->withErrors(['error' => 'Failed to update period'])->withInput();
+            return back()->withErrors(['error' => 'Failed to update budget'])->withInput();
+        }
     }
 
-    }
+
 
     public function destroy(string $id)
     {
@@ -172,6 +246,32 @@ public function index()
         } catch (\Throwable $th) {
             Log::error('---DELETE PERIOD ERROR---' . $th->getMessage());
             return redirect()->route('budgetperiod.index')->with('error', 'Failed to delete Period. Please try again.');
+        }
+    }
+
+
+    public function delGLAttachment($id)
+    {
+        //$this->authorize(PermissionEnum::BudgetSetupDelete, BudgetGLsAttachments::class);
+
+        try {
+            $glAttachment = BudgetGLsAttachments::findOrFail($id);
+            $glAttachment->delete();
+
+            //Delete the associated BudgetGLMasterAllocations if they exist
+            BudgetGLMasterAllocations::where('GLAttachmentID', $id)->delete();
+
+            activity()
+                ->performedOn($glAttachment)
+                ->causedBy(Auth::user())
+                ->withProperties(['action' => 'delete'])
+                ->log('Deleted GL Attachment Successfully: ' . $id);
+
+            return back()->with('success', 'GL Attachment deleted successfully.');
+            //return response()->json(['success' => true, 'message' => 'GL Attachment deleted successfully.']);
+        } catch (\Throwable $th) {
+            Log::error('Failed to delete GL Attachment: ' . $th->getMessage());
+            return response()->json(['success' => false, 'message' => 'Failed to delete GL Attachment.'], 500);
         }
     }
 

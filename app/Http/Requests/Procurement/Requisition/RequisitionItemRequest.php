@@ -3,8 +3,8 @@
 namespace App\Http\Requests\Procurement\Requisition;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Validator;
 
 class RequisitionItemRequest extends FormRequest
 {
@@ -23,8 +23,8 @@ class RequisitionItemRequest extends FormRequest
             'Quantity' => ['required', 'numeric'],
             'Urgency' => ['required', 'integer'],
             'UOM' => ['required', 'integer'],
-             'EstimatedPrice' => ['nullable', 'numeric'],
-             'LineItemID' => ['nullable', 'integer'],
+            'EstimatedPrice' => ['nullable', 'numeric'],
+            'LineItemID' => ['nullable', 'integer'],
         ];
     }
 
