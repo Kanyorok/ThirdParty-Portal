@@ -202,7 +202,7 @@ class InterBranchRequisitionService
         $enum = match ($action) {
             'APPROVED' => InterBranchRequisitionEnum::Approved,
             'REJECTED' => InterBranchRequisitionEnum::Rejected,
-            default => InterBranchRequisitionEnum::Pending
+            default => InterBranchRequisitionEnum::Submitted
         };
 
         Workflow::create([

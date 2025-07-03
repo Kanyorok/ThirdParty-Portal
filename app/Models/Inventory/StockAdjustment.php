@@ -42,12 +42,7 @@ class StockAdjustment extends Model
     {
         return $this->belongsTo(User::class, 'AdjustedBy', 'Id');
     }
-
-    public static function getPrimaryKey(): string
-    {
-        return 'Id';
-    }
-
+    
     public function items()
     {
         return $this->hasMany(StockAdjustmentItem::class, 'AdjustmentId', 'Id');
