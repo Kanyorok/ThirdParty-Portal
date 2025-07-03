@@ -68,7 +68,7 @@
         </div>
         <div class="col-md-4">
           <label class="form-label">Remarks</label>
-            <input type="text" class="form-control" placeholder="Optional" name="Remarks">
+            <input type="text" class="form-control" name="Remarks">
         </div>
       </div>
       <button class="btn btn-success">💾 Save Unit</button>

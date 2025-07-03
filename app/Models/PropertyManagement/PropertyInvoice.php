@@ -14,6 +14,7 @@ class PropertyInvoice extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
+        'InvoiceNumber',
         'Lease',
         'BillingMonth',
         'InvoiceDate',
@@ -26,4 +27,12 @@ class PropertyInvoice extends Model
         'DeletedBy'
     ];
 
+    public static function getPrimaryKey(): string
+    {
+        return 'PropertyInvoiceId';
+    }
+    public function lease()
+    {
+        return $this->belongsTo(PropertyNewLease::class, 'Lease', 'Id');
+    }
 }
