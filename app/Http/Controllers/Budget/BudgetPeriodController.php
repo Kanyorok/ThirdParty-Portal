@@ -267,7 +267,8 @@ class BudgetPeriodController extends Controller
                 ->withProperties(['action' => 'delete'])
                 ->log('Deleted GL Attachment Successfully: ' . $id);
 
-            return response()->json(['success' => true, 'message' => 'GL Attachment deleted successfully.']);
+            return back()->with('success', 'GL Attachment deleted successfully.');
+            //return response()->json(['success' => true, 'message' => 'GL Attachment deleted successfully.']);
         } catch (\Throwable $th) {
             Log::error('Failed to delete GL Attachment: ' . $th->getMessage());
             return response()->json(['success' => false, 'message' => 'Failed to delete GL Attachment.'], 500);
