@@ -25,10 +25,7 @@ class PropertyBlockController extends Controller
         $properties = PropertyRegistry::all();
         return view('property.propertyregistry.structuralmapping.addblock.create', compact('properties'));
     }
-    public function show($id){
-        $block = PropertyBlock::find($id);
-        return view('property.propertyregistry.structuralmapping.addblock.show',compact('block'));
-    }
+
     public function store(PropertyBlockRequest $request)
     {
         

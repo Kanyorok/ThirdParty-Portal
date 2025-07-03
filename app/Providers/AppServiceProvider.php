@@ -54,6 +54,7 @@ use App\Models\HRM\Employee;
 use App\Models\Inventory\LoadOpeningStock;
 use App\Models\Procurement\DepartmentNeeds;
 use App\Models\Procurement\Order;
+use App\Models\Procurement\PrequalificationPeriod;
 use App\Models\Procurement\RequisitionLine;
 use App\Models\Procurement\ProcurementMethod;
 use App\Models\Procurement\RequisitionLines;
@@ -63,8 +64,10 @@ use App\Models\Procurement\RFQLine;
 use App\Models\Procurement\SchedulePlan;
 use App\Models\PropertyManagement\PropertyBlock;
 use App\Models\PropertyManagement\PropertyFloor;
+use App\Models\PropertyManagement\PropertyLeaseRenewal;
 use App\Models\PropertyManagement\PropertyUnit;
 use App\Models\PropertyManagement\PropertyNewTenant;
+use App\Models\PropertyManagement\PropertyLeaseSchedule;
 use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyTenantClearance;
 use App\Models\PropertyManagement\PropertyType;
@@ -75,6 +78,7 @@ use App\Policies\CrmBranchPolicy;
 use App\Policies\Inventory\OpenStockPolicy;
 use App\Policies\Procurement\DepartmentNeedsPolicy;
 use App\Policies\Procurement\OrderPolicy;
+use App\Policies\Procurement\PrequalificationPeriodPolicy;
 use App\Policies\Procurement\ProcurementMethodPolicy;
 use App\Policies\Procurement\RequisitionLinesPolicy;
 use App\Policies\Procurement\RequisitionPolicy;
@@ -85,6 +89,8 @@ use App\Policies\PropertyManagement\PropertyNewTenantPolicy;
 use App\Policies\PropertyManagement\PropertyRegistryPolicy;
 use App\Policies\PropertyManagement\PropertyStructuralPolicy;
 use App\Policies\PropertyManagement\PropertyTenantClearancePolicy;
+use App\Policies\PropertyManagement\PropertyLeaseSchedulePolicy;
+use App\Policies\PropertyManagement\PropertyLeaseRenewalPolicy;
 use App\Policies\PropertyManagement\PropertyTypePolicy;
 use App\Policies\PropertyManagement\PropertyFloorPolicy;
 use App\Policies\PropertyManagement\PropertyUnitPolicy;        
@@ -221,6 +227,10 @@ class AppServiceProvider extends ServiceProvider
             PropertyTenantClearance::getPrimaryKey() => PropertyTenantClearance::class,
             PropertyFloor::getPrimaryKey() => PropertyFloor::class,
             PropertyUnit::getPrimaryKey() => PropertyUnit::class,
+            PropertyLeaseSchedule::getPrimaryKey() => PropertyLeaseSchedule::class,
+            PropertyLeaseRenewal::getPrimaryKey() => PropertyLeaseRenewal::class,
+            
+            PrequalificationPeriod::getPrimaryKey() => PrequalificationPeriod::class,
         ]);
 
         Gate::policy(Role::class, RolePolicy::class);
@@ -254,6 +264,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PropertyTenantClearance::class, PropertyTenantClearancePolicy::class);
         Gate::policy(PropertyFloor::class, PropertyFloorPolicy::class);
         Gate::policy(PropertyUnit::class, PropertyUnitPolicy::class);
+        Gate::policy(PropertyLeaseSchedule::class, PropertyLeaseSchedulePolicy::class);
+        Gate::policy(PropertyLeaseRenewal::class, PropertyLeaseRenewalPolicy::class);
+        Gate::policy(PrequalificationPeriod::class, PrequalificationPeriodPolicy::class);
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);
          Event::listen(SMSSendEvent::class, SMSSendListener::class);
