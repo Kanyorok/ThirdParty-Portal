@@ -38,5 +38,4 @@ class BudgetLinesGLAccount extends Pivot
         'ModifiedOn' => 'datetime',
         'DeletedOn' => 'datetime',
     ];
-
 }
