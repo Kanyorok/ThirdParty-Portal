@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use App\Models\Auth\User;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -34,49 +35,60 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
-        // Perform authentication
+        // Authenticate
         $request->authenticate();
         $user = $request->user();
 
-        // Clear navbar cache
         ModuleService::clearNavbarCache($user);
 
-        // Validate branch selection
         $selectedBranchId = $request->input('branch');
-
         if (empty($selectedBranchId)) {
-            Auth::logout(); // Logout since session is authenticated but invalid
+            Auth::logout();
             return redirect()->back()->withErrors([
                 'branch' => 'You must select a login branch.'
             ]);
         }
 
-        // Check if selected branch is valid for this user via ModelRoles
-        $hasAccess = DB::table('t_ModelRoles')
+        $modelRole = DB::table('t_ModelRoles')
             ->where('model_id', $user->Id)
+            ->where('model_type', User::getPrimaryKey()) // resolves to 'Id'
             ->where('BranchId', $selectedBranchId)
-            ->exists();
+            ->first();
 
-        if (!$hasAccess) {
+        if (!$modelRole) {
             Auth::logout();
             return redirect()->back()->withErrors([
                 'branch' => 'You do not have access to the selected branch.'
             ]);
         }
 
-        // Get branch name
+        $roleName = DB::table('t_Roles')
+            ->where('id', $modelRole->role_id)
+            ->value('name');
+
+        if (!$roleName) {
+            Auth::logout();
+            return redirect()->back()->withErrors([
+                'branch' => 'Role mapping not found for selected branch.'
+            ]);
+        }
+
         $branchName = DB::table('t_Branches')
             ->where('Id', $selectedBranchId)
             ->value('Name');
 
-        // Store in session
         session([
             'LoginBranchId' => $selectedBranchId,
-            'LoginBranchName' => $branchName
+            'LoginBranchName' => $branchName,
+            'LoginRoleName' => $roleName
         ]);
+
+        $user->syncRoles([]); // clear any previous
+        // $user->syncRolesWithBranch([$roleName], $selectedBranchId, $user->Id);
 
         return redirect()->intended('/');
     }
+
 
     /**
      * Logout

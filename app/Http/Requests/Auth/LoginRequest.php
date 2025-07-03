@@ -28,7 +28,7 @@ class LoginRequest extends FormRequest
         return [
             'UserID' => ['required', 'string'],
             'password' => ['required', 'string'],
-            'branch' => ['nullable', 'exists:t_Branches,Id'],
+            'branch' => ['required', 'exists:t_Branches,Id'],
         ];
     }
 
