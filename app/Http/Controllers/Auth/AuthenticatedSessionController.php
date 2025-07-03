@@ -78,13 +78,12 @@ class AuthenticatedSessionController extends Controller
             ->value('Name');
 
         session([
-            'LoginBranchId' => $selectedBranchId,
+            'LoginBranchId'   => $selectedBranchId,
             'LoginBranchName' => $branchName,
-            'LoginRoleName' => $roleName
+            'LoginRoleName'   => $roleName
         ]);
 
-        $user->syncRoles([]); // clear any previous
-        // $user->syncRolesWithBranch([$roleName], $selectedBranchId, $user->Id);
+        $user->setEffectiveRole($roleName); // Tell Spatie the effective role (no DB insert/update)
 
         return redirect()->intended('/');
     }
