@@ -55,28 +55,34 @@ trait ReportsTrait
                 }
 
                 $parameters = $service->getReportParametersValidated($ssrsReport['Id'], $request->all());
-                $xmlResponse = $service->exportReport($report->Path, parameters: $parameters, format: 'XML', content: true);
+
+                $xmlResponse = $service->exportReport($report->Path, parameters: $parameters->toArray(), content: true);
                 if (!str_contains($xmlResponse, 'xml')) {
                     throw new ErroredException('invalid report.');
                 }
                 $data = $service->parseReportXml($xmlResponse);
-            } catch (ConnectionException $e) {
+            } catch (ConnectionException|ErroredException $e) {
                 Log::error('Error Load Report :');
                 Log::error($e);
-                return view('snippets.errors')->with('message', 'cannot connect to the report server.');
-            } catch (ErroredException $e) {
-                Log::error('Error Load Report :');
-                Log::error($e);
-                return view('snippets.errors')->with('message', $e->getMessage() ?? 'cannot retrieve report data.');
+                try {
+                    $service = new SSRSService();
+                    $ssrsReport = $service->getReportByPath($report->Path);
+                    $parameters = $service->getReportParametersValidated($ssrsReport['Id'], $request->all());
+                } catch (ErroredException $e) {
+                    return view('snippets.errors')->with('message', 'cannot connect to the report server.');
+                } catch (ConnectionException $e) {
+                    return view('snippets.errors')->with('message', $e->getMessage() ?? 'cannot retrieve report data.');
+                }
+                return view('reports.table', compact('report'))->with('data', collect())->with('params', SSRSService::queryParams($parameters->put('_key', md5($report->Path))->toArray()))
+                    ->with('module', Str::lower(self::MODULE->name))->with('message', 'Cannot generate preview, try export');
             } catch (Throwable|Exception $e) {
                 Log::error('Error Load Report :');
                 Log::error($e);
                 return view('snippets.errors')->with('message', 'cannot retrieve report data.');
             }
 
-            return ($data->isEmpty())
-                ? view('snippets.errors')->with('message', 'Report has no data. Please check your report parameters and try again..')
-                : view('reports.table', compact('report', 'data'))->with('params', SSRSService::queryParams(collect($parameters)->put('_key', md5($report->Path))->toArray()));
+            return view('reports.table', compact('report', 'data'))->with('params', SSRSService::queryParams($parameters->put('_key', md5($report->Path))->toArray()))
+                ->with('module', Str::lower(self::MODULE->name))->with('message', 'Report has no data. Please check your report parameters and try again.');
         }
 
         try {
@@ -100,7 +106,7 @@ trait ReportsTrait
 
     public function export(Request $request, Report $report, string $format): StreamedResponse|RedirectResponse
     {
-        if ($report->ModuleId !== self::MODULE->value) {
+        if ((int)$report->ModuleId !== self::MODULE->value) {
             return redirect()->back()->with('fail', 'invalid report.');
         }
         //todo check permissions
@@ -112,7 +118,7 @@ trait ReportsTrait
         try {
             $service = new SSRSService();
             $ssrsReport = $service->getReportByPath($report->Path);
-            return $service->exportReport($report->Path, parameters: $service->getReportParametersValidated($ssrsReport['Id'], $request->all()), format: $format);
+            return $service->exportReport($report->Path, parameters: $service->getReportParametersValidated($ssrsReport['Id'], $request->all())->toArray(), format: $format);
         } catch (ConnectionException $e) {
             return redirect()->back()->with('fail', 'cannot connect to the report server.');
         } catch (ErroredException $e) {
