@@ -1,6 +1,15 @@
 @extends('layouts.app')
 @section('title', 'Tenant Exit')
 @section('content')
+@if ($errors->any())
+    <div class="alert alert-danger">
+        <ul class="mb-0">
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
 <div class="container mt-4">
 
   <h4 class="fw-bold mb-3">Tenant Exit & Clearance Checklist</h4>
@@ -21,8 +30,8 @@
             </select>
         </div>
         <div class="col-md-6">
-          <label class="form-label">Exit Date</label>
-            <input type="date" class="form-control" value="ExitDate" name="ExitDate">
+          <label class="form-label" id="exit-date">Exit Date</label>
+            <input type="date" class="form-control" id="exit-date" value="ExitDate" name="ExitDate">
         </div>
       </div>
 
@@ -85,4 +94,13 @@
   </div>
 </div>
 
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    flatpickr("#exit-date", {
+        dateFormat: "d/m/Y",
+        allowInput: true
+    });
+</script>
 @endsection

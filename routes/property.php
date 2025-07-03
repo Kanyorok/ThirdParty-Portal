@@ -161,9 +161,17 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::put('renewlease/edit/{Id}',[PropertyLeaseRenewalController::class,'update'])->name('renewlease.update');
     Route::delete('renewlease/delete/{Id}', [PropertyLeaseRenewalController::class,'destroy'])->name('renewlease.destroy'); 
     
-    
-    Route::resource('attachments', PropertyAttachmentsController::class);
     Route::resource('rentinvoice', PropertyInvoiceController::class);
+    Route::get('rentinvoice/create', [PropertyInvoiceController::class,'create'])->name('rentinvoice.create');
+    Route::post('rentinvoice', [PropertyInvoiceController::class,'store'])->name('rentinvoice.store');
+    Route::get('rentinvoice/show/{id}', [PropertyInvoiceController::class,'show'])->name('rentinvoice.show');
+    Route::get('rentinvoice/edit/{id}',[PropertyInvoiceController::class,'edit'])->name('rentinvoice.edit');
+    Route::put('rentinvoice/edit/{id}',[PropertyInvoiceController::class,'update'])->name('rentinvoice.update');
+    Route::delete('rentinvoice/delete/{id}', [PropertyInvoiceController::class,'destroy'])->name('rentinvoice.destroy');
+
+
+
+    Route::resource('attachments', PropertyAttachmentsController::class);
     Route::resource('rentreceipt', PropertyReceiptController::class);
     Route::resource('rentdashboard', RentDashboardController::class);
     Route::resource('tenantledger', TenantStatementController::class);
