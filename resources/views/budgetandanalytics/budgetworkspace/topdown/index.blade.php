@@ -1,6 +1,19 @@
 @extends('layouts.app')
 @section('title', 'General Ledger Entries')
 @section('content')
+@if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
+@if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
+
 <div class="container mt-4">
     {{-- <h4 class="mb-3">📊 Budget Data Entry</h4> --}}
  
@@ -9,7 +22,7 @@
         @method('POST')
         <!-- Budget selection -->
         <div class="row mb-3">
-            <div class="col-md-4">
+            <div class="col-md-6">
                 <label class="form-label">Select Budget</label>
                 <select class="form-select" name="BudgetID" required>
                 <option value="" selected disabled>-- Select Budget --</option>
@@ -18,7 +31,7 @@
                 @endforeach
                 </select>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-6">
                 <label class="form-label">Select Branch</label>
                 <select class="form-select" name="BranchID" required>
                 <option value="" selected disabled>-- Select Branch --</option>
@@ -27,14 +40,14 @@
                 @endforeach
                 </select>
             </div>
-            <div class="col-md-4">
+            {{-- <div class="col-md-4">
                 <label class="form-label">Select Format</label>
                 <select class="form-select" id="format" name="format" required>
                     <option value="m" selected>Monthly</option>
                     <option value="q">Quarterly</option>
                 </select>
-            </div>
-            <div class="col-md-4 d-flex align-items-end mt-3">
+            </div> --}}
+            <div class="col-md-12 d-flex align-items-end mt-5">
                 <button type="submit" class="btn btn-primary w-100" onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Loading Please wait...'; this.form.submit(); }">
                     💾 Submit
                 </button>

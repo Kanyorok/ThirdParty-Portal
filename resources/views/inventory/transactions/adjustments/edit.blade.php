@@ -68,11 +68,11 @@
         </div>
 
 
-        <h5 class="mb-3">Adjustment Items</h5>
+            <h5 class="mb-3">Adjustment Items</h5>
 
-        <div class="table-responsive mb-3">
-            <table class="table table-bordered align-middle">
-                <thead class="table-light">
+            <div class="table-responsive mb-3">
+                <table class="table table-bordered align-middle">
+                    <thead class="table-light">
                     <tr>
                         <th>#</th>
                         <th>Item Code</th>
@@ -139,9 +139,9 @@
                             </td>
                         </tr>
                     @endforeach
-                </tbody>
-            </table>
-        </div>
+                    </tbody>
+                </table>
+            </div>
 
         <div class="mb-3">
             <label for="AdjustedBy" class="form-label">Adjusted By</label>

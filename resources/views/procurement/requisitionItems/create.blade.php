@@ -125,7 +125,8 @@
                             <div class="mb-3">
                                 <label class="form-label" for="Quantity">Quantity </label>
 
-                                <input type="number" class="form-control" id="Quantity" name="Quantity" step="any" required
+                                <input type="number" class="form-control" id="Quantity" name="Quantity" step="any"
+                                       required
                                     placeholder="Quantity">
                                 {{-- <textarea name="Quantity" id="Quantity" rows="3" class="form-control"
                                           maxlength="1000"></textarea> --}}
@@ -149,7 +150,7 @@
                                 <label class="form-label" for="EstimatedPrice">Estimated Price </label>
 
                                 <input type="number" class="form-control" id="EstimatedPrice" name="EstimatedPrice"
-                                       step="any"  readonly required>
+                                       step="any" readonly required>
 
                                 <p id="EstimatedPrice_error" class="invalid-feedback d-none error col-12" role="alert">
                                 </p>

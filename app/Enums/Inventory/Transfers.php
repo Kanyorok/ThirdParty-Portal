@@ -8,7 +8,6 @@ enum Transfers: string
 {
     use UsefulEnumTrait;
 
-   
 
     case Pending = 'pe';
 

@@ -67,7 +67,7 @@
                                      style="width: 0" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
                             </div>
                         @endif
-                        @if($campaign->Status->value === CampaignStatusEnum::Draft->value)
+                            @if($campaign->Status->value === CampaignStatusEnum::Draft->value)
                             <div class="accordion accordion-flush mb-3" id="accordionHelp">
                                 <div class="accordion-item">
                                     <h2 class="accordion-header" id="flush-headingOne">

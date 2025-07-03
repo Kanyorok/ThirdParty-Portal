@@ -39,6 +39,7 @@ class TenderSupplier extends Model
     {
         return $this->belongsTo(Supplier::class, 'SupplierID', 'Id');
     }
+
     public function bidResponsiveness()
     {
         return $this->hasOne(BidResponsiveness::class, 'TenderSupplierID');

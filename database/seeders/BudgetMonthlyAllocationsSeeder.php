@@ -3,9 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Auth\User;
-use App\Models\Budget\BudgetLine;
 use Carbon\Carbon;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -61,32 +59,32 @@ class BudgetMonthlyAllocationsSeeder extends Seeder
 
             // Insert into t_BudgetActivities
             $budgetActivityID = DB::table('t_BudgetActivities')->insertGetId([
-                'BudgetLineID'   => $config['BudgetLineID'],
-                'BranchID'       => $config['BranchID'],
-                'ActivityID'     => $activityMaster->Id,
-                'Description'    => $config['Description'],
+                'BudgetLineID' => $config['BudgetLineID'],
+                'BranchID' => $config['BranchID'],
+                'ActivityID' => $activityMaster->Id,
+                'Description' => $config['Description'],
                 'AllocationType' => $config['AllocationType'],
                 'FullAllocation' => $config['FullAllocation'],
-                'CreatedBy'      => $userIds[array_rand($userIds)],
-                'CreatedOn'      => $now->copy()->subDays(rand(5, 20)),
-                'ModifiedBy'     => $userIds[array_rand($userIds)],
-                'ModifiedOn'     => $now->copy()->subDays(rand(1, 4)),
-                'DeletedBy'      => null,
-                'DeletedOn'      => null,
+                'CreatedBy' => $userIds[array_rand($userIds)],
+                'CreatedOn' => $now->copy()->subDays(rand(5, 20)),
+                'ModifiedBy' => $userIds[array_rand($userIds)],
+                'ModifiedOn' => $now->copy()->subDays(rand(1, 4)),
+                'DeletedBy' => null,
+                'DeletedOn' => null,
             ]);
 
             // Insert into t_BudgetMonthlyAllocations
             foreach ($config['Allocations'] as $month => $amount) {
                 DB::table('t_BudgetMonthlyAllocations')->insert([
                     'BudgetActivityID' => $budgetActivityID,
-                    'Month'            => $month + 1,
-                    'Amount'           => $amount,
-                    'CreatedBy'        => $userIds[array_rand($userIds)],
-                    'CreatedOn'        => $now->copy()->subDays(rand(1, 10)),
-                    'ModifiedBy'       => $userIds[array_rand($userIds)],
-                    'ModifiedOn'       => $now->copy()->subDays(rand(0, 5)),
-                    'DeletedBy'        => null,
-                    'DeletedOn'        => null,
+                    'Month' => $month + 1,
+                    'Amount' => $amount,
+                    'CreatedBy' => $userIds[array_rand($userIds)],
+                    'CreatedOn' => $now->copy()->subDays(rand(1, 10)),
+                    'ModifiedBy' => $userIds[array_rand($userIds)],
+                    'ModifiedOn' => $now->copy()->subDays(rand(0, 5)),
+                    'DeletedBy' => null,
+                    'DeletedOn' => null,
                 ]);
             }
 

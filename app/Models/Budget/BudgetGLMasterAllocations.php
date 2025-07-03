@@ -21,6 +21,7 @@ class BudgetGLMasterAllocations extends Model
     protected $fillable = [
         'BudgetID',
         'BranchID',
+        'GLAttachmentID',
         'AccountID',
         'Description',
         'GLAccountTypeID',

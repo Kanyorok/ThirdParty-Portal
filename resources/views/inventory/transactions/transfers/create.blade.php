@@ -61,15 +61,15 @@
                     <h5>Requisition Items</h5>
                     <table class="table table-bordered align-middle" id="itemsTable">
                         <thead class="table-light">
-                            <tr>
-                                <th>#</th>
-                                <th>Item Name</th>
-                                <th>Item Code</th>
-                                <th>UOM</th>
-                                <th>Approved Qty</th>
-                                <th>Dispatched Qty</th>
-                                <th>Remarks</th>
-                            </tr>
+                        <tr>
+                            <th>#</th>
+                            <th>Item Name</th>
+                            <th>Item Code</th>
+                            <th>UOM</th>
+                            <th>Approved Qty</th>
+                            <th>Dispatched Qty</th>
+                            <th>Remarks</th>
+                        </tr>
                         </thead>
                         <tbody id="itemsBody"></tbody>
                     </table>
@@ -82,96 +82,96 @@
     </form>
 </div>
 
-<script>
-    const requisitionTypeSelect = document.getElementById('requisition_type');
-    const requisitionIdSelect = document.getElementById('requisition_id');
-    const transferDetails = document.getElementById('transferDetails');
-    const itemsBody = document.getElementById('itemsBody');
+    <script>
+        const requisitionTypeSelect = document.getElementById('requisition_type');
+        const requisitionIdSelect = document.getElementById('requisition_id');
+        const transferDetails = document.getElementById('transferDetails');
+        const itemsBody = document.getElementById('itemsBody');
 
-    const fromBranchText = document.getElementById('fromBranch');
-    const toBranchText = document.getElementById('toBranch');
-    const fromBranchHidden = document.getElementById('FromBranch');
-    const toBranchHidden = document.getElementById('ToBranch');
-    const requisitionTypeHidden = document.getElementById('RequisitionType');
-    const requisitionIdHidden = document.getElementById('RequisitionId');
+        const fromBranchText = document.getElementById('fromBranch');
+        const toBranchText = document.getElementById('toBranch');
+        const fromBranchHidden = document.getElementById('FromBranch');
+        const toBranchHidden = document.getElementById('ToBranch');
+        const requisitionTypeHidden = document.getElementById('RequisitionType');
+        const requisitionIdHidden = document.getElementById('RequisitionId');
 
-    let selectedType = '';
+        let selectedType = '';
 
-    const requisitionsBaseUrl = "{{ url(route('requisitions.by-type', ['type' => 'PLACEHOLDER'])) }}";
-    const requisitionDetailsBaseUrl = "{{ url(route('requisitions.details', ['id' => 'PLACEHOLDER'])) }}";
+        const requisitionsBaseUrl = "{{ url(route('requisitions.by-type', ['type' => 'PLACEHOLDER'])) }}";
+        const requisitionDetailsBaseUrl = "{{ url(route('requisitions.details', ['id' => 'PLACEHOLDER'])) }}";
 
-    requisitionTypeSelect.addEventListener('change', function () {
-        selectedType = this.value;
-        requisitionTypeHidden.value = selectedType;
-        requisitionIdSelect.innerHTML = '<option value="">Loading...</option>';
+        requisitionTypeSelect.addEventListener('change', function () {
+            selectedType = this.value;
+            requisitionTypeHidden.value = selectedType;
+            requisitionIdSelect.innerHTML = '<option value="">Loading...</option>';
 
-        requisitionIdHidden.value = '';
-        itemsBody.innerHTML = '';
-        fromBranchText.value = '';
-        toBranchText.value = '';
-        fromBranchHidden.value = '';
-        toBranchHidden.value = '';
-        transferDetails.style.display = 'none';
-
-        if (!selectedType) {
-            requisitionIdSelect.innerHTML = '<option value="">Select Requisition</option>';
-            return;
-        }
-
-        const url = requisitionsBaseUrl.replace('PLACEHOLDER', selectedType);
-
-        fetch(url)
-            .then(response => response.json())
-            .then(data => {
-                requisitionIdSelect.innerHTML = '<option value="">Select Requisition</option>';
-                data.forEach(req => {
-                    const text = selectedType === 'interbranch' ? req.ReqNo : req.RequisitionNo;
-                    requisitionIdSelect.innerHTML += `<option value="${req.Id}">${text}</option>`;
-                });
-            })
-            .catch(error => {
-                console.error('Error fetching requisitions:', error);
-                requisitionIdSelect.innerHTML = '<option value="">Failed to load</option>';
-            });
-    });
-
-    requisitionIdSelect.addEventListener('change', function () {
-        const id = this.value;
-
-        itemsBody.innerHTML = '';
-        fromBranchText.value = '';
-        toBranchText.value = '';
-        fromBranchHidden.value = '';
-        toBranchHidden.value = '';
-        transferDetails.style.display = 'none';
-
-        if (!id || !selectedType) {
             requisitionIdHidden.value = '';
-            return;
-        }
+            itemsBody.innerHTML = '';
+            fromBranchText.value = '';
+            toBranchText.value = '';
+            fromBranchHidden.value = '';
+            toBranchHidden.value = '';
+            transferDetails.style.display = 'none';
 
-        requisitionIdHidden.value = id;
+            if (!selectedType) {
+                requisitionIdSelect.innerHTML = '<option value="">Select Requisition</option>';
+                return;
+            }
 
-        const detailsUrl = requisitionDetailsBaseUrl.replace('PLACEHOLDER', id) + `?type=${selectedType}`;
+            const url = requisitionsBaseUrl.replace('PLACEHOLDER', selectedType);
 
-        fetch(detailsUrl)
-            .then(response => response.json())
-            .then(data => {
-                if (selectedType === 'procurement') {
-                    fromBranchText.value = 'Headquarters';
-                    fromBranchHidden.value = '{{ \App\Models\Core\Branch::where("IsHQ", 1)->value("Id") ?? "" }}';
-                } else {
-                    fromBranchText.value = data.from_branch?.Name || 'N/A';
-                    fromBranchHidden.value = data.from_branch?.Id || '';
-                }
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    requisitionIdSelect.innerHTML = '<option value="">Select Requisition</option>';
+                    data.forEach(req => {
+                        const text = selectedType === 'interbranch' ? req.ReqNo : req.RequisitionNo;
+                        requisitionIdSelect.innerHTML += `<option value="${req.Id}">${text}</option>`;
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching requisitions:', error);
+                    requisitionIdSelect.innerHTML = '<option value="">Failed to load</option>';
+                });
+        });
 
-                toBranchText.value = data.to_branch?.Name || 'N/A';
-                toBranchHidden.value = data.to_branch?.Id || '';
+        requisitionIdSelect.addEventListener('change', function () {
+            const id = this.value;
 
-                itemsBody.innerHTML = '';
-                data.items.forEach((item, index) => {
-                    const dispatchedQty = item.DispatchedQty ?? item.ApprovedQty;
-                    itemsBody.innerHTML += `
+            itemsBody.innerHTML = '';
+            fromBranchText.value = '';
+            toBranchText.value = '';
+            fromBranchHidden.value = '';
+            toBranchHidden.value = '';
+            transferDetails.style.display = 'none';
+
+            if (!id || !selectedType) {
+                requisitionIdHidden.value = '';
+                return;
+            }
+
+            requisitionIdHidden.value = id;
+
+            const detailsUrl = requisitionDetailsBaseUrl.replace('PLACEHOLDER', id) + `?type=${selectedType}`;
+
+            fetch(detailsUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (selectedType === 'procurement') {
+                        fromBranchText.value = 'Headquarters';
+                        fromBranchHidden.value = '{{ \App\Models\Core\Branch::where("IsHQ", 1)->value("Id") ?? "" }}';
+                    } else {
+                        fromBranchText.value = data.from_branch?.Name || 'N/A';
+                        fromBranchHidden.value = data.from_branch?.Id || '';
+                    }
+
+                    toBranchText.value = data.to_branch?.Name || 'N/A';
+                    toBranchHidden.value = data.to_branch?.Id || '';
+
+                    itemsBody.innerHTML = '';
+                    data.items.forEach((item, index) => {
+                        const dispatchedQty = item.DispatchedQty ?? item.ApprovedQty;
+                        itemsBody.innerHTML += `
                         <tr>
                             <td>${index + 1}</td>
                             <td>
@@ -188,7 +188,7 @@
                             <td><input type="text" class="form-control" name="items[${index}][remarks]" maxlength="255"></td>
                         </tr>
                     `;
-                });
+                    });
 
                 transferDetails.style.display = 'block';
             })

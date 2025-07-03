@@ -25,9 +25,9 @@
         </div>
     </div>
 
-    <div class="table-responsive">
-        <table class="table table-bordered">
-            <thead class="table-light">
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead class="table-light">
                 <tr>
                     <th>#</th>
                     <th>Item Code</th>
@@ -36,8 +36,8 @@
                     <th>Adjusted Qty</th>
                     <th>Remarks</th>
                 </tr>
-            </thead>
-            <tbody>
+                </thead>
+                <tbody>
                 @foreach($adjustment->items as $index => $item)
                 <tr>
                     <td>{{ $index + 1 }}</td>
@@ -49,10 +49,10 @@
                     <td>{{ $item->Remarks ?? '-' }}</td>
                 </tr>
                 @endforeach
-            </tbody>
-        </table>
-    </div>
+                </tbody>
+            </table>
+        </div>
 
-    <a href="{{ route('transactionsadjustment.index') }}" class="btn btn-secondary mt-3">← Back to List</a>
-</div>
+        <a href="{{ route('transactionsadjustment.index') }}" class="btn btn-secondary mt-3">← Back to List</a>
+    </div>
 @endsection

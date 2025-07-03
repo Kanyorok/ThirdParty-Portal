@@ -94,15 +94,15 @@ class StockItemService
         });
     }
 
- 
+
     protected function generateSKUCode(int $Id, int $branchId, ?int $storeId): string
     {
         // Use 'NA' as a placeholder for the store segment if storeId is null
         $storeSegment = ($storeId !== null) ? str_pad($storeId, 2, '0', STR_PAD_LEFT) : 'NA';
 
         return 'SKU-' . str_pad($branchId, 2, '0', STR_PAD_LEFT) . '-' .
-               $storeSegment . '-' .
-               str_pad($Id, 5, '0', STR_PAD_LEFT);
+            $storeSegment . '-' .
+            str_pad($Id, 5, '0', STR_PAD_LEFT);
     }
 
     /**

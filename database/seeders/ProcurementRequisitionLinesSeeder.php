@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class ProcurementRequisitionLinesSeeder extends Seeder
 {
@@ -16,7 +16,6 @@ class ProcurementRequisitionLinesSeeder extends Seeder
         $statusId = DB::table('t_CodeDetails')->where('CodeID', 'a')->value('ID');
         $userId = DB::table('t_Users')->value('Id');
         $uomCode = DB::table('t_UOM')->value('Id');
-        
 
 
         if (!$requisitionId || !$itemId || !$urgencyId || !$statusId || !$userId || !$uomCode) {

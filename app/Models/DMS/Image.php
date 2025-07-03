@@ -4,7 +4,7 @@ namespace App\Models\DMS;
 
 use App\Enums\Core\ExtensionsEnum;
 use App\Exceptions\ErroredException;
-use App\Services\ImageService;
+use App\Services\DMS\ImageService;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;

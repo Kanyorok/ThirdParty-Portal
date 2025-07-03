@@ -46,6 +46,7 @@
             <table class="table table-hover table-bordered rounded-3" id="glAttachmentsTable">
                 <thead class="table-light">
                     <tr>
+                        <th scope="col">Type</th>
                         <th scope="col">Account ID</th>
                         <th scope="col">Description</th>
                         <th scope="col">Account Type</th>
@@ -55,18 +56,27 @@
                 <tbody id="glAttachmentsBody">
                     @foreach ($glAttachments as $gl)
                         <tr data-gl-id="{{ $gl->Id }}">
+                            <td>{{ $gl->GLAccountTypeID }}</td>
                             <td>{{ $gl->AccountID }}</td>
                             <td class="description-cell">{{ $gl->Description ?? 'N/A' }}</td>
                             <td>
                                 {{ $glAccountTypes->firstWhere('GLAccountTypeID', $gl->GLAccountTypeID)->Description ?? 'Unknown Type' }}
                             </td>
                             <td>
-                                <button type="button" class="btn btn-sm btn-primary edit-gl-btn me-1" data-gl-id="{{ $gl->Id }}" data-description="{{ $gl->Description ?? '' }}">
+                                {{-- <button type="button" class="btn btn-sm btn-primary edit-gl-btn me-1" data-gl-id="{{ $gl->Id }}" data-description="{{ $gl->Description ?? '' }}">
                                     <i class="bi bi-pencil"></i> Edit
+                                </button> --}}
+                                <button type="button"
+                                        class="btn btn-sm btn-danger custom-delete-btn"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#customDeleteConfirmModal"
+                                        data-name="{{ $gl->Description }}"    {{-- Pass item name --}}
+                                        data-route="{{ route('budget.delete-gl-attachment', $gl->Id) }}"> {{-- Pass delete route --}}
+                                    Delete
                                 </button>
-                                <button type="button" class="btn btn-sm btn-danger delete-gl-btn" data-gl-id="{{ $gl->Id }}">
-                                    <i class="bi bi-trash"></i> Delete
-                                </button>
+{{--                                <button type="button" class="btn btn-sm btn-danger delete-gl-btn" data-gl-id="{{ $gl->Id }}">--}}
+{{--                                    <i class="bi bi-trash"></i> Delete--}}
+{{--                                </button>--}}
                             </td>
                         </tr>
                     @endforeach
@@ -105,6 +115,9 @@
             </div>
         </div>
     </div>
+
+    <!-- Import the Custom Delete Modal -->
+    @include('components.modals.delete-confirm')
 
     <!-- Custom CSS for Enhanced UI -->
     <style>
@@ -177,27 +190,6 @@
                         alert(errorMessage);
                     }
                 });
-            });
-
-            // Handle delete with confirmation
-            $('.delete-gl-btn').click(function () {
-                let glId = $(this).data('gl-id');
-                if (confirm('Are you sure you want to delete this GL attachment?')) {
-                    $.ajax({
-                        url: '{{ url("budget/delete-gl") }}/' + glId,
-                        type: 'POST',
-                        data: {
-                            _token: '{{ csrf_token() }}'
-                        },
-                        success: function (response) {
-                            location.reload(); // Reload to show success message and updated table
-                        },
-                        error: function (xhr) {
-                            let errorMessage = xhr.responseJSON?.message || 'Failed to delete GL attachment';
-                            alert(errorMessage);
-                        }
-                    });
-                }
             });
         });
     </script>
