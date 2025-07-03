@@ -21,7 +21,7 @@ class ProcurementRequisitionSeeder extends Seeder
         }
 
         DB::table('t_Requisitions')->insert([
-            'RequisitionNo' => 'REQ-2025-003',
+            'RequisitionNo' => 'REQ-2025-004',
             'BranchID' => $branchId,
             'DepartmentID' => $departmentId,
             'Remarks' => 'Seeder-generated test requisition',

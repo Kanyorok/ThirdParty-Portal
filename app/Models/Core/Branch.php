@@ -43,7 +43,7 @@ class Branch extends Model
         return $this->belongsTo(User::class, 'ManagerId', 'Id')->withTrashed();
     }
 
-    
+
     public function store()
     {
         return $this->hasMany(Store::class, 'BranchID', 'Id');

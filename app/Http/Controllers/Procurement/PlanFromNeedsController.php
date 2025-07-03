@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers\Procurement;
 
+use App\Enums\Procurement\DepartmentNeedsEnum;
+use App\Enums\ProcurementPlanStatusEnum;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Procurement\PlanFromNeedsRequest;
 use App\Models\Core\Branch;
 use App\Models\HRM\Department;
 use App\Models\Inventory\ItemCategories;
@@ -13,10 +16,6 @@ use App\Models\Procurement\PlanLineItems;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Enums\Procurement\DepartmentNeedsEnum;
-use App\Http\Requests\Procurement\PlanFromNeedsRequest;
-use App\Enums\ProcurementPlanStatusEnum;
-use App\Policies\Procurement\PlanManualInputPolicy;
 
 class PlanFromNeedsController extends Controller
 {

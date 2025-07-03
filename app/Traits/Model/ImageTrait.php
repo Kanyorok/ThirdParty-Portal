@@ -5,7 +5,7 @@ namespace App\Traits\Model;
 use App\Enums\Core\ExtensionsEnum;
 use App\Models\Auth\User;
 use App\Models\DMS\Image;
-use App\Services\ImageService;
+use App\Services\DMS\ImageService;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Http\UploadedFile;
 use RuntimeException;

@@ -13,7 +13,7 @@ class TransactionReceiptItem extends Model
 {
     use SoftDeletes;
 
-    
+
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
@@ -29,13 +29,13 @@ protected $fillable = [
     'DispatchedQty',   
     'Discrepancy', 
     'Remarks',
+    'Store',
     'CreatedBy',
     'CreatedOn',
     'ModifiedBy',
     'ModifiedOn',
     'ReceiptId',
 ];
-
 
 
     public function receipt()

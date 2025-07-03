@@ -3,15 +3,15 @@
 namespace App\Services\Inventory;
 
 use App\Models\Inventory\TransactionReceipt;
-use App\Models\Inventory\TransactionReceiptItem;
-use App\Models\Inventory\TransactionTransfer;
-use App\Models\Inventory\TransactionTransferItem;
-use App\Models\Inventory\InterBranchRequisition;
+use App\Models\Inventory\StockItem;
+use App\Models\Inventory\InventoryHold;
 use App\Models\Core\Workflow;
 use App\Models\Core\PendingWorkflow;
+use App\Models\Core\CodeDetail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
+use Illuminate\Validation\ValidationException;
 use App\Enums\Inventory\Transfers;
 
 class TransactionReceiptService
@@ -40,7 +40,6 @@ class TransactionReceiptService
             $receipt->ReceiptId = 'REC/' . now()->format('Ymd') . '/' . str_pad($receipt->Id, 4, '0', STR_PAD_LEFT);
             $receipt->save();
 
-            // Add receipt items
             $this->createReceiptItems($receipt, $items);
 
             Workflow::create([
@@ -66,6 +65,25 @@ class TransactionReceiptService
                     'ModifiedOn' => now(),
                 ]
             );
+            // ✅ Update InventoryHold entries for this transfer to Delivered and soft-delete them
+$sourceCodeId = CodeDetail::where('CodeID', 'Source')
+    ->where('Description', 'Transaction Transfer')
+    ->value('ID');
+
+$deliveredStatus = Transfers::Delivered->value;
+
+InventoryHold::where('Source', $sourceCodeId)
+    ->where('SourceID', $receipt->TransferId)
+    ->where('Status', Transfers::InTransit->value)
+    ->whereNull('DeletedOn')
+    ->update([
+        'Status'     => $deliveredStatus,
+        'ModifiedBy' => Auth::id(),
+        'ModifiedOn' => now(),
+        'DeletedBy'  => Auth::id(),
+        'DeletedOn'  => now(),
+    ]);
+
 
             activity()
                 ->causedBy(auth()->user())
@@ -77,79 +95,92 @@ class TransactionReceiptService
         });
     }
 
-    public function createReceiptItems($receipt, $items)
-    {
-        foreach ($items as $itemData) {
-            $item = $receipt->items()->create([
-                'item' => $itemData['item'],
-                'ReceivedQty' => $itemData['received_qty'],
-                'DispatchedQty' => $itemData['dispatched_qty'] ?? null,
-                'Discrepancy' => isset($itemData['dispatched_qty'], $itemData['received_qty']) 
-                    ? $itemData['dispatched_qty'] - $itemData['received_qty'] 
-                    : null,
-                'DamagedQty' => $itemData['damaged_qty'] ?? 0,
-                'CreatedBy' => Auth::id(),
-                'CreatedOn' => Carbon::now(),
-                'ModifiedBy' => Auth::id(),
-                'ModifiedOn' => Carbon::now(),
-            ]);
+   public function createReceiptItems($receipt, $items)
+{
+    $toBranchId = $receipt->transfer->ToBranch;
 
-            activity()
-                ->causedBy(auth()->user())
-                ->performedOn($item)
-                ->withProperties(['attributes' => $item->toArray()])
-                ->log('Receipt item added');
+    $transferSource = CodeDetail::where('CodeID', 'Source')
+        ->where('Description', 'Transfer Receipts')
+        ->value('ID');
+
+    if (!$transferSource) {
+        \Log::error('Transfer Source CodeDetail ID not found.');
+        throw new \Exception("Source type 'Transfer Receipts' not found in t_CodeDetails.");
+    }
+
+    foreach ($items as $index => $itemData) {
+        $storeId = $itemData['store_id'] ?? null;
+        $itemId = $itemData['item'];
+
+        $stockQuery = StockItem::where('ItemID', $itemId)->where('Branch', $toBranchId);
+        $storeId ? $stockQuery->where('Store', $storeId) : null;
+        $stock = $stockQuery->first();
+
+        if (!$stock) {
+            throw ValidationException::withMessages([
+                "items.$index.item" => 'Item not available in the selected stock. <a href="' . route('sku.create') . '" target="_blank">Click here to add stock</a>.'
+            ]);
         }
-    }
 
-    public function updateReceipt($receipt, $data)
-    {
-        return DB::transaction(function () use ($receipt, $data) {
-            \Log::info('Updating receipt with data:', $data);
+        $receiptItem = $receipt->items()->create([
+            'item' => $itemId,
+            'Store' => $storeId,
+            'ReceivedQty' => $itemData['received_qty'],
+            'DispatchedQty' => $itemData['dispatched_qty'] ?? null,
+            'Discrepancy' => isset($itemData['dispatched_qty'], $itemData['received_qty'])
+                ? $itemData['dispatched_qty'] - $itemData['received_qty']
+                : null,
+            'DamagedQty' => $itemData['damaged_qty'] ?? 0,
+            'CreatedBy' => Auth::id(),
+            'CreatedOn' => now(),
+            'ModifiedBy' => Auth::id(),
+            'ModifiedOn' => now(),
+        ]);
 
-            $receipt->update([
-                'ReceivedBy' => $data['ReceivedBy'],
-                'ReceivedDate' => $data['ReceivedDate'],
-                'GeneralRemarks' => $data['GeneralRemarks'] ?? null,
-                'ModifiedBy' => Auth::id(),
-                'ModifiedOn' => Carbon::now(),
+        $stock->CurrentQty += $itemData['received_qty'];
+        $stock->ModifiedBy = Auth::id();
+        $stock->ModifiedOn = now();
+        $stock->save();
+
+        $damagedQty = (float) ($itemData['damaged_qty'] ?? 0);
+        if ($damagedQty > 0) {
+            \Log::info('Recording to InventoryHold', [
+                'ItemID' => $itemId,
+                'Quantity' => $damagedQty,
+                'SourceID' => $receipt->Id,
+                'Source' => $transferSource,
             ]);
 
-            activity()
-                ->causedBy(Auth::user())
-                ->performedOn($receipt)
-                ->withProperties(['attributes' => $receipt->toArray()])
-                ->log('Transaction Receipt updated');
+            $status = CodeDetail::where('CodeID', 'AdjustmentReason')
+            ->where('Description', 'Damaged in Transit')
+            ->value('ID');
 
-            $updatedItemIds = collect($data['items'])->pluck('item')->toArray();
-            $receipt->items()->whereNotIn('Item', $updatedItemIds)->delete();
 
-            foreach ($data['items'] as $itemData) {
-                $item = $receipt->items()->updateOrCreate(
-                    [
-                        'ReceiptId' => $receipt->Id,
-                        'Item' => $itemData['item']
-                    ],
-                    [
-                        'ReceivedQty' => $itemData['received_qty'],
-                        'DamagedQty' => $itemData['damaged_qty'] ?? 0,
-                        'DispatchedQty' => $itemData['dispatched_qty'] ?? null,
-                        'Discrepancy' => $itemData['discrepancy'] ?? null,
-                        'ModifiedBy' => Auth::id(),
-                        'ModifiedOn' => Carbon::now(),
-                    ]
-                );
+            InventoryHold::create([
+                'ItemID' => $itemId,
+                'BranchID' => $toBranchId,
+                'Store' => $storeId,
+                'Quantity' => $damagedQty,
+                'Reason' => $status,
+                'Source' => $transferSource,
+                'SourceID' => $receipt->Id,
+                'Status' => Transfers::InTransit->value,
+                'Remarks' => $itemData['remarks'] ?? null,
+                'CreatedBy' => Auth::id(),
+                'CreatedOn' => now(),
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
+            ]);
+        }
 
-                activity()
-                    ->causedBy(Auth::user())
-                    ->performedOn($item)
-                    ->withProperties(['attributes' => $item->toArray()])
-                    ->log('Receipt item updated or created');
-            }
-
-            return $receipt;
-        });
+        activity()
+            ->causedBy(auth()->user())
+            ->performedOn($receiptItem)
+            ->withProperties(['attributes' => $receiptItem->toArray()])
+            ->log('Receipt item added and stock updated');
     }
+}
+
 
     public function delete($receipt)
     {

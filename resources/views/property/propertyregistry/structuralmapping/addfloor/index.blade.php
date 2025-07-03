@@ -11,7 +11,7 @@
     <h4 class="fw-bold mb-3">📋 Floors per Block</h4>
 
     @if($floors->count())
-  <table id="propertyfloors" class="table table-bordered table-striped align-middle">
+        <table id="propertyfloors" class="table table-bordered table-striped align-middle">
     <thead class="table-light">
       <tr>
           <th>#</th>
@@ -31,12 +31,14 @@
             <td>{{ $floor->FloorLabel }}</td>
             <td>{{ $floor->FloorNotes }}</td>
         <td>
-        <a href="{{ route('addfloor.edit', $floor->Id) }}" class="btn btn-sm btn-warning">Edit</a>
-        <form action="{{ route('addfloor.destroy', $floor->Id) }}" method="POST" class="d-inline">
-            @csrf
-            @method('DELETE')
-            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this property?');">Delete</button>
-         </form>
+            <a href="{{ route('addfloor.edit', $floor->Id) }}" class="btn btn-sm btn-warning">Edit</a>
+            <form action="{{ route('addfloor.destroy', $floor->Id) }}" method="POST" class="d-inline">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn btn-sm btn-danger"
+                        onclick="return confirm('Are you sure you want to delete this property?');">Delete
+                </button>
+            </form>
       </tr>
     @endforeach
     </tbody>

@@ -36,8 +36,8 @@
                                 {{ $clarification->Answer ? 'Responded' : 'Pending' }}
                             </span>
                         </td>
-                        <td>{{ $clarification->QuestionDate->format('Y-m-d') }}</td>
-                        <td>{{ $clarification->AnswerDate ? $clarification->AnswerDate->format('Y-m-d') : '-' }}</td>
+                        <td>{{ $clarification->QuestionDate->format('d/m/Y') }}</td>
+                        <td>{{ $clarification->AnswerDate ? $clarification->AnswerDate->format('d/m/Y') : '-' }}</td>
                         <td>
                             <span class="badge {{ $clarification->ISPUBLISHEDTOALL ? 'bg-success' : 'bg-secondary' }}">
                                 {{ $clarification->ISPUBLISHEDTOALL ? 'Yes' : 'No' }}

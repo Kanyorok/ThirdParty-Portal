@@ -27,74 +27,75 @@
         </div>
 
 
-      <!-- Item and Category -->
-<div class="row mb-3">
-  <div class="col-md-6">
-    <label class="form-label">Item Name</label>
-    <select name="ItemID" class="form-select" id="item-select" required>
-      <option disabled {{ old('ItemID') ? '' : 'selected' }}>Select Item</option>
-      @foreach($items as $item)
-        <option value="{{ $item->Id }}"
-                data-uom-name="{{ $item->uom->Name ?? 'N/A' }}"
-                data-uom-code="{{ $item->uom->Code ?? '' }}"
-                data-category-id="{{ $item->category->Id ?? '' }}"
-                data-uom-id="{{ $item->uom->Id ?? '' }}"
-                data-category-name="{{ $item->category->Name ?? 'N/A' }}"
-                {{ old('ItemID') == $item->Id ? 'selected' : '' }}>
-          {{ $item->ItemName }}
-        </option>
-      @endforeach
-    </select>
-  </div>
-  <div class="col-md-6">
-    <label class="form-label">Item Category</label>
-    <input type="text" id="display-category" class="form-control" readonly>
-    <input type="hidden" name="CategoryID" id="category-id">
-  </div>
-</div>
+        <!-- Item and Category -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Item Name</label>
+                <select name="ItemID" class="form-select" id="item-select" required>
+                    <option disabled {{ old('ItemID') ? '' : 'selected' }}>Select Item</option>
+                    @foreach($items as $item)
+                        <option value="{{ $item->Id }}"
+                                data-uom-name="{{ $item->uom->Name ?? 'N/A' }}"
+                                data-uom-code="{{ $item->uom->Code ?? '' }}"
+                                data-category-id="{{ $item->category->Id ?? '' }}"
+                                data-uom-id="{{ $item->uom->Id ?? '' }}"
+                                data-category-name="{{ $item->category->Name ?? 'N/A' }}"
+                            {{ old('ItemID') == $item->Id ? 'selected' : '' }}>
+                            {{ $item->ItemName }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Item Category</label>
+                <input type="text" id="display-category" class="form-control" readonly>
+                <input type="hidden" name="CategoryID" id="category-id">
+            </div>
+        </div>
 
-<!-- Quantity and UOM -->
-<div class="row mb-3">
-  <div class="col-md-6">
-    <label class="form-label">Quantity</label>
-    <input type="number" name="quantity" class="form-control @error('quantity') is-invalid @enderror"
-           placeholder="e.g. 10" value="{{ old('quantity') }}" required>
-    @error('quantity')
-      <div class="alert alert-danger mt-1">{{ $message }}</div>
-    @enderror
-  </div>
-  <div class="col-md-6">
-    <label class="form-label">Unit of Measure</label>
-    <input type="text" class="form-control" id="display-uom" readonly>
-    <input type="hidden" name="unit_of_measure_id" id="unit_of_measure_id">
-  </div>
-</div>
+        <!-- Quantity and UOM -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Quantity</label>
+                <input type="number" name="quantity" class="form-control @error('quantity') is-invalid @enderror"
+                       placeholder="e.g. 10" value="{{ old('quantity') }}" required>
+                @error('quantity')
+                <div class="alert alert-danger mt-1">{{ $message }}</div>
+                @enderror
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Unit of Measure</label>
+                <input type="text" class="form-control" id="display-uom" readonly>
+                <input type="hidden" name="unit_of_measure_id" id="unit_of_measure_id">
+            </div>
+        </div>
 
-<!-- Estimated Cost and Schedule -->
-<div class="row mb-3">
-  <div class="col-md-6">
-    <label class="form-label">Estimated Unit Cost</label>
-    <input type="number" name="estimated_cost"
-           class="form-control @error('estimated_cost') is-invalid @enderror"
-           placeholder="e.g. 50000" value="{{ old('estimated_cost') }}" required>
-    @error('estimated_cost')
-      <div class="alert alert-danger mt-1">{{ $message }}</div>
-    @enderror
-  </div>
-  <div class="col-md-6">
-    <label class="form-label">Planned Quarter</label>
-    <select name="schedule_period" class="form-select @error('schedule_period') is-invalid @enderror" required>
-      <option disabled {{ old('schedule_period') ? '' : 'selected' }}>Select Quarter</option>
-      <option value="Q1" {{ old('schedule_period') == 'Q1' ? 'selected' : '' }}>Q1</option>
-      <option value="Q2" {{ old('schedule_period') == 'Q2' ? 'selected' : '' }}>Q2</option>
-      <option value="Q3" {{ old('schedule_period') == 'Q3' ? 'selected' : '' }}>Q3</option>
-      <option value="Q4" {{ old('schedule_period') == 'Q4' ? 'selected' : '' }}>Q4</option>
-    </select>
-    @error('schedule_period')
-      <div class="alert alert-danger mt-1">{{ $message }}</div>
-    @enderror
-  </div>
-</div>
+        <!-- Estimated Cost and Schedule -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Estimated Unit Cost</label>
+                <input type="number" name="estimated_cost"
+                       class="form-control @error('estimated_cost') is-invalid @enderror"
+                       placeholder="e.g. 50000" value="{{ old('estimated_cost') }}" required>
+                @error('estimated_cost')
+                <div class="alert alert-danger mt-1">{{ $message }}</div>
+                @enderror
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Planned Quarter</label>
+                <select name="schedule_period" class="form-select @error('schedule_period') is-invalid @enderror"
+                        required>
+                    <option disabled {{ old('schedule_period') ? '' : 'selected' }}>Select Quarter</option>
+                    <option value="Q1" {{ old('schedule_period') == 'Q1' ? 'selected' : '' }}>Q1</option>
+                    <option value="Q2" {{ old('schedule_period') == 'Q2' ? 'selected' : '' }}>Q2</option>
+                    <option value="Q3" {{ old('schedule_period') == 'Q3' ? 'selected' : '' }}>Q3</option>
+                    <option value="Q4" {{ old('schedule_period') == 'Q4' ? 'selected' : '' }}>Q4</option>
+                </select>
+                @error('schedule_period')
+                <div class="alert alert-danger mt-1">{{ $message }}</div>
+                @enderror
+            </div>
+        </div>
 
         <!-- Delivery Date and Budget Line -->
         <div class="row mb-3">
@@ -167,36 +168,34 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const itemSelect = document.getElementById('item-select');
-    const uomDisplay = document.getElementById('display-uom');   // Visible UOM code
-    const uomIdInput = document.getElementById('unit_of_measure_id'); // Hidden UOM ID
-    const categoryIdInput = document.getElementById('category-id');
-    const categoryDisplay = document.getElementById('display-category');
+    document.addEventListener('DOMContentLoaded', function () {
+        const itemSelect = document.getElementById('item-select');
+        const uomDisplay = document.getElementById('display-uom');   // Visible UOM code
+        const uomIdInput = document.getElementById('unit_of_measure_id'); // Hidden UOM ID
+        const categoryIdInput = document.getElementById('category-id');
+        const categoryDisplay = document.getElementById('display-category');
 
-    function updateItemFields() {
-        const selected = itemSelect.options[itemSelect.selectedIndex];
-        const uomCode = selected.getAttribute('data-uom-code');
-        const categoryId = selected.getAttribute('data-category-id');
-        const categoryName = selected.getAttribute('data-category-name');
-        const uomId = selected.getAttribute('data-uom-id');
+        function updateItemFields() {
+            const selected = itemSelect.options[itemSelect.selectedIndex];
+            const uomCode = selected.getAttribute('data-uom-code');
+            const categoryId = selected.getAttribute('data-category-id');
+            const categoryName = selected.getAttribute('data-category-name');
+            const uomId = selected.getAttribute('data-uom-id');
 
-        uomIdInput.value = uomId || '';
-        uomDisplay.value = uomCode || 'N/A';
+            uomIdInput.value = uomId || '';
+            uomDisplay.value = uomCode || 'N/A';
 
-        categoryIdInput.value = categoryId || '';
-        categoryDisplay.value = categoryName || 'N/A';
-    }
+            categoryIdInput.value = categoryId || '';
+            categoryDisplay.value = categoryName || 'N/A';
+        }
 
-    itemSelect.addEventListener('change', updateItemFields);
+        itemSelect.addEventListener('change', updateItemFields);
 
-    // Trigger it once on load in case item is pre-selected
-    if (itemSelect.value) {
-        updateItemFields();
-    }
-});
+        // Trigger it once on load in case item is pre-selected
+        if (itemSelect.value) {
+            updateItemFields();
+        }
+    });
 </script>
-
-
 
 @endsection

@@ -48,7 +48,7 @@
                                 <td>{{$loop->iteration }}</td>
                                 <td>{{ $item->RequisitionNo }}</td>
                                 <td>{{ $item->PlanTitle ?? 'N/A' }}</td>
-                                <td>{{ Carbon::parse($item->CreatedOn)->format('d-m-Y') }}</td>
+                                <td>{{ Carbon::parse($item->CreatedOn)->format('d/m/Y') }}</td>
                                 <td>{{ $item->BranchID }}</td>
                                 <td>{{ $item->DepartmentID }}</td>
                                 <td>{{ $item->Remarks }}</td>
@@ -56,7 +56,8 @@
                                 <td>{{ number_format($item->ExpectedPrice, 2) }}</td>
                                 <td>{{ $item->Status }}</td>
                                 <td><a href="{{ route('requisition.show',[ $item->Id]) }}" class="btn btn-info btn-sm">View</a>
-                                    <a href="{{ route('requisition.approval',[ $item->Id]) }}" class="btn btn-success btn-sm">Approve</a>
+                                    <a href="{{ route('requisition.approval',[ $item->Id]) }}"
+                                       class="btn btn-success btn-sm">Approve</a>
                                 </td>
 
 

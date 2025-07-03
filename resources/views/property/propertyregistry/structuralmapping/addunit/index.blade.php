@@ -10,7 +10,7 @@
 
   <h4 class="fw-bold mb-3">📋 Property Units</h4>
     @if($units->count())
-  <table id="propertyunits" class="table table-bordered table-striped align-middle">
+        <table id="propertyunits" class="table table-bordered table-striped align-middle">
     <thead class="table-light">
       <tr>
         <th>#</th>
@@ -38,12 +38,14 @@
           <td>{{ $unit->CurrentStatus ? 'Vacant' : 'Occupied' }}</td>
           <td>{{ $unit->Remarks }}</td>
         <td>
-        <a href="{{ route('addunit.edit', $unit->Id) }}" class="btn btn-sm btn-warning">Edit</a>
-        <form action="{{ route('addunit.destroy', $unit->Id) }}" method="POST" class="d-inline">
-            @csrf
-            @method('DELETE')
-            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this property?');">Delete</button>
-         </form>
+            <a href="{{ route('addunit.edit', $unit->Id) }}" class="btn btn-sm btn-warning">Edit</a>
+            <form action="{{ route('addunit.destroy', $unit->Id) }}" method="POST" class="d-inline">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn btn-sm btn-danger"
+                        onclick="return confirm('Are you sure you want to delete this property?');">Delete
+                </button>
+            </form>
       </tr>
     @endforeach
     </tbody>

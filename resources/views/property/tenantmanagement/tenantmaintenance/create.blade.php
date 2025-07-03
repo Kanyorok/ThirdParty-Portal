@@ -2,22 +2,22 @@
 @section('title', 'IProperty Management')
 @section('content')
 <div class="container mt-4">
-  <h4 class="fw-bold mb-3">👤 Add New Tenant</h4>
+  <h4 class="fw-bold mb-3">Add New Tenant</h4>
 
     <form action="{{ route('addtenant.store') }}" method="POST">
         @csrf
   <div class="card shadow">
-    <div class="card-header bg-light fw-bold">➕ Tenant Registration</div>
+    <div class="card-header bg-light fw-bold">Tenant Registration</div>
     <div class="card-body">
       <!-- Tenant Type -->
       <div class="row g-3 mb-3">
         <div class="col-md-3">
           <label class="form-label">Tenant Type</label>
             <select class="form-select" name="TenantType">
-              <option value="">-- Select Tenent Type --</option>
-              @foreach ($tenantTypes as $tenanttype)
-                <option value="{{ $tenanttype->ID }}">{{ $tenanttype->Description }}</option>
-              @endforeach
+                <option value="">-- Select Tenent Type --</option>
+                @foreach ($tenantTypes as $tenanttype)
+                    <option value="{{ $tenanttype->ID }}">{{ $tenanttype->Description }}</option>
+                @endforeach
           </select>
         </div>
         <div class="col-md-5">
@@ -56,13 +56,13 @@
           <label class="form-label">Remarks</label>
             <input type="text" class="form-control" name="Remarks" placeholder="Optional">
         </div>
-      <div>
-        <label class="form-label">Status</label>
-        <select class="form-select" name="IsActive">
-          <option value="1">Active</option>
-          <option value="0">Inactive</option>
-        </select>
-      </div>
+          <div>
+              <label class="form-label">Status</label>
+              <select class="form-select" name="IsActive">
+                  <option value="1">Active</option>
+                  <option value="0">Inactive</option>
+              </select>
+          </div>
       </div>
 
       <!-- Document Upload -->
@@ -71,7 +71,7 @@
         <input type="file" class="form-control" multiple>
         <small class="text-muted">e.g. ID copy, Certificate of Incorporation</small>
       </div>
-        <button class="btn btn-success">💾 Save Tenant</button>
+        <button class="btn btn-success">Save Tenant</button>
     </form>
     </div>
   </div>

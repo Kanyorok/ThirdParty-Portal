@@ -9,18 +9,20 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BudgetManualEntry extends Model
 {
-    use UserActorTrait,SoftDeletes;
-    
+    use UserActorTrait, SoftDeletes;
+
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
-    
+
     protected $table = 't_BudgetManualEntry';
     protected $primaryKey = 'Id';
+
     public static function getPrimaryKey(): string
     {
         return 'BudgetManualEntryId';
     }
+
     protected $fillable = [
         'BudgetID',
         'BranchID',
@@ -39,16 +41,23 @@ class BudgetManualEntry extends Model
         'ModifiedOn' => 'datetime',
         'DeletedOn' => 'datetime',
     ];
+
     public function budget()
     {
         return $this->belongsTo(Budget::class, 'BudgetID', 'Id');
     }
+
     public function branch()
     {
-        return $this->belongsTo(Branch::class, 'BranchID', 'Id');  
+        return $this->belongsTo(Branch::class, 'BranchID', 'Id');
     }
+
     public function budgetLine()
     {
         return $this->belongsTo(BudgetLine::class, 'BudgetLineID', 'Id');
+    }
+    public function allocations()
+    {
+        return $this->hasMany(BudgetManualEntryAllocations::class, 'EntryID', 'Id');
     }
 }
