@@ -42,7 +42,7 @@
                          <td>{{ $adjustment->AdjustmentId}}</>
                         <td>{{ Carbon::parse($adjustment->AdjustmentDate)->format('d/m/Y') }}</td>
                         <td>{{ optional($adjustment->branch)->Name ?? 'N/A' }}</td>
-                        <td>{{ $adjustment->Reason }}</td>
+                        <td>{{ optional($adjustment->reason)->Description ?? 'N/A' }}</td>
                         <td>{{$adjustment->adjustedBy->Name ?? 'N/A'}}</td>
                         <td>
                             @if($statusEnum)

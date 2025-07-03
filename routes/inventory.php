@@ -24,7 +24,7 @@ use App\Http\Controllers\Inventory\InventoryTypeController;
 use App\Http\Controllers\Inventory\StoreController;
 use App\Http\Controllers\Inventory\UOMController;
 use App\Http\Controllers\Inventory\ItemTypeController;
-
+use App\Http\Controllers\Inventory\InventoryHoldReviewController;
 use App\Http\Controllers\Inventory\PriceManagementController;
 
 use Illuminate\Support\Facades\Route;
@@ -180,6 +180,18 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::delete('/transactionsadjustment/{stock_adjustment}', [TransactionAdjustmentController::class, 'destroy'])->name('transactionsadjustment.destroy');
 
     Route::get('/branch-stock/{branchId}', [TransactionAdjustmentController::class, 'getBranchStock'])->name('branch.stock');
+
+    //Route::resource('inventoryholdreview', InventoryHoldReviewController::class);
+    Route::get('/inventoryholdreview', [InventoryHoldReviewController::class, 'index'])->name('inventoryholdreview.index');
+    Route::get('/inventoryholdreview/create', [InventoryHoldReviewController::class, 'create'])->name('inventoryholdreview.create');
+    Route::post('/inventoryholdreview', [InventoryHoldReviewController::class, 'store'])->name('inventoryholdreview.store');
+    Route::get('/inventoryholdreview/{id}/details', [InventoryHoldReviewController::class, 'getDetails'])->name('inventoryholdreview.details');
+    Route::get('/inventoryholdreview/{Id}', [InventoryHoldReviewController::class, 'show'])->name('inventoryholdreview.show');
+    Route::get('/inventoryholdreview/{Id}/edit', [InventoryHoldReviewController::class, 'edit'])->name('inventoryholdreview.edit');
+    Route::put('/inventoryholdreview/{id}', [InventoryHoldReviewController::class, 'update'])->name('inventoryholdreview.update');
+    Route::delete('/inventoryholdreview/{id}', [InventoryHoldReviewController::class, 'destroy'])->name('inventoryholdreview.destroy');
+    
+
 
     //Route::resource('interbranchrequisitionapproval', InterBranchRequisitionApprovalController::class);
     Route::get('/interbranchrequisitionapproval', [InterBranchRequisitionApprovalController::class, 'index'])->name('interbranchrequisitionapproval.index');

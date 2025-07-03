@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Model\UserActorTrait;
 use App\Models\Core\Branch;
 use App\Models\Auth\User;
+use App\Models\Core\CodeDetail;
 
 
 
@@ -71,6 +72,11 @@ class StockAdjustment extends Model
     {
         return 'Id';
     }
+    public function reason()
+{
+    return $this->belongsTo(CodeDetail::class, 'Reason', 'Id');
+}
+
     
 
     

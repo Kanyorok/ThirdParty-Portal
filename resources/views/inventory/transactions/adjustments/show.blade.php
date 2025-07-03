@@ -10,7 +10,7 @@
             <p><strong>Adjustment ID:</strong> {{ $adjustment->AdjustmentId }}</p>
             <p><strong>Adjustment Date:</strong> {{ \Carbon\Carbon::parse($adjustment->AdjustmentDate)->format('Y-m-d') }}</p>
             <p><strong>Branch:</strong> {{ optional($adjustment->branch)->Name ?? 'N/A' }}</p>
-            <p><strong>Reason:</strong> {{ $adjustment->Reason }}</p>
+            <p><strong>Reason:</strong> {{ optional($adjustment->reason)->Description ?? 'N/A' }}</p>
             <p><strong>Adjusted By:</strong> {{ $adjustment->adjustedBy->Name ?? 'N/A' }}</p>
             <p><strong>Status:</strong>
                 @php
@@ -32,7 +32,7 @@
                     <th>#</th>
                     <th>Item Code</th>
                     <th>Item Name</th>
-                    <th>Current Qty</th> {{-- This column header is for the original stock quantity --}}
+                    <th>Current Qty</th> 
                     <th>Adjusted Qty</th>
                     <th>Remarks</th>
                 </tr>

@@ -32,97 +32,95 @@ class TransactionReceiptsController extends Controller
 
     public function create()
     {
-    $this->authorize('create', TransactionReceipt::class);
-    $transfers = TransactionTransfer::doesntHave('receipt')
-    ->with(['items.item'])
-    ->where('Status', Transfers::InTransit)
-    ->get();
-    $users = User::all();
+        $this->authorize('create', TransactionReceipt::class);
 
-        return view('inventory.transactions.receipts.create', compact('transfers','users'));
+        $transfers = TransactionTransfer::doesntHave('receipt')
+            ->with(['items.item'])
+            ->where('Status', Transfers::InTransit)
+            ->get();
+
+        $users = User::all();
+
+        return view('inventory.transactions.receipts.create', compact('transfers', 'users'));
     }
 
     public function store(TransactionReceiptRequest $request)
-{
-    $this->authorize('create', TransactionReceipt::class);
-    $validatedData = $request->validated();
-    $items = $validatedData['items'] ?? [];
-    unset($validatedData['items']);
+    {
+        $this->authorize('create', TransactionReceipt::class);
+        $validatedData = $request->validated();
+        $items = $validatedData['items'] ?? [];
+        unset($validatedData['items']);
 
-    try {
-        $receipt = $this->service->createReceipt($validatedData, $items);
-        return redirect()->route('transactionsreceipts.index')->with('success', 'Transaction receipt posted successfully.');
-    } 
-    
-    catch (\Illuminate\Validation\ValidationException $e) {
-    $transferId = $validatedData['TransferID'] ?? null;
-    $transfer = TransactionTransfer::find($transferId);
-    $branchId = $transfer?->ToBranch;
+        try {
+            $receipt = $this->service->createReceipt($validatedData, $items);
+            return redirect()->route('transactionsreceipts.index')->with('success', 'Transaction receipt posted successfully.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $transferId = $validatedData['TransferID'] ?? null;
+            $transfer = TransactionTransfer::find($transferId);
+            $branchId = $transfer?->ToBranch;
 
-    $itemsWithDetails = collect($items)->map(function ($item) use ($branchId) {
-        $itemModel = \App\Models\Inventory\ItemMasterList::find($item['item']);
-        $item['item_name'] = $itemModel->ItemName ?? 'Unknown';
-        $storeOptions = \App\Models\Inventory\Store::where('BranchID', $branchId)
-            ->get(['Id', 'StoreName'])
-            ->map(fn ($s) => ['Id' => $s->Id, 'StoreName' => $s->StoreName])
-            ->toArray();
+            $itemsWithDetails = collect($items)->map(function ($item) use ($branchId) {
+                $itemModel = \App\Models\Inventory\ItemMasterList::find($item['item']);
+                $item['item_name'] = $itemModel->ItemName ?? 'Unknown';
 
-        $item['store_options'] = $storeOptions;
+                $storeOptions = \App\Models\Inventory\Store::where('BranchID', $branchId)
+                    ->get(['Id', 'StoreName'])
+                    ->map(fn ($s) => ['Id' => $s->Id, 'StoreName' => $s->StoreName])
+                    ->toArray();
 
-        return $item;
-    })->toArray();
+                $item['store_options'] = $storeOptions;
+                return $item;
+            })->toArray();
 
-    return redirect()
-        ->back()
-        ->withInput(array_merge($validatedData, ['items' => $itemsWithDetails]))
-        ->withErrors($e->validator);
-}
-
-}
-
+            return redirect()
+                ->back()
+                ->withInput(array_merge($validatedData, ['items' => $itemsWithDetails]))
+                ->withErrors($e->validator);
+        }
+    }
 
     public function show($id)
     {
         $this->authorize('view', TransactionReceipt::class);
-        $receipt = TransactionReceipt::with(['transfer', 'items.item','receivedBy'])->findOrFail($id);
+
+        $receipt = TransactionReceipt::with(['transfer', 'items.item', 'receivedBy'])->findOrFail($id);
+
         return view('inventory.transactions.receipts.show', compact('receipt'));
     }
 
     public function destroy($id)
     {
         $this->authorize('destroy', TransactionReceipt::class);
+
         $receipt = TransactionReceipt::findOrFail($id);
-        $this->service->deleteReceipt($receipt);
+        $this->service->delete($receipt);
+
         return redirect()->route('transactionsreceipts.index')->with('success', 'Receipt deleted.');
     }
 
-   public function getTransferItems($id)
-{
-    $transfer = TransactionTransfer::with('items.item')->findOrFail($id);
-    $branchId = $transfer->ToBranch;
+    public function getTransferItems($id)
+    {
+        $transfer = TransactionTransfer::with('items.item')->findOrFail($id);
+        $branchId = $transfer->ToBranch;
 
-    // Fetch all stores in the branch
-    $branchStores = \App\Models\Inventory\Store::where('BranchID', $branchId)
-        ->select('Id', 'StoreName')
-        ->get();
+        $branchStores = \App\Models\Inventory\Store::where('BranchID', $branchId)
+            ->select('Id', 'StoreName')
+            ->get();
 
-    $itemsWithStores = $transfer->items->map(function ($transferItem) use ($branchStores) {
-        $item = $transferItem->item;
+        $itemsWithStores = $transfer->items->map(function ($transferItem) use ($branchStores) {
+            $item = $transferItem->item;
 
-        return [
-            'Item' => $transferItem->Item,
-            'DispatchedQty' => $transferItem->DispatchedQty,
-            'item' => $item,
-            'stores' => $branchStores, // Attach all stores from the branch
-        ];
-    });
+            return [
+                'Item' => $transferItem->Item,
+                'DispatchedQty' => $transferItem->DispatchedQty,
+                'item' => $item,
+                'stores' => $branchStores,
+            ];
+        });
 
-    return response()->json([
-        'items' => $itemsWithStores,
-        'from_branch' => $branchId,
-    ]);
+        return response()->json([
+            'items' => $itemsWithStores,
+            'from_branch' => $branchId,
+        ]);
+    }
 }
-
-}
-
-
