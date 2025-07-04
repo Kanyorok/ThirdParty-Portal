@@ -33,7 +33,8 @@ class TextCleanerService
             ->replaceMatches('/[^\p{L}\p{N}\'’]+/u', ' ') // keep letters, numbers, apostrophes
             ->__toString();
 
-        $this->tokens = collect(preg_split('/\s+/', $normalized, -1, PREG_SPLIT_NO_EMPTY));
+        $this->tokens = collect(preg_split('/\s+/', $normalized, -1, PREG_SPLIT_NO_EMPTY))
+            ->filter(fn($token) => Str::length($token) > 2);
 
         $combined = $this->stopwords()->merge($this->customStopWords)->unique();
 
