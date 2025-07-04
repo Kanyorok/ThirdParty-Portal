@@ -22,7 +22,7 @@ class TextFileExtraction extends FileExtraction
 
     private function getContent(string $filePath): string
     {
-        if (file_exists($filePath) === false) {
+        if (!file_exists($filePath)) {
             return '';
         }
         try {

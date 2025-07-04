@@ -5,9 +5,10 @@ namespace App\Services\DMS;
 use App\Enums\Core\ExtensionsEnum;
 use App\Models\DMS\Document;
 use App\Services\DMS\Files\ImageOCR;
+use App\Services\DMS\Files\SpreadsheetExtraction;
 use App\Services\DMS\Files\TextFileExtraction;
 use App\Services\DMS\Files\UnknownFileExtraction;
-use App\Services\DMS\Files\WordDocumentExtractor;
+use App\Services\DMS\Files\WordDocumentExtraction;
 use RuntimeException;
 
 class FileExtractionService
@@ -25,16 +26,19 @@ class FileExtractionService
 
     public function searchAndTags(): bool
     {
+        if ($this->extension->isText()) {
+            return (new TextFileExtraction($this->document))->processContent();
+        }
         if ($this->extension->isImage()) {
             return (new ImageOCR($this->document))->processContent();
         }
         if ($this->extension->isDocument()) {
-            return (new WordDocumentExtractor($this->document))->processContent();
+            return (new WordDocumentExtraction($this->document))->processContent();
+        }
+        if ($this->extension->isSpreadsheet()) {
+            return (new SpreadsheetExtraction($this->document))->processContent();
         }
 
-        if ($this->extension->isText()) {
-            return (new TextFileExtraction($this->document))->processContent();
-        }
 
         return (new UnknownFileExtraction($this->document))->processContent();
     }

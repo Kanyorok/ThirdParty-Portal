@@ -10,7 +10,7 @@ use PhpOffice\PhpWord\Element\TextRun;
 use PhpOffice\PhpWord\IOFactory;
 use Throwable;
 
-class WordDocumentExtractor extends FileExtraction
+class WordDocumentExtraction extends FileExtraction
 {
     public function processContent(): bool
     {
@@ -28,7 +28,7 @@ class WordDocumentExtractor extends FileExtraction
 
     private function extractDocumentText(string $filePath): string
     {
-        if (file_exists($filePath) === false) {
+        if (!file_exists($filePath)) {
             return '';
         }
         $reader = $this->type->getDocumentType();
