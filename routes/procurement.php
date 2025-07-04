@@ -146,8 +146,9 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
 
     // RFQLines Routes
     Route::post('/rfqlines', [RFQLinesController::class, 'store'])->name('linecategories.store');
-    Route::get('/rfqlines/create', [RFQLinesController::class, 'create'])->name('rfqlines.create');
-    Route::get('/requisitionlines/categories', [RFQLinesController::class, 'getCategories']);
+    Route::get('/requisition/{requisitionId}/categories', [RFQLinesController::class, 'getRequisitionCategories']);
+    Route::get('/rfq/{rfqId}/lines/create', [RFQLinesController::class, 'create'])->name('rfqlines.create');
+
 
     // RFQ routes
     Route::get('/rfqs/create', [RFQController::class, 'create'])->name('rfqs.create');

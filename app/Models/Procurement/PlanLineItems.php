@@ -9,6 +9,7 @@ use App\Models\Inventory\ItemMasterList;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Core\CodeDetail;
 
 class PlanLineItems extends Model
 {
@@ -69,7 +70,7 @@ class PlanLineItems extends Model
 
     public function procurementMode()
     {
-        return $this->belongsTo(ProcurementMode::class, 'ProcurementMethod', 'id');
+        return $this->belongsTo(CodeDetail::class, 'ProcurementMethod', 'ID');
     }
 
     // PlanLineItems.php
@@ -79,7 +80,7 @@ class PlanLineItems extends Model
     }
 
     public function createdBy()
-    {//todo @edwin by @mureithi
+    {
         return $this->belongsTo(User::class, 'CreatedBy', 'Id');
     }
 

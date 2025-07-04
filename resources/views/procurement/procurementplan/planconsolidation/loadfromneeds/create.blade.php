@@ -124,7 +124,7 @@
                             <td>{{ $need->department->Name ?? 'N/A' }}</td>
                             <td>{{ $need->RequestedQty }}</td>
                             <td>{{ number_format($need->EstimatedUnitCost * $need->RequestedQty, 2) }}</td>
-                            <td>{{ \Carbon\Carbon::parse($need->RequestedDate)->toDateString() }}</td>
+                            <td>{{ \Carbon\Carbon::parse($need->RequestedDate)->format('d/m/Y') }}</td>
                             <td>{{ $need->Justification }}</td>
                             <td>
                                 <select name="budget_line_id[{{ $need->Id }}]" class="form-select" required>
