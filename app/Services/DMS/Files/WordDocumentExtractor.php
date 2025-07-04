@@ -31,7 +31,11 @@ class WordDocumentExtractor extends FileExtraction
         if (file_exists($filePath) === false) {
             return '';
         }
-        $phpWord = IOFactory::load($filePath, $this->extension->getDocumentType());
+        $reader = $this->type->getDocumentType();
+        if (empty($reader)) {
+            return '';
+        }
+        $phpWord = IOFactory::load($filePath, $reader);
 
         $text = '';
 

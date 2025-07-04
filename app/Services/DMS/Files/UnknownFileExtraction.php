@@ -2,7 +2,7 @@
 
 namespace App\Services\DMS\Files;
 
-class UnknownFile extends FileExtraction
+class UnknownFileExtraction extends FileExtraction
 {
     public function processContent(): bool
     {
