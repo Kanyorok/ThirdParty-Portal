@@ -304,7 +304,7 @@ class ModuleSeeder extends Seeder
             // ['ModuleID' => 1206200, 'Name' => 'Perod Types', 'Icon' => null, 'Description' => 'Budget Period Types', 'Route' => 'periodtypes.index', 'ParentID' => 1206000],
             //['ModuleID' => 1206300, 'Name' => 'Planning Methods', 'Icon' => null, 'Description' => 'Budget Planning Methods', 'Route' => 'planningmethods.index', 'ParentID' => 1206000],
             //['ModuleID' => 1206400, 'Name' => 'Budget Drivers', 'Icon' => null, 'Description' => 'Budet Drivers', 'Route' => 'budgetdriverssetup.index', 'ParentID' => 1206000],
-            ['ModuleID' => 1299000, 'Name' => 'Reports', 'Icon' => null, 'Description' => 'Budget Reports', 'Route' => 'budget-reports.index', 'ParentID' => 1200000],
+            //['ModuleID' => 1299000, 'Name' => 'Reports', 'Icon' => null, 'Description' => 'Budget Reports', 'Route' => 'budget-reports.index', 'ParentID' => 1200000],
         ]);
 
         if ($fresh) {
