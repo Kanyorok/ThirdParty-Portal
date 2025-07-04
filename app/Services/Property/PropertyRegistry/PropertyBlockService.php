@@ -14,18 +14,20 @@ class PropertyBlockService
     public function __construct(PropertyBlock $propertyBlock)
     {
     }
+
     public static function create(
         PropertyRegistry $PropertyID,
         string $BlockName,
         string $Description,
-        User $user
-    ):self {
+        User   $user
+    ): self
+    {
         $block = PropertyBlock::create([
-            'PropertyID'    => $PropertyID->Id,
+            'PropertyID' => $PropertyID->Id,
             'BlockName' => $BlockName,
-            'Description'   => $Description,
+            'Description' => $Description,
             'CreatedBy' => $user->Id,
-            'ModifiedBy'    => $user->Id,
+            'ModifiedBy' => $user->Id,
         ]);
 
         activity()->causedBy($user->Id)->performedOn($block)->event('create')->log("Added Property Block {$block->Id}.");

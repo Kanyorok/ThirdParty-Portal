@@ -13,27 +13,27 @@ class TransactionTransferRequest extends FormRequest
 {
     public function authorize()
     {
-        return true; 
+        return true;
     }
 
-public function rules()
-{
-    return [
-        
-        'RequisitionId'   => 'required|exists:t_InterBranchRequisition,Id',
-        'RequisitionType'   => 'required|string',
-        'TransferDate' => 'required|date',
-        'TransferredBy' => 'required|string',
-        'FromBranch' => 'nullable|exists:t_Branches,Id',
-        'ToBranch' => 'exists:t_Branches,Id',
-        'items' => 'required|array|min:1',
-        'items.*.item' => 'required|exists:t_Items,Id',
-        'items.*.uom' => 'required|exists:t_UOM,Id',
-        'items.*.approved_qty' => 'required|numeric|min:1',
-        'items.*.dispatched_qty' => 'required|numeric|min:0', 
-        'items.*.remarks' => 'nullable|string|max:255',
-    ];
-  
-}
+    public function rules()
+    {
+        return [
+
+            'RequisitionId' => 'required|exists:t_InterBranchRequisition,Id',
+            'RequisitionType' => 'required|string',
+            'TransferDate' => 'required|date',
+            'TransferredBy' => 'required|string',
+            'FromBranch' => 'nullable|exists:t_Branches,Id',
+            'ToBranch' => 'exists:t_Branches,Id',
+            'items' => 'required|array|min:1',
+            'items.*.item' => 'required|exists:t_Items,Id',
+            'items.*.uom' => 'required|exists:t_UOM,Id',
+            'items.*.approved_qty' => 'required|numeric|min:1',
+            'items.*.dispatched_qty' => 'required|numeric|min:0',
+            'items.*.remarks' => 'nullable|string|max:255',
+        ];
+
+    }
 
 }

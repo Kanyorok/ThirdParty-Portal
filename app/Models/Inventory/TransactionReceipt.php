@@ -38,6 +38,11 @@ class TransactionReceipt extends Model
         'Status' => \App\Enums\Inventory\Transfers::class,
     ];
 
+    public static function getPrimaryKey(): string
+    {
+        return 'ReceiptId';
+    }
+
     public function transfer()
     {
         return $this->belongsTo(TransactionTransfer::class, 'TransferId', 'Id');
@@ -52,7 +57,8 @@ class TransactionReceipt extends Model
     {
         return $this->belongsTo(User::class, 'CreatedBy', 'Id');
     }
-     public function receivedBy()
+
+    public function receivedBy()
     {
         return $this->belongsTo(User::class, 'ReceivedBy', 'Id');
     }
@@ -65,9 +71,5 @@ class TransactionReceipt extends Model
     public function deleter()
     {
         return $this->belongsTo(User::class, 'DeletedBy', 'Id');
-    }
-    public static function getPrimaryKey(): string
-    {
-        return 'ReceiptId';
     }
 }

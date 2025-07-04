@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 use App\Models\Auth\User;
 use Carbon\Carbon;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class BudgetGLAccountSubTypeSeeder extends Seeder
 {
@@ -59,14 +59,14 @@ class BudgetGLAccountSubTypeSeeder extends Seeder
 
         foreach ($subTypes as [$type, $name]) {
             DB::table('t_GLAccountSubTypes')->insert([
-                'GLAccountTypeValue'   => $type,
+                'GLAccountTypeValue' => $type,
                 'GLAccountSubTypeName' => $name,
-                'CreatedBy'            => $userIds[array_rand($userIds)],
-                'CreatedOn'            => $now->copy()->subDays(rand(5, 30)),
-                'ModifiedBy'           => $userIds[array_rand($userIds)],
-                'ModifiedOn'           => $now->copy()->subDays(rand(1, 4)),
-                'DeletedBy'            => null,
-                'DeletedOn'            => null,
+                'CreatedBy' => $userIds[array_rand($userIds)],
+                'CreatedOn' => $now->copy()->subDays(rand(5, 30)),
+                'ModifiedBy' => $userIds[array_rand($userIds)],
+                'ModifiedOn' => $now->copy()->subDays(rand(1, 4)),
+                'DeletedBy' => null,
+                'DeletedOn' => null,
             ]);
         }
     }

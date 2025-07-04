@@ -40,24 +40,54 @@ class TransactionTransfersController extends Controller
     }
 
     public function store(TransactionTransferRequest $request)
-    {
-        $this->authorize('create', TransactionTransfer::class);
-        $validatedData = $request->validated();
-        $items = $validatedData['items'] ?? [];
-        unset($validatedData['items']);
+{
+    $this->authorize('create', TransactionTransfer::class);
+
+    $validatedData = $request->validated();
+    $items = $validatedData['items'] ?? [];
+    unset($validatedData['items']);
+
+    try {
+        foreach ($items as $item) {
+            $itemId = $item['item'];
+            $qty = $item['dispatched_qty'];
+
+            $branch = $validatedData['RequisitionType'] === 'procurement'
+                ? app(TransactionTransferService::class)->getHQBranchId()
+                : $validatedData['FromBranch'];
+
+            $stock = \App\Models\Inventory\StockItem::where('ItemID', $itemId)
+                ->where('Branch', $branch)
+                ->first();
+
+            if (!$stock || $stock->CurrentQty < $qty) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => "Insufficient stock for ItemID {$itemId} in Branch {$branch}.",
+                ], 422);
+            }
+        }
 
         $transfer = $this->service->createTransfer($validatedData);
         $this->service->createTransferItems($transfer, $items);
 
-        return redirect()
-            ->route('transactionstransfers.index')
-            ->with('success', 'Transfer created and submitted for approval.');
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Transfer created successfully.',
+            'redirect' => route('transactionstransfers.index'),
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+        ], 500);
     }
+}
 
     public function show($Id)
     {
         $this->authorize('view', TransactionTransfer::class);
-        $transferitem = TransactionTransfer::with(['fromBranch', 'toBranch', 'creator', 'items.item','transferredBy'])->findOrFail($Id);
+        $transferitem = TransactionTransfer::with(['fromBranch', 'toBranch', 'creator', 'items.item', 'transferredBy'])->findOrFail($Id);
         return view('inventory.transactions.transfers.show', compact('transferitem'));
     }
 
@@ -85,36 +115,43 @@ class TransactionTransfersController extends Controller
     }
 
     public function destroy($Id)
-    {
-        $this->authorize('destroy', TransactionTransfer::class);
-        $transfer = TransactionTransfer::findOrFail($Id);
-        $this->service->delete($transfer);
-        return redirect()->route('transactionstransfers.index')->with('success', 'Transfer deleted.');
-    }
-
-  public function getRequisitionsByType($type)
 {
-    if ($type === 'interbranch') {
-        $requisitions = InterBranchRequisition::where('Status', 'Ap')
-            ->whereDoesntHave('transfer')
-            ->get();
-    } elseif ($type === 'procurement') {
-        $statusIds = DB::table('t_CodeDetails')
-            ->where('CodeID', 'a')
-            ->pluck('ID');
+    $this->authorize('destroy', TransactionTransfer::class);
 
-        $requisitions = Requisitions::whereIn('StatusID', $statusIds)
-            ->whereNotNull('PlanRef')
-            ->whereDoesntHave('transfer', function ($q) {
-                $q->where('RequisitionType', 'procurement');
-            })
-            ->get();
-    } else {
-        return response()->json([], 400);
-    }
+    DB::transaction(function () use ($Id) {
+        $transactionTransfer = TransactionTransfer::findOrFail($Id);
 
-    return response()->json($requisitions);
+        $transactionTransfer->items()->delete();
+        $transactionTransfer->delete();
+    });
+
+    return redirect()->route('transactionstransfers.index')->with('success', 'Transfer deleted.');
 }
+
+
+    public function getRequisitionsByType($type)
+    {
+        if ($type === 'interbranch') {
+            $requisitions = InterBranchRequisition::where('Status', 'Ap')
+                ->whereDoesntHave('transfer')
+                ->get();
+        } elseif ($type === 'procurement') {
+            $statusIds = DB::table('t_CodeDetails')
+                ->where('CodeID', 'a')
+                ->pluck('ID');
+
+            $requisitions = Requisitions::whereIn('StatusID', $statusIds)
+                ->whereNotNull('PlanRef')
+                ->whereDoesntHave('transfer', function ($q) {
+                    $q->where('RequisitionType', 'procurement');
+                })
+                ->get();
+        } else {
+            return response()->json([], 400);
+        }
+
+        return response()->json($requisitions);
+    }
 
     public function getRequisitionDetails(Request $request, $id)
     {
@@ -127,8 +164,8 @@ class TransactionTransfersController extends Controller
                     'Item' => $item->Item,
                     'ItemCode' => $item->item->ItemCode ?? '',
                     'ItemName' => $item->item->ItemName ?? '',
-                    'UOM' => $item->item->UOM, 
-                    'UOMCode' => $item->item->uom->Code ?? 'N/A', 
+                    'UOM' => $item->item->UOM,
+                    'UOMCode' => $item->item->uom->Code ?? 'N/A',
                     'ApprovedQty' => $item->ApprovedQty,
                 ];
             });
@@ -151,7 +188,7 @@ class TransactionTransfersController extends Controller
                     'ItemCode' => $line->item->ItemCode ?? '',
                     'ItemName' => $line->item->ItemName ?? $line->Description,
                     'UOM' => $line->item->UOM ?? $line->UOM,
-                    'UOMCode' => $line->item->uom->Code ?? 'N/A', 
+                    'UOMCode' => $line->item->uom->Code ?? 'N/A',
                     'ApprovedQty' => $line->Quantity,
                 ];
             });

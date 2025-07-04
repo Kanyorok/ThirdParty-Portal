@@ -40,7 +40,7 @@ class PropertyNewTenantController extends Controller
     }
 
     public function show($id)
-    { 
+    {
         $this->authorize(PermissionEnum::TenantMentenanceView, PropertyNewTenant::class);
         $newtenant = PropertyNewTenant::findOrFail($id);
         return view('property.tenantmanagement.tenantmaintenance.show', compact('newtenant'));
@@ -48,26 +48,26 @@ class PropertyNewTenantController extends Controller
 
     public function store(PropertyNewTenantRequest $request)
     {
-            $this->authorize(PermissionEnum::TenantMentenanceCreate, PropertyNewTenant::class);
+        $this->authorize(PermissionEnum::TenantMentenanceCreate, PropertyNewTenant::class);
 
-            $data = $request->validated();
+        $data = $request->validated();
 
-            $tenantTypeModel = CodeDetail::findOrFail($data['TenantType']);
+        $tenantTypeModel = CodeDetail::findOrFail($data['TenantType']);
 
-            $this->service::create(
-                $tenantTypeModel,
-                $data['TenantName'],
-                $data['IDRegistrationNo'],
-                $data['PhoneNumber'],
-                $data['EmailAddress'],
-                $data['Nationality'],
-                $data['PostalAddress'],
-                $data['Remarks'],
-                $data['IsActive'],
-                $request->user()
-            );
+        $this->service::create(
+            $tenantTypeModel,
+            $data['TenantName'],
+            $data['IDRegistrationNo'],
+            $data['PhoneNumber'],
+            $data['EmailAddress'],
+            $data['Nationality'],
+            $data['PostalAddress'],
+            $data['Remarks'],
+            $data['IsActive'],
+            $request->user()
+        );
 
-            return redirect()->route('addtenant.index')->with('success', 'Tenant created successfully');
+        return redirect()->route('addtenant.index')->with('success', 'Tenant created successfully');
 
     }
 

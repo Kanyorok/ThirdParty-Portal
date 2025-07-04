@@ -13,10 +13,10 @@ return [
     |
     */
 
-        'name'    => env('ORG_NAME', 'Imarisha Saving And Credit'),
-        'address' => env('ORG_ADDRESS', 'Imarisha Sacco Building, Kericho, Kericho County'),
-        'phone'   => env('ORG_PHONE', '0709578000'),
-        'email'   => env('ORG_EMAIL', 'imarisha@imarishasacco.co.ke'),
-        'website' => env('ORG_WEBSITE', 'www.imarishasacco.co.ke'),
+        'name'    => env('ORG_NAME', 'Craft Silicon Limited'),
+        'address' => env('ORG_ADDRESS', 'Craft Silicon, Nairobi, Kenya'),
+        'phone'   => env('ORG_PHONE', '0709 044000'),
+        'email'   => env('ORG_EMAIL', 'support@craftsilicon.com'),
+        'website' => env('ORG_WEBSITE', 'www.craftsilicon.com'),
 
        ];

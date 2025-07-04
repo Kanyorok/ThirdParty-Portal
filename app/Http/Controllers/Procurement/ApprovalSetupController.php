@@ -2,18 +2,18 @@
 
 namespace App\Http\Controllers\Procurement;
 
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
 
 class ApprovalSetupController extends Controller
 {
-    public function index(){
+    public function index()
+    {
         $approvalGroups = DB::table('t_ApprovalGroups as g')
-        ->leftJoin('t_Permissions as p', 'g.Permission', '=', 'p.id')
-        ->select('g.*', 'p.name as permission_name')
-        ->get();
+            ->leftJoin('t_Permissions as p', 'g.Permission', '=', 'p.id')
+            ->select('g.*', 'p.name as permission_name')
+            ->get();
 
         $permissions = DB::table('t_Permissions')->get();
         return view('procurement.requisitions.approval-setup', compact('approvalGroups', 'permissions'));

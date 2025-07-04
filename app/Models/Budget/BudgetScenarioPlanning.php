@@ -12,7 +12,7 @@ class BudgetScenarioPlanning extends Model
 
 
     protected $primaryKey = 'Id';
-    
+
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
@@ -35,18 +35,20 @@ class BudgetScenarioPlanning extends Model
         'ModifiedBy',
     ];
 
-    public function planningMethodRef(){
+    public function planningMethodRef()
+    {
 
-        return $this->belongsTo(BudgetPlanningMethods::class , 'planningMethod', 'Id');
+        return $this->belongsTo(BudgetPlanningMethods::class, 'planningMethod', 'Id');
     }
 
-    public function budgetPeriodRef(){
+    public function budgetPeriodRef()
+    {
 
-        return $this->belongsTo(BudgetPeriods::class , 'budgetPeriod', 'Id');
+        return $this->belongsTo(BudgetPeriods::class, 'budgetPeriod', 'Id');
     }
 
     protected $casts = [
-    'isDefault' => 'boolean',
-];
- 
+        'isDefault' => 'boolean',
+    ];
+
 }

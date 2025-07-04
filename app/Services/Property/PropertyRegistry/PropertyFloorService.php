@@ -15,13 +15,15 @@ class PropertyFloorService
     public function __construct(public PropertyFloor $propertyFloor)
     {
     }
+
     public static function create(
-        PropertyRegistry  $propertyId,
-        PropertyBlock  $blockId,
-        string $floorLabel,
-        string $floorNotes,
-        User   $user
-    ): self {
+        PropertyRegistry $propertyId,
+        PropertyBlock    $blockId,
+        string           $floorLabel,
+        string           $floorNotes,
+        User             $user
+    ): self
+    {
         $propertyFloor = PropertyFloor::create([
             'PropertyID' => $propertyId->Id,
             'BlockID' => $blockId->Id,

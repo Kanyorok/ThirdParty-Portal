@@ -8,20 +8,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BudgetMonthlyAllocation extends Model
 {
-    use UserActorTrait,SoftDeletes;
-    
-    protected $table='t_BudgetMonthlyAllocations';
-    protected $primaryKey = 'Id';
-    
+    use UserActorTrait, SoftDeletes;
+
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
-
-    public static function getPrimaryKey(): string
-    {
-        return 'BudgetMonthlyAllocationId';
-    }
-
+    protected $table = 't_BudgetMonthlyAllocations';
+    protected $primaryKey = 'Id';
     protected $fillable = [
         'BudgetActivityID',
         'Month',
@@ -33,11 +26,15 @@ class BudgetMonthlyAllocation extends Model
         'ModifiedOn',
         'DeletedBy',
     ];
-
     protected $casts = [
-        'CreatedOn'   => 'datetime',
-        'ModifiedOn'  => 'datetime',
-        'DeletedOn'   => 'datetime',
+        'CreatedOn' => 'datetime',
+        'ModifiedOn' => 'datetime',
+        'DeletedOn' => 'datetime',
     ];
+
+    public static function getPrimaryKey(): string
+    {
+        return 'BudgetMonthlyAllocationId';
+    }
 
 }

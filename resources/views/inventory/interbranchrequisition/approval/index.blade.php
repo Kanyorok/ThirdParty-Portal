@@ -83,19 +83,23 @@
                         </thead>
                         <tbody>
                         @foreach($requisition->items as $index => $requisitionItem)
-                        <tr>
-                            <td>{{ $index + 1 }}</td>
-                            <td>{{ $requisitionItem->item?->ItemName ?? 'N/A' }}</td>
-                            <td>{{ $requisitionItem->RequestedQty }}</td>
-                            <td>
-                                <input type="number" min="0" name="approved_qty[{{ $requisitionItem->Id }}]" class="form-control"
-                                    value="{{ old('approved_qty.' . $requisitionItem->Id, $requisitionItem->RequestedQty) }}" form="approval-form">
-                            </td>
-                            <td>
-                                <input type="text" name="item_remarks[{{ $requisitionItem->Id }}]" class="form-control"
-                                    value="{{ old('item_remarks.' . $requisitionItem->Id, $requisitionItem->Remarks) }}" placeholder="Optional remarks" form="approval-form">
-                            </td>
-                        </tr>
+                            <tr>
+                                <td>{{ $index + 1 }}</td>
+                                <td>{{ $requisitionItem->item?->ItemName ?? 'N/A' }}</td>
+                                <td>{{ $requisitionItem->RequestedQty }}</td>
+                                <td>
+                                    <input type="number" min="0" name="approved_qty[{{ $requisitionItem->Id }}]"
+                                           class="form-control"
+                                           value="{{ old('approved_qty.' . $requisitionItem->Id, $requisitionItem->RequestedQty) }}"
+                                           form="approval-form">
+                                </td>
+                                <td>
+                                    <input type="text" name="item_remarks[{{ $requisitionItem->Id }}]"
+                                           class="form-control"
+                                           value="{{ old('item_remarks.' . $requisitionItem->Id, $requisitionItem->Remarks) }}"
+                                           placeholder="Optional remarks" form="approval-form">
+                                </td>
+                            </tr>
                         @endforeach
                         </tbody>
                     </table>

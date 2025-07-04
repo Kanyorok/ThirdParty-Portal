@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Models\Auth\User;
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
-use App\Models\Auth\User;
 
 class BudgetLineCategorySeeder extends Seeder
 {
@@ -34,14 +34,14 @@ class BudgetLineCategorySeeder extends Seeder
             DB::table('t_BudgetLineCategories')->insert([
                 'CategoryCode' => $code,
                 'CategoryName' => $name,
-                'Description'  => $desc,
-                'IsActive'     => $isActive,
-                'CreatedBy'    => $userIds[array_rand($userIds)],
-                'CreatedOn'    => $now->copy()->subDays(rand(5, 30)),
-                'ModifiedBy'   => $userIds[array_rand($userIds)],
-                'ModifiedOn'   => $now->copy()->subDays(rand(1, 4)),
-                'DeletedBy'    => null,
-                'DeletedOn'    => null,
+                'Description' => $desc,
+                'IsActive' => $isActive,
+                'CreatedBy' => $userIds[array_rand($userIds)],
+                'CreatedOn' => $now->copy()->subDays(rand(5, 30)),
+                'ModifiedBy' => $userIds[array_rand($userIds)],
+                'ModifiedOn' => $now->copy()->subDays(rand(1, 4)),
+                'DeletedBy' => null,
+                'DeletedOn' => null,
             ]);
         }
     }

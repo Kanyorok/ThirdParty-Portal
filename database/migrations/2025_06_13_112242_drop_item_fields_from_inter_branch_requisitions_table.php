@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     public function up(): void
     {
         Schema::table('t_InterBranchRequisition', function (Blueprint $table) {
@@ -34,7 +33,7 @@ return new class extends Migration
             $table->foreignId('ItemCode')->nullable()->constrained('t_Items', 'Id');
             $table->foreignId('ItemName')->nullable()->constrained('t_Items', 'Id');
             $table->foreignId('UOM')->nullable()->constrained('t_Items', 'Id');
-            $table->integer('RequestedQty')->nullable(); 
+            $table->integer('RequestedQty')->nullable();
             $table->string('Remarks')->nullable();
         });
     }
