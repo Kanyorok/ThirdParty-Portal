@@ -8,7 +8,7 @@ use App\Services\DMS\Files\ImageOCR;
 use App\Services\DMS\Files\SpreadsheetExtraction;
 use App\Services\DMS\Files\TextFileExtraction;
 use App\Services\DMS\Files\UnknownFileExtraction;
-use App\Services\DMS\Files\WordDocumentExtraction;
+use App\Services\DMS\Files\WordExtraction;
 use RuntimeException;
 
 class FileExtractionService
@@ -33,9 +33,12 @@ class FileExtractionService
             return (new ImageOCR($this->document))->processContent();
         }
         if ($this->extension->isDocument()) {
-            return (new WordDocumentExtraction($this->document))->processContent();
+            return (new WordExtraction($this->document))->processContent();
         }
         if ($this->extension->isSpreadsheet()) {
+            return (new SpreadsheetExtraction($this->document))->processContent();
+        }
+        if ($this->extension->isPresentation()) {
             return (new SpreadsheetExtraction($this->document))->processContent();
         }
 

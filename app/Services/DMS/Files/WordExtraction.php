@@ -10,7 +10,7 @@ use PhpOffice\PhpWord\Element\TextRun;
 use PhpOffice\PhpWord\IOFactory;
 use Throwable;
 
-class WordDocumentExtraction extends FileExtraction
+class WordExtraction extends FileExtraction
 {
     public function processContent(): bool
     {
