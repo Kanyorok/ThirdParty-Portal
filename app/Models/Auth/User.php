@@ -56,64 +56,21 @@ class User extends Authenticatable
         'CreatedBy' => 'integer',
     ];
 
-    public function syncRoles(...$roles)
-    {
-        $roles = collect($roles)->flatten()->all();
-
-        $branchId = session('LoginBranchId');
-        if (!$branchId) {
-            throw new \RuntimeException("Branch must be selected before syncing roles.");
-        }
-
-        // Convert names to Role models
-        $roleModels = collect($roles)->map(function ($role) {
-            return $role instanceof Role ? $role : Role::where('name', $role)->firstOrFail();
-        });
-
-        // Delete only roles assigned under current branch
-        ModelRole::where([
-            'model_id'   => $this->Id,
-            'model_type' => self::getPrimaryKey(),
-            'BranchId'   => $branchId,
-        ])->delete();
-
-        // Re-insert new ones
-        foreach ($roleModels as $roleModel) {
-            ModelRole::create([
-                'model_id'   => $this->Id,
-                'model_type' => self::getPrimaryKey(),
-                'role_id'    => $roleModel->id,
-                'BranchId'   => $branchId,
-                'CreatedBy'  => $this->Id,
-                'CreatedOn'  => now(),
-                'ModifiedBy' => $this->Id,
-                'ModifiedOn' => now(),
-            ]);
-        }
-
-        // You may also update the Spatie internal relation cache
-        $this->setRelation('roles', collect($roleModels));
-
-        return $this;
-    }
+    protected $effectiveRole = null;
 
     public function setEffectiveRole(string $roleName): void
     {
-        $role = \Spatie\Permission\Models\Role::where('name', $roleName)
-            ->with('permissions') // ✅ Ensure permissions are loaded
-            ->first();
-
-        if (!$role) {
-            throw new \RuntimeException("Role '{$roleName}' does not exist.");
-        }
-
-        // Inject the role with permissions into memory
-        $this->setRelation('roles', collect([$role]));
-
-        // Also reset the permissions relationship to match (if you use $user->permissions directly)
-        $this->setRelation('permissions', $role->permissions);
+        $this->effectiveRole = $roleName;
     }
 
+    public function getRoleNames()
+    {
+        if ($this->effectiveRole) {
+            return collect([$this->effectiveRole]);
+        }
+
+        return parent::getRoleNames();
+    }
 
     public function syncRolesWithBranch(array|Collection $roles, int $branchId, int $actorId = 1): void
     {
