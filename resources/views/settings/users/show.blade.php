@@ -40,7 +40,7 @@
                                         aria-expanded="false" class="btn btn-link dropdown-toggle">
                                     {{ $user->Phone }}
                                 </button>
-                                <div class="dropdown-menu" style="">
+                                <div class="dropdown-menu">
                                     <a class="dropdown-item disabled text-decoration-line-through"
                                        href="javascript:void(0)"><i class="fas fa-phone-alt"></i> Call</a>
                                     <div class="dropdown-divider"></div>

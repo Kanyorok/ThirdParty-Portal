@@ -11,8 +11,8 @@ class MeetingClient extends Pivot
 {
     use UserActorTrait;
 
-    const string CREATED_AT = 'CreatedOn';
-    const string UPDATED_AT = 'ModifiedOn';
+    const CREATED_AT = 'CreatedOn';
+    const UPDATED_AT = 'ModifiedOn';
     protected $table = 't_MeetingClients';
 
     public static function getPrimaryKey(): string

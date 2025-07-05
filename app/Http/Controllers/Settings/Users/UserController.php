@@ -52,12 +52,18 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             'Role' => ['required', 'string', 'max:20'],
-            'Employee' => ['required', 'string', 'max:20']
+            'Employee' => ['required', 'string', 'max:20'],
+            'BranchId' => ['required', 'integer', 'exists:t_Branches,Id'],
         ]);
 
         $role = Role::query()->where('id', $validated['Role'])->first();
         if (!$role instanceof Role) {
             throw ValidationException::withMessages(['Role' => 'invalid role defined']);
+        }
+
+        $branch = Branch::query()->where('Id', $validated['BranchId'])->first();
+        if (!$branch instanceof Branch) {
+            throw ValidationException::withMessages(['BranchId' => 'branch not found']);
         }
 
         $employee = Employee::query()->doesntHave('user')->where('EmployeeID', $validated['Employee'])->first();
@@ -67,9 +73,9 @@ class UserController extends Controller
 
         $actor = $request->user();
         try {
-            return DB::transaction(function () use ($actor, $role, $employee) {
+            return DB::transaction(function () use ($actor, $role, $employee, $branch) {
                 UserService::create($employee, $actor)
-                    ->setRole($role, $actor)
+                    ->setRole($role, $branch, $actor)
                     ->welcomeEmail();
                 return $this->succeeded('user added successfully');
             });
@@ -87,7 +93,8 @@ class UserController extends Controller
     {
         return view('settings.users.create')
             ->with('employees', Employee::doesntHave('user')->get(['EmployeeID', 'FirstName', 'LastName']))
-            ->with('Roles', Role::all());
+            ->with('Roles', Role::all())
+            ->with('branches', Branch::all());
     }
 
     /**

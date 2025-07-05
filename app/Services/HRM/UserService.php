@@ -35,7 +35,7 @@ use App\Models\Auth\ModelRole;
 
 class UserService
 {
-    public const string MODULE = 'USERS';
+    public const MODULE = 'USERS';
 
     public function __construct(public User $user)
     {
@@ -140,7 +140,7 @@ class UserService
             ])->rawColumns(['action', 'photo'])->make();
     }
 
-    public function sendMessage(string $message, User $actor, bool $immediate = false, BulkNotification $bulkNotification = null): static
+    public function sendMessage(string $message, User $actor, bool $immediate = false, $bulkNotification = null): static
     {
         if (SystemHelper::isSystem($this->user)) {
             return $this;
@@ -209,7 +209,7 @@ class UserService
         return ($user instanceof BRUser) ? $user : null;
     }
 
-    public function update(string $UserID, string $Name, string $Email, string $Phone, GenderEnum $Gender, User $actor, string $Signature = '', string $Notes = '', Branch $branch = null): static
+    public function update(string $UserID, string $Name, string $Email, string $Phone, GenderEnum $Gender, User $actor, string $Signature = '', string $Notes = '', $branch = null): static
     {
         $email_change = ($this->user->Email === $Email) ? null : $this->user->Email;
         $this->user->update([
@@ -236,7 +236,7 @@ class UserService
         return $this;
     }
 
-    public function sendEmail(string $subject, string $body, array $cc = [], bool|null $immediate = false, EmailPriorityEnum $priorityEnum = EmailPriorityEnum::Normal, Email $email = null): ?CRMEmailService
+    public function sendEmail(string $subject, string $body, array $cc = [], bool|null $immediate = false, EmailPriorityEnum $priorityEnum = EmailPriorityEnum::Normal, $email = null): ?CRMEmailService
     {
         if (SystemHelper::isSystem($this->user)) {
             return null;
