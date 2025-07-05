@@ -59,47 +59,6 @@ class User extends Authenticatable
 
     protected ?Role $effectiveRole = null;
 
-    public function syncRoles(...$roles)
-    {
-        $roles = collect($roles)->flatten()->all();
-
-        $branchId = session('LoginBranchId');
-        if (!$branchId) {
-            throw new \RuntimeException("Branch must be selected before syncing roles.");
-        }
-
-        // Convert names to Role models
-        $roleModels = collect($roles)->map(function ($role) {
-            return $role instanceof Role ? $role : Role::where('name', $role)->firstOrFail();
-        });
-
-        // Delete only roles assigned under current branch
-        ModelRole::where([
-            'model_id'   => $this->Id,
-            'model_type' => self::getPrimaryKey(),
-            'BranchId'   => $branchId,
-        ])->delete();
-
-        // Re-insert new ones
-        foreach ($roleModels as $roleModel) {
-            ModelRole::create([
-                'model_id'   => $this->Id,
-                'model_type' => self::getPrimaryKey(),
-                'role_id'    => $roleModel->id,
-                'BranchId'   => $branchId,
-                'CreatedBy'  => $this->Id,
-                'CreatedOn'  => now(),
-                'ModifiedBy' => $this->Id,
-                'ModifiedOn' => now(),
-            ]);
-        }
-
-        // You may also update the Spatie internal relation cache
-        $this->setRelation('roles', collect($roleModels));
-
-        return $this;
-    }
-
     public function getRoleNames(): Collection
     {
         $branchId = session('LoginBranchId');
@@ -142,7 +101,7 @@ class User extends Authenticatable
 
     public function setEffectiveRole(string $roleName): void
     {
-        $this->effectiveRole = \Spatie\Permission\Models\Role::where('name', $roleName)->first();
+        $this->effectiveRole = Role::where('name', $roleName)->first();
     }
 
     public function syncRolesWithBranch(array|Collection $roles, int $branchId, int $actorId = 1): void
