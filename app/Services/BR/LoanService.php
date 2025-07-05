@@ -15,13 +15,13 @@ use Throwable;
 
 class LoanService
 {
-    public const string MODULE = 'DEBT';
+    public const MODULE = 'DEBT';
 
     public function __construct(public DebtProduct $loan)
     {
     }
 
-    public function message(string $message, User $actor, bool $immediate = false, BulkNotification $bulkNotification = null): array
+    public function message(string $message, User $actor, bool $immediate = false, $bulkNotification = null): array
     {
         if (!$this->loan->client instanceof Client) {
             return [];
