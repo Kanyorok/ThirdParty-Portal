@@ -26,6 +26,7 @@ use Spatie\Permission\Models\Role;
 use App\Traits\Controller\HasBranchRoles;
 use App\Models\Auth\ModelRole;
 use Illuminate\Support\Collection;
+use Spatie\Permission\Models\Permission;
 
 class User extends Authenticatable
 {
@@ -56,20 +57,92 @@ class User extends Authenticatable
         'CreatedBy' => 'integer',
     ];
 
-    protected $effectiveRole = null;
+    protected ?Role $effectiveRole = null;
+
+    public function syncRoles(...$roles)
+    {
+        $roles = collect($roles)->flatten()->all();
+
+        $branchId = session('LoginBranchId');
+        if (!$branchId) {
+            throw new \RuntimeException("Branch must be selected before syncing roles.");
+        }
+
+        // Convert names to Role models
+        $roleModels = collect($roles)->map(function ($role) {
+            return $role instanceof Role ? $role : Role::where('name', $role)->firstOrFail();
+        });
+
+        // Delete only roles assigned under current branch
+        ModelRole::where([
+            'model_id'   => $this->Id,
+            'model_type' => self::getPrimaryKey(),
+            'BranchId'   => $branchId,
+        ])->delete();
+
+        // Re-insert new ones
+        foreach ($roleModels as $roleModel) {
+            ModelRole::create([
+                'model_id'   => $this->Id,
+                'model_type' => self::getPrimaryKey(),
+                'role_id'    => $roleModel->id,
+                'BranchId'   => $branchId,
+                'CreatedBy'  => $this->Id,
+                'CreatedOn'  => now(),
+                'ModifiedBy' => $this->Id,
+                'ModifiedOn' => now(),
+            ]);
+        }
+
+        // You may also update the Spatie internal relation cache
+        $this->setRelation('roles', collect($roleModels));
+
+        return $this;
+    }
+
+    public function getRoleNames(): Collection
+    {
+        $branchId = session('LoginBranchId');
+        if (!$branchId) return collect();
+
+        return ModelRole::where('model_id', $this->UserID)
+            ->where('model_type', self::getPrimaryKey())
+            ->where('BranchId', $branchId)
+            ->with('role')
+            ->get()
+            ->pluck('role.name')
+            ->filter();
+    }
+
+    public function hasRole($roles, string $guard = null): bool
+    {
+        $roleNames = $this->getRoleNames();
+
+        return collect($roles)->intersect($roleNames)->isNotEmpty();
+    }
+
+    public function getPermissionsViaRoles(): Collection
+    {
+        $branchId = session('LoginBranchId');
+        if (!$branchId) return collect();
+
+        return Permission::query()
+            ->whereHas('roles.modelRoles', function ($query) use ($branchId) {
+                $query->where('model_id', $this->Id)
+                    ->where('model_type', self::getPrimaryKey())
+                    ->where('BranchId', $branchId);
+            })
+            ->get();
+    }
+
+    public function hasPermissionTo($permission, $guardName = null): bool
+    {
+        return $this->getPermissionsViaRoles()->contains('name', $permission);
+    }
 
     public function setEffectiveRole(string $roleName): void
     {
-        $this->effectiveRole = $roleName;
-    }
-
-    public function getRoleNames()
-    {
-        if ($this->effectiveRole) {
-            return collect([$this->effectiveRole]);
-        }
-
-        return parent::getRoleNames();
+        $this->effectiveRole = \Spatie\Permission\Models\Role::where('name', $roleName)->first();
     }
 
     public function syncRolesWithBranch(array|Collection $roles, int $branchId, int $actorId = 1): void
@@ -134,19 +207,29 @@ class User extends Authenticatable
         return $this->hasMany(LoanAssignment::class, 'UserId', 'Id');
     }
 
-    public function role(): ?\Spatie\Permission\Models\Role
+    public function role(): ?Role
     {
-        $branchId = session('LoginBranchId');
-
-        if (!$branchId) {
-            return null; // No branch selected, cannot determine role
+        // Return memory-injected role if available
+        if ($this->effectiveRole instanceof Role) {
+            return $this->effectiveRole;
         }
 
-        return ModelRole::where('model_id', $this->Id)
-            ->where('model_type', 'UserID')
+        $branchId = session('LoginBranchId');
+        if (!$branchId) {
+            return null; // Or fallback to default role() if needed
+        }
+
+        // Find branch-specific role via t_ModelRoles
+        $modelRole = ModelRole::where('model_id', $this->Id)
+            ->where('model_type', self::getPrimaryKey()) // resolves to 'UserID'
             ->where('BranchId', $branchId)
-            ->with('role')
-            ->first()?->role;
+            ->first();
+
+        if (!$modelRole) {
+            return null;
+        }
+
+        return Role::find($modelRole->role_id);
     }
 
     public function teams(): BelongsToMany
