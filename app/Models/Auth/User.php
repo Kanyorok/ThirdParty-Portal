@@ -22,7 +22,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Spatie\Permission\Models\Role;
+use App\Models\Auth\Role;
 use App\Traits\Controller\HasBranchRoles;
 use App\Models\Auth\ModelRole;
 use Illuminate\Support\Collection;
