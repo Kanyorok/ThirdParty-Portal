@@ -83,7 +83,7 @@ class AuthenticatedSessionController extends Controller
             'LoginRoleName'   => $roleName
         ]);
 
-        $user->setEffectiveRole($roleName); // Tell Spatie the effective role (no DB insert/update)
+        $user->setEffectiveRole($roleName); // Tell Spatie the effective role
 
         return redirect()->intended('/');
     }

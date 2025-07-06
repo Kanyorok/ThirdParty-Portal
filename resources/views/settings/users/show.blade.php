@@ -24,11 +24,6 @@
                                                                      data-click_url="{{ route('users.edit',$user->UserID) }}"
                                                                      data-summary_title="Update {{ $user->Name }} details."><i
                                 class="fas fa-edit"></i></a></h5>
-                    <div class="text-muted mb-2">Role : {{ $user->role()?->name }}
-                        <a href="#" class="ml-2 click-summary-data"
-                           data-click_url="{{ route('user_roles.index',$user->UserID) }}"
-                           data-summary_title="Update {{ $user->Name }} Role."><i
-                                class="fas fa-edit"></i></a></div>
                 </div>
                 <div class="card-body border-top">
                     <h5 class="h6 card-title">Contacts</h5>
