@@ -108,13 +108,16 @@ class BudgetLineCategoriesController extends Controller
         DB::beginTransaction();
         try {
             $budgetLineCategory = BudgetLineCategories::findOrFail($id);
+            $budgetLineCategory->DeletedBy = Auth::id();
+            $budgetLineCategory->save();
             $budgetLineCategory->delete();
-            DB::commit();
+            
             activity()
                 ->performedOn($budgetLineCategory)
                 ->causedBy(Auth::user())
                 ->withProperties(['action' => 'delete'])
                 ->log('Deleted budget line category: ' . $budgetLineCategory->CategoryName);
+            DB::commit();
             return redirect()->route('budgetlinecategories.index')->with('success', 'Budget Line Category deleted successfully.');
         } catch (\Exception $e) {
             DB::rollBack();

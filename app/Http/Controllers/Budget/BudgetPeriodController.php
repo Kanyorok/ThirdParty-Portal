@@ -234,6 +234,7 @@ class BudgetPeriodController extends Controller
         $this->authorize(PermissionEnum::BudgetSetupDelete, BudgetPeriods::class);
         try{
             $period = BudgetPeriods::findOrFail($id); // safer: throws 404 if not found
+            $period -> DeletedBy = Auth::Id();
             $period->delete();
 
             activity()
@@ -256,10 +257,12 @@ class BudgetPeriodController extends Controller
 
         try {
             $glAttachment = BudgetGLsAttachments::findOrFail($id);
+            $glAttachment->DeletedBy = Auth::Id();
+            $glAttachment->save();
             $glAttachment->delete();
 
             //Delete the associated BudgetGLMasterAllocations if they exist
-            BudgetGLMasterAllocations::where('GLAttachmentID', $id)->delete();
+            // BudgetGLMasterAllocations::where('GLAttachmentID', $id)->delete();
 
             activity()
                 ->performedOn($glAttachment)

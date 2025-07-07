@@ -118,6 +118,8 @@ class BudgetActivitiesMasterController extends Controller
         DB::beginTransaction();
         try {
             $activity = BudgetActivityMaster::findOrFail($id);
+            $activity->DeletedBy = Auth::id();
+            $activity->save();
             $activity->delete();
             DB::commit();
             activity()

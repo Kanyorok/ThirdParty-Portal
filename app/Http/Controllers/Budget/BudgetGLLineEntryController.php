@@ -123,7 +123,13 @@ public function store(Request $request)
         DB::beginTransaction();
         try {
             $entry = BudgetManualEntry::findOrFail($id);
-            $entry->allocations()->delete(); // Delete related allocations
+            $monthlydelete = BudgetManualEntryAllocations::where('EntryId', $id)->update([
+                'DeletedBy' =>  Auth::Id()
+            ]);
+            $monthlydelete = BudgetManualEntryAllocations::where('EntryId', $id)->delete();
+            $entry->DeletedBy = Auth :: Id();
+            $entry->save();
+           
             $entry->delete(); // Delete the entry itself
             DB::commit();
             activity()
