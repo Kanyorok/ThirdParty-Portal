@@ -78,7 +78,7 @@ class ConsolidatedProcurementPlan extends Model
     }
     public function lineItems()
     {
-        return $this->hasMany(PlanLineItems::class, 'PlanID');
+        return $this->hasMany(PlanLineItem::class, 'PlanID');
     }
 
 }

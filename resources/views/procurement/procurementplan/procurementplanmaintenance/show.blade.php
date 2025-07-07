@@ -21,6 +21,7 @@
             <table class="table table-bordered">
                 <thead>
                 <tr>
+                    <th>Need ID</th>
                     <th>Item Name</th>
                     <th>Quantity</th>
                     <th>Estimated Unit Cost (KES)</th>
@@ -32,6 +33,7 @@
                 <tbody>
                 @foreach($plan->lineItems as $item)
                     <tr>
+                        <td>{{ $item->NeedID ?? 'N/A'}}</td>
                         <td>{{ $item->item->ItemName ?? 'N/A' }}</td>
                         <td>{{ $item->MergedQty }}</td>
                         <td>{{ number_format($item->EstimatedUnitCost, 2) }}</td>
@@ -61,11 +63,6 @@
                    class="btn btn-outline-success">
                     <i class="fas fa-file-import me-1"></i>
                     Generate Items from Needs
-                </a>
-                <a href="{{ route('planmanualinput.index', ['plan_id' => $plan->PlanID, 'title' => $plan->Title]) }}"
-                   class="btn btn-outline-primary">
-                    <i class="fas fa-tasks me-1"></i>
-                    Manage Items
                 </a>
             @endif
         </div>

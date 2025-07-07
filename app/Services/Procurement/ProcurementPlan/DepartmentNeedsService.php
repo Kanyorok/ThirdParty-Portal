@@ -2,18 +2,23 @@
 
 namespace App\Services\Procurement\ProcurementPlan;
 
-use App\Models\Procurement\DepartmentNeeds;
+use App\Models\Procurement\DepartmentNeed;
 use App\Models\Auth\User;
 use Illuminate\Support\Str;
 
 class DepartmentNeedsService
 {
-    public function create(array $data, User $actor): DepartmentNeeds
+    public function create(array $data, User $actor): DepartmentNeed
     {
         //dd($actor->employee->DepartmentId);
-        $departmentNeed = DepartmentNeeds::create([
-            'NeedID' => 'NEED-' . Str::upper(Str::random(5)),
-            'BranchID' => $actor->employee->BranchId,
+        $prefix = 'NEED-';
+        $lastNEED = DepartmentNeed::where('NeedID', 'like', $prefix . '%')->orderBy('Id', 'desc')->first();
+        $lastNumber = $lastNEED ? intval(substr($lastNEED->NeedID, strlen($prefix))) : 0;
+        $newNEEDNumber = $prefix . str_pad($lastNumber + 1, 5, '0', STR_PAD_LEFT);
+
+        $departmentNeed = DepartmentNeed::create([
+            'NeedID' => $newNEEDNumber,
+            'BranchID' => session('LoginBranchId'),
             'DepartmentID' => $actor->employee->DepartmentId,
             'ItemID' => $data['ItemID'],
             'RequestedQty' => $data['RequestedQty'],

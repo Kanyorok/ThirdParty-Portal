@@ -68,20 +68,6 @@
                     </small> --}}
                 </div>
             </div>
-
-            <div class="col-12">
-                <label class="form-label fw-semibold">Attached Document</label>
-                <div class="form-control-plaintext border rounded bg-light px-3 py-2">
-                    @if($need->Attachment)
-                        <a href="{{ asset('uploads/' . $need->Attachment) }}" target="_blank"
-                           class="text-decoration-underline">
-                            {{ $need->Attachment }}
-                        </a>
-                    @else
-                        <span class="text-muted">No document attached.</span>
-                    @endif
-                </div>
-            </div>
         </div>
     </div>
 

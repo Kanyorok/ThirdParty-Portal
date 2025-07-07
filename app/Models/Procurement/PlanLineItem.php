@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Core\CodeDetail;
 
-class PlanLineItems extends Model
+class PlanLineItem extends Model
 {
     use SoftDeletes, UserActorTrait;
 
@@ -96,7 +96,7 @@ class PlanLineItems extends Model
 
     public function budgetline()
     {
-        return $this->belongsTo(BudgetMaster::class, 'BudgetLineID', 'Id');
+        return $this->belongsTo(BudgetMaster::class, 'BudgetLineID', 'BudgetLineID');
     }
 
     public function setMethod()
