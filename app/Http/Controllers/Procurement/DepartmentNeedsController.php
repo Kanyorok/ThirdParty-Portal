@@ -29,18 +29,19 @@ class DepartmentNeedsController extends Controller
 
     public function store(Request $request, DepartmentNeedsService $service)
     {
-        //dd($request->all());
-
         try {
             DB::transaction(function () use ($request, $service) {
                 $actor = $request->user();
                 $service->create($request->all(), $actor);
             });
 
-            return redirect()->route('procurementdepartmentalplan.index')->with('success', 'Department need created!');
-        } catch (Throwable $e) {
+            return redirect()->route('procurementdepartmentalplan.index')
+                ->with('success', 'Department need created!');
+        } catch (\Exception $e) {
             Log::error("--- CREATE DEPARTMENT NEEDS ERROR --- " . $e->getMessage());
-            return redirect()->back()->withErrors(['error' => 'Failed to create need.']);
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['error' => $e->getMessage()]);
         }
     }
 

@@ -10,17 +10,32 @@ class DepartmentNeedsService
 {
     public function create(array $data, User $actor): DepartmentNeed
     {
-        //dd($actor->employee->DepartmentId);
+        $branchId = session('LoginBranchId');
+        $departmentId = $actor->employee->DepartmentId;
+        $itemId = $data['ItemID'];
+
+        // Check for existing need with same combination
+        $existing = DepartmentNeed::where('BranchID', $branchId)
+            ->where('DepartmentID', $departmentId)
+            ->where('ItemID', $itemId)
+            ->first();
+
+        if ($existing) {
+            throw new \Exception('A need for this item already exists in this branch and department.');
+        }
+
+        // Generate NeedID
         $prefix = 'NEED-';
         $lastNEED = DepartmentNeed::where('NeedID', 'like', $prefix . '%')->orderBy('Id', 'desc')->first();
         $lastNumber = $lastNEED ? intval(substr($lastNEED->NeedID, strlen($prefix))) : 0;
         $newNEEDNumber = $prefix . str_pad($lastNumber + 1, 5, '0', STR_PAD_LEFT);
 
+        // Create the new department need
         $departmentNeed = DepartmentNeed::create([
             'NeedID' => $newNEEDNumber,
-            'BranchID' => session('LoginBranchId'),
-            'DepartmentID' => $actor->employee->DepartmentId,
-            'ItemID' => $data['ItemID'],
+            'BranchID' => $branchId,
+            'DepartmentID' => $departmentId,
+            'ItemID' => $itemId,
             'RequestedQty' => $data['RequestedQty'],
             'EstimatedUnitCost' => $data['EstimatedUnitCost'],
             'Justification' => $data['Justification'],
@@ -41,4 +56,5 @@ class DepartmentNeedsService
 
         return $departmentNeed;
     }
+
 }

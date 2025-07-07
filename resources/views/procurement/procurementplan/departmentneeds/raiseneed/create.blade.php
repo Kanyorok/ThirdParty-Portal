@@ -97,7 +97,10 @@
 @section('scripts')
     <script>
         flatpickr("#RequestedDate", {
-            dateFormat: "d/m/Y"
+            dateFormat: "Y-m-d",      
+            altInput: true,
+            altFormat: "d/m/Y",       
+            allowInput: true
         });
         document.addEventListener('DOMContentLoaded', function () {
             const itemDropdown = document.getElementById('itemDropdown');
