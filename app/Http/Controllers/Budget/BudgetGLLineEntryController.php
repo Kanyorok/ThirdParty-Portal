@@ -48,6 +48,7 @@ class BudgetGLLineEntryController extends Controller
 
 public function store(Request $request)
 {
+    $this->authorize(PermissionEnum::BudgetSetupCreate, BudgetManualEntry::class);
     $request->validate([
         'BudgetID' => 'required|exists:t_Budgets,Id',
         'BranchID' => 'required|exists:t_Branches,Id',
@@ -107,6 +108,7 @@ public function store(Request $request)
 
     public function show($id)
     {
+        $this->authorize(PermissionEnum::BudgetSetupView, BudgetManualEntry::class);
         $entries = BudgetManualEntry::with([
             'budgetLine:Id,LineName',
             'allocations:Id,Month,Allocation,EntryID',
@@ -172,6 +174,8 @@ public function store(Request $request)
 
     public function update(Request $request, $id)
 {
+    $this->authorize(PermissionEnum::BudgetSetupUpdate, BudgetManualEntry::class);
+
     $request->validate([
         'BranchID' => 'required|exists:t_Branches,Id',
         'BudgetLineID' => 'required|exists:t_BudgetLines,Id',

@@ -84,6 +84,8 @@ class BudgetPeriodController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorize(PermissionEnum::BudgetSetupCreate, BudgetPeriods::class);
+
          $validated = $request->validate([
             'Name' => 'required|string|max:255',
             'FiscalYear' => 'required|integer|min:2020|max:2100',
@@ -153,6 +155,8 @@ class BudgetPeriodController extends Controller
 
     public function show($id)
     {
+        $this->authorize(PermissionEnum::BudgetSetupView, BudgetPeriods::class);
+
         try {
             // Fetch the budget
             $budget = Budget::findOrFail($id);
@@ -186,7 +190,7 @@ class BudgetPeriodController extends Controller
 
     public function update(Request $request, $id)
     {
-       // $this->authorize(PermissionEnum::BudgetSetupUpdate, BudgetPeriods::class);
+        $this->authorize(PermissionEnum::BudgetSetupUpdate, BudgetPeriods::class);
 
         $validated = $request->validate([
             'Name'        => 'required|string|max:255',
@@ -253,7 +257,7 @@ class BudgetPeriodController extends Controller
 
     public function delGLAttachment($id)
     {
-        //$this->authorize(PermissionEnum::BudgetSetupDelete, BudgetGLsAttachments::class);
+        $this->authorize(PermissionEnum::BudgetSetupDelete, BudgetGLsAttachments::class);
 
         try {
             $glAttachment = BudgetGLsAttachments::findOrFail($id);

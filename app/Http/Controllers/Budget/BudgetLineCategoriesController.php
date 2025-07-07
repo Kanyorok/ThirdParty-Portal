@@ -22,12 +22,14 @@ class BudgetLineCategoriesController extends Controller
 
     public function create()
     {
+        $this->authorize(PermissionEnum::BudgetSetupCreate, BudgetLineCategories::class);
         // Logic to show form for creating a new budget line category
         return view('budgetandanalytics.settings.budgetlinecategories.create');
     }
 
     public function store(Request $request)
     {
+        $this->authorize(PermissionEnum::BudgetSetupCreate, BudgetLineCategories::class);
         $validated = $request->validate([
             'CategoryCode' => 'required|string|max:255',
             'CategoryName' => 'required|string|max:255',

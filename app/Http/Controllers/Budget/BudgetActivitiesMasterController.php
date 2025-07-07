@@ -68,6 +68,8 @@ class BudgetActivitiesMasterController extends Controller
 
     public function edit($id)
     {
+
+        
         $activity = BudgetActivityMaster::findOrFail($id);
         $lines = BudgetLine::all();
         return view('budgetandanalytics.settings.activitymaster.edit', compact('activity', 'lines'));
