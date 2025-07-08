@@ -27,6 +27,7 @@ use App\Http\Controllers\Inventory\TransactionTransfersController;
 use App\Http\Controllers\Inventory\UOMController;
 use App\Http\Controllers\Inventory\UOMConversionController;
 
+
 use Illuminate\Support\Facades\Route;
 
 //use App\Http\Controllers\Inventory\ReceiptController;
@@ -113,6 +114,7 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/stocktake/branches/{storeId}', [StockTakeController::class, 'getStoreByBranch'])->name('getstores');
     Route::get('/stock-items/{branchId}/{storeId}', [StockTakeController::class, 'getStockItems'])->name('stocktake.items');
 
+
     Route::resource('uomconversion', UOMConversionController::class);
     Route::resource('stockvaluationhistory', StockValuationHistoryController::class);
     Route::resource('expirytracking', ExpiryBatchTrackingController::class);
@@ -144,6 +146,7 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/transactionstransfers/requisitions/details/{id}', [TransactionTransfersController::class, 'getRequisitionDetails'])
         ->name('requisitions.details');
 
+
     //Route::resource('transactionsreceipts', TransactionReceiptsController::class);
     Route::get('/transactionsreceipts', [TransactionReceiptsController::class, 'index'])->name('transactionsreceipts.index');
     Route::get('/transactionsreceipts/create', [TransactionReceiptsController::class, 'create'])->name('transactionsreceipts.create');
@@ -153,6 +156,8 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::put('/transactionsreceipts/{Id}', [TransactionReceiptsController::class, 'update'])->name('transactionsreceipts.update');
     Route::delete('/transactionsreceipts/{Id}', [TransactionReceiptsController::class, 'destroy'])->name('transactionsreceipts.destroy');
     Route::get('/transactionsreceipts/transfer-items/{Id}', [TransactionReceiptsController::class, 'getTransferItems']);
+
+
 
     Route::resource('stockissue', StockIssueController::class);
 
@@ -172,8 +177,10 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
 
     Route::put('/transactionsadjustment/{stock_adjustment}', [TransactionAdjustmentController::class, 'update'])->name('transactionsadjustment.update');
     Route::delete('/transactionsadjustment/{stock_adjustment}', [TransactionAdjustmentController::class, 'destroy'])->name('transactionsadjustment.destroy');
+
     Route::get('/branch-stock/{branchId}', [TransactionAdjustmentController::class, 'getBranchStock'])->name('branch.stock');
-//Route::resource('inventoryholdreview', InventoryHoldReviewController::class);
+
+    //Route::resource('inventoryholdreview', InventoryHoldReviewController::class);
     Route::get('/inventoryholdreview', [InventoryHoldReviewController::class, 'index'])->name('inventoryholdreview.index');
     Route::get('/inventoryholdreview/create', [InventoryHoldReviewController::class, 'create'])->name('inventoryholdreview.create');
     Route::post('/inventoryholdreview', [InventoryHoldReviewController::class, 'store'])->name('inventoryholdreview.store');
@@ -182,6 +189,7 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/inventoryholdreview/{Id}/edit', [InventoryHoldReviewController::class, 'edit'])->name('inventoryholdreview.edit');
     Route::put('/inventoryholdreview/{id}', [InventoryHoldReviewController::class, 'update'])->name('inventoryholdreview.update');
     Route::delete('/inventoryholdreview/{id}', [InventoryHoldReviewController::class, 'destroy'])->name('inventoryholdreview.destroy');
+    
 
 
     //Route::resource('interbranchrequisitionapproval', InterBranchRequisitionApprovalController::class);
@@ -229,5 +237,7 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
         'index' => 'inventory-reports.index',
         'show' => 'inventory-reports.show'
+
+
     ]);
 });

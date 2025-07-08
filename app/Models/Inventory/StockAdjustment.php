@@ -18,13 +18,11 @@ class StockAdjustment extends Model
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
-
+    
 
     protected $table = 't_StockAdjustments';
     protected $connection = 'sqlsrv';
     protected $primaryKey = 'Id';
-    public $timestamps = false;
-
     protected $fillable = [
         'AdjustmentId',
         'AdjustmentDate',
@@ -44,7 +42,7 @@ class StockAdjustment extends Model
     {
         return $this->belongsTo(User::class, 'AdjustedBy', 'Id');
     }
-
+    
     public function items()
     {
         return $this->hasMany(StockAdjustmentItem::class, 'AdjustmentId', 'Id');
@@ -69,16 +67,16 @@ class StockAdjustment extends Model
     {
         return $this->belongsTo(Branch::class, 'Branch', 'Id');
     }
-
     public static function getPrimaryKey(): string
     {
         return 'Id';
     }
-
     public function reason()
-    {
-        return $this->belongsTo(CodeDetail::class, 'Reason', 'Id');
-    }
+{
+    return $this->belongsTo(CodeDetail::class, 'Reason', 'Id');
+}
+
+    
 
 
 }

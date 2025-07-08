@@ -1,7 +1,11 @@
 @extends('layouts.app')
 @section('title', 'Budget Creation')
 @section('content')
-
+    <div class="container-lg mt-4">
+{{--        <h4 class="fw-bold mb-4 text-primary">Create New Budget Period</h4>--}}
+        <div class="fs-6 text-secondary mb-4">
+            This form allows you to create a new budget by specifying budget details and selecting GL accounts.
+        </div>
     @if(session('error'))
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
             {{ session('error') }}
@@ -68,6 +72,7 @@
                     <select class="form-select rounded-3" id="glAccounts" multiple size="8" disabled>
                         <option disabled>Select GL Accounts</option>
                     </select>
+                    <div class="form-text">Hold Ctrl (Windows) or Cmd (Mac) to select multiple GLs.</div>
                     <button type="button" class="btn btn-outline-primary mt-2 w-100 rounded-3" id="addGlButton" disabled>
                         <i class="bi bi-plus-circle me-1"></i>Add Selected GLs
                     </button>
@@ -93,12 +98,11 @@
             </div>
             <!-- Hidden input to store selected GLs -->
             <input type="hidden" name="selected_gls" id="selected_gls" value="">
-
             <div class="modal-footer border-0 pt-4">
-                <button type="button" class="btn btn-outline-secondary rounded-3">Cancel</button>
+{{--                <button type="button" class="btn btn-outline-secondary rounded-3 me-2">Cancel</button>--}}
                 <button type="submit" class="btn btn-primary rounded-3"
-                    onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Saving...'; this.form.submit(); }">
-                    <i class="bi bi-save me-1"></i>Save
+                        onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Saving...'; this.form.submit(); }">
+                    <i class="bi bi-save me-1"></i>Create Budget
                 </button>
             </div>
         </div>

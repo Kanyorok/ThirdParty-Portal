@@ -52,7 +52,7 @@
                                 <td>{{ $item->Urgency }}</td>
                                 {{--                                <td>{{ $item->Status }}</td>--}}
                                 <td>{{ $item->UserName }}</td>
-                                <td>{{ $item->CreatedOn }}</td>
+                                <td>{{ \Carbon\Carbon::parse($item->CreatedOn)->format('d/m/Y') }}</td>
                                 {{--                                <td>{{ $item->ModifiedBy }}</td> --}}
                                 {{--                                <td>{{ $item->ModifiedOn }}</td> --}}
                             </tr>

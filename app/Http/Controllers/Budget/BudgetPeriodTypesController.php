@@ -27,6 +27,7 @@ class BudgetPeriodTypesController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorize(PermissionEnum::BudgetSetupCreate, BudgetPeriodTypes::class);
         $validated = $request->validate([
             'PeriodType' => 'required|string|max:50',
             'Code' => 'required|string|max:10|unique:t_BudgetPeriodTypes,Code',

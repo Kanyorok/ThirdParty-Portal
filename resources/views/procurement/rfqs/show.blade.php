@@ -12,6 +12,7 @@
         <div class="card-body">
             <p><strong>RFQ Number:</strong> {{ $rfq->RFQNumber }}</p>
             <p><strong>RFQ Comments:</strong> {{ $rfq->Comments }}</p>
+            <p><strong>Requisition No:</strong> {{ $rfq->requisition->RequisitionNo }}</p>
             <p><strong>Status:</strong>
                 <span class="badge
                     @if($rfq->Status === 'Pending') bg-warning
@@ -161,14 +162,21 @@
             </div>
 
             <div class="modal-body">
-                <!-- Comments -->
+                <!-- Requisition No (readonly) -->
                 <div class="mb-3">
-                    <label>Item Category</label>
+                    <label for="requisitionNo">Requisition No</label>
+                    <input type="text" class="form-control" id="requisitionNo" value="{{ $rfq->requisition->RequisitionNo ?? 'N/A' }}" readonly>
+                </div>
+
+                <!-- Item Category Dropdown -->
+                <div class="mb-3">
+                    <label for="categoryDropdown">Item Category</label>
                     <select name="ItemCategoryId" id="categoryDropdown" class="form-control" required>
                         <option value="">-- Select Category --</option>
                     </select>
                 </div>
             </div>
+
             <input type="hidden" name="RFQId" id="rfq-number" value="{{ $rfq->Id }}">
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -181,23 +189,38 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const categoryDropdown = document.getElementById('categoryDropdown');
-        // Clear existing options except the placeholder
-        categoryDropdown.length = 1;
-        fetch('{{ url("/procurement/requisitionlines/categories") }}') // if in a Blade file
+        const requisitionId = {{ $rfq->requisition->Id }};
+
+        categoryDropdown.innerHTML = '<option value="">-- Select Category --</option>';
+
+        fetch(`/procurement/requisition/${requisitionId}/categories`)
             .then(response => response.json())
             .then(data => {
-                data.forEach(cat => {
+                if (!data || data.length === 0) {
                     const option = document.createElement('option');
-                    option.value = cat.Id;
-                    option.textContent = cat.Name;
+                    option.value = "";
+                    option.textContent = "⚠️ No items available for the attached requisition.";
                     categoryDropdown.appendChild(option);
-                });
+                    categoryDropdown.disabled = false;
+                } else {
+                    data.forEach(cat => {
+                        const option = document.createElement('option');
+                        option.value = cat.Id;
+                        option.textContent = cat.Name;
+                        categoryDropdown.appendChild(option);
+                    });
+                    categoryDropdown.disabled = false;
+                }
             })
             .catch(error => {
-                console.error('Error fetching categories:', error);
-        });
+                console.error('Error loading categories:', error);
+                categoryDropdown.innerHTML = '<option value="">⚠️ Failed to load categories</option>';
+                categoryDropdown.disabled = true;
+            });
     });
 </script>
+
+
 <script>
     function printRFQ() {
         const content = document.getElementById('printSection').innerHTML;

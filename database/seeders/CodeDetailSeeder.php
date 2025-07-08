@@ -512,5 +512,23 @@ class CodeDetailSeeder extends Seeder
                 'ModifiedBy' => $user->Id,
             ],
         ]);
+        DB::table('t_CodeDetails')->insert([
+            [
+                'CodeID' => "ProcurementMethod",
+                'Description' => 'RFQ',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+            [
+                'CodeID' => 'ProcurementMethod',
+                'Description' => 'Tender',
+                'CreatedOn' => $date,
+                'CreatedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'ModifiedBy' => $user->Id,
+            ],
+        ]);
     }
 }

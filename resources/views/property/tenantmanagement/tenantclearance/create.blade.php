@@ -1,14 +1,23 @@
 @extends('layouts.app')
 @section('title', 'Tenant Exit')
 @section('content')
+@if ($errors->any())
+    <div class="alert alert-danger">
+        <ul class="mb-0">
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
 <div class="container mt-4">
 
-    <h4 class="fw-bold mb-3">Tenant Exit & Clearance Checklist</h4>
+  <h4 class="fw-bold mb-3">Tenant Exit & Clearance Checklist</h4>
 
     <form action="{{ route('tenantclearance.store') }}" method="POST">
         @csrf
   <div class="card shadow">
-      <div class="card-header bg-light fw-bold"> Exit Process</div>
+    <div class="card-header bg-light fw-bold"> Exit Process</div>
     <div class="card-body">
       <div class="row g-3 mb-3">
         <div class="col-md-6">
@@ -21,8 +30,8 @@
             </select>
         </div>
         <div class="col-md-6">
-          <label class="form-label">Exit Date</label>
-            <input type="date" class="form-control" value="ExitDate" name="ExitDate">
+          <label class="form-label" id="exit-date">Exit Date</label>
+            <input type="date" class="form-control" id="exit-date" value="ExitDate" name="ExitDate">
         </div>
       </div>
 
@@ -50,7 +59,7 @@
           </select>
         </div>
         <div class="col-md-3">
-            <label class="form-label">Deposit Refunded?</label>
+          <label class="form-label">Deposit Refunded?</label>
             <select class="form-select" name="DepositRefunded" required>
                 <option>--Select the tenant Type</option>
                 @foreach ($codedetails as $codedetail)
@@ -59,15 +68,15 @@
           </select>
         </div>
       </div>
-        <div class="col-md-3">
-            <label class="form-label">Status</label>
-            <select class="form-select" name="Status" required>
-                <option value="">-- Select Status --</option>
-                @foreach (\App\Enums\Property\TenantClearanceEnum::cases() as $status)
-                    <option value="{{ $status->value }}">{{ $status->label() }}</option>
-                @endforeach
-            </select>
-        </div>
+      <div class="col-md-3">
+          <label class="form-label">Status</label>
+          <select class="form-select" name="Status" required>
+              <option value="">-- Select Status --</option>
+              @foreach (\App\Enums\Property\TenantClearanceEnum::cases() as $status)
+                  <option value="{{ $status->value }}">{{ $status->label() }}</option>
+              @endforeach
+          </select>
+      </div>
 
       <!-- Upload & Remarks -->
       <div class="mb-3">
@@ -85,4 +94,13 @@
   </div>
 </div>
 
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    flatpickr("#exit-date", {
+        dateFormat: "d/m/Y",
+        allowInput: true
+    });
+</script>
 @endsection

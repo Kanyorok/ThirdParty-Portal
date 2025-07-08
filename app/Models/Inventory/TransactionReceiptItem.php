@@ -22,20 +22,20 @@ class TransactionReceiptItem extends Model
     protected $connection = 'sqlsrv';
     protected $primaryKey = 'Id';
 
-    protected $fillable = [
-        'item',
-        'ReceivedQty',
-        'DamagedQty',
-        'DispatchedQty',
-        'Discrepancy',
-        'Remarks',
-        'Store',
-        'CreatedBy',
-        'CreatedOn',
-        'ModifiedBy',
-        'ModifiedOn',
-        'ReceiptId',
-    ];
+protected $fillable = [
+    'item',
+    'ReceivedQty',
+    'DamagedQty',
+    'DispatchedQty',   
+    'Discrepancy', 
+    'Remarks',
+    'Store',
+    'CreatedBy',
+    'CreatedOn',
+    'ModifiedBy',
+    'ModifiedOn',
+    'ReceiptId',
+];
 
 
     public function receipt()

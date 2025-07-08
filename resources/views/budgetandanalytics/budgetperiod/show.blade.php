@@ -41,7 +41,12 @@
         </div>
 
         <!-- GL Attachments Section -->
-        <h5 class="mt-4 mb-3 fw-bold text-primary">Attached GL Accounts</h5>
+        <div class="d-flex justify-content-between align-items-center mb-2 mt-4">
+            <h5 class="fw-bold text-primary mb-0">Attached GL Accounts</h5>
+            <a href="{{route('budgetperiod.edit',$budget->Id)}}" class="btn btn-primary rounded-3">
+                Attach GLS
+            </a>
+        </div>
         <div class="table-responsive">
             <table class="table table-hover table-bordered rounded-3" id="glAttachmentsTable">
                 <thead class="table-light">
@@ -66,9 +71,17 @@
                                 {{-- <button type="button" class="btn btn-sm btn-primary edit-gl-btn me-1" data-gl-id="{{ $gl->Id }}" data-description="{{ $gl->Description ?? '' }}">
                                     <i class="bi bi-pencil"></i> Edit
                                 </button> --}}
-                                <button type="button" class="btn btn-sm btn-danger delete-gl-btn" data-gl-id="{{ $gl->Id }}">
-                                    <i class="bi bi-trash"></i> Delete
+                                <button type="button"
+                                        class="btn btn-sm btn-danger custom-delete-btn"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#customDeleteConfirmModal"
+                                        data-name="{{ $gl->Description }}"    {{-- Pass item name --}}
+                                        data-route="{{ route('budget.delete-gl-attachment', $gl->Id) }}"> {{-- Pass delete route --}}
+                                    Delete
                                 </button>
+{{--                                <button type="button" class="btn btn-sm btn-danger delete-gl-btn" data-gl-id="{{ $gl->Id }}">--}}
+{{--                                    <i class="bi bi-trash"></i> Delete--}}
+{{--                                </button>--}}
                             </td>
                         </tr>
                     @endforeach
@@ -107,6 +120,9 @@
             </div>
         </div>
     </div>
+
+    <!-- Import the Custom Delete Modal -->
+    @include('components.modals.delete-confirm')
 
     <!-- Custom CSS for Enhanced UI -->
     <style>
@@ -179,27 +195,6 @@
                         alert(errorMessage);
                     }
                 });
-            });
-
-            // Handle delete with confirmation
-            $('.delete-gl-btn').click(function () {
-                let glId = $(this).data('gl-id');
-                if (confirm('Are you sure you want to delete this GL attachment?')) {
-                    $.ajax({
-                        url: '{{ url("budget/delete-gl-attachment") }}/' + glId,
-                        type: 'POST',
-                        data: {
-                            _token: '{{ csrf_token() }}'
-                        },
-                        success: function (response) {
-                            location.reload(); // Reload to show success message and updated table
-                        },
-                        error: function (xhr) {
-                            let errorMessage = xhr.responseJSON?.message || 'Failed to delete GL attachment';
-                            alert(errorMessage);
-                        }
-                    });
-                }
             });
         });
     </script>

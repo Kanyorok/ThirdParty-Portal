@@ -32,7 +32,7 @@ class PropertyNewLeaseController extends Controller
 
     public function create(){
         $properties = PropertyRegistry::with('getBlockByProperty.floor.units')->get();
-        $newtenants = PropertyTenantClearance::with('tenant')->where('Status', TenantClearanceEnum::Cleared->value)->get();
+        $newtenants = PropertyNewTenant::where('IsActive', '1')->get();
         $codes = CodeDetail::where('CodeID', 'PaymentFrequency')->get();
         return view('property.tenantmanagement.leasemanagement.leasemaintenance.create', compact('newtenants', 'properties', 'codes'));
     }

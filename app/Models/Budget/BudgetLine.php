@@ -79,4 +79,16 @@ class BudgetLine extends Model
     {
         return $this->belongsTo(CodeDetail::class, 'GLAccountTypeID', 'Value');
     }
+
+    public function productTypes()
+    {
+        return $this->belongsToMany(
+            BudgetProductType::class,          // The related model
+            't_BudgetLineProductTypes',        // The pivot table
+            'BudgetLineId',                    // Foreign key on pivot pointing to this model
+            'ProductTypeId',                   // Foreign key on pivot pointing to related model
+            'Id',                              // Local key on this model
+            'Id'                               // Local key on related model
+        );
+    }
 }

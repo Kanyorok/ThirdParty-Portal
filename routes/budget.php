@@ -69,9 +69,11 @@ use Illuminate\Support\Facades\Route;
 Route::namespace('Budget')->prefix('budget')->group(function () {
     Route::resource('budgetline', BudgetLinesController::class);
     Route::resource('budgetperiod', BudgetPeriodController::class);
+    Route::post('/budgetperiod/attachGL', [BudgetPeriodController::class,'attachGL'])->name('budgetperiod.attachGL');;
     Route::resource('budgetproductmaster', BudgetProductMasterController::class);
     Route::resource('budgetproducttype', BudgetProductTypeController::class);
     Route::resource('budgetlinemapping', BudgetLineMappingController::class);
+    Route::delete('/delete-lineProduct/{id}', [BudgetLineMappingController::class,'destroyProduct'])->name('budgetlinemapping.destroyProduct');
     Route::resource('budgetglmapping', BudgetGLMappingController::class);
     Route::resource('budgetdrivers', BudgetDriversController::class);
     Route::resource('budgetlinecategories', BudgetLineCategoriesController::class);
@@ -146,11 +148,11 @@ Route::namespace('Budget')->prefix('budget')->group(function () {
 
     Route::resource('budgetdriverssetup',BudgetDriversSetupController::class);
     Route::get('budgetlinemapping/gl-subtypes/{typeId}', [BudgetLineMappingController::class, 'getGLAccountSubTypes']);
-    Route::post('budget/delete-gl-attachment/{id}', [BudgetPeriodController::class, 'delGLAttachment']);
 
-    Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('budgetline-reports.export');
-    Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
-        'index' => 'budgetline-reports.index',
-        'show' => 'budgetline-reports.show'
-    ]);
+//    Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('budgetline-reports.export');
+//    Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
+//        'index' => 'budgetline-reports.index',
+//        'show' => 'budgetline-reports.show'
+//    ]);
+    Route::delete('budget/delete-gl-attachment/{id}', [BudgetPeriodController::class, 'delGLAttachment'])->name('budget.delete-gl-attachment');
 });

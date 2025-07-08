@@ -19,6 +19,7 @@
                 <tr>
                     <th>#</th>
                     <th>Quotation Number</th>
+                    <th>Requisition No</th>
                     <th>Quotation Status</th>
                     <th>Submission Deadline</th>
                     <th>Created On</th>
@@ -30,9 +31,10 @@
                     <tr>
                         <td>{{ $loop->iteration }}</td>
                         <td>{{ $rfq->RFQNumber ?? '-' }}</td>
+                        <td>{{ $rfq->requisition->RequisitionNo ?? '-' }}</td>
                         <td>{{ $rfq->Status ?? '-' }}</td>
                         <td>{{ $rfq->SubmissionDeadline ? \Carbon\Carbon::parse($rfq->SubmissionDeadline)->format('d/m/Y') : '-' }}</td>
-                        <td>{{ $rfq->CreatedOn ? \Carbon\Carbon::parse($rfq->CreatedAt)->format('d/m/Y') : '-' }}</td>
+                        <td>{{ $rfq->CreatedOn ? \Carbon\Carbon::parse($rfq->CreatedOn)->format('d/m/Y') : '-' }}</td>
                         <td>
                             <a href="{{ route('rfqs.show', $rfq->Id) }}" class="btn btn-sm btn-info">View</a>
                         </td>
@@ -56,8 +58,15 @@
             </div>
 
             <div class="modal-body">
-                <!-- Comments -->
-                <!-- Comments -->
+            <div class="mb-3">
+                <label for="RequisitionId" class="form-label">Select Requisition <span class="text-danger">*</span></label>
+                <select name="RequisitionId" id="RequisitionId" class="form-select" required>
+                    <option value="">-- Choose Requisition --</option>
+                    @foreach($requisitions as $requisition)
+                        <option value="{{ $requisition->Id }}">{{ $requisition->RequisitionNo }}</option>
+                    @endforeach
+                </select>
+            </div>
                 <div class="mb-3">
                     <label for="Comments" class="form-label">Comments <span class="text-danger">*</span></label>
                     <textarea name="Comments" id="Comments" rows="3" class="form-control" required></textarea>
@@ -65,9 +74,9 @@
 
                 <!-- Submission Deadline -->
                 <div class="mb-3">
-                    <label for="SubmissionDeadline" class="form-label">Submission Deadline <span
-                            class="text-danger">*</span></label>
-                    <input type="date" name="SubmissionDeadline" id="SubmissionDeadline" class="form-control" required>
+                    <label for="SubmissionDeadline" class="form-label">Submission Deadline <span class="text-danger">*</span></label>
+                    <input type="date" name="SubmissionDeadline" id="SubmissionDeadline" class="form-control" required min="{{ \Carbon\Carbon::now()->toDateString() }}">
+
                 </div>
             </div>
 
@@ -76,6 +85,23 @@
                 <button type="submit" class="btn btn-primary">Save RFQ</button>
             </div>
         </form>
+        @if($errors->any())
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
     </div>
 </div>
+<script>
+    @if($errors->any())
+    var createRFQModal = new bootstrap.Modal(document.getElementById('createRFQModal'));
+    createRFQModal.show();
+    @endif
+</script>
+
 @endsection

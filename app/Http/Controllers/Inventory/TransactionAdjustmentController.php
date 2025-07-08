@@ -13,7 +13,7 @@ use App\Enums\Inventory\Transfers;
 use App\Models\Core\Branch;
 use App\Models\Auth\User;
 use App\Models\Core\CodeDetail;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Log; 
 
 class TransactionAdjustmentController extends Controller
 {
@@ -30,14 +30,14 @@ class TransactionAdjustmentController extends Controller
         return view('inventory.transactions.adjustments.index', compact('adjustments'));
     }
     public function create()
-    {
-        $this->authorize('create', StockAdjustment::class);
-        $branches = Branch::all();
-        $users = User::all();
-        $reasons = CodeDetail::where('CodeID', 'AdjustmentReason')->get();
+        {
+            $this->authorize('create', StockAdjustment::class);
+            $branches = Branch::all();
+            $users = User::all();
+            $reasons = CodeDetail::where('CodeID', 'AdjustmentReason')->get();
 
-        return view('inventory.transactions.adjustments.create', compact('branches', 'users', 'reasons'));
-    }
+            return view('inventory.transactions.adjustments.create', compact('branches','users', 'reasons'));
+        }
 
     public function store(StockAdjustmentRequest $request)
     {
@@ -62,7 +62,7 @@ class TransactionAdjustmentController extends Controller
         return redirect()->back()->with('success', 'Stock adjustment approved.');
     }
 
-    public function edit(StockAdjustment $stockAdjustment)
+    public function edit(StockAdjustment $stockAdjustment) 
     {
         $this->authorize('update', $stockAdjustment);
 
@@ -71,9 +71,9 @@ class TransactionAdjustmentController extends Controller
         $itemIdsInAdjustment = $adjustment->items->pluck('Item')->toArray();
 
         $currentStocksInBranch = StockItem::where('Branch', $adjustment->Branch)
-            ->whereIn('ItemID', $itemIdsInAdjustment)
-            ->pluck('CurrentQty', 'ItemID');
-        $adjustment->items->each(function ($adjItem) use ($currentStocksInBranch) {
+                                          ->whereIn('ItemID', $itemIdsInAdjustment)
+                                          ->pluck('CurrentQty', 'ItemID'); 
+        $adjustment->items->each(function($adjItem) use ($currentStocksInBranch) {
 
             $adjItem->current_stock_qty = $currentStocksInBranch->get($adjItem->Item, 0);
         });
@@ -81,7 +81,7 @@ class TransactionAdjustmentController extends Controller
         $branches = Branch::all();
         $users = User::all();
         $reasons = CodeDetail::where('CodeID', 'AdjustmentReason')->get();
-        return view('inventory.transactions.adjustments.edit', compact('adjustment', 'branches', 'users', 'reasons'));
+       return view('inventory.transactions.adjustments.edit', compact('adjustment', 'branches', 'users', 'reasons'));
 
     }
 
@@ -89,23 +89,23 @@ class TransactionAdjustmentController extends Controller
     {
         \Log::info('TransactionAdjustmentController@update: Attempting to update StockAdjustment ID: ' . $stockAdjustment->Id);
         $validated = $request->validated();
-        $this->service->update($stockAdjustment, $validated);
+        $this->service->update($stockAdjustment, $validated); 
         return redirect()->route('transactionsadjustment.index')->with('success', 'Stock adjustment updated successfully.');
     }
 
-    public function show(StockAdjustment $stockAdjustment)
+    public function show(StockAdjustment $stockAdjustment) 
     {
         $this->authorize('view', $stockAdjustment);
 
-        $adjustment = $stockAdjustment->load(['branch', 'items.item', 'adjustedBy']);
+        $adjustment = $stockAdjustment->load(['branch','items.item', 'adjustedBy']);
 
         $itemIdsInAdjustment = $adjustment->items->pluck('Item')->toArray();
 
         $currentStocksInBranch = StockItem::where('Branch', $adjustment->Branch)
-            ->whereIn('ItemID', $itemIdsInAdjustment)
-            ->pluck('CurrentQty', 'ItemID');
+                                          ->whereIn('ItemID', $itemIdsInAdjustment)
+                                          ->pluck('CurrentQty', 'ItemID'); 
 
-        $adjustment->items->each(function ($adjItem) use ($currentStocksInBranch) {
+        $adjustment->items->each(function($adjItem) use ($currentStocksInBranch) {
             $adjItem->current_stock_qty = $currentStocksInBranch->get($adjItem->Item, 0);
         });
 

@@ -9,6 +9,9 @@ use App\Models\Procurement\PlanLineItems;
 use App\Models\Procurement\ProcurementMode;
 use App\Services\Procurement\ProcurementPlan\ProcurementMethodService;
 use Illuminate\Http\Request;
+use App\Models\Core\CodeDetail;
+use App\Models\Procurement\ProcurementMode;
+
 
 
 class ProcurementSetMethodController extends Controller
@@ -17,8 +20,8 @@ class ProcurementSetMethodController extends Controller
     public function index()
     {
         $approvedPlans = ConsolidatedProcurementPlan::where('Status', ProcurementPlanStatusEnum::Draft)->get();
-        $procurementModes = ProcurementMode::all();
-        return view('procurement.procurementplan.planneditemsandactivities.assignprocurementmethod.index', compact('approvedPlans', 'procurementModes'));
+        $procurementModes = CodeDetail::where('CodeID', 'ProcurementMethod')->get();
+        return view('procurement.procurementplan.planneditemsandactivities.assignprocurementmethod.index', compact('approvedPlans','procurementModes'));
     }
 
     public function create()
@@ -28,7 +31,10 @@ class ProcurementSetMethodController extends Controller
 
     public function getPlanItems($planId)
     {
-        $Lines = PlanLineItems::with('item', 'procurementMode')->where('PlanID', $planId)->get()
+        $Lines = PlanLineItems::with('item', 'procurementMode')
+            ->where('PlanID', $planId)
+            ->where('ProcurementMethod',0)
+            ->get()
             ->map(function ($lineItem) {
                 return [
                     'LineItemID' => $lineItem->LineItemID,
@@ -38,8 +44,10 @@ class ProcurementSetMethodController extends Controller
                     'ProcurementMethod' => optional($lineItem->procurementMode)->Name,
                 ];
             });
+
         return response()->json($Lines);
     }
+
 
     public function store(Request $request, ProcurementMethodService $service)
     {

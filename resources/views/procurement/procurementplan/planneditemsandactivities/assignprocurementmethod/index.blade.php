@@ -38,14 +38,14 @@
                 <div class="table-responsive">
                     <table class="table table-bordered align-middle">
                         <thead class="table-light">
-                        <tr>
-                            <th>Item</th>
-                            <th>Qty</th>
-                            <th>Est. Cost</th>
-                            <th>Assigned Method</th>
-                            <th>Assign Method</th>
-                            <th>Justification (if override)</th>
-                        </tr>
+                            <tr>
+                                <th>Item</th>
+                                <th>Qty</th>
+                                <th>Est. Cost</th>
+                                <th>Assigned Method</th>
+                                <th>Assign Method</th>
+                                <th class="d-none">Justification (if override)</th>
+                            </tr>
                         </thead>
                         <tbody id="items-table-body">
                         <!-- Items will load here dynamically -->
@@ -86,12 +86,13 @@
                         const tbody = document.getElementById('items-table-body');
                         tbody.innerHTML = '';
 
-                        const selectOptions = procurementModes.map(mode =>
-                            `<option value="${mode.id}">${mode.Name}</option>`
-                        ).join('');
+                    const selectOptions = procurementModes.map(mode =>
+                        `<option value="${mode.ID}">${mode.Description}</option>`
+                    ).join('');
 
-                        data.forEach(line => {
-                            const row = `
+
+                    data.forEach(line => {
+                        const row = `
                             <tr>
                                 <td>${line.item_name}</td>
                                 <td>${line.MergedQty}</td>
@@ -103,7 +104,7 @@
                                         ${selectOptions}
                                     </select>
                                 </td>
-                                <td>
+                                <td class="d-none">
                                     <input type="text" class="form-control" name="justification[${line.LineItemID}]" placeholder="Only if changing from suggestion">
                                 </td>
                             </tr>

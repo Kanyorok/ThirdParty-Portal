@@ -59,11 +59,19 @@
                         </td>
                         <td>
                             <a href="{{ route('budgetlinecategories.edit', $category->Id) }}" class="btn btn-sm btn-info">Edit</a>
-                            <form action="{{ route('budgetlinecategories.destroy', $category->Id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this category?');">
+                            {{-- <form action="{{ route('budgetlinecategories.destroy', $category->Id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this category?');">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                            </form>
+                            </form> --}}
+                            <button type="button"
+                                    class="btn btn-sm btn-danger custom-delete-btn"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#customDeleteConfirmModal"
+                                    data-name="{{ $category->CategoryName }}"    {{-- Pass item name --}}
+                                    data-route="{{route('budgetlinecategories.destroy', $category->Id)}}"> {{--Pass delete route--}}
+                                     Delete
+                            </button>
                         </td>
                     </tr>
                 @endforeach
@@ -75,4 +83,5 @@
         </table>
     </div>
 </div>
+@include('components.modals.delete-confirm')
 @endsection

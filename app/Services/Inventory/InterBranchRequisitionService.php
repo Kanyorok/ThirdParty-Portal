@@ -2,14 +2,14 @@
 
 namespace App\Services\Inventory;
 
+use App\Enums\Inventory\InterBranchRequisitionEnum;
+use App\Models\Core\PendingWorkflow;
+use App\Models\Core\Workflow;
 use App\Models\Inventory\InterBranchRequisition;
 use App\Models\Inventory\InterBranchRequisitionItem;
-use App\Models\Core\Workflow;
-use App\Models\Core\PendingWorkflow;
-use App\Enums\Inventory\InterBranchRequisitionEnum;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB; 
 
 class InterBranchRequisitionService
 {
@@ -33,9 +33,9 @@ class InterBranchRequisitionService
         $requisition->ModifiedOn = Carbon::now();
         $requisition->save();
 
-
+       
         $requisition->ReqNo = $this->generateReqNo($requisition);
-        $requisition->save();
+        $requisition->save(); 
 
         foreach ($items as $item) {
             $item['RequisitionId'] = $requisition->Id;
@@ -153,7 +153,7 @@ class InterBranchRequisitionService
         $requisition->save();
         $requisition->delete();
 
-
+      
         $requisition->items()->delete();
 
         activity()
@@ -202,7 +202,7 @@ class InterBranchRequisitionService
         $enum = match ($action) {
             'APPROVED' => InterBranchRequisitionEnum::Approved,
             'REJECTED' => InterBranchRequisitionEnum::Rejected,
-            default => InterBranchRequisitionEnum::Pending
+            default => InterBranchRequisitionEnum::Submitted
         };
 
         Workflow::create([

@@ -114,16 +114,16 @@ class TransactionTransferService
             }
 
             $created = TransactionTransferItem::create([
-                'TransferId' => $transfer->Id,
-                'Item' => $itemId,
-                'ApprovedQty' => $itemData['approved_qty'],
-                'UOM' => $itemData['uom'],
+                'TransferId'    => $transfer->Id,
+                'Item'          => $itemId,
+                'ApprovedQty'   => $itemData['approved_qty'],
+                'UOM'           => $itemData['uom'],
                 'DispatchedQty' => $dispatchedQty,
-                'Remarks' => $itemData['remarks'] ?? null,
-                'CreatedBy' => Auth::id(),
-                'ModifiedBy' => Auth::id(),
-                'CreatedOn' => now(),
-                'ModifiedOn' => now(),
+                'Remarks'       => $itemData['remarks'] ?? null,
+                'CreatedBy'     => Auth::id(),
+                'ModifiedBy'    => Auth::id(),
+                'CreatedOn'     => now(),
+                'ModifiedOn'    => now(),
             ]);
 
             activity()->performedOn($created)->causedBy(Auth::user())
@@ -156,29 +156,29 @@ class TransactionTransferService
                 }
 
                 InventoryHold::create([
-                    'ItemID' => $item->Item,
-                    'BranchID' => $transfer->ToBranch,
-                    'Quantity' => $item->DispatchedQty,
-                    'Reason' => CodeDetail::where('CodeID', 'AdjustmentReason')->where('Description', 'In Transit')->value('ID'),
-                    'Source' => CodeDetail::where('CodeID', 'Source')->where('Description', 'Transaction Transfer')->value('ID'),
-                    'SourceID' => $transfer->Id,
-                    'Status' => Transfers::InTransit->value,
-                    'Remarks' => $item->Remarks,
-                    'CreatedBy' => Auth::id(),
-                    'CreatedOn' => now(),
+                    'ItemID'     => $item->Item,
+                    'BranchID'   => $transfer->ToBranch,
+                    'Quantity'   => $item->DispatchedQty,
+                    'Reason'     => CodeDetail::where('CodeID', 'AdjustmentReason')->where('Description', 'In Transit')->value('ID'),
+                    'Source'     => CodeDetail::where('CodeID', 'Source')->where('Description', 'Transaction Transfer')->value('ID'),
+                    'SourceID'   => $transfer->Id,
+                    'Status'     => Transfers::InTransit->value,
+                    'Remarks'    => $item->Remarks,
+                    'CreatedBy'  => Auth::id(),
+                    'CreatedOn'  => now(),
                     'ModifiedBy' => Auth::id(),
                     'ModifiedOn' => now(),
                 ]);
             }
 
             Workflow::create([
-                'Source' => 'TransactionTransfer',
-                'SourceID' => $transfer->Id,
-                'Stage' => Transfers::InTransit->label(),
-                'Status' => Transfers::InTransit->value,
-                'Notes' => 'Transaction Transfer Approved: stock deducted from origin branch',
-                'CreatedBy' => Auth::id(),
-                'CreatedOn' => now(),
+                'Source'     => 'TransactionTransfer',
+                'SourceID'   => $transfer->Id,
+                'Stage'      => Transfers::InTransit->label(),
+                'Status'     => Transfers::InTransit->value,
+                'Notes'      => 'Transaction Transfer Approved: stock deducted from origin branch',
+                'CreatedBy'  => Auth::id(),
+                'CreatedOn'  => now(),
                 'ModifiedBy' => Auth::id(),
                 'ModifiedOn' => now(),
             ]);

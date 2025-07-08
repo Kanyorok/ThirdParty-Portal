@@ -24,7 +24,7 @@
             <div class="card mb-3">
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table id="requisitionTable" class="table table-bordered table-striped align-middle">
+                    <table id="requisitionTable" class="table table-bordered table-striped align-middle">
                         <thead>
                         <tr>
                             <th>#</th>
@@ -49,6 +49,7 @@
                                 <td>{{ $item->RequisitionNo }}</td>
                                 <td>{{ $item->PlanTitle ?? 'N/A' }}</td>
                                 <td>{{ Carbon::parse($item->CreatedOn)->format('d-m-Y') }}</td>
+
                                 <td>{{ $item->BranchID }}</td>
                                 <td>{{ $item->DepartmentID }}</td>
                                 <td>{{ $item->Remarks }}</td>
@@ -143,10 +144,8 @@
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label" for="Remarks">Remarks <span
-                                        class="text-danger">*</span></label>
-                                <textarea name="Remarks" id="Remarks" rows="3" class="form-control" maxlength="1000"
-                                          required></textarea>
+                                <label class="form-label" for="Remarks">Remarks <span class="text-danger">*</span></label>
+                                <textarea name="Remarks" id="Remarks" rows="3" class="form-control" maxlength="1000" required></textarea>
                                 <p id="Remarks_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
 
