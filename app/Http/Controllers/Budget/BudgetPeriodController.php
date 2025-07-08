@@ -175,6 +175,7 @@ class BudgetPeriodController extends Controller
             return view('budgetandanalytics.budgetperiod.show', compact('budget', 'glAttachments', 'glAccountTypes'));
         } catch (\Throwable $th) {
             Log::error('Failed to load budget: ' . $th->getMessage());
+            return $th->getMessage();
             return redirect()->route('budgetperiod.index')->withErrors(['error' => 'Failed to load budget']);
         }
     }

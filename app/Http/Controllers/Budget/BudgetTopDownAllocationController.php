@@ -143,6 +143,7 @@ class BudgetTopDownAllocationController extends Controller
                 ->select('Id','AccountID', 'Description', 'GLAccountTypeID')
                 ->get();
             $isExisting = false;
+
             return view('budgetandanalytics.budgetworkspace.topdown.create', compact(
                 'budgets',
                 'branches',
