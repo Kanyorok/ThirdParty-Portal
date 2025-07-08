@@ -91,7 +91,9 @@ class PlanLineItem extends Model
 
     public function departmentNeed()
     {
-        return $this->hasOne(DepartmentNeed::class, 'ItemID', 'ItemID');
+        return $this->hasOne(DepartmentNeed::class, 'ItemID', 'ItemID')
+            ->whereColumn('BranchID', 'BranchID')
+            ->whereColumn('DepartmentID', 'DepartmentID');
     }
 
     public function deletedBy()
