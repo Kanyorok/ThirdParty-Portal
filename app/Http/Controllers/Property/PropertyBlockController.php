@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers\Property;
 
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\PropertyRegistry\PropertyBlockRequest;
-use App\Services\Property\PropertyRegistry\PropertyBlockService;
 use App\Models\PropertyManagement\PropertyBlock;
 use App\Models\PropertyManagement\PropertyRegistry;
+use App\Services\Property\PropertyRegistry\PropertyBlockService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 
 class PropertyBlockController extends Controller
@@ -18,20 +18,17 @@ class PropertyBlockController extends Controller
     //
     public function index()
     {
-         $blocks = PropertyBlock::with('property')->get();
+        $blocks = PropertyBlock::with('property')->get();
         return view('property.propertyregistry.structuralmapping.addblock.index',compact('blocks'));
     }
     public function create(){
         $properties = PropertyRegistry::all();
         return view('property.propertyregistry.structuralmapping.addblock.create', compact('properties'));
     }
-    public function show($id){
-        $block = PropertyBlock::find($id);
-        return view('property.propertyregistry.structuralmapping.addblock.show',compact('block'));
-    }
+
     public function store(PropertyBlockRequest $request)
     {
-        
+
         $validated = $request->validated();
 
         $propertyregistry = PropertyRegistry::findOrFail($validated['PropertyID']);
@@ -45,7 +42,8 @@ class PropertyBlockController extends Controller
 
            return redirect()->route('addblock.index')->with('success','property block created successfully');
     }
-     public function edit($id)
+
+    public function edit($id)
     {
         //Check if user has permission to edit tender categories
         //$this->authorize(PermissionEnum::PropertyCategoryUpdate, CategoryMaster::class);
@@ -97,7 +95,7 @@ class PropertyBlockController extends Controller
     public function destroy($id)
     {
         //Check if user has permission to delete property categories
-       //$this->authorize(PermissionEnum::PropertyCategoryDelete, CategoryMaster::class);
+        //$this->authorize(PermissionEnum::PropertyCategoryDelete, CategoryMaster::class);
         try {
             $block = PropertyBlock::findOrFail($id);
             $block->delete();
@@ -114,4 +112,3 @@ class PropertyBlockController extends Controller
     }
 
 }
-          

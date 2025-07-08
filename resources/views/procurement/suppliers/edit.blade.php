@@ -26,10 +26,7 @@
 
         <div class="mb-3">
             <label for="is_prequalified" class="form-label">Prequalified</label>
-            <select name="IsPrequalified" id="IsPrequalified" class="form-control">
-                <option value="1" {{ $supplier->IsPrequalified ? 'selected' : '' }}>Prequalified</option>
-                <option value="0" {{ !$supplier->IsPrequalified ? 'selected' : '' }}>Not Prequalified</option>
-            </select>
+            <input type="text" class="form-control" id="IsPrequalified" readonly  value="{{ old('IsPrequalified', $supplier->IsPrequalified ? 'Prequalified' : 'Not Prequalifies') }}">
         </div>
 
         <button type="submit" class="btn btn-primary">Update Supplier</button>

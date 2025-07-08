@@ -2,16 +2,11 @@
 
 namespace App\Http\Controllers\Procurement;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Procurement\DepartmentNeeds;
-use App\Models\HRM\Department;
-use App\Models\Core\Branch;
-use App\Policies\Procurement\ConsolidatedProcurementPlanPolicy;
 use App\Exports\NeedsExport;
+use App\Http\Controllers\Controller;
+use App\Models\Procurement\DepartmentNeeds;
+use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
-
-
 
 
 class ConsolidatedDashboardController extends Controller
@@ -27,7 +22,7 @@ class ConsolidatedDashboardController extends Controller
         $query = DepartmentNeeds::with(['item', 'branch', 'department']);
 
         if ($branch !== 'All Branches' && !empty($branch)) {
-            $query->where('BranchID', $branch); 
+            $query->where('BranchID', $branch);
         }
 
         if ($department !== 'All Departments' && !empty($department)) {
@@ -63,7 +58,7 @@ class ConsolidatedDashboardController extends Controller
                     'DepartmentName' => $need->department->Name ?? 'N/A',
                     'RequestedQty' => $need->RequestedQty,
                     'EstimatedCost' => number_format($need->RequestedQty * $need->EstimatedUnitCost, 2),
-                    'RequestedDate' =>\Carbon\Carbon::parse($need->RequestedDate)->format('d/m/Y'),
+                    'RequestedDate' => \Carbon\Carbon::parse($need->RequestedDate)->format('d/m/Y'),
                     'CreatedOn' => \Carbon\Carbon::parse($need->CreatedOn)->format('Y-m-d'),
                     'Status' => $need->Status->label(),
                 ];
@@ -71,10 +66,11 @@ class ConsolidatedDashboardController extends Controller
 
         return response()->json($needs);
     }
+
     public function exportExcel(Request $request)
-{
-    return Excel::download(new NeedsExport($request), 'consolidated_needs.xlsx');
-}
+    {
+        return Excel::download(new NeedsExport($request), 'consolidated_needs.xlsx');
+    }
 
     public function create()
     {

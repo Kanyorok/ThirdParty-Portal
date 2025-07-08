@@ -47,7 +47,7 @@ class ClientTaskController extends Controller
 
         try {
             $activity = $this->save($client, $notes, $dated, $assignee, $actor);
-        } catch (Throwable | Exception $e) {
+        } catch (Throwable|Exception $e) {
             Log::error('Error adding  Client Task. e: ' . $e->getMessage());
             return $this->errored('unexpected error, try again latter');
         }

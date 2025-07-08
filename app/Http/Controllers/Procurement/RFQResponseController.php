@@ -10,17 +10,18 @@ use App\Models\ThirdParies\Supplier;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\procurement\RFQResponseItem;
 
 class RFQResponseController extends Controller
 {
     public function index()
     {
-        $rfqResponses = RFQResponse::with(['rfq', 'items'])->get();
+        $rfqResponses = RFQResponse::with(['rfq', 'items','items.uom'])->get();
         return view('procurement.rfqresponses.index', compact('rfqResponses'));
     }
     public function create()
     {
-        $rfqs = RFQ::all();
+        $rfqs = RFQ::where('Status', 'Approved')->get();
         $currencies = config('app.currencies');
 
         // Get all unique SupplierIds from the pivot table t_RFQ_Supplier
@@ -106,59 +107,30 @@ class RFQResponseController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'RFQId' => 'required|exists:t_RFQ,Id',
-            'RFQNumber' => 'required|string|max:255',
-            'SupplierName' => 'required|string|max:255',
             'TotalPayable' => 'required|numeric|min:0',
-            'Currency' => 'required|string|max:3',
             'DurationDays' => 'required|integer|min:1',
             'RequisitionItems' => 'required|array',
             'RequisitionItems.*.id' => 'nullable|integer|exists:t_ResponseItems,Id',
-            'RequisitionItems.*.name' => 'required|string|max:255',
-            'RequisitionItems.*.uom' => 'nullable|string|max:50',
-            'RequisitionItems.*.quantity' => 'required|integer|min:1',
             'RequisitionItems.*.quotedprice' => 'required|numeric|min:0',
             'RequisitionItems.*.totalpayable' => 'required|numeric|min:0',
         ]);
 
         $rfqResponse = RFQResponse::findOrFail($id);
+
+        // Only update editable fields
         $rfqResponse->update([
-            'RFQId' => $request->RFQId,
-            'RFQNumber' => $request->RFQNumber,
-            'SupplierName' => $request->SupplierName,
             'TotalPayable' => $request->TotalPayable,
-            'Currency' => $request->Currency,
             'DurationDays' => $request->DurationDays,
             'ModifiedBy' => auth()->user()->Id,
         ]);
 
-        // Update or recreate associated items
-        $existingItemIds = $rfqResponse->items->pluck('Id')->toArray();
-
-        $submittedItems = $request->RequisitionItems;
-
-        foreach ($submittedItems as $itemData) {
+        // Only update editable fields in items
+        foreach ($request->RequisitionItems as $itemData) {
             if (!empty($itemData['id'])) {
-                // Update existing item
                 $item = RFQResponseItem::findOrFail($itemData['id']);
                 $item->update([
-                    'ItemName' => $itemData['name'],
-                    'UOM' => $itemData['uom'] ?? null,
-                    'Quantity' => $itemData['quantity'],
                     'QuotedPrice' => $itemData['quotedprice'],
                     'TotalPayable' => $itemData['totalpayable'],
-                    'ModifiedBy' => auth()->user()->Id,
-                ]);
-            } else {
-                // Create new item
-                RFQResponseItem::create([
-                    'RfqResponseId' => $rfqResponse->Id,
-                    'ItemName' => $itemData['name'],
-                    'UOM' => $itemData['uom'] ?? null,
-                    'Quantity' => $itemData['quantity'],
-                    'QuotedPrice' => $itemData['quotedprice'],
-                    'TotalPayable' => $itemData['totalpayable'],
-                    'CreatedBy' => auth()->user()->Id,
                     'ModifiedBy' => auth()->user()->Id,
                 ]);
             }
@@ -176,18 +148,29 @@ class RFQResponseController extends Controller
 
     public function getRequisitionItems($rfqId)
     {
-        // Fetch all RFQLines where RFQId matches the given $rfqId
-        $rfqLines = RFQLine::where('RFQId', $rfqId)->get();
+        // Fetch RFQ lines and eager load uomDetails relation
+        $rfqLines = RFQLine::with('uom')->where('RFQId', $rfqId)->get();
 
         if ($rfqLines->isEmpty()) {
             return response()->json(['error' => 'No RFQ lines found for the given RFQ ID'], 404);
         }
 
-        // Return the RFQLines directly as JSON
+        // Transform for frontend
+        $items = $rfqLines->map(function ($line) {
+            return [
+                'id' => $line->Id,
+                'ItemName' => $line->ItemName,
+                'Quantity' => $line->Quantity,
+                'UOM' => $line->UOM,
+                'UOMName' => $line->uom->Name ?? 'N/A',
+            ];
+        });
+
         return response()->json([
-            'requisitionItems' => $rfqLines,
+            'requisitionItems' => $items,
         ]);
     }
+
 
     public function getSuppliers($rfqId)
     {

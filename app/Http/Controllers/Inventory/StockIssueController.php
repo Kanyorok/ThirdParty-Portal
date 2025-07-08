@@ -13,7 +13,8 @@ class StockIssueController extends Controller
         return view('inventory.transactions.stockissue.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('inventory.transactions.stockissue.create');
     }
 }

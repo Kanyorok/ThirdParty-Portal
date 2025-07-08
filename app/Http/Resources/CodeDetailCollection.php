@@ -15,13 +15,13 @@ class CodeDetailCollection extends ResourceCollection
     public function toArray(Request $request): array
     {
         return [
-                'data' => $this->collection->transform(function ($detail) {
-                    return [
-                            'id'           => $detail->ID,
-                            'Name'         => ($detail->Description) ?? $detail->Name,
-                            'DisplayOrder' => ($detail->DisplayOrder) ?? '',
-                           ];
-                }),
-               ];
+            'data' => $this->collection->transform(function ($detail) {
+                return [
+                    'id' => $detail->ID,
+                    'Name' => ($detail->Description) ?? $detail->Name,
+                    'DisplayOrder' => ($detail->DisplayOrder) ?? '',
+                ];
+            }),
+        ];
     }
 }

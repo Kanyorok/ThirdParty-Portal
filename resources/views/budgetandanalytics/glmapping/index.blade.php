@@ -23,7 +23,7 @@
             <th>GL Type</th>
             <th>Mapped to Budget Line</th>
             <th>Active</th>
-            <th>Actions</th>
+            {{-- <th>Actions</th> --}}
           </tr>
         </thead>
         <tbody>
@@ -36,10 +36,10 @@
             <td>{{$gls->GTType}}</td>
             <td><span class="badge bg-success">✅ Yes</span></td>
             <td><span class="badge bg-success">✔</span></td>
-            <td>
+            {{-- <td>
               <button class="btn btn-sm btn-info">🔍 View</button>
               <button class="btn btn-sm btn-outline-primary">🔗 Map</button>
-            </td>
+            </td> --}}
           </tr>
           @endforeach
         </tbody>

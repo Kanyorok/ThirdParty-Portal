@@ -2,6 +2,7 @@
 
 namespace App\Models\Procurement;
 
+use App\Models\Inventory\UnitOfMeasure;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Inventory\ItemCategories;
 use App\Models\ThirdParies\Supplier;
@@ -36,6 +37,11 @@ class RFQLine extends Model
     public function category()
     {
         return $this->belongsTo(ItemCategories::class, 'ItemCategoryId');
+    }
+
+    public function uom()
+    {
+        return  $this->belongsTo(UnitOfMeasure::class, 'UOM','Id');
     }
 
     public function suppliers()

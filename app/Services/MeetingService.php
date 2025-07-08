@@ -11,6 +11,7 @@ use App\Models\CRM\Meeting;
 use App\Models\CRM\MeetingRoom;
 use App\Models\CRM\Schedule;
 use App\Models\DMS\Image;
+use App\Services\DMS\ImageService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;

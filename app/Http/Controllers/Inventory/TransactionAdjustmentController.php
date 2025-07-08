@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use App\Enums\Inventory\Transfers;
 use App\Models\Core\Branch;
 use App\Models\Auth\User;
+use App\Models\Core\CodeDetail;
 use Illuminate\Support\Facades\Log; 
 
 class TransactionAdjustmentController extends Controller
@@ -28,14 +29,15 @@ class TransactionAdjustmentController extends Controller
         $adjustments = StockAdjustment::with('items')->latest('CreatedOn')->paginate(20);
         return view('inventory.transactions.adjustments.index', compact('adjustments'));
     }
-
     public function create()
-    {
-        $this->authorize('create', StockAdjustment::class);
-        $branches = \App\Models\Core\Branch::all();
-        $users = User::all();
-        return view('inventory.transactions.adjustments.create', compact('branches','users'));
-    }
+        {
+            $this->authorize('create', StockAdjustment::class);
+            $branches = Branch::all();
+            $users = User::all();
+            $reasons = CodeDetail::where('CodeID', 'AdjustmentReason')->get();
+
+            return view('inventory.transactions.adjustments.create', compact('branches','users', 'reasons'));
+        }
 
     public function store(StockAdjustmentRequest $request)
     {
@@ -76,10 +78,11 @@ class TransactionAdjustmentController extends Controller
             $adjItem->current_stock_qty = $currentStocksInBranch->get($adjItem->Item, 0);
         });
 
-        $branches = \App\Models\Core\Branch::all();
+        $branches = Branch::all();
         $users = User::all();
+        $reasons = CodeDetail::where('CodeID', 'AdjustmentReason')->get();
+       return view('inventory.transactions.adjustments.edit', compact('adjustment', 'branches', 'users', 'reasons'));
 
-        return view('inventory.transactions.adjustments.edit', compact('adjustment', 'branches', 'users'));
     }
 
     public function update(StockAdjustmentRequest $request, StockAdjustment $stockAdjustment)

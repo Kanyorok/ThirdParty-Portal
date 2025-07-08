@@ -5,14 +5,16 @@ namespace App\Http\Controllers\CRM\Email;
 use App\Enums\EmailStatusEnum;
 use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Base\UploadDocumentRequest;
+use App\Http\Requests\DMS\UploadDocumentRequest;
 use App\Http\Requests\Email\SendDraftMailRequest;
 use App\Models\Communication\Email;
 use App\Services\CRMEmailService;
-use App\Services\ImageService;
+use App\Services\DMS\ImageService;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class EmailActionsController extends Controller
 {
@@ -41,7 +43,7 @@ class EmailActionsController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (\Exception | \Throwable $e) {
+        } catch (Exception|Throwable $e) {
             Log::error('Error upload email attachment : ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }
@@ -71,7 +73,7 @@ class EmailActionsController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (\Exception | \Throwable $e) {
+        } catch (Exception|Throwable $e) {
             Log::error($e);
             Log::error('Error send draft email : ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
