@@ -73,6 +73,7 @@ Route::namespace('Budget')->prefix('budget')->group(function () {
     Route::resource('budgetproductmaster', BudgetProductMasterController::class);
     Route::resource('budgetproducttype', BudgetProductTypeController::class);
     Route::resource('budgetlinemapping', BudgetLineMappingController::class);
+    Route::delete('/delete-lineProduct/{id}', [BudgetLineMappingController::class,'destroyProduct'])->name('budgetlinemapping.destroyProduct');
     Route::resource('budgetglmapping', BudgetGLMappingController::class);
     Route::resource('budgetdrivers', BudgetDriversController::class);
     Route::resource('budgetlinecategories', BudgetLineCategoriesController::class);
