@@ -33,10 +33,10 @@ class BudgetLineMappingController extends Controller
         //Fetch Budget line category
         $budgetCategories=BudgetLineCategories::all();
 
-        //Pull the GLS 
+        //Pull the GLS
         $gls=BudgetGLAccount::select('Id','Description','GTType')->get();
-        
-        //Fetch Product type 
+
+        //Fetch Product type
         $productTypes=BudgetProductType::select('Id','Name')->get();
         return view('budgetandanalytics.budgetlinemapping.index',compact('budgetLines','gls','productTypes','budgetCategories'));
     }
@@ -45,13 +45,13 @@ class BudgetLineMappingController extends Controller
     {
         //Check Permissions
         $this->authorize(PermissionEnum::BudgetSetupCreate,BudgetLine::class);
-        //Pull the GLS 
+        //Pull the GLS
         $gls=BudgetGLAccount::select('Id','Description','GTType')->get();
-        
+
         //Fetch Budget line category
         $budgetCategories=BudgetLineCategories::all();
 
-        //Fetch Product type 
+        //Fetch Product type
         $productTypes=BudgetProductType::select('Id','Name')->get();
 
         //Fetch GL Account Types
@@ -283,48 +283,6 @@ class BudgetLineMappingController extends Controller
         }
     }
 
-
-    public function destroy(Request $request,$id)
-    {
-        // return $id;
-        //Check if user has permissions
-        $this->authorize(PermissionEnum::BudgetSetupDelete, BudgetLine::class);
-
-        //Try deleting the Line and its associated mappings in BudgetLinesGLAccount
-        DB::beginTransaction();
-        try {
-            //Check if the deletion is fr lineproduct
-        if ($request->type === 'lineProduct') {
-             BudgetLineProductTypes::where('Id', $id)->delete();
-        }else{
-            //find budgetline by id
-            $budgetLine = BudgetLine::findOrFail($id);
-            //Delete GLS assoc with the budget line
-            BudgetLinesGLAccount::where('Id', $budgetLine->Id)->delete();
-            //Delete the prducts associated with the budget line
-            BudgetLineProductTypes::where('Id', $budgetLine->Id)->delete();
-            //Delete the budget line itself
-            $budgetLine->delete();
-
-        }
-
-            //Log the acitivity
-            activity()
-                ->performedOn($budgetLine)
-                ->causedBy(Auth::user())
-                ->withProperties(['action' => 'delete'])
-                ->log('Delete a budget line mapping');
-            DB::commit();
-            return redirect()->back()->with('success', 'Budget Line and its mappings deleted successfully.');
-        } catch (\Throwable $th) {
-            DB::rollBack();
-
-            Log::error('Failed to delete Budget Line: ' . $th->getMessage());
-
-            return redirect()->back()->with('error', 'Failed to delete Budget Line.');
-        }
-    }
-
     public function getGLAccountSubTypes($typeId)
     {
         $subTypes = \App\Models\Budget\BudgetGLAccountSubType::where('GLAccountTypeValue', $typeId)->get();
@@ -346,5 +304,71 @@ class BudgetLineMappingController extends Controller
         // Eager load productTypes for the given budget line
         // $budgetLine = BudgetLine::with(['productTypes'])->where('Id',$id)->firstOrFail();
         return view('budgetandanalytics.budgetlinemapping.show', compact('products','budgetLineName'));
+    }
+
+
+    public function destroy(Request $request,$id)
+    {
+        //Check if user has permissions
+        $this->authorize(PermissionEnum::BudgetSetupDelete, BudgetLine::class);
+
+        //Try deleting the Line and its associated mappings in BudgetLinesGLAccount
+        DB::beginTransaction();
+        try {
+            //find budgetline by id
+            $budgetLine = BudgetLine::findOrFail($id);
+            //Delete GLS assoc with the budget line
+            BudgetLinesGLAccount::where('BudgetLineID', $budgetLine->Id)->update(['DeletedBy'=>Auth::id()]);
+            BudgetLinesGLAccount::where('BudgetLineID', $budgetLine->Id)->delete();
+            //Delete the products associated with the budget line
+            BudgetLineProductTypes::where('BudgetLineId', $budgetLine->Id)->update(['DeletedBy'=>Auth::id()]);
+            BudgetLineProductTypes::where('BudgetLineId', $budgetLine->Id)->delete();
+            //Delete the budget line itself
+            $budgetLine->update(['DeletedBy'=>Auth::id()]);
+            $budgetLine->delete();
+            $budgetLine->save();
+
+            //Log the acitivity
+            activity()
+                ->performedOn(new BudgetLine())
+                ->causedBy(Auth::user())
+                ->withProperties(['action' => 'delete'])
+                ->log('Delete a budget line mapping');
+            DB::commit();
+            return redirect()->back()->with('success', 'Budget Line and its mappings deleted successfully.');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+
+            Log::error('Failed to delete Budget Line: ' . $th->getMessage());
+
+            return redirect()->back()->with('error', 'Failed to delete Budget Line.');
+        }
+    }
+
+
+    public function destroyProduct(Request $request,$id)
+    {
+        //Check if user has permissions
+        $this->authorize(PermissionEnum::BudgetSetupDelete, BudgetLine::class);
+
+        //Try deleting the Line and its associated mappings in BudgetLinesGLAccount
+        DB::beginTransaction();
+        try {
+            $budgetLineProduct= BudgetLineProductTypes::where('Id', $id)->delete();
+            //Log the acitivity
+            activity()
+                ->performedOn(new BudgetLineProductTypes())
+                ->causedBy(Auth::user())
+                ->withProperties(['action' => 'delete'])
+                ->log('Delete a product from BudgetLine');
+            DB::commit();
+            return redirect()->back()->with('success', 'Product Detached from BudgetLine successfully.');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return $th->getMessage();
+            Log::error('Failed to delete BudgetLine Product: ' . $th->getMessage());
+
+            return redirect()->back()->with('error', 'Failed to delete Budget Line.');
+        }
     }
 }
