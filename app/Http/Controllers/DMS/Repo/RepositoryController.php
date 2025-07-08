@@ -22,7 +22,7 @@ class RepositoryController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index(Request $request): View|RepositoryCollection
     {
         return $this->show($request, RepositoryService::root());
     }

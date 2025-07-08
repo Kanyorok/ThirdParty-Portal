@@ -41,7 +41,7 @@ trait DMSTagTrait
                 ->addColumn('action', function (DMSTags $tag) use ($extra) {
                     return '<a  href="' . route('file-tags.show', [$tag->TagID]) . '" class="btn btn-info btn-sm"><i class="fas fa-eye"></i> details</button>';
                 })->editColumn('documents_count', function (DMSTags $tag) use ($withCount) {
-                    return (in_array('documents_count', $withCount, true)) ? number_format($tag->documents_count) : 0;
+                    return (in_array('documents', $withCount, true)) ? number_format($tag->documents_count) : 0;
                 })->addColumn('Description', function (DMSTags $tag) {
                     return Str::of($tag->Description)->limit(100);
                 })->rawColumns(['action'])->make();

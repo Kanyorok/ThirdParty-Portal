@@ -865,7 +865,7 @@
                                 </button>
                                 <button class="btn btn-danger float-end" id="trashFileBtn"
                                         type="submit"><i
-                                        class="fas fa-trash"></i> yes, document
+                                        class="fas fa-trash"></i> yes, delete
                                 </button>
                             </div>
                         </form>
@@ -1061,7 +1061,7 @@
                 }
             });
 
-            let content = '<tr id="' + file.id + '" class="dbl-click-redirect-data" data-dbl_click_url="' + file.links.detail + '"> <td> <div class="d-flex align-items-center"><img src="' + file.type.img + '" alt="user-image" class="wid-35">' +
+            let content = '<tr id="' + file.id + '" class="dbl-click-redirect-data" data-dbl_click_url="' + file.links.detail + '"> <td> <div class="d-flex align-items-center"><img src="' + file.type.img + '" alt="file-icon" class="wid-35">' +
                 '<h6 class="mb-0 ms-2 text-truncate">' + file.name + '</h6> </div> </td> <td>' + file.size.string + '</td> <td>' + file.dated.datetime + '</td>' +
                 '<td> <div class="user-group p-1">' + usersContent + '  </div> </td>' +
                 '<td> <div class="d-flex flex-wrap gap-2">' + tagsContent + ' </div> </td>' +

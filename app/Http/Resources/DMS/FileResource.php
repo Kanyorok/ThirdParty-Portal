@@ -20,8 +20,7 @@ class FileResource extends JsonResource
     {
         $service = new DocumentService($this->resource);
         $users = $service->users()->with('photo')->paginate(7, ['ImageId', 'UserID', 'Name']);
-        $tags = $service->tags(auth()->user())->paginate(4, ['TagID', 'Name', 'Visibility']);
-
+        $tags = $service->tags(auth()->user())->paginate(4, ['t_DMSTags.TagID', 't_DMSTags.Name', 't_DMSTags.Visibility']);
         return [
             'id' => $this->DocumentId,
             'name' => $this->Name,

@@ -22,7 +22,7 @@ class TagController extends Controller
     public function __construct()
     {
         $this->middleware('ajax')->except(['index', 'show']);
-        //$this->authorizeResource(DMSTags::class);
+        $this->authorizeResource(DMSTags::class);
     }
 
     /**
@@ -64,7 +64,7 @@ class TagController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(DMSTags $dMSTags)
+    public function show(DMSTags $dMSTags): View
     {
         return view('dms.tags.show', ['tag' => $dMSTags->loadCount('documents')]);
     }
@@ -72,27 +72,21 @@ class TagController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(NewTagRequest $request, string $tagId): JsonResponse
+    public function update(NewTagRequest $request, DMSTags $dMSTags): JsonResponse
     {
-        $tag = DMSTags::query()->where('TagID', $tagId)->first();
-        if (!$tag instanceof DMSTags) {
-            return $this->errored('invalid tag given, try again later');
-        }
-        $this->authorize('update', $tag);
-
         $actor = $request->user();
         $visibility = $request->getVisibility();
         try {
-            return DB::transaction(function () use ($request, $tag, $actor, $visibility) {
-                $tag->update([
+            return DB::transaction(function () use ($request, $dMSTags, $actor, $visibility) {
+                $dMSTags->update([
                     'Name' => $request->string('Name')->toString(),
                     'Description' => $request->string('Description', '')->toString(),
                     'Visibility' => $visibility->value,
                     'ModifiedBy' => $actor->Id,
                 ]);
 
-                activity()->causedBy($actor)->performedOn($tag)->event('update')->log('updated ' . $tag->Name . ' document tag.');
-                return $this->succeeded('tag updated successfully', route('file-tags.show', [$tag->TagID]));
+                activity()->causedBy($actor)->performedOn($dMSTags)->event('update')->log('updated ' . $dMSTags->Name . ' document tag.');
+                return $this->succeeded('tag updated successfully', route('file-tags.show', [$dMSTags->TagID]));
             });
         } catch (Throwable|Exception $e) {
             Log::error('Error updating Document Tag: ');
@@ -104,22 +98,17 @@ class TagController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Request $request, string $tagId): JsonResponse
+    public function destroy(Request $request, DMSTags $dMSTags): JsonResponse
     {
-        $tag = DMSTags::query()->where('TagID', $tagId)->first();
-        if (!$tag instanceof DMSTags) {
-            return $this->errored('invalid tag given, try again later');
-        }
-        $this->authorize('delete', $tag);
         $actor = $request->user();
         try {
-            return DB::transaction(function () use ($tag, $actor) {
-                $tag->forceFill([
+            return DB::transaction(function () use ($dMSTags, $actor) {
+                $dMSTags->forceFill([
                     'DeletedBy' => $actor->Id,
                     'DeletedOn' => now(),
                 ])->save();
 
-                activity()->causedBy($actor)->performedOn($tag)->event('delete')->log('deleted document tag: ' . $tag->Name . '.');
+                activity()->causedBy($actor)->performedOn($dMSTags)->event('delete')->log('deleted document tag: ' . $dMSTags->Name . '.');
                 return $this->succeeded('tag deleted successfully', route('file-tags.index'));
             });
         } catch (Throwable|Exception $e) {

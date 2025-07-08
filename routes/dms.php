@@ -8,6 +8,7 @@ use App\Http\Controllers\DMS\Files\DocumentPermissionController;
 use App\Http\Controllers\DMS\Files\DocumentUploadController;
 use App\Http\Controllers\DMS\Repo\RepositoryController;
 use App\Http\Controllers\DMS\Repo\RepositoryPermissionController;
+use App\Http\Controllers\DMS\Tags\DocumentTagController;
 use App\Http\Controllers\DMS\Tags\TagController;
 use Illuminate\Support\Facades\Route;
 
@@ -28,5 +29,9 @@ Route::namespace('DMS')->prefix('dms')->group(function () {
         Route::resource('files', DocumentController::class)->parameters(['files' => 'document'])->except('create');
     });
     Route::resource('repo', RepositoryController::class)->parameters(['repo' => 'repository']);
+
+    Route::prefix('file-tags/{d_m_s_tags}')->group(function () {
+        Route::get('files', DocumentTagController::class)->name('file-tags.files');
+    });
     Route::resource('file-tags', TagController::class)->parameters(['file-tags' => 'd_m_s_tags'])->except('edit');
 });

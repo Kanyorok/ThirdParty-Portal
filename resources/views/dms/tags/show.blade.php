@@ -49,22 +49,24 @@
             <div class="card">
                 <div class="card-body py-0">
                     <ul class="nav nav-tabs profile-tabs" id="TagsTab" role="tablist">
+
                         <li class="nav-item" role="presentation">
-                            <a class="nav-link active" id="document-tags-tab-1" data-bs-toggle="tab" href="#tab-0"
+                            <a class="nav-link active" id="document-tags-tab-2" href="#tab-1" data-bs-toggle="tab"
+                               role="tab"
+                               aria-selected="false" onclick="fetchDocumentsTable()">
+                                <i class="fas fa-file-lines me-2"></i> Documents</a>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link " id="document-tags-tab-1" data-bs-toggle="tab" href="#tab-0"
                                role="tab"
                                aria-selected="false" tabindex="-1" onclick="fetchTaggingRulesTable()">
                                 <i class="fas fa-gavel me-2"></i>Tagging Rules</a>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <a class="nav-link " id="document-tags-tab-2" href="#tab-1" data-bs-toggle="tab" role="tab"
-                               aria-selected="false" onclick="fetchDocumentsTable()">
-                                <i class="fas fa-file-lines me-2"></i> Documents</a>
                         </li>
                     </ul>
                 </div>
             </div>
             <div class="tab-content">
-                <div class="tab-pane active show" id="tab-0" role="tabpanel" aria-labelledby="document-tags-tab-1">
+                <div class="tab-pane" id="tab-0" role="tabpanel" aria-labelledby="document-tags-tab-1">
                     <div class="row">
                         <div class="col-12">
                             <div class="card">
@@ -89,22 +91,22 @@
                         </div>
                     </div>
                 </div>
-                <div class="tab-pane" id="tab-1" role="tabpanel" aria-labelledby="document-tags-tab-2">
+                <div class="tab-pane active show" id="tab-1" role="tabpanel" aria-labelledby="document-tags-tab-2">
                     <div class="row">
                         <div class="col-12">
                             <div class="card">
                                 <div class="card-header"><h5>Documents</h5></div>
                                 <div class="card-body  table-responsive">
                                     <table id="DocumentsTable"
-                                           class="table table-striped dataTable no-footer dtr-inline w-100">
+                                           class="table dataTable no-footer dtr-inline w-100">
                                         <thead>
-                                        <tr>
+                                        <tr class="d-none">
                                             <th></th>
-                                            <th>Member No</th>
-                                            <th>Name</th>
-                                            <th>Type</th>
-                                            <th>Phone</th>
-                                            <th>Email</th>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
                                         </tr>
                                         </thead>
                                         <tbody></tbody>
@@ -232,18 +234,35 @@
                     serverSide: true,
                     responsive: true,
                     ajax: {
-                        url: '{{--{{ route('marketing-list.clients', [$tag->slug, 'q'=> 'current']) }}--}}',
+                        url: '{{ route('file-tags.files', [$tag->TagID]) }}',
                         error: function (jqXHR) {
                             codeNotify(jqXHR.status);
                         }
                     },
+                    dom: '<"row"<"col-12"r><"col-12 w-100 my-3"t><"col-6"i><"col-6"p>>',
+                    columnDefs: [
+                        //{"className": "text-center", "targets": [3]},
+                        {
+                            "render": function (data, type, row) {
+                                return '<div class="d-flex align-items-center"><img src="' + data + '" alt="file-icon" class="wid-35"><h6 class="mb-0 ms-2 text-truncate">' + row.Visibility + ' ' + row.Name + '</h6> </div></div>';
+                            },
+                            "targets": 0
+                        },
+                        /*{
+                            "render": function (data, type, row) {
+                                return '<div class="d-flex align-items-center"><img src="'+data+'" alt="file-icon" class="wid-35"></div>';
+                            },
+                            "targets": 1
+                        },*/
+                        {"visible": false, "targets": [1, 2]}
+                    ],
                     columns: [
-                        {data: "DT_RowIndex", name: 'DT_RowIndex', searchable: false, orderable: false},
-                        {data: 'ClientID', name: 'ClientID'},
+                        {data: 'Icon', name: 'Icon', searchable: false, orderable: false},
                         {data: 'Name', name: 'Name'},
-                        {data: 'type.Description', name: 'type.Description'},
-                        {data: 'Mobile', name: 'Mobile'},
-                        {data: 'Email', name: 'Email'},
+                        {data: 'Visibility', name: 'Visibility'},
+                        {data: 'current.Size', name: 'current.Size'},
+                        {data: 'Repository', name: 'Repository'},
+                        {data: 'CreatedOn', name: 'CreatedOn'},
                     ]
                 });
 

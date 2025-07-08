@@ -80,7 +80,7 @@
                                 </button>
                                 <button class="btn btn-danger float-end" id="trashFileBtn"
                                         type="submit"><i
-                                        class="fas fa-trash"></i> yes, document
+                                        class="fas fa-trash"></i> yes, delete
                                 </button>
                             </div>
                         </form>
