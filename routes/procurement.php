@@ -1,19 +1,24 @@
 <?php
 use Illuminate\Support\Facades\Route;
+
 use App\Http\Controllers\Procurement\ApprovalSetupController;
 use App\Http\Controllers\Procurement\AwardsController;
 use App\Http\Controllers\Procurement\BidEvaluationController;
 use App\Http\Controllers\Procurement\BidScoreConsolidationController;
 use App\Http\Controllers\Procurement\CalenderBasedController;
 use App\Http\Controllers\Procurement\ConsolidatedDashboardController;
+use App\Http\Controllers\Procurement\ContractsController;
+use App\Http\Controllers\Procurement\ContractsLifecycleController;
 use App\Http\Controllers\Procurement\CriteriaController;
 use App\Http\Controllers\Procurement\DelayedItemsController;
+use App\Http\Controllers\Procurement\DeliveryController;
 use App\Http\Controllers\Procurement\DepartmentNeedApprovalController;
 use App\Http\Controllers\Procurement\DepartmentNeedsController;
 use App\Http\Controllers\Procurement\EngagedAuditorController;
 use App\Http\Controllers\Procurement\EvaluationCriteriaController;
 use App\Http\Controllers\Procurement\EvaluatorDashboardController;
 use App\Http\Controllers\Procurement\GoodsReceiptController;
+use App\Http\Controllers\Procurement\InspectionController;
 use App\Http\Controllers\Procurement\MapToBudgetController;
 use App\Http\Controllers\Procurement\ModeTimelineController;
 use App\Http\Controllers\Procurement\PlanApprovalInboxController;
@@ -67,34 +72,8 @@ use App\Http\Controllers\Procurement\TenderResponseController;
 use App\Http\Controllers\Procurement\TenderSubmissionController;
 use App\Http\Controllers\Procurement\TenderTypeController;
 use App\Http\Controllers\Procurement\TimelineController;
-use App\Http\Controllers\Procurement\CalenderBasedController;
-use App\Http\Controllers\Procurement\DelayedItemsController;
-use App\Http\Controllers\Procurement\PlanvsActualController;
-use App\Http\Controllers\Procurement\PlanFromNeedsController;
-use App\Http\Controllers\Procurement\PlanManualInputController;
-use App\Http\Controllers\Procurement\SubmitForApprovalController;
-use App\Http\Controllers\Procurement\PlanEditController;
-use App\Http\Controllers\Procurement\PlanApprovalInboxController;
-use App\Http\Controllers\Procurement\PlanExectionDashboardController;
-use App\Http\Controllers\Procurement\DepartmentNeedApprovalController;
-use App\Models\Procurement\Tender;
-use App\Http\Controllers\Procurement\SectionController;
-use App\Http\Controllers\Procurement\ProcurementSchedulePlanController;
-use App\Http\Controllers\Procurement\ProcurementSubmitPlanController;
-use App\Http\Controllers\Procurement\SupplierListingController;
-use App\Http\Controllers\Procurement\PrequalificationRoundsController;
-use App\Http\Controllers\Procurement\PrequalificationCriteriaController;
-use App\Http\Controllers\Procurement\PrequalificationApplicationsController;
-use App\Http\Controllers\Procurement\PrequalificationEvaluationController;
-use App\Http\Controllers\Procurement\PrequalificationEvalAprovalController;
-use App\Http\Controllers\Procurement\PrequalifiedSuppliersController;
-use App\Http\Controllers\Procurement\TenderBidResponsivenessController;
 
-use App\Http\Controllers\Procurement\AwardsController;
-use App\Http\Controllers\Procurement\ContractsController;
-use App\Http\Controllers\Procurement\ContractsLifecycleController;
-use App\Http\Controllers\Procurement\DeliveryController;
-use App\Http\Controllers\Procurement\InspectionController;
+use App\Models\Procurement\Tender;
 
 
 
