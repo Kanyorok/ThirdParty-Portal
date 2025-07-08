@@ -1,5 +1,5 @@
 <?php
-
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Procurement\ApprovalSetupController;
 use App\Http\Controllers\Procurement\AwardsController;
 use App\Http\Controllers\Procurement\BidEvaluationController;
@@ -24,8 +24,10 @@ use App\Http\Controllers\Procurement\PlanManualInputController;
 use App\Http\Controllers\Procurement\PlanvsActualController;
 use App\Http\Controllers\Procurement\PrequalificationApplicationsController;
 use App\Http\Controllers\Procurement\PrequalificationCriteriaController;
+use App\Http\Controllers\Procurement\PrequalificationCriteriaSetupController;
 use App\Http\Controllers\Procurement\PrequalificationEvalAprovalController;
 use App\Http\Controllers\Procurement\PrequalificationEvaluationController;
+use App\Http\Controllers\Procurement\PrequalificationPeriodController;
 use App\Http\Controllers\Procurement\PrequalificationRoundsController;
 use App\Http\Controllers\Procurement\PrequalifiedSuppliersController;
 use App\Http\Controllers\Procurement\ProcurementApprovalController;
@@ -63,10 +65,8 @@ use App\Http\Controllers\Procurement\TenderInitiationApproveController;
 use App\Http\Controllers\Procurement\TenderOpeningController;
 use App\Http\Controllers\Procurement\TenderResponseController;
 use App\Http\Controllers\Procurement\TenderSubmissionController;
-use App\Http\Controllers\Procurement\TimelineController;
-use App\Http\Controllers\Procurement\PrequalificationPeriodController;
-use App\Http\Controllers\Procurement\PrequalificationCriteriaSetupController;
 use App\Http\Controllers\Procurement\TenderTypeController;
+use App\Http\Controllers\Procurement\TimelineController;
 
 
 Route::namespace('Procurement')->prefix('procurement')->group(function () {
@@ -144,8 +144,9 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
 
     // RFQLines Routes
     Route::post('/rfqlines', [RFQLinesController::class, 'store'])->name('linecategories.store');
-    Route::get('/rfqlines/create', [RFQLinesController::class, 'create'])->name('rfqlines.create');
-    Route::get('/requisitionlines/categories', [RFQLinesController::class, 'getCategories']);
+    Route::get('/requisition/{requisitionId}/categories', [RFQLinesController::class, 'getRequisitionCategories']);
+    Route::get('/rfq/{rfqId}/lines/create', [RFQLinesController::class, 'create'])->name('rfqlines.create');
+
 
     // RFQ routes
     Route::get('/rfqs/create', [RFQController::class, 'create'])->name('rfqs.create');

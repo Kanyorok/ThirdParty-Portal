@@ -9,7 +9,6 @@ use App\Models\Inventory\InterBranchRequisition;
 use App\Models\Inventory\InterBranchRequisitionItem;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB; 
 
 class InterBranchRequisitionService
@@ -203,7 +202,7 @@ class InterBranchRequisitionService
         $enum = match ($action) {
             'APPROVED' => InterBranchRequisitionEnum::Approved,
             'REJECTED' => InterBranchRequisitionEnum::Rejected,
-            default => InterBranchRequisitionEnum::Pending
+            default => InterBranchRequisitionEnum::Submitted
         };
 
         Workflow::create([

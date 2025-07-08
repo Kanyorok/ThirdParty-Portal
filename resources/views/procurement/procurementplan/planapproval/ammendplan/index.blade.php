@@ -76,7 +76,7 @@
               <th>Adjust Qty</th>
             <th>Unit Cost</th>
             <th>Total</th>
-            <th>Remarks</th>
+            <th class="d-none">Remarks</th>
             <th>Action</th>
           </tr>
         </thead>
@@ -90,7 +90,7 @@
               <td>{{ $item->MergedQty }}</td>
               <td>
                   <input type="number" class="form-control form-control-sm" name="qty_{{ $item->LineItemID }}"
-                         value="{{ $item->MergedQty }}" min="1">
+                         value="{{ $item->MergedQty }}" min="1" max="{{ $item->OriginalQTY }}">
               </td>
             <td>
                 <input type="number" class="form-control form-control-sm" name="unitCost_{{ $item->LineItemID }}"
@@ -99,7 +99,7 @@
             <td>
                 <span class="text-muted">{{ number_format($item->MergedQty * $item->EstimatedUnitCost) }}</span>
             </td>
-            <td>
+            <td class="d-none">
                 <textarea name="remarks_{{ $item->LineItemID }}" class="form-control form-control-sm"
                           rows="1">{{ $item->ChangeRemarks }}</textarea>
             </td>
@@ -151,6 +151,13 @@
             ordering: true,
             searching: true,
             lengthChange: true,
+            columnDefs: [
+                {
+                    targets: [8],
+                    visible: false,
+                    searchable: false
+                }
+            ],
             language: {
                 emptyTable: ""
             }

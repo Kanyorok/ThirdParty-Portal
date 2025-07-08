@@ -48,7 +48,7 @@
             <tr>
                 <td>{{$item->SupplierName}}</td>
                 <td><span class="badge bg-info">Manual</span></td>
-                <td>{{ \Carbon\Carbon::parse($item->ReceivedAt)->format('d M Y, h:i A') }}</td>
+                <td>{{ \Carbon\Carbon::parse($item->ReceivedAt)->format('d/m/Y') }}</td>
                 <td>{{ $item->modifiedByUser->Name ?? 'N/A' }}</td>
                 <td>
                     <a href="#" class="btn btn-sm btn-outline-info">View</a>

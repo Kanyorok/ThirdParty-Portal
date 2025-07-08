@@ -5,6 +5,7 @@ namespace App\Models\Procurement;
 use App\Models\Inventory\ItemCategories;
 use App\Models\Inventory\ItemMasterList;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Inventory\PriceManagement;
 
 class TenderItems extends Model
 {

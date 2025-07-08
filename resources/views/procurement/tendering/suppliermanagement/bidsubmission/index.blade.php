@@ -32,7 +32,7 @@
                         <td>{{ $submission->TenderRef }}</td>
                         <td>{{ $submission->SupplierName }}</td>
                         <td>{{ $submission->submissionMode->Description ?? 'N/A' }}</td>
-                        <td>{{ $submission->ReceivedAt->format('Y-m-d h:i A') }}</td>
+                        <td>{{ $submission->ReceivedAt->format('d/m/Y') }}</td>
                         <td>{{ $submission->createdByUser->Name ?? 'N/A' }}</td>
                         <td>{{ $submission->Remarks ?? 'N/A' }}</td>
                         <td>
@@ -85,16 +85,16 @@
                         </div>
                     </div>
 
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="fw-bold">Submission Mode:</label>
-                            <div class="text-muted">{{ $submission->submissionMode->Description ?? 'N/A' }}</div>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="fw-bold">Received At:</label>
-                            <div class="text-muted">{{ $submission->ReceivedAt->format('Y-m-d h:i A') }}</div>
-                        </div>
-                    </div>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="fw-bold">Submission Mode:</label>
+              <div class="text-muted">{{ $submission->submissionMode->Description ?? 'N/A' }}</div>
+            </div>
+            <div class="col-md-6">
+              <label class="fw-bold">Received At:</label>
+              <div class="text-muted">{{ $submission->ReceivedAt->format('d/m/Y') }}</div>
+            </div>
+          </div>
 
                     <div class="row mb-3">
                         <div class="col-md-6">
@@ -167,14 +167,13 @@
                                            value="{{ $submission->SubmissionModeID }}">
                                 </div>
 
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Received At</label>
-                                <input type="datetime-local" class="form-control" name="ReceivedAt"
-                                       value="{{ \Carbon\Carbon::parse($submission->ReceivedAt)->format('Y-m-d\TH:i') }}"
-                                       required>
-                            </div>
-                        </div>
+                                </div>
+                                <div class="col-md-6">
+                                  <label class="form-label fw-bold">Received At</label>
+                                  <input type="datetime-local" class="form-control" name="ReceivedAt"
+                                    value="{{ \Carbon\Carbon::parse($submission->ReceivedAt)->format('d/m/Y') }}" required>
+                                </div>
+                              </div>
 
                         <div class="row mb-3">
                             <div class="col-md-6">

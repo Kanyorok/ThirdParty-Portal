@@ -28,7 +28,7 @@
             <td>{{ $index + 1 }}</td>
             <td>{{ $invitation->TenderId }}</td>
             <td>{{ $invitation->SupplierId  }}</td>
-            <td>{{ \Carbon\Carbon::parse($invitation->InvitationDate)->format('Y-m-d') }}</td>
+            <td>{{ \Carbon\Carbon::parse($invitation->InvitationDate)->format('d/m/Y') }}</td>
             <td>
                 @if($invitation->ResponseStatus === 'Accepted')
                     <span class="badge bg-success">Accepted</span>
@@ -38,7 +38,7 @@
                     <span class="badge bg-secondary">{{ $invitation->ResponseStatus }}</span>
                 @endif
             </td>
-            <td>{{ \Carbon\Carbon::parse($invitation->ResponseDate)->format('Y-m-d') }}</td>
+            <td>{{ \Carbon\Carbon::parse($invitation->ResponseDate)->format('d/m/Y') }}</td>
             <td>{{ $invitation->DeclineReason ?? 'Ready to submit bid' }}</td>
         </tr>
     @empty
