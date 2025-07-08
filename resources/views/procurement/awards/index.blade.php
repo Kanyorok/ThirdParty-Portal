@@ -2,39 +2,40 @@
 @section('title', 'Tender & RFQ Awards Overview')
 @section('content')
 
-    <div class="container mt-4">
-        <h4 class="mb-3">🏆 Tender & RFQ Awards Overview</h4>
+<div class="container mt-4">
+    <h4 class="mb-3">🏆 Tender & RFQ Awards Overview</h4>
 
-        <!-- Filters -->
-        <form class="row g-3 mb-3">
-            <div class="col-md-3">
-                <select class="form-select">
-                    <option selected>All Types</option>
-                    <option value="Tender">Tender</option>
-                    <option value="RFQ">RFQ</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <select class="form-select">
-                    <option selected>All Status</option>
-                    <option value="Awarded">Awarded</option>
-                    <option value="Pending">Pending</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <input type="text" class="form-control" placeholder="Search Ref / Title">
-            </div>
-            <div class="col-md-3">
-                <button class="btn btn-outline-primary w-100">Filter</button>
-            </div>
-        </form>
+    <!-- Filters -->
+    <form class="row g-3 mb-3">
+        <div class="col-md-3">
+            <select class="form-select">
+                <option selected>All Types</option>
+                <option value="Tender">Tender</option>
+                <option value="RFQ">RFQ</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select class="form-select">
+                <option selected>All Status</option>
+                <option value="Awarded">Awarded</option>
+                <option value="Pending">Pending</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <input type="text" class="form-control" placeholder="Search Ref / Title">
+        </div>
+        <div class="col-md-3">
+            <button class="btn btn-outline-primary w-100">Filter</button>
+        </div>
+    </form>
 
-        <!-- Awards Table -->
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-bordered align-middle">
-                        <thead class="table-light text-center">
+    <!-- Awards Table -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle">
+                    <thead class="table-light text-center">
+
                         <tr>
                             <th>#</th>
                             <th>Ref No.</th>
@@ -74,11 +75,12 @@
                             </td>
                         </tr>
                         <!-- More rows dynamically -->
-                        </tbody>
-                    </table>
-                </div>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
+</div>
 
 @endsection
+

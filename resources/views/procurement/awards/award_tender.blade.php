@@ -2,15 +2,16 @@
 @section('title', 'Award Tender')
 @section('content')
 
-    <div class="container mt-4">
-        <div class="card shadow-sm">
-            <div class="card-header bg-primary text-white">
-                🏆 Award Tender: TENDER/ICT/2025/004 – Procurement of ICT Equipment
-            </div>
-            <div class="card-body">
-                <h5 class="mb-3">📊 Final Scoring Summary</h5>
-                <table class="table table-bordered align-middle">
-                    <thead class="table-light text-center">
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            🏆 Award Tender: TENDER/ICT/2025/004 – Procurement of ICT Equipment
+        </div>
+        <div class="card-body">
+            <h5 class="mb-3">📊 Final Scoring Summary</h5>
+            <table class="table table-bordered align-middle">
+                <thead class="table-light text-center">
+
                     <tr>
                         <th>Bidder</th>
                         <th>Technical Score</th>
@@ -19,6 +20,7 @@
                         <th>Responsive?</th>
                         <th>Select</th>
                     </tr>
+
                     </thead>
                     <tbody>
                     <tr>
@@ -37,26 +39,27 @@
                         <td><span class="badge bg-success">Yes</span></td>
                         <td><input type="radio" name="winner"></td>
                     </tr>
-                    </tbody>
-                </table>
+                </tbody>
+            </table>
 
-                <div class="mb-3">
-                    <label class="form-label">Award Justification</label>
-                    <textarea class="form-control" rows="3">Highest total score across both technical and financial evaluation.</textarea>
-                </div>
+            <div class="mb-3">
+                <label class="form-label">Award Justification</label>
+                <textarea class="form-control" rows="3">Highest total score across both technical and financial evaluation.</textarea>
+            </div>
 
-                <div class="form-check mb-4">
-                    <input class="form-check-input" type="checkbox" id="notify" checked>
-                    <label class="form-check-label" for="notify">
-                        Notify Unsuccessful Bidders
-                    </label>
-                </div>
+            <div class="form-check mb-4">
+                <input class="form-check-input" type="checkbox" id="notify" checked>
+                <label class="form-check-label" for="notify">
+                    Notify Unsuccessful Bidders
+                </label>
+            </div>
 
-                <div class="text-end">
-                    <button class="btn btn-primary">✅ Confirm Tender Award</button>
-                </div>
+            <div class="text-end">
+                <button class="btn btn-primary">✅ Confirm Tender Award</button>
             </div>
         </div>
     </div>
+</div>
+
 
 @endsection

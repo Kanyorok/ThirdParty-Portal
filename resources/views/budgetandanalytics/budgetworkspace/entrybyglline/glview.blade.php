@@ -42,11 +42,19 @@
                         <td style="width: 200px; white-space: nowrap;">
                             <a href="#" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#allocModal{{ $item->Id }}">View Allocations</a>
                             <a href="{{ route('entrybyglline.edit', $item->Id) }}" class="btn btn-sm btn-primary">🖉</a>
-                            <form action="{{ route('entrybyglline.destroy', $item->Id) }}" method="POST" class="d-inline">
+                            {{-- <form action="{{ route('entrybyglline.destroy', $item->Id) }}" method="POST" class="d-inline">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this entry?')">🗑️</button>
-                            </form>
+                            </form> --}}
+                            <button type="button"
+                                    class="btn btn-sm btn-danger custom-delete-btn"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#customDeleteConfirmModal"
+                                    data-name="{{ $item->budget->Name  }}"    {{-- Pass item name --}}
+                                    data-route="{{route('entrybyglline.destroy', $item->Id)}}"> {{--Pass delete route--}}
+                                     🗑️
+                            </button>
                             <!-- Modal -->
                             <div class="modal fade" id="allocModal{{ $item->Id }}" tabindex="-1" aria-labelledby="allocModalLabel{{ $item->Id }}" aria-hidden="true">
                               <div class="modal-dialog modal-lg">
@@ -100,4 +108,5 @@
         </div>
     </div>
 </div>
+@include('components.modals.delete-confirm')
 @endsection
