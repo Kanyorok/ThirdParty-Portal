@@ -120,4 +120,30 @@ class TransactionApprovalController extends Controller
 
         return redirect()->back()->with('error', 'Reject not supported for this transaction type.');
     }
+    public function show($id, Request $request)
+{
+    $transactionType = $request->get('transaction_type', 'Stock Transfer');
+
+    if ($transactionType === 'Stock Transfer') {
+        $record = \App\Models\Inventory\TransactionTransfer::with([
+            'fromBranch', 'toBranch', 'transferredBy', 'items.item.uom'
+        ])->findOrFail($id);
+
+    } elseif ($transactionType === 'Stock Adjustment') {
+        $record = \App\Models\Inventory\StockAdjustment::with([
+            'branch', 'adjustedBy', 'items.item.uom'
+        ])->findOrFail($id);
+
+    } elseif ($transactionType === 'Stock Issue') {
+        $record = \App\Models\Inventory\StockIssue::with([
+            'branch', 'creator', 'items.item.uom'
+        ])->findOrFail($id);
+
+    } else {
+        abort(404, 'Unsupported transaction type');
+    }
+
+    return view('inventory.transactions.transactionsapprovals.show', compact('record', 'transactionType'));
+}
+
 }

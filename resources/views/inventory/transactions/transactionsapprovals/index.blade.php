@@ -68,6 +68,7 @@
                     <th>STATUS</th>
                     <th>APPROVE</th>
                     <th>REJECT</th>
+                    <th>ACTIONS</th>
                 </tr>
             </thead>
             <tbody>
@@ -128,6 +129,10 @@
                             </form>
                         </td>
                     </tr>
+                    <td>
+                        <a href="{{ route('transactionsapproval.show', $record->Id) }}"
+                           class="btn btn-sm btn-primary">View</a>
+                    </td>
                 @empty
                     <tr>
                         <td colspan="9" class="text-center">No pending {{ strtolower($transactionType) }}s found.</td>
