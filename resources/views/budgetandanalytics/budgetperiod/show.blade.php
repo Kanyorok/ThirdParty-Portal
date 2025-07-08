@@ -41,7 +41,12 @@
         </div>
 
         <!-- GL Attachments Section -->
-        <h5 class="mt-4 mb-3 fw-bold text-primary">Attached GL Accounts</h5>
+        <div class="d-flex justify-content-between align-items-center mb-2 mt-4">
+            <h5 class="fw-bold text-primary mb-0">Attached GL Accounts</h5>
+            <a href="{{route('budgetperiod.edit',$budget->Id)}}" class="btn btn-primary rounded-3">
+                Attach GLS
+            </a>
+        </div>
         <div class="table-responsive">
             <table class="table table-hover table-bordered rounded-3" id="glAttachmentsTable">
                 <thead class="table-light">
