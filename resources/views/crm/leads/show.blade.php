@@ -515,7 +515,7 @@
                     <div class="card">
                         <div class="card-header">
                             <div class="row">
-                                <div class="col-md-6 col-12"><h5>Products Intrested</h5></div>
+                                <div class="col-md-6 col-12"><h5>Product Interested</h5></div>
                                 <div class="col-md-6 col-12">
                                     <div class="float-end">
                                         <button class="btn btn-primary add-lead-product" type="button"><i
@@ -563,7 +563,7 @@
                 </div>
                 <div class="tab-pane m-2" id="tab-4" role="tabpanel">
                     <div class="card">
-                        <div class="card-header"><h5>Discusions</h5></div>
+                        <div class="card-header"><h5>Discussions</h5></div>
                         <div class="card-body">
                             <table id="discussionsTable"
                                    class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">

@@ -74,7 +74,7 @@
 @endsection
 @section('content')
     <div class="row">
-        <div class="col-6 mb-1"><h2>@yield('title')</h2></div>
+        <div class="col-6 mb-1"></div>
         <div class="col-6 mb-1">
             <div class="float-end">
                 {{--<button type="button" class="btn btn-outline-primary modal-create-call-schedule"><i class="fas fa-calendar-plus"></i>&nbsp; add scheduled call</button>
