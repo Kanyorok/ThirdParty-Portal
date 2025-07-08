@@ -5,6 +5,7 @@ namespace App\Services\DMS;
 use App\Enums\Core\ExtensionsEnum;
 use App\Models\DMS\Document;
 use App\Services\DMS\Files\ImageOCR;
+use App\Services\DMS\Files\PdfExtraction;
 use App\Services\DMS\Files\SpreadsheetExtraction;
 use App\Services\DMS\Files\TextFileExtraction;
 use App\Services\DMS\Files\UnknownFileExtraction;
@@ -41,7 +42,9 @@ class FileExtractionService
         if ($this->extension->isPresentation()) {
             return (new SpreadsheetExtraction($this->document))->processContent();
         }
-
+        if ($this->extension->value === ExtensionsEnum::Pdf->value) {
+            return (new PdfExtraction($this->document))->processContent();
+        }
 
         return (new UnknownFileExtraction($this->document))->processContent();
     }

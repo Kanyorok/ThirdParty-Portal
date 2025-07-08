@@ -23,7 +23,7 @@ abstract class FileExtraction extends DocumentService
     {
         parent::__construct($document);
         $ex = $this->document->ext();
-        if ($ex instanceof ExtensionsEnum) {
+        if (!$ex instanceof ExtensionsEnum) {
             throw new RuntimeException('Invalid file extension');
         }
         $this->extension = $ex;

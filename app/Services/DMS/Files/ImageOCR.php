@@ -22,7 +22,7 @@ class ImageOCR extends FileExtraction
         return $this->handleContent();
     }
 
-    private function ocr(string $filePath): string
+    public function ocr(string $filePath): string
     {
         if (file_exists($filePath) === false) {
             return '';
