@@ -6,6 +6,7 @@ use App\Enums\Core\VisibilityEnum;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DMSTags extends Model
@@ -42,5 +43,10 @@ class DMSTags extends Model
     {
         return $this->belongsToMany(Document::class, 't_DocumentTags', 'TagId', 'DocId', 'Id', 'Id')
             ->withPivot(['CreatedBy', 'ModifiedBy', 'DeletedBy'])->withTimestamps(); //->using(DocumentTags::class);
+    }
+
+    public function rules(): HasMany|DMSTags
+    {
+        return $this->hasMany(DocumentTaggingRules::class, 'TagId', 'Id');
     }
 }

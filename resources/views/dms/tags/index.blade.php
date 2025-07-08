@@ -66,9 +66,9 @@
                     serverSide: true,
                     responsive: true,
                     //"order": [[6, 'desc']],
-                    /*  "columnDefs": [
-                          {"className": "text-center", "targets": [2]}
-                      ],*/
+                    "columnDefs": [
+                        {"className": "text-center", "targets": [3]}
+                    ],
                     ajax: {
                         url: getDocumentUrl(),
                         error: function (request) {
@@ -83,7 +83,7 @@
                         {data: "DT_RowIndex", name: 'DT_RowIndex', searchable: false, orderable: false},
                         {data: 'Name', name: 'Name'},
                         {data: 'Description', name: 'Description'},
-                        {data: 'document_count', name: 'document_count'},
+                        {data: 'documents_count', name: 'documents_count', searchable: false, orderable: false},
                         {data: 'action', name: 'action', orderable: false, searchable: false},
                     ], "oLanguage": {
                         "sEmptyTable": "no tags found here"

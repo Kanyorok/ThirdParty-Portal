@@ -28,5 +28,5 @@ Route::namespace('DMS')->prefix('dms')->group(function () {
         Route::resource('files', DocumentController::class)->parameters(['files' => 'document'])->except('create');
     });
     Route::resource('repo', RepositoryController::class)->parameters(['repo' => 'repository']);
-    Route::resource('file-tags', TagController::class)->parameters(['file-tags' => 'DMSTag']);
+    Route::resource('file-tags', TagController::class)->parameters(['file-tags' => 'd_m_s_tags'])->except('edit');
 });
