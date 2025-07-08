@@ -260,14 +260,14 @@ class BudgetLineMappingController extends Controller
                 }
             }
 
-            DB::commit();
-
             // LOG Activity
             activity()
                 ->performedOn($budgetLine)
                 ->causedBy(Auth::user())
                 ->withProperties(['action' => 'update'])
                 ->log('Updated a budget line mapping');
+
+            DB::commit();
 
             return redirect()->route('budgetlinemapping.index')->with('success', 'Budget Line Mapping updated successfully.');
 
