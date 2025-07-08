@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Inventory;
 
 
 use App\Http\Controllers\Controller;
-use App\Models\Inventory\ItemCategories;
 use App\Http\Requests\Inventory\StoreItemCategoryRequest;
 use App\Http\Requests\Inventory\UpdateItemCategoryRequest;
+use App\Models\Inventory\ItemCategories;
 use App\Services\Inventory\ItemCategoryService;
 
 class ItemCategoryController extends Controller
@@ -54,12 +54,12 @@ class ItemCategoryController extends Controller
     }
 
     public function update(UpdateItemCategoryRequest $request, $id)
-{
-    $category = ItemCategories::findOrFail($id);
-    $this->authorize('update', $category);
-    $category->update($request->validated());
-    return redirect()->route('itemcategory.index')->with('success', 'Category updated successfully.');
-}
+    {
+        $category = ItemCategories::findOrFail($id);
+        $this->authorize('update', $category);
+        $category->update($request->validated());
+        return redirect()->route('itemcategory.index')->with('success', 'Category updated successfully.');
+    }
 
 
     public function destroy($id)

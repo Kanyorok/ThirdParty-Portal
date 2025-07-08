@@ -35,8 +35,8 @@
                             <th>Responsive?</th>
                             <th>Select</th>
                         </tr>
-                    </thead>
-                    <tbody>
+                        </thead>
+                        <tbody>
                         <tr>
                             <td>OfficePro</td>
                             <td>KES 96,000</td>
@@ -75,5 +75,6 @@
         </div>
     </div>
 </div>
+
 
 @endsection

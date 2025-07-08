@@ -5,8 +5,10 @@ namespace App\Models\Procurement;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+
 use App\Models\Auth\User;
 use App\Models\Procurement\TenderSupplier;
+
 
 class BidResponsiveness extends Model
 {
@@ -45,8 +47,10 @@ class BidResponsiveness extends Model
     {
         return 'BidResponsivenessId';
     }
+
+
     public function tenderSupplier()
     {
-        return $this->belongsTo(TenderSupplier::class, 'TenderSupplierID','id');
+        return $this->belongsTo(TenderSupplier::class, 'TenderSupplierID', 'id');
     }
 }

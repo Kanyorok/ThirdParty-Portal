@@ -11,7 +11,7 @@
             <strong>Fiscal Year:</strong> {{ $plan->FiscalYear }}<br>
             <strong>Status:</strong> {{ $plan->Status->label() }}<br>
             <strong>Created By:</strong> {{ $plan->createdBy->Name ?? 'N/A' }}<br>
-            <strong>Created On:</strong> {{ \Carbon\Carbon::parse($plan->CreatedDate)->format('Y-m-d') ?? 'N/A' }}<br>
+            <strong>Created On:</strong> {{ \Carbon\Carbon::parse($plan->CreatedDate)->format('d/m/Y') ?? 'N/A' }}<br>
         </div>
 
         <h5>Line Items</h5>
@@ -37,7 +37,7 @@
                         <td>{{ number_format($item->EstimatedUnitCost, 2) }}</td>
                         <td>{{ number_format($item->MergedQty * $item->EstimatedUnitCost, 2) }}</td>
                         <td>{{ $item->budgetLine->Description ?? 'N/A' }}</td>
-                        <td>{{ $item->procurementMode->Name ?? 'N/A' }}</td>
+                        <td>{{ $item->procurementMode->Description ?? 'N/A' }}</td>
                     </tr>
                 @endforeach
                 </tbody>
@@ -62,7 +62,8 @@
                     <i class="fas fa-file-import me-1"></i>
                     Generate Items from Needs
                 </a>
-                <a href="{{ route('planmanualinput.index', ['plan_id' => $plan->PlanID, 'title' => $plan->Title]) }}" class="btn btn-outline-primary">
+                <a href="{{ route('planmanualinput.index', ['plan_id' => $plan->PlanID, 'title' => $plan->Title]) }}"
+                   class="btn btn-outline-primary">
                     <i class="fas fa-tasks me-1"></i>
                     Manage Items
                 </a>

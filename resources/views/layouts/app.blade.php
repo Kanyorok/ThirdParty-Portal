@@ -17,12 +17,12 @@
     <div class="navbar-wrapper">
         <div class="m-header">
             <a href="{{ route('home') }}" class="b-brand text-primary d-flex align-items-center">
-                <img src="{{ asset('assets/img/icons/android-icon-48x48.png') }}" class="img-fluid" alt="logo">
+                <img src="{{ asset('assets/img/carft.png') }}" class="img-fluid" alt="logo" width="58" height="48">
                 <div class="ms-3">
                     <div class="h2 mb-0 text-decoration-none">
                         {{ config('app.name') }}
                     </div>
-                    <div class="small text-muted text-center">Unity Is Strength</div>
+                    <div class="small text-muted text-center">Thinking.Crafting.Transorming</div>
                 </div>
             </a>
         </div>

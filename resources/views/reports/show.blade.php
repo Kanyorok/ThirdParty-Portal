@@ -23,7 +23,7 @@
                                                 class="form-control"
                                                 id="{{ $parameter['Name'] }}"
                                                 name="{{ $parameter['Name'] }}"
-                                                required="{{ !$parameter['Nullable'] && !$parameter['AllowBlank'] ? 'true' : 'false' }}"
+                                                @if(!$parameter['Nullable'] && !$parameter['AllowBlank']) required @endif
                                             >
                                             @if($parameter['ErrorMessage'])
                                                 <div
@@ -39,7 +39,8 @@
                                                     class="form-select select-option"
                                                     id="{{ $parameter['Name'] }}"
                                                     name="{{ $parameter['Name'] }}"
-                                                    required="{{ !$parameter['Nullable'] && !$parameter['AllowBlank'] ? 'true' : 'false' }}"
+                                                    @if(!$parameter['Nullable'] && !$parameter['AllowBlank']) required
+                                                    @endif
                                                     multiple
                                                 >
                                                     @foreach($parameter['ValidValues'] as $value)
@@ -52,7 +53,7 @@
                                                     class="form-select select-option"
                                                     id="{{ $parameter['Name'] }}"
                                                     name="{{ $parameter['Name'] }}"
-                                                    required="{{ !$parameter['Nullable'] && !$parameter['AllowBlank'] ? 'true' : 'false' }}"
+                                                    @if(!$parameter['Nullable'] && !$parameter['AllowBlank']) required @endif
                                                 >
                                                     @foreach($parameter['ValidValues'] as $value)
                                                         <option
@@ -65,7 +66,8 @@
                                                     class="form-control"
                                                     id="{{ $parameter['Name'] }}"
                                                     name="{{ $parameter['Name'] }}"
-                                                    required="{{ !$parameter['Nullable'] && !$parameter['AllowBlank'] ? 'true' : 'false' }}"
+                                                    @if(!$parameter['Nullable'] && !$parameter['AllowBlank']) required
+                                                    @endif
                                                     value="{{ !empty($parameter['DefaultValues']) ? $parameter['DefaultValues'][0] : '' }}"
                                                 >
                                             @endif
@@ -85,7 +87,7 @@
                                                     id="{{ $parameter['Name'] }}_true"
                                                     name="{{ $parameter['Name'] }}"
                                                     value="true"
-                                                    required="{{ !$parameter['Nullable'] && !$parameter['AllowBlank'] ? 'true' : 'false' }}"
+                                                    @if(!$parameter['Nullable'] && !$parameter['AllowBlank']) required @endif
                                                 >
                                                 <label class="form-check-label"
                                                        for="{{ $parameter['Name'] }}_true">Yes</label>
@@ -97,7 +99,7 @@
                                                     id="{{ $parameter['Name'] }}_false"
                                                     name="{{ $parameter['Name'] }}"
                                                     value="false"
-                                                    required="{{ !$parameter['Nullable'] && !$parameter['AllowBlank'] ? 'true' : 'false' }}"
+                                                    @if(!$parameter['Nullable'] && !$parameter['AllowBlank']) required @endif
                                                 >
                                                 <label class="form-check-label"
                                                        for="{{ $parameter['Name'] }}_false">No</label>
@@ -117,7 +119,8 @@
                                                 class="form-control"
                                                 id="{{ $parameter['Name'] }}"
                                                 name="{{ $parameter['Name'] }}"
-                                                required="{{ !$parameter['Nullable'] && !$parameter['AllowBlank'] ? 'true' : 'false' }}"
+                                                @if(!$parameter['Nullable'] && !$parameter['AllowBlank']) required
+                                                @endif
                                                 value="{{ !empty($parameter['DefaultValues']) ? $parameter['DefaultValues'][0] : '' }}"
                                             >
                                             @if($parameter['ErrorMessage'])
@@ -135,7 +138,8 @@
                                                 class="form-control"
                                                 id="{{ $parameter['Name'] }}"
                                                 name="{{ $parameter['Name'] }}"
-                                                required="{{ !$parameter['Nullable'] && !$parameter['AllowBlank'] ? 'true' : 'false' }}"
+                                                @if(!$parameter['Nullable'] && !$parameter['AllowBlank']) required
+                                                @endif
                                                 value="{{ !empty($parameter['DefaultValues']) ? $parameter['DefaultValues'][0] : '' }}"
                                             >
                                             @if($parameter['ErrorMessage'])
@@ -191,9 +195,6 @@
             @endif
         });
 
-        async function submitReportParameters() {
-
-        }
 
         async function getReport(params) {
             ReportContent.html(' <div class="my-4 text-center"><i class="fas fa-spinner fa-spin fa-5x"></i><h3>Please wait</h3></div>');

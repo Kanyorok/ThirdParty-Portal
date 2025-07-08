@@ -25,48 +25,14 @@ class SupplierController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        // Return the view for creating a new supplier
-        $categories = ItemCategories::all();
-        return view('procurement.suppliers.create', compact('categories'));
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        // Validate the request data
-        $validated = $request->validate([
-            'SupplierName' => 'required|string|max:255',
-            'ContactEmail' => 'required|email|max:255|unique:t_Suppliers,ContactEmail',
-            'CategoryId' => 'required',
-
-            'ContactPhone' => 'nullable|string|max:20',
-            'Address' => 'nullable|string|max:255',
-            'IsPrequalified' => 'boolean',
-        ]);
-
-        $validated['CreatedBy'] = Auth::id();
-        $validated['ModifiedBy'] = Auth::id();
-
-        // Create a new supplier
-        Supplier::create($validated);
-
-        // Redirect to the suppliers index with a success message
-        return redirect()->route('suppliers.index')->with('success', 'Supplier created successfully.');
-    }
-
-    /**
      * Display the specified resource.
      */
     public function show(string $id)
     {
-        //
+        $supplier = Supplier::with('category')->findOrFail($id);
+        return view('procurement.suppliers.show', compact('supplier'));
     }
+
 
     /**
      * Show the form for editing the specified resource.
@@ -91,7 +57,6 @@ class SupplierController extends Controller
             'ContactEmail' => 'nullable|email|max:255',
             'ContactPhone' => 'nullable|string|max:20',
             'Address' => 'nullable|string|max:255',
-            'IsPrequalified' => 'boolean',
         ]);
 
         // Find the supplier by ID and update it

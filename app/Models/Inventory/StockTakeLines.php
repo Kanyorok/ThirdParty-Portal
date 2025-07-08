@@ -11,10 +11,10 @@ class StockTakeLines extends Model
     //
     use UserActorTrait, SoftDeletes;
 
-   protected $table = 't_StockTakeLines';
     const string CREATED_AT = 'CreatedOn';
     const string UPDATED_AT = 'ModifiedOn';
     const string DELETED_AT = 'DeletedOn';
+    protected $table = 't_StockTakeLines';
     protected $primaryKey = 'Id';
 
     protected $fillable = [
@@ -22,17 +22,18 @@ class StockTakeLines extends Model
         'ItemId',
         'ActualQuantity',
         'CountedQuantity',
-        'Remarks',                                                                                                 
+        'Remarks',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy'
-       
-        ];
+
+    ];
 
     public static function getPrimaryKey(): string
     {
         return 'StockTakeLineId';
     }
+
     public function stockTake()
     {
         return $this->belongsTo(StockTake::class, 'StockTakeId', 'Id');
@@ -42,6 +43,7 @@ class StockTakeLines extends Model
     {
         return $this->belongsTo(StockItem::class, 'ItemId', 'Id');
     }
+
     public function itemmaster()
     {
         return $this->belongsTo(ItemMasterList::class, 'ItemID', 'Id');

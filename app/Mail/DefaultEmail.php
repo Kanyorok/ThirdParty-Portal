@@ -46,7 +46,7 @@ class DefaultEmail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.template',
+            view: 'crm.emails.template',
         );
     }
 

@@ -1,4 +1,3 @@
-
 @extends('layouts.app')
 @section('title', 'Tender & RFQ Awards Overview')
 @section('content')
@@ -36,6 +35,7 @@
             <div class="table-responsive">
                 <table class="table table-bordered align-middle">
                     <thead class="table-light text-center">
+
                         <tr>
                             <th>#</th>
                             <th>Ref No.</th>
@@ -46,8 +46,8 @@
                             <th>Date Awarded</th>
                             <th>Actions</th>
                         </tr>
-                    </thead>
-                    <tbody>
+                        </thead>
+                        <tbody>
                         <tr>
                             <td>1</td>
                             <td>TENDER/ICT/2025/004</td>
@@ -83,3 +83,4 @@
 </div>
 
 @endsection
+

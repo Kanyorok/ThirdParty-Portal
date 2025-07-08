@@ -2,7 +2,6 @@
 
 namespace App\Models\Budget;
 
-use App\Http\Controllers\Budget\BudgetTopDownAllocationController;
 use App\Models\Core\Branch;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
@@ -13,18 +12,11 @@ class BudgetTopDownData extends Model
     use UserActorTrait;
     use SoftDeletes;
 
-    protected $table = 't_BudgetTopDownData'; // Use your actual table name
-    protected $primaryKey = 'Id';
-
-    public static function getPrimaryKey(): string
-    {
-        return 'BudgetTopDownDataId';
-    }
-
-    const CREATED_AT = 'CreatedOn';
+    const CREATED_AT = 'CreatedOn'; // Use your actual table name
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
-
+    protected $table = 't_BudgetTopDownData';
+    protected $primaryKey = 'Id';
     protected $fillable = [
         'TopDownID',
         'BranchID',
@@ -34,7 +26,13 @@ class BudgetTopDownData extends Model
         'DeletedBy',
     ];
 
+    public static function getPrimaryKey(): string
+    {
+        return 'BudgetTopDownDataId';
+    }
+
     // Relationships
+
     public function topDown()
     {
         return $this->belongsTo(BudgetTopDown::class, 'TopDownID');

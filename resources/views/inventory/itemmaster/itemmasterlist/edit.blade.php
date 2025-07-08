@@ -39,7 +39,8 @@
                 <select name="ItemType" class="form-select" required>
                     <option disabled>Select Type</option>
                     @foreach($itemTypes as $itemType)
-                        <option value="{{ $itemType->Id }}" {{ old('ItemType') == $itemType->Id ? 'selected' : '' }}>
+                        <option value="{{ $itemType->Id }}"
+                                {{ (old('ItemType', $item->ItemType) == $itemType->Id) ? 'selected' : '' }}>
                             {{ $itemType->TypeName }}
                         </option>
                     @endforeach
@@ -76,7 +77,8 @@
                 <select name="UOM" class="form-select" required>
                     <option disabled>Select UOM</option>
                     @foreach($uoms as $uom)
-                        <option value="{{ $uom->Id }}" {{ old('UOM') == $uom->Id ? 'selected' : '' }}>
+                        <option value="{{ $uom->Id }}"
+                                {{ (old('UOM', $item->UOM) == $uom->Id) ? 'selected' : '' }}>
                             {{ $uom->Code }}
                         </option>
                     @endforeach
@@ -88,8 +90,8 @@
                 <select name="InventoryType" class="form-select" required>
                     <option disabled>Select Inventory Type</option>
                     @foreach($inventoryTypes as $inventoryType)
-                        <option
-                            value="{{ $inventoryType->Id }}" {{ old('InventoryType') == $inventoryType->Id ? 'selected' : '' }}>
+                        <option value="{{ $inventoryType->Id }}"
+                                {{ (old('InventoryType', $item->InventoryType) == $inventoryType->Id) ? 'selected' : '' }}>
                             {{ $inventoryType->Type }}
                         </option>
                     @endforeach
@@ -130,7 +132,7 @@
                 <label for="Status" class="form-label">Active?</label>
                 <input type="hidden" name="Status" value="0">
                 <input class="form-check-input" type="checkbox" name="Status" value="1" id="Status"
-                    {{ old('Status', 1) == 1 ? 'checked' : '' }}>
+                        {{ old('Status', $item->Status) == 1 ? 'checked' : '' }}>
 
             </div>
         </div>
@@ -140,8 +142,6 @@
 </div>
 
 @endsection
-
-
 
 @section('scripts')
 

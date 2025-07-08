@@ -48,7 +48,7 @@
             <td>{{ $item->glAccountSubType->GLAccountSubTypeName ?? 'N/A' }}</td>
             <td>
               @if($item->IsProductDriven)
-                <span class="badge bg-success">Yes</span>
+                <a href="{{ route('budgetlinemapping.show', $item->Id) }}" class="badge bg-primary" title="View Product Types">Yes</a>
               @else
                 <span class="badge bg-secondary">No</span>
               @endif

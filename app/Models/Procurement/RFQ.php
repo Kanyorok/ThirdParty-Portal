@@ -26,7 +26,7 @@ class RFQ extends Model
     }
 
     protected $fillable = [
-        'RFQNumber', 'Comments', 'Status', 'SubmissionDeadline', 'CreatedBy', 'ModifiedBy'
+        'RFQNumber', 'RequisitionId', 'Comments', 'Status', 'SubmissionDeadline', 'CreatedBy', 'ModifiedBy','Remarks'
     ];
 
     public function rfqLines()
@@ -52,4 +52,9 @@ class RFQ extends Model
                     ->withPivot('Status')
                     ->withTimestamps();
     }
+    public function requisition()
+    {
+        return $this->belongsTo(Requisitions::class, 'RequisitionId', 'Id');
+    }
+
 }

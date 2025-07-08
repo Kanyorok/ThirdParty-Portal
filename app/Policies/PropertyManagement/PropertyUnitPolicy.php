@@ -15,10 +15,12 @@ class PropertyUnitPolicy
     {
         return $user->can(PermissionEnum::PropertyStructuralView->value);
     }
+
     public function store(User $user): bool
     {
         return $user->can(PermissionEnum::PropertyStructuralCreate->value);
     }
+
     public function view(User $user, PropertyUnit $propertyUnit): bool
     {
         return $user->can(PermissionEnum::PropertyStructuralView->value);

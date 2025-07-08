@@ -9,6 +9,7 @@ use App\Models\Procurement\RFQLine;
 use App\Models\ThirdParies\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\Procurement\Requisitions;
 
 class RFQController extends Controller
 {
@@ -17,9 +18,19 @@ class RFQController extends Controller
      */
     public function index()
     {
+        $rfqs = RFQ::with(['category', 'suppliers', 'requisition'])->get();
 
-        $rfqs = RFQ::with(['category', 'suppliers'])->get();
-        return view('procurement.rfqs.index', compact('rfqs'));
+        $requisitions = DB::table('t_Requisitions as r')
+            ->join('t_CodeDetails as cd', 'r.StatusID', '=', 'cd.Id')
+            ->join('t_RequisitionLines as rl', 'r.Id', '=', 'rl.RequisitionID')
+            ->leftJoin('t_RFQLines as rfql', 'rl.Id', '=', 'rfql.RequisitionLineId')
+            ->where('cd.Description', 'Approved')
+            ->whereNull('rfql.Id')
+            ->select('r.Id', 'r.RequisitionNo')
+            ->distinct()
+            ->get();
+
+        return view('procurement.rfqs.index', compact('rfqs', 'requisitions'));
     }
 
     /**
@@ -38,8 +49,9 @@ class RFQController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'RequisitionId' => 'required|exists:t_Requisitions,Id',
             'Comments' => 'nullable|string|max:255',
-            'SubmissionDeadline' => 'required|date|after:today',
+            'SubmissionDeadline' => 'required|date|after_or_equal:today',
         ]);
 
         // Fetch items + quantities for this category
@@ -65,6 +77,7 @@ class RFQController extends Controller
         // Create the RFQ
         $rfq = RFQ::create([
             'RFQNumber' => $newRFQNumber,
+            'RequisitionId' => $request->RequisitionId,
             'Comments' => $request->Comments,
             'SubmissionDeadline' => $request->SubmissionDeadline,
             'CreatedBy' => auth()->user()->Id,
@@ -86,6 +99,11 @@ class RFQController extends Controller
         ]);
 
         $rfq = RFQ::findOrFail($id);
+
+        // Check if RFQ has at least one line item
+        if ($rfq->rfqLines()->count() < 1) {
+            return redirect()->back()->with('error', 'Cannot approve an RFQ without any items.');
+        }
 
         // Update RFQ status to Approved
         $rfq->update(['Status' => 'Approved']);
@@ -112,9 +130,14 @@ class RFQController extends Controller
         ]);
 
         $rfq = RFQ::findOrFail($id);
+
+        //Check if RFQ has at least one line item
+        if ($rfq->rfqLines()->count() < 1) {
+            return redirect()->back()->with('error', 'Cannot reject an RFQ without any items.');
+        }
         $rfq->update([
             'Status' => 'Rejected',
-            'Comments' => $request->RejectionReason,
+            'Remarks' => $request->RejectionReason,
         ]);
 
         return redirect()->back()->with('success', 'RFQ has been rejected successfully.');
@@ -126,7 +149,7 @@ class RFQController extends Controller
     public function show($id)
     {
         // Get the RFQ and its associated RFQLines
-        $rfq = RFQ::with('rfqLines')->findOrFail($id);
+        $rfq = RFQ::with('rfqLines','rfqLines.uom')->findOrFail($id);
 
         // Get unique itemCategoryIds from the RFQLines
         $itemCategoryIds = $rfq->rfqLines->pluck('ItemCategoryId')->unique();

@@ -3,6 +3,7 @@
 @section('title', 'Requisitions')
 @section('styles')
     <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
     <style>
         .select2-container {
             width: 100% !important;
@@ -10,19 +11,20 @@
     </style>
 @endsection
 @section('content')
-    <div class="mb-3">
-        <h1 class="h3 d-inline align-middle">@yield('title')</h1>
-        <button class="btn btn-primary float-end ms-2 modal-create-item" type="button"><i
-                class="fas fa-plus-circle"></i> New
-            Requisition
-        </button>
+    <div class="row mb-3">
+        <div class="col-md-12 text-end">
+            <button class="btn btn-primary modal-create-item" type="button">
+                <i class="fas fa-plus-circle"></i> New Requisition
+            </button>
+        </div>
     </div>
+
     <div class="row">
         <div class="col-12">
             <div class="card mb-3">
                 <div class="card-body">
-                    <table id="requsitionTable"
-                           class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                    <div class="table-responsive">
+                    <table id="requisitionTable" class="table table-bordered table-striped align-middle">
                         <thead>
                         <tr>
                             <th>#</th>
@@ -47,6 +49,7 @@
                                 <td>{{ $item->RequisitionNo }}</td>
                                 <td>{{ $item->PlanTitle ?? 'N/A' }}</td>
                                 <td>{{ Carbon::parse($item->CreatedOn)->format('d-m-Y') }}</td>
+
                                 <td>{{ $item->BranchID }}</td>
                                 <td>{{ $item->DepartmentID }}</td>
                                 <td>{{ $item->Remarks }}</td>
@@ -54,7 +57,8 @@
                                 <td>{{ number_format($item->ExpectedPrice, 2) }}</td>
                                 <td>{{ $item->Status }}</td>
                                 <td><a href="{{ route('requisition.show',[ $item->Id]) }}" class="btn btn-info btn-sm">View</a>
-                                    <a href="{{ route('requisition.approval',[ $item->Id]) }}" class="btn btn-success btn-sm">Approve</a>
+                                    <a href="{{ route('requisition.approval',[ $item->Id]) }}"
+                                       class="btn btn-success btn-sm">Approve</a>
                                 </td>
 
 
@@ -66,6 +70,7 @@
                         @endforelse
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -139,13 +144,11 @@
                             </div>
 
                             <div class="mb-3">
-                                <div>
-                                    <label class="form-label" for="Remarks">Remarks <span
-                                    class="text-danger">*</span</label>
-                                </div>
+                                <label class="form-label" for="Remarks">Remarks <span class="text-danger">*</span></label>
                                 <textarea name="Remarks" id="Remarks" rows="3" class="form-control" maxlength="1000" required></textarea>
                                 <p id="Remarks_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
+
 
                             <hr>
                             <div class="mt-4">
@@ -164,14 +167,32 @@
     </div>
 @endsection
 @section('scripts')
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
     <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
+
     <script src="{{ asset('assets/js/datatables.js') }}"></script>
+
     <script>
         const $Modal = $('#RequisitionItemModal');
-        $(function () {
-            // $.fn.dataTable.ext.errMode = 'none';
-            // fetchCampaignsTable();
 
+        $(document).ready(function () {
+
+            @if(!$details->isEmpty())
+            $('#requisitionTable').DataTable({
+                pageLength: 10,
+                ordering: true,
+                searching: true,
+                lengthChange: true,
+                language: {
+                    emptyTable: "No data available"
+                }
+            });
+            @endif
+
+            // Modal open event
             $(document).on('click', '.modal-create-item', function () {
                 $(".modal-title").html('Add Requisition');
                 $(".modal-item").addClass('d-none');
@@ -179,58 +200,18 @@
                 $Modal.modal('show');
             });
 
+            // Form submission
             $('form#createRequisitionForm').submit(async function (e) {
-                // alert('hello');
                 e.preventDefault();
                 if (await saveForm($(this), $('#createRequisitionBtn'), true, true, true)) {
                     $Modal.modal('hide');
                 }
-
             });
-
 
             $("#MarketingList").select2({
                 dropdownParent: $Modal,
             });
-
         });
-
-        // function fetchCampaignsTable() {
-        //     if (!$.fn.DataTable.isDataTable('#requsitionTable')) {
-        //         $('#requsitionTable').DataTable({
-        //             processing: true,
-        //             serverSide: true,
-        //             responsive: true,
-        //             // "order": [[3, 'asc']],
-        //             "columnDefs": [
-        //                 {"className": "text-center", "targets": [2]}
-        //             ],
-        //             ajax: {
-        //                 url: getDocumentUrl(),
-        //                 error: function (request) {
-        //                     if (request.status === 400 && request.responseJSON.message) {
-        //                         nWarning(request.responseJSON.message);
-        //                     } else {
-        //                         codeNotify(request.status);
-        //                     }
-        //                 }
-        //             },
-        //             columns: [
-        //                 {data: "DT_RowIndex", name: 'DT_RowIndex', searchable: false, orderable: false},
-        //                 {data: 'Label', name: 'Label'},
-        //                 {data: 'Status', name: 'Status'},
-        //                 {data: 'contacts_count', name: 'contacts_count'},
-        //                 {data: 'CreatedOn', name: 'CreatedOn'},
-        //                 {data: 'action', name: 'action', orderable: false, searchable: false},
-        //             ], "oLanguage": {
-        //                 "sEmptyTable": "no campaigns under this filter"
-        //             }
-        //         }).on('error', function () {
-        //             nWarning("an issue occurred while loading campaigns.");
-        //         });
-        //     } else {
-        //         $('#requsitionTable').DataTable().ajax.reload();
-        //     }
-        // }
     </script>
 @endsection
+

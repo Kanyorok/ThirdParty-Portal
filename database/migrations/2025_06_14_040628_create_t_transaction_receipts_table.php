@@ -4,14 +4,13 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     public function up()
     {
         Schema::create('t_TransactionReceipts', function (Blueprint $table) {
             $table->id('Id');
-            $table->string('ReceiptId')->nullable();   
-            $table->foreignId('TransferId')->constrained('t_Transfers', 'Id');            
+            $table->string('ReceiptId')->nullable();
+            $table->foreignId('TransferId')->constrained('t_Transfers', 'Id');
             $table->string('ReceivedBy');
             $table->date('ReceivedDate');
             $table->text('GeneralRemarks')->nullable();

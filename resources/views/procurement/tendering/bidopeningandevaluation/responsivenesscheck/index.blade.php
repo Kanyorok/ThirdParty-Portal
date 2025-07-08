@@ -43,6 +43,7 @@
             <div class="table-responsive">
                 <table id="responsivenessTable" class="table table-bordered table-striped align-middle">
                     <thead class="table-light text-center">
+
                         <tr>
                             <th>#</th>
                             <th>Bidder Name</th>
@@ -63,6 +64,7 @@
                             <td>{{ $bid->supplier->SupplierName ?? '-' }}</td>
                             <td>{{ $bid->tender->TenderNo ?? '-' }}</td>
                             <td>{{ \Carbon\Carbon::parse($bid->CreatedOn)->format('Y-m-d') }}</td>
+
                             <td>
                                 @if($bid->bidResponsiveness)
                                     {{ $bid->bidResponsiveness->SubmittedTimely ? '✅' : '❌' }}
@@ -96,7 +98,6 @@
                             </td>
                             <td>
                                 <a href="{{ route('bidresponsiveness.create', $bid->id) }}" class="btn btn-sm btn-outline-secondary">Review</a>
-
                             </td>
 
                         </tr>
@@ -131,3 +132,4 @@
     });
 </script>
 @endsection
+

@@ -10,7 +10,6 @@
 @endsection
 @section('content')
     <div class="mb-3">
-        <h1 class="h3 d-inline align-middle">@yield('title')</h1>
         <button class="btn btn-primary float-end ms-2 modal-create-item" type="button"><i class="fas fa-plus-circle"></i> Add
             Items
         </button>
@@ -53,7 +52,7 @@
                                 <td>{{ $item->Urgency }}</td>
                                 {{--                                <td>{{ $item->Status }}</td>--}}
                                 <td>{{ $item->UserName }}</td>
-                                <td>{{ $item->CreatedOn }}</td>
+                                <td>{{ \Carbon\Carbon::parse($item->CreatedOn)->format('d/m/Y') }}</td>
                                 {{--                                <td>{{ $item->ModifiedBy }}</td> --}}
                                 {{--                                <td>{{ $item->ModifiedOn }}</td> --}}
                             </tr>
@@ -117,10 +116,11 @@
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label" for="Quantity">Quantity <span
-                                class="text-danger" id="QtyAvailable"></span></label>
-
-                                <input type="number" class="form-control" id="Quantity" name="Quantity" required step="any"
+                                <label class="form-label" for="Quantity">
+                                    Quantity <span id="QtyAvailable" class="badge bg-info text-dark ms-2"></span>
+                                </label>
+                                <input type="number" class="form-control" id="Quantity" name="Quantity" required
+                                       step="any"
                                        placeholder="Quantity">
                                 {{-- <textarea name="Quantity" id="Quantity" rows="3" class="form-control"
                                           maxlength="1000"></textarea> --}}
@@ -130,21 +130,21 @@
                                 <label class="form-label" for="UOM">UOM </label>
 
                                 <select class="form-control" name="UOM" id="UOM" required>
-                                    
+
                                 </select>
 
                                 <p id="UOM_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
-                         
+
                             <input type="hidden" name="EstimatedPrice" id="EstimatedPrice">
 
 {{--                            <div class="mb-3">--}}
-{{--                                <label class="form-label" for="LineItemID">LineItemID </label>--}}
+                            {{--                                <label class="form-label" for="LineItemID">LineItemID </label>--}}
 
-                                <input type="hidden" class="form-control" id="LineItemID" name="LineItemID"
-                                       readonly>
+                            <input type="hidden" class="form-control" id="LineItemID" name="LineItemID"
+                                   readonly>
 
-{{--                                <p id="LineItemID_error" class="invalid-feedback d-none error col-12" role="alert">--}}
+                            {{--                                <p id="LineItemID_error" class="invalid-feedback d-none error col-12" role="alert">--}}
 {{--                                </p>--}}
 {{--                            </div>--}}
 
@@ -185,15 +185,15 @@
     <script>
         const $Modal = $('#RequisitionItemModal');
 
-        // Inject Requisition ID from URL or backend
-        const requisitionId = "{{ $id ?? '' }}"; // fallback for safety
+        // Get requisition ID from backend or URL
+        const requisitionId = "{{ $id ?? '' }}";
 
-        function getRequisitionIdFromUrl(){
-            // use global if available
+        function getRequisitionIdFromUrl() {
             return requisitionId || window.location.pathname.split('/').pop();
         }
 
         $(function () {
+            // Show modal for adding item
             $(document).on('click', '.modal-create-item', function () {
                 $(".modal-title").html('Add Item');
                 $('#RequisitionID').val(getRequisitionIdFromUrl());
@@ -201,7 +201,8 @@
                 $('#createRequisitionItem').removeClass('d-none');
                 $Modal.modal('show');
             });
-            
+
+            // Handle form submission
             $('form#createRequisitionItemForm').submit(async function (e) {
                 e.preventDefault();
                 if (await saveForm($(this), $('#createRequisitionItemBtn'), true, true, true)) {
@@ -209,6 +210,7 @@
                 }
             });
 
+            // On type change -> fetch items
             $('#Type').on('change', function () {
                 let type = $(this).val();
                 let requisitionId = getRequisitionIdFromUrl();
@@ -225,9 +227,8 @@
                                 );
                             });
                         },
-                        error: function (response) {
+                        error: function () {
                             alert('Failed to load items');
-                            console.log(response);
                         }
                     });
                 } else {
@@ -235,6 +236,7 @@
                 }
             });
 
+            // On item change -> fetch item details
             $('#Item').on('change', function () {
                 let itemId = $(this).val();
                 let requisitionId = getRequisitionIdFromUrl();
@@ -247,41 +249,54 @@
                             if (response.data && response.data.length > 0) {
                                 let itemData = response.data[0];
 
-                                // Set UOM
+                                // UOM
                                 $('#UOM').empty().append(
                                     `<option value="${itemData.UOMID}">${itemData.UOM}</option>`
                                 );
 
-                                // Set estimated price
+                                // Estimated Price
                                 $('#EstimatedPrice').val(itemData.UnitPrice || 0);
-                                $('#LineItemID').val(item.LineItemID || '');
-                                // Display available quantity
-                                if (itemData.OriginalQty && itemData.OriginalQty > 0) {
-                                    $('#QtyAvailable').text(`Available Qty: ${itemData.OriginalQty}`);
+
+                                // LineItem ID
+                                $('#LineItemID').val(itemData.LineItemID || '');
+
+                                // Remaining Qty logic with color badges
+                                let remainingQty = parseFloat(itemData.RemainingQty ?? 0);
+                                if (!isNaN(remainingQty)) {
+                                    if (remainingQty > 0) {
+                                        $('#QtyAvailable').html(
+                                            `<span class="badge bg-info text-dark">Available Qty: ${remainingQty}</span>`
+                                        );
+                                    } else {
+                                        $('#QtyAvailable').html(
+                                            `<span class="badge bg-danger">Not Applicable or Available Qty Already Zero</span>`
+                                        );
+                                    }
                                 } else {
-                                    $('#QtyAvailable').text('');
+                                    $('#QtyAvailable').html('');
                                 }
+
                             } else {
+                                // Fallbacks
                                 $('#UOM').empty().append('<option value="">Select UOM</option>');
                                 $('#EstimatedPrice').val('');
-                                $('#QtyAvailable').text('');
+                                $('#QtyAvailable').html('');
+                                $('#LineItemID').val('');
                             }
                         },
-                        error: function (response) {
+                        error: function () {
                             alert('Failed to load item details');
-                            console.log(response);
                             $('#UOM').empty().append('<option value="">Select UOM</option>');
                             $('#EstimatedPrice').val('');
-                            $('#QtyAvailable').text('');
+                            $('#QtyAvailable').html('');
+                            $('#LineItemID').val('');
                         }
                     });
                 } else {
                     $('#UOM').empty().append('<option value="">Select UOM</option>');
-                    // $('#Description').val('');
                     $('#EstimatedPrice').val(0);
                     $('#LineItemID').val('');
-                    $('#EstimatedPrice').val('');
-                    $('#QtyAvailable').text('');
+                    $('#QtyAvailable').html('');
                 }
             });
 
@@ -289,6 +304,5 @@
                 dropdownParent: $Modal,
             });
         });
-</script>
-
+    </script>
 @endsection

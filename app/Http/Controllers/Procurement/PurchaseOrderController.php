@@ -24,7 +24,7 @@ class PurchaseOrderController extends Controller
     public function __construct(protected ItemService $itemService, protected SupplierService $supplierService, protected OrderService $orderService, protected RFQService $rfqService, protected DocumentApprovalService $documentApprovalService)
     {
 
-        $this->middleware('ajax')->except(['index', 'create', 'show', 'linkRFQ', 'fetchRFQDetails','approval','approve']);
+        $this->middleware('ajax')->except(['index', 'create', 'show', 'linkRFQ', 'fetchRFQDetails', 'approval', 'approve']);
 //        $this->authorizeResource(Order::class);
     }
 
@@ -331,8 +331,8 @@ class PurchaseOrderController extends Controller
         return view("procurement.orders.rfqlink", compact('RFQ'));
     }
 
-    public function approval($id){
-
+    public function approval($id)
+    {
 
 
         try {

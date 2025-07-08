@@ -33,34 +33,34 @@ class Ticket extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-                           'TicketID',
-                           'Title',
-                           'CategoryID',
-                           'Notes',
-                           'Party',
-                           'PartyID',
-                           'Source',
-                           'SourceID',
-                           'Status',
-                           'Priority',
-                           'Owner',
-                           'OwnerID',
-                           'ClosedOn',
-                           'SourceTicketID',
-                           'StartDate',
-                           'EndDate',
-                           'CreatedBy',
-                           'ModifiedBy',
-                           'DeletedBy',
-                          ];
+        'TicketID',
+        'Title',
+        'CategoryID',
+        'Notes',
+        'Party',
+        'PartyID',
+        'Source',
+        'SourceID',
+        'Status',
+        'Priority',
+        'Owner',
+        'OwnerID',
+        'ClosedOn',
+        'SourceTicketID',
+        'StartDate',
+        'EndDate',
+        'CreatedBy',
+        'ModifiedBy',
+        'DeletedBy',
+    ];
 
     protected $casts = [
-                        'Status'    => TicketStatusEnum::class,
-                        'Priority'  => TicketPriorityEnum::class,
-                        'ClosedOn'  => 'datetime',
-                        'StartDate' => 'datetime',
-                        'EndDate'   => 'datetime',
-                       ];
+        'Status' => TicketStatusEnum::class,
+        'Priority' => TicketPriorityEnum::class,
+        'ClosedOn' => 'datetime',
+        'StartDate' => 'datetime',
+        'EndDate' => 'datetime',
+    ];
 
     public static function getPrimaryKey(): string
     {
