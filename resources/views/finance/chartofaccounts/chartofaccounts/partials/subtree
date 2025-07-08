@@ -1,0 +1,19 @@
+@php
+    $children = $accounts->where('ParentGLID', $parentId);
+@endphp
+
+@if($children->count())
+    <ul class="list-group list-group-flush">
+        @foreach($children as $child)
+            <li class="list-group-item">
+                <a href="{{ route('chartofaccounts.show', $child->GLCode) }}">
+                    <strong>{{ $child->GLCode }}</strong> – {{ $child->AccountName }}
+                </a>
+                @include('finance.chartofaccounts.chartofaccounts.partials.subtree', [
+                    'accounts' => $accounts,
+                    'parentId' => $child->GLCode
+                ])
+            </li>
+        @endforeach
+    </ul>
+@endif
