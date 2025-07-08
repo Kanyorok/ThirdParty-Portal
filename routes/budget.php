@@ -69,6 +69,7 @@ use Illuminate\Support\Facades\Route;
 Route::namespace('Budget')->prefix('budget')->group(function () {
     Route::resource('budgetline', BudgetLinesController::class);
     Route::resource('budgetperiod', BudgetPeriodController::class);
+    Route::post('/budgetperiod/attachGL', [BudgetPeriodController::class,'attachGL'])->name('budgetperiod.attachGL');;
     Route::resource('budgetproductmaster', BudgetProductMasterController::class);
     Route::resource('budgetproducttype', BudgetProductTypeController::class);
     Route::resource('budgetlinemapping', BudgetLineMappingController::class);
@@ -152,5 +153,5 @@ Route::namespace('Budget')->prefix('budget')->group(function () {
 //        'index' => 'budgetline-reports.index',
 //        'show' => 'budgetline-reports.show'
 //    ]);
-//    Route::delete('budget/delete-gl-attachment/{id}', [BudgetPeriodController::class, 'delGLAttachment'])->name('budget.delete-gl-attachment');
+    Route::delete('budget/delete-gl-attachment/{id}', [BudgetPeriodController::class, 'delGLAttachment'])->name('budget.delete-gl-attachment');
 });

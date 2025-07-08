@@ -1,22 +1,10 @@
 @extends('layouts.app')
 @section('title', 'General Ledger Entries')
 @section('content')
-@if(session('error'))
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        {{ session('error') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
-@if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
 
 <div class="container mt-4">
     {{-- <h4 class="mb-3">📊 Budget Data Entry</h4> --}}
- 
+
     <form method="POST" action="{{ route('topdownallocation.display') }}">
         @csrf
         @method('POST')
@@ -53,7 +41,7 @@
                 </button>
             </div>
         </div>
- 
+
         <!-- MONTHLY FORMAT -->
         {{-- <div id="monthly_form" class="table-responsive mb-4">
             <div style="overflow-x: auto;">
@@ -78,7 +66,7 @@
 
                                 @for ($m = 1; $m <= 12; $m++)
                                     <td>
-                                        <input type="number" 
+                                        <input type="number"
                                             name="monthly_allocations[{{ $item->AccountID_CBS }}][{{ $m }}]"
                                             class="form-control"
                                             placeholder="e.g. 100000000"
@@ -102,7 +90,7 @@
                 </table>
             </div>
         </div> --}}
- 
+
         {{-- <button type="submit" class="btn btn-success" onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Saving...'; this.form.submit(); }">
         💾 Save Budget
         </button> --}}
@@ -137,5 +125,5 @@
 // });
 </script>
 
- 
+
 @endsection

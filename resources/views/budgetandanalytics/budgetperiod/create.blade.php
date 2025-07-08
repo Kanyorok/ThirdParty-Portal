@@ -72,6 +72,7 @@
                     <select class="form-select rounded-3" id="glAccounts" multiple size="8" disabled>
                         <option disabled>Select GL Accounts</option>
                     </select>
+                    <div class="form-text">Hold Ctrl (Windows) or Cmd (Mac) to select multiple GLs.</div>
                     <button type="button" class="btn btn-outline-primary mt-2 w-100 rounded-3" id="addGlButton" disabled>
                         <i class="bi bi-plus-circle me-1"></i>Add Selected GLs
                     </button>
