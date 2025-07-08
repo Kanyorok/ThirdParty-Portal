@@ -33,7 +33,14 @@
                 <tbody>
                 @foreach($plan->lineItems as $item)
                     <tr>
-                        <td>{{ $item->NeedID ?? 'N/A'}}</td>
+                        @php
+                            $matchNeed = $item->departmentNeed()
+                                ->where('BranchID', $item->BranchID)
+                                ->where('DepartmentID', $item->DepartmentID)
+                                ->whereNull('DeletedOn')
+                                ->first();
+                        @endphp
+                        <td>{{ $matchNeed->NeedID ?? 'N/A' }}</td>
                         <td>{{ $item->item->ItemName ?? 'N/A' }}</td>
                         <td>{{ $item->MergedQty }}</td>
                         <td>{{ number_format($item->EstimatedUnitCost, 2) }}</td>

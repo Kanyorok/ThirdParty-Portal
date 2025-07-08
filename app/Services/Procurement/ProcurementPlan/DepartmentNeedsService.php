@@ -18,6 +18,7 @@ class DepartmentNeedsService
         $existing = DepartmentNeed::where('BranchID', $branchId)
             ->where('DepartmentID', $departmentId)
             ->where('ItemID', $itemId)
+            ->where('IsUsed', '0') // Correct usage
             ->first();
 
         if ($existing) {

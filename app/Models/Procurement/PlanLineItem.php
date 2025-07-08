@@ -89,6 +89,11 @@ class PlanLineItem extends Model
         return $this->belongsTo(User::class, 'ModifiedBy', 'Id');
     }
 
+    public function departmentNeed()
+    {
+        return $this->hasOne(DepartmentNeed::class, 'ItemID', 'ItemID');
+    }
+
     public function deletedBy()
     {
         return $this->belongsTo(User::class, 'DeletedBy', 'Id');

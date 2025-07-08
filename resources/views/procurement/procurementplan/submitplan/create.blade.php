@@ -79,7 +79,7 @@
                                 <span class="text-danger">Unlinked</span>
                             @endif
                         </td>
-                        <td>{{ $item->procurementMode->Name ?? '—' }}</td>
+                        <td>{{ $item->setMethod->Name ?? '—' }}</td>
                         <td>
                             @if ($item->schedulePlan && $item->schedulePlan->periods->isNotEmpty())
                                 @foreach ($item->schedulePlan->periods as $period)

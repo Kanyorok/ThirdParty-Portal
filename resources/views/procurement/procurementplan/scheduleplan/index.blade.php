@@ -38,6 +38,7 @@
                     <thead class="table-light">
                     <tr>
                         <th>#</th>
+                        <th>Need ID</th>
                         <th>Item</th>
                         <th>Total Qty</th>
                         <th>Scheduled Qty</th>
@@ -96,6 +97,7 @@
                                         const row = `
                                         <tr>
                                             <td>${index + 1}</td>
+                                            <td>${line.NeedID || 'N/A'}</td>
                                             <td>${line.item_name}</td>
                                             <td>${line.MergedQty}</td>
                                             <td>${line.ScheduleQTY ?? '-'}</td>
