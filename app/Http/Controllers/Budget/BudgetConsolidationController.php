@@ -16,7 +16,7 @@ class BudgetConsolidationController extends Controller
     //
     public function index()
     {
-        // /return 1; 
+        // /return 1;
         //Define data array that will store the data for all types entry
         $data = [];
         $isSet = false;
@@ -30,7 +30,7 @@ class BudgetConsolidationController extends Controller
             $budget = Budget::find($budgetId);
             if (!$budget) {
                 return redirect()->back()->with('error', 'Budget not found');
-            }  
+            }
             else {
                 //Fetching the GLACCountTypes From Core details
                 $isSet = true;
@@ -46,7 +46,7 @@ class BudgetConsolidationController extends Controller
                         ->select('Id', 'Description', 'BudgetLineID', 'BranchID','AllocationType', 'FullAllocation')
                         ->get();
 
-                        //return $budgetActivities;     
+                        //return $budgetActivities;
                     foreach ($budgetActivities as $activity) {
                         //Get the name for the GLAccountSubType
                         $glAccountSubType = BudgetGLAccountSubType::find($activity->budgetLine->GLAccountSubTypeID)->GLAccountSubTypeName ?? 'N/A';
@@ -60,18 +60,23 @@ class BudgetConsolidationController extends Controller
                             $allocationValues = [];
                         }
 
-                        //Store this into the data arrays using keys from gl type value 
+                        //Store this into the data arrays using keys from gl type value
                         $data[$type->Description][$glAccountSubType][]=[
                             'budgetLineName'=>$budgetLineName,
                             'allocationValues'=>$allocationValues,
                             'allocationType'=>$activity->AllocationType,
                             'fullAllocation'=>$activity->FullAllocation,
                         ];
-                    } 
+                    }
                     ///////////////////////// Fetching data for Entry By Line //////////////////////////////////////////
-                    $entriesByLine=BudgetManualEntry::select('Id','BudgetID','BudgetLineID','BranchID','Amount','Comments')->where('BudgetID', $budgetId)->latest()->get();
+                    $entriesByLine=BudgetManualEntry::select('Id','BudgetID','BudgetLineID','BranchID','Amount','Comments')
+                        ->where('BudgetID', $budgetId)
+                        ->latest()->get();
                     //Get allocation for this lines and place them in data array
                     foreach ($entriesByLine as $entry) {
+                        //Have a check to filter based on the GLType
+                        $typeCheck=BudgetLine::find($entry->BudgetLineID)->GLAccountTypeID;
+                        if($typeCheck !== $type->Value) continue;
                         $budgetLine = BudgetLine::find($entry->BudgetLineID);
                         if ($budgetLine) {
                             $glAccountSubType = BudgetGLAccountSubType::find($budgetLine->GLAccountSubTypeID)->GLAccountSubTypeName ?? 'N/A';
