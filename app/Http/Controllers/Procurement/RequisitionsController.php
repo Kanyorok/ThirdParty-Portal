@@ -8,6 +8,7 @@ use App\Http\Requests\Procurement\Requisition\ApproveRequisitionRequest;
 use App\Http\Requests\Procurement\Requisition\RequisitionRequest;
 use App\Models\Procurement\Order;
 use App\Models\Procurement\Requisitions;
+use App\Models\HRM\Employee;
 use App\Services\Core\DocumentApprovalService;
 use App\Services\Procurement\Requisition\RequisitionItemService;
 use App\Services\Procurement\Requisition\RequisitionService;
@@ -17,6 +18,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Enums\ProcurementPlanStatusEnum;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class RequisitionsController extends Controller
 {
@@ -57,34 +59,43 @@ class RequisitionsController extends Controller
     public function create()
     {
         try {
-            $details = $this->service->fetchRequisition();
-            $branches = $this->service->fetchBranches();
-            $departments = $this->service->fetchDepartments();
-            $procurementPlans = $this->service->fetchProcurementPlan();
+            $user = Auth::user();
 
-            if (!$details || !$branches || !$departments || !$procurementPlans) {
-                return view('procurement.requisitions.create', [
-                    'details' => $details ?? [],
-                    'branches' => $branches ?? [],
-                    'departments' => $departments ?? [],
-                    'procurementPlans' => $procurementPlans ?? [],
-                ]);
+            // Fetch employee with branch and department
+            $employee = Employee::where('Id', $user->EmployeeId)
+                ->with('branch', 'department') // if relations exist
+                ->first();
+
+            $branchId = session('LoginBranchId');
+            $departmentId = $employee?->DepartmentId ?? null;
+
+            $departmentName = null;
+
+            if ($departmentId) {
+                $departmentName = DB::table('t_Departments')->where('Id', $departmentId)->value('Name');
             }
 
-            return view('procurement.requisitions.create', compact(
-                'details', 'branches', 'departments', 'procurementPlans'
-            ));
+            $details = $this->service->fetchRequisition();
+            $procurementPlans = $this->service->fetchProcurementPlan();
+
+            return view('procurement.requisitions.create', [
+                'details' => $details ?? [],
+                'branchId' => $branchId,
+                'departmentId' => $departmentId,
+                'departmentName' => $departmentName,
+                'procurementPlans' => $procurementPlans ?? [],
+            ]);
         } catch (\Exception $e) {
-            Log::error('Data fetch failed: ' . $e->getMessage());
+            Log::error('Requisition create failed: ' . $e->getMessage());
+
             return view('procurement.requisitions.create', [
                 'details' => [],
-                'branches' => [],
-                'departments' => [],
+                'branchId' => null,
+                'departmentId' => null,
                 'procurementPlans' => [],
             ])->with('error', 'An error occurred: ' . $e->getMessage());
         }
     }
-
 
     /**
      * Store a newly created resource in storage.
