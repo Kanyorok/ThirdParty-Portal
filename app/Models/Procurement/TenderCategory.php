@@ -16,7 +16,7 @@ class TenderCategory extends Model {
 
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
         'CategoryCode',
@@ -30,7 +30,7 @@ class TenderCategory extends Model {
     //     'TenderCategory' => TenderCategoryEnum::class,
     // ];
 
-    public static function generateCatCode(string $categoryValue = null)
+    public static function generateCatCode($categoryValue = null)
     {
         $prefix = match($categoryValue) {
             TenderCategoryEnum::Goods->value => 'GDT-',

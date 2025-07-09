@@ -94,6 +94,8 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
 
     Route::post('requisition/approve/{id}', [RequisitionsController::class, 'approve'])->name('requisition.approve');
     Route::get('requisition/approval/{id}', [RequisitionsController::class, 'approval'])->name('requisition.approval');
+    Route::get('procurementplan/details/{id}', [RequisitionsController::class, 'getPlanDetails'])
+     ->name('procurement.plan.details');
     Route::prefix('admin')->group(function () {
         Route::put('/approval-settings/{id}', [ApprovalSetupController::class, 'update'])->name('approval-setup.update');
         Route::post('/approval-settings', [ApprovalSetupController::class, 'store'])->name('approval-settings.store');

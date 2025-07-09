@@ -55,6 +55,7 @@
                         <thead>
                         <tr>
                             <th>#</th>
+                            <th>NEED ID</th>
                             <th>Item</th>
                             <th>Branch</th>
                             <th>Qty</th>
@@ -69,13 +70,14 @@
                         @foreach($selectedPlan->lineItems as $index => $item)
                             <tr>
                                 <td>{{ $index + 1 }}</td>
+                                <td>{{ $item->departmentNeed->NeedID ?? 'N/A' }}</td>
                                 <td>{{ $item->item->ItemName ?? 'N/A' }}</td>
                                 <td>{{ $item->branch->Name ?? 'N/A' }}</td>
                                 <td>{{ $item->MergedQty ?? 'N/A' }}</td>
                                 <td>{{ $item->EstimatedUnitCost ?? 'N/A' }}</td>
                                 <td>{{ $item->MergedQty && $item->EstimatedUnitCost ? number_format($item->MergedQty * $item->EstimatedUnitCost, 2) : 'N/A' }}</td>
                                 <td>{{ $item->budgetLine->Description ?? 'N/A' }}</td>
-                                <td>{{ $item->procurementMode->Name ?? 'N/A' }}</td>
+                                <td>{{ $item->procurementMode->Description ?? 'N/A' }}</td>
                                 <td>{{ $item->SchedulePeriod ?? 'N/A' }}</td>
                             </tr>
                         @endforeach

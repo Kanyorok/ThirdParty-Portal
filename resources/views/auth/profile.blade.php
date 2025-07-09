@@ -24,7 +24,6 @@
                     </div>
                     {!! $user->getImage('id="image_upload_preview" alt=".." class="img-fluid avatar-1 rounded-circle mb-2" width="128" height="128"') !!}
                     <h5 class="card-title mb-0">{{ $user->Name }}</h5>
-                    <div class="text-muted mb-2">{{ $user->roles()->first()?->name }}</div>
                 </div>
                 <div class="card-body">
                     <div class="text-center">

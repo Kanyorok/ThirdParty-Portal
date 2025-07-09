@@ -28,7 +28,7 @@ class StaticListsService
         return (new self($detail))->setOrder($actor);
     }
 
-    public function setOrder(User $actor, int $position = null): static
+    public function setOrder(User $actor, $position = null): static
     {
         if (is_int($position)) {
             $newPosition = $position;
@@ -71,13 +71,13 @@ class StaticListsService
         return $this->setOrder($actor, (CodeDetail::query()->where('CodeID', $this->codeDetail->CodeID)->count()));
     }
 
-    public const string MarketingModes = 'MarketingModes';
-    public const string CustomerResponses = 'CustomerResponses';
-    public const string ProductDevelopmentStages = 'ProductDevelopmentStages';
-    public const string LeadLossReason = 'LeadLossReason';
-    public const string Industries = 'Industries';
-    public const string CustomerType = 'CustomerTypes';
-    public const string TicketCategories = 'TicketCategories';
+    public const MarketingModes = 'MarketingModes';
+    public const CustomerResponses = 'CustomerResponses';
+    public const ProductDevelopmentStages = 'ProductDevelopmentStages';
+    public const LeadLossReason = 'LeadLossReason';
+    public const Industries = 'Industries';
+    public const CustomerType = 'CustomerTypes';
+    public const TicketCategories = 'TicketCategories';
 
 
     public static function getLists(): Collection

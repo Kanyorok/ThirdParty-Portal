@@ -5,7 +5,7 @@ namespace App\Policies\Procurement;
 use App\Enums\Core\PermissionEnum;
 use App\Enums\Procurement\DepartmentNeedsEnum;
 use App\Models\Auth\User;
-use App\Models\Procurement\DepartmentNeeds;
+use App\Models\Procurement\DepartmentNeed;
 
 class DepartmentNeedsPolicy
 {
@@ -22,22 +22,22 @@ class DepartmentNeedsPolicy
         return $user->can(PermissionEnum::DepartmentNeedsWrite->value);
     }
 
-    public function view(User $user, DepartmentNeeds $departmentNeeds): bool
+    public function view(User $user, DepartmentNeed $departmentNeeds): bool
     {
         return $user->can(PermissionEnum::DepartmentNeedsRead->value);
     }
 
-    public function update(User $user, DepartmentNeeds $departmentNeeds): bool
+    public function update(User $user, DepartmentNeed $departmentNeeds): bool
     {
         return $user->can(PermissionEnum::DepartmentNeedsUpdate->value);
     }
 
-    public function destroy(User $user, DepartmentNeeds $departmentNeeds): bool
+    public function destroy(User $user, DepartmentNeed $departmentNeeds): bool
     {
         return $user->can(PermissionEnum::DepartmentNeedsDelete->value);
     }
 
-    public function approve(User $user, DepartmentNeeds $departmentNeeds): bool
+    public function approve(User $user, DepartmentNeed $departmentNeeds): bool
     {
         //dd($departmentNeeds);
         if ($departmentNeeds->Status->value === DepartmentNeedsEnum::Approved->value) {

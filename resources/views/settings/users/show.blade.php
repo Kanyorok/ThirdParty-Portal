@@ -24,11 +24,6 @@
                                                                      data-click_url="{{ route('users.edit',$user->UserID) }}"
                                                                      data-summary_title="Update {{ $user->Name }} details."><i
                                 class="fas fa-edit"></i></a></h5>
-                    <div class="text-muted mb-2">Role : {{ $user->role()?->name }}
-                        <a href="#" class="ml-2 click-summary-data"
-                           data-click_url="{{ route('user_roles.index',$user->UserID) }}"
-                           data-summary_title="Update {{ $user->Name }} Role."><i
-                                class="fas fa-edit"></i></a></div>
                 </div>
                 <div class="card-body border-top">
                     <h5 class="h6 card-title">Contacts</h5>
@@ -40,7 +35,7 @@
                                         aria-expanded="false" class="btn btn-link dropdown-toggle">
                                     {{ $user->Phone }}
                                 </button>
-                                <div class="dropdown-menu" style="">
+                                <div class="dropdown-menu">
                                     <a class="dropdown-item disabled text-decoration-line-through"
                                        href="javascript:void(0)"><i class="fas fa-phone-alt"></i> Call</a>
                                     <div class="dropdown-divider"></div>
@@ -75,6 +70,8 @@
                                             aria-selected="false">Credentials</a></li>
                     <li class="nav-item"><a class="nav-link" href="#tab-3" data-bs-toggle="tab" role="tab"
                                             aria-selected="false">Attrition</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#tab-4" data-bs-toggle="tab" role="tab"
+                                            aria-selected="false">Branch Role</a></li>
                 </ul>
                 <div class="tab-content">
                     <div class="tab-pane active m-2" id="tab-1" role="tabpanel">
@@ -130,6 +127,69 @@
                             </form>
                         </div>
                     </div>
+                    <div class="tab-pane m-2" id="tab-4" role="tabpanel">
+                    <h5 class="mb-3">Branch Role Assignments</h5>
+
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Branch</th>
+                                <th>Role</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                             @foreach($user->branchRoles as $assignment)
+                                <tr>
+                                    <td>{{ $assignment->branch->Name ?? '—' }}</td>
+                                    <td>{{ $assignment->role->name ?? '—' }}</td>
+                                    <td>
+                                        <form method="POST" action="#">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+
+                    <hr>
+
+                    <form method="POST" action="{{ route('user_roles.store',$user->UserID)}}">
+                        @csrf
+                        <input type="hidden" name="model_id" value="{{ $user->UserID }}">
+                        <input type="hidden" name="model_type" value="App\Models\User">
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label>Branch</label>
+                                <select name="BranchId" class="form-control select2">
+                                    <option disabled selected>Select Branch</option>
+                                    @foreach($branches as $branch)
+                                        <option value="{{ $branch->Id }}">{{ $branch->Name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label>Role</label>
+                                <select name="role_id" class="form-control select2">
+                                    <option disabled selected>Select Role</option>
+                                    @foreach($roles as $role)
+                                        <option value="{{ $role->id }}">{{ $role->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="col-12 text-end mt-3">
+                                <button class="btn btn-primary">Assign Role to Branch</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
                 </div>
             </div>
         </div>
@@ -166,7 +226,7 @@
                     "order": [[1, 'desc']],
                     dom: 'rtip',
                     ajax: {
-                        url: '{{ route('user.activities',[$user->UserID]) }}',
+                        url: "{{ route('user.activities',[$user->UserID]) }}",
                         error: function (jqXHR) {
                             codeNotify(jqXHR.status);
                         }

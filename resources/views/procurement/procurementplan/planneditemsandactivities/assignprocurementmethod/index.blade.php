@@ -39,6 +39,7 @@
                     <table class="table table-bordered align-middle">
                         <thead class="table-light">
                             <tr>
+                                <th>Need ID</th>
                                 <th>Item</th>
                                 <th>Qty</th>
                                 <th>Est. Cost</th>
@@ -94,6 +95,7 @@
                     data.forEach(line => {
                         const row = `
                             <tr>
+                               <td>${line.NeedID || 'N/A'}</td>
                                 <td>${line.item_name}</td>
                                 <td>${line.MergedQty}</td>
                                 <td>KES ${parseFloat(line.EstimatedUnitCost).toLocaleString()}</td>
