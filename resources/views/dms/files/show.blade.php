@@ -316,23 +316,20 @@
         function fetchFilePreview() {
             const previewContainer = document.getElementById('FilePreviewPage');
 
-            fetch("{{ route('file.preview', [$file->DocumentId]) }}")
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.text();
-                })
-                .then(html => {
+            $.ajax({
+                url: "{{ route('file.preview', [$file->DocumentId]) }}",
+                method: "GET",
+                success: function (html) {
                     previewContainer.innerHTML = html;
-                })
-                .catch(error => {
+                },
+                error: function (jqXHR) {
                     previewContainer.innerHTML = `
-                        <div class="text-center m-5">
-                            <i class="fas fa-exclamation-triangle fa-3x text-danger"></i>
-                            <p class="mt-2">Error loading preview: ${error.message}</p>
-                        </div>`;
-                });
+            <div class="text-center m-5">
+                <i class="fas fa-exclamation-triangle fa-3x text-danger"></i>
+                <p class="mt-2">Error loading preview: ${jqXHR.statusText}</p>
+            </div>`;
+                }
+            });
         }
 
 

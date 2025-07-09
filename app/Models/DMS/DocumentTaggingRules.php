@@ -27,7 +27,8 @@ class DocumentTaggingRules extends Model
 
     protected $casts = [
         'Content' => ContentEnum::class,
-        'Comparison' => StringComparisonEnum::class
+        'Comparison' => StringComparisonEnum::class,
+        'TagId' => 'integer',
     ];
 
     public static function getPrimaryKey(): string

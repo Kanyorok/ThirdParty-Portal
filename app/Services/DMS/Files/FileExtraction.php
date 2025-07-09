@@ -45,15 +45,14 @@ abstract class FileExtraction extends DocumentService
                 return true;
             }, 2);
         } catch (Throwable $e) {
-            Log::error('Generate Document Blog & Auto Tagging Failed : ');
-            Log::error($e);
+            Log::error('Generate Document Blog & Auto Tagging Failed : ' . $e);
             return false;
         }
     }
 
     protected function createTempFile(): ?string
     {
-        $name = Uuid::uuid4()->toString() . $this->extension->value;
+        $name = Uuid::uuid4()->toString() . '.' . $this->extension->value;
         return (Storage::disk('temp')->put($name, $this->getFileContent(false))) ? $name : null;
     }
 

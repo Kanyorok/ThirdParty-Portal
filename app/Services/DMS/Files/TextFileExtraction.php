@@ -12,7 +12,7 @@ class TextFileExtraction extends FileExtraction
             return false;
         }
         $name = $this->createTempFile();
-        $content = $this->getContent(storage_path('app/temp') . $name);
+        $content = $this->getContent(storage_path('app/temp') . '/' . $name);
         $this->trashTempFile($name);
         if ($content !== '') {
             return $this->handleContent($content);

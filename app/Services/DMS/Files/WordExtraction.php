@@ -18,7 +18,7 @@ class WordExtraction extends FileExtraction
             return false;
         }
         $name = $this->createTempFile();
-        $content = $this->extractDocumentText(storage_path('app/temp') . $name);
+        $content = $this->extractDocumentText(storage_path('app/temp') . '/' . $name);
         $this->trashTempFile($name);
         if ($content !== '') {
             return $this->handleContent($content);

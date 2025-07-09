@@ -70,18 +70,25 @@
                     <div class="row">
                         <div class="col-12">
                             <div class="card">
-                                <div class="card-header"><h5>Tagging Rules</h5></div>
+                                <div class="card-header">
+                                    <div class="card-actions float-end">
+                                        <button type="button" class="btn btn-sm btn-primary click-summary-data"
+                                                data-summary_title='New Tagging Rule'
+                                                data-click_url='{{ route('tagging-rules.create',[$tag->TagID]) }}'
+                                        ><i class="fas fa-plus-circle"></i> create a new rule
+                                        </button>
+                                    </div>
+                                    <h5>Tagging Rules</h5></div>
                                 <div class="card-body  table-responsive">
                                     <table id="TaggingRulesTable"
                                            class="table table-striped dataTable no-footer dtr-inline w-100">
                                         <thead>
                                         <tr>
-                                            <th></th>
-                                            <th>Name</th>
-                                            <th>Type</th>
-                                            <th>Email</th>
-                                            <th>Phone</th>
-                                            <th>Last Contact</th>
+                                            <th>No.</th>
+                                            <th>What</th>
+                                            <th>How</th>
+                                            <th>Value</th>
+                                            <th>actions</th>
                                         </tr>
                                         </thead>
                                         <tbody></tbody>
@@ -187,6 +194,24 @@
                             </div>
                         </form>
                     </div>
+                    <div class="onboarding-content with-gradient d-none modal-item text-center"
+                         id="trashTaggingRuleModal">
+                        <h4 class="text-danger">
+                            Trash Document Tagging rule : <br> <b id="trashTaggingRule"></b> ?
+                        </h4>
+                        <form id="trashTaggingRuleForm" method="post"> @csrf @method('delete')
+                            <div class="mt-4">
+                                <button type="button" class="btn btn-secondary float-start"
+                                        data-bs-dismiss="modal">
+                                    no, cancel
+                                </button>
+                                <button class="btn btn-danger float-end" id="trashTaggingRuleBtn"
+                                        type="submit"><i
+                                        class="fas fa-trash"></i> yes, delete
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -199,6 +224,21 @@
             $.fn.dataTable.ext.errMode = 'none';
             fetchDocumentsTable();
 
+            $(document).on('click', '.modal-trash-rule', function () {
+                $(".modal-title").html('<b class="text-danger">Remove </b> tagging rule');
+                $(".modal-item").addClass('d-none');
+                $("#trashTaggingRuleForm").attr('action', $(this).data('click_url'));
+                $("#trashTaggingRule").html($(this).data('info'));
+                $('#trashTaggingRuleModal').removeClass('d-none');
+                $Modal.modal('show');
+            });
+            $('form#trashTaggingRuleForm').submit(async function (e) {
+                e.preventDefault();
+                if (await saveForm($(this), $('#trashTaggingRuleBtn'), false, true, true)) {
+                    $Modal.modal('hide');
+                    fetchTaggingRulesTable();
+                }
+            });
             $(document).on('click', '.modal-trash-tag', function () {
                 $(".modal-title").html('Trash Tag : {{ $tag->Name }}');
                 $(".modal-item").addClass('d-none');
@@ -281,39 +321,25 @@
                     processing: true,
                     serverSide: true,
                     responsive: true,
-                    /* "order": [[5, 'desc']],
-                     "columnDefs": [
-                         {"className": "text-center", "targets": [2]}
-                     ],*/
-                    /* 'columnDefs': [
-                         {
-                             'targets': 0,
-                             'checkboxes': {
-                                 'selectRow': true
-                             }
-                         }
-                     ], */
                     ajax: {
-                        url: '{{--{{ route('marketing-list.leads', [$tag->slug, 'q'=> 'current']) }}--}}',
+                        url: '{{ route('tagging-rules.index', [$tag->TagID]) }}',
                         error: function (jqXHR) {
                             codeNotify(jqXHR.status);
                         }
                     },
-
                     columns: [
                         {data: "DT_RowIndex", name: 'DT_RowIndex', searchable: false, orderable: false},
-                        {data: 'Name', name: 'Name'},
-                        {data: 'Type', name: 'Type'},
-                        {data: 'Email', name: 'Email'},
-                        {data: 'Phone', name: 'Phone'},
-                        {data: 'LastContacted', name: 'LastContacted'},
+                        {data: 'Content', name: 'Content'},
+                        {data: 'Comparison', name: 'Comparison'},
+                        {data: 'Value', name: 'Value'},
+                        {data: 'action', name: 'action', orderable: false, searchable: false},
                     ], "oLanguage": {
-                        "sEmptyTable": "no leads found here"
+                        "sEmptyTable": "No automated tagging rules found for this tag.",
                     }
                 });
 
                 TaggingRulesTable.on('error', function (er) {
-                    nWarning("an issue occurred while loading leads.");
+                    nWarning("an issue occurred while loading tagging rules.");
                     console.log(er);
                 });
             } else {

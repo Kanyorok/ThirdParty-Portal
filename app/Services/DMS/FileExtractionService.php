@@ -19,7 +19,7 @@ class FileExtractionService
     public function __construct(protected Document $document)
     {
         $ex = $this->document->ext();
-        if ($ex instanceof ExtensionsEnum) {
+        if (!$ex instanceof ExtensionsEnum) {
             throw new RuntimeException('Invalid file extension');
         }
         $this->extension = $ex;

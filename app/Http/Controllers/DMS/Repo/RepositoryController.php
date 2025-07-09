@@ -130,10 +130,8 @@ class RepositoryController extends Controller
                 ]);
             });
         } catch (Throwable|Exception $e) {
-            Log::error('trash board member.');
-            Log::error($e);
+            Log::error('trash board member : ' . $e);
             return $this->errored('an unexpected error occurred');
         }
-
     }
 }

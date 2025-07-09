@@ -99,10 +99,9 @@ class DocumentService extends PermissionsService
 
         $properties = (new FileProperties($file, $extension))->getProperties();
         $path = self::_saveFile($disk, $file->getContent());
-        $checksum2 = hash_file('sha256', $path);
+        $checksum2 = hash_file('sha256', Storage::disk($disk->value)->path($path));
         $checksum = base64_encode($checksum1 . '|' . $checksum2);
-        //for blob use https://github.com/NilGems/laravel-textract
-        //todo create event for blob and tags
+
         return self::_create($repository, $actor, $disk, $file->getClientOriginalName(), $extension, $path, $file->getSize(), $checksum, '', properties: $properties, copyPermissions: $copyRepoPermissions = false);
     }
 
@@ -113,10 +112,11 @@ class DocumentService extends PermissionsService
     {
         // $path = $disk->path() . '/' . Uuid::uuid4()->toString() . '.' . $extension->value;
         $path = $disk->path() . '/' . Uuid::uuid4()->toString() . '.data';
-        if (!Storage::disk($disk->value)->put($path, (new EncryptionService())->encrypt($contents))) {
-            throw new ErroredException('Saving file failed.');
+        if (Storage::disk($disk->value)->put($path, (new EncryptionService())->encrypt($contents))) {
+            return $path;
         }
-        return $path;
+        throw new ErroredException('Saving file failed.');
+
     }
 
     public function getFileContent(bool $base64 = true): string

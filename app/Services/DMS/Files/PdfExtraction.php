@@ -18,9 +18,9 @@ class PdfExtraction extends FileExtraction
             return false;
         }
         $name = $this->createTempFile();
-        $content = $this->simpleExtractText(storage_path('app/temp') . $name);
+        $content = $this->simpleExtractText(storage_path('app/temp') . '/' . $name);
         if ($content === '') {
-            $content = $this->ocr(storage_path('app/temp') . $name);
+            $content = $this->ocr(storage_path('app/temp') . '/' . $name);
         }
         $this->trashTempFile($name);
         if ($content !== '') {

@@ -7,7 +7,7 @@ use App\Models\DMS\Document;
 use App\Services\DMS\DocumentService;
 use Illuminate\View\View;
 
-class DocumentActionsConroller extends Controller
+class DocumentActionsController extends Controller
 {
     public function __construct()
     {

@@ -47,7 +47,7 @@ return new class extends Migration {
             $table->string('Version');
             $table->string('Path', 2000);
             $table->char('Disk', 2)->comment('Disk Enum');
-            $table->string('Checksum', 100);
+            $table->string('Checksum', 250);
             $table->unsignedBigInteger('Size');
             $table->foreignId('DocumentId')->constrained('t_Documents', 'Id');
             $table->longText('Description')->nullable();
@@ -89,8 +89,8 @@ return new class extends Migration {
         Schema::create('t_DMSTaggingRules', static function (Blueprint $table) {
             $table->id('Id');
             $table->foreignId('TagId')->constrained('t_DMSTags', 'Id');
-            $table->char('Content')->comment('ContentEnum - body/title');
-            $table->char('Comparison')->comment('StringComparisonEnum - contains, equal');
+            $table->char('Content', 2)->comment('ContentEnum - body/title');
+            $table->char('Comparison', 2)->comment('StringComparisonEnum - contains, equal ..');
             $table->string('Value');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
