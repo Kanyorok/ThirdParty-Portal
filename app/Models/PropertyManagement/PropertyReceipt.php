@@ -18,7 +18,7 @@ class PropertyReceipt extends Model
         'BillingMonth',
         'InvoiceDate',
         'RentAmount',
-        'ServiceCharge',
+        'ServicesCharge',
         'OtherCharges',
         'TotalDue',
         'AmountPaid',
