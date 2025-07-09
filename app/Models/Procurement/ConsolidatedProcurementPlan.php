@@ -14,9 +14,9 @@ class ConsolidatedProcurementPlan extends Model
 {
     use SoftDeletes, UserActorTrait;
 
-    const string CREATED_AT = 'CreatedOn';
-    const string UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    const CREATED_AT = 'CreatedOn';
+    const UPDATED_AT = 'ModifiedOn';
+    const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_ConsolidatedProcurementPlan';
     protected $primaryKey = 'PlanID';
@@ -78,7 +78,7 @@ class ConsolidatedProcurementPlan extends Model
     }
     public function lineItems()
     {
-        return $this->hasMany(PlanLineItems::class, 'PlanID');
+        return $this->hasMany(PlanLineItem::class, 'PlanID');
     }
 
 }

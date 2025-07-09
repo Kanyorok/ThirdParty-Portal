@@ -31,10 +31,11 @@ use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 use Throwable;
 use Yajra\DataTables\DataTables;
+use App\Models\Auth\ModelRole;
 
 class UserService
 {
-    public const string MODULE = 'USERS';
+    public const MODULE = 'USERS';
 
     public function __construct(public User $user)
     {
@@ -106,7 +107,16 @@ class UserService
                 if (array_key_exists('action_team', $extra)) {
                     return '<button type="button"  data-action="' . route('team-users.destroy', [$extra['action_team'], $user->UserID]) . '" data-name="' . $user->Name . '" class="btn btn-danger btn-sm modal-trash-team-users"><i class="fas fa-trash"></i></button>';
                 }
-                return '<a  href="' . route('users.show', [$user->UserID]) . '" class="btn btn-info btn-sm"><i class="fas fa-eye"></i> details</button>';
+                return '
+                    <a href="' . route('users.show', [$user->UserID]) . '" class="btn btn-info btn-sm me-1">
+                        <i class="fas fa-eye"></i> Details
+                    </a>
+                    <button type="button"
+                            data-click_url="' . route('roles.edit', [$user->UserID]) . '"
+                            data-summary_title="' . $user->Name . ': Branches"
+                            class="btn btn-primary btn-sm click-summary-data">
+                        <i class="fas fa-edit"></i>
+                    </button>';
             })->editColumn('pivot', function (User $user) use ($extra) {
                 if (!in_array('pivot_date', $extra, true)) {
                     return '';
@@ -130,7 +140,7 @@ class UserService
             ])->rawColumns(['action', 'photo'])->make();
     }
 
-    public function sendMessage(string $message, User $actor, bool $immediate = false, BulkNotification $bulkNotification = null): static
+    public function sendMessage(string $message, User $actor, bool $immediate = false, $bulkNotification = null): static
     {
         if (SystemHelper::isSystem($this->user)) {
             return $this;
@@ -156,11 +166,16 @@ class UserService
         return ($query) ? $q : $q->get();
     }
 
-    public function setRole(Role $role, User $actor): static
+    public function setRole(Role $role, Branch $branch, User $actor): static
     {
-        $this->user->syncRoles($role->name);
-
-        activity()->causedBy($actor)->performedOn($this->user)->event('update')->log('Updated user ' . $this->user->UserID . ' role to ' . $role->name);
+        // Assign system-level role using Spatie (optional if you're not using permission checks globally)
+        $this->user->syncRolesWithBranch([$role->name], $branch->Id, $actor->Id);
+        // Log activity
+        activity()
+            ->causedBy($actor)
+            ->performedOn($this->user)
+            ->event('update')
+            ->log('Assigned role ' . $role->name . ' to user ' . $this->user->UserID . ' for branch ' . $branch->Name);
 
         return $this;
     }
@@ -194,7 +209,7 @@ class UserService
         return ($user instanceof BRUser) ? $user : null;
     }
 
-    public function update(string $UserID, string $Name, string $Email, string $Phone, GenderEnum $Gender, User $actor, string $Signature = '', string $Notes = '', Branch $branch = null): static
+    public function update(string $UserID, string $Name, string $Email, string $Phone, GenderEnum $Gender, User $actor, string $Signature = '', string $Notes = '', $branch = null): static
     {
         $email_change = ($this->user->Email === $Email) ? null : $this->user->Email;
         $this->user->update([
@@ -221,7 +236,7 @@ class UserService
         return $this;
     }
 
-    public function sendEmail(string $subject, string $body, array $cc = [], bool|null $immediate = false, EmailPriorityEnum $priorityEnum = EmailPriorityEnum::Normal, Email $email = null): ?CRMEmailService
+    public function sendEmail(string $subject, string $body, array $cc = [], bool|null $immediate = false, EmailPriorityEnum $priorityEnum = EmailPriorityEnum::Normal, $email = null): ?CRMEmailService
     {
         if (SystemHelper::isSystem($this->user)) {
             return null;

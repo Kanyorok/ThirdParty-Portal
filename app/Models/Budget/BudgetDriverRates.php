@@ -9,20 +9,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BudgetDriverRates extends Model
 {
-    use UserActorTrait,SoftDeletes;
-  
-    protected $table='t_BudgetDriverRates';
-    protected $primaryKey = 'Id';
-    
+    use UserActorTrait, SoftDeletes;
+
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
-
-    public static function getPrimaryKey(): string
-    {
-        return 'BudgetDriverRatesId';
-    }
-
+    protected $table = 't_BudgetDriverRates';
+    protected $primaryKey = 'Id';
     protected $fillable = [
         'PeriodTypeID',
         'ProductTypeID',
@@ -37,27 +30,32 @@ class BudgetDriverRates extends Model
         'ModifiedOn',
         'DeletedBy',
     ];
-
     protected $casts = [
-        'CreatedOn'   => 'datetime',
-        'ModifiedOn'  => 'datetime',
-        'DeletedOn'   => 'datetime',
+        'CreatedOn' => 'datetime',
+        'ModifiedOn' => 'datetime',
+        'DeletedOn' => 'datetime',
     ];
 
+    public static function getPrimaryKey(): string
+    {
+        return 'BudgetDriverRatesId';
+    }
+
     //Relations
+
     public function productType(): BelongsTo
     {
-        return $this->belongsTo(BudgetProductType::class,'ProductTypeID','Id');
+        return $this->belongsTo(BudgetProductType::class, 'ProductTypeID', 'Id');
     }
 
-    public function periodType():BelongsTo
+    public function periodType(): BelongsTo
     {
-        return $this->belongsTo(BudgetPeriodTypes::class,'PeriodTypeID','Id');
+        return $this->belongsTo(BudgetPeriodTypes::class, 'PeriodTypeID', 'Id');
     }
 
-    public function rateType():BelongsTo
+    public function rateType(): BelongsTo
     {
-        return $this->belongsTo(BudgetRates::class,'RateTypeID','Id');
+        return $this->belongsTo(BudgetRates::class, 'RateTypeID', 'Id');
     }
-    
+
 }

@@ -14,7 +14,8 @@
                     <select class="form-select" id="approved-plan-select">
                         <option selected disabled>-- Choose Plan --</option>
                         @foreach ($approvedPlans as $plan)
-                            <option value="{{ $plan->PlanID }}">{{ $plan->ReferenceNumber }} – {{ $plan->Title }}</option>
+                            <option value="{{ $plan->PlanID }}">{{ $plan->ReferenceNumber }}
+                                – {{ $plan->Title }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -38,6 +39,7 @@
                     <table class="table table-bordered align-middle">
                         <thead class="table-light">
                             <tr>
+                                <th>Need ID</th>
                                 <th>Item</th>
                                 <th>Qty</th>
                                 <th>Est. Cost</th>
@@ -47,7 +49,7 @@
                             </tr>
                         </thead>
                         <tbody id="items-table-body">
-                            <!-- Items will load here dynamically -->
+                        <!-- Items will load here dynamically -->
                         </tbody>
                     </table>
                 </div>
@@ -63,27 +65,27 @@
 </div>
 
 @push('scripts')
-<script>
-    const procurementModes = @json($procurementModes);
+    <script>
+        const procurementModes = @json($procurementModes);
 
-    document.addEventListener('DOMContentLoaded', function () {
-        const loadBtn = document.getElementById('load-items-btn');
-        const planSelect = document.getElementById('approved-plan-select');
+        document.addEventListener('DOMContentLoaded', function () {
+            const loadBtn = document.getElementById('load-items-btn');
+            const planSelect = document.getElementById('approved-plan-select');
 
-        loadBtn.addEventListener('click', function () {
-            const planId = planSelect.value;
-            if (!planId) {
-                alert('Please select a plan.');
-                return;
-            }
+            loadBtn.addEventListener('click', function () {
+                const planId = planSelect.value;
+                if (!planId) {
+                    alert('Please select a plan.');
+                    return;
+                }
 
-            document.getElementById('approved-plan-id-hidden').value = planId;
+                document.getElementById('approved-plan-id-hidden').value = planId;
 
-            fetch(`/procurement/procurement/set-method/plan-items/${planId}`)
-                .then(response => response.json())
-                .then(data => {
-                    const tbody = document.getElementById('items-table-body');
-                    tbody.innerHTML = '';
+                fetch(`/procurement/procurement/set-method/plan-items/${planId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const tbody = document.getElementById('items-table-body');
+                        tbody.innerHTML = '';
 
                     const selectOptions = procurementModes.map(mode =>
                         `<option value="${mode.ID}">${mode.Description}</option>`
@@ -93,6 +95,7 @@
                     data.forEach(line => {
                         const row = `
                             <tr>
+                               <td>${line.NeedID || 'N/A'}</td>
                                 <td>${line.item_name}</td>
                                 <td>${line.MergedQty}</td>
                                 <td>KES ${parseFloat(line.EstimatedUnitCost).toLocaleString()}</td>
@@ -108,17 +111,16 @@
                                 </td>
                             </tr>
                         `;
-                        tbody.insertAdjacentHTML('beforeend', row);
+                            tbody.insertAdjacentHTML('beforeend', row);
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error loading items:', error);
+                        alert('An error occurred while loading items.');
                     });
-                })
-                .catch(error => {
-                    console.error('Error loading items:', error);
-                    alert('An error occurred while loading items.');
-                });
+            });
         });
-    });
-</script>
+    </script>
 @endpush
-
 
 @endsection

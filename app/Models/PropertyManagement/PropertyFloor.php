@@ -14,7 +14,7 @@ class PropertyFloor extends Model
     protected $table = 't_PropertyFloor';
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    const DELETED_AT = 'DeletedOn';
     protected $primaryKey = 'Id';
 
     protected $fillable = [
@@ -36,9 +36,10 @@ class PropertyFloor extends Model
     {
         return $this->hasMany(PropertyUnit::class, 'FloorID');
     }
+
     public function property()
     {
-        return $this->belongsTo(PropertyRegistry::class,'PropertyID','Id');
+        return $this->belongsTo(PropertyRegistry::class, 'PropertyID', 'Id');
     }
 
     public function block()

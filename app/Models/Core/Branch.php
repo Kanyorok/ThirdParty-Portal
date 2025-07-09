@@ -13,9 +13,9 @@ class Branch extends Model
 {
     use SoftDeletes, UserActorTrait;
 
-    const string CREATED_AT = 'CreatedOn';
-    const string UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    const CREATED_AT = 'CreatedOn';
+    const UPDATED_AT = 'ModifiedOn';
+    const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Branches';
     protected $primaryKey = 'Id';
@@ -43,7 +43,7 @@ class Branch extends Model
         return $this->belongsTo(User::class, 'ManagerId', 'Id')->withTrashed();
     }
 
-    
+
     public function store()
     {
         return $this->hasMany(Store::class, 'BranchID', 'Id');

@@ -10,7 +10,7 @@ use App\Models\Core\Branch;
 
 class TransactionTransferItem extends Model
 {
-      use SoftDeletes;
+    use SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -19,21 +19,21 @@ class TransactionTransferItem extends Model
     protected $table = 't_TransferItems';
     protected $connection = 'sqlsrv';
     protected $primaryKey = 'Id';
-  
-  
+
+
     protected $fillable = [
-           'TransferId',
-           'Item',
-           'ApprovedQty',
-           'DispatchedQty',
-           'UOM',
-           'Remarks',
-           'CreatedBy',
-           'CreatedOn',
-           'ModifiedBy',
-           'ModifiedOn',
-           'DeletedBy',
-           'DeletedOn',
+        'TransferId',
+        'Item',
+        'ApprovedQty',
+        'DispatchedQty',
+        'UOM',
+        'Remarks',
+        'CreatedBy',
+        'CreatedOn',
+        'ModifiedBy',
+        'ModifiedOn',
+        'DeletedBy',
+        'DeletedOn',
 
     ];
 
@@ -51,7 +51,7 @@ class TransactionTransferItem extends Model
     {
         return $this->belongsTo(User::class, 'DeletedBy', 'Id');
     }
-     
+
     public function requisition()
     {
         return $this->belongsTo(InterBranchRequisition::class, 'RequisitionId', 'Id');
@@ -60,7 +60,8 @@ class TransactionTransferItem extends Model
     {
         return $this->belongsTo(ItemMasterList::class, 'Item', 'Id');
     }
-        public function uom()
+
+    public function uom()
     {
         return $this->belongsTo(UnitOfMeasure::class, 'UOM', 'Id');
     }
@@ -69,8 +70,6 @@ class TransactionTransferItem extends Model
     {
         return $this->belongsTo(TransactionTransfer::class, 'TransferId', 'Id');
     }
- 
-    
 
- 
+
 }

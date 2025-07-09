@@ -72,8 +72,8 @@
             <th>Item</th>
             <th>From Branch</th>
             <th>Original Qty</th>
-            <th>Current Qty</th>
-            <th>Adjust Qty</th>
+              <th>Current Qty</th>
+              <th>Adjust Qty</th>
             <th>Unit Cost</th>
             <th>Total</th>
             <th class="d-none">Remarks</th>

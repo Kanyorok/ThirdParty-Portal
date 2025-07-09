@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Budget;
 
+use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Budget\BudgetDriverProjections;
 use App\Models\Budget\BudgetDriverProjectionsData;
@@ -19,6 +20,7 @@ class BudgetProductEntryController extends Controller
     // View budget entry list
    public function index()
     {
+        $this->authorize(PermissionEnum::BudgetSetupView, BudgetDriverProjections::class);
         //$projections = BudgetDriverProjections::with(['scenario', 'product', 'period'])->get();
         $projections=BudgetDriverProjections::with(
             'projections',

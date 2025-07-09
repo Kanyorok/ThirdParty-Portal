@@ -18,7 +18,6 @@ return new class extends Migration
             $table->decimal('Weight', 5, 2)->default(0.00); // DECIMAL(5,2)
             $table->boolean('IsActive')->default(true); // BIT (boolean in Laravel)
             $table->text('Comments')->nullable(); // TEXT (optional)
-
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');

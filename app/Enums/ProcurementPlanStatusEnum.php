@@ -13,7 +13,7 @@ enum ProcurementPlanStatusEnum: string
     case Approved = 'Ap';
     case Rejected = 'Re';
 
-        // Added this status
+    // Added this status
     case Pending = 'P';
 
     public function label(): string

@@ -19,16 +19,13 @@ class AwardsController extends Controller
 
     public function view_tender($id)
     {
-        
-            return view('procurement.awards.award_tender', compact('id'));
+
+        return view('procurement.awards.award_tender', compact('id'));
 
     }
 
     public function view_rfq($id)
     {
-      
-        
-
         return view('procurement.awards.award_rfq', compact('id'));
     }
 

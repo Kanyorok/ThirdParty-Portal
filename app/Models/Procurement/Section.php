@@ -39,4 +39,9 @@ class Section extends Model
     {
         return 'id';
     }
+
+    public function criteria()
+    {
+        return $this->hasMany(Criteria::class, 'SectionID', 'id');
+    }
 }

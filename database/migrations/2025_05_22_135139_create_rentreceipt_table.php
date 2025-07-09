@@ -11,11 +11,13 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('t_RentReceipt', function (Blueprint $table) {
-            $table->id();
-            $table->string('InvoiceID');
-            $table->string('BillingMonth');
-            $table->date('InvoiceDate');
-            $table->integer('RentAmount');
+            $table->id('Id');
+            $table->foreignId('InvoiceID')->constrained('t_RentInvoice', 'Id');
+            $table->foreignId('BillingMonth')->constrained('t_RentInvoice', 'Id');
+            $table->foreignId('InvoiceDate')->constrained('t_RentInvoice', 'Id');
+            $table->foreignId('RentAmount')->constrained('t_RentInvoice', 'Id');
+            $table->foreignId('ServicesCharge')->constrained('t_RentInvoice', 'Id');
+            $table->foreignId('OtherCharges')->constrained('t_RentInvoice', 'Id');
             $table->integer('TotalDue');
             $table->integer('AmountPaid');
             $table->integer('Balance');

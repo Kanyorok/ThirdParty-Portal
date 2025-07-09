@@ -745,7 +745,7 @@
                     serverSide: true,
                     responsive: true,
                     ajax: {
-                        url: '{{ route('localities.index') }}?_code={{ \App\Enums\LocalityTypeEnum::County->value }}',
+                        url: "{{ route('localities.index') }}?_code={{ \App\Enums\LocalityTypeEnum::County->value }}",
                         error: function (jqXHR) {
                             codeNotify(jqXHR.status);
                         }
@@ -775,7 +775,7 @@
                     serverSide: true,
                     responsive: true,
                     ajax: {
-                        url: '{{ route('localities.index') }}?_code={{ \App\Enums\LocalityTypeEnum::City->value }}',
+                        url: "{{ route('localities.index') }}?_code={{ \App\Enums\LocalityTypeEnum::City->value }}",
                         error: function (jqXHR) {
                             codeNotify(jqXHR.status);
                         }
@@ -932,7 +932,7 @@
                     responsive: true,
                     // "order": [[3, 'asc']],
                     ajax: {
-                        url: '{{ route('meeting-room.index') }}',
+                        url: "{{ route('meeting-room.index') }}",
                         error: function (jqXHR) {
                             codeNotify(jqXHR.status);
                         }
@@ -961,7 +961,7 @@
                     responsive: true,
                     // "order": [[3, 'asc']],
                     ajax: {
-                        url: '{{ route('currencies.index') }}',
+                        url: "{{ route('currencies.index') }}",
                         error: function (jqXHR) {
                             codeNotify(jqXHR.status);
                         }

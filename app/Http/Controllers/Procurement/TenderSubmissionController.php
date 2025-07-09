@@ -14,7 +14,7 @@ class TenderSubmissionController extends Controller
 {
     public function index()
     {
-        $submissions = BidSubmission::with('submissionMode','createdByUser')->get();
+        $submissions = BidSubmission::with('submissionMode', 'createdByUser')->get();
         return view('procurement.tendering.suppliermanagement.bidsubmission.index', compact('submissions'));
     }
 

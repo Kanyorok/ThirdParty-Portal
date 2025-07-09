@@ -14,7 +14,7 @@ class PropertyUnit extends Model
     protected $table = 't_PropertyUnit';
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    const DELETED_AT = 'DeletedOn';
     protected $primaryKey = 'Id';
 
     protected $fillable = [
@@ -47,15 +47,18 @@ class PropertyUnit extends Model
     {
         return $this->belongsTo(PropertyBlock::class, 'BlockID', 'Id');
     }
+
     public function property()
     {
-        return $this->belongsTo(PropertyRegistry::class,'PropertyID','Id');
+        return $this->belongsTo(PropertyRegistry::class, 'PropertyID', 'Id');
     }
+
     public function blocks()
     {
         return $this->belongsTo(PropertyBlock::class, 'BlockID', 'Id');
     }
-     public function floors()
+
+    public function floors()
     {
         return $this->belongsTo(PropertyFloor::class, 'FloorID', 'Id');
     }

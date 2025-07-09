@@ -15,7 +15,7 @@
     @endif
 
     @if($modes->isEmpty())
-    <div class="alert alert-info">No procurement methods found.</div>
+        <div class="alert alert-info">No procurement methods found.</div>
     @else
     <table class="table table-bordered table-striped align-middle">
         <thead class="table-light">

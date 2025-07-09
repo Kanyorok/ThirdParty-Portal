@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Procurement;
 use App\Enums\Procurement\DepartmentNeedsEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Inventory\ItemMasterList;
-use App\Models\Procurement\DepartmentNeeds;
+use App\Models\Procurement\DepartmentNeed;
 use App\Services\Procurement\ProcurementPlan\DepartmentNeedsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -29,30 +29,31 @@ class DepartmentNeedsController extends Controller
 
     public function store(Request $request, DepartmentNeedsService $service)
     {
-        //dd($request->all());
-
         try {
             DB::transaction(function () use ($request, $service) {
                 $actor = $request->user();
                 $service->create($request->all(), $actor);
             });
 
-            return redirect()->route('procurementdepartmentalplan.index')->with('success', 'Department need created!');
-        } catch (Throwable $e) {
+            return redirect()->route('procurementdepartmentalplan.index')
+                ->with('success', 'Department need created!');
+        } catch (\Exception $e) {
             Log::error("--- CREATE DEPARTMENT NEEDS ERROR --- " . $e->getMessage());
-            return redirect()->back()->withErrors(['error' => 'Failed to create need.']);
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['error' => $e->getMessage()]);
         }
     }
 
     public function index(Request $request)
     {
-        $departmentneedviews = DepartmentNeeds::with('creator')->where('Status', DepartmentNeedsEnum::Pending)->get();
+        $departmentneedviews = DepartmentNeed::with('creator')->where('Status', DepartmentNeedsEnum::Pending)->get();
         return view('procurement.procurementplan.departmentneeds.raiseneed.index', compact('departmentneedviews'));
     }
 
     public function fetchLinesByDPlan($NeedID)
     {
-        $lines = DepartmentNeeds::with('item')
+        $lines = DepartmentNeed::with('item')
             ->where('NeedID', $NeedID)
             ->get()
             ->map(function ($line) {
@@ -74,14 +75,14 @@ class DepartmentNeedsController extends Controller
     public function update(Request $request)
     {
         foreach ($request->Needs as $needData) {
-            $need = DepartmentNeeds::where('NeedID', $needData['NeedID'])->firstOrFail();
+            $need = DepartmentNeed::where('NeedID', $needData['NeedID'])->firstOrFail();
 
             $need->update([
                 'RequestedQty' => $needData['RequestedQty'],
                 'EstimatedUnitCost' => $needData['EstimatedUnitCost'],
                 'FiscalYear' => $needData['FiscalYear'],
                 'ModifiedOn' => now(),
-                'ModifiedBy' => auth()->id(),
+                'ModifiedBy' => $request->user()->id,
             ]);
         }
 
@@ -92,7 +93,7 @@ class DepartmentNeedsController extends Controller
     public function destroy($NeedID)
     {
         try {
-            $needs = DepartmentNeeds::where('NeedID', $NeedID)->get();
+            $needs = DepartmentNeed::where('NeedID', $NeedID)->get();
 
             foreach ($needs as $need) {
                 $need->delete();

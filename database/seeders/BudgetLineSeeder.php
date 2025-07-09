@@ -3,9 +3,9 @@
 namespace Database\Seeders;
 
 use App\Models\Auth\User;
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class BudgetLineSeeder extends Seeder
 {
@@ -372,8 +372,8 @@ class BudgetLineSeeder extends Seeder
                 'DeletedOn' => null,
             ]);
 
-            $glAccountType = ($line['GLAccountType'] === 'I' || $line['GLAccountType'] === 'E') 
-                ? null 
+            $glAccountType = ($line['GLAccountType'] === 'I' || $line['GLAccountType'] === 'E')
+                ? null
                 : ($line['GLAccountType'] === 'A' ? 'ASSET' : 'LIABILITY');
 
             // Ensure $availableGLs is an array

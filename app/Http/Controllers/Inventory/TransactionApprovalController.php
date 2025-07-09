@@ -17,7 +17,8 @@ class TransactionApprovalController extends Controller
     public function __construct(
         StockAdjustmentService $adjustmentService,
         TransactionTransferService $transferService
-    ) {
+    )
+    {
         $this->adjustmentService = $adjustmentService;
         $this->transferService = $transferService;
     }
@@ -36,7 +37,7 @@ class TransactionApprovalController extends Controller
             if ($branch) {
                 $query->whereHas('fromBranch', function ($q) use ($branch) {
                     $q->where('Name', 'like', "%$branch%")
-                      ->orWhere('Id', $branch);
+                        ->orWhere('Id', $branch);
                 });
             }
 
@@ -47,7 +48,7 @@ class TransactionApprovalController extends Controller
             if ($branch) {
                 $query->whereHas('branch', function ($q) use ($branch) {
                     $q->where('Name', 'like', "%$branch%")
-                      ->orWhere('Id', $branch);
+                        ->orWhere('Id', $branch);
                 });
             }
 
@@ -58,7 +59,7 @@ class TransactionApprovalController extends Controller
             if ($branch) {
                 $query->whereHas('branch', function ($q) use ($branch) {
                     $q->where('Name', 'like', "%$branch%")
-                      ->orWhere('Id', $branch);
+                        ->orWhere('Id', $branch);
                 });
             }
 
@@ -89,15 +90,8 @@ class TransactionApprovalController extends Controller
 
         try {
             if ($transactionType === 'Stock Transfer') {
-                $this->transferService->approve($id);  
+                $this->transferService->approve($id);
                 return redirect()->back()->with('success', 'Stock Transfer approved.');
-            }
-
-            if ($transactionType === 'Stock Issue') {
-                $issue = \App\Models\Inventory\StockIssue::findOrFail($id);
-                $issue->Status = 'Approved';
-                $issue->save();
-                return redirect()->back()->with('success', 'Stock Issue approved.');
             }
 
             if ($transactionType === 'Stock Adjustment') {
