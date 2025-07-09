@@ -12,7 +12,7 @@
 
 @section('content')
     <div class="container">
-        <h4 class="mb-4">Approve Stock Transactions</h4>
+        <h4 class="mb-4">Select Transactions to Approve</h4>
 
         @if(session('success'))
             <div class="alert alert-success alert-dismissible fade show" role="alert">
