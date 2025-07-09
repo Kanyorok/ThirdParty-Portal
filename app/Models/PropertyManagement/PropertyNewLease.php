@@ -2,6 +2,7 @@
 
 namespace App\Models\PropertyManagement;
 
+use App\Enums\Property\PropertyNewLeaseEnum;
 use App\Models\Core\CodeDetail;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
@@ -28,8 +29,12 @@ class PropertyNewLease extends Model
         'PaymentFrequency',
         'MonthlyRent',
         'Deposit',
+        'ServiceCharge',
+        'ParkingFee',
+        'OtherCharges',
         'DueDay',
         'SpecialTerms',
+        'Status',
         'IsActive',
         'CreatedBy',
         'ModifiedBy',
@@ -40,6 +45,9 @@ class PropertyNewLease extends Model
     {
         return 'LeaseId';
     }
+    protected $casts = [
+        'Status' => PropertyNewLeaseEnum::class,
+    ];
     public function getPropertyByTenant()
     {
         return $this->hasMany(PropertyNewLease::class, 'Id', 'Tenant');

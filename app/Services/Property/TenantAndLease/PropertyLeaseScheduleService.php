@@ -14,8 +14,6 @@ class PropertyLeaseScheduleService
      */
     public static function create(
         int $leaseId,
-        int $tenantId,
-        int $propertyId,
         int $paymentFrequencyId,
         string $startDate,
         string $endDate,
@@ -36,8 +34,6 @@ class PropertyLeaseScheduleService
         // Attempt to create the schedule
         $leaseSchedule = PropertyLeaseSchedule::create([
             'LeaseNumber'      => $leaseId,
-            'TenantId'         => $tenantId,
-            'PropertyId'       => $propertyId,
             'PaymentFrequency' => $paymentFrequencyId,
             'StartDate'        => $startDate,
             'EndDate'          => $endDate,

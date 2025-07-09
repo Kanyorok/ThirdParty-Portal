@@ -65,8 +65,6 @@ public function store(PropertyLeaseScheduleRequest $request)
     $lease = PropertyNewLease::findOrFail($leaseId);
     PropertyLeaseScheduleService::create(
         $leaseId,                  // from DB
-        $tenantId,
-        $propertyId,
         $paymentFrequencyId,
         $validated['StartDate'],
         $validated['EndDate'],
@@ -100,8 +98,6 @@ public function store(PropertyLeaseScheduleRequest $request)
         $this->authorize(PermissionEnum::PropertyLeaseScheduleUpdate, PropertyLeaseSchedule::class);
         $validated=$request->validate([
             'LeaseId' => 'required|exists:t_LeaseCreation,Id',
-            'TenantId' => 'required|exists:t_LeaseCreation,Id',
-            'PropertyId' => 'required|exists:t_LeaseCreation,Id',
             'PaymentFrequency' => 'required|string|max:50',
             'StartDate' => 'required|date',
             'EndDate' => 'required|date',
@@ -117,8 +113,6 @@ public function store(PropertyLeaseScheduleRequest $request)
             $leaseschedules = PropertyLeaseSchedule::findOrFail($id);
 
             $leaseschedules->update([
-                'TenantId' => $validated['TenantId'],
-                'PropertyId' => $validated['PropertyId'],
                 'PaymentFrequency' => $validated['PaymentFrequency'],
                 'StartDate' => $validated['StartDate'],
                 'EndDate' => $validated['EndDate'],

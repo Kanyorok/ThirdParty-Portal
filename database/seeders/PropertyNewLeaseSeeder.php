@@ -2,12 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Enums\Property\PropertyNewLeaseEnum;
 use Illuminate\Database\Seeder;
 use App\Models\PropertyManagement\PropertyNewLease;
 use App\Models\PropertyManagement\PropertyNewTenant;
-use App\Models\PropertyManagement\PropertyRegistry;
-use App\Models\PropertyManagement\PropertyBlock;
-use App\Models\PropertyManagement\PropertyFloor;
 use App\Models\PropertyManagement\PropertyUnit;
 use App\Models\Core\CodeDetail;
 use Carbon\Carbon;
@@ -59,9 +57,13 @@ class PropertyNewLeaseSeeder extends Seeder
             'PaymentFrequency'  => $frequency->ID,
             'MonthlyRent'       => 50000,
             'Deposit'           => 50000,
+            'ServiceCharge'     => 1000,
+            'ParkingFee'        => 700,
+            'OtherCharges'      => 200,
             'DueDay'            => 5,
             'SpecialTerms'      => 'No pets allowed.',
             'IsActive'          => true,
+            'Status'            => PropertyNewLeaseEnum::New->value,
             'CreatedBy'         => 2,
             'ModifiedBy'        => 2,
             'CreatedOn'         => $now,

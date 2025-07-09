@@ -22,7 +22,7 @@
                     <div class="h2 mb-0 text-decoration-none">
                         {{ config('app.name') }}
                     </div>
-                    <div class="small text-muted text-center">Thinking.Crafting.Transorming</div>
+                    <div class="small text-muted text-center">Thinking.Crafting.Transforming</div>
                 </div>
             </a>
         </div>

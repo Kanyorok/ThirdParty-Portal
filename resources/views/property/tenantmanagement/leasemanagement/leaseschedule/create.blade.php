@@ -41,20 +41,6 @@
                         <input type="text" id="lease-display" class="form-control" readonly>
                     </div>
 
-                    <!-- Auto-filled Tenant -->
-                    <div class="col-md-6">
-                        <label class="form-label">Tenant</label>
-                        <input type="text" id="tenant-display" class="form-control" readonly>
-                        <input type="hidden" name="TenantId" id="tenant-id">
-                    </div>
-
-                    <!-- Auto-filled Property -->
-                    <div class="col-md-6">
-                        <label class="form-label">Property</label>
-                        <input type="text" id="property-display" class="form-control" readonly>
-                        <input type="hidden" name="PropertyId" id="property-id">
-                    </div>
-
                     <!-- Auto-filled Payment Frequency -->
                     <div class="col-md-6">
                         <label class="form-label">Payment Frequency</label>

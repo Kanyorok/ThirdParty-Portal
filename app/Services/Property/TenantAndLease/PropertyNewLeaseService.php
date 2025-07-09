@@ -10,6 +10,7 @@ use App\Models\PropertyManagement\PropertyNewLease;
 use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyUnit;
+use App\Services\Property\TenantAndLease\PropertyLeaseScheduleService;
 use DateTime;
 
 class PropertyNewLeaseService
@@ -31,6 +32,9 @@ class PropertyNewLeaseService
         CodeDetail $PaymentFrequency,
         float $MonthlyRent,
         float $Deposit,
+        float $ServiceCharge,
+        float $ParkingFee,
+        float $OtherCharges,
         int $DueDay,
         string $SpecialTerms,
         User $user
@@ -54,10 +58,25 @@ class PropertyNewLeaseService
             'MonthlyRent' => $MonthlyRent,
             'Deposit' => $Deposit,
             'DueDay' => $DueDay,
+            'ServiceCharge' => $ServiceCharge,
+            'ParkingFee' => $ParkingFee,
+            'OtherCharges' => $OtherCharges,
             'SpecialTerms' => $SpecialTerms,
             'CreatedBy' => $user->Id,
             'ModifiedBy' => $user->Id,
         ]);
+
+        PropertyLeaseScheduleService::create(
+        leaseId: $newlease->Id,
+        paymentFrequencyId: $PaymentFrequency->ID,
+        startDate: $StartDate->format('Y-m-d'),
+        endDate: $EndDate->format('Y-m-d'),
+        baseRent: $MonthlyRent,
+        serviceCharge: $ServiceCharge,
+        parkingFee: $ParkingFee,
+        otherCharges: $OtherCharges,
+        user: $user
+    );
 
         activity()->causedBy($user->Id)
             ->performedOn($newlease)
