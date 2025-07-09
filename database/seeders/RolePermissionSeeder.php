@@ -72,7 +72,13 @@ class RolePermissionSeeder extends Seeder
             $users = User::all();
             foreach ($users as $user) {
                 if (($user instanceof User) && $user->roles()->count() === 0) {
-                    $user->assignRole('admin');
+                    $user->roles()->attach($adminRole->id, [
+                        'BranchId' => $user->BranchId ?? 1, 
+                        'CreatedBy' => 1,
+                        'CreatedOn' => now(),
+                        'ModifiedBy' => 1,
+                        'ModifiedOn' => now(),
+                    ]);
                 }
             }
         }

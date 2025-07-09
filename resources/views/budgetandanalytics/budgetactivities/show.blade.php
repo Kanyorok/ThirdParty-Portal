@@ -73,11 +73,19 @@
             </td>
             <td>
               <a href="{{ route('budgetactivities.edit', $activity->Id) }}" class="btn btn-sm btn-primary">🖉</a>
-              <form action="{{ route('budgetactivities.destroy', $activity->Id) }}" method="POST" class="d-inline">
+              {{-- <form action="{{ route('budgetactivities.destroy', $activity->Id) }}" method="POST" class="d-inline">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this activity?')">🗑️</button>
-              </form>
+              </form> --}}
+              <button type="button"
+                      class="btn btn-sm btn-danger custom-delete-btn"
+                      data-bs-toggle="modal"
+                      data-bs-target="#customDeleteConfirmModal"
+                      data-name="{{ $activity->activity->ActivityName  }}"    {{-- Pass item name --}}
+                      data-route="{{route('budgetactivities.destroy', $activity->Id)}}"> {{--Pass delete route--}}
+                      🗑️
+                </button>
           </tr>
         @endforeach
       </tbody>
@@ -91,4 +99,5 @@
     </div>
   </div>
 </div>
+@include('components.modals.delete-confirm')
 @endsection

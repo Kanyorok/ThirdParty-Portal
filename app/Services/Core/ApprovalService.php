@@ -87,15 +87,23 @@ class ApprovalService
         $permissionId = $this->getApprovalGroupPermission($docType);
         if (!$permissionId) return false;
 
-        $allApprovers = $this->getApproverIds($permissionId);
-        $approvedUsers = $this->getApprovedUserIds($docType, $documentId, $allApprovers);
+        $approverIds = $this->getApproverIds($permissionId);
+        if (empty($approverIds)) return false;
 
-        sort($allApprovers);
-        sort($approvedUsers);
+        $approvedUserIds = DB::table('t_Approvals')
+            ->where('DocType', $docType)
+            ->where('DocumentId', $documentId)
+            ->whereIn('UserId', $approverIds)
+            ->where('Status', 'approved')
+            ->pluck('UserId')
+            ->unique()
+            ->toArray();
 
-        return $allApprovers === $approvedUsers;
+        sort($approverIds);
+        sort($approvedUserIds);
+
+        return $approverIds === $approvedUserIds;
     }
-
     private function getRequiredPermissionId(string $docType, float $amount): ?int
     {
         return DB::table('t_ApprovalLimits')
@@ -197,8 +205,10 @@ class ApprovalService
             ->where('mr.model_type', 'UserID')
             ->where('rp.permission_id', $permissionId)
             ->pluck('mr.model_id')
+            ->unique()
             ->toArray();
     }
+
 
     private function getApprovedUserIds(string $docType, int $documentId, array $approverIds): array
     {

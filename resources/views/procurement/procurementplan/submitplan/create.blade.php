@@ -54,6 +54,7 @@
                 <thead class="table-light">
                 <tr>
                     <th>#</th>
+                    <th>NEED ID</th>
                     <th>Item</th>
                     <th>Branch</th>
                     <th>Qty</th>
@@ -68,6 +69,7 @@
                 @forelse ($plan->lineItems as $index => $item)
                     <tr>
                         <td>{{ $index + 1 }}</td>
+                        <td>{{ $item->departmentNeed->NeedID ?? '—' }}</td>
                         <td>{{ $item->item->ItemName ?? '—' }}</td>
                         <td>{{ $item->Branch->Name ?? '—' }}</td>
                         <td>{{ $item->MergedQty }}</td>
@@ -79,7 +81,7 @@
                                 <span class="text-danger">Unlinked</span>
                             @endif
                         </td>
-                        <td>{{ $item->procurementMode->Name ?? '—' }}</td>
+                        <td>{{ $item->ProcurementMode->Description ?? '—' }}</td>
                         <td>
                             @if ($item->schedulePlan && $item->schedulePlan->periods->isNotEmpty())
                                 @foreach ($item->schedulePlan->periods as $period)

@@ -11,13 +11,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Core\CodeDetail;
 
-class PlanLineItems extends Model
+class PlanLineItem extends Model
 {
     use SoftDeletes, UserActorTrait;
 
-    const string CREATED_AT = 'CreatedOn';
-    const string UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    const CREATED_AT = 'CreatedOn';
+    const UPDATED_AT = 'ModifiedOn';
+    const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_PlanLineItem';
     protected $primaryKey = 'LineItemID';
@@ -89,6 +89,13 @@ class PlanLineItems extends Model
         return $this->belongsTo(User::class, 'ModifiedBy', 'Id');
     }
 
+    public function departmentNeed()
+    {
+        return $this->hasOne(DepartmentNeed::class, 'ItemID', 'ItemID')
+            ->whereColumn('BranchID', 'BranchID')
+            ->whereColumn('DepartmentID', 'DepartmentID');
+    }
+
     public function deletedBy()
     {
         return $this->belongsTo(User::class, 'DeletedBy', 'Id');
@@ -96,7 +103,7 @@ class PlanLineItems extends Model
 
     public function budgetline()
     {
-        return $this->belongsTo(BudgetMaster::class, 'BudgetLineID', 'Id');
+        return $this->belongsTo(BudgetMaster::class, 'BudgetLineID', 'BudgetLineID');
     }
 
     public function setMethod()
