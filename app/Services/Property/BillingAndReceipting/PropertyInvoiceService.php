@@ -16,6 +16,7 @@ class PropertyInvoiceService
         $this->invoice = $invoice;
     }
     public static function create(
+         $TenantId,
         PropertyNewLease $Lease,
         string $BillingMonth,
         string $InvoiceDate,
@@ -32,6 +33,7 @@ class PropertyInvoiceService
         $InvoiceNumber = 'INV-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
 
         $invoice = PropertyInvoice::create([
+            'TenantId'=> $TenantId,
             'InvoiceNumber' => $InvoiceNumber,
             'Lease'    => $Lease->Id,
             'BillingMonth' => $BillingMonth,

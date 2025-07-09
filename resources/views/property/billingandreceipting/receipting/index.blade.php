@@ -13,7 +13,8 @@
     <thead class="table-light">
       <tr>
         <th>#</th>
-        <th>Invoice</th>
+          <th>Invoice</th>
+          <th>TenantID</th>
           <th>Billing Month</th>
           <th>Invoice Date</th>
           <th>Rent Amount</th>
@@ -33,6 +34,7 @@
       <tr>
           <td>{{ $loop->iteration ??'_' }}</td>
           <td>{{ $receipt->invoice->InvoiceNumber ?? '_' }}</td>
+          <th>{{ $receipt->invoice->lease->tenant->TenantName ??'_' }}</td>
           <td>{{ $receipt->BillingMonth ?? '_' }}</td>
           <td>{{ $receipt->InvoiceDate ? \Carbon\Carbon::parse($receipt->InvoiceDate)->format('d m Y') : '-' }}</td>
           <td>{{ $receipt->RentAmount ?? '_' }}</td>
@@ -45,7 +47,7 @@
           <td>{{ $receipt->ReferenceNo ?? '_' }}</td>
           <td>{{ $receipt->Remarks ?? '_' }}</td>
         <td>
-            <a href="{{ route('rentreceipt.index') }}" class="btn btn-sm btn-outline-secondary">🧾 Print Receipt</a>
+            <a href="{{ route('rentreceipt.pdf',$receipt->Id) }}" class="btn btn-sm btn-outline-secondary">🧾 Print Receipt</a>
                     <a href="{{ route('rentreceipt.show', $receipt->Id) }}" class="btn btn-sm btn-info">👁 View</a>
             <a href="{{ route('rentreceipt.edit', $receipt->Id) }}" class="btn btn-sm btn-warning">Edit</a>
             <form action="{{ route('rentreceipt.destroy', $receipt->Id) }}" method="POST" class="d-inline">

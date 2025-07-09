@@ -25,6 +25,8 @@
                             @foreach ($invoices as $invoice)
                                 <option value="{{ $invoice->Id }}"
                                     data-invoicenumber="{{ $invoice->InvoiceNumber ?? 'N/A' }}"
+                                    data-tenantid-id="{{ $invoice->TenantId ?? 'N/A' }}" 
+                                    data-tenantid-name="{{ $invoice->TenantId ?? 'N/A' }}"
                                     data-billingmonth-id="{{ $invoice->BillingMonth ?? 'N/A' }}"
                                     data-billingmonth-name="{{ $invoice->BillingMonth ?? 'N/A' }}"
                                     data-invoicedate-id="{{ $invoice->InvoiceDate ?? 'N/A' }}"
@@ -42,7 +44,13 @@
                             @endforeach
                         </select>
                     </div>
-
+                <div class="col-md-6">
+                    <label class="form-label">TenantId</label>
+                        <input type="text" id="tenantid-display" class="form-control" readonly>
+                        <input type="hidden" name="TenantId" id="tenantid-id"
+                               value="{{ old('TenantId', $receipts->TenantId ?? '') }}">
+                    </div>
+                    
                     <div class="col-md-6">
                         <label class="form-label">Billing Month</label>
                         <input type="text" id="billingmonth-display" class="form-control" readonly>
@@ -153,6 +161,8 @@
 
     document.getElementById('invoice-select').addEventListener('change', function () {
         const selected = this.options[this.selectedIndex];
+        document.getElementById('tenantid-id').value = selected.getAttribute('data-tenantid-id');
+        document.getElementById('tenantid-display').value = selected.getAttribute('data-tenantid-id');
         document.getElementById('billingmonth-id').value = selected.getAttribute('data-billingmonth-id');
         document.getElementById('billingmonth-display').value = selected.getAttribute('data-billingmonth-name');
         document.getElementById('invoicedate-id').value = selected.getAttribute('data-invoicedate-id');

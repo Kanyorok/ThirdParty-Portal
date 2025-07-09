@@ -178,6 +178,7 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::get('rentreceipt/edit/{Id}',[PropertyReceiptController::class,'edit'])->name('rentreceipt.edit');
     Route::put('rentreceipt/edit/{Id}',[PropertyReceiptController::class,'update'])->name('rentreceipt.update');
     Route::delete('rentreceipt/delete/{Id}', [PropertyReceiptController::class,'destroy'])->name('rentreceipt.destroy');
+    Route::get('rentreceipt/pdf/{Id}', [PropertyReceiptController::class,'print'])->name('rentreceipt.pdf');
 
 
 
@@ -185,7 +186,7 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::get('tenantledger', [TenantStatementController::class,'index'])->name('tenantledger.index');
     // Route::get('tenantledger/create', [TenantStatementController::class,'create'])->name('tenantledger.create');
     // Route::get('tenantledger/store', [TenantStatementController::class,'store'])->name('tenantledger.store');   
-    Route::get('tenantledger/pdf', [TenantStatementController::class,'create'])->name('tenantledger.pdf');
+     Route::get('tenantledger/pdf', [TenantStatementController::class,'exportpdf'])->name('tenantledger.pdf');
     
     
 

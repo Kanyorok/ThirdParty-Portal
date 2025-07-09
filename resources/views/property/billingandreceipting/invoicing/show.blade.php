@@ -10,6 +10,9 @@
                     <dt class="col-sm-4">Invoice Number</dt>
                     <dd class="col-sm-8">{{ $invoice->InvoiceNumber ?? '-' }}</dd>
 
+                    <dt class="col-sm-4">Tenant ID</dt>
+                    <dd class="col-sm-8">{{ $invoice->lease->tenant->TenantName ?? '-' }}</dd>
+
                     <dt class="col-sm-4">Lease</dt>
                     <dd class="col-sm-8">{{ $invoice->lease->LeaseNumber  ?? '-' }}</dd>
 

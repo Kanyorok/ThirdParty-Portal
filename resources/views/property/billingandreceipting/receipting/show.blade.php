@@ -10,6 +10,10 @@
                     <dt class="col-sm-4">InvoiceID</dt>
                     <dd class="col-sm-8">{{ $receipt->InvoiceID ?? '_' }}</dd>
 
+                    <dt class="col-sm-4">TenantID</dt>
+                    <dd class="col-sm-8">{{ $receipt->invoice->lease->tenant->TenantName ?? '_' }}</dd>
+                    
+
                     <dt class="col-sm-4">Billing Month</dt>
                     <dd class="col-sm-8">{{ $receipt->BillingMonth ?? '_' }}</dd>
 

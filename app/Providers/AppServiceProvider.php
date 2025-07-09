@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Auth\ModelRole;
 use App\Models\Auth\Team;
 use App\Models\Auth\User;
 use App\Models\BR\Account;
@@ -60,11 +61,12 @@ use App\Models\DMS\Image;
 use App\Models\DMS\Repository;
 use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
-use App\Models\Procurement\DepartmentNeed;
 use App\Models\Inventory\InterBranchRequisition;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
+use App\Models\Procurement\DepartmentNeed;
 use App\Models\Procurement\DepartmentNeeds;
 use App\Models\Procurement\Order;
+use App\Models\Procurement\PlanLineItem;
 use App\Models\Procurement\PrequalificationPeriod;
 use App\Models\Procurement\ProcurementMethod;
 use App\Models\Procurement\RequisitionLine;
@@ -131,7 +133,6 @@ use Illuminate\Support\ServiceProvider;
 use Spatie\Permission\Models\Role;
 use App\Policies\Inventory\InventoryHoldReviewPolicy;
 use App\Models\Inventory\ItemType;
-//  use App\Policies\Procurement\PlanManualInputPolicy;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\TransactionReceipt;
 use App\Models\Inventory\TransactionTransfer;
@@ -143,10 +144,7 @@ use App\Models\Inventory\InventoryType;
 use App\Models\Inventory\PriceManagement;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\InventoryHoldReview;
-use App\Models\Procurement\PlanLineItem;
-use App\Models\Auth\ModelRole;
 use App\Models\Procurement\PlanLineItems;
-
 
 
 class AppServiceProvider extends ServiceProvider
