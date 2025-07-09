@@ -168,12 +168,17 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::put('rentinvoice/edit/{id}',[PropertyInvoiceController::class,'update'])->name('rentinvoice.update');
     Route::delete('rentinvoice/delete/{id}', [PropertyInvoiceController::class,'destroy'])->name('rentinvoice.destroy');
 
-
+    Route::resource('tenantledger', TenantStatementController::class);
+    Route::get('tenantledger', [TenantStatementController::class,'index'])->name('tenantledger.index');
+    Route::get('tenantledger/create', [TenantStatementController::class,'create'])->name('tenantledger.create');
+    Route::get('tenantledger/pdf', [TenantStatementController::class,'create'])->name('tenantledger.pdf');
+    
+   
 
     Route::resource('attachments', PropertyAttachmentsController::class);
     Route::resource('rentreceipt', PropertyReceiptController::class);
     Route::resource('rentdashboard', RentDashboardController::class);
-    Route::resource('tenantledger', TenantStatementController::class);
+
     Route::resource('maintenancerequest', PropertyMaintenanceRequestController::class);
     Route::resource('assignrequest', PropertyMaintananceAssignController::class);
     Route::resource('maintenancedashboard', PropertyMaintenanceDashboardController::class);
