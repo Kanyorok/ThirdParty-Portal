@@ -11,7 +11,6 @@ use App\Http\Requests\Property\TenantAndLease\PropertyLeaseScheduleRequest;
 use App\Services\Property\TenantAndLease\PropertyLeaseScheduleService;
 use Illuminate\Http\Request;
 use App\Models\Core\CodeDetail;
-use Illuminate\Support\Facades\Validator;
 use App\Models\PropertyManagement\PropertyLeaseSchedule;
 use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Models\PropertyManagement\PropertyNewLease;
@@ -57,8 +56,6 @@ public function store(PropertyLeaseScheduleRequest $request)
     try {
     $validated = $request->validated();
     $leaseId = (int) $validated['LeaseId'];
-    $tenantId = (int) $validated['TenantId'];
-    $propertyId = (int) $validated['PropertyId'];
     $paymentFrequencyId = (int) $validated['PaymentFrequency'];
 
     // Use the lease ID to get the full lease
