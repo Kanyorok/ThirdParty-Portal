@@ -50,11 +50,11 @@ class CodeDetailSeeder extends Seeder
         // STATIC ENTRIES (from various modules)
         $static = [
             // Requisition Status
-            ['CodeID' => 'RequisitionStatus', 'Description' => 'Approved'],
-            ['CodeID' => 'RequisitionStatus', 'Description' => 'Submitted For Approval'],
-            ['CodeID' => 'RequisitionStatus', 'Description' => 'Pending'],
-            ['CodeID' => 'RequisitionStatus', 'Description' => 'Rejected'],
-            ['CodeID' => 'RequisitionStatus', 'Description' => 'Deferred'],
+            ['CodeID' => 'RequisitionStatus', 'Description' => 'Approved', 'Value' => 'Ap'],
+            ['CodeID' => 'RequisitionStatus', 'Description' => 'Submitted For Approval', 'Value' => 'Su'],
+            ['CodeID' => 'RequisitionStatus', 'Description' => 'Pending', 'Value' => 'Pe'],
+            ['CodeID' => 'RequisitionStatus', 'Description' => 'Rejected', 'Value' => 'Re'],
+            ['CodeID' => 'RequisitionStatus', 'Description' => 'Deferred', 'Value' => 'De'],
 
             // Requisition Urgency
             ['CodeID' => 'RequisitionUrgency', 'Description' => 'Very Urgent', 'Value' => 1],

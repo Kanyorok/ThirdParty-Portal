@@ -66,6 +66,11 @@ class RequisitionsController extends Controller
                 ->with('branch', 'department') // if relations exist
                 ->first();
 
+            $approvedStatusId = DB::table('t_CodeDetails')
+                ->where('CodeID', 'RequisitionStatus')
+                ->where('Value', 'Ap')
+                ->value('ID');
+          
             $branchId = session('LoginBranchId');
             $departmentId = $employee?->DepartmentId ?? null;
 
@@ -83,6 +88,7 @@ class RequisitionsController extends Controller
                 'branchId' => $branchId,
                 'departmentId' => $departmentId,
                 'departmentName' => $departmentName,
+                'approvedStatusId' => $approvedStatusId,
                 'procurementPlans' => $procurementPlans ?? [],
             ]);
         } catch (\Exception $e) {
