@@ -135,11 +135,13 @@
                                 <button type="submit" class="btn btn-danger btn-sm">Reject</button>
                             </form>
                         </td>
-                    </tr>
-                    <td>
-                        <a href="{{ route('transactionsapproval.show', $record->Id) }}"
-                           class="btn btn-sm btn-primary">View</a>
+                         <td>
+                            <a href="{{ route('transactionsapproval.show', ['Id' => $record->Id, 'transaction_type' => $transactionType]) }}" class="btn btn-sm btn-primary">
+                                View
+                            </a>
                     </td>
+                    </tr>
+                   
                 @empty
                     <tr>
                         <td colspan="9" class="text-center">No pending {{ strtolower($transactionType) }}s found.</td>

@@ -42,9 +42,12 @@
                                 @php
                                     $statusEnum = \App\Enums\Inventory\Transfers::tryFrom($record->Status);
                                 @endphp
-                                <span class="badge bg-{{ $statusEnum?->badgeColor() }}">{{ $statusEnum?->label() ?? $record->Status }}</span>
+                                <span class="badge bg-{{ $statusEnum?->badgeColor() }}">
+                                    {{ $statusEnum?->label() ?? $record->Status }}
+                                </span>
                             </td>
                         </tr>
+
                     @elseif($transactionType === 'Stock Adjustment')
                         <tr>
                             <th>Reference No</th>
@@ -92,7 +95,15 @@
                                 <tr>
                                     <td>{{ $i + 1 }}</td>
                                     <td>{{ $item->item->ItemName ?? 'N/A' }}</td>
-                                    <td>{{ $item->Quantity ?? 'N/A' }}</td>
+                                    <td>
+                                        @if($transactionType === 'Stock Transfer')
+                                            {{ $item->DispatchedQty ?? 'N/A' }}
+                                        @elseif($transactionType === 'Stock Adjustment')
+                                            {{ $item->AdjustmentQty ?? 'N/A' }}
+                                        @else
+                                            N/A
+                                        @endif
+                                    </td>
                                     <td>{{ $item->item->uom->Name ?? 'N/A' }}</td>
                                     <td>{{ $item->Remarks ?? '-' }}</td>
                                 </tr>

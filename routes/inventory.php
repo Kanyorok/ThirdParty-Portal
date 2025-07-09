@@ -99,8 +99,8 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
 
 
 
-    Route::resource('inventorydashboard', InventoryDashboardController::class);
-    Route::resource('movementdashboard', MovementDashboardController::class);
+   // Route::resource('inventorydashboard', InventoryDashboardController::class);
+   // Route::resource('movementdashboard', MovementDashboardController::class);
 
     //Route::resource('stocktake', StockTakeController::class);
     Route::get('/stocktake/index', [StockTakeController::class, 'index'])->name('stocktake.index');
