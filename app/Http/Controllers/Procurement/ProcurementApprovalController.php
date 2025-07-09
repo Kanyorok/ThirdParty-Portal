@@ -2,13 +2,12 @@
 
 namespace App\Http\Controllers\Procurement;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Procurement\ConsolidatedProcurementPlan;
-use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
 use App\Enums\ProcurementPlanStatusEnum;
+use App\Http\Controllers\Controller;
 use App\Models\Core\Workflow;
+use App\Models\Procurement\ConsolidatedProcurementPlan;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
 
 class ProcurementApprovalController extends Controller
 {
@@ -21,7 +20,7 @@ class ProcurementApprovalController extends Controller
             $selectedPlan = ConsolidatedProcurementPlan::find($request->PlanID);
 
             if ($selectedPlan) {
-                $selectedPlan->load(['lineItems.branch', 'lineItems.department', 'lineItems.item', 'lineItems.budgetLine','lineItems.procurementMode']);
+                $selectedPlan->load(['lineItems.branch', 'lineItems.department', 'lineItems.item', 'lineItems.budgetLine', 'lineItems.procurementMode']);
                 $selectedPlan->CurrentApprLevel = $this->getApprovalLevelFromStatus($selectedPlan->Status);
             } else {
                 return redirect()->back()->with('error', 'Selected plan not found.');

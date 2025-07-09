@@ -10,7 +10,7 @@ class OpeningStockSampleExport implements FromArray, WithHeadings
     public function array(): array
     {
         return [
-            ['1', '1', 'ITM-00001', '1', '1', '0', '1', '1', '1', '1','5','1','3','100000','13/06/2025', '1'],
+            ['1', '1', 'ITM-00001', '1', '1', '0', '1', '1', '1', '1', '5', '1', '3', '100000', '13/06/2025', '1'],
         ];
     }
 

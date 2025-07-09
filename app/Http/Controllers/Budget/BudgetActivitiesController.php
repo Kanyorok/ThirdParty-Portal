@@ -20,6 +20,7 @@ class BudgetActivitiesController extends Controller
     //
     public function index()
     {
+        $this->authorize(PermissionEnum::BudgetSetupView, BudgetActivity::class);
         $activities = BudgetActivity::with([
             'budget:Id,Name,From,To',
             //'allocations:Id,BudgetActivityID,Month,Amount', 
@@ -37,6 +38,8 @@ class BudgetActivitiesController extends Controller
 
     public function create()
     {
+        $this->authorize(PermissionEnum::BudgetSetupCreate, BudgetActivity::class);
+
         $budgetLines=BudgetLine::select('Id','LineName')->get();
         $branches=Branch::select('Id','Name')->get();
         $budgets=Budget::all();
@@ -109,16 +112,13 @@ class BudgetActivitiesController extends Controller
                     ]);
                 }
             }
-
-            DB::commit();
-
             // Log activity
             activity()
                 ->performedOn($activity)
                 ->causedBy(Auth::user())
                 ->withProperties(['action' => 'create'])
                 ->log('Created a budget activity');
-
+            DB::commit();
             return redirect()->route('budgetactivities.index')->with('success', 'Budget Activity created successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -145,8 +145,14 @@ class BudgetActivitiesController extends Controller
 
     public function show($budgetId)
     {
+        $this->authorize(PermissionEnum::BudgetSetupView, BudgetActivity::class);
+
         $budget = Budget::findOrFail($budgetId);
-        $activities = BudgetActivity::with(['budgetLine', 'branch', 'allocations'])
+        $activities = BudgetActivity::with([
+        'activity:Id,ActivityName', 
+        'budgetLine', 
+        'branch', 
+        'allocations'])
             ->where('BudgetID', $budgetId)
             ->get();
         return view('budgetandanalytics.budgetactivities.show', compact('budget', 'activities'));
@@ -154,6 +160,8 @@ class BudgetActivitiesController extends Controller
 
     public function edit($id)
     {
+        $this->authorize(PermissionEnum::BudgetSetupUpdate, BudgetActivity::class);
+        // Fetch the activity with its allocations
         $activity = BudgetActivity::with(['allocations'])->findOrFail($id);
         $budgetLines = BudgetLine::select('Id','LineName')->get();
         $branches = Branch::select('Id','Name')->get();
@@ -225,12 +233,13 @@ class BudgetActivitiesController extends Controller
                     ]);
                 }
             }
-            DB::commit();
+           
             activity()
                 ->performedOn($activity)
                 ->causedBy(Auth::user())
                 ->withProperties(['action' => 'update'])
                 ->log('Updated a budget activity');
+            DB::commit();
             return redirect()->route('budgetactivities.show',$budgetId)->with('success', 'Budget Activity updated successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -239,6 +248,41 @@ class BudgetActivitiesController extends Controller
                 'stack' => $th->getTraceAsString()
             ]);
             return back()->with('error', 'An error occurred while updating the budget activity. Please try again.');
+        }
+    }
+
+    public function destroy($id)
+    {
+        $this->authorize(PermissionEnum::BudgetSetupDelete, BudgetActivity::class);
+        try {
+            DB::beginTransaction();
+            $activity = BudgetActivity::findOrFail($id);
+            $activityId=$activity->BudgetActivityID;
+            // $activity->allocations()->delete();
+            // $allocations = BudgetMonthlyAllocation::where('BudgetActivityID', $activityId)->get();
+
+            // foreach($allocations as $allocation ){
+            //     $allocations->DeletedBy = Auth::Id();
+            //     $allocation->save();
+            //     $allocation->delete();
+            // }
+            $activity->DeletedBy = Auth ::Id();
+            $activity->save();
+            $activity->delete();
+            activity()
+                ->performedOn($activity)
+                ->causedBy(Auth::user())
+                ->withProperties(['action' => 'delete'])
+                ->log('Deleted a budget activity');
+            DB::commit();
+            return back()->with('success', 'Budget Activity deleted successfully.');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            Log::error('Failed to delete budget activity.', [
+                'error' => $th->getMessage(),
+                'stack' => $th->getTraceAsString()
+            ]);
+            return back()->with('error', 'An error occurred while deleting the budget activity. Please try again.');
         }
     }
 }

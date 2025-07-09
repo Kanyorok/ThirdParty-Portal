@@ -47,12 +47,10 @@ class Requisitions extends Model
     }
 
 
-
     public function transfer()
     {
         return $this->hasOne(\App\Models\Inventory\TransactionTransfer::class, 'RequisitionId', 'Id');
     }
-    
 
 
 }

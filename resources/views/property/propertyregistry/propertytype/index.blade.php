@@ -32,7 +32,9 @@
                     <form action="{{ route('propertytype.destroy', $type->Id) }}" method="POST" class="d-inline">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this type?');">Delete</button>
+                        <button type="submit" class="btn btn-sm btn-danger"
+                                onclick="return confirm('Are you sure you want to delete this type?');">Delete
+                        </button>
                     </form>
                 </td>
             </tr>

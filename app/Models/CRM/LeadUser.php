@@ -14,9 +14,9 @@ class LeadUser extends Model
 {
     use ImageTrait, UserActorTrait, SoftDeletes;
 
-    const string CREATED_AT = 'CreatedOn';
-    const string UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    const CREATED_AT = 'CreatedOn';
+    const UPDATED_AT = 'ModifiedOn';
+    const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_LeadUsers';
     protected $primaryKey = 'Id';
@@ -46,7 +46,7 @@ class LeadUser extends Model
 
     protected function getImageName(): string
     {
-        return " Lead User";
+        return "Lead User";
     }
 
     public static function getPrimaryKey(): string

@@ -20,9 +20,9 @@ use Illuminate\Support\Facades\DB;
 
 class RequisitionsController extends Controller
 {
-    public function __construct(protected RequisitionService $service,protected RequisitionItemService $requisitionItemService,protected DocumentApprovalService $documentApprovalService)
+    public function __construct(protected RequisitionService $service, protected RequisitionItemService $requisitionItemService, protected DocumentApprovalService $documentApprovalService)
     {
-        $this->middleware('ajax')->except(['index', 'show', 'create','approval','approve']);
+        $this->middleware('ajax')->except(['index', 'show', 'create', 'approval', 'approve']);
 //         $this->authorizeResource(Requisitions::class); // Uncomment if using authorization
     }
 
@@ -142,15 +142,17 @@ class RequisitionsController extends Controller
         }
     }
 
-    public function approval($id){
+    public function approval($id)
+    {
         try {
-            $requisition = Requisitions::findOrFail($id); 
+            $requisition = Requisitions::findOrFail($id);
             $this->authorize('view', $requisition); // Authorize the order object itself
 
             $requisitionInfo = $this->service->getRelatedRequisition($id);
             $requisitionlineInfo = $this->requisitionItemService->getRequisitionRelatedItems($id);
+            $approvalStatus = $this->getApprovalStatus('purchase_requisition', $id);
 
-            return view('procurement.requisitions.approval', compact('requisitionInfo', 'requisitionlineInfo'));
+            return view('procurement.requisitions.approval', compact('requisitionInfo', 'requisitionlineInfo', 'approvalStatus'));
 
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
             Log::warning("Unauthorized access attempt to view Requisition ID: {$id} by user ID: " . auth()->id());
@@ -168,19 +170,79 @@ class RequisitionsController extends Controller
     {
         $hasLines = DB::table('t_RequisitionLines')->where('RequisitionId', $id)->exists();
         if (!$hasLines) {
-            return back()->with('error','Cannot approve a requisition without items.');
+            return back()->with('error', 'Cannot approve a requisition without items.');
         }
         return $this->documentApprovalService->approve($requisitionRequest, $id);
     }
 
+    private function getApprovalStatus(string $docType, int $documentId)
+    {
+        $permissionId = DB::table('t_ApprovalGroups')
+            ->where('DocType', $docType)
+            ->value('Permission');
+
+        if (!$permissionId) return [];
+
+        $approverUsers = DB::table('t_ModelRoles as mr')
+            ->join('t_RolePermissions as rp', 'mr.role_id', '=', 'rp.role_id')
+            ->join('t_Users as u', 'mr.model_id', '=', 'u.Id')
+            ->where('mr.model_type', 'UserID')
+            ->where('rp.permission_id', $permissionId)
+            ->select('u.Id', 'u.Name')
+            ->distinct()
+            ->get();
+
+        $approvedUserIds = DB::table('t_Approvals')
+            ->where('DocType', $docType)
+            ->where('DocumentId', $documentId)
+            ->where('Status', 'approved')
+            ->pluck('UserId')
+            ->toArray();
+
+        return $approverUsers->map(function ($user) use ($approvedUserIds) {
+            return [
+                'name' => $user->Name,
+                'approved' => in_array($user->Id, $approvedUserIds),
+            ];
+        });
+    }
+
+    public function getPlanDetails($id)
+    {
+        $branchIds = DB::table('t_PlanLineItem')
+            ->where('PlanID', $id)
+            ->distinct()
+            ->pluck('BranchID');
+
+        $departmentIds = DB::table('t_PlanLineItem')
+            ->where('PlanID', $id)
+            ->distinct()
+            ->pluck('DepartmentID');
+
+        $branches = DB::table('t_Branches')
+            ->whereIn('BranchCode', $branchIds)
+            ->select('Id', 'Name')
+            ->get();
+
+        $departments = DB::table('t_Departments')
+            ->whereIn('DepartmentCode', $departmentIds)
+            ->select('Id', 'Name')
+            ->get();
+
+        return response()->json([
+            'branches' => $branches,
+            'departments' => $departments,
+        ]);
+    }
+    
     public function getRequisitions(): JsonResponse{
         try{
             $details = $this->service->fetchRequisition();
             return response()->json([
                 'success' => true,
                 'data' => $details,
-            ]);}
-        catch(\Exception $e){
+            ]);
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch items.',

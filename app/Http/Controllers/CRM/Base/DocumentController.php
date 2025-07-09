@@ -4,7 +4,7 @@ namespace App\Http\Controllers\CRM\Base;
 
 use App\Http\Controllers\Controller;
 use App\Models\DMS\Image;
-use App\Services\ImageService;
+use App\Services\DMS\ImageService;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;

@@ -21,18 +21,18 @@
                 <span>({{ $budget ? $budget->From . ' to ' . $budget->To : 'N/A' }})</span>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-6">
             <label class="form-label fw-medium">Branch</label>
             <div class="border rounded p-2 bg-light">
                 <span class="fw-bold">{{ $branch ? $branch->Name : 'N/A' }}</span>
             </div>
         </div>
-        <div class="col-md-3">
+        {{-- <div class="col-md-3">
             <label class="form-label fw-medium">Frequency</label>
             <div class="border rounded p-2 bg-light">
                 <span class="fw-bold">Monthly</span>
             </div>
-        </div>
+        </div> --}}
     </div>
 
     <form method="POST" action="{{ route('topdownallocation.store') }}">
@@ -78,10 +78,11 @@
                                             {{ $item->Description }} <b>({{ $item->GLAccountTypeID ?? 'NA' }})</b>
                                         </td>
                                         <input type="hidden" name="gl_data[{{ $item->AccountID }}][Description]" value="{{ $item->Description }}">
+                                        <input type="hidden" name="gl_data[{{ $item->AccountID }}][AttachID]" value="{{ $item->Id }}">
                                         <input type="hidden" name="gl_data[{{ $item->AccountID }}][GLAccountTypeID]" value="{{ $item->GLAccountTypeID ?? 'NA' }}">
                                         @for ($m = 1; $m <= 12; $m++)
                                             <td>
-                                                <input type="text" 
+                                                <input type="text"
                                                        name="monthly_allocations[{{ $item->AccountID }}][{{ $m }}]"
                                                        class="form-control form-control-sm text-end monthly-input"
                                                        placeholder="0.00"
@@ -92,22 +93,22 @@
                                             </td>
                                         @endfor
                                         <td>
-                                            <input class="form-control form-control-sm total-input text-end" 
+                                            <input class="form-control form-control-sm total-input text-end"
                                                    name="budget_2025[{{ $item->AccountID }}]"
-                                                   style="width: 120px; padding: 2px 5px;" 
-                                                   value="0" 
+                                                   style="width: 120px; padding: 2px 5px;"
+                                                   value="0"
                                                    readonly />
                                         </td>
                                         <td>
-                                            <input class="form-control form-control-sm text-end" 
-                                                   style="width: 120px; padding: 2px 5px;" 
-                                                   value="{{ $item->ActualsDec2024 ?? 4000000 }}" 
+                                            <input class="form-control form-control-sm text-end"
+                                                   style="width: 120px; padding: 2px 5px;"
+                                                   value="{{ $item->ActualsDec2024 ?? 4000000 }}"
                                                    readonly />
                                         </td>
                                         <td>
-                                            <input class="form-control form-control-sm text-end percent-change" 
-                                                   style="width: 110px; padding: 2px 5px;" 
-                                                   value="{{ $item->PercentChange ?? '108.75%' }}" 
+                                            <input class="form-control form-control-sm text-end percent-change"
+                                                   style="width: 110px; padding: 2px 5px;"
+                                                   value="{{ $item->PercentChange ?? '108.75%' }}"
                                                    readonly />
                                         </td>
                                     </tr>
@@ -194,7 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Update category totals 
+        // Update category totals
         document.getElementById('category-a').textContent = formatNumber(categoryTotals['A']);
         document.getElementById('category-l').textContent = formatNumber(categoryTotals['L']);
         document.getElementById('category-e').textContent = formatNumber(categoryTotals['E']);

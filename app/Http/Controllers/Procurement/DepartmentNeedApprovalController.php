@@ -6,7 +6,7 @@ use App\Enums\Procurement\DepartmentNeedsEnum;
 use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
 use Exception;
-use App\Models\Procurement\DepartmentNeeds;
+use App\Models\Procurement\DepartmentNeed;
 use App\Services\Procurement\ProcurementPlan\DepartmentNeedsApprovalService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -19,19 +19,19 @@ class DepartmentNeedApprovalController extends Controller
     //
     public function index()
     {
-        $NeedsApprovalviews = DepartmentNeeds::with('creator')->where('Status', DepartmentNeedsEnum::Pending)->get();
+        $NeedsApprovalviews = DepartmentNeed::with('creator')->where('Status', DepartmentNeedsEnum::Pending)->get();
         return view('procurement.procurementplan.departmentneeds.approval.index', compact('NeedsApprovalviews'));
     }
 
     public function show($Id)
     {
-        $need = DepartmentNeeds::with(['item.category', 'item.uom', 'creator'])->findOrFail($Id);
+        $need = DepartmentNeed::with(['item.category', 'item.uom', 'creator'])->findOrFail($Id);
         return view('procurement.procurementplan.departmentneeds.approval.show', compact('need'));
     }
 
     public function update(Request $request, $departmentNeed_ID): RedirectResponse
     {
-        $departmentNeeds = DepartmentNeeds::query()->findOrFail($departmentNeed_ID);
+        $departmentNeeds = DepartmentNeed::query()->findOrFail($departmentNeed_ID);
 
         $this->authorize('approve', $departmentNeeds);
 
@@ -54,7 +54,7 @@ class DepartmentNeedApprovalController extends Controller
                 ->back()
                 ->with('error', $e->getMessage());
         } catch (\Throwable|Exception $e) {
-            \Log::error('Error approve department needs failed: ' . $e->getMessage());
+            Log::error('Error approve department needs failed: ' . $e->getMessage());
             return redirect()
                 ->back()
                 ->with('error', 'Unexpected error, try again later.');
@@ -68,7 +68,7 @@ class DepartmentNeedApprovalController extends Controller
 
     public function destroy(Request $request, $departmentNeed_ID): RedirectResponse
     {
-        $departmentNeeds = DepartmentNeeds::findOrFail($departmentNeed_ID);
+        $departmentNeeds = DepartmentNeed::findOrFail($departmentNeed_ID);
         $this->authorize('destroy', $departmentNeeds);
 
         $actor = $request->user();

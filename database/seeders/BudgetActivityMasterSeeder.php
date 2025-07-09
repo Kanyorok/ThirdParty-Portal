@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Models\Auth\User;
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
-use App\Models\Auth\User;
 
 class BudgetActivityMasterSeeder extends Seeder
 {
@@ -90,16 +90,16 @@ class BudgetActivityMasterSeeder extends Seeder
             $line = $budgetLines[$lineName] ?? $budgetLines->first();
 
             DB::table('t_BudgetActivityMaster')->insert([
-                'ActivityName'   => $name,
-                'Description'    => $desc,
-                'IsActive'       => $isActive,
-                'BudgetLineID'   => $line->Id,
-                'CreatedBy'      => $userIds[array_rand($userIds)],
-                'CreatedOn'      => $now->copy()->subDays(rand(10, 30)),
-                'ModifiedBy'     => $userIds[array_rand($userIds)],
-                'ModifiedOn'     => $now->copy()->subDays(rand(1, 5)),
-                'DeletedBy'      => null,
-                'DeletedOn'      => null,
+                'ActivityName' => $name,
+                'Description' => $desc,
+                'IsActive' => $isActive,
+                'BudgetLineID' => $line->Id,
+                'CreatedBy' => $userIds[array_rand($userIds)],
+                'CreatedOn' => $now->copy()->subDays(rand(10, 30)),
+                'ModifiedBy' => $userIds[array_rand($userIds)],
+                'ModifiedOn' => $now->copy()->subDays(rand(1, 5)),
+                'DeletedBy' => null,
+                'DeletedOn' => null,
             ]);
         }
     }

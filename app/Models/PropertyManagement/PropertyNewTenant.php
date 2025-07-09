@@ -13,7 +13,7 @@ class PropertyNewTenant extends Model
     protected $table = 't_TenantMaintenance';
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    public const DELETED_AT = 'DeletedOn';
     protected $primaryKey = 'Id';
 
     protected $fillable = [
@@ -35,6 +35,7 @@ class PropertyNewTenant extends Model
     {
         return 'TenantMaintenanceId';
     }
+
     public function type()
     {
         return $this->belongsTo(CodeDetail::class, 'TenantType', 'ID');

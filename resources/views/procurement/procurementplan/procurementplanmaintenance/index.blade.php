@@ -23,7 +23,7 @@
           <th>Title</th>
           <th>Year</th>
           <th>Items</th>
-          <th>Estimated Total Cost (KES)</th>
+            <th>Estimated Total Cost (KES)</th>
           <th>Status</th>
           <th>Created By</th>
           <th>Created On</th>
@@ -47,25 +47,26 @@
             <td>{{ $plan->createdBy->Name ?? 'N/A' }}</td>
             <td>
               @if($plan->CreatedDate)
-                {{ (new DateTime($plan->CreatedDate))->format('d/m/Y') }}
+                    {{ (new DateTime($plan->CreatedDate))->format('d/m/Y') }}
               @else
                 N/A
               @endif
-            </td> 
-            <td>
-                <a href="{{ route('procurementplanmaintain.show', $plan->PlanID) }}"
-                   class="btn btn-sm btn-outline-primary">
-                    @if($plan->Status->value === 'Dr')
-                        View to Add Items
-                    @elseif(in_array($plan->Status->value, ['Su', 'Ap']))
-                        View
-                    @else
-                        View
-                    @endif
-                </a>
-               @if($plan->Status->value === 'Dr')
-                  <a href="{{ route('planning.editDraftItems', ['PlanID' => $plan->PlanID]) }}" class="btn btn-sm btn-outline-success">Edit</a>
-                @endif
+            </td>
+              <td>
+                  <a href="{{ route('procurementplanmaintain.show', $plan->PlanID) }}"
+                     class="btn btn-sm btn-outline-primary">
+                      @if($plan->Status->value === 'Dr')
+                          View to Add Items
+                      @elseif(in_array($plan->Status->value, ['Su', 'Ap']))
+                          View
+                      @else
+                          View
+                      @endif
+                  </a>
+                  @if($plan->Status->value === 'Dr')
+                      <a href="{{ route('planning.editDraftItems', ['PlanID' => $plan->PlanID]) }}"
+                         class="btn btn-sm btn-outline-success">Edit</a>
+                  @endif
             </td>
           </tr>
       @endforeach

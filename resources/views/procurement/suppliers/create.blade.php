@@ -41,7 +41,7 @@
                 <option value="{{ $category->Id }}"
                     {{ old('CategoryId', $item->CategoryId ?? '') == $category->Id ? 'selected' : '' }}>
 
-                {{ $category->Name }}
+                    {{ $category->Name }}
                 </option>
                 @endforeach
             </select>

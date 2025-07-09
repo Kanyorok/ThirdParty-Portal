@@ -2,7 +2,6 @@
 
 namespace App\Services\Core;
 
-use App\Http\Requests\Orders\ApproveOrderRequest;
 use App\Models\Auth\User;
 use App\Models\Procurement\Order;
 use App\Models\Procurement\Requisitions;
@@ -33,15 +32,12 @@ class DocumentApprovalService
                 'model' => Requisitions::class,
                 'route' => 'requisition.approval',
                 'approved_column' => 'StatusID',
-                'approved_value' => 26,
+                'approved_value' => $this->getCodeId('RequisitionStatus', 'Approved'),
             ],
         ];
 
-        $modelClass = $docMap[$documentType]['model'];
-        $document = $modelClass::findOrFail($id);
-
         // Check if already fully approved
-        if ($this->approvalService->isFullyApproved($documentType, $id, (float) $data['order_total'])) {
+        if ($this->approvalService->isFullyApproved($documentType, $id, (float)$data['order_total'])) {
             return redirect()->route($docMap[$documentType]['route'], $id)
                 ->with('warning', 'This document is already fully approved.');
         }
@@ -61,23 +57,22 @@ class DocumentApprovalService
 
             if (!$alreadyApproved) {
                 DB::table('t_Approvals')->insert([
-                    'DocType'     => $documentType,
-                    'DocumentId'  => $id,
-                    'UserId'      => $actor->Id,
-                    'Status'      => 'approved',
-                    'CreatedBy'   => $actor->Id,
-                    'CreatedOn'   => now(),
-                    'ModifiedBy'  => $actor->Id,
-                    'ModifiedOn'  => now(),
+                    'DocType' => $documentType,
+                    'DocumentId' => $id,
+                    'UserId' => $actor->Id,
+                    'Status' => 'approved',
+                    'CreatedBy' => $actor->Id,
+                    'CreatedOn' => now(),
+                    'ModifiedBy' => $actor->Id,
+                    'ModifiedOn' => now(),
                 ]);
             }
 
             // After insert, check if this was the final approval
             $isNowFullyApproved = app(ApprovalService::class)
-                ->isFullyApproved($documentType, $id, (float) $data['order_total']);
+                ->isFullyApproved($documentType, $id, (float)$data['order_total']);
 
             if ($isNowFullyApproved) {
-                // Perform the update via query builder instead of model (safe for transactions)
                 DB::table((new $docMap[$documentType]['model'])->getTable())
                     ->where('id', $id)
                     ->update([
@@ -86,11 +81,19 @@ class DocumentApprovalService
             }
         });
 
-        // Redirect response based on approval outcome
+        // Redirect based on final approval status
         return redirect()->route($docMap[$documentType]['route'], $id)
             ->with($isNowFullyApproved ? 'success' : 'info', $isNowFullyApproved
                 ? 'Document fully approved!'
                 : 'Approval recorded, waiting for more approvers.');
+    }
+
+    private function getCodeId(string $codeGroup, string $description): ?int
+    {
+        return DB::table('t_CodeDetails')
+            ->where('CodeID', $codeGroup)
+            ->where('Description', $description)
+            ->value('ID');
     }
 
     public function approveDocument(string $docType, float $amount, User $actor, int $documentId): array
@@ -112,20 +115,43 @@ class DocumentApprovalService
 
     private function recordApproval(string $docType, int $documentId, User $actor): void
     {
+        // Insert primary approval
         DB::table('t_Approvals')->updateOrInsert(
             [
-                'DocType' => $docType,
+                'DocType'    => $docType,
                 'DocumentId' => $documentId,
-                'UserId' => $actor->Id,
+                'UserId'     => $actor->Id,
             ],
             [
-                'Status' => 'approved',
-                'CreatedBy' => $actor->Id,
+                'Status'     => 'approved',
+                'CreatedBy'  => $actor->Id,
                 'ModifiedBy' => $actor->Id,
-                'CreatedOn' => now(),
+                'CreatedOn'  => now(),
                 'ModifiedOn' => now(),
             ]
         );
+
+        // If the actor is 'Default', also approve as 'System'
+        if ($actor->Name === 'User Default') {
+            $systemUser = DB::table('t_Users')->where('Name', 'SYSTEM')->first();
+
+            if ($systemUser) {
+                DB::table('t_Approvals')->updateOrInsert(
+                    [
+                        'DocType'    => $docType,
+                        'DocumentId' => $documentId,
+                        'UserId'     => $systemUser->Id,
+                    ],
+                    [
+                        'Status'     => 'approved',
+                        'CreatedBy'  => $actor->Id, // Log who triggered it
+                        'ModifiedBy' => $actor->Id,
+                        'CreatedOn'  => now(),
+                        'ModifiedOn' => now(),
+                    ]
+                );
+            }
+        }
     }
 
     private function recordRejection(string $docType, int $documentId, User $actor, ?string $reason): void

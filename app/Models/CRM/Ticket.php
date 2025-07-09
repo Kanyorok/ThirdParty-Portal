@@ -22,9 +22,9 @@ class Ticket extends Model
 {
     use SoftDeletes, UserActorTrait;
 
-    const string CREATED_AT = 'CreatedOn';
-    const string UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    const CREATED_AT = 'CreatedOn';
+    const UPDATED_AT = 'ModifiedOn';
+    const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Tickets';
     protected $primaryKey = 'Id';
@@ -33,34 +33,34 @@ class Ticket extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-                           'TicketID',
-                           'Title',
-                           'CategoryID',
-                           'Notes',
-                           'Party',
-                           'PartyID',
-                           'Source',
-                           'SourceID',
-                           'Status',
-                           'Priority',
-                           'Owner',
-                           'OwnerID',
-                           'ClosedOn',
-                           'SourceTicketID',
-                           'StartDate',
-                           'EndDate',
-                           'CreatedBy',
-                           'ModifiedBy',
-                           'DeletedBy',
-                          ];
+        'TicketID',
+        'Title',
+        'CategoryID',
+        'Notes',
+        'Party',
+        'PartyID',
+        'Source',
+        'SourceID',
+        'Status',
+        'Priority',
+        'Owner',
+        'OwnerID',
+        'ClosedOn',
+        'SourceTicketID',
+        'StartDate',
+        'EndDate',
+        'CreatedBy',
+        'ModifiedBy',
+        'DeletedBy',
+    ];
 
     protected $casts = [
-                        'Status'    => TicketStatusEnum::class,
-                        'Priority'  => TicketPriorityEnum::class,
-                        'ClosedOn'  => 'datetime',
-                        'StartDate' => 'datetime',
-                        'EndDate'   => 'datetime',
-                       ];
+        'Status' => TicketStatusEnum::class,
+        'Priority' => TicketPriorityEnum::class,
+        'ClosedOn' => 'datetime',
+        'StartDate' => 'datetime',
+        'EndDate' => 'datetime',
+    ];
 
     public static function getPrimaryKey(): string
     {

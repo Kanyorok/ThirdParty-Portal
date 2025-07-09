@@ -8,20 +8,15 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BudgetTopDown extends Model
 {
-    public static function getPrimaryKey(): string
-    {
-        return 'BudgetTopDownId';
-    }
-     use SoftDeletes;
-     use UserActorTrait;
-
-    protected $table = 't_BudgetTopDown';
-    protected $primaryKey = 'Id';
-
     const CREATED_AT = 'CreatedOn';
+
+    use SoftDeletes;
+    use UserActorTrait;
+
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
-
+    protected $table = 't_BudgetTopDown';
+    protected $primaryKey = 'Id';
     protected $fillable = [
         'ScenarioID',
         'PeriodID',
@@ -31,7 +26,13 @@ class BudgetTopDown extends Model
         'ModifiedBy',
     ];
 
+    public static function getPrimaryKey(): string
+    {
+        return 'BudgetTopDownId';
+    }
+
     // Relationships
+
     public function scenario()
     {
         return $this->belongsTo(BudgetScenarioPlanning::class, 'ScenarioID');

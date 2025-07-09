@@ -4,7 +4,7 @@ namespace App\Models\DMS;
 
 use App\Enums\Core\ExtensionsEnum;
 use App\Exceptions\ErroredException;
-use App\Services\ImageService;
+use App\Services\DMS\ImageService;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
@@ -14,9 +14,9 @@ class Image extends Model
 {
     use SoftDeletes, UserActorTrait;
 
-    const string CREATED_AT = 'CreatedOn';
-    const string UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    const CREATED_AT = 'CreatedOn';
+    const UPDATED_AT = 'ModifiedOn';
+    const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Images';
     protected $primaryKey = 'ImageID';

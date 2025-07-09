@@ -11,7 +11,7 @@ class BudgetPeriods extends Model
     use UserActorTrait, SoftDeletes;
 
     protected $primaryKey = 'Id';
-    
+
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
@@ -32,8 +32,9 @@ class BudgetPeriods extends Model
         'ModifiedBy',
     ];
 
-    public function periodTypeID(){
-        return $this->belongsTo(BudgetPeriodTypes::class,'periodType');
+    public function periodTypeID()
+    {
+        return $this->belongsTo(BudgetPeriodTypes::class, 'periodType');
     }
     public function periodType()
     {

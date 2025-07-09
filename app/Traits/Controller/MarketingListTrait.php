@@ -53,10 +53,10 @@ trait MarketingListTrait
                 })->editColumn('Notes', function (MarketingList $list) {
                     return Str::limit($list->Notes);
                 })->setRowClass('mouse_pointer user-select-none dbl-click-redirect-data')->setRowData([
-                                                                                                       'dbl_click_url' => function (MarketingList $list) {
-                                                                                                        return ($list->Source === DebtProduct::getPrimaryKey()) ? route('loans-list.show', $list->slug) : route('marketing-list.show', $list->slug);
-                                                                                                       },
-                                                                                                      ])->rawColumns(['Label'])->make();
+                    'dbl_click_url' => function (MarketingList $list) {
+                        return ($list->Source === DebtProduct::getPrimaryKey()) ? route('loans-list.show', $list->slug) : route('marketing-list.show', $list->slug);
+                    },
+                ])->rawColumns(['Label'])->make();
         } catch (Exception) {
         }
 
@@ -74,7 +74,7 @@ trait MarketingListTrait
             });
         } catch (ErroredException $e) {
             throw new ErroredException($e->getMessage());
-        } catch (Exception | Throwable $e) {
+        } catch (Exception|Throwable $e) {
             Log::error('Error create list :  ' . $e->getMessage());
             throw new ErroredException('unexpected error, try again later');
         }
@@ -96,7 +96,7 @@ trait MarketingListTrait
             });
         } catch (ErroredException $e) {
             throw new ErroredException($e->getMessage());
-        } catch (Exception | Throwable $e) {
+        } catch (Exception|Throwable $e) {
             Log::error('Error update list :  ' . $e->getMessage());
             throw new ErroredException('unexpected error, try again later');
         }
@@ -123,7 +123,7 @@ trait MarketingListTrait
             });
         } catch (ErroredException $e) {
             throw new ErroredException($e->getMessage());
-        } catch (Exception | Throwable $e) {
+        } catch (Exception|Throwable $e) {
             Log::error('Error delete list :  ' . $e->getMessage());
             throw new ErroredException('unexpected error, try again later');
         }

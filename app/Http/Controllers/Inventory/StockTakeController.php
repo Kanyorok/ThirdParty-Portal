@@ -23,32 +23,32 @@ class StockTakeController extends Controller
     //
     public function index()
     {
-        $stocks = StockTake::with('branch', 'store','createdby','countedby')->get();
-        return view('inventory.stockmanagement.stocktake.index',compact ('stocks'));
+        $stocks = StockTake::with('branch', 'store', 'createdby', 'countedby')->get();
+        return view('inventory.stockmanagement.stocktake.index', compact('stocks'));
     }
 
     public function create()
     {
         $branches = Branch::all();
-        $users = User::all(); 
+        $users = User::all();
         $stocks = collect();
         return view('inventory.stockmanagement.stocktake.create', compact('branches', 'stocks', 'users'));
     }
 
 
     public function getStoreByBranch($storeId)
-    {   
-        $stores = Store::where('BranchID',$storeId)->get();
+    {
+        $stores = Store::where('BranchID', $storeId)->get();
         return response()->json($stores);
     }
 
     public function getStockItems($branchId, $storeId)
     {
         $stocks = StockItem::where('Branch', $branchId)
-                    ->where('Store', $storeId)
-                    ->whereNull('DeletedOn')
-                    ->with('item')
-                    ->get();
+            ->where('Store', $storeId)
+            ->whereNull('DeletedOn')
+            ->with('item')
+            ->get();
 
         return response()->json($stocks); // Just return raw data
     }
@@ -93,64 +93,64 @@ class StockTakeController extends Controller
         return view('inventory.stockmanagement.stocktake.edit', compact('stock', 'branches', 'stores', 'users'));
     }
 
-     public function update(Request $request, $id)
-{
-    $validated = $request->validate([
-        'BranchId'   => 'required|exists:t_Branches,Id',
-        'StoreId'    => 'required|exists:t_Stores,Id',
-        'CountedBy'  => 'required|exists:t_Users,Id',
-        'CountDate'  => 'required|date',
-    ]);
-
-    DB::beginTransaction();
-
-    try {
-        $stock = StockTake::findOrFail($id);
-
-        // Update the stock take header
-        $stock->update([
-            'BranchId'   => $validated['BranchId'],
-            'StoreId'    => $validated['StoreId'],
-            'CountedBy'  => $validated['CountedBy'],
-            'CountDate'  => $validated['CountDate'],
-            'ModifiedBy' => Auth::id(),
+    public function update(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'BranchId' => 'required|exists:t_Branches,Id',
+            'StoreId' => 'required|exists:t_Stores,Id',
+            'CountedBy' => 'required|exists:t_Users,Id',
+            'CountDate' => 'required|date',
         ]);
 
-        // ✅ Update lines
-        if ($request->has('lines')) {
-            foreach ($request->lines as $lineData) {
-                if (!empty($lineData['Id'])) {
-                    $line = StockTakeLines::find($lineData['Id']);
+        DB::beginTransaction();
 
-                    if ($line) {
-                        $line->update([
-                            'CountedQuantity' => $lineData['CountedQuantity'],
-                            'Remarks'         => $lineData['Remarks'] ?? null,
-                            'ModifiedBy'      => Auth::id(),
-                            'ModifiedOn'      => now(),
-                        ]);
+        try {
+            $stock = StockTake::findOrFail($id);
+
+            // Update the stock take header
+            $stock->update([
+                'BranchId' => $validated['BranchId'],
+                'StoreId' => $validated['StoreId'],
+                'CountedBy' => $validated['CountedBy'],
+                'CountDate' => $validated['CountDate'],
+                'ModifiedBy' => Auth::id(),
+            ]);
+
+            // ✅ Update lines
+            if ($request->has('lines')) {
+                foreach ($request->lines as $lineData) {
+                    if (!empty($lineData['Id'])) {
+                        $line = StockTakeLines::find($lineData['Id']);
+
+                        if ($line) {
+                            $line->update([
+                                'CountedQuantity' => $lineData['CountedQuantity'],
+                                'Remarks' => $lineData['Remarks'] ?? null,
+                                'ModifiedBy' => Auth::id(),
+                                'ModifiedOn' => now(),
+                            ]);
+                        }
                     }
                 }
             }
+
+            DB::commit();
+
+            activity()
+                ->performedOn($stock)
+                ->causedBy(Auth::user())
+                ->withProperties(['action' => 'update'])
+                ->log('Updated Stock Take and lines');
+
+            return redirect()->route('stocktake.index')->with('success', 'Stock Take updated successfully');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            Log::error('Failed to Update Stock Take: ' . $th->getMessage());
+            return back()->withErrors(['error' => 'Failed to update Stock Take'])->withInput();
         }
-
-        DB::commit();
-
-        activity()
-            ->performedOn($stock)
-            ->causedBy(Auth::user())
-            ->withProperties(['action' => 'update'])
-            ->log('Updated Stock Take and lines');
-
-        return redirect()->route('stocktake.index')->with('success', 'Stock Take updated successfully');
-    } catch (\Throwable $th) {
-        DB::rollBack();
-        Log::error('Failed to Update Stock Take: ' . $th->getMessage());
-        return back()->withErrors(['error' => 'Failed to update Stock Take'])->withInput();
     }
-}
 
-       public function destroy($id)
+    public function destroy($id)
     {
         //Check if user has permission to delete property categories
         //$this->authorize(PermissionEnum::PropertyTypeDelete , PropertyType::class);
@@ -167,6 +167,6 @@ class StockTakeController extends Controller
                 ->withErrors(['error' => 'Failed to delete Stock Take. Please try again.'])
                 ->withInput();
         }
-    }   
+    }
 
 }

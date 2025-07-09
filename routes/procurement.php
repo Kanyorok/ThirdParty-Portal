@@ -1,77 +1,83 @@
 <?php
+use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\Procurement\ApprovalSetupController;
+use App\Http\Controllers\Procurement\AwardsController;
+use App\Http\Controllers\Procurement\BidEvaluationController;
+use App\Http\Controllers\Procurement\BidScoreConsolidationController;
+use App\Http\Controllers\Procurement\CalenderBasedController;
+use App\Http\Controllers\Procurement\ConsolidatedDashboardController;
+use App\Http\Controllers\Procurement\ContractsController;
+use App\Http\Controllers\Procurement\ContractsLifecycleController;
 use App\Http\Controllers\Procurement\CriteriaController;
+use App\Http\Controllers\Procurement\DelayedItemsController;
+use App\Http\Controllers\Procurement\DeliveryController;
+use App\Http\Controllers\Procurement\DepartmentNeedApprovalController;
+use App\Http\Controllers\Procurement\DepartmentNeedsController;
+use App\Http\Controllers\Procurement\EngagedAuditorController;
+use App\Http\Controllers\Procurement\EvaluationCriteriaController;
+use App\Http\Controllers\Procurement\EvaluatorDashboardController;
+use App\Http\Controllers\Procurement\GoodsReceiptController;
+use App\Http\Controllers\Procurement\InspectionController;
+use App\Http\Controllers\Procurement\MapToBudgetController;
+use App\Http\Controllers\Procurement\ModeTimelineController;
+use App\Http\Controllers\Procurement\PlanApprovalInboxController;
+use App\Http\Controllers\Procurement\PlanEditController;
+use App\Http\Controllers\Procurement\PlanExectionDashboardController;
+use App\Http\Controllers\Procurement\PlanFromNeedsController;
+use App\Http\Controllers\Procurement\PlanManualInputController;
+use App\Http\Controllers\Procurement\PlanvsActualController;
+use App\Http\Controllers\Procurement\PrequalificationApplicationsController;
+use App\Http\Controllers\Procurement\PrequalificationCriteriaController;
+use App\Http\Controllers\Procurement\PrequalificationCriteriaSetupController;
+use App\Http\Controllers\Procurement\PrequalificationEvalAprovalController;
+use App\Http\Controllers\Procurement\PrequalificationEvaluationController;
+use App\Http\Controllers\Procurement\PrequalificationPeriodController;
+use App\Http\Controllers\Procurement\PrequalificationRoundsController;
+use App\Http\Controllers\Procurement\PrequalifiedSuppliersController;
+use App\Http\Controllers\Procurement\ProcurementApprovalController;
+use App\Http\Controllers\Procurement\ProcurementModeController;
+use App\Http\Controllers\Procurement\ProcurementPeriodController;
+use App\Http\Controllers\Procurement\ProcurementPlanController;
+use App\Http\Controllers\Procurement\ProcurementPlanMaintainController;
+use App\Http\Controllers\Procurement\ProcurementReportsController;
+use App\Http\Controllers\Procurement\ProcurementSchedulePlanController;
+use App\Http\Controllers\Procurement\ProcurementSetMethodController;
+use App\Http\Controllers\Procurement\ProcurementSubmitPlanController;
 use App\Http\Controllers\Procurement\PurchaseOrderController;
 use App\Http\Controllers\Procurement\ReportsController;
 use App\Http\Controllers\Procurement\RequisitionItemsController;
 use App\Http\Controllers\Procurement\RequisitionsController;
-// use App\Http\Controllers\procurement\SectionController;
-use App\Http\Controllers\Procurement\TenderEvaluationsController;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Procurement\ModeTimelineController;
-use App\Http\Controllers\Procurement\ProcurementModeController;
-use App\Http\Controllers\Procurement\TenderController;
-use App\Http\Controllers\Procurement\SasraAuditorController;
-use App\Http\Controllers\Procurement\EngagedAuditorController;
-use App\Http\Controllers\Procurement\SupplierController;
-use App\Http\Controllers\Procurement\ProcurementPeriodController;
-use App\Http\Controllers\Procurement\ProcurementPlanController;
 use App\Http\Controllers\Procurement\RFQController;
-use App\Http\Controllers\Procurement\RFQResponseController;
 use App\Http\Controllers\Procurement\RFQEvaluationController;
-use App\Http\Controllers\Procurement\GoodsReceiptController;
-use App\Http\Controllers\Procurement\TenderCategoryController;
-use App\Http\Controllers\Procurement\TenderTypeController;
-use App\Http\Controllers\Procurement\TenderInitiationApproveController;
-use App\Http\Controllers\Procurement\TenderResponseController;
-use App\Http\Controllers\Procurement\TenderclarificationController;
-use App\Http\Controllers\Procurement\TenderSubmissionController;
-
-use App\Http\Controllers\Procurement\TenderOpeningController;
-use App\Http\Controllers\Procurement\TenderDecryptController;
-use App\Http\Controllers\Procurement\TenderCommitteeController;
+use App\Http\Controllers\Procurement\RFQLinesController;
+use App\Http\Controllers\Procurement\RFQResponseController;
+use App\Http\Controllers\Procurement\SasraAuditorController;
+use App\Http\Controllers\Procurement\SectionController;
+use App\Http\Controllers\Procurement\SubmitForApprovalController;
+use App\Http\Controllers\Procurement\SupplierController;
+use App\Http\Controllers\Procurement\SupplierListingController;
 use App\Http\Controllers\Procurement\TenderAcceptController;
 use App\Http\Controllers\Procurement\TenderAssignRoleController;
-use App\Http\Controllers\Procurement\EvaluationCriteriaController;
-use App\Http\Controllers\Procurement\BidEvaluationController;
-use App\Http\Controllers\Procurement\BidScoreConsolidationController;
-use App\Http\Controllers\Procurement\EvaluatorDashboardController;
-use App\Http\Controllers\Procurement\ProcurementReportsController;
-use App\Http\Controllers\Procurement\ProcurementPlanMaintainController;
-use App\Http\Controllers\Procurement\ProcurementApprovalController;
-use App\Http\Controllers\Procurement\ConsolidatedDashboardController;
-use App\Http\Controllers\Procurement\ProcurementSetMethodController;
-use App\Http\Controllers\Procurement\MapToBudgetController;
-use App\Http\Controllers\Procurement\RFQLinesController;
-use App\Http\Controllers\Procurement\DepartmentNeedsController;
-use App\Http\Controllers\Procurement\TimelineController;
-use App\Http\Controllers\Procurement\CalenderBasedController;
-use App\Http\Controllers\Procurement\DelayedItemsController;
-use App\Http\Controllers\Procurement\PlanvsActualController;
-use App\Http\Controllers\Procurement\PlanFromNeedsController;
-use App\Http\Controllers\Procurement\PlanManualInputController;
-use App\Http\Controllers\Procurement\SubmitForApprovalController;
-use App\Http\Controllers\Procurement\PlanEditController;
-use App\Http\Controllers\Procurement\PlanApprovalInboxController;
-use App\Http\Controllers\Procurement\PlanExectionDashboardController;
-use App\Http\Controllers\Procurement\DepartmentNeedApprovalController;
-use App\Http\Controllers\Procurement\SectionController;
-use App\Http\Controllers\Procurement\ProcurementSchedulePlanController;
-use App\Http\Controllers\Procurement\ProcurementSubmitPlanController;
-use App\Http\Controllers\Procurement\SupplierListingController;
-use App\Http\Controllers\Procurement\PrequalificationRoundsController;
-use App\Http\Controllers\Procurement\PrequalificationCriteriaController;
-use App\Http\Controllers\Procurement\PrequalificationApplicationsController;
-use App\Http\Controllers\Procurement\PrequalificationEvaluationController;
-use App\Http\Controllers\Procurement\PrequalificationEvalAprovalController;
-use App\Http\Controllers\Procurement\PrequalifiedSuppliersController;
 use App\Http\Controllers\Procurement\TenderBidResponsivenessController;
-use App\Http\Controllers\Procurement\ApprovalSetupController;
-use App\Http\Controllers\Procurement\AwardsController;
+use App\Http\Controllers\Procurement\TenderCategoryController;
+use App\Http\Controllers\Procurement\TenderclarificationController;
+use App\Http\Controllers\Procurement\TenderCommitteeController;
+use App\Http\Controllers\Procurement\TenderController;
+use App\Http\Controllers\Procurement\TenderDecryptController;
+use App\Http\Controllers\Procurement\TenderEvaluationsController;
+use App\Http\Controllers\Procurement\TenderInitiationApproveController;
+use App\Http\Controllers\Procurement\TenderOpeningController;
+use App\Http\Controllers\Procurement\TenderResponseController;
+use App\Http\Controllers\Procurement\TenderSubmissionController;
+use App\Http\Controllers\Procurement\TenderTypeController;
+use App\Http\Controllers\Procurement\TimelineController;
+
+use App\Models\Procurement\Tender;
+
 
 
 Route::namespace('Procurement')->prefix('procurement')->group(function () {
-
 
     //Requisitions
     Route::resource('requisition', 'RequisitionsController');
@@ -81,13 +87,15 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::get('requisitionItem/getItem/{type}', [RequisitionItemsController::class, 'getItems'])->name('requisitionItem.getItems');
 
     // this route is static affecting orders\create.blade.php & requisitions\show
-    Route::get('requisitionItem/getItemDetails/{item}', [RequisitionItemsController::class,'getItemDetails'])->name('requisitionItem.getItemDetails');
+    Route::get('requisitionItem/getItemDetails/{item}', [RequisitionItemsController::class, 'getItemDetails'])->name('requisitionItem.getItemDetails');
 
 //    Route::get('requisitionItem/{id}', [RequisitionItemsController::class, 'show'])->name('requisitionItem.show');
 //    Route::get('requisitionItem/create/{id}', [RequisitionItemsController::class, 'create'])->name('requisitionItems.create');
 
     Route::post('requisition/approve/{id}', [RequisitionsController::class, 'approve'])->name('requisition.approve');
     Route::get('requisition/approval/{id}', [RequisitionsController::class, 'approval'])->name('requisition.approval');
+    Route::get('procurementplan/details/{id}', [RequisitionsController::class, 'getPlanDetails'])
+     ->name('procurement.plan.details');
     Route::prefix('admin')->group(function () {
         Route::put('/approval-settings/{id}', [ApprovalSetupController::class, 'update'])->name('approval-setup.update');
         Route::post('/approval-settings', [ApprovalSetupController::class, 'store'])->name('approval-settings.store');
@@ -146,8 +154,9 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
 
     // RFQLines Routes
     Route::post('/rfqlines', [RFQLinesController::class, 'store'])->name('linecategories.store');
-    Route::get('/rfqlines/create', [RFQLinesController::class, 'create'])->name('rfqlines.create');
-    Route::get('/requisitionlines/categories', [RFQLinesController::class, 'getCategories']);
+    Route::get('/requisition/{requisitionId}/categories', [RFQLinesController::class, 'getRequisitionCategories']);
+    Route::get('/rfq/{rfqId}/lines/create', [RFQLinesController::class, 'create'])->name('rfqlines.create');
+
 
     // RFQ routes
     Route::get('/rfqs/create', [RFQController::class, 'create'])->name('rfqs.create');
@@ -366,9 +375,35 @@ Route::prefix('planning')->name('planning.')->group(function () {
 
 });
 
- Route::resource('supplierslist', SupplierListingController::class);
- Route::resource('preqrounds', PrequalificationRoundsController::class);
- Route::resource('preqcriteria', PrequalificationCriteriaController::class);
+ 
+
+//Route::resource('preqrounds', PrequalificationRoundsController::class);
+Route::get('preqrounds', [PrequalificationPeriodController::class, 'index'])->name('preqrounds.index');
+Route::get('preqrounds/create', [PrequalificationPeriodController::class, 'create'])->name('preqrounds.create');
+Route::post('preqrounds', [PrequalificationPeriodController::class, 'store'])->name('preqrounds.store');
+Route::get('preqrounds/{Id}', [PrequalificationPeriodController::class, 'show'])->name('preqrounds.show');
+Route::get('preqrounds/edit/{Id}', [PrequalificationPeriodController::class, 'edit'])->name('preqrounds.edit');
+Route::put('preqrounds/{Id}', [PrequalificationPeriodController::class, 'update'])->name('preqrounds.update');
+Route::delete('preqrounds/{Id}', [PrequalificationPeriodController::class, 'destroy'])->name('preqrounds.destroy');
+
+
+//Route::resource('preqcriteria', PrequalificationCriteriaSetupController::class);
+Route::get('preqcriteria', [PrequalificationCriteriaSetupController::class, 'index'])->name('preqcriteria.index');
+Route::get('preqcriteria/criteria/{round_id}/{section_id}', [PrequalificationCriteriaSetupController::class, 'getCriteriabySection'])->name('getCriteriabySection');
+Route::get('preqcriteria/section/create', [PrequalificationCriteriaSetupController::class, 'create'])->name('preqcriteria.create');
+Route::post('preqcriteria/store', [PrequalificationCriteriaSetupController::class, 'store'])->name('preqcriteria.store');
+Route::get('preqcriteria/{Id}', [PrequalificationCriteriaSetupController::class, 'show'])->name('preqcriteria.show');
+Route::get('preqcriteria/edit/{Id}', [PrequalificationCriteriaSetupController::class, 'edit'])->name('preqcriteria.edit');
+Route::put('preqcriteria/update/{id}', [PrequalificationCriteriaSetupController::class, 'update'])->name('preqcriteria.update');
+Route::delete('preqcriteria/destroy/{id}', [PrequalificationCriteriaSetupController::class, 'destroy'])->name('preqcriteria.destroy');
+
+
+
+
+
+
+
+Route::resource('supplierslist', SupplierListingController::class);
  Route::resource('preqapplications', PrequalificationApplicationsController::class);
  Route::resource('preqevaluation', PrequalificationEvaluationController::class);
  Route::resource('preqevalapproval', PrequalificationEvalAprovalController::class);
@@ -381,7 +416,32 @@ Route::get('/awards-tender/view/{id}', [AwardsController::class, 'view_tender'])
 
   Route::resource('procawards', AwardsController::class);
  
+// Contracts - Core CRUD
+Route::get('contracts', [ContractsController::class, 'index'])->name('contracts.index');
+Route::get('contracts/create', [ContractsController::class, 'create'])->name('contracts.create');
+Route::post('contracts', [ContractsController::class, 'store'])->name('contracts.store');
+Route::get('contracts/{id}/view', [ContractsController::class, 'view'])->name('contracts.view');
+Route::get('contracts/{id}/edit', [ContractsController::class, 'edit'])->name('contracts.edit');
+Route::put('contracts/{id}', [ContractsController::class, 'update'])->name('contracts.update');
+
+// Contracts - Approval Queue
+Route::get('contracts/approval-queue', [ContractsController::class, 'approvalQueue'])->name('contracts.approve_index');
+Route::get('contracts/{id}/approve', [ContractsController::class, 'approve'])->name('contracts.approve');
+Route::post('contracts/{id}/approve', [ContractsController::class, 'submitApproval'])->name('contracts.approve.submit');
+
+// Contracts - LPO Link
+Route::get('contracts/{id}/lpo', [ContractsController::class, 'linkLPO'])->name('contracts.lpo.link');
+
+// Contracts Lifecycle
+Route::get('contracts/lifecycle', [ContractsLifecycleController::class, 'index'])->name('contractcycle.index');
+Route::get('contracts/lifecycle/{id}/view', [ContractsLifecycleController::class, 'view'])->name('contractcycle.view');
+Route::get('contracts/lifecycle/{id}/amend', [ContractsLifecycleController::class, 'amend'])->name('contractcycle.amend');
+Route::post('contracts/lifecycle/{id}/amend', [ContractsLifecycleController::class, 'submitAmendment'])->name('contractcycle.amend.submit');
+Route::get('contracts/lifecycle/{id}/terminate', [ContractsLifecycleController::class, 'terminate'])->name('contractcycle.terminate');
+Route::post('contracts/lifecycle/{id}/terminate', [ContractsLifecycleController::class, 'submitTermination'])->name('contractcycle.terminate.submit');
+Route::get('contracts/lifecycle/{id}/execute', [ContractsLifecycleController::class, 'monitorExecution'])->name('contractcycle.execution');
 
 
-
+Route::resource('deliverynotes', DeliveryController::class);
+Route::resource('goodsinspection', InspectionController::class);
 

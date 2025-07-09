@@ -2,15 +2,13 @@
 
 namespace App\Http\Controllers\Procurement;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Enums\Core\PostingEnum;
 use App\Enums\ProcurementPlanStatusEnum;
-use App\Models\Procurement\PlanLineItem;
+use App\Http\Controllers\Controller;
 use App\Models\Auth\User;
-use Illuminate\Support\Facades\Auth;
-use App\Policies\Procurement\ProcurementPlanMaintainPolicy;
+use App\Models\Procurement\ConsolidatedProcurementPlan;
+use App\Models\Procurement\PlanLineItem;
+use Illuminate\Http\Request;
 
 class ProcurementPlanMaintainController extends Controller
 {
@@ -21,11 +19,6 @@ class ProcurementPlanMaintainController extends Controller
         $plans = ConsolidatedProcurementPlan::with(['createdBy', 'lineItems'])->get();
 
         return view('procurement.procurementplan.procurementplanmaintenance.index', compact('plans'));
-    }
-
-    public function getEstimatedCostAttribute()
-    {
-        return $this->lineItems->sum(fn($item) => $item->MergedQty * $item->EstimatedUnitCost);
     }
 
     public function store(Request $request)
@@ -47,10 +40,10 @@ class ProcurementPlanMaintainController extends Controller
         'FiscalYear'      => $request->FiscalYear,
         'Status' => ProcurementPlanStatusEnum::Draft,
         'CreatedBy'       => $userId,
-        'SubmittedBy'     => $userId,
+        'SubmittedBy' => $userId,
         'CreatedDate'     => now(),
         'SubmittedDate'   => now(),
-        'CreatedOn'       => now(),
+        'CreatedOn' => now(),
         'ModifiedOn'      => now(),
         'CurrentApprLevel'=> 0,
         'ModifiedBy' => $userId,
@@ -84,7 +77,7 @@ class ProcurementPlanMaintainController extends Controller
     public function show($id)
     {
         $this->authorize('view', ConsolidatedProcurementPlan::class);
-        $plan = ConsolidatedProcurementPlan::with(['lineItems.item', 'lineItems.budgetLine','lineItems.procurementMode','createdBy'])->findOrFail($id);
+        $plan = ConsolidatedProcurementPlan::with([ 'lineItems.departmentNeed','lineItems.item', 'lineItems.budgetLine', 'lineItems.procurementMode', 'createdBy'])->findOrFail($id);
 
         return view('procurement.procurementplan.procurementplanmaintenance.show', compact('plan'));
     }

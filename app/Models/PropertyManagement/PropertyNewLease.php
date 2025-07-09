@@ -13,7 +13,7 @@ class PropertyNewLease extends Model
     protected $table = 't_LeaseCreation';
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    public const DELETED_AT = 'DeletedOn';
     protected $primaryKey = 'Id';
 
     protected $fillable = [
@@ -39,6 +39,14 @@ class PropertyNewLease extends Model
     public static function getPrimaryKey(): string
     {
         return 'LeaseId';
+    }
+    public function getPropertyByTenant()
+    {
+        return $this->hasMany(PropertyNewLease::class, 'Id', 'Tenant');
+    }
+    public function getLeaseByProperty()
+    {
+        return $this->hasMany(PropertyNewLease::class, 'Id', 'PropertyID');
     }
     public function tenant()
     {

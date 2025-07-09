@@ -14,7 +14,7 @@ class PropertyTenantClearance extends Model
     protected $table = 't_TenantClearance';
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    const DELETED_AT = 'DeletedOn';
     protected $primaryKey = 'Id';
 
     protected $fillable = [
@@ -31,7 +31,7 @@ class PropertyTenantClearance extends Model
         'DeletedBy'
     ];
 
-    
+
     public static function getPrimaryKey(): string
     {
         return 'TenantClearanceId';
@@ -42,11 +42,12 @@ class PropertyTenantClearance extends Model
 
     public function tenant()
     {
-        return $this->belongsTo(PropertyNewTenant::class,'Tenant','Id');
+        return $this->belongsTo(PropertyNewTenant::class, 'Tenant', 'Id');
     }
+
     public function code()
     {
-        return $this->belongsTo(CodeDetail::class,'DepositRefunded','ID');
+        return $this->belongsTo(CodeDetail::class, 'DepositRefunded', 'ID');
     }
     
 

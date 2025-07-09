@@ -1382,7 +1382,7 @@
                 $("#trashLeadWatcherForm").attr('action', $(this).data('click_url'));
                 $('#trashLeadWatcher').html(name);
                 $('#trashLeadWatcherModal').removeClass('d-none');
-                $('.modal-title').html('<b>Remove</b> ticket watcher : ' + name);
+                $('.modal-title').html('<b>Remove</b> lead watcher : ' + name);
                 $Modal.children().first().removeClass('modal-lg');
                 $Modal.modal('show');
             });

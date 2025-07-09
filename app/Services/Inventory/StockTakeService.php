@@ -21,6 +21,33 @@ class StockTakeService
     }
 
     /**
+     * Creates a StockTake and associated lines in a single transaction
+     */
+    public static function createWithLines(
+        Branch $branch,
+        Store  $store,
+        string $countedBy,
+        Carbon $countDate,
+        array  $lines
+    ): self
+    {
+        return DB::transaction(function () use ($branch, $store, $countedBy, $countDate, $lines) {
+            $service = self::create($branch, $store, $countedBy, $countDate);
+
+            foreach ($lines as $line) {
+                $service->addLine(
+                    itemId: $line['ItemId'],
+                    actualQuantity: $line['ActualQuantity'],
+                    countedQuantity: $line['CountedQuantity'],
+                    remarks: $line['Remarks'] ?? null
+                );
+            }
+
+            return $service;
+        });
+    }
+
+    /**
      * Creates StockTake record and returns service instance
      */
     public static function create(
@@ -28,15 +55,16 @@ class StockTakeService
         Store $store,
         string $countedBy,
         Carbon $countDate
-    ): self {
+    ): self
+    {
         return DB::transaction(function () use ($branch, $store, $countedBy, $countDate) {
             $stockTake = StockTake::create([
-                'BranchId'    => $branch->Id,
-                'StoreId'     => $store->Id,
-                'CountedBy'   => $countedBy,
-                'CountDate'   => $countDate,
-                'CreatedBy'   => Auth::id(),
-                'ModifiedBy'  => Auth::id(),
+                'BranchId' => $branch->Id,
+                'StoreId' => $store->Id,
+                'CountedBy' => $countedBy,
+                'CountDate' => $countDate,
+                'CreatedBy' => Auth::id(),
+                'ModifiedBy' => Auth::id(),
             ]);
 
             activity()
@@ -53,20 +81,21 @@ class StockTakeService
      * Adds a line to the current StockTake
      */
     public function addLine(
-        int $itemId,
+        int   $itemId,
         float $actualQuantity,
         float $countedQuantity,
         ?string $remarks = null
-    ): StockTakeLines {
+    ): StockTakeLines
+    {
         return DB::transaction(function () use ($itemId, $actualQuantity, $countedQuantity, $remarks) {
             $line = StockTakeLines::create([
-                'StockTakeId'     => $this->stockTake->Id,
-                'ItemId'          => $itemId,
-                'ActualQuantity'  => $actualQuantity,
+                'StockTakeId' => $this->stockTake->Id,
+                'ItemId' => $itemId,
+                'ActualQuantity' => $actualQuantity,
                 'CountedQuantity' => $countedQuantity,
-                'Remarks'         => $remarks,
-                'CreatedBy'       => Auth::id(),
-                'ModifiedBy'      => Auth::id(),
+                'Remarks' => $remarks,
+                'CreatedBy' => Auth::id(),
+                'ModifiedBy' => Auth::id(),
             ]);
 
             activity()
@@ -76,32 +105,6 @@ class StockTakeService
                 ->log("Added line item to Stock Take #{$this->stockTake->Id}");
 
             return $line;
-        });
-    }
-
-    /**
-     * Creates a StockTake and associated lines in a single transaction
-     */
-    public static function createWithLines(
-        Branch $branch,
-        Store $store,
-        string $countedBy,
-        Carbon $countDate,
-        array $lines
-    ): self {
-        return DB::transaction(function () use ($branch, $store, $countedBy, $countDate, $lines) {
-            $service = self::create($branch, $store, $countedBy, $countDate);
-
-            foreach ($lines as $line) {
-                $service->addLine(
-                    itemId: $line['ItemId'],
-                    actualQuantity: $line['ActualQuantity'],
-                    countedQuantity: $line['CountedQuantity'],
-                    remarks: $line['Remarks'] ?? null
-                );
-            }
-
-            return $service;
         });
     }
 

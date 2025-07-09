@@ -38,8 +38,9 @@
                                 <th>Responsive?</th>
                                 <th>Select</th>
                             </tr>
-                        </thead>
-                        <tbody>
+
+                            </thead>
+                            <tbody>
                             <tr>
                                 <td>1</td>
                                 <td>OfficePro Suppliers</td>

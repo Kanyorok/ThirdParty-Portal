@@ -12,9 +12,9 @@ class Comment extends Model
 {
     use SoftDeletes, UserActorTrait;
 
-    const string CREATED_AT = 'CreatedOn';
-    const string UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    const CREATED_AT = 'CreatedOn';
+    const UPDATED_AT = 'ModifiedOn';
+    const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Comments';
     protected $primaryKey = 'Id';
@@ -23,22 +23,22 @@ class Comment extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-                           'Notes',
-                           'CommentType',
-                           'CommentTypeID',
-                           'Response',
-                           'RemoteId',
-                           'Source',
-                           'CreatedBy',
-                           'ModifiedBy',
-                           'DeletedBy',
-                          ];
+        'Notes',
+        'CommentType',
+        'CommentTypeID',
+        'Response',
+        'RemoteId',
+        'Source',
+        'CreatedBy',
+        'ModifiedBy',
+        'DeletedBy',
+    ];
 
     protected $casts = [
-                        'Response'   => 'object',
-                        'CreatedBy'  => 'integer',
-                        'ModifiedBy' => 'integer',
-                       ];
+        'Response' => 'object',
+        'CreatedBy' => 'integer',
+        'ModifiedBy' => 'integer',
+    ];
 
     public static function getPrimaryKey(): string
     {
