@@ -47,7 +47,7 @@
                                 <div id="all-earnings-graph"></div>
                             </div>
                             <div class="col-5">
-                                <h5 class="mb-1">3</h5>
+                                <h5 class="mb-1 text-end">{{$openBudgets}}</h5>
 {{--                                <p class="text-primary mb-0"><i class="ti ti-arrow-up-right"></i> 30.6%</p>--}}
                             </div>
                         </div>
@@ -99,7 +99,7 @@
                                 <div id="page-views-graph"></div>
                             </div>
                             <div class="col-5">
-                                <h5 class="mb-1">290</h5>
+                                <h5 class="mb-1 text-end">{{$totalGLS}}</h5>
 {{--                                <p class="text-warning mb-0"><i class="ti ti-arrow-up-right"></i> 30.6%</p>--}}
                             </div>
                         </div>
@@ -113,32 +113,11 @@
                     <div class="d-flex align-items-center">
                         <div class="flex-shrink-0">
                             <div class="avtar avtar-s bg-light-success">
-                                <svg width="24" height="24"
-                                     viewBox="0 0 24 24" fill="none"
-                                     xmlns="../../external.html?link=http://www.w3.org/2000/svg">
-                                    <path d="M8 2V5" stroke="#2ca87f" stroke-width="1.5" stroke-miterlimit="10"
-                                          stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M16 2V5" stroke="#2ca87f" stroke-width="1.5" stroke-miterlimit="10"
-                                          stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path opacity="0.4" d="M3.5 9.08984H20.5" stroke="#2ca87f"
-                                          stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round"
-                                          stroke-linejoin="round"/>
-                                    <path
-                                        d="M21 8.5V17C21 20 19.5 22 16 22H8C4.5 22 3 20 3 17V8.5C3 5.5 4.5 3.5 8 3.5H16C19.5 3.5 21 5.5 21 8.5Z"
-                                        stroke="#2ca87f" stroke-width="1.5" stroke-miterlimit="10"
-                                        stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path opacity="0.4" d="M15.6947 13.7002H15.7037" stroke="#2ca87f"
-                                          stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path opacity="0.4" d="M15.6947 16.7002H15.7037" stroke="#2ca87f"
-                                          stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path opacity="0.4" d="M11.9955 13.7002H12.0045" stroke="#2ca87f"
-                                          stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path opacity="0.4" d="M11.9955 16.7002H12.0045" stroke="#2ca87f"
-                                          stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path opacity="0.4" d="M8.29431 13.7002H8.30329" stroke="#2ca87f"
-                                          stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path opacity="0.4" d="M8.29395 16.7002H8.30293" stroke="#2ca87f"
-                                          stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M17 21H7C5.895 21 5 20.105 5 19V5C5 3.895 5.895 3 7 3H12.414L17 7.586V19C17 20.105 16.105 21 15 21Z" stroke="#DC2626" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path opacity="0.4" d="M12 3V8H17" stroke="#DC2626" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path opacity="0.4" d="M8 11H14" stroke="#DC2626" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path opacity="0.4" d="M8 15H14" stroke="#DC2626" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
                             </div>
                         </div>
@@ -163,7 +142,7 @@
                                 <div id="total-task-graph"></div>
                             </div>
                             <div class="col-5">
-                                <h5 class="mb-1">839</h5>
+                                <h5 class="mb-1 text-end">0</h5>
 {{--                                <p class="text-success mb-0"><i class="ti ti-arrow-up-right"></i> Recent</p>--}}
                             </div>
                         </div>
@@ -176,17 +155,9 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center">
                         <div class="flex-shrink-0">
-                            <div class="avtar avtar-s bg-light-danger">
-                                <svg width="24" height="24"
-                                     viewBox="0 0 24 24" fill="none"
-                                     xmlns="../../external.html?link=http://www.w3.org/2000/svg">
-                                    <path
-                                        d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
-                                        stroke="#DC2626" stroke-width="1.5" stroke-miterlimit="10"
-                                        stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path opacity="0.4" d="M8.4707 10.7402L12.0007 14.2602L15.5307 10.7402"
-                                          stroke="#DC2626" stroke-width="1.5" stroke-linecap="round"
-                                          stroke-linejoin="round"/>
+                            <div class="avtar avtar-s bg-light-danger"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M18.5 15.5C18.5 17.433 16.433 19.5 14.5 19.5H7C5.067 19.5 3 17.433 3 15.5C3 13.567 5.067 11.5 7 11.5C7 9.567 8.567 8 10.5 8C12.433 8 14 9.567 14 11.5H14.5C16.433 11.5 18.5 13.567 18.5 15.5Z" stroke="#DC2626" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path opacity="0.4" d="M10 14.5H14V10.5" stroke="#DC2626" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
                             </div>
                         </div>
@@ -211,7 +182,7 @@
                                 <div id="download-graph"></div>
                             </div>
                             <div class="col-5">
-                                <h5 class="mb-1">2.6 GB</h5>
+                                <h5 class="mb-1 text-end">0.00 GB</h5>
 {{--                                <p class="text-danger mb-0"><i class="ti ti-arrow-up-right"></i> 30.6%</p>--}}
                             </div>
                         </div>
@@ -220,7 +191,132 @@
             </div>
         </div>
     </div>
+
+    <div class="col-xl-6 col-xxl-12 d-flex">
+        <div class="card  flex-fill w-100">
+            <div class="card-header pb-0">
+                <h5 class="card-title ">Pending Approvals
+                    <button class="btn btn-link float-end" type="button" onclick="fetchPendingApprovalsTable()"><i
+                            class="fas fa-refresh"></i></button>
+                </h5>
+            </div>
+            <div class="card-body pt-0">
+                <table id="approvalsTable"
+                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                    <thead>
+                    <tr>
+                        <th class="w-75">description</th>
+                        <th>dated</th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 @endsection
 @section('scripts')
+    <script src="{{ asset('assets/js/datatables.js') }}"></script>
+    <script>
+        const converted = {!! json_encode(data_get($data,'leads.line.converted')) !!},
+            labels = {!! json_encode(data_get($data,'leads.line.labels')) !!},
+            statuses = {!! json_encode(data_get($data,'leads.donut.labels')) !!};
+        let tasksTable = null, approvalsTable = null, leadStatus = [0, 0];
+        $(function () {
+            $.fn.dataTable.ext.errMode = 'none';
+            fetchTasksTable();
 
+            var ctx = document.getElementById("leadChart").getContext("2d");
+
+            const convertedColour = ctx.createLinearGradient(0, 0, 0, 225);
+            convertedColour.addColorStop(0, "rgba(8,182,15,0.7)");
+            convertedColour.addColorStop(1, "rgba(8,182,15, 0)");
+            // Line chart
+            new Chart(document.getElementById("leadChart"), {
+                type: "line",
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: "Lead Won",
+                        fill: true,
+                        backgroundColor: convertedColour,
+                        borderColor: window.theme.success,
+                        data: converted
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    legend: {
+                        display: true
+                    },
+                    tooltips: {
+                        intersect: false
+                    },
+                    hover: {
+                        intersect: true
+                    },
+                    plugins: {
+                        filler: {
+                            propagate: false
+                        }
+                    },
+                    scales: {
+                        xAxes: [{
+                            reverse: true,
+                            gridLines: {
+                                color: "rgba(0,0,0,0.0)"
+                            }
+                        }],
+                        yAxes: [{
+                            ticks: {
+                                min: 0,
+                                precision: 0
+                            },
+                            display: true,
+                            borderDash: [3, 3],
+                            gridLines: {
+                                color: "rgba(112,112,112,0.1)",
+                                fontColor: "#fff"
+                            }
+                        }]
+                    }
+                }
+            });
+
+            fetchPendingApprovalsTable();
+
+        });
+
+        function fetchPendingApprovalsTable() {
+            if (approvalsTable === null) {
+                approvalsTable = $('#approvalsTable').DataTable({
+                    processing: true,
+                    serverSide: true,
+                    responsive: true,
+                    "order": [[1, 'desc']],
+                    ajax: {
+                        url: '{{ route('pending-workflows') }}',
+                        error: function (jqXHR) {
+                            codeNotify(jqXHR.status);
+                        }
+                    },
+                    columns: [
+                        {data: 'description', name: 'Source'},
+                        {data: 'CreatedOn', name: 'CreatedOn'},
+                    ], "oLanguage": {
+                        "sEmptyTable": "no pending workflow"
+                    }
+                });
+
+                approvalsTable.on('error', function (er) {
+                    nWarning("an issue occurred while loading workflow.");
+                    console.log(er);
+                });
+            } else {
+                approvalsTable.ajax.reload();
+            }
+        }
+
+    </script>
 @endsection
+
