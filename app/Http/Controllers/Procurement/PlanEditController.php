@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Procurement\PlanLineItems;
+use App\Models\Procurement\PlanLineItem;
 use App\Enums\ProcurementPlanStatusEnum;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Policies\Procurement\PlanEditPolicy;
@@ -14,14 +14,14 @@ class PlanEditController extends Controller
     //
     public function index(Request $request)
     {
-        $this->authorize('viewAny', PlanLineItems::class);
+        $this->authorize('viewAny', PlanLineItem::class);
         $planId = $request->input('PlanID');
 
         $availablePlans = ConsolidatedProcurementPlan::where('Status', ProcurementPlanStatusEnum::Draft)->get();
 
         $draftItems = collect();
         if ($planId) {
-            $draftItems = PlanLineItems::where('PlanID', $planId)
+            $draftItems = PlanLineItem::where('PlanID', $planId)
                 ->whereHas('consolidatedProcurementPlan', function ($query) {
                     $query->where('Status', ProcurementPlanStatusEnum::Draft);
                 })
@@ -43,7 +43,7 @@ class PlanEditController extends Controller
         $errors = [];
 
         foreach ($itemIds as $id) {
-            $item = PlanLineItems::findOrFail($id);
+            $item = PlanLineItem::findOrFail($id);
             $this->authorize('update', $item);
             $qty = $request->input("qty_$id");
             $cost = $request->input("unitCost_$id");
@@ -57,14 +57,14 @@ class PlanEditController extends Controller
                 continue;
             }
 
-            PlanLineItems::where('LineItemID', $id)->update([
+            PlanLineItem::where('LineItemID', $id)->update([
                 'MergedQty' => $qty,
                 'EstimatedUnitCost' => $cost,
                 'ChangeRemarks' => $remarks,
                 'ModifiedOn' => now(),
                 'ModifiedBy' => auth()->id(),
             ]);
-            $updatedItem = PlanLineItems::find($id);
+            $updatedItem = PlanLineItem::find($id);
             activity()
                 ->causedBy($user)
                 ->performedOn($updatedItem)
@@ -82,7 +82,7 @@ class PlanEditController extends Controller
     {
         $user = auth()->user();
 
-        $item = PlanLineItems::find($id);
+        $item = PlanLineItem::find($id);
         $this->authorize('delete', $item);
         if ($item) {
             $item->update([
