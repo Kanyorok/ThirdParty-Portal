@@ -164,6 +164,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 306000, 'Name' => 'Quotations', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 306100, 'Name' => 'View Quotations', 'Icon' => null, 'Description' => '', 'ParentID' => 306000, 'Route' => 'rfqs.index'],
             ['ModuleID' => 306200, 'Name' => 'Quotation Responses', 'Icon' => null, 'Description' => '', 'ParentID' => 306000, 'Route' => 'rfqresponses.index'],
+            ['ModuleID' => 306400, 'Name' => 'Quotation Criteria Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 306000, 'Route' => 'rfqcriteriasetup.evaluations'],
             ['ModuleID' => 306300, 'Name' => 'Quotation Evaluation', 'Icon' => null, 'Description' => '', 'ParentID' => 306000, 'Route' => 'evaluations.index'],
 
             //Awards
@@ -181,6 +182,7 @@ class ModuleSeeder extends Seeder
 
             ['ModuleID' => 398000, 'Name' => 'Settings', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 398100, 'Name' => 'Criteria Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'sections.index'],
+            ['ModuleID' => 398400, 'Name' => 'RFQ Criteria Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'rfqsettingsections.index'],
             ['ModuleID' => 398200, 'Name' => 'Methods Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'procurement-modes.index'],
             ['ModuleID' => 398300, 'Name' => 'Approval Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'approval-setup.index'],
             ['ModuleID' => 399000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'Description' => '', 'ParentID' => 300000, 'Route' => 'procurement-reports.index'],

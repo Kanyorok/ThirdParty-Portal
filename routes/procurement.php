@@ -68,6 +68,13 @@ use App\Http\Controllers\Procurement\PrequalifiedSuppliersController;
 use App\Http\Controllers\Procurement\TenderBidResponsivenessController;
 use App\Http\Controllers\Procurement\ApprovalSetupController;
 use App\Http\Controllers\Procurement\AwardsController;
+use App\Http\Controllers\Procurement\RFQCommitteeController;
+use App\Http\Controllers\Procurement\RFQSettingSectionController;
+use App\Http\Controllers\Procurement\RFQSettingCriteriaController;
+use App\Http\Controllers\Procurement\RFQCriteriaController;
+use App\Http\Controllers\Procurement\RFQSectionController;
+
+
 
 
 Route::namespace('Procurement')->prefix('procurement')->group(function () {
@@ -200,6 +207,9 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::resource('tenderdecrypt', TenderDecryptController::class);
     Route::resource('tendercommittee', TenderCommitteeController::class);
     Route::post('/store-tender-committee', [TenderCommitteeController::class, 'membersAdd'])->name('tendercommittee.save');
+    Route::get('/committee-references/{type}', [TenderCommitteeController::class, 'getReferences']);
+    Route::get('/tender-committee/show/{id}/{type}', [TenderCommitteeController::class, 'show'])->name('tendercommittee.show');
+
     Route::resource('memberresponse', TenderAcceptController::class);
     Route::resource('assignrole', TenderAssignRoleController::class);
     Route::resource('evaluationcriteria', EvaluationCriteriaController::class);
@@ -294,6 +304,7 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::resource('ammendplan', PlanEditController::class);
     Route::resource('approvalinbox', PlanApprovalInboxController::class);
     Route::resource('executiondashboard', PlanExectionDashboardController::class);
+    Route::resource('rfqcommittee', RFQCommitteeController::class);
 
     //Tendering
     Route::get('/tenderresponse', [TenderResponseController::class, 'index'])->name('tenderresponse.index');
@@ -381,6 +392,35 @@ Route::get('/awards-tender/view/{id}', [AwardsController::class, 'view_tender'])
   Route::get('/awards-rfq/view/{id}', [AwardsController::class, 'view_rfq'])->name('awards.view');
 
   Route::resource('procawards', AwardsController::class);
+
+Route::post('/rfqcommittee', [RFQCommitteeController::class, 'store'])->name('rfqcommittee.store');
+
+//RFQ Criteria Setup
+Route::prefix('procurement/rfq')->group(function () {
+    Route::resource('sections', RFQSettingSectionController::class)->names('rfqsettingsections');
+    Route::resource('criterias', RFQSettingCriteriaController::class)->names('rfqsettingcriterias');
+
+    Route::get('/procurement/rfqcriteriasetup/evaluations', [RFQSectionController::class, 'evaluationSetup'])->name('rfqcriteriasetup.evaluations');
+
+    });
+Route::post('/procurement/rfqcriteriasetup/evaluations/save', [RFQSectionController::class, 'saveEvaluation'])->name('rfqcriteriasetup.evaluations.save');
+    Route::get('/sections/info', [RFQSettingSectionController::class,'index'])->name('rfqsettingsections.index');
+    Route::get('/procurement/rfq/criterias/section/{id}', [RFQSettingCriteriaController::class, 'show'])->name('rfqsettingcriterias.show');
+    Route::post('/', [RFQSettingSectionController::class, 'store'])->name('rfqsettingsections.store');
+    Route::post('/', [RFQSettingCriteriaController::class, 'store'])->name('rfqsettingcriterias.store');
+
+
+    Route::prefix('procurement/rfq')->group(function () {
+    Route::resource('procurement/rfq/criterias', RFQCriteriaController::class)->only(['store', 'show', 'destroy']);
+    Route::resource('procurement/rfq/sections', RFQSectionController::class);
+    Route::resource('procurement/rfq/criterias', RFQCriteriaController::class)->names('rfqcriterias');
+    Route::resource('procurement/rfq/sections', RFQSectionController::class)->names('rfqsections');
+    });
+    Route::get('procurement/rfq/criterias/setup/{rfqId}', [RFQCriteriaController::class, 'show'])->name('rfqcriterias.show');
+    Route::post('procurement/rfq/criterias', [RFQCriteriaController::class, 'store'])->name('rfqcriterias.store');
+
+
+
  
 
 

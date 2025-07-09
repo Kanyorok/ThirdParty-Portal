@@ -56,5 +56,13 @@ class RFQ extends Model
     {
         return $this->belongsTo(Requisitions::class, 'RequisitionId', 'Id');
     }
+    public function sections()
+    {
+        return $this->hasMany(RFQSection::class, 'RFQID', 'Id');
+    }
+    public function criteria()
+    {
+        return $this->hasMany(RFQCriteria::class, 'RFQID', 'Id');
+    }
 
 }

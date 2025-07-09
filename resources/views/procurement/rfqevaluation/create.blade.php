@@ -85,40 +85,42 @@
 @endsection
 
 @section('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const rfqSelect = document.getElementById('rfq-select');
-    const rfqComments = document.getElementById('rfq-total-comments');
-    const supplierTableBody = document.querySelector('#supplier-table tbody');
-    const evaluationFormsContainer = document.getElementById('evaluation-forms-container');
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const rfqSelect = document.getElementById('rfq-select');
+            const rfqComments = document.getElementById('rfq-total-comments');
+            const supplierTableBody = document.querySelector('#supplier-table tbody');
+            const evaluationFormsContainer = document.getElementById('evaluation-forms-container');
 
-    rfqSelect.addEventListener('change', function () {
-        const selectedOption = rfqSelect.options[rfqSelect.selectedIndex];
-        rfqComments.value = selectedOption.getAttribute('data-comments') || '';
+            rfqSelect.addEventListener('change', function () {
+                const selectedOption = rfqSelect.options[rfqSelect.selectedIndex];
+                rfqComments.value = selectedOption.getAttribute('data-comments') || '';
 
-        const rfqId = this.value;
-        supplierTableBody.innerHTML = '<tr><td colspan="5" class="text-center">Loading...</td></tr>';
-        evaluationFormsContainer.innerHTML = '';
-
-        if (!rfqId) {
-            supplierTableBody.innerHTML = '<tr><td colspan="5" class="text-center">Select an RFQ to view supplier details</td></tr>';
-            return;
-        }
-
-        fetch(`/procurement/rfq-responses/${rfqId}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.length > 0) {
-                    supplierTableBody.innerHTML = '';
+                const rfqId = this.value;
+                supplierTableBody.innerHTML = '<tr><td colspan="5" class="text-center">Loading...</td></tr>';
                 evaluationFormsContainer.innerHTML = '';
 
-                    data.forEach((response, index) => {
-                        const status = response.TotalPayable ? 'Submitted' : 'No Reply';
-                        const action = response.TotalPayable
-                            ? `<a href="#" class="btn btn-sm btn-link">View Quote</a>`
-                            : `<a href="#" class="btn btn-sm btn-link disabled">View Quote</a>`;
+                if (!rfqId) {
+                    supplierTableBody.innerHTML = '<tr><td colspan="5" class="text-center">Select an RFQ to view supplier details</td></tr>';
+                    return;
+                }
 
-                        supplierTableBody.innerHTML += `
+                fetch(`/procurement/rfq-responses/${rfqId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const { responses, criteria } = data;
+
+                        if (responses.length > 0) {
+                            supplierTableBody.innerHTML = '';
+                            evaluationFormsContainer.innerHTML = '';
+
+                            responses.forEach((response, index) => {
+                                const status = response.TotalPayable ? 'Submitted' : 'No Reply';
+                                const action = response.TotalPayable
+                                    ? `<a href="#" class="btn btn-sm btn-link">View Quote</a>`
+                                    : `<a href="#" class="btn btn-sm btn-link disabled">View Quote</a>`;
+
+                                supplierTableBody.innerHTML += `
                             <tr>
                                 <td>${response.SupplierName || 'Unknown'}</td>
                                 <td>${response.TotalPayable ? `Kes. ${response.TotalPayable}` : '-'}</td>
@@ -128,7 +130,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             </tr>
                         `;
 
-                        evaluationFormsContainer.innerHTML += `
+                                let formHtml = `
                             <div class="card mb-4">
                                 <div class="card-header">
                                     Supplier ${response.SupplierName || `#${index + 1}`}
@@ -144,46 +146,43 @@ document.addEventListener('DOMContentLoaded', function () {
                                                 <th>Comments</th>
                                             </tr>
                                         </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>Technical Quality</td>
-                                                <td>40%</td>
-                                                <td><input type="number" name="Evaluations[${response.SupplierId}][TechnicalQuality]" class="form-control" min="1" max="10" required></td>
-                                                <td><input type="text" name="Evaluations[${response.SupplierId}][TechnicalQualityComments]" class="form-control"></td>
-                                            </tr>
-                                            <tr>
-                                                <td>Pricing</td>
-                                                <td>30%</td>
-                                                <td><input type="number" name="Evaluations[${response.SupplierId}][Pricing]" class="form-control" min="1" max="10" required></td>
-                                                <td><input type="text" name="Evaluations[${response.SupplierId}][PricingComments]" class="form-control"></td>
-                                            </tr>
-                                            <tr>
-                                                <td>Delivery Time</td>
-                                                <td>20%</td>
-                                                <td><input type="number" name="Evaluations[${response.SupplierId}][DeliveryTime]" class="form-control" min="1" max="10" required></td>
-                                                <td><input type="text" name="Evaluations[${response.SupplierId}][DeliveryTimeComments]" class="form-control"></td>
-                                            </tr>
-                                            <tr>
-                                                <td>Past Experience</td>
-                                                <td>10%</td>
-                                                <td><input type="number" name="Evaluations[${response.SupplierId}][PastExperience]" class="form-control" min="1" max="10" required></td>
-                                                <td><input type="text" name="Evaluations[${response.SupplierId}][PastExperienceComments]" class="form-control"></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        `;
+                                        <tbody>`;
+
+                                // Loop through grouped criteria by section
+                                for (const sectionId in criteria) {
+                                    const sectionGroup = criteria[sectionId];
+                                    const sectionName = sectionGroup[0]?.section?.SectionName || 'Unnamed Section';
+
+                                    formHtml += `<tr class="table-secondary">
+                                            <td colspan="4" class="fw-bold">${sectionName}</td>
+                                         </tr>`;
+
+                                    sectionGroup.forEach(criterion => {
+                                        const critId = criterion.CriteriaID;
+                                        const name = criterion.criteria?.CriteriaName || 'Unnamed';
+                                        const maxScore = parseFloat(criterion.MaxScore).toFixed(2);
+
+                                        formHtml += `<tr>
+                                    <td>${name}</td>
+                                    <td>${maxScore}%</td>
+                                    <td><input type="number" name="Evaluations[${response.SupplierId}][${critId}][Score]" class="form-control" min="1" max="10" required></td>
+                                    <td><input type="text" name="Evaluations[${response.SupplierId}][${critId}][Comments]" class="form-control"></td>
+                                </tr>`;
+                                    });
+                                }
+
+                                formHtml += `</tbody></table></div></div>`;
+                                evaluationFormsContainer.innerHTML += formHtml;
+                            });
+                        } else {
+                            supplierTableBody.innerHTML = '<tr><td colspan="5" class="text-center">No supplier details found for the selected RFQ</td></tr>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching RFQ responses:', error);
+                        supplierTableBody.innerHTML = '<tr><td colspan="5" class="text-center">Failed to load supplier details. Please try again.</td></tr>';
                     });
-                } else {
-                    supplierTableBody.innerHTML = '<tr><td colspan="5" class="text-center">No supplier details found for the selected RFQ</td></tr>';
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching RFQ responses:', error);
-                supplierTableBody.innerHTML = '<tr><td colspan="5" class="text-center">Failed to load supplier details. Please try again.</td></tr>';
             });
-    });
-});
-</script>
+        });
+    </script>
 @endsection
