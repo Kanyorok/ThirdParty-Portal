@@ -346,6 +346,34 @@ class BudgetPeriodController extends Controller
                     'ModifiedBy' => Auth::id(),
                     'ModifiedOn' => now(),
                 ]);
+
+                //Check if the attachments have already been placed to the BudgetGLAllocation table
+                $check=BudgetGLMasterAllocations::where('BudgetID',$budgetID)->first();
+
+                $now = Carbon::now();
+                if($check){// Do some insert in the BudgetMasterAllocation
+                    //Get distinct values of all the branches id
+                    $branchIDS=BudgetGLMasterAllocations::where('BudgetID',$budgetID)->distinct()->pluck('BranchID')->toArray();
+                    //Insert the data based on the branches
+                    foreach($branchIDS as $branchID){
+                        BudgetGLMasterAllocations::create([
+                            'BudgetID' => $budgetID,
+                            'BranchID' => $branchID,
+                            'GLAttachmentID' => $action->Id,
+                            'AccountID' => $gl['AccountID'],
+                            'Description' => $gl['Description'] ?? null,
+                            'GLAccountTypeID' =>  $gl['GLAccountTypeID'],
+                            //'Total' => $total,
+                            'CreatedBy' => Auth::id(),
+                            'CreatedOn' => $now,
+                            'ModifiedBy' => Auth::id(),
+                            'ModifiedOn' => $now,
+                            'DeletedBy' => null,
+                            'DeletedOn' => null,
+                            //...$monthData,
+                        ]);
+                    }
+                }
             }
 
 
@@ -360,6 +388,7 @@ class BudgetPeriodController extends Controller
             return redirect()->route('budgetperiod.index')->with('success', 'GL Attached Successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
+            return $th->getMessage();
             Log::error('Failed to attach GLs: ' . $th->getMessage());
 
             return back()->withErrors(['error' => 'Failed to create Budget'])->withInput();
