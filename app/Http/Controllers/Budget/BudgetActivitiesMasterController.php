@@ -68,6 +68,8 @@ class BudgetActivitiesMasterController extends Controller
 
     public function edit($id)
     {
+
+        
         $activity = BudgetActivityMaster::findOrFail($id);
         $lines = BudgetLine::all();
         return view('budgetandanalytics.settings.activitymaster.edit', compact('activity', 'lines'));
@@ -118,6 +120,8 @@ class BudgetActivitiesMasterController extends Controller
         DB::beginTransaction();
         try {
             $activity = BudgetActivityMaster::findOrFail($id);
+            $activity->DeletedBy = Auth::id();
+            $activity->save();
             $activity->delete();
             DB::commit();
             activity()

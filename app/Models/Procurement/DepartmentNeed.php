@@ -27,6 +27,7 @@ class DepartmentNeed extends Model
         'NeedID', 'BranchID', 'DepartmentID', 'ItemID', 'RequestedQty', 'EstimatedUnitCost',
         'Justification', 'Status', 'FiscalYear', 'RequestedDate', 'PriorityLevel', 'IsEmergency',
         'CreatedBy', 'ModifiedBy', 'DeletedBy', 'IsUsed',
+
     ];
 
     protected $casts = [
