@@ -259,7 +259,15 @@ class BudgetActivitiesController extends Controller
             $activity = BudgetActivity::findOrFail($id);
             $activityId=$activity->BudgetActivityID;
             // $activity->allocations()->delete();
-            BudgetMonthlyAllocation::where('BudgetActivityID', $activityId)->delete();
+            // $allocations = BudgetMonthlyAllocation::where('BudgetActivityID', $activityId)->get();
+
+            // foreach($allocations as $allocation ){
+            //     $allocations->DeletedBy = Auth::Id();
+            //     $allocation->save();
+            //     $allocation->delete();
+            // }
+            $activity->DeletedBy = Auth ::Id();
+            $activity->save();
             $activity->delete();
             activity()
                 ->performedOn($activity)

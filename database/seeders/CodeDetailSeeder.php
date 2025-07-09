@@ -12,523 +12,141 @@ use Illuminate\Support\Facades\DB;
 
 class CodeDetailSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $date = now();
         $user = SystemHelper::user();
-        $data = collect();
-        $id = 0;
-        foreach (LeadStatusEnum::cases() as $statusEnum) {
-            $id++;
-            $data->add([
-                'CodeID' => $statusEnum->value,
+
+        $entries = collect();
+
+        // ENUMS
+        foreach (LeadStatusEnum::cases() as $index => $statusEnum) {
+            $entries->push([
+                'CodeID' => 'LeadStatus',
+                'Value' => $statusEnum->value,
                 'Description' => $statusEnum->description(),
-                'DisplayOrder' => $id,
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
+                'DisplayOrder' => $index + 1,
             ]);
         }
 
-        $id = 0;
-        foreach (CampaignStatusEnum::cases() as $campaignStatusEnum) {
-            $id++;
-            $data->add([
-                'CodeID' => $campaignStatusEnum->value,
+        foreach (CampaignStatusEnum::cases() as $index => $campaignStatusEnum) {
+            $entries->push([
+                'CodeID' => 'CampaignStatus',
+                'Value' => $campaignStatusEnum->value,
                 'Description' => $campaignStatusEnum->name,
-                'DisplayOrder' => $id,
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
+                'DisplayOrder' => $index + 1,
             ]);
         }
 
-        $id = 0;
-        foreach (TicketStatusEnum::cases() as $ticketStatusEnum) {
-            $id++;
-            $data->add([
-                'CodeID' => $ticketStatusEnum->value,
+        foreach (TicketStatusEnum::cases() as $index => $ticketStatusEnum) {
+            $entries->push([
+                'CodeID' => 'TicketStatus',
+                'Value' => $ticketStatusEnum->value,
                 'Description' => $ticketStatusEnum->name,
-                'DisplayOrder' => $id,
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
+                'DisplayOrder' => $index + 1,
             ]);
         }
 
-        DB::table('t_CodeDetails')->insert($data->toArray());
+        // STATIC ENTRIES (from various modules)
+        $static = [
+            // Requisition Status
+            ['CodeID' => 'RequisitionStatus', 'Description' => 'Approved'],
+            ['CodeID' => 'RequisitionStatus', 'Description' => 'Submitted For Approval'],
+            ['CodeID' => 'RequisitionStatus', 'Description' => 'Pending'],
+            ['CodeID' => 'RequisitionStatus', 'Description' => 'Rejected'],
+            ['CodeID' => 'RequisitionStatus', 'Description' => 'Deferred'],
 
-        DB::table('t_CodeDetails')->insert([
-            [
-                'CodeID' => StaticListsService::MarketingModes,
-                'Description' => 'Outdoor Marketing',
-                'DisplayOrder' => 1,
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            [
-                'CodeID' => StaticListsService::MarketingModes,
-                'Description' => 'Trade Shows',
-                'DisplayOrder' => 2,
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            [
-                'CodeID' => StaticListsService::CustomerResponses,
-                'Description' => 'Needs a loan against loan',
-                'DisplayOrder' => 2,
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            [
-                'CodeID' => StaticListsService::CustomerResponses,
-                'Description' => 'Interested (indicate product)',
-                'DisplayOrder' => 1,
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            [
-                'CodeID' => StaticListsService::LeadLossReason,
-                'Description' => 'Lost to a Competitor',
-                'DisplayOrder' => 1,
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            [
-                'CodeID' => StaticListsService::LeadLossReason,
-                'Description' => 'Cannot be Contacted',
-                'DisplayOrder' => 2,
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            [
-                'CodeID' => StaticListsService::CustomerType,
-                'Description' => 'Business People',
-                'DisplayOrder' => 1,
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            [
-                'CodeID' => StaticListsService::CustomerType,
-                'Description' => 'Boda Boda Rider',
-                'DisplayOrder' => 2,
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            [
-                'CodeID' => StaticListsService::CustomerType,
-                'Description' => 'Taxi Driver',
-                'DisplayOrder' => 3,
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            [
-                'CodeID' => StaticListsService::Industries,
-                'Description' => 'Agriculture',
-                'DisplayOrder' => 1,
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            [
-                'CodeID' => StaticListsService::Industries,
-                'Description' => 'Tourism',
-                'DisplayOrder' => 2,
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-        ]);
+            // Requisition Urgency
+            ['CodeID' => 'RequisitionUrgency', 'Description' => 'Very Urgent', 'Value' => 1],
 
-        DB::table('t_CodeDetails')->insert(values: [
-            [
-                'CodeID' => "RequisitionStatus",
-                'Description' => 'Approved',
-                'Value' => null,
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            [
-                'CodeID' => 'RequisitionStatus',
-                'Description' => 'Pending',
-                'Value' => null,
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            [
-                'CodeID' => 'RequisitionStatus',
-                'Description' => 'Rejected',
-                'Value' => null,
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            [
-                'CodeID' => 'RequisitionStatus',
-                'Description' => 'Deferred',
-                'Value' => null,
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            [
-                'CodeID' => 'RequisitionUrgency',
-                'Description' => 'Very Urgent',
-                'Value' => 5,
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-        ]);
+            // Submission Mode
+            ['CodeID' => 'SubmissionMode', 'Description' => 'Hand delivered'],
+            ['CodeID' => 'SubmissionMode', 'Description' => 'Courier'],
 
-        DB::table('t_CodeDetails')->insert([
-            [
-                'CodeID' => "SubmissionMode",
-                'Description' => 'Hand delivered',
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            [
-                'CodeID' => 'SubmissionMode',
-                'Description' => 'Courier',
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
+            // GL Account Types
+            ['CodeID' => 'GLAccountType', 'Description' => 'Assets', 'Value' => 'A'],
+            ['CodeID' => 'GLAccountType', 'Description' => 'Liabilities', 'Value' => 'L'],
+            ['CodeID' => 'GLAccountType', 'Description' => 'Income', 'Value' => 'I'],
+            ['CodeID' => 'GLAccountType', 'Description' => 'Expenses', 'Value' => 'E'],
 
-        ]);
+            // Tenant Types
+            ['CodeID' => 'TenantType', 'Description' => 'Individulal'],
+            ['CodeID' => 'TenantType', 'Description' => 'Corporate'],
+            ['CodeID' => 'TenantType', 'Description' => 'Government'],
+            ['CodeID' => 'TenantType', 'Description' => 'NGO'],
+            ['CodeID' => 'TenantType', 'Description' => 'Other'],
 
+            // Deposit Refunded
+            ['CodeID' => 'DepositRefunded', 'Description' => 'Fully Refunded'],
+            ['CodeID' => 'DepositRefunded', 'Description' => 'Partially Refunded'],
+            ['CodeID' => 'DepositRefunded', 'Description' => 'Not Refunded'],
 
-        //// Budget System Codes
-        DB::table('t_CodeDetails')->insert([
-            [
-                'CodeID' => "GLAccountType",
-                'Value' => 'A',
-                'Description' => 'Assets',
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            [
-                'CodeID' => "GLAccountType",
-                'Value' => 'L',
-                'Description' => 'Liabilities',
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            [
-                'CodeID' => "GLAccountType",
-                'Value' => 'I',
-                'Description' => 'Income',
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            [
-                'CodeID' => "GLAccountType",
-                'Value' => 'E',
-                'Description' => 'Expenses',
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-        ]);
+            // Source
+            ['CodeID' => 'Source', 'Description' => 'Transfer Receipts'],
+            ['CodeID' => 'Source', 'Description' => 'Stock Adjustment'],
+            ['CodeID' => 'Source', 'Description' => 'Transaction Transfer'],
 
-        DB::table('t_CodeDetails')->insert([
-            [
-                'CodeID' => "TenantType",
-                'Description' => 'Individual',
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            [
-                'CodeID' => "TenantType",
-                'Description' => 'Corporate',
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            [
-                'CodeID' => "TenantType",
-                'Description' => 'Government',
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            [
-                'CodeID' => "TenantType",
-                'Description' => 'NGO',
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            [
-                'CodeID' => "TenantType",
-                'Description' => 'Other',
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-        ]);
-        DB::table('t_CodeDetails')->insert([
-            [
-                'CodeID' => "DepositRefunded",
-                'Description' => 'Fully Refunded',
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            [
-                'CodeID' => 'DepositRefunded',
-                'Description' => 'Partially Refunded',
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            [
-                'CodeID' => 'DepositRefunded',
-                'Description' => 'Not Refunded',
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            
-        ]);
-        DB::table('t_CodeDetails')->insert([
-            [
-                'CodeID' => "Source",
-                'Description' => 'Transfer Receipts',
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            [
-                'CodeID' => 'Source',
-                'Description' => 'Stock Adjustment',
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            [
-                'CodeID' => 'Source',
-                'Description' => 'Transaction Transfer',
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            
-        ]);
-        DB::table('t_CodeDetails')->insert([
-            [
-                'CodeID' => "DefectsCondition",
-                'Description' => 'Contaminated',
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            [
-                'CodeID' => 'DefectsCondition',
-                'Description' => 'Irreparable',
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            
-        ]);
-         DB::table('t_CodeDetails')->insert([
-            [
-                'CodeID' => "AdjustmentReason",
-                'Description' => 'Damage',
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-             [
-                'CodeID' => "AdjustmentReason",
-                'Description' => 'Damaged in Transit',
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            [
-                'CodeID' => 'AdjustmentReason',
-                'Description' => 'Stock Found',
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
+            // Defects Condition
+            ['CodeID' => 'DefectsCondition', 'Description' => 'Contaminated'],
+            ['CodeID' => 'DefectsCondition', 'Description' => 'Irreparable'],
 
-             [
-                'CodeID' => 'AdjustmentReason',
-                'Description' => 'Expired',
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            [
-                'CodeID' => 'AdjustmentReason',
-                'Description' => 'Shrinkage',
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            [
-                'CodeID' => 'AdjustmentReason',
-                'Description' => 'Other',
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            [
-                'CodeID' => 'AdjustmentReason',
-                'Description' => 'In Transit',
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            
-        ]);
+            // Adjustment Reason
+            ['CodeID' => 'AdjustmentReason', 'Description' => 'Damage'],
+            ['CodeID' => 'AdjustmentReason', 'Description' => 'Damaged in Transit'],
+            ['CodeID' => 'AdjustmentReason', 'Description' => 'Stock Found'],
+            ['CodeID' => 'AdjustmentReason', 'Description' => 'Expired'],
+            ['CodeID' => 'AdjustmentReason', 'Description' => 'Shrinkage'],
+            ['CodeID' => 'AdjustmentReason', 'Description' => 'Other'],
+            ['CodeID' => 'AdjustmentReason', 'Description' => 'In Transit'],
 
-        DB::table('t_CodeDetails')->insert([
-            [
-                'CodeID' => "PaymentFrequency",
-                'Description' => 'Annually',
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            [
-                'CodeID' => "PaymentFrequency",
-                'Description' => 'Bi-Annually',
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            [
-                'CodeID' => 'PaymentFrequency',
-                'Description' => 'Quarterly',
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            [
-                'CodeID' => 'PaymentFrequency',
-                'Description' => 'Monthly',
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-        ]);
+            // Payment Frequency
+            ['CodeID' => 'PaymentFrequency', 'Description' => 'Annually'],
+            ['CodeID' => 'PaymentFrequency', 'Description' => 'Bi-Annually'],
+            ['CodeID' => 'PaymentFrequency', 'Description' => 'Quarterly'],
+            ['CodeID' => 'PaymentFrequency', 'Description' => 'Monthly'],
 
-        DB::table('t_CodeDetails')->insert([
-            [
-                'CodeID' => "TerminationReason",
-                'Description' => 'Relocation',
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            [
-                'CodeID' => "TerminationReason",
-                'Description' => 'Non Payment',
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            [
-                'CodeID' => 'TerminationReason',
-                'Description' => 'Other',
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-        ]);
-        DB::table('t_CodeDetails')->insert([
-            [
-                'CodeID' => "ProcurementMethod",
-                'Description' => 'RFQ',
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-            [
-                'CodeID' => 'ProcurementMethod',
-                'Description' => 'Tender',
-                'CreatedOn' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $user->Id,
-            ],
-        ]);
+            // Termination Reason
+            ['CodeID' => 'TerminationReason', 'Description' => 'Relocation'],
+            ['CodeID' => 'TerminationReason', 'Description' => 'Non Payment'],
+            ['CodeID' => 'TerminationReason', 'Description' => 'Other'],
+
+            // Procurement Method
+            ['CodeID' => 'ProcurementMethod', 'Description' => 'RFQ'],
+            ['CodeID' => 'ProcurementMethod', 'Description' => 'Tender'],
+
+            // StaticListsService entries
+            ['CodeID' => StaticListsService::MarketingModes, 'Description' => 'Outdoor Marketing', 'DisplayOrder' => 1],
+            ['CodeID' => StaticListsService::MarketingModes, 'Description' => 'Trade Shows', 'DisplayOrder' => 2],
+            ['CodeID' => StaticListsService::CustomerResponses, 'Description' => 'Interested (indicate product)', 'DisplayOrder' => 1],
+            ['CodeID' => StaticListsService::CustomerResponses, 'Description' => 'Needs a loan against loan', 'DisplayOrder' => 2],
+            ['CodeID' => StaticListsService::LeadLossReason, 'Description' => 'Lost to a Competitor', 'DisplayOrder' => 1],
+            ['CodeID' => StaticListsService::LeadLossReason, 'Description' => 'Cannot be Contacted', 'DisplayOrder' => 2],
+            ['CodeID' => StaticListsService::CustomerType, 'Description' => 'Business People', 'DisplayOrder' => 1],
+            ['CodeID' => StaticListsService::CustomerType, 'Description' => 'Boda Boda Rider', 'DisplayOrder' => 2],
+            ['CodeID' => StaticListsService::CustomerType, 'Description' => 'Taxi Driver', 'DisplayOrder' => 3],
+            ['CodeID' => StaticListsService::Industries, 'Description' => 'Agriculture', 'DisplayOrder' => 1],
+            ['CodeID' => StaticListsService::Industries, 'Description' => 'Tourism', 'DisplayOrder' => 2],
+        ];
+
+        foreach ($static as $index => $item) {
+            $entries->push(array_merge($item, ['DisplayOrder' => $item['DisplayOrder'] ?? ($index + 1)]));
+        }
+
+        // Ensure only non-existing records are inserted
+        foreach ($entries as $entry) {
+            $exists = DB::table('t_CodeDetails')->where('CodeID', $entry['CodeID'])->where('Description', $entry['Description'])->exists();
+            if (!$exists) {
+                DB::table('t_CodeDetails')->insert([
+                    'CodeID' => $entry['CodeID'],
+                    'Value' => $entry['Value'] ?? null,
+                    'Description' => $entry['Description'],
+                    'DisplayOrder' => $entry['DisplayOrder'] ?? 1,
+                    'CreatedOn' => $date,
+                    'CreatedBy' => $user->Id,
+                    'ModifiedOn' => $date,
+                    'ModifiedBy' => $user->Id,
+                ]);
+            }
+        }
     }
 }

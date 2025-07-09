@@ -6,7 +6,7 @@ use App\Enums\Procurement\SchedulePlanEnum;
 use App\Enums\ProcurementPlanStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
-use App\Models\Procurement\PlanLineItems;
+use App\Models\Procurement\PlanLineItem;
 use App\Services\Procurement\ProcurementPlan\SchedulePlanService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -37,19 +37,19 @@ class ProcurementSchedulePlanController extends Controller
     public function fetchLinesByDPlan($planId)
     {
         try {
-            $Lines = PlanLineItems::with(['item', 'schedulePlan.periods'])
-                ->where('PlanID', $planId)->get();
+            $Lines = PlanLineItem::with(['item', 'schedulePlan.periods', 'departmentNeed']) // include relationship
+                ->where('PlanID', $planId)
+                ->get();
 
             $mappedLines = $Lines->map(function ($lineItem) {
                 $statusEnum = $lineItem->schedulePlan?->Status ?? SchedulePlanEnum::NotScheduled;
 
                 $rawType = $lineItem->schedulePlan?->ScheduleType;
-                $displayType = '-';
-                if ($rawType === 'month') {
-                    $displayType = 'Monthly';
-                } elseif ($rawType === 'quarter') {
-                    $displayType = 'Quarterly';
-                }
+                $displayType = match ($rawType) {
+                    'month' => 'Monthly',
+                    'quarter' => 'Quarterly',
+                    default => '-',
+                };
 
                 return [
                     'LineItemID' => $lineItem->LineItemID,
@@ -59,6 +59,7 @@ class ProcurementSchedulePlanController extends Controller
                     'ScheduleType' => $displayType,
                     'Status' => $statusEnum->label(),
                     'Periods' => $lineItem->schedulePlan?->periods ?? [],
+                    'NeedID' => $lineItem->departmentNeed?->NeedID, // ✅ Now included
                 ];
             });
 
@@ -76,7 +77,7 @@ class ProcurementSchedulePlanController extends Controller
         $lineItemIds = $request->input('lineItemIds', []);
 
         foreach ($lineItemIds as $lineItemId) {
-            $lineItem = PlanLineItems::find($lineItemId);
+            $lineItem = PlanLineItem::find($lineItemId);
             if (!$lineItem) continue;
 
             $mode = $request->input("mode_{$lineItemId}");
@@ -136,7 +137,7 @@ class ProcurementSchedulePlanController extends Controller
     {
         $planId = $request->query('plan_id');
         $plan = ConsolidatedProcurementPlan::findOrFail($planId);
-        $lineItem = PlanLineItems::with(['item', 'schedulePlan.periods'])->findOrFail($lineItemId);
+        $lineItem = PlanLineItem::with(['item', 'schedulePlan.periods'])->findOrFail($lineItemId);
 
         return view('procurement.procurementplan.scheduleplan.edit', compact('plan', 'lineItem'));
     }

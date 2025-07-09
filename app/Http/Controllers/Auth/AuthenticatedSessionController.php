@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
@@ -9,14 +8,22 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use App\Models\Auth\User;
 
 class AuthenticatedSessionController extends Controller
 {
+    /**
+     * Show login form with branch selection.
+     */
     public function create(): View
     {
-        return view('auth.login');
+        // Fetch all branches
+        $branches = DB::table('t_Branches')->select('Id', 'Name')->get();
+
+        return view('auth.login', compact('branches'));
     }
 
     /**
@@ -28,45 +35,95 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
+        // Authenticate
         $request->authenticate();
+        $user = $request->user();
 
-        ModuleService::clearNavbarCache($request->user());
+        ModuleService::clearNavbarCache($user);
+
+        $selectedBranchId = $request->input('branch');
+        if (empty($selectedBranchId)) {
+            Auth::logout();
+            return redirect()->back()->withErrors([
+                'branch' => 'You must select a login branch.'
+            ]);
+        }
+
+        $modelRole = DB::table('t_ModelRoles')
+            ->where('model_id', $user->Id)
+            ->where('model_type', User::getPrimaryKey()) // resolves to 'Id'
+            ->where('BranchId', $selectedBranchId)
+            ->first();
+
+        if (!$modelRole) {
+            Auth::logout();
+            return redirect()->back()->withErrors([
+                'branch' => 'You do not have access to the selected branch.'
+            ]);
+        }
+
+        $roleName = DB::table('t_Roles')
+            ->where('id', $modelRole->role_id)
+            ->value('name');
+
+        if (!$roleName) {
+            Auth::logout();
+            return redirect()->back()->withErrors([
+                'branch' => 'Role mapping not found for selected branch.'
+            ]);
+        }
+
+        $branchName = DB::table('t_Branches')
+            ->where('Id', $selectedBranchId)
+            ->value('Name');
+
+        session([
+            'LoginBranchId'   => $selectedBranchId,
+            'LoginBranchName' => $branchName,
+            'LoginRoleName'   => $roleName
+        ]);
+
+        $user->setEffectiveRole($roleName); // Tell Spatie the effective role
 
         return redirect()->intended('/');
     }
 
+
     /**
-     * Destroy an authenticated session.
-     *
-     * @param Request $request
-     * @return RedirectResponse
+     * Logout
      */
     public function destroy(Request $request): RedirectResponse
     {
-        activity()->causedBy($request->user())->performedOn($request->user())->event('authentication')->log('Signed Out from ' . $request->getClientIp());
+        activity()
+            ->causedBy($request->user())
+            ->performedOn($request->user())
+            ->event('authentication')
+            ->log('Signed Out from ' . $request->getClientIp());
 
         ModuleService::clearNavbarCache($request->user());
 
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
 
         return redirect('/');
     }
 
     /**
-     * Destroy an authenticated session.
+     * Logout on timeout
      */
     public function timeout(Request $request): JsonResponse
     {
-        activity()->causedBy($request->user())->performedOn($request->user())->event('authentication')->log('Session timeout after 1 minutes on ' . $request->getClientIp());
+        activity()
+            ->causedBy($request->user())
+            ->performedOn($request->user())
+            ->event('authentication')
+            ->log('Session timeout after 1 minute on ' . $request->getClientIp());
 
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
 
         $request->session()->put('status', 'Session timeout, please login again.');

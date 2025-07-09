@@ -9,6 +9,7 @@
             <thead class="table-light">
             <tr>
                 <th>#</th>
+                <th>Need Id</th>
                 <th>Item Name</th>
                 <th>Category</th>
                 <th>Quantity</th>
@@ -24,6 +25,7 @@
             @forelse ($NeedsApprovalviews as $index => $NeedsApprovalview)
                 <tr>
                     <td>{{ $index + 1 }}</td>
+                    <td>{{ $NeedsApprovalview->NeedID }}</td>
                     <td>{{ $NeedsApprovalview->item->ItemName ?? 'N/A' }}</td>
                     <td>{{ $NeedsApprovalview->item->category->Name ?? 'N/A' }}</td>
                     <td>{{ $NeedsApprovalview->RequestedQty }}</td>

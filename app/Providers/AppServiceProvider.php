@@ -60,9 +60,7 @@ use App\Models\DMS\Image;
 use App\Models\DMS\Repository;
 use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
-use App\Models\Inventory\InterBranchRequisition;
-use App\Models\Procurement\ConsolidatedProcurementPlan;
-use App\Models\Procurement\DepartmentNeeds;
+use App\Models\Procurement\DepartmentNeed;
 use App\Models\Procurement\Order;
 use App\Models\Procurement\PrequalificationPeriod;
 use App\Models\Procurement\ProcurementMethod;
@@ -141,7 +139,10 @@ use App\Models\Inventory\InventoryType;
 use App\Models\Inventory\PriceManagement;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\InventoryHoldReview;
-use App\Models\Procurement\PlanLineItems;
+use App\Models\Inventory\InterBranchRequisition;
+use App\Models\Procurement\ConsolidatedProcurementPlan;
+use App\Models\Procurement\PlanLineItem;
+use App\Models\Auth\ModelRole;
 
 
 class AppServiceProvider extends ServiceProvider
@@ -204,12 +205,12 @@ class AppServiceProvider extends ServiceProvider
             Requisitions::getPrimaryKey() => Requisitions::class,
             RequisitionLine::getPrimaryKey() => RequisitionLine::class,
             Order::getPrimaryKey() => Order::class,
-            DepartmentNeeds::getPrimaryKey() => DepartmentNeeds::class,
+            DepartmentNeed::getPrimaryKey() => DepartmentNeed::class,
             ProcurementMethod::getPrimaryKey() => ProcurementMethod::class,
             SchedulePlan::getPrimaryKey() => SchedulePlan::class,
             InterBranchRequisition::getPrimaryKey() => InterBranchRequisition::class,
             ConsolidatedProcurementPlan::getPrimaryKey() => ConsolidatedProcurementPlan::class,
-            PlanLineItems::getPrimaryKey() => PlanLineItems::class,
+            PlanLineItem::getPrimaryKey() => PlanLineItem::class,
 
             //iINVENTORY
             ItemMasterList::getPrimaryKey() => ItemMasterList::class,
@@ -224,6 +225,7 @@ class AppServiceProvider extends ServiceProvider
             TransactionTransfer::getPrimaryKey() => TransactionTransfer::class,
             StockAdjustment::getPrimaryKey() => StockAdjustment::class,
             InventoryHoldReview::getPrimaryKey() => InventoryHoldReview::class,
+            ModelRole::getPrimaryKey() => ModelRole::class,
           
             ///////// Budget and Analytics /////////
             BudgetActivityMaster::getPrimaryKey() => BudgetActivityMaster::class,
@@ -301,7 +303,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(RequisitionLine::class, RequisitionLinesPolicy::class);
         Gate::policy(ProductDevelopment::class, ProductDevelopmentPolicy::class);
         Gate::policy(Order::class, OrderPolicy::class);
-        Gate::policy(DepartmentNeeds::class, DepartmentNeedsPolicy::class);
+        Gate::policy(DepartmentNeed::class, DepartmentNeedsPolicy::class);
         Gate::policy(ProcurementMethod::class, ProcurementMethodPolicy::class);
         Gate::policy(ItemMasterList::class, ItemMasterListPolicy::class);
         Gate::policy(ItemCategories::class, ItemCategoryPolicy::class);
@@ -313,7 +315,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PriceManagement::class, PriceManagementPolicy::class);
         Gate::policy(ConsolidatedProcurementPlan::class, ProcurementPlanMaintainPolicy::class);
         Gate::policy(SchedulePlan::class, SchedulePlanPolicy::class);
-        Gate::policy(PlanLineItems::class, PlanManualInputPolicy::class);
+        Gate::policy(PlanLineItem::class, PlanManualInputPolicy::class);
         Gate::policy(InterBranchRequisition::class, InterBranchRequisitionPolicy::class);
         Gate::policy(TransactionReceipt::class, TransactionReceiptPolicy::class);
         Gate::policy(StockAdjustment::class, StockAdjustmentPolicy::class);

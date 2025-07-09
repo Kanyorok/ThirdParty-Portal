@@ -34,8 +34,16 @@
                             <form action="{{route('budgetlinemapping.destroy', $product->Id)}}" method="POST" class="d-inline">
                                 @csrf
                                 @method('DELETE')
-                                <input type="hidden" name="type" value="lineProduct">
+                                <input type="hidden" name="type" value="lineProduct"> 
                                 <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this activity?')">🗑️</button>
+                                {{-- <button type="button"
+                                        class="btn btn-sm btn-danger custom-delete-btn"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#customDeleteConfirmModal"
+                                        data-name="{{ $product->products->Name }}"    {{-- Pass item name --}}
+                                        {{-- data-route="{{route('budgetlinemapping.destroy', $product->Id)}}"> Pass delete route --}}
+                                    {{-- Delete --}}
+                                {{-- </button> --}} 
                             </form>
                         </td>
                     </tr>
@@ -49,4 +57,5 @@
         </div>
     </div>
 </div>
+@include('components.modals.delete-confirm')
 @endsection

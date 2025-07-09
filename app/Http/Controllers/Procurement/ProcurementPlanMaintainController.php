@@ -21,11 +21,6 @@ class ProcurementPlanMaintainController extends Controller
         return view('procurement.procurementplan.procurementplanmaintenance.index', compact('plans'));
     }
 
-    public function getEstimatedCostAttribute()
-    {
-        return $this->lineItems->sum(fn($item) => $item->MergedQty * $item->EstimatedUnitCost);
-    }
-
     public function store(Request $request)
     {
         $this->authorize('store', ConsolidatedProcurementPlan::class);
@@ -82,7 +77,7 @@ class ProcurementPlanMaintainController extends Controller
     public function show($id)
     {
         $this->authorize('view', ConsolidatedProcurementPlan::class);
-        $plan = ConsolidatedProcurementPlan::with(['lineItems.item', 'lineItems.budgetLine', 'lineItems.procurementMode', 'createdBy'])->findOrFail($id);
+        $plan = ConsolidatedProcurementPlan::with([ 'lineItems.departmentNeed','lineItems.item', 'lineItems.budgetLine', 'lineItems.procurementMode', 'createdBy'])->findOrFail($id);
 
         return view('procurement.procurementplan.procurementplanmaintenance.show', compact('plan'));
     }

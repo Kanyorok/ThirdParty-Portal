@@ -50,6 +50,7 @@
             <thead class="table-light">
             <tr>
                 <th>#</th>
+                <th>Need ID</th>
                 <th>Item Name</th>
                 <th>Branch</th>
                 <th>Department</th>
@@ -65,6 +66,7 @@
             @forelse ($needs as $index => $need)
                 <tr>
                     <td>{{ $index + 1 }}</td>
+                    <td>{{ $need->NeedID }}</td>
                     <td>{{ $need->item->ItemName ?? 'N/A' }}</td>
                     <td>{{ $need->branch->Name ?? 'N/A' }}</td>
                     <td>{{ $need->department->Name ?? 'N/A' }}</td>
@@ -188,9 +190,9 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
+    @if(!$needs->isEmpty())
     <script>
         $(document).ready(function () {
-            @if(!$needs->isEmpty())
             $('#consolidatedneedsTable').DataTable({
                 pageLength: 10,
                 ordering: true,
@@ -200,7 +202,7 @@
                     emptyTable: ""
                 }
             });
-            @endif
         });
     </script>
+    @endif
 @endsection
