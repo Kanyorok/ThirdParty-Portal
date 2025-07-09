@@ -38,6 +38,11 @@ class StockAdjustment extends Model
         'DeletedOn'
     ];
 
+    public static function getPrimaryKey(): string
+    {
+        return 'stockadjustmentId';
+    }
+
     public function adjustedBy()
     {
         return $this->belongsTo(User::class, 'AdjustedBy', 'Id');

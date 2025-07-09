@@ -31,17 +31,28 @@
                         @endforeach
                     </select>
                 </div>
+                 <div class="col-md-6">
+                    <label class="form-label">Select tenant</label>
+                        <select name="TenantId" class="form-select" required>
+                        <option value="">-- Select Lease --</option>
+                        @foreach ($newtenants as $newtenant)
+                            <option value="{{ $newtenant->Id }}"@if(old('Lease', $invoices->TenantId) == $newtenant->Id) selected @endif>
+                            {{ $newtenant->tenant->TenantName }}
+                            </option>
+                        @endforeach
+                        </select>
+                    </div>
                 <div class="col-md-3">
                     <label class="form-label">Billing Month</label>
                     <input type="month" class="form-control" name="BillingMonth"
                         value="{{ old('BillingMonth', $invoices->BillingMonth ? \Carbon\Carbon::parse($invoices->BillingMonth)->format('Y-m') : '') }}">
                 </div>
+
                 <div class="col-md-3">
                     <label class="form-label">Invoice Date</label>
                     <input type="date" class="form-control" name="InvoiceDate"
                         value="{{ old('InvoiceDate', $invoices->InvoiceDate ? \Carbon\Carbon::parse($invoices->InvoiceDate)->format('Y-m-d') : '') }}">
-                </div>
-            </div>
+               </div>
 
             <!-- Charges Summary -->
             <div class="row g-3 mb-3">

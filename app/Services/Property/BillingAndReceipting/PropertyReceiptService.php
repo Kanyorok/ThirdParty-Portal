@@ -9,6 +9,7 @@ class PropertyReceiptService
 {
 
     public static function create(
+        string $TenantId,
         string $InvoiceID,
         string $BillingMonth,
         string $InvoiceDate,
@@ -33,6 +34,7 @@ class PropertyReceiptService
         throw new \Exception('This Invoice is already Receipted.');
     }
         $receipt = PropertyReceipt::create([
+            'TenantId'=>$TenantId,
             'InvoiceID' => $InvoiceID,
             'BillingMonth' => $BillingMonth,
             'InvoiceDate'   => $InvoiceDate,

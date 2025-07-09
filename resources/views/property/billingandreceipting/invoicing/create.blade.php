@@ -31,6 +31,17 @@
               @endforeach
             </select>
         </div>
+        <div class="col-md-6">
+          <label class="form-label">Select tenant</label>
+            <select name="TenantId" class="form-select" required>
+              <option value="">-- Select Lease --</option>
+              @foreach ($newtenants as $newtenant)
+                <option value="{{ $newtenant->Id }}">
+                  {{ $newtenant->tenant->TenantName }}
+                </option>
+              @endforeach
+            </select>
+          </div>
         <div class="col-md-3">
           <label class="form-label">Billing Month</label>
             <input type="month" class="form-control" value="2025-05" name="BillingMonth">

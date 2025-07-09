@@ -14,6 +14,7 @@ class PropertyReceipt extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
+        'TenantId',
         'InvoiceID',
         'BillingMonth',
         'InvoiceDate',
@@ -39,5 +40,9 @@ class PropertyReceipt extends Model
     public function invoice()
     {
         return $this->belongsTo(PropertyInvoice::class, 'InvoiceID', 'Id');
+    }
+    public function invoicetenant()
+    {
+        return $this->belongsTo(PropertyInvoice::class, 'TenantId', 'Id');
     }
 }

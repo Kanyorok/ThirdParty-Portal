@@ -14,6 +14,7 @@ class PropertyInvoice extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
+        'TenantId',
         'InvoiceNumber',
         'Lease',
         'BillingMonth',

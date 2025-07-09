@@ -40,7 +40,8 @@ class PropertyReceiptController extends Controller
         $this->authorize(PermissionEnum::PropertyReceiptCreate, PropertyReceipt::class);
             try {
                 $validated = $request->validated();
-                $InvoiceID = (int) $validated['InvoiceID'];
+                $TenantId = (int) $validated['InvoiceID'];
+                $InvoiceID = (int) $validated['TenantId'];
                 $BillingMonth = (int) $validated['BillingMonth'];
                 $InvoiceDate = (int) $validated['InvoiceDate'];
                 $RentAmount = (int) $validated['RentAmount'];
@@ -49,6 +50,7 @@ class PropertyReceiptController extends Controller
           //dd('Validation');      
     $receipt = PropertyInvoice::findOrFail($InvoiceID);
        PropertyReceiptService::create(
+            $TenantId,
             $InvoiceID,
             $BillingMonth,
             $InvoiceDate,
@@ -73,6 +75,54 @@ class PropertyReceiptController extends Controller
     }
 
     }
+    public function print($Id)
+{
+    $receipt = PropertyReceipt::with(['invoice.lease.tenant'])->findOrFail($Id);
+    $tenantName = optional(optional($receipt->invoice)->lease)->tenant->TenantName ?? 'N/A';
+
+    $html = "
+    <html>
+    <head>
+        <title>Tenant Receipt</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 30px; }
+            h2 { text-align: center; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            td, th { padding: 8px; border: 1px solid #ccc; text-align: left; }
+            .center { text-align: center; }
+        </style>
+    </head>
+    <body onload='window.print();'>
+        <h2>Tenant Payment Receipt</h2>
+        <p><strong>Tenant:</strong> {$tenantName}</p>
+        <p><strong>Receipt No:</strong> {$receipt->ReferenceNo}</p>
+        <p><strong>Invoice No:</strong> " . ($receipt->invoice->InvoiceNumber ?? '-') . "</p>
+        <p><strong>Payment Date:</strong> {$receipt->PaymentDate}</p>
+        <p><strong>Payment Method:</strong> {$receipt->PaymentMethod}</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>Amount (KES)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Rent</td><td>{$receipt->RentAmount}</td></tr>
+                <tr><td>Services Charge</td><td>{$receipt->ServicesCharge}</td></tr>
+                <tr><td>Other Charges</td><td>{$receipt->OtherCharges}</td></tr>
+                <tr><td><strong>Total Due</strong></td><td><strong>{$receipt->TotalDue}</strong></td></tr>
+                <tr><td>Paid</td><td>{$receipt->Amount}</td></tr>
+                <tr><td>Balance</td><td>{$receipt->Balance}</td></tr>
+            </tbody>
+        </table>
+        <p><strong>Remarks:</strong> {$receipt->Remarks}</p>
+        <p class='center'>Thank you for your payment.</p>
+    </body>
+    </html>
+    ";
+
+    return response($html)->header('Content-Type', 'text/html');
+}
     public function edit($id)
     {
         //Check if user has permission to edit tender categories
@@ -83,8 +133,11 @@ class PropertyReceiptController extends Controller
     }
      public function update(PropertyReceiptRequest $request, $id){
 
+
+
         $this->authorize(PermissionEnum::PropertyReceiptUpdate, PropertyReceipt::class);
                 $validated = $request->validated();
+                $TenantId = (int) $validated['TenantId'];
                 $InvoiceID = (int) $validated['InvoiceID'];
                 $BillingMonth = (int) $validated['BillingMonth'];
                 $InvoiceDate = (int) $validated['InvoiceDate'];
@@ -98,6 +151,7 @@ class PropertyReceiptController extends Controller
             $receipts = PropertyReceipt::findOrFail($id);
 
             $receipts->update([
+            'TenantId'=> $validated ['TenantId'],
             'InvoiceID' =>$validated ['InvoiceID'],
             'BillingMonth' =>$validated['BillingMonth'],
             'InvoiceDate'   => $validated ['InvoiceDate'],

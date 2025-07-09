@@ -21,8 +21,11 @@
               <select name="InvoiceID"id="invoice-select" class="form-select" required>
                 <option value="">-- Select InvoiceID --</option>
                   @foreach ($invoices as $invoice)
-                      <option value="{{ $invoice->Id }}"
+                      <option value="{{ $invoice->Id }}"                
+                    
                                     data-invoicenumber="{{ $invoice->InvoiceNumber ?? 'N/A' }}"
+                                    data-tenantid-id="{{ $invoice->TenantId ?? 'N/A' }}" 
+                                    data-tenantid-name="{{ $invoice->TenantId ?? 'N/A' }}" 
                                     data-billingmonth-id="{{ $invoice->BillingMonth ?? 'N/A'}}"
                                     data-billingmonth-name="{{ $invoice->BillingMonth ?? 'N/A' }}"    
                                     data-invoicedate-id="{{ $invoice->InvoiceDate ?? 'N/A' }}"
@@ -42,6 +45,13 @@
             <input type="text" id="invoice-display" class="form-control" readonly>    
           </div>
           
+          </div>
+            <div class="col-md-6">
+            <label class="form-label">TenantId</label>
+          <input type="text" id="tenantid-display" class="form-control" readonly>
+          <input type="hidden" name="TenantId" id="tenantid-id">
+        </div>
+
         <div class="col-md-6">
           <label class="form-label">Billing Month</label>
           <input type="text" id="billingmonth-display" class="form-control" readonly>
@@ -140,7 +150,9 @@
         const selected = this.options[this.selectedIndex];
 
         document.getElementById('invoice-display').value = selected.getAttribute('data-invoicenumber');
-        document.getElementById('billingmonth-id').value = selected.getAttribute('data-billingmonth-id');
+        document.getElementById('tenantid-id').value = selected.getAttribute('data-tenantid-id');
+        document.getElementById('tenantid-display').value = selected.getAttribute('data-tenantid-id');
+        document.getElementById('billingmonth-id').value = selected.getAttribute('data-billingmonth-name');
         document.getElementById('billingmonth-display').value = selected.getAttribute('data-billingmonth-name');
         document.getElementById('invoicedate-id').value = selected.getAttribute('data-invoicedate-id');
         document.getElementById('invoicedate-display').value = selected.getAttribute('data-invoicedate-name');
