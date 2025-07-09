@@ -3,10 +3,13 @@
 namespace App\Models\PropertyManagement;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\Model\UserActorTrait;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PropertyMaintenanceRequest extends Model
 {
     //
+    use SoftDeletes, UserActorTrait;
     protected $table = 't_MaintenanceRequest';
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
@@ -26,5 +29,24 @@ class PropertyMaintenanceRequest extends Model
         'ModifiedBy',
         'DeletedBy'
     ];
-
+    public static function getPrimaryKey(): string
+    {
+        return 'PropertyMaintenanceRequestId';
+    }
+     public function property()
+    {
+        return $this->belongsTo(PropertyRegistry::class, 'Property', 'Id');
+    }
+    public function block()
+    {
+        return $this->belongsTo(PropertyBlock::class, 'Block', 'Id');
+    }
+    public function floor()
+    {
+        return $this->belongsTo(PropertyFloor::class, 'Floor', 'Id');
+    }
+    public function unit()
+    {
+        return $this->belongsTo(PropertyUnit::class, 'Unit', 'Id');
+    }
 }

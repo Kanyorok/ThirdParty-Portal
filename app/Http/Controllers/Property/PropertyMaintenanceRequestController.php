@@ -15,7 +15,7 @@ class PropertyMaintenanceRequestController extends Controller
     //
     public function index()
     {
-        @$maintenancerequests = PropertyMaintenanceRequest::all();
+        $maintenancerequests = PropertyMaintenanceRequest::all();
         return view('property.maintenanceandissues.maintenancerequest.index', compact('maintenancerequests'));
     }
 
@@ -25,6 +25,24 @@ class PropertyMaintenanceRequestController extends Controller
         $floors = PropertyFloor::all();
         $properties = PropertyRegistry::all();
         return view('property.maintenanceandissues.maintenancerequest.create', compact('properties', 'floors', 'blocks', 'units'));
+    }
+    public function getBlockByProperty($propertyId)
+    {
+        $blocks = PropertyBlock::where('PropertyID', $propertyId)->get();
+        //dd($blocks); // check if it's returning correctly
+        return response()->json($blocks);
+    }
+
+
+    public function getFloorByBlock($blockId)
+    {
+        $floors = PropertyFloor::where('BlockID', $blockId)->get();
+        return response()->json($floors);
+    }
+    public function getUnitByFloor($floorId)
+    {
+        $units = PropertyUnit::where('FloorId', $floorId)->get();
+        return response()->json($units);
     }
 
     public function store(Request $request)
