@@ -27,19 +27,19 @@
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h6 class="mb-0">All Earnings</h6>
+                            <h6 class="mb-0">Open Budgets</h6>
                         </div>
-                        <div class="flex-shrink-0 ms-3">
-                            <div class="dropdown"><a
-                                    class="avtar avtar-s btn-link-secondary dropdown-toggle arrow-none" href="#"
-                                    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i
-                                        class="ti ti-dots-vertical f-18"></i></a>
-                                <div class="dropdown-menu dropdown-menu-end"><a class="dropdown-item"
-                                                                                href="#">Today</a> <a
-                                        class="dropdown-item" href="#">Weekly</a> <a
-                                        class="dropdown-item" href="#">Monthly</a></div>
-                            </div>
-                        </div>
+{{--                        <div class="flex-shrink-0 ms-3">--}}
+{{--                            <div class="dropdown"><a--}}
+{{--                                    class="avtar avtar-s btn-link-secondary dropdown-toggle arrow-none" href="#"--}}
+{{--                                    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i--}}
+{{--                                        class="ti ti-dots-vertical f-18"></i></a>--}}
+{{--                                <div class="dropdown-menu dropdown-menu-end"><a class="dropdown-item"--}}
+{{--                                                                                href="#">Today</a> <a--}}
+{{--                                        class="dropdown-item" href="#">Weekly</a> <a--}}
+{{--                                        class="dropdown-item" href="#">Monthly</a></div>--}}
+{{--                            </div>--}}
+{{--                        </div>--}}
                     </div>
                     <div class="bg-body p-3 mt-3 rounded">
                         <div class="mt-3 row align-items-center">
@@ -47,8 +47,8 @@
                                 <div id="all-earnings-graph"></div>
                             </div>
                             <div class="col-5">
-                                <h5 class="mb-1">$3,020</h5>
-                                <p class="text-primary mb-0"><i class="ti ti-arrow-up-right"></i> 30.6%</p>
+                                <h5 class="mb-1">3</h5>
+{{--                                <p class="text-primary mb-0"><i class="ti ti-arrow-up-right"></i> 30.6%</p>--}}
                             </div>
                         </div>
                     </div>
@@ -79,19 +79,19 @@
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h6 class="mb-0">Page Views</h6>
+                            <h6 class="mb-0">Total GL</h6>
                         </div>
-                        <div class="flex-shrink-0 ms-3">
-                            <div class="dropdown"><a
-                                    class="avtar avtar-s btn-link-secondary dropdown-toggle arrow-none" href="#"
-                                    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i
-                                        class="ti ti-dots-vertical f-18"></i></a>
-                                <div class="dropdown-menu dropdown-menu-end"><a class="dropdown-item"
-                                                                                href="#">Today</a> <a
-                                        class="dropdown-item" href="#">Weekly</a> <a
-                                        class="dropdown-item" href="#">Monthly</a></div>
-                            </div>
-                        </div>
+{{--                        <div class="flex-shrink-0 ms-3">--}}
+{{--                            <div class="dropdown"><a--}}
+{{--                                    class="avtar avtar-s btn-link-secondary dropdown-toggle arrow-none" href="#"--}}
+{{--                                    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i--}}
+{{--                                        class="ti ti-dots-vertical f-18"></i></a>--}}
+{{--                                <div class="dropdown-menu dropdown-menu-end"><a class="dropdown-item"--}}
+{{--                                                                                href="#">Today</a> <a--}}
+{{--                                        class="dropdown-item" href="#">Weekly</a> <a--}}
+{{--                                        class="dropdown-item" href="#">Monthly</a></div>--}}
+{{--                            </div>--}}
+{{--                        </div>--}}
                     </div>
                     <div class="bg-body p-3 mt-3 rounded">
                         <div class="mt-3 row align-items-center">
@@ -99,8 +99,8 @@
                                 <div id="page-views-graph"></div>
                             </div>
                             <div class="col-5">
-                                <h5 class="mb-1">290K+</h5>
-                                <p class="text-warning mb-0"><i class="ti ti-arrow-up-right"></i> 30.6%</p>
+                                <h5 class="mb-1">290</h5>
+{{--                                <p class="text-warning mb-0"><i class="ti ti-arrow-up-right"></i> 30.6%</p>--}}
                             </div>
                         </div>
                     </div>
@@ -143,19 +143,19 @@
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h6 class="mb-0">Total Task</h6>
+                            <h6 class="mb-0">Total Documents</h6>
                         </div>
-                        <div class="flex-shrink-0 ms-3">
-                            <div class="dropdown"><a
-                                    class="avtar avtar-s btn-link-secondary dropdown-toggle arrow-none" href="#"
-                                    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i
-                                        class="ti ti-dots-vertical f-18"></i></a>
-                                <div class="dropdown-menu dropdown-menu-end"><a class="dropdown-item"
-                                                                                href="#">Today</a> <a
-                                        class="dropdown-item" href="#">Weekly</a> <a
-                                        class="dropdown-item" href="#">Monthly</a></div>
-                            </div>
-                        </div>
+{{--                        <div class="flex-shrink-0 ms-3">--}}
+{{--                            <div class="dropdown"><a--}}
+{{--                                    class="avtar avtar-s btn-link-secondary dropdown-toggle arrow-none" href="#"--}}
+{{--                                    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i--}}
+{{--                                        class="ti ti-dots-vertical f-18"></i></a>--}}
+{{--                                <div class="dropdown-menu dropdown-menu-end"><a class="dropdown-item"--}}
+{{--                                                                                href="#">Today</a> <a--}}
+{{--                                        class="dropdown-item" href="#">Weekly</a> <a--}}
+{{--                                        class="dropdown-item" href="#">Monthly</a></div>--}}
+{{--                            </div>--}}
+{{--                        </div>--}}
                     </div>
                     <div class="bg-body p-3 mt-3 rounded">
                         <div class="mt-3 row align-items-center">
@@ -164,7 +164,7 @@
                             </div>
                             <div class="col-5">
                                 <h5 class="mb-1">839</h5>
-                                <p class="text-success mb-0"><i class="ti ti-arrow-up-right"></i> New</p>
+{{--                                <p class="text-success mb-0"><i class="ti ti-arrow-up-right"></i> Recent</p>--}}
                             </div>
                         </div>
                     </div>
@@ -191,19 +191,19 @@
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h6 class="mb-0">Download</h6>
+                            <h6 class="mb-0">File size</h6>
                         </div>
-                        <div class="flex-shrink-0 ms-3">
-                            <div class="dropdown"><a
-                                    class="avtar avtar-s btn-link-secondary dropdown-toggle arrow-none" href="#"
-                                    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i
-                                        class="ti ti-dots-vertical f-18"></i></a>
-                                <div class="dropdown-menu dropdown-menu-end"><a class="dropdown-item"
-                                                                                href="#">Today</a> <a
-                                        class="dropdown-item" href="#">Weekly</a> <a
-                                        class="dropdown-item" href="#">Monthly</a></div>
-                            </div>
-                        </div>
+{{--                        <div class="flex-shrink-0 ms-3">--}}
+{{--                            <div class="dropdown"><a--}}
+{{--                                    class="avtar avtar-s btn-link-secondary dropdown-toggle arrow-none" href="#"--}}
+{{--                                    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i--}}
+{{--                                        class="ti ti-dots-vertical f-18"></i></a>--}}
+{{--                                <div class="dropdown-menu dropdown-menu-end"><a class="dropdown-item"--}}
+{{--                                                                                href="#">Today</a> <a--}}
+{{--                                        class="dropdown-item" href="#">Weekly</a> <a--}}
+{{--                                        class="dropdown-item" href="#">Monthly</a></div>--}}
+{{--                            </div>--}}
+{{--                        </div>--}}
                     </div>
                     <div class="bg-body p-3 mt-3 rounded">
                         <div class="mt-3 row align-items-center">
@@ -211,8 +211,8 @@
                                 <div id="download-graph"></div>
                             </div>
                             <div class="col-5">
-                                <h5 class="mb-1">2,067</h5>
-                                <p class="text-danger mb-0"><i class="ti ti-arrow-up-right"></i> 30.6%</p>
+                                <h5 class="mb-1">2.6 GB</h5>
+{{--                                <p class="text-danger mb-0"><i class="ti ti-arrow-up-right"></i> 30.6%</p>--}}
                             </div>
                         </div>
                     </div>
