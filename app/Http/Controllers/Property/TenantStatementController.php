@@ -30,7 +30,7 @@ class TenantStatementController extends Controller
             $toDate = Carbon::parse($to)->endOfDay();
 
             // Get invoices within the date range for the tenant
-            $invoices = PropertyInvoice::where('InvoiceNumber', $InvoiceNumber)
+            $invoices = PropertyInvoice::where('TenantId', $tenantId)
                 ->whereBetween('InvoiceDate', [$fromDate, $toDate])
                 ->get();
 

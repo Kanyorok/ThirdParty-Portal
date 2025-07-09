@@ -185,7 +185,7 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::get('tenantledger', [TenantStatementController::class,'index'])->name('tenantledger.index');
     // Route::get('tenantledger/create', [TenantStatementController::class,'create'])->name('tenantledger.create');
     // Route::get('tenantledger/store', [TenantStatementController::class,'store'])->name('tenantledger.store');   
-    // Route::get('tenantledger/pdf', [TenantStatementController::class,'create'])->name('tenantledger.pdf');
+    Route::get('tenantledger/pdf', [TenantStatementController::class,'create'])->name('tenantledger.pdf');
     
     
 
