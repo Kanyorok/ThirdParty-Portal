@@ -69,7 +69,8 @@ class Document extends Model
     public function tags(): BelongsToMany
     {
         return $this->belongsToMany(DMSTags::class, 't_DocumentTags', 'DocId', 'TagId', $this->primaryKey, 'Id')
-            ->withPivot(['CreatedBy', 'ModifiedBy', 'DeletedBy'])->withTimestamps()->using(DocumentTags::class);
+            ->withPivot(['CreatedBy', 'ModifiedBy', 'DeletedBy'])->withTimestamps()->whereNull('t_DocumentTags.DeletedOn')
+            ->using(DocumentTags::class);
         //
     }
 

@@ -47,16 +47,19 @@ class DocumentController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Repository $repository, Document $document): View
+    public function show(Request $request, Repository $repository, Document $document): View
     {
-        $document->load(['current', 'repository', 'creator', 'category', 'properties', 'tags'])->withCount('versions');
+        $actor = $request->user();
+        $document->load(['current', 'repository', 'creator', 'category', 'properties'])->withCount('versions');
 
         $lock = Cache::lock('view-document-' . $document->DocumentId, 100);
         if ($lock->get()) {
-            activity()->causedBy(auth()->user())->performedOn($document)->event('view')->log('viewed document  ' . $document->Name . '.');
+            activity()->causedBy($actor)->performedOn($document)->event('view')->log('viewed document  ' . $document->Name . '.');
         }
 
-        return view('dms.files.show')->with('repoService', new RepositoryService($repository))->with('file', $document);
+        return view('dms.files.show')->with('repoService', new RepositoryService($repository))
+            ->with('tags', (new DocumentService($document))->tags($actor)->get())
+            ->with('file', $document);
     }
 
     /**

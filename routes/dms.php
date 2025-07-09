@@ -5,6 +5,7 @@ use App\Http\Controllers\DMS\Files\DocumentActionsController;
 use App\Http\Controllers\DMS\Files\DocumentActivityController;
 use App\Http\Controllers\DMS\Files\DocumentController;
 use App\Http\Controllers\DMS\Files\DocumentPermissionController;
+use App\Http\Controllers\DMS\Files\DocumentTagsController;
 use App\Http\Controllers\DMS\Files\DocumentUploadController;
 use App\Http\Controllers\DMS\Repo\RepositoryController;
 use App\Http\Controllers\DMS\Repo\RepositoryPermissionController;
@@ -20,6 +21,7 @@ Route::namespace('DMS')->prefix('dms')->group(function () {
         Route::get('activities', DocumentActivityController::class)->name('file.activities');
         Route::get('preview', [DocumentActionsController::class, 'preview'])->name('file.preview');
         Route::put('file-visibility', [DocumentPermissionController::class, 'visibility'])->name('file.visibility');
+        Route::resource('document-tags', DocumentTagsController::class)->only(['create', 'store']);
         Route::resource('file-permissions', DocumentPermissionController::class)->only(['index', 'store', 'destroy']);
     });
 

@@ -2,7 +2,6 @@
 
 namespace App\Models\DMS;
 
-use App\Enums\Core\VisibilityEnum;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
@@ -23,6 +22,7 @@ class DocumentTags extends Pivot
         'DocId', 'TagId',
         'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
+
 
     public static function getPrimaryKey(): string
     {
