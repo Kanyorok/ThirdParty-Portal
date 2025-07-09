@@ -130,7 +130,6 @@ use Illuminate\Support\ServiceProvider;
 use Spatie\Permission\Models\Role;
 use App\Policies\Inventory\InventoryHoldReviewPolicy;
 use App\Models\Inventory\ItemType;
-use App\Policies\Procurement\PlanManualInputPolicy;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\TransactionReceipt;
 use App\Models\Inventory\TransactionTransfer;

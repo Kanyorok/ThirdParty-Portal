@@ -278,7 +278,7 @@ class CodeDetailSeeder extends Seeder
         DB::table('t_CodeDetails')->insert([
             [
                 'CodeID' => "TenantType",
-                'Description' => 'Individulal',
+                'Description' => 'Individual',
                 'CreatedOn' => $date,
                 'CreatedBy' => $user->Id,
                 'ModifiedOn' => $date,

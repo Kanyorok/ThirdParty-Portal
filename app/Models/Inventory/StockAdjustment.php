@@ -4,7 +4,6 @@ namespace App\Models\Inventory;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\Model\UserActorTrait;
 use App\Models\Core\Branch;
 use App\Models\Auth\User;
 use App\Models\Core\CodeDetail;
@@ -38,6 +37,11 @@ class StockAdjustment extends Model
         'DeletedOn'
     ];
 
+    public static function getPrimaryKey(): string
+    {
+        return 'stockadjustmentId';
+    }
+
     public function adjustedBy()
     {
         return $this->belongsTo(User::class, 'AdjustedBy', 'Id');
@@ -68,9 +72,9 @@ class StockAdjustment extends Model
         return $this->belongsTo(Branch::class, 'Branch', 'Id');
     }
     public function reason()
-{
-    return $this->belongsTo(CodeDetail::class, 'Reason', 'Id');
-}
+    {
+        return $this->belongsTo(CodeDetail::class, 'Reason', 'Id');
+    }
 
     
 
