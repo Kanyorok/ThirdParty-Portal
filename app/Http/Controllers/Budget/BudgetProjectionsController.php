@@ -65,7 +65,7 @@ class BudgetProjectionsController extends Controller
  
     // Store budget product entry
     public function store(Request $request)
-    {
+    {$this->authorize(PermissionEnum::BudgetSetupCreate, BudgetDriverProjections::class);
         $validated = $request->validate([
             'BudgetID' => 'required|exists:t_Budgets,Id',
             // 'CurrencyID' => 'required|exists:t_Currencies,Id', (currently we will use 1 as currency)
@@ -156,6 +156,7 @@ class BudgetProjectionsController extends Controller
 
     public function update(Request $request, $id)
     {
+        $this->authorize(PermissionEnum::BudgetSetupUpdate, BudgetDriverProjections::class);
         $validated = $request->validate([
             // 'CurrencyID' => 'nullable|exists:t_Currencies,Id',
             'Products'   => 'nullable|array',
@@ -231,6 +232,7 @@ class BudgetProjectionsController extends Controller
     }
     public function destroy($id)
     {
+        $this->authorize(PermissionEnum::BudgetSetupDelete, BudgetDriverProjections::class);
         DB::beginTransaction();
         try {
             $budget = BudgetDriverProjections::findOrFail($id);

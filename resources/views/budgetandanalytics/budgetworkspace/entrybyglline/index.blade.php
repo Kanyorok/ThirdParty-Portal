@@ -56,11 +56,19 @@
                                 <td>Manual Entry</td>
                                 <td style="width: 200px; white-space: nowrap;">
                                     <a href="{{ route('entrybyglline.show', $item->BudgetID) }}" class="btn btn-sm btn-primary">👁️</a>
-                                    <form action="{{ route('entrybyglline.destroy', $item->Id) }}" method="POST" class="d-inline">
+                                    {{-- <form action="{{ route('entrybyglline.destroy', $item->Id) }}" method="POST" class="d-inline">
                                         @csrf
                                         @method('DELETE')
                                         <button class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this entry?')">🗑️</button>
-                                    </form>
+                                    </form> --}}
+                                     <button type="button"
+                                            class="btn btn-sm btn-danger custom-delete-btn"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#customDeleteConfirmModal"
+                                            data-name="{{ $item->budget->Name  }}"    {{-- Pass item name --}}
+                                            data-route="{{route('entrybyglline.destroy', $item->Id)}}"> {{--Pass delete route--}}
+                                            🗑️
+                                    </button>
                                 </td>
                             </tr>
                         @endforeach
@@ -75,4 +83,6 @@
 
         </div>
 </div>
+@include('components.modals.delete-confirm')
+
 @endsection

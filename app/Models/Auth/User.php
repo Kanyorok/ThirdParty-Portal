@@ -22,16 +22,19 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Traits\HasRoles;
+use App\Models\Auth\Role;
+use App\Traits\Controller\HasBranchRoles;
+use App\Models\Auth\ModelRole;
+use Illuminate\Support\Collection;
+use Spatie\Permission\Models\Permission;
 
 class User extends Authenticatable
 {
-    use ImageTrait, HasFactory, Notifiable,UserActorTrait, SoftDeletes, HasRoles;
+    use ImageTrait, HasFactory, Notifiable,UserActorTrait, SoftDeletes, HasBranchRoles;
 
-    const string CREATED_AT = 'CreatedOn';
-    const string UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    const CREATED_AT = 'CreatedOn';
+    const UPDATED_AT = 'ModifiedOn';
+    const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Users';
     protected $primaryKey = 'Id';
@@ -53,6 +56,80 @@ class User extends Authenticatable
         'Linked'    => 'bool',
         'CreatedBy' => 'integer',
     ];
+
+    protected ?Role $effectiveRole = null;
+
+    public function getRoleNames(): Collection
+    {
+        $branchId = session('LoginBranchId');
+        if (!$branchId) return collect();
+
+        return ModelRole::where('model_id', $this->UserID)
+            ->where('model_type', self::getPrimaryKey())
+            ->where('BranchId', $branchId)
+            ->with('role')
+            ->get()
+            ->pluck('role.name')
+            ->filter();
+    }
+
+    public function hasRole($roles, string $guard = null): bool
+    {
+        $roleNames = $this->getRoleNames();
+
+        return collect($roles)->intersect($roleNames)->isNotEmpty();
+    }
+
+    public function getPermissionsViaRoles(): Collection
+    {
+        $branchId = session('LoginBranchId');
+        if (!$branchId) return collect();
+
+        return Permission::query()
+            ->whereHas('roles.modelRoles', function ($query) use ($branchId) {
+                $query->where('model_id', $this->Id)
+                    ->where('model_type', self::getPrimaryKey())
+                    ->where('BranchId', $branchId);
+            })
+            ->get();
+    }
+
+    public function hasPermissionTo($permission, $guardName = null): bool
+    {
+        return $this->getPermissionsViaRoles()->contains('name', $permission);
+    }
+
+    public function setEffectiveRole(string $roleName): void
+    {
+        $this->effectiveRole = Role::where('name', $roleName)->first();
+    }
+
+    public function syncRolesWithBranch(array|Collection $roles, int $branchId, int $actorId = 1): void
+    {
+        // Remove existing roles for this user + branch
+        ModelRole::where([
+            'model_id'   => $this->Id,
+            'model_type' => self::class,
+            'BranchId'   => $branchId,
+        ])->delete();
+
+        foreach ($roles as $role) {
+            $roleModel = $role instanceof Role
+                ? $role
+                : Role::where('name', $role)->firstOrFail();
+
+            ModelRole::create([
+                'model_id'   => $this->Id,
+                'model_type' => self::getPrimaryKey(),
+                'role_id'    => $roleModel->id,
+                'BranchId'   => $branchId,
+                'CreatedBy'  => $actorId,
+                'CreatedOn'  => now(),
+                'ModifiedBy' => $actorId,
+                'ModifiedOn' => now(),
+            ]);
+        }
+    }
 
     public static function getPrimaryKey(): string
     {
@@ -91,8 +168,27 @@ class User extends Authenticatable
 
     public function role(): ?Role
     {
-        $role = $this->roles()->first();
-        return ($role instanceof Role) ? $role : null;
+        // Return memory-injected role if available
+        if ($this->effectiveRole instanceof Role) {
+            return $this->effectiveRole;
+        }
+
+        $branchId = session('LoginBranchId');
+        if (!$branchId) {
+            return null; // Or fallback to default role() if needed
+        }
+
+        // Find branch-specific role via t_ModelRoles
+        $modelRole = ModelRole::where('model_id', $this->Id)
+            ->where('model_type', self::getPrimaryKey()) // resolves to 'UserID'
+            ->where('BranchId', $branchId)
+            ->first();
+
+        if (!$modelRole) {
+            return null;
+        }
+
+        return Role::find($modelRole->role_id);
     }
 
     public function teams(): BelongsToMany
@@ -105,6 +201,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(TeamUser::class, 'UserId', "Id");
     }
+
+    public function branchRoles()
+    {
+        return $this->hasMany(ModelRole::class, 'model_id')
+            ->where('model_type', self::getPrimaryKey())
+            ->with(['role', 'branch']);
+    }
+
 
     public function getEmailForPasswordReset()
     {

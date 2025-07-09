@@ -13,7 +13,7 @@ class PropertyNewLease extends Model
     protected $table = 't_LeaseCreation';
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    public const DELETED_AT = 'DeletedOn';
     protected $primaryKey = 'Id';
 
     protected $fillable = [

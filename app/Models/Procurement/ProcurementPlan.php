@@ -50,11 +50,6 @@ class ProcurementPlan extends Model
         'Status' => ProcurementPlanStatusEnum::Draft, // Draft as default val
     ];
 
-    public function item(): BelongsTo
-    {
-        return $this->belongsTo(Item::class, 'ItemId');
-    }
-
     public function procurementPeriod(): BelongsTo
     {
         return $this->belongsTo(ProcurementPeriod::class, 'ProcurementPeriodId');

@@ -18,7 +18,7 @@ use Throwable;
 
 class RepositoryService extends PermissionsService
 {
-    protected const int ROOT = 1;
+    protected const ROOT = 1;
 
     public function __construct(public Repository $repo)
     {
@@ -35,7 +35,7 @@ class RepositoryService extends PermissionsService
     /**
      * @throws ErroredException
      */
-    private static function _create(string $Name, User $actor, Repository $repository = null, string $Description = ""): Repository
+    private static function _create(string $Name, User $actor, $repository = null, string $Description = ""): Repository
     {
         try {
             return DB::transaction(static function () use ($repository, $Name, $Description, $actor) {

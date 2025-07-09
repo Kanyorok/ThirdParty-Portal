@@ -294,7 +294,7 @@
                 placeholder: "Choose users ...", minimumInputLength: 2,
                 dropdownParent: $Modal,
                 ajax: {
-                    url: '{{route('users.select2')}}',
+                    url: "{{ route('users.select2') }}",
                     dataType: 'json',
                     delay: 250,
                     data: function (params) {
@@ -371,7 +371,7 @@
                         {"className": "text-center", "targets": [2]}
                     ],
                     ajax: {
-                        url: '{{ route('users.index') }}',
+                        url: "{{ route('users.index') }}",
                         error: function (jqXHR) {
                             codeNotify(jqXHR.status);
                         }
@@ -420,7 +420,7 @@
                         {"visible": false, "targets": [3]}
                     ],
                     ajax: {
-                        url: '{{ route('branches.index') }}',
+                        url: "{{ route('branches.index') }}",
                         error: function (jqXHR) {
                             codeNotify(jqXHR.status);
                         }
@@ -458,7 +458,7 @@
                         {"className": "text-center", "targets": [2]}
                     ],
                     ajax: {
-                        url: '{{ route('teams.index') }}',
+                        url: "{{ route('teams.index') }}",
                         error: function (jqXHR) {
                             codeNotify(jqXHR.status);
                         }
@@ -494,7 +494,7 @@
                         {"className": "text-center", "targets": [2]}
                     ],
                     ajax: {
-                        url: '{{ route('roles.index') }}',
+                        url: "{{ route('roles.index') }}",
                         error: function (jqXHR) {
                             codeNotify(jqXHR.status);
                         }
