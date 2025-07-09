@@ -886,11 +886,7 @@
                 <li class="pc-h-item pc-sidebar-popup"><a href="#" class="pc-head-link ms-0" id="mobile-collapse"><i
                             class="ti ti-menu-2"></i></a></li>
                 <li class="pc-h-item d-none d-md-inline-flex">
-                    <form class="form-search"><i class="search-icon">
-                            <svg class="pc-icon">
-                                <use xlink:href="#custom-search-normal-1"></use>
-                            </svg>
-                        </i><input type="search" class="form-control" placeholder="Ctrl + K"></form>
+                    @yield('search-form')
                 </li>
 
             </ul>

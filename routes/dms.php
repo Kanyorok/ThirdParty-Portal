@@ -1,14 +1,15 @@
 <?php
 
-use App\Http\Controllers\DMS\DocumentRecentController;
 use App\Http\Controllers\DMS\Files\DocumentActionsController;
 use App\Http\Controllers\DMS\Files\DocumentActivityController;
 use App\Http\Controllers\DMS\Files\DocumentController;
 use App\Http\Controllers\DMS\Files\DocumentPermissionController;
+use App\Http\Controllers\DMS\Files\DocumentRecentController;
 use App\Http\Controllers\DMS\Files\DocumentTagsController;
 use App\Http\Controllers\DMS\Files\DocumentUploadController;
 use App\Http\Controllers\DMS\Repo\RepositoryController;
 use App\Http\Controllers\DMS\Repo\RepositoryPermissionController;
+use App\Http\Controllers\DMS\SearchController;
 use App\Http\Controllers\DMS\Tags\DocumentTagController;
 use App\Http\Controllers\DMS\Tags\TagController;
 use App\Http\Controllers\DMS\Tags\TaggingRuleController;
@@ -37,7 +38,9 @@ Route::namespace('DMS')->prefix('dms')->group(function () {
         Route::get('files', DocumentTagController::class)->name('file-tags.files');
         Route::resource('tagging-rules', TaggingRuleController::class)
             ->parameters(['tagging-rules' => 'document_tagging_rules'])->except(['show', 'edit', 'update']);
-
     });
     Route::resource('file-tags', TagController::class)->parameters(['file-tags' => 'd_m_s_tags'])->except('edit');
+
+    Route::get('search', SearchController::class)->name('dms.search');
+
 });

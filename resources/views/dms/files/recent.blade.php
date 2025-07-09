@@ -1,5 +1,4 @@
-@php use App\Enums\Core\ExtensionsEnum; @endphp
-@php use App\Enums\Core\VisibilityEnum; @endphp
+@php use App\Enums\Core\ExtensionsEnum; use App\Enums\Core\VisibilityEnum; @endphp
 @extends('layouts.app')
 
 @section('title')
@@ -16,6 +15,22 @@
             width: 30px !important;
         }
     </style>
+@endsection
+@section('search-form')
+    <style>
+        .tt-menu {
+            width: 100% !important;
+            padding: .5rem 1.5rem !important;
+            opacity: 0.98;
+        }
+    </style>
+    <div class="form-search" action="" method="get"><i class="search-icon">
+            <svg class="pc-icon">
+                <use xlink:href="#custom-search-normal-1"></use>
+            </svg>
+        </i><input type="search" name="q" class="form-control typeahead" id="SearchInput" style="width: 50vw;"
+                   placeholder="Search Files & Folders">
+    </div>
 @endsection
 @section('content')
     <div class="row">
@@ -53,7 +68,6 @@
             </div>
         </div>
     </div>
-
     <div class="modal fade" id="dmsActionsModal" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
@@ -91,6 +105,7 @@
     </div>
 @endsection
 @section('scripts')
+    <script src="{{ asset('assets/libs/typeahead/typeahead.bundle.min.js') }}"></script>
     <script src="{{ asset('assets/libs/dropzone/dropzone.min.js') }}"></script>
     <script>const $Modal = $('#dmsActionsModal');
         Dropzone.options.uploadForm = {
@@ -127,6 +142,64 @@
                 }
             });
             fetchFiles();
+
+            const filesEngine = new Bloodhound({
+                datumTokenizer: function (document) {
+                    return Bloodhound.tokenizers.whitespace(document.name);
+                },
+                queryTokenizer: Bloodhound.tokenizers.whitespace,
+                remote: {
+                    url: "{{ route('dms.search') }}?type=files&q=%QUERY",
+                    wildcard: '%QUERY',
+                    filter: function (response) {
+                        return response.data;
+                    }
+                }
+            });
+
+            const nhlTeams = new Bloodhound({
+                datumTokenizer: Bloodhound.tokenizers.obj.whitespace('team'),
+                queryTokenizer: Bloodhound.tokenizers.whitespace,
+                prefetch: '{{ asset('nhl.json') }}'
+            });
+
+            filesEngine.initialize();
+
+            $('#SearchInput').typeahead({
+                    highlight: false
+                },
+                /* {
+                     name: 'nba-teams',
+                     display: 'team',
+                     source: nbaTeams,
+                     templates: {
+                         header: '<h6>NBA Teams</h6>'
+                     }
+                 },*/
+                {
+                    name: 'files',
+                    displayKey: 'value',
+                    source: filesEngine.ttAdapter(),
+                    limit: 5,
+                    templates: {
+                        header: '<h6 class="suggestions-header text-primary mb-0 mx-3 mt-3 pb-2">Files</h6>',
+                        suggestion: function (document) {
+                            return '<a href="' + document.detail + '"><div class="d-flex align-items-center"><img' +
+                                ' class="rounded-circle me-3" src="' + document.type.img + '" alt="' + document.id + '" height="32"><div class="user-info"><h6 class="mb-0">' + document.name + '</h6><small class="text-muted">' + document.size.string + "</small></div></div></a>"
+                        },
+                        notFound: '<div class="not-found px-3 py-2"><h6 class="suggestions-header text-primary mb-2' +
+                            '">Files</h6><p class="py-2 mb-0"><i class="bx bx-error-circle bx-xs me-2"></i>' +
+                            ' No Results Found</p></div>'
+                    }
+                },
+                {
+                    name: 'nhl-teams',
+                    display: 'team',
+                    source: nhlTeams,
+                    templates: {
+                        header: '<h6>NHL Teams</h6>'
+                    }
+                });
         });
 
 

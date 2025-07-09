@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\DMS;
+namespace App\Http\Controllers\DMS\Files;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\DMS\FilesCollection;
