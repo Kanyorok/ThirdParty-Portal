@@ -64,6 +64,14 @@
                         <td>
                             <div class="d-flex gap-2 justify-content-center">
                                 <a href="#" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#editBudgetModal{{ $budget->Id }}">✏️</a>
+                                <button type="button"
+                                        class="btn btn-sm btn-danger custom-delete-btn"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#customDeleteConfirmModal"
+                                        data-name="{{ $budget->Name }}"    {{-- Pass item name --}}
+                                        data-route="{{ route('budget.delete-budget', $budget->Id) }}"> {{-- Pass delete route --}}
+                                    Delete
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -80,7 +88,7 @@
 </div>
 
 {{-- Edit Modals --}}
-@foreach ($budgets as $item)    
+@foreach ($budgets as $item)
 <div class="modal fade" id="editBudgetModal{{ $item->Id }}" tabindex="-1" aria-labelledby="editLabel{{ $item->Id }}" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content rounded-3 shadow">
@@ -135,4 +143,6 @@
 </div>
 @endforeach
 
+<!-- Import the Custom Delete Modal -->
+@include('components.modals.delete-confirm')
 @endsection

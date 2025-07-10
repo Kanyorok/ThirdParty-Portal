@@ -11,7 +11,7 @@
         <div class="auth-form">
             <div class="card my-5">
                 <form method="POST" action="{{ route('login') }}" class="card-body">@csrf
-                    <div class="text-center"><img src="{{ asset('assets/img/icons/android-icon-96x96.png') }}" alt="">
+                    <div class="text-center"><img src="{{ asset('assets/img/icons/craft-logo.png') }}" alt="">
                     </div>
                     <h4 class="text-center f-w-500 mb-3 mt-lg-5">Login with your USERID or Email </h4>
                     <div class="mb-3">

@@ -286,28 +286,29 @@ class BudgetPeriodController extends Controller
         $this->authorize(PermissionEnum::BudgetSetupDelete, BudgetGLsAttachments::class);
 
         try {
-            $glAttachment = BudgetGLsAttachments::findOrFail($id);
+            DB::beginTransaction();
+            $glAttachment = BudgetGLsAttachments::find($id);
             $glAttachment->DeletedBy = Auth::Id();
-            $glAttachment->save();
             $glAttachment->delete();
 
             //Delete the associated BudgetGLMasterAllocations if they exist
             //
-            $findAlloc=BudgetGLMasterAllocations::find($id);
+            $findAlloc=BudgetGLMasterAllocations::where('GLAttachmentID', $id)->first();
             $findAlloc->DeletedBy=Auth::id();
             $findAlloc->delete();
 
-            BudgetGLMasterAllocations::where('GLAttachmentID', $id)->delete();
+            //BudgetGLMasterAllocations::where('GLAttachmentID', $id)->delete();
 
             activity()
                 ->performedOn($glAttachment)
                 ->causedBy(Auth::user())
                 ->withProperties(['action' => 'delete'])
                 ->log('Deleted GL Attachment Successfully: ' . $id);
-
+            DB::commit();
             return back()->with('success', 'GL Attachment deleted successfully.');
             //return response()->json(['success' => true, 'message' => 'GL Attachment deleted successfully.']);
         } catch (\Throwable $th) {
+            DB::rollBack();
             Log::error('Failed to delete GL Attachment: ' . $th->getMessage());
             return response()->json(['success' => false, 'message' => 'Failed to delete GL Attachment.'], 500);
         }
@@ -395,4 +396,23 @@ class BudgetPeriodController extends Controller
         }
     }
 
+    public function delBudget($id){
+
+        $this->authorize(PermissionEnum::BudgetSetupDelete, BudgetLine::class);
+
+        try{
+            DB::beginTransaction();
+            $budget=Budget::find($id);
+            $budget->DeletedBy=Auth::id();
+            $budget->delete();
+            $budget->save();
+            DB::commit();
+            return back()->with('success', 'Budget Deleted Successfully.');
+        }catch(\Throwable $th){
+            DB::rollBack();
+
+            Log::error('Failed to delete Budget: ' . $th->getMessage());
+            return back()->withErrors(['error' => 'Failed to delete Budget. Please try again.']);
+        }
+    }
 }
