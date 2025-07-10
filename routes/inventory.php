@@ -99,8 +99,8 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
 
 
 
-    Route::resource('inventorydashboard', InventoryDashboardController::class);
-    Route::resource('movementdashboard', MovementDashboardController::class);
+   // Route::resource('inventorydashboard', InventoryDashboardController::class);
+   // Route::resource('movementdashboard', MovementDashboardController::class);
 
     //Route::resource('stocktake', StockTakeController::class);
     Route::get('/stocktake/index', [StockTakeController::class, 'index'])->name('stocktake.index');
@@ -165,7 +165,7 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/transactionsapproval', [TransactionApprovalController::class, 'index'])->name('transactionsapproval.index');
     Route::post('/transactionsapproval/approve/{Id}', [TransactionApprovalController::class, 'approve'])->name('transactionsapproval.approve');
     Route::post('/transactionsapproval/reject/{Id}', [TransactionApprovalController::class, 'reject'])->name('transactionsapproval.reject');
-
+    Route::get('/transactionsapproval/{Id}', [TransactionApprovalController::class, 'show'])->name('transactionsapproval.show');
 
     //Route::resource('transactionsadjustment', TransactionAdjustmentController::class);
     Route::get('/transactionsadjustment', [TransactionAdjustmentController::class, 'index'])->name('transactionsadjustment.index');
