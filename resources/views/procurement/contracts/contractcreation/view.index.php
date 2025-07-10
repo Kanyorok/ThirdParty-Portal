@@ -39,31 +39,32 @@
 
     <div class="mb-3">
         <label class="form-label">Notes</label>
-        <textarea class="form-control" rows="3" readonly>Standard 6-month delivery agreement with phased supply.</textarea>
+        <textarea class="form-control" rows="3"
+                  readonly>Standard 6-month delivery agreement with phased supply.</textarea>
     </div>
 
     <!-- 📦 Breakdown -->
     <h5 class="mt-4">📦 Contract Items Breakdown</h5>
     <table class="table table-bordered">
         <thead class="table-light">
-            <tr>
-                <th>Item Description</th>
-                <th>Qty</th>
-                <th>Unit Price</th>
-                <th>Total</th>
-                <th>Delivery Timeline</th>
-                <th>Milestone</th>
-            </tr>
+        <tr>
+            <th>Item Description</th>
+            <th>Qty</th>
+            <th>Unit Price</th>
+            <th>Total</th>
+            <th>Delivery Timeline</th>
+            <th>Milestone</th>
+        </tr>
         </thead>
         <tbody>
-            <tr>
-                <td>Office Desk – Executive</td>
-                <td>50</td>
-                <td>15,000</td>
-                <td>750,000</td>
-                <td>Within 30 days</td>
-                <td>Phase 1 Delivery</td>
-            </tr>
+        <tr>
+            <td>Office Desk – Executive</td>
+            <td>50</td>
+            <td>15,000</td>
+            <td>750,000</td>
+            <td>Within 30 days</td>
+            <td>Phase 1 Delivery</td>
+        </tr>
         </tbody>
     </table>
 </div>

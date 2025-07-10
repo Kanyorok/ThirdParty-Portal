@@ -1,86 +1,87 @@
+@php use App\Models\Core\Branch; @endphp
 @extends('layouts.app')
 
 @section('title', 'Create Transfer')
 
 @section('content')
-<div class="container bg-white shadow rounded p-4">
-    <h4 class="mb-4">Select Requisition Type and Number</h4>
+    <div class="container bg-white shadow rounded p-4">
+        <h4 class="mb-4">Select Requisition Type and Number</h4>
 
-    <form class="mb-3">
-        <div class="row">
-            <div class="col-md-4">
-                <label for="requisition_type" class="form-label">Requisition Type</label>
-                <select class="form-select" id="requisition_type" required>
-                    <option value="">Select Requisition Type</option>
-                    <option value="interbranch">InterBranch Requisition</option>
-                    <option value="procurement">Procurement Plan Requisition</option>
-                </select>
-            </div>
-            <div class="col-md-4">
-                <label for="requisition_id" class="form-label">Requisition Number</label>
-                <select class="form-select" id="requisition_id" required>
-                    <option value="">Select Requisition</option>
-                </select>
-            </div>
-        </div>
-    </form>
-
-    <form method="POST" action="{{ route('transactionstransfers.store') }}" id="transferForm">
-        @csrf
-        <div id="transferDetails" style="display: none">
-            <div class="row mb-3">
+        <form class="mb-3">
+            <div class="row">
                 <div class="col-md-4">
-                    <label for="transferDate" class="form-label">Transfer Date</label>
-                    <input type="date" class="form-control" id="transferDate" name="TransferDate" required>
-                </div>
-                <div class="col-md-2">
-                    <label for="fromBranch" class="form-label">From Branch</label>
-                    <input type="text" class="form-control" id="fromBranch" readonly>
-                    <input type="hidden" name="FromBranch" id="FromBranch">
-                </div>
-                <div class="col-md-2">
-                    <label for="toBranch" class="form-label">To Branch</label>
-                    <input type="text" class="form-control" id="toBranch" readonly>
-                    <input type="hidden" name="ToBranch" id="ToBranch">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Transferred By</label>
-                    <select name="TransferredBy" class="form-select select2" required>
-                        <option value="">-- Select User --</option>
-                        @foreach ($users as $user)
-                            <option value="{{ $user->Id }}">{{ $user->Name }}</option>
-                        @endforeach
+                    <label for="requisition_type" class="form-label">Requisition Type</label>
+                    <select class="form-select" id="requisition_type" required>
+                        <option value="">Select Requisition Type</option>
+                        <option value="interbranch">InterBranch Requisition</option>
+                        <option value="procurement">Procurement Plan Requisition</option>
                     </select>
                 </div>
-                <input type="hidden" name="RequisitionId" id="RequisitionId">
-                <input type="hidden" name="RequisitionType" id="RequisitionType">
-            </div>
-
-            <div id="itemsSection">
-                <div class="mb-3">
-                    <h5>Requisition Items</h5>
-                    <table class="table table-bordered align-middle" id="itemsTable">
-                        <thead class="table-light">
-                        <tr>
-                            <th>#</th>
-                            <th>Item Name</th>
-                            <th>Item Code</th>
-                            <th>UOM</th>
-                            <th>Approved Qty</th>
-                            <th>Dispatched Qty</th>
-                            <th>Remarks</th>
-                        </tr>
-                        </thead>
-                        <tbody id="itemsBody"></tbody>
-                    </table>
+                <div class="col-md-4">
+                    <label for="requisition_id" class="form-label">Requisition Number</label>
+                    <select class="form-select" id="requisition_id" required>
+                        <option value="">Select Requisition</option>
+                    </select>
                 </div>
             </div>
+        </form>
 
-            <div id="ajax-error" class="alert alert-danger d-none"></div>
-            <button type="submit" class="btn btn-primary" id="submitBtn">✅ Submit Transfer</button>
-        </div>
-    </form>
-</div>
+        <form method="POST" action="{{ route('transactionstransfers.store') }}" id="transferForm">
+            @csrf
+            <div id="transferDetails" style="display: none">
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="transferDate" class="form-label">Transfer Date</label>
+                        <input type="date" class="form-control" id="transferDate" name="TransferDate" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="fromBranch" class="form-label">From Branch</label>
+                        <input type="text" class="form-control" id="fromBranch" readonly>
+                        <input type="hidden" name="FromBranch" id="FromBranch">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="toBranch" class="form-label">To Branch</label>
+                        <input type="text" class="form-control" id="toBranch" readonly>
+                        <input type="hidden" name="ToBranch" id="ToBranch">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Transferred By</label>
+                        <select name="TransferredBy" class="form-select select2" required>
+                            <option value="">-- Select User --</option>
+                            @foreach ($users as $user)
+                                <option value="{{ $user->Id }}">{{ $user->Name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <input type="hidden" name="RequisitionId" id="RequisitionId">
+                    <input type="hidden" name="RequisitionType" id="RequisitionType">
+                </div>
+
+                <div id="itemsSection">
+                    <div class="mb-3">
+                        <h5>Requisition Items</h5>
+                        <table class="table table-bordered align-middle" id="itemsTable">
+                            <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Item Name</th>
+                                <th>Item Code</th>
+                                <th>UOM</th>
+                                <th>Approved Qty</th>
+                                <th>Dispatched Qty</th>
+                                <th>Remarks</th>
+                            </tr>
+                            </thead>
+                            <tbody id="itemsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="ajax-error" class="alert alert-danger d-none"></div>
+                <button type="submit" class="btn btn-primary" id="submitBtn">✅ Submit Transfer</button>
+            </div>
+        </form>
+    </div>
 
     <script>
         const requisitionTypeSelect = document.getElementById('requisition_type');
@@ -159,7 +160,7 @@
                 .then(data => {
                     if (selectedType === 'procurement') {
                         fromBranchText.value = 'Headquarters';
-                        fromBranchHidden.value = '{{ \App\Models\Core\Branch::where("IsHQ", 1)->value("Id") ?? "" }}';
+                        fromBranchHidden.value = '{{ Branch::where("IsHQ", 1)->value("Id") ?? "" }}';
                     } else {
                         fromBranchText.value = data.from_branch?.Name || 'N/A';
                         fromBranchHidden.value = data.from_branch?.Id || '';
@@ -190,48 +191,48 @@
                     `;
                     });
 
-                transferDetails.style.display = 'block';
-            })
-            .catch(error => {
-                console.error('Error loading requisition details:', error);
-                requisitionIdHidden.value = '';
-            });
-    });
-
-    // AJAX Form Submission
-    document.getElementById('transferForm').addEventListener('submit', function (e) {
-        e.preventDefault();
-
-        const form = e.target;
-        const formData = new FormData(form);
-        const submitBtn = document.getElementById('submitBtn');
-        const errorBox = document.getElementById('ajax-error');
-
-        submitBtn.disabled = true;
-        errorBox.classList.add('d-none');
-        errorBox.innerHTML = '';
-
-        fetch(form.action, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': formData.get('_token'),
-            },
-            body: formData,
-        })
-        .then(async (response) => {
-            const data = await response.json();
-            if (!response.ok) {
-                throw new Error(data.message || 'An error occurred.');
-            }
-            window.location.href = data.redirect;
-        })
-        .catch(error => {
-            errorBox.innerHTML = `<strong>Error:</strong> ${error.message}`;
-            errorBox.classList.remove('d-none');
-        })
-        .finally(() => {
-            submitBtn.disabled = false;
+                    transferDetails.style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('Error loading requisition details:', error);
+                    requisitionIdHidden.value = '';
+                });
         });
-    });
-</script>
+
+        // AJAX Form Submission
+        document.getElementById('transferForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const form = e.target;
+            const formData = new FormData(form);
+            const submitBtn = document.getElementById('submitBtn');
+            const errorBox = document.getElementById('ajax-error');
+
+            submitBtn.disabled = true;
+            errorBox.classList.add('d-none');
+            errorBox.innerHTML = '';
+
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': formData.get('_token'),
+                },
+                body: formData,
+            })
+                .then(async (response) => {
+                    const data = await response.json();
+                    if (!response.ok) {
+                        throw new Error(data.message || 'An error occurred.');
+                    }
+                    window.location.href = data.redirect;
+                })
+                .catch(error => {
+                    errorBox.innerHTML = `<strong>Error:</strong> ${error.message}`;
+                    errorBox.classList.remove('d-none');
+                })
+                .finally(() => {
+                    submitBtn.disabled = false;
+                });
+        });
+    </script>
 @endsection

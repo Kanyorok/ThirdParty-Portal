@@ -3,17 +3,16 @@
 namespace App\Models\DMS;
 
 use App\Enums\Core\VisibilityEnum;
-use App\Models\Core\SpecialPermission;
+use App\Traits\Model\SpecialPermissionTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Repository extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes, UserActorTrait, SpecialPermissionTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -57,10 +56,9 @@ class Repository extends Model
         return $this->belongsTo(__CLASS__, 'ParentId', 'Id');
     }
 
-    public function permissions(): MorphMany
+
+    public function getShareEmailSubject(): string
     {
-        return $this->morphMany(SpecialPermission::class, 'model', "Model", "ModelID", 'Id');
+        return 'Notification: #permission permission to ' . $this->Name;
     }
-
-
 }

@@ -252,17 +252,18 @@ class ScheduleService
 
         return $service;
     }
-  public function boards()
-{
-    return Board::query()
-        ->whereIn('BoardMemberID', $this->schedule->users()->pluck('t_ScheduleUsers.UserID'));
-}
+
+    public function boards()
+    {
+        return Board::query()
+            ->whereIn('BoardMemberID', $this->schedule->users()->pluck('t_ScheduleUsers.UserID'));
+    }
 
 
-public function boardsCount(): int
-{
-    return $this->schedule->users()->count();
-}
+    public function boardsCount(): int
+    {
+        return $this->schedule->users()->count();
+    }
 
     public static function userMeeting(array $UserIds, string $title, string|MeetingRoom $location, string $agenda, Carbon $start, Carbon $end, User $actor): ScheduleService
     {

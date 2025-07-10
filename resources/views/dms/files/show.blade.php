@@ -1,6 +1,6 @@
 @php use App\Enums\Core\VisibilityEnum; @endphp
 @php use App\Enums\Core\RoleEnum; @endphp
-@extends('layouts.app')
+@extends('dms.layout')
 
 @section('title')
     {{ $file->Name }}
@@ -26,15 +26,36 @@
                         <li class="list-group-item">Type : <b class="float-end">{!! $file->ext()->getIcon() !!} &nbsp;
                                 {{$file->ext()->name}}</b></li>
                         <li class="list-group-item">Visibility : <span class="float-end"> <b>{!! $file->Visibility->icon() !!}
-                                &nbsp; {{$file->Visibility->name}}</b> <a href="javascript:void(0)"
-                                                                          class="float-end edit-permission-visibility"><i
-                                        class="material-icons-two-tone"> edit</i></a></span></li>
+                                &nbsp; {{$file->Visibility->name}}</b>
+                                <a href="javascript:void(0)" class="float-end edit-permission-visibility">
+                                    <i class="material-icons-two-tone"> edit</i></a></span></li>
                         <li class="list-group-item">Versions : <b
                                 class="float-end">{{ number_format($file->versions_count) }}</b></li>
                         <li class="list-group-item">Size : <b
                                 class="float-end">{{  \Illuminate\Support\Number::fileSize( $file->current->Size, 2) }}</b>
                         </li>
                     </ul>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header py-3">
+                    <div class="card-actions float-end">
+                        <a href="javascript:void(0)" class="float-end click-summary-data"
+                           data-summary_title='<i class="fas fa-tags"></i> Update File Tags'
+                           data-click_url='{{ route('document-tags.create',[$file->DocumentId]) }}'
+                        >
+                            <i class="material-icons-two-tone"> edit</i></a>
+                    </div>
+                    <h5>File Tags </h5>
+                </div>
+                <div class="card-body">
+                    @foreach($tags as $tag)
+                        @if ($tag->Visibility->value === VisibilityEnum::Private->value)
+                            <span class="badge rounded-pill text-bg-primary">{{ $tag->Name }}</span>
+                        @else
+                            <span class="badge rounded-pill text-bg-danger">{{ $tag->Name }}</span>
+                        @endif
+                    @endforeach
                 </div>
             </div>
             <div class="card">
@@ -316,23 +337,20 @@
         function fetchFilePreview() {
             const previewContainer = document.getElementById('FilePreviewPage');
 
-            fetch("{{ route('file.preview', [$file->DocumentId]) }}")
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.text();
-                })
-                .then(html => {
+            $.ajax({
+                url: "{{ route('file.preview', [$file->DocumentId]) }}",
+                method: "GET",
+                success: function (html) {
                     previewContainer.innerHTML = html;
-                })
-                .catch(error => {
+                },
+                error: function (jqXHR) {
                     previewContainer.innerHTML = `
-                        <div class="text-center m-5">
-                            <i class="fas fa-exclamation-triangle fa-3x text-danger"></i>
-                            <p class="mt-2">Error loading preview: ${error.message}</p>
-                        </div>`;
-                });
+            <div class="text-center m-5">
+                <i class="fas fa-exclamation-triangle fa-3x text-danger"></i>
+                <p class="mt-2">Error loading preview: ${jqXHR.statusText}</p>
+            </div>`;
+                }
+            });
         }
 
 

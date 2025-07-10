@@ -2,12 +2,12 @@
 @section('title', 'PO to Invoice Sync Setup')
 
 @section('content')
-<div class="container mt-4">
-    <h4 class="mb-3">🔄 PO to Invoice Sync Setup</h4>
-    <a href="{{ route('po-invoice-sync.create') }}" class="btn btn-primary mb-3">➕ Add Sync Rule</a>
+    <div class="container mt-4">
+        <h4 class="mb-3">🔄 PO to Invoice Sync Setup</h4>
+        <a href="{{ route('po-invoice-sync.create') }}" class="btn btn-primary mb-3">➕ Add Sync Rule</a>
 
-    <table class="table table-bordered">
-        <thead>
+        <table class="table table-bordered">
+            <thead>
             <tr>
                 <th>PO Type</th>
                 <th>Default GL Account</th>
@@ -15,8 +15,8 @@
                 <th>Status</th>
                 <th>Actions</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             <tr>
                 <td>Goods Purchase</td>
                 <td>5000 - Procurement Payable</td>
@@ -35,7 +35,7 @@
                     <a href="#" class="btn btn-sm btn-secondary">Edit</a>
                 </td>
             </tr>
-        </tbody>
-    </table>
-</div>
+            </tbody>
+        </table>
+    </div>
 @endsection

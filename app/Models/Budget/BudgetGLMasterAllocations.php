@@ -8,14 +8,17 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BudgetGLMasterAllocations extends Model
 {
-    use UserActorTrait,SoftDeletes;
+    use UserActorTrait, SoftDeletes;
+
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
+
     public static function getPrimaryKey(): string
     {
         return 'BudgetGLMasterAllocationsID';
     }
+
     protected $table = 't_BudgetGLMasterAllocations';
     protected $primaryKey = 'Id';
     protected $fillable = [
@@ -37,7 +40,8 @@ class BudgetGLMasterAllocations extends Model
         'DeletedOn' => 'datetime',
     ];
 
-    public function glType(){
+    public function glType()
+    {
         return $this->belongsTo(BudgetGLMaster::class, 'AccountID', 'AccountID');
     }
 }

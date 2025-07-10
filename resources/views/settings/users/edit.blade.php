@@ -78,8 +78,8 @@
         <hr>
         <div class="mt-4">
             <button type="button" class="btn btn-secondary float-start" onclick="window.bsOffcanvas.hide()">
-    cancel
-</button>
+                cancel
+            </button>
 
             <button class="btn btn-primary float-end" id="updateUserBtn" type="submit">
                 <i class="fas fa-save"></i> update {{ $user->UserID }}

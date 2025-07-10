@@ -3,6 +3,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\Auth\User;
 use App\Services\Core\ModuleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -11,7 +12,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
-use App\Models\Auth\User;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -78,9 +78,9 @@ class AuthenticatedSessionController extends Controller
             ->value('Name');
 
         session([
-            'LoginBranchId'   => $selectedBranchId,
+            'LoginBranchId' => $selectedBranchId,
             'LoginBranchName' => $branchName,
-            'LoginRoleName'   => $roleName
+            'LoginRoleName' => $roleName
         ]);
 
         $user->setEffectiveRole($roleName); // Tell Spatie the effective role

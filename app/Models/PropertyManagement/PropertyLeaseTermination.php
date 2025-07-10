@@ -30,10 +30,12 @@ class PropertyLeaseTermination extends Model
     {
         return 'LeaseTerminationId';
     }
+
     public function lease()
     {
         return $this->belongsTo(PropertyNewLease::class, 'LeaseID', 'Id');
     }
+
     public function code()
     {
         return $this->belongsTo(CodeDetail::class, 'TerminationReason', 'ID');

@@ -2,25 +2,25 @@
 @section('title', '📊 Contract Execution Monitor')
 
 @section('content')
-<div class="container mt-4">
-    <h4>📊 Contract Execution – CONTRACT/PROC/2025/010</h4>
+    <div class="container mt-4">
+        <h4>📊 Contract Execution – CONTRACT/PROC/2025/010</h4>
 
-    <!-- Summary Card -->
-    <div class="card mb-4 shadow-sm">
-        <div class="card-body">
-            <h5 class="card-title">Supply of Office Furniture</h5>
-            <p class="mb-1">Vendor: <strong>OfficePro Ltd</strong></p>
-            <p class="mb-1">Contract Period: <strong>01-Jul-2025 to 31-Dec-2025</strong></p>
-            <p class="mb-0">Contract Value: <strong>KES 1,500,000</strong></p>
+        <!-- Summary Card -->
+        <div class="card mb-4 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Supply of Office Furniture</h5>
+                <p class="mb-1">Vendor: <strong>OfficePro Ltd</strong></p>
+                <p class="mb-1">Contract Period: <strong>01-Jul-2025 to 31-Dec-2025</strong></p>
+                <p class="mb-0">Contract Value: <strong>KES 1,500,000</strong></p>
+            </div>
         </div>
-    </div>
 
-    <!-- LPOs Issued -->
-    <div class="card mb-4 shadow-sm">
-        <div class="card-header">📄 Linked LPOs</div>
-        <div class="card-body p-0">
-            <table class="table table-bordered mb-0 text-center">
-                <thead class="table-light">
+        <!-- LPOs Issued -->
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header">📄 Linked LPOs</div>
+            <div class="card-body p-0">
+                <table class="table table-bordered mb-0 text-center">
+                    <thead class="table-light">
                     <tr>
                         <th>#</th>
                         <th>LPO No</th>
@@ -29,8 +29,8 @@
                         <th>Status</th>
                         <th>Deliveries</th>
                     </tr>
-                </thead>
-                <tbody>
+                    </thead>
+                    <tbody>
                     <tr>
                         <td>1</td>
                         <td>LPO/2025/321</td>
@@ -40,17 +40,17 @@
                         <td><a href="#" class="btn btn-sm btn-outline-primary">Track</a></td>
                     </tr>
                     <!-- More rows -->
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            </div>
         </div>
-    </div>
 
-    <!-- Milestones / Deliverables -->
-    <div class="card shadow-sm">
-        <div class="card-header">📦 Contract Milestones / Deliverables</div>
-        <div class="card-body p-0">
-            <table class="table table-bordered mb-0 text-center">
-                <thead class="table-light">
+        <!-- Milestones / Deliverables -->
+        <div class="card shadow-sm">
+            <div class="card-header">📦 Contract Milestones / Deliverables</div>
+            <div class="card-body p-0">
+                <table class="table table-bordered mb-0 text-center">
+                    <thead class="table-light">
                     <tr>
                         <th>#</th>
                         <th>Description</th>
@@ -58,8 +58,8 @@
                         <th>Status</th>
                         <th>Remarks</th>
                     </tr>
-                </thead>
-                <tbody>
+                    </thead>
+                    <tbody>
                     <tr>
                         <td>1</td>
                         <td>Supply of Executive Desks (Batch 1)</td>
@@ -74,9 +74,9 @@
                         <td><span class="badge bg-info text-dark">In Progress</span></td>
                         <td>Partial delivery received</td>
                     </tr>
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-</div>
 @endsection

@@ -499,101 +499,101 @@
             });
         });
 
-             /*function showCreateModal(start_time, end_time, type) {
-            if (start !== null){
-                start.destroy();
-            }
-            if (end !== null){
-                end.destroy();
-            }
-            if (client !== null){
-                client.select2('destroy');
-            }
+        /*function showCreateModal(start_time, end_time, type) {
+       if (start !== null){
+           start.destroy();
+       }
+       if (end !== null){
+           end.destroy();
+       }
+       if (client !== null){
+           client.select2('destroy');
+       }
 
-            _type.val(type);
-            if(type === 'meeting'){
-                $(".modal-title").html('Schedule a meeting.');
-                $('#schedule_location').val('').parent('div').removeClass('d-none');
-                $('#schedule_title').val('').parent('div').removeClass('d-none');
-                $('#branches').val('').parent('div').removeClass('d-none');
-                //$('#schedule_title').removeAttr("readonly").val('');
-                client = $('#client').val([]).attr('multiple',"multiple").change().select2({
-                    placeholder: "Choose a client...", minimumInputLength: 2,
-                    dropdownParent: $Modal,
-                    ajax: {
-                        url: '{ {route('clients.select2')}}',
-                        dataType: 'json',
-                        delay: 250,
-                        data: function (params) {
-                            return {q: $.trim(params.term)};
-                        },
-                        processResults: function (data) {
-                            return {
-                                results: $.map(data, function (item) {
-                                    return {text: item.Name + ' - ' + item.ClientID, id: item.ClientID}
-                                })
-                            };
-                        },
-                        cache: true
-                    }
-                });
-            } else if (type === 'call') {
-                $(".modal-title").html('Schedule a call.');
-                $('#schedule_location').val('').parent('div').addClass('d-none');
-                $('#schedule_title').val('').parent('div').addClass('d-none');
-                $('#branches').val('').parent('div').addClass('d-none');
-                //$('#schedule_title').attr("readonly","readonly").val('');
-                client = $('#client').val([]).removeAttr("multiple").change().select2({
-                    placeholder: "Choose a client...", minimumInputLength: 2,
-                    dropdownParent: $Modal,
-                    ajax: {
-                        url: '{ {route('clients.select2')}}',
-                        dataType: 'json',
-                        delay: 250,
-                        data: function (params) {
-                            return {q: $.trim(params.term)};
-                        },
-                        processResults: function (data) {
-                            return {
-                                results: $.map(data, function (item) {
-                                    return {text: item.Name + ' - ' + item.ClientID, id: item.ClientID}
-                                })
-                            };
-                        },
-                        cache: true
-                    }
-                });
-            } else {
-                nWarning('Unknown type of schedule.');
-                return;
-            }
+       _type.val(type);
+       if(type === 'meeting'){
+           $(".modal-title").html('Schedule a meeting.');
+           $('#schedule_location').val('').parent('div').removeClass('d-none');
+           $('#schedule_title').val('').parent('div').removeClass('d-none');
+           $('#branches').val('').parent('div').removeClass('d-none');
+           //$('#schedule_title').removeAttr("readonly").val('');
+           client = $('#client').val([]).attr('multiple',"multiple").change().select2({
+               placeholder: "Choose a client...", minimumInputLength: 2,
+               dropdownParent: $Modal,
+               ajax: {
+                   url: '{ {route('clients.select2')}}',
+                   dataType: 'json',
+                   delay: 250,
+                   data: function (params) {
+                       return {q: $.trim(params.term)};
+                   },
+                   processResults: function (data) {
+                       return {
+                           results: $.map(data, function (item) {
+                               return {text: item.Name + ' - ' + item.ClientID, id: item.ClientID}
+                           })
+                       };
+                   },
+                   cache: true
+               }
+           });
+       } else if (type === 'call') {
+           $(".modal-title").html('Schedule a call.');
+           $('#schedule_location').val('').parent('div').addClass('d-none');
+           $('#schedule_title').val('').parent('div').addClass('d-none');
+           $('#branches').val('').parent('div').addClass('d-none');
+           //$('#schedule_title').attr("readonly","readonly").val('');
+           client = $('#client').val([]).removeAttr("multiple").change().select2({
+               placeholder: "Choose a client...", minimumInputLength: 2,
+               dropdownParent: $Modal,
+               ajax: {
+                   url: '{ {route('clients.select2')}}',
+                   dataType: 'json',
+                   delay: 250,
+                   data: function (params) {
+                       return {q: $.trim(params.term)};
+                   },
+                   processResults: function (data) {
+                       return {
+                           results: $.map(data, function (item) {
+                               return {text: item.Name + ' - ' + item.ClientID, id: item.ClientID}
+                           })
+                       };
+                   },
+                   cache: true
+               }
+           });
+       } else {
+           nWarning('Unknown type of schedule.');
+           return;
+       }
 
-            $("#schedule_start").val(start_time);
-            start = flatpickr("#schedule_start", {
-                enableTime: true,
-                altInput: true,
-                minDate: moment().format('YYYY-MM-DD hh:mm'),
-                defaultDate: start_time,
-                minuteIncrement: 1,
-                altFormat: "F j, Y H:i",
-                dateFormat: "Y-m-d H:i",
-            });
+       $("#schedule_start").val(start_time);
+       start = flatpickr("#schedule_start", {
+           enableTime: true,
+           altInput: true,
+           minDate: moment().format('YYYY-MM-DD hh:mm'),
+           defaultDate: start_time,
+           minuteIncrement: 1,
+           altFormat: "F j, Y H:i",
+           dateFormat: "Y-m-d H:i",
+       });
 
-            $("#schedule_end").val(end_time);
-            end = flatpickr("#schedule_end", {
-                enableTime: true,
-                altInput: true,
-                minuteIncrement: 1,
-                minDate: moment().add(2,'m').format('YYYY-MM-DD hh:mm'),
-                defaultDate: end_time,
-                altFormat: "F j, Y H:i",
-                dateFormat: "Y-m-d H:i",
-            });
+       $("#schedule_end").val(end_time);
+       end = flatpickr("#schedule_end", {
+           enableTime: true,
+           altInput: true,
+           minuteIncrement: 1,
+           minDate: moment().add(2,'m').format('YYYY-MM-DD hh:mm'),
+           defaultDate: end_time,
+           altFormat: "F j, Y H:i",
+           dateFormat: "Y-m-d H:i",
+       });
 
-            $(".modal-item").addClass('d-none');
-            $('#createScheduleModal').removeClass('d-none');
-            $Modal.modal('show');
-        }*/
+       $(".modal-item").addClass('d-none');
+       $('#createScheduleModal').removeClass('d-none');
+       $Modal.modal('show');
+   }*/
 
     </script>
 @endsection

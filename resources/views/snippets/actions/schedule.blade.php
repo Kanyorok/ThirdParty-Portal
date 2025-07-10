@@ -146,7 +146,8 @@
 <script src="{{ asset('assets/libs/rangePlugin.js') }}"></script>
 <script src='{{ asset('assets/libs/moment/moment-with-locales.js') }}'></script>
 <script>
-    let schedule_call_start = null, schedule_call_end = null, schedule_meeting_start = null, schedule_meeting_end = null;
+    let schedule_call_start = null, schedule_call_end = null, schedule_meeting_start = null,
+        schedule_meeting_end = null;
 
     $(function () {
         /* schedule_call_start = flatpickr("#call_start", {
