@@ -16,6 +16,7 @@ use App\Models\Core\CategoryMaster;
 use App\Models\Core\SpecialPermission;
 use App\Models\DMS\Document;
 use App\Models\DMS\Repository;
+use App\Services\Core\PermissionsService;
 use DateTime;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
@@ -178,7 +179,7 @@ class DocumentService extends PermissionsService
                 ]);
 
                 if ($copyPermissions && $repository->Visibility->value === VisibilityEnum::Private->value) {
-                    self::copyRepoPermissions($repository, $document, $actor);
+                    self::copyPermissions($repository, $document, $actor);
                 }
 
                 $document->versions()->create([

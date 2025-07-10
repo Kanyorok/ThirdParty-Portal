@@ -6,7 +6,7 @@ use App\Enums\Core\ExtensionsEnum;
 use App\Enums\Core\VisibilityEnum;
 use App\Exceptions\ErroredException;
 use App\Models\Core\CategoryMaster;
-use App\Models\Core\SpecialPermission;
+use App\Traits\Model\SpecialPermissionTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Document extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes, UserActorTrait, SpecialPermissionTrait;
 
     const string CREATED_AT = 'CreatedOn';
     const string UPDATED_AT = 'ModifiedOn';
@@ -74,11 +74,6 @@ class Document extends Model
         //
     }
 
-    public function permissions(): MorphMany
-    {
-        return $this->morphMany(SpecialPermission::class, 'model', "Model", "ModelID", 'Id');
-    }
-
     public function relations(): MorphMany
     {
         return $this->morphMany(DocumentRelation::class, 'related', "Related", "RelatedID", 'Id');
@@ -97,5 +92,10 @@ class Document extends Model
     public function properties(): HasMany
     {
         return $this->hasMany(DocumentAttribute::class, 'DocumentId', 'Id');
+    }
+
+    public function getShareEmailSubject(): string
+    {
+        return 'Notification: #permission permission to ' . $this->Name;
     }
 }

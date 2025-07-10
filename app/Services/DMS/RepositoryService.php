@@ -11,6 +11,7 @@ use App\Models\Auth\Team;
 use App\Models\Auth\User;
 use App\Models\Core\SpecialPermission;
 use App\Models\DMS\Repository;
+use App\Services\Core\PermissionsService;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -81,7 +82,7 @@ class RepositoryService extends PermissionsService
 
                 //copy permissions
                 if ($visibility->value === VisibilityEnum::Private->value) {
-                    self::copyRepoPermissions($repository, $repo, $actor);
+                    self::copyPermissions($repository, $repo, $actor);
                 }
 
                 activity()->causedBy($actor)->performedOn($repo)->event('create')->log('Created folder : ' . $repo->Name);
