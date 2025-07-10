@@ -155,4 +155,5 @@ Route::namespace('Budget')->prefix('budget')->group(function () {
 //        'show' => 'budgetline-reports.show'
 //    ]);
     Route::delete('budget/delete-gl-attachment/{id}', [BudgetPeriodController::class, 'delGLAttachment'])->name('budget.delete-gl-attachment');
+    Route::delete('budget/delete-budget/{id}', [BudgetPeriodController::class, 'delBudget'])->name('budget.delete-budget');
 });
