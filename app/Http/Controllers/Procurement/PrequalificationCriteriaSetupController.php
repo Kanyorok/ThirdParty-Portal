@@ -10,7 +10,6 @@ use App\Models\Procurement\PrequalificationPeriod;
 use App\Models\Procurement\PrequalificationSection;
 use App\Models\procurement\Section;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class PrequalificationCriteriaSetupController extends Controller
 {

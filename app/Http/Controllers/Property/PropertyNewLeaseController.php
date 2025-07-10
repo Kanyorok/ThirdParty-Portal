@@ -14,6 +14,7 @@ use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyTenantClearance;
 use App\Models\PropertyManagement\PropertyUnit;
 use App\Services\Property\TenantAndLease\PropertyNewLeaseService;
+use DateTime;
 
 class PropertyNewLeaseController extends Controller
 {
@@ -80,8 +81,8 @@ class PropertyNewLeaseController extends Controller
             $block,
             $floor,
             $unit,
-            $startDate = new \DateTime($data['StartDate']),
-            $endDate = new \DateTime($data['EndDate']),
+            $startDate = new DateTime($data['StartDate']),
+            $endDate = new DateTime($data['EndDate']),
             $paymentFrequency,
             $monthlyRent = $data['MonthlyRent'],
             $deposit = $data['Deposit'],

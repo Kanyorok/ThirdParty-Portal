@@ -2,16 +2,14 @@
 
 namespace App\Http\Controllers\Property;
 
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\Controller;
 use App\Enums\Core\PermissionEnum;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\BillingAndReceipting\PropertyReceiptRequest;
-use App\Services\Property\BillingAndReceipting\PropertyReceiptService;
-use Illuminate\Http\Request;
-use App\Models\PropertyManagement\PropertyReceipt;
 use App\Models\PropertyManagement\PropertyInvoice;
+use App\Models\PropertyManagement\PropertyReceipt;
+use App\Services\Property\BillingAndReceipting\PropertyReceiptService;
+use Exception;
+use Illuminate\Support\Facades\Auth;
 
 class PropertyReceiptController extends Controller
 {
@@ -32,38 +30,38 @@ class PropertyReceiptController extends Controller
     {
         //dd($request->all());
         $this->authorize(PermissionEnum::PropertyReceiptCreate, PropertyReceipt::class);
-            try {
-                $validated = $request->validated();
-                $InvoiceID = (int) $validated['InvoiceID'];
-                $BillingMonth = (int) $validated['BillingMonth'];
-                $InvoiceDate = (int) $validated['InvoiceDate'];
-                $RentAmount = (int) $validated['RentAmount'];
-                $ServicesCharge = (int) $validated['ServicesCharge'];
-                $OtherCharges = (int) $validated['OtherCharges'];
-          //dd('Validation');      
-    $receipt = PropertyInvoice::findOrFail($InvoiceID);
-       PropertyReceiptService::create(
-            $InvoiceID,
-            $BillingMonth,
-            $InvoiceDate,
-            $RentAmount,
-            $ServicesCharge,
-            $OtherCharges,
-            $validated ['TotalDue'], 
-            $validated['AmountPaid' ],
-            $validated['Balance'],
-            $validated['PaymentDate'],
-            $validated ['Amount' ],
-            $validated['PaymentMethod'],
-            $validated['ReferenceNo'],
-            $validated['Remarks'],
-             Auth::user()
-        );
+        try {
+            $validated = $request->validated();
+            $InvoiceID = (int)$validated['InvoiceID'];
+            $BillingMonth = (int)$validated['BillingMonth'];
+            $InvoiceDate = (int)$validated['InvoiceDate'];
+            $RentAmount = (int)$validated['RentAmount'];
+            $ServicesCharge = (int)$validated['ServicesCharge'];
+            $OtherCharges = (int)$validated['OtherCharges'];
+            //dd('Validation');
+            $receipt = PropertyInvoice::findOrFail($InvoiceID);
+            PropertyReceiptService::create(
+                $InvoiceID,
+                $BillingMonth,
+                $InvoiceDate,
+                $RentAmount,
+                $ServicesCharge,
+                $OtherCharges,
+                $validated ['TotalDue'],
+                $validated['AmountPaid'],
+                $validated['Balance'],
+                $validated['PaymentDate'],
+                $validated ['Amount'],
+                $validated['PaymentMethod'],
+                $validated['ReferenceNo'],
+                $validated['Remarks'],
+                Auth::user()
+            );
         //dd('Validation');
         return redirect()->route('rentreceipt.index')->with('success', 'Rent receipt created successfully');
-        } catch (\Exception $e) {
-        // Redirect back with error message
-        return redirect()->back()->with('error', $e->getMessage());
+        } catch (Exception $e) {
+            // Redirect back with error message
+            return redirect()->back()->with('error', $e->getMessage());
     }
 
     }

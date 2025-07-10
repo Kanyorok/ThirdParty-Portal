@@ -294,8 +294,11 @@ class BudgetPeriodController extends Controller
             //Delete the associated BudgetGLMasterAllocations if they exist
             //
             $findAlloc=BudgetGLMasterAllocations::where('GLAttachmentID', $id)->first();
-            $findAlloc->DeletedBy=Auth::id();
-            $findAlloc->delete();
+            if ($findAlloc) {
+                $findAlloc->DeletedBy = Auth::id();
+                $findAlloc->save(); // Save before deleting if you want DeletedBy recorded
+                $findAlloc->delete();
+            }
 
             //BudgetGLMasterAllocations::where('GLAttachmentID', $id)->delete();
 
@@ -309,6 +312,7 @@ class BudgetPeriodController extends Controller
             //return response()->json(['success' => true, 'message' => 'GL Attachment deleted successfully.']);
         } catch (\Throwable $th) {
             DB::rollBack();
+            return $th->getMessage();
             Log::error('Failed to delete GL Attachment: ' . $th->getMessage());
             return response()->json(['success' => false, 'message' => 'Failed to delete GL Attachment.'], 500);
         }

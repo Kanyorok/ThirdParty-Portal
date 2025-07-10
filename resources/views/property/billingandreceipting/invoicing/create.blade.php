@@ -23,12 +23,12 @@
         <div class="col-md-6">
           <label class="form-label">Select Lease</label>
             <select name="Lease" class="form-select" required>
-              <option value="">-- Select Lease --</option>
-              @foreach ($newtenants as $newtenant)
-                <option value="{{ $newtenant->Id }}">
-                  LSno: {{ $newtenant->LeaseNumber }} — Name: {{ $newtenant->tenant->TenantName }}
-                </option>
-              @endforeach
+                <option value="">-- Select Lease --</option>
+                @foreach ($newtenants as $newtenant)
+                    <option value="{{ $newtenant->Id }}">
+                        LSno: {{ $newtenant->LeaseNumber }} — Name: {{ $newtenant->tenant->TenantName }}
+                    </option>
+                @endforeach
             </select>
         </div>
         <div class="col-md-3">

@@ -2,11 +2,12 @@
 
 namespace App\Http\Requests\Inventory;
 
+use App\Models\Inventory\StockItem;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
 // Correctly import Illuminate\Validation\Validator
-use App\Models\Inventory\StockItem;
 
 // Import StockItem model
 
@@ -26,7 +27,7 @@ class StockAdjustmentRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -45,7 +46,7 @@ class StockAdjustmentRequest extends FormRequest
     /**
      * Configure the validator instance.
      *
-     * @param \Illuminate\Validation\Validator $validator // Changed the type hint here!
+     * @param Validator $validator // Changed the type hint here!
      * @return void
      */
     public function withValidator(Validator $validator): void

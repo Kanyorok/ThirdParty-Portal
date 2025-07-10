@@ -13,15 +13,15 @@
                     <div class="card-body">
 
                         {{-- Requisition Dropdown --}}
-{{--                        <div class="mb-3">--}}
-{{--                            <label>Requisition</label>--}}
-{{--                            <select id="requisitionDropdown" name="RequisitionID" class="form-control" required>--}}
-{{--                                <option value="">-- Select Requisition --</option>--}}
-{{--                                @foreach($requisitions as $req)--}}
-{{--                                    <option value="{{ $req->Id }}">{{ 'Requisition #' . $req->RequisitionNo }}</option>--}}
-{{--                                @endforeach--}}
-{{--                            </select>--}}
-{{--                        </div>--}}
+                        {{--                        <div class="mb-3">--}}
+                        {{--                            <label>Requisition</label>--}}
+                        {{--                            <select id="requisitionDropdown" name="RequisitionID" class="form-control" required>--}}
+                        {{--                                <option value="">-- Select Requisition --</option>--}}
+                        {{--                                @foreach($requisitions as $req)--}}
+                        {{--                                    <option value="{{ $req->Id }}">{{ 'Requisition #' . $req->RequisitionNo }}</option>--}}
+                        {{--                                @endforeach--}}
+                        {{--                            </select>--}}
+                        {{--                        </div>--}}
                         <div class="mb-3">
                             <label>Requisition</label>
                             <input class="form-control" value="{{ $requisition->RequisitionNo }}" readonly>

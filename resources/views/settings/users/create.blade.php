@@ -24,6 +24,15 @@
             <p id="Role_error" class="invalid-feedback d-none error col-12"
                role="alert"></p>
         </div>
+        <div class="mb-3">
+            <label>Branch</label>
+            <select name="BranchId" class="form-control select2">
+                <option disabled selected>Select Branch</option>
+                @foreach($branches as $branch)
+                    <option value="{{ $branch->Id }}">{{ $branch->Name }}</option>
+                @endforeach
+            </select>
+        </div>
         <hr>
         <div class="mt-4">
             <button type="button" class="btn btn-secondary float-start"
@@ -31,7 +40,7 @@
                 cancel
             </button>
             <button class="btn btn-primary float-end" id="createUserBtn" type="submit"><i
-                        class="fas fa-save"></i> add User
+                    class="fas fa-save"></i> add User
             </button>
         </div>
     </form>
@@ -49,5 +58,4 @@
             }
         });
     });
-
 </script>

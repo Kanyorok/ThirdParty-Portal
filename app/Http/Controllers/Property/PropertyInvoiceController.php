@@ -2,17 +2,16 @@
 
 namespace App\Http\Controllers\Property;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Enums\Core\PermissionEnum;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\BillingAndReceipting\PropertyInvoiceRequest;
-use App\Services\Property\BillingAndReceipting\PropertyInvoiceService;
 use App\Models\PropertyManagement\PropertyInvoice;
 use App\Models\PropertyManagement\PropertyNewLease;
-use App\Models\PropertyManagement\PropertyNewTenant;
+use App\Services\Property\BillingAndReceipting\PropertyInvoiceService;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class PropertyInvoiceController extends Controller
 {
@@ -27,7 +26,7 @@ class PropertyInvoiceController extends Controller
         $this->authorize(PermissionEnum::PropertyInvoiceCreate, PropertyInvoice::class);
         $newleases = PropertyNewLease::all();
         $newtenants = PropertyNewLease::all();
-        return view('property.billingandreceipting.invoicing.create', compact('newleases','newtenants'));
+        return view('property.billingandreceipting.invoicing.create', compact('newleases', 'newtenants'));
     }
 
     public function show($id)
@@ -37,7 +36,7 @@ class PropertyInvoiceController extends Controller
         return view('property.billingandreceipting.invoicing.show', compact('invoice'));
     }
 
-    public function store( PropertyInvoiceRequest $request)
+    public function store(PropertyInvoiceRequest $request)
     {
         //dd($request->all());
         $this->authorize(PermissionEnum::PropertyInvoiceCreate, PropertyInvoice::class);
@@ -45,19 +44,20 @@ class PropertyInvoiceController extends Controller
 
         $Lease = PropertyNewLease::findOrFail($validated['Lease']);
         //dd('validation');
-         PropertyInvoiceService::create(
-         $Lease,
-        $validated['BillingMonth'],
-        $validated['InvoiceDate'],
-        $validated['RentAmount'],
-        $validated['ServicesCharge'],
-        $validated['OtherCharges'],
-        $validated['InvoiceNotes'],
-        Auth::user()
-    );
+        PropertyInvoiceService::create(
+            $Lease,
+            $validated['BillingMonth'],
+            $validated['InvoiceDate'],
+            $validated['RentAmount'],
+            $validated['ServicesCharge'],
+            $validated['OtherCharges'],
+            $validated['InvoiceNotes'],
+            Auth::user()
+        );
 
         return redirect()->route('rentinvoice.index')->with('success', 'Invoice created successfully');
     }
+
     public function edit($id)
     {
         $this->authorize(PermissionEnum::PropertyInvoiceUpdate, PropertyInvoice::class);
@@ -73,7 +73,7 @@ class PropertyInvoiceController extends Controller
         $validated = $request->validated();
 
         $Lease = PropertyNewLease::findOrFail($validated['Lease']);
-        
+
         DB::beginTransaction();
 
         try {
@@ -98,7 +98,7 @@ class PropertyInvoiceController extends Controller
                 ->log('Updated Invoice  Details');
 
             return redirect()->route('rentinvoice.index')->with('success', 'Invoice updated successfully');
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             DB::rollBack();
             return back()->withErrors(['error' => $th->getMessage()])->withInput();
         }
@@ -113,7 +113,7 @@ class PropertyInvoiceController extends Controller
 
             return redirect()->route('rentinvoice.index')
                 ->with('success', 'Invoice Deleted Successfully!');
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             // Log the error for debugging
             Log::error('Error deleting invoice: ' . $th->getMessage());
             return redirect()->back()

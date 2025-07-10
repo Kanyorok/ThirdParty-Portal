@@ -2,18 +2,15 @@
 
 namespace App\Http\Controllers\Property;
 
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\Request;
 use App\Enums\Core\PermissionEnum;
 use App\Enums\Property\TenantClearanceEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\TenantAndLease\PropertyTenantClearanceRequest;
 use App\Models\Core\CodeDetail;
-use App\Models\PropertyManagement\PropertyTenantClearance;
 use App\Models\PropertyManagement\PropertyNewTenant;
+use App\Models\PropertyManagement\PropertyTenantClearance;
 use App\Services\Property\TenantAndLease\PropertyTenantClearanceService;
+use Carbon\Carbon;
 
 class PropertyTenantClearanceController extends Controller
 {
@@ -54,7 +51,7 @@ class PropertyTenantClearanceController extends Controller
         $depositRefunded = $validatedData['DepositRefunded'] ? CodeDetail::findOrFail($validatedData['DepositRefunded']) : null;
         $clearance = $this->service->create(
             $tenant,
-            $exitdate = \Carbon\Carbon::createFromFormat('d/m/Y', $validatedData['ExitDate']),
+            $exitdate = Carbon::createFromFormat('d/m/Y', $validatedData['ExitDate']),
             $validatedData['FinalInspection'],
             $validatedData['AllDuesPaid'],
             $validatedData['KeysReturned'],
@@ -84,7 +81,7 @@ class PropertyTenantClearanceController extends Controller
         $TenantId = PropertyTenantClearance::where('Id', $Id)->firstOrFail();
         $this->service->update(
             $TenantId,
-            $exitdate = \Carbon\Carbon::createFromFormat('d/m/Y', $validatedData['ExitDate']),
+            $exitdate = Carbon::createFromFormat('d/m/Y', $validatedData['ExitDate']),
             $validatedData['FinalInspection'],
             $validatedData['AllDuesPaid'],
             $validatedData['KeysReturned'],

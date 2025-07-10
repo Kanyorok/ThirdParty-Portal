@@ -2,11 +2,8 @@
 
 namespace App\Models\PropertyManagement;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Models\Core\CodeDetail;
-use App\Traits\Model\UserActorTrait;
-use App\Models\PropertyManagement\PropertyNewLease;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Model;
 
 class PropertyLeaseRenewal extends Model
 {
@@ -14,7 +11,7 @@ class PropertyLeaseRenewal extends Model
     protected $table = 't_RenewLease';
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    const DELETED_AT = 'DeletedOn';
     protected $primaryKey = 'Id';
 
     protected $fillable = [

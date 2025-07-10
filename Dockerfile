@@ -2,14 +2,15 @@ FROM php:8.3-apache-bullseye
 
 # Install system dependencies including imap
 RUN apt-get update && apt-get install -y \
-    unzip zip curl git gnupg2 \
-    apt-transport-https unixodbc unixodbc-dev \
-    libgssapi-krb5-2 lsb-release \
+    unzip poppler-utils ghostscript zip curl git gnupg2 \
+    apt-transport-https unixodbc unixodbc-dev imagemagick \
+    libgssapi-krb5-2 lsb-release libwebp-dev \
     libpng-dev libjpeg-dev libfreetype6-dev \
     libxml2-dev libonig-dev libzip-dev \
     libssl-dev software-properties-common \
     apt-transport-https unixodbc unixodbc-dev \
-    libc-client-dev libkrb5-dev libgssapi-krb5-2 lsb-release \
+    libc-client-dev libkrb5-dev libgssapi-krb5-2  \
+    tesseract-ocr tesseract-ocr-eng libtesseract-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \

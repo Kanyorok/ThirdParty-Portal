@@ -1,8 +1,10 @@
+@php use Carbon\Carbon; @endphp
 @extends('layouts.app')
 @section('title', 'General Ledger Entries')
 @section('content')
     <div class="container mt-3">
-        <div id="edit-alert" class="alert alert-info alert-dismissible fade show" role="alert" style="display: none; position: fixed; top: 20px; right: 20px; z-index: 1050;">
+        <div id="edit-alert" class="alert alert-info alert-dismissible fade show" role="alert"
+             style="display: none; position: fixed; top: 20px; right: 20px; z-index: 1050;">
             Editing in progress...
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
@@ -11,9 +13,18 @@
             <button type="button" class="btn btn-primary btn-sm" id="toggle-edit">
                 <i class="fas fa-edit me-1"></i> Enable Edit
             </button>
+            <div class="d-flex align-items-center">
+                <span class="text-muted fs-6 me-2" id="save-status">Saved</span>
+                <button type="button" class="btn btn-outline-secondary btn-sm me-2" id="undo-btn" disabled>
+                    <i class="fas fa-undo me-1"></i> Undo
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="redo-btn" disabled>
+                    <i class="fas fa-redo me-1"></i> Redo
+                </button>
+            </div>
         </div>
 
-        <form method="POST" action="{{ route('topdownallocation.update', $budgetId) }}" id="budget-form">
+        <form method="POST" action="{{ route('topdownallocation.update',$budgetId) }}" id="budget-form">
             @csrf
             @method('PATCH')
             <input type="hidden" name="branchId" value="{{ $branchId }}">
@@ -26,7 +37,10 @@
                     <select class="form-select form-select-sm" name="BudgetID" required disabled>
                         <option selected disabled>-- Select Budget --</option>
                         @foreach ($budgets as $item)
-                            <option value="{{ $item->Id }}" {{ $budgetId == $item->Id ? 'selected' : '' }}>{{ $item->Name }} - {{ \Carbon\Carbon::parse($item->From)->format('Y-m-d') }} to {{ \Carbon\Carbon::parse($item->To)->format('Y-m-d') }}</option>
+                            <option
+                                value="{{ $item->Id }}" {{ $budgetId == $item->Id ? 'selected' : '' }}>{{ $item->Name }}
+                                - {{ Carbon::parse($item->From)->format('Y-m-d') }}
+                                to {{ Carbon::parse($item->To)->format('Y-m-d') }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -35,7 +49,8 @@
                     <select class="form-select form-select-sm" name="BranchID" required disabled>
                         <option selected disabled>-- Select Branch --</option>
                         @foreach ($branches as $item)
-                            <option value="{{ $item->Id }}" {{ $branchId == $item->Id ? 'selected' : '' }}>{{ $item->Name }}</option>
+                            <option
+                                value="{{ $item->Id }}" {{ $branchId == $item->Id ? 'selected' : '' }}>{{ $item->Name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -52,8 +67,12 @@
                     <table class="table table-bordered table-striped table-sm" id="budget-table">
                         <thead class="table-light text-center">
                         <tr style="position: sticky; top: 0; background: #f8f9fa; z-index: 10; box-shadow: 0 2px 2px -1px rgba(0,0,0,0.1);">
-                            <th style="position: sticky; left: 0; background: #f8f9fa; z-index: 11; min-width: 100px; max-width: 100px;">Account ID</th>
-                            <th style="position: sticky; left: 100px; background: #f8f9fa; z-index: 11; min-width: 200px; max-width: 200px; text-wrap: wrap;">Budget Line</th>
+                            <th style="position: sticky; left: 0; background: #f8f9fa; z-index: 11; min-width: 100px; max-width: 100px;">
+                                Account ID
+                            </th>
+                            <th style="position: sticky; left: 100px; background: #f8f9fa; z-index: 11; min-width: 200px; max-width: 200px; text-wrap: wrap;">
+                                Budget Line
+                            </th>
                             @for ($m = 1; $m <= 12; $m++)
                                 <th style="min-width: 100px;">Month {{ $m }}</th>
                             @endfor
@@ -73,11 +92,13 @@
                                     <td colspan="17" class="fw-bold">{{ $typeName }}</td>
                                 </tr>
                                 @foreach ($groupedAccounts[$typeId] as $item)
-                                    <tr data-account-id="{{ $item->AccountID }}" data-account-type="{{ $item->GLAccountTypeID }}">
+                                    <tr data-account-id="{{ $item->AccountID }}"
+                                        data-account-type="{{ $item->GLAccountTypeID }}">
                                         <td style="position: sticky; left: 0; background: #fff; z-index: 9; min-width: 100px; max-width: 100px;">
                                             {{ $item->AccountID }}
                                         </td>
-                                        <td style="position: sticky; left: 100px; background: #fff; min-width: 200px; max-width: 200px; text-wrap: wrap; overflow: hidden; text-overflow: ellipsis;" title="{{ $item->Description }}">
+                                        <td style="position: sticky; left: 100px; background: #fff; min-width: 200px; max-width: 200px; text-wrap: wrap; overflow: hidden; text-overflow: ellipsis;"
+                                            title="{{ $item->Description }}">
                                             {{ $item->Description }} <b>({{ $item->GLAccountTypeID }})</b>
                                         </td>
                                         @for ($m = 1; $m <= 12; $m++)
@@ -94,7 +115,7 @@
                                                        value="{{ $value > 0 ? number_format($value, 0) : '' }}"
                                                        inputmode="numeric"
                                                        disabled
-                                                       style="width: 100px; padding: 2px 5px;" />
+                                                       style="width: 100px; padding: 2px 5px;"/>
                                             </td>
                                         @endfor
                                         <td>
@@ -102,20 +123,19 @@
                                                    name="budget_2025[{{ $item->AccountID }}]"
                                                    style="width: 120px; padding: 2px 5px;"
                                                    value="0"
-                                                   readonly />
+                                                   readonly/>
                                         </td>
                                         <td>
-                                            <input class="form-control form-control-sm text-end actuals-input"
-                                                   name="actuals_dec_2024[{{ $item->AccountID }}]"
+                                            <input class="form-control form-control-sm text-end"
                                                    style="width: 120px; padding: 2px 5px;"
-                                                   value="{{ $item->Actuals ?? 0 }}"
-                                                   readonly />
+                                                   value="{{ $item->ActualsDec2024 ?? 4000000 }}"
+                                                   readonly/>
                                         </td>
                                         <td>
                                             <input class="form-control form-control-sm text-end percent-change"
                                                    style="width: 100px; padding: 2px 5px;"
-                                                   value="0.00%"
-                                                   readonly />
+                                                   value="{{ $item->PercentChange ?? '0.00%' }}"
+                                                   readonly/>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -125,7 +145,8 @@
                     </table>
                 </div>
                 <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-3">
-                    <button type="submit" class="btn btn-success btn-sm" id="submit-btn" onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Saving...'; this.form.submit(); }">
+                    <button type="submit" class="btn btn-success btn-sm" id="submit-btn"
+                            onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Saving...'; this.form.submit(); }">
                         <i class="fas fa-save me-1"></i> Save Budget
                     </button>
                     <div class="d-flex flex-wrap gap-3 align-items-center">
@@ -148,7 +169,8 @@
                             <span class="fw-bold">Variance:</span> <span id="variance" class="fw-bold">0</span>
                         </div>
                         <div class="border rounded p-2 bg-warning">
-                            <span class="fw-bold">% Variance:</span> <span id="percent-variance" class="fw-bold">0.00%</span>
+                            <span class="fw-bold">% Variance:</span> <span id="percent-variance"
+                                                                           class="fw-bold">0.00%</span>
                         </div>
                     </div>
                 </div>
@@ -164,6 +186,9 @@
         document.addEventListener('DOMContentLoaded', () => {
             const table = document.getElementById('budget-table');
             const toggle = document.getElementById('toggle-edit');
+            const undo = document.getElementById('undo-btn');
+            const redo = document.getElementById('redo-btn');
+            const saveStatus = document.getElementById('save-status');
             const submitBtn = document.getElementById('submit-btn');
             const editAlert = document.getElementById('edit-alert');
             let edit = false;
@@ -172,7 +197,7 @@
             let hasEdited = false;
 
             const formatNumber = (num) => {
-                return num.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                return num.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
             };
 
             const parseNumber = (str) => {
@@ -185,6 +210,8 @@
                 history.push(snapshot);
                 if (history.length > 50) history.shift();
                 redoStack = [];
+                undo.disabled = false;
+                redo.disabled = true;
             }
 
             function restore(snapshot) {
@@ -202,28 +229,16 @@
                     const v = parseNumber(el.dataset.val);
                     sum += v;
                 });
-                const totalInput = row.querySelector('.total-input');
-                totalInput.value = formatNumber(sum);
-
-                // Calculate % Change
-                const actuals = parseNumber(row.querySelector('.actuals-input').value);
-                const percentChangeInput = row.querySelector('.percent-change');
-                const percentChange = actuals !== 0 ? ((sum - actuals) / actuals * 100).toFixed(2) : 0;
-                percentChangeInput.value = `${percentChange}%`;
-                percentChangeInput.style.backgroundColor = percentChange > 100 ? '#fff3cd' : '';
+                row.querySelector('.total-input').value = formatNumber(sum);
             }
 
             function recalcAll() {
-                const categoryTotals = { 'A': 0, 'L': 0, 'E': 0, 'I': 0 };
-                const actualsTotals = { 'A': 0, 'L': 0, 'E': 0, 'I': 0 };
-
+                const categoryTotals = {'A': 0, 'L': 0, 'E': 0, 'I': 0};
                 table.querySelectorAll('tbody tr[data-account-type]').forEach(row => {
                     recalcRow(row);
                     const total = parseNumber(row.querySelector('.total-input').value);
-                    const actuals = parseNumber(row.querySelector('.actuals-input').value);
                     const accountType = row.dataset.accountType;
                     categoryTotals[accountType] += total;
-                    actualsTotals[accountType] += actuals;
                 });
 
                 document.getElementById('category-a').textContent = formatNumber(categoryTotals['A']);
@@ -232,11 +247,11 @@
                 document.getElementById('category-i').textContent = formatNumber(categoryTotals['I']);
 
                 const netPosition = categoryTotals['A'] + categoryTotals['E'] - categoryTotals['L'] - categoryTotals['I'];
-                const totalActuals = actualsTotals['A'] + actualsTotals['E'] - actualsTotals['L'] - actualsTotals['I'];
                 document.getElementById('net-position').textContent = formatNumber(netPosition);
 
-                const variance = totalActuals - netPosition;
-                const percentVariance = totalActuals !== 0 ? ((variance / totalActuals) * 100).toFixed(2) : 0;
+                const actuals = 4000000;
+                const variance = actuals - netPosition;
+                const percentVariance = actuals !== 0 ? ((variance / actuals) * 100).toFixed(2) : 0;
                 document.getElementById('variance').textContent = formatNumber(variance);
                 document.getElementById('percent-variance').textContent = `${percentVariance}%`;
             }
@@ -260,7 +275,9 @@
                         editAlert.style.display = 'block';
                         setTimeout(() => {
                             editAlert.classList.remove('show');
-                            setTimeout(() => { editAlert.style.display = 'none'; }, 150);
+                            setTimeout(() => {
+                                editAlert.style.display = 'none';
+                            }, 150);
                         }, 8000);
                         hasEdited = true;
                     }
@@ -331,7 +348,16 @@
 
             submitBtn.addEventListener('click', (e) => {
                 e.preventDefault();
+                saveStatus.textContent = 'Saving...';
+                saveStatus.classList.add('saving');
                 document.getElementById('budget-form').submit();
+            });
+
+            table.querySelectorAll('.percent-change').forEach(input => {
+                const value = parseFloat(input.value.replace('%', '')) || 0;
+                if (value > 100) {
+                    input.style.backgroundColor = '#fff3cd';
+                }
             });
 
             recalcAll();
@@ -343,36 +369,53 @@
             border-collapse: collapse;
             font-size: 0.9rem;
         }
+
         #monthly_form th, #monthly_form td {
             border: 1px solid #dee2e6;
             padding: 4px 6px;
             vertical-align: middle;
         }
+
         #monthly_form th {
             font-weight: 600;
         }
+
         #monthly_form tr:hover:not(.table-secondary) {
             background-color: #f1f3f5;
         }
+
         #monthly_form .form-control {
             box-sizing: border-box;
             height: 28px;
             font-size: 0.85rem;
         }
+
         #monthly_form .table-responsive {
             border-radius: 4px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
+
         .active-cell {
             border: 2px solid #007bff !important;
-            box-shadow: 0 0 5px rgba(0,123,255,0.3);
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
         }
+
+        #save-status.saving {
+            color: #007bff;
+        }
+
+        #save-status.saved {
+            color: #28a745;
+        }
+
         #edit-alert {
             max-width: 300px;
         }
+
         .border {
             border-color: #dee2e6 !important;
         }
+
         .bg-light, .bg-success, .bg-info, .bg-warning {
             padding: 0.5rem 0.75rem;
             border-radius: 0.25rem;
@@ -380,4 +423,7 @@
         }
     </style>
 
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 @endsection

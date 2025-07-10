@@ -2,12 +2,12 @@
 
 namespace App\Models\Procurement;
 
-use App\Models\Inventory\UnitOfMeasure;
-use Illuminate\Database\Eloquent\Model;
 use App\Models\Inventory\ItemCategories;
+use App\Models\Inventory\UnitOfMeasure;
 use App\Models\ThirdParies\Supplier;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Model\UserActorTrait;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class RFQLine extends Model
 {
@@ -18,7 +18,7 @@ class RFQLine extends Model
 
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
         'RFQLineNo', 'RequisitionId', 'RequisitionLineId', 'RFQId', 'ItemId', 'UOM', 'Quantity', 'ItemName', 'ItemCategoryId', 'CreatedOn', 'ModifiedOn', 'CreatedBy', 'ModifiedBy'

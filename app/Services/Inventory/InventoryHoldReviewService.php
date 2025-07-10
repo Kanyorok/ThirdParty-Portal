@@ -2,12 +2,14 @@
 
 namespace App\Services\Inventory;
 
+use App\Enums\Inventory\Transfers;
 use App\Models\Inventory\InventoryHold;
 use App\Models\Inventory\InventoryHoldReview;
+use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Enums\Inventory\Transfers;
+use InvalidArgumentException;
 
 class InventoryHoldReviewService
 {
@@ -15,7 +17,7 @@ class InventoryHoldReviewService
     {
         $id = $data['Id'] ?? $data['InventoryHoldID'] ?? null;
         if (!$id) {
-            throw new \InvalidArgumentException('InventoryHold Id is required.');
+            throw new InvalidArgumentException('InventoryHold Id is required.');
         }
 
         $hold = InventoryHold::findOrFail($id);
@@ -37,7 +39,7 @@ class InventoryHoldReviewService
 
             if (!$hold->Reason) {
                 Log::error("Disposal blocked: Missing reason for InventoryHold ID {$id}");
-                throw new \Exception("Cannot dispose item without a defect reason.");
+                throw new Exception("Cannot dispose item without a defect reason.");
             }
 
             $review = InventoryHoldReview::create([
@@ -96,7 +98,7 @@ class InventoryHoldReviewService
         $hold->update([
             'FromBranch' => $to,
             'BranchID' => $from,
-            'Status' => \App\Enums\Inventory\Transfers::InTransit->value,
+            'Status' => Transfers::InTransit->value,
             'ModifiedBy' => Auth::id(),
             'ModifiedOn' => now(),
         ]);

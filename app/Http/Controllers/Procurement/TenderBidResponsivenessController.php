@@ -3,11 +3,10 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Procurement\TenderSupplier;
-use App\Models\Procurement\Tender;
-use App\Models\ThirdParies\Supplier;
 use App\Models\Procurement\BidResponsiveness;
+use App\Models\Procurement\Tender;
+use App\Models\Procurement\TenderSupplier;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class TenderBidResponsivenessController extends Controller
@@ -39,7 +38,7 @@ class TenderBidResponsivenessController extends Controller
         $bidResponses = $query->get();
 
         // Distinct tender list for dropdown
-        $tenders = Tender::whereIn('Id',TenderSupplier::select('TenderID')
+        $tenders = Tender::whereIn('Id', TenderSupplier::select('TenderID')
         )->pluck('TenderNo');
 
 

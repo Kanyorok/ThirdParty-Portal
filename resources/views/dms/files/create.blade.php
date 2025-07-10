@@ -1,6 +1,6 @@
 @php use App\Enums\Core\ExtensionsEnum; @endphp
 @php use App\Enums\Core\VisibilityEnum; @endphp
-@extends('layouts.app')
+@extends('dms.layout')
 
 @section('title','Bulk Upload')
 
@@ -24,7 +24,8 @@
                             <select name="repo" id="repo" class="form-control">
                                 @foreach($repositories as $repository)
                                     <option
-                                        {{ ($repository->Id === $root->Id)?'selected':'' }} value="{{ $repository->RepositoryId }}">{{ $repository->Name }}</option>
+                                        {{ ($repository->Id === $root->Id)?'selected':'' }} value="{{ $repository->RepositoryId }}"
+                                        data-route="{{ route('files.store', [$repository->RepositoryId]) }}">{{ $repository->Name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -49,7 +50,7 @@
 @endsection
 @section('scripts')
     <script src="{{ asset('assets/libs/dropzone/dropzone.min.js') }}"></script>
-    <script>
+    <script> let dropzoneInstance;
         Dropzone.options.uploadForm = {
             maxFilesize: 9,//Mb//todo filesize
             acceptedFiles: "{{ implode(", ",ExtensionsEnum::getAllMimeTypes()) }}",
@@ -58,14 +59,14 @@
                 <i class="fas fa-cloud-upload-alt" style="font-size: 48px; color: #ccc; margin-bottom: 10px;"></i>
                 <h3>Drop files here or click to upload.</h3>
                 <span class="note needsclick">(files uploaded will be in repo selected above and take the repo permissions.)</span>
-            </div>
-        `,
-            success: function (file, response) {
+            </div>`,
+            init: function () {
+                dropzoneInstance = this;
+            }, success: function (file, response) {
                 file.previewElement.remove();
                 nSuccess(response.message);
                 appendFiles(response.data, true);
-            },
-            error: function (file, message) {
+            }, error: function (file, message) {
                 msg = (typeof message === 'string') ? message : message.message
 
                 nWarning(msg + ' : ' + file.name);
@@ -73,6 +74,19 @@
             },
         };
         $(function () {
+            $('#repo').on('change', function () {
+
+                //const selectedRepo = $(this).val();
+                const newAction = $(this).find(':selected').data('route');
+
+                // Update the form action
+                $('#upload-form').attr('action', newAction);
+
+                // Update the dropzone options if needed
+                if (dropzoneInstance && dropzoneInstance.options) {
+                    dropzoneInstance.options.url = newAction;
+                }
+            });
 
         });
 

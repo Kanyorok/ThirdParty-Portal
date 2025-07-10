@@ -1,3 +1,4 @@
+@php use Carbon\Carbon; @endphp
 @extends('layouts.app')
 @section('title', 'Prequalification Periods')
 @section('content')
@@ -26,8 +27,8 @@
                     <tr>
                         <td>{{ $index + 1 }}</td>
                         <td>{{ $period->Title }}</td>
-                        <td>{{ \Carbon\Carbon::parse($period->StartDate)->format('d/m/Y') }}</td>
-                        <td>{{ \Carbon\Carbon::parse($period->EndDate)->format('d/m/Y') }}</td>
+                        <td>{{ Carbon::parse($period->StartDate)->format('d/m/Y') }}</td>
+                        <td>{{ Carbon::parse($period->EndDate)->format('d/m/Y') }}</td>
                         <td>
                             <span class="badge bg-{{ $period->Status->badgeColor() }}">
                                 {{ $period->Status->label() }}

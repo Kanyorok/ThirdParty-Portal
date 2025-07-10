@@ -1,3 +1,4 @@
+@php use App\Models\Core\CodeDetail; @endphp
 @extends('layouts.app')
 
 @section('title', 'Inventory Review')
@@ -69,7 +70,7 @@
                 <select name="Condition" id="Condition" class="form-control" required>
                     <option value="">-- Select Condition --</option>
                     @php
-                        $conditionOptions = \App\Models\Core\CodeDetail::where('CodeID', 'DefectsCondition')->get();
+                        $conditionOptions = CodeDetail::where('CodeID', 'DefectsCondition')->get();
                     @endphp
                     @foreach($conditionOptions as $option)
                         <option value="{{ $option->ID }}" {{ old('Condition') == $option->ID ? 'selected' : '' }}>

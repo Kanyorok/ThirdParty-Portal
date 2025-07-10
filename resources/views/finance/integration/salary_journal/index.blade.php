@@ -2,13 +2,13 @@
 @section('title', 'Salary Journal Template Setup')
 
 @section('content')
-<div class="container mt-4">
-    <h4 class="mb-3">📄 Salary Journal Template Setup</h4>
-    
-    <a href="{{ route('salary-journal-templates.create') }}" class="btn btn-primary mb-3">➕ Add Template</a>
+    <div class="container mt-4">
+        <h4 class="mb-3">📄 Salary Journal Template Setup</h4>
 
-    <table class="table table-bordered">
-        <thead>
+        <a href="{{ route('salary-journal-templates.create') }}" class="btn btn-primary mb-3">➕ Add Template</a>
+
+        <table class="table table-bordered">
+            <thead>
             <tr>
                 <th>Template</th>
                 <th>Component</th>
@@ -19,8 +19,8 @@
                 <th>Status</th>
                 <th>Actions</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             @foreach($templates as $template)
                 <tr>
                     <td>{{ $template->TemplateName }}</td>
@@ -39,7 +39,7 @@
                     </td>
                 </tr>
             @endforeach
-        </tbody>
-    </table>
-</div>
+            </tbody>
+        </table>
+    </div>
 @endsection

@@ -2,14 +2,12 @@
 
 namespace App\Models\Inventory;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Auth\User;
 use App\Models\Core\Branch;
-use App\Models\Inventory\Store;
-use App\Models\Inventory\ItemMasterList;
 use App\Models\Core\CodeDetail;
 use App\Traits\Model\UserActorTrait;
-use App\Models\Auth\User;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class InventoryHold extends Model
 {

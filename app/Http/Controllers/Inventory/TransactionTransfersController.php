@@ -3,19 +3,18 @@
 namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
-use App\Models\Inventory\ItemMasterList;
-use App\Models\Inventory\TransactionTransfer;
-use App\Models\Inventory\InterBranchRequisition;
-use App\Models\Procurement\Requisitions;
-use App\Models\Procurement\RequisitionLine;
 use App\Http\Requests\Inventory\TransactionTransferRequest;
+use App\Models\Auth\User;
+use App\Models\Core\Branch;
+use App\Models\Inventory\InterBranchRequisition;
+use App\Models\Inventory\ItemMasterList;
+use App\Models\Inventory\StockItem;
+use App\Models\Inventory\TransactionTransfer;
+use App\Models\Procurement\Requisitions;
 use App\Services\Inventory\TransactionTransferService;
 use Illuminate\Http\Request;
-use App\Models\Core\Branch;
-use App\Models\Auth\User;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 class TransactionTransfersController extends Controller
 {
@@ -56,7 +55,7 @@ class TransactionTransfersController extends Controller
                     ? app(TransactionTransferService::class)->getHQBranchId()
                     : $validatedData['FromBranch'];
 
-                $stock = \App\Models\Inventory\StockItem::where('ItemID', $itemId)
+                $stock = StockItem::where('ItemID', $itemId)
                     ->where('Branch', $branch)
                     ->first();
 
@@ -76,7 +75,7 @@ class TransactionTransfersController extends Controller
                 'message' => 'Transfer created successfully.',
                 'redirect' => route('transactionstransfers.index'),
             ]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             return response()->json([
                 'status' => 'error',
                 'message' => $e->getMessage(),

@@ -5,11 +5,11 @@ namespace App\Services\Procurement\ProcurementPlan;
 use App\Enums\Procurement\DepartmentNeedsEnum;
 use App\Enums\WorkflowStatus;
 use App\Models\Auth\User;
-use App\Models\Procurement\DepartmentNeeds;
+use App\Models\Procurement\DepartmentNeed;
 
 class DepartmentNeedsApprovalService
 {
-    public function __construct(public DepartmentNeeds $departmentNeeds)
+    public function __construct(public DepartmentNeed $departmentNeeds)
     {
 
     }

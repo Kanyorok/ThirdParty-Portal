@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Stock Adjustment')
+@section('title', 'Create Stock Adjustment')
 
 @section('content')
     @if ($errors->any())
