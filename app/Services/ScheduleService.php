@@ -239,7 +239,7 @@ class ScheduleService
     public static function boardMeeting(Committee $committee, string $title, string|MeetingRoom $location, string $agenda, Carbon $start, Carbon $end, User $actor, array $UserIds = []): ScheduleService
     {
         $dated = now();
-        $service = self::_meeting(type: Board::getPrimaryKey(), title: $title, location: $location, start: $start, end: $end, actor: $actor, notes: $agenda, source: $committee->Id, sourceID: Committee::getPrimaryKey())
+        $service = self::_meeting(type: Board::getPrimaryKey(), title: $title, location: $location, start: $start, end: $end, actor: $actor, notes: $agenda, sourceID: $committee->Id, source: Committee::getPrimaryKey())
             ->attachBoard($committee->members()->select('t_BoardMembers.Id')->get('Id')->pluck('Id')->toArray(), $dated, $actor);
 
         if (empty($UserIds)) {
@@ -252,6 +252,17 @@ class ScheduleService
 
         return $service;
     }
+  public function boards()
+{
+    return Board::query()
+        ->whereIn('BoardMemberID', $this->schedule->users()->pluck('t_ScheduleUsers.UserID'));
+}
+
+
+public function boardsCount(): int
+{
+    return $this->schedule->users()->count();
+}
 
     public static function userMeeting(array $UserIds, string $title, string|MeetingRoom $location, string $agenda, Carbon $start, Carbon $end, User $actor): ScheduleService
     {

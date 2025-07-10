@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\Procurement\DepartmentNeeds;
+use App\Models\Procurement\DepartmentNeed;
 use App\Models\Core\Branch;
 use App\Models\HRM\Department;
 use App\Models\Inventory\ItemMasterList;
@@ -31,7 +31,7 @@ class DepartmentNeedsSeeder extends Seeder
         }
 
         // Get the current max NeedID to avoid duplicates
-        $maxNeedId = DepartmentNeeds::max('NeedID') ?? 0;
+        $maxNeedId = DepartmentNeed::max('NeedID') ?? 0;
 
         // Example data to seed
         $needs = [
@@ -126,7 +126,7 @@ class DepartmentNeedsSeeder extends Seeder
         foreach ($needs as $need) {
             $maxNeedId++;
             $need['NeedID'] = $maxNeedId; // Assign unique NeedID
-            DepartmentNeeds::create($need);
+            DepartmentNeed::create($need);
         }
     }
 }

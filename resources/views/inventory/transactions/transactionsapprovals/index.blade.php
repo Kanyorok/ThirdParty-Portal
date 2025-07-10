@@ -12,7 +12,7 @@
 
 @section('content')
     <div class="container">
-        <h4 class="mb-4">Approve Stock Transactions</h4>
+        <h4 class="mb-4">Select Transactions to Approve</h4>
 
         @if(session('success'))
             <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -73,6 +73,7 @@
                     <th>STATUS</th>
                     <th>APPROVE</th>
                     <th>REJECT</th>
+                    <th>ACTIONS</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -134,7 +135,13 @@
                                 <button type="submit" class="btn btn-danger btn-sm">Reject</button>
                             </form>
                         </td>
+                         <td>
+                            <a href="{{ route('transactionsapproval.show', ['Id' => $record->Id, 'transaction_type' => $transactionType]) }}" class="btn btn-sm btn-primary">
+                                View
+                            </a>
+                    </td>
                     </tr>
+                   
                 @empty
                     <tr>
                         <td colspan="9" class="text-center">No pending {{ strtolower($transactionType) }}s found.</td>

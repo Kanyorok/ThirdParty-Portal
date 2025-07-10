@@ -146,8 +146,8 @@
 <script src="{{ asset('assets/libs/rangePlugin.js') }}"></script>
 <script src='{{ asset('assets/libs/moment/moment-with-locales.js') }}'></script>
 <script>
-    let schedule_call_start = null, schedule_call_end = null, schedule_meeting_start = null,
-        schedule_meeting_end = null;
+    let schedule_call_start = null, schedule_call_end = null, schedule_meeting_start = null, schedule_meeting_end = null;
+
     $(function () {
         /* schedule_call_start = flatpickr("#call_start", {
              enableTime: true,
@@ -185,21 +185,47 @@
              dateFormat: "Y-m-d H:i",
              allowInput: true,
          });*/
-        flatpickr("#call_start", {
-            minDate: moment().add(10, 'm').format('YYYY-MM-DD hh:mm'),
-            mode: 'range',
+
+        schedule_call_start = flatpickr("#call_start", {
             enableTime: true,
             dateFormat: "Y-m-d H:i",
+            minDate: moment().add(1, 'm').toDate(),
             allowInput: true,
-            "plugins": [new rangePlugin({input: "#call_end"})]
+            minuteIncrement: 1,
+            onChange: function (selectedDates) {
+                if (selectedDates.length) {
+                    schedule_call_end.set('minDate', moment(selectedDates[0]).add(1, 'minute').toDate());
+                }
+            }
         });
-        flatpickr("#meeting_start", {
-            minDate: moment().add(10, 'm').format('YYYY-MM-DD hh:mm'),
-            mode: 'range',
-            dateFormat: "Y-m-d H:i",
-            allowInput: true,
+
+        schedule_call_end = flatpickr("#call_end", {
             enableTime: true,
-            "plugins": [new rangePlugin({input: "#meeting_end"})]
+            dateFormat: "Y-m-d H:i",
+            minDate: moment().add(2, 'm').toDate(),
+            allowInput: true,
+            minuteIncrement: 1
+        });
+
+        schedule_meeting_start = flatpickr("#meeting_start", {
+            enableTime: true,
+            dateFormat: "Y-m-d H:i",
+            minDate: moment().add(1, 'm').toDate(),
+            allowInput: true,
+            minuteIncrement: 1,
+            onChange: function (selectedDates) {
+                if (selectedDates.length) {
+                    schedule_meeting_end.set('minDate', moment(selectedDates[0]).add(1, 'minute').toDate());
+                }
+            }
+        });
+
+        schedule_meeting_end = flatpickr("#meeting_end", {
+            enableTime: true,
+            dateFormat: "Y-m-d H:i",
+            minDate: moment().add(2, 'm').toDate(),
+            allowInput: true,
+            minuteIncrement: 1
         });
 
         $('#meeting_users').select2({
@@ -223,6 +249,7 @@
                 cache: true
             }
         });
+
         $('#call_user').select2({
             placeholder: "Select user to assign", minimumInputLength: 2,
             dropdownParent: $('#scheduleActionsModal'),
@@ -250,20 +277,20 @@
             placeholder: "Select Location or Type it In",
             dropdownParent: $("#scheduleActionsModal"),
         });
-        /*
-                $("#call_start").on("change", function () {
-                    validateDates('call_start', 'call_end', true, schedule_call_end);
-                });
-                $("#call_end").on("change", function () {
-                    validateDates('call_start', 'call_end', false, schedule_call_end);
-                });
-                $("#meeting_start").on("change", function () {
-                    validateDates('meeting_start', 'meeting_end', true, schedule_meeting_end);
-                });
-                $("#meeting_end").on("change", function () {
-                    validateDates('meeting_start', 'meeting_end', false, schedule_meeting_end);
-                });*/
 
+        /*
+        $("#call_start").on("change", function () {
+            validateDates('call_start', 'call_end', true, schedule_call_end);
+        });
+        $("#call_end").on("change", function () {
+            validateDates('call_start', 'call_end', false, schedule_call_end);
+        });
+        $("#meeting_start").on("change", function () {
+            validateDates('meeting_start', 'meeting_end', true, schedule_meeting_end);
+        });
+        $("#meeting_end").on("change", function () {
+            validateDates('meeting_start', 'meeting_end', false, schedule_meeting_end);
+        });*/
 
         $(document).on('click', '.add-party-scheduled-call-btn', function () {
             $(".modal-item").addClass('d-none');
@@ -274,6 +301,7 @@
              schedule_call_end.setDate(new Date(moment().add(20, 'm').format('YYYY-MM-DD HH:mm')));*/
             $("#scheduleActionsModal").modal('show');
         });
+
         $('form#createCallForm').submit(async function (e) {
             e.preventDefault();
             if (validateDates('call_start', 'call_end')) {
@@ -302,6 +330,7 @@
             schedule_meeting_end.setDate(new Date(moment().add(20, 'm').format('YYYY-MM-DD HH:mm')));*/
             $("#scheduleActionsModal").modal('show');
         });
+
         $('form#createAppointmentForm').submit(async function (e) {
             e.preventDefault();
             if (validateDates('meeting_start', 'meeting_end')) {
@@ -320,7 +349,6 @@
                 }
             }
         });
-
     });
 
     function validateDates(startID, endID, isStart, end) {
@@ -333,9 +361,11 @@
             setInvalid(startID, 'Invalid date here');
             return false;
         }
+
         let end_time = moment($("#" + endID).val(), "YYYY-MM-DD HH:mm");
+
         if (isStart) {
-            end_time = start_time.clone().add(15, 'm');
+            end_time = start_time.clone().add(1, 'm');
             end.setDate(new Date(end_time.format('YYYY-MM-DD HH:mm')));
         }
 
@@ -343,6 +373,7 @@
             setInvalid(endID, 'Invalid date here');
             return false;
         }
+
         if (moment().subtract(2, 'm').isAfter(start_time)) {
             setInvalid(startID, 'cannot schedule date after now');
             return false;
@@ -357,6 +388,7 @@
             setInvalid(endID, 'Duration should be at least a minute.');
             return false;
         }
+
         return true;
     }
 </script>

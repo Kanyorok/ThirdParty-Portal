@@ -66,4 +66,9 @@ class Board extends Model
         return $this->belongsToMany(Committee::class, 't_BoardCommittee', 'BoardId', 'CommitteeId', 'Id', 'Id')
             ->withTimestamps('CreatedOn', 'ModifiedOn')->withPivot(['CreatedBy', 'ModifiedBy'])->using(BoardCommittee::class);
     }
+    public static function getScheduleType(): string
+{
+    return 'BoardID';
+}
+
 }
