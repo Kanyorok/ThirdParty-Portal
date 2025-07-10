@@ -2,8 +2,9 @@
 
 namespace App\Models\PropertyManagement;
 
-use Illuminate\Database\Eloquent\Model;
+
 use App\Traits\Model\UserActorTrait;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PropertyMaintenanceRequest extends Model

@@ -15,7 +15,6 @@ use App\Http\Controllers\Property\PropertyMaintenanceWorkCompletionController;
 use App\Http\Controllers\Property\PropertyNewLeaseController;
 use App\Http\Controllers\Property\PropertyNewTenantController;
 use App\Http\Controllers\Property\PropertyPaymentFrequencyController;
-use App\Http\Controllers\Property\PropertyReceiptController;
 use App\Http\Controllers\Property\PropertyRegistryController;
 use App\Http\Controllers\Property\PropertyReportsController;
 use App\Http\Controllers\Property\PropertyReportsVisualController;
@@ -165,20 +164,20 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::get('rentinvoice', [PropertyInvoiceController::class,'index'])->name('rentinvoice.index');
     Route::get('rentinvoice/create', [PropertyInvoiceController::class,'create'])->name('rentinvoice.create');
     Route::post('rentinvoice', [PropertyInvoiceController::class,'store'])->name('rentinvoice.store');
-    Route::get('rentinvoice/show/{Id}', [PropertyInvoiceController::class,'show'])->name('rentinvoice.show');
-    Route::get('rentinvoice/edit/{Id}',[PropertyInvoiceController::class,'edit'])->name('rentinvoice.edit');
-    Route::put('rentinvoice/edit/{Id}',[PropertyInvoiceController::class,'update'])->name('rentinvoice.update');
-    Route::delete('rentinvoice/delete/{Id}', [PropertyInvoiceController::class,'destroy'])->name('rentinvoice.destroy');
+    Route::get('rentinvoice/show/{id}', [PropertyInvoiceController::class,'show'])->name('rentinvoice.show');
+    Route::get('rentinvoice/edit/{id}',[PropertyInvoiceController::class,'edit'])->name('rentinvoice.edit');
+    Route::put('rentinvoice/edit/{id}',[PropertyInvoiceController::class,'update'])->name('rentinvoice.update');
+    Route::delete('rentinvoice/delete/{id}', [PropertyInvoiceController::class,'destroy'])->name('rentinvoice.destroy');
 
-    //Route::resource('rentreceipt', PropertyReceiptController::class);
-    Route::get('rentreceipt', [PropertyReceiptController::class,'index'])->name('rentreceipt.index');
-    Route::get('rentreceipt/create', [PropertyReceiptController::class,'create'])->name('rentreceipt.create');
-    Route::post('rentreceipt', [PropertyReceiptController::class,'store'])->name('rentreceipt.store');
-    Route::get('rentreceipt/show/{Id}', [PropertyReceiptController::class,'show'])->name('rentreceipt.show');
-    Route::get('rentreceipt/edit/{Id}',[PropertyReceiptController::class,'edit'])->name('rentreceipt.edit');
-    Route::put('rentreceipt/edit/{Id}',[PropertyReceiptController::class,'update'])->name('rentreceipt.update');
-    Route::delete('rentreceipt/delete/{Id}', [PropertyReceiptController::class,'destroy'])->name('rentreceipt.destroy');
-    Route::get('rentreceipt/pdf/{Id}', [PropertyReceiptController::class,'print'])->name('rentreceipt.pdf');
+    //Route::resource('rentreceipt', PropertyMaintenanceRequestController::class);
+    Route::get('rentreceipt', [PropertyMaintenanceRequestController::class,'index'])->name('rentreceipt.index');
+    Route::get('rentreceipt/create', [PropertyMaintenanceRequestController::class,'create'])->name('rentreceipt.create');
+    Route::post('rentreceipt', [PropertyMaintenanceRequestController::class,'store'])->name('rentreceipt.store');
+    Route::get('rentreceipt/show/{Id}', [PropertyMaintenanceRequestController::class,'show'])->name('rentreceipt.show');
+    Route::get('rentreceipt/edit/{Id}',[PropertyMaintenanceRequestController::class,'edit'])->name('rentreceipt.edit');
+    Route::put('rentreceipt/edit/{Id}',[PropertyMaintenanceRequestController::class,'update'])->name('rentreceipt.update');
+    Route::delete('rentreceipt/delete/{Id}', [PropertyMaintenanceRequestController::class,'destroy'])->name('rentreceipt.destroy');
+    Route::get('rentreceipt/pdf/{Id}', [PropertyMaintenanceRequestController::class,'print'])->name('rentreceipt.pdf');
 
 
 
@@ -188,11 +187,17 @@ Route::namespace('Property')->prefix('property')->group(function () {
     // Route::get('tenantledger/store', [TenantStatementController::class,'store'])->name('tenantledger.store');   
      Route::get('tenantledger/pdf', [TenantStatementController::class,'exportpdf'])->name('tenantledger.pdf');
     
-    
+    //Route::resource('maintenancerequest', PropertyMaintenanceRequestController::class);
+    Route::get('maintenancerequest', [PropertyMaintenanceRequestController::class,'index'])->name('maintenancerequest.index');
+    Route::get('maintenancerequest/create', [PropertyMaintenanceRequestController::class,'create'])->name('maintenancerequest.create');
+    Route::post('maintenancerequest', [PropertyMaintenanceRequestController::class,'store'])->name('maintenancerequest.store');
+    Route::get('maintenancerequest/show/{id}', [PropertyMaintenanceRequestController::class,'show'])->name('maintenancerequest.show');
+    Route::get('maintenancerequest/edit/{id}',[PropertyMaintenanceRequestController::class,'edit'])->name('maintenancerequest.edit');
+    Route::put('maintenancerequest/edit/{id}',[PropertyMaintenanceRequestController::class,'update'])->name('maintenancerequest.update');
+    Route::delete('maintenancerequest/delete/{id}', [PropertyMaintenanceRequestController::class,'destroy'])->name('maintenancerequest.destroy');
 
     Route::resource('attachments', PropertyAttachmentsController::class);
     Route::resource('rentdashboard', RentDashboardController::class);
-    Route::resource('maintenancerequest', PropertyMaintenanceRequestController::class);
     Route::resource('assignrequest', PropertyMaintananceAssignController::class);
     Route::resource('maintenancedashboard', PropertyMaintenanceDashboardController::class);
     Route::resource('workcompletion', PropertyMaintenanceWorkCompletionController::class);

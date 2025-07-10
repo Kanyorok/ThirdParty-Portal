@@ -75,8 +75,7 @@ class PropertyUnitController extends Controller
     public function edit($id)
     {
         $this->authorize(PermissionEnum::PropertyStructuralUpdate, PropertyUnit::class);
-        //Check if user has permission to edit tender categories
-        //$this->authorize(PermissionEnum::PropertyUpdate, PropertyFloor::class);
+        
         $unit = PropertyUnit::findOrFail($id);
         $floors = PropertyFloor::all();
         $blocks = PropertyBlock::all();
