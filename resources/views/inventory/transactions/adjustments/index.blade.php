@@ -14,8 +14,8 @@
 
     <div class="container bg-white shadow-sm rounded p-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        
-        <a href="{{ route('transactionsadjustment.create') }}" class="btn btn-success">➕ New Adjustment</a>
+
+    <a href="{{ route('transactionsadjustment.create') }}" class="btn btn-success">➕ New Adjustment</a>
     </div>
 
     <div class="table-responsive">
@@ -33,20 +33,21 @@
             </tr>
             </thead>
             <tbody>
-                @forelse($adjustments as $index => $adjustment)
-                    @php
-                        $statusEnum = Transfers::tryFrom($adjustment->Status);
-                    @endphp
-                    <tr>
-                        <td>{{ $adjustments->firstItem() + $index }}</td>
-                         <td>{{ $adjustment->AdjustmentId}}</>
-                        <td>{{ Carbon::parse($adjustment->AdjustmentDate)->format('d/m/Y') }}</td>
-                        <td>{{ optional($adjustment->branch)->Name ?? 'N/A' }}</td>
-                        <td>{{ optional($adjustment->reason)->Description ?? 'N/A' }}</td>
-                        <td>{{$adjustment->adjustedBy->Name ?? 'N/A'}}</td>
-                        <td>
-                            @if($statusEnum)
-                                <span class="badge bg-{{ $statusEnum->badgeColor() }}">
+            @forelse($adjustments as $index => $adjustment)
+                @php
+                    $statusEnum = Transfers::tryFrom($adjustment->Status);
+                @endphp
+                <tr>
+                    <td>{{ $adjustments->firstItem() + $index }}</td>
+                    <td>{{ $adjustment->AdjustmentId}}</
+                    >
+                    <td>{{ Carbon::parse($adjustment->AdjustmentDate)->format('d/m/Y') }}</td>
+                    <td>{{ optional($adjustment->branch)->Name ?? 'N/A' }}</td>
+                    <td>{{ optional($adjustment->reason)->Description ?? 'N/A' }}</td>
+                    <td>{{$adjustment->adjustedBy->Name ?? 'N/A'}}</td>
+                    <td>
+                        @if($statusEnum)
+                            <span class="badge bg-{{ $statusEnum->badgeColor() }}">
                                     {{ $statusEnum->label() }}
                                 </span>
                         @else

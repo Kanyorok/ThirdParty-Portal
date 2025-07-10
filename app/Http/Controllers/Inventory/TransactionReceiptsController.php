@@ -65,7 +65,7 @@ class TransactionReceiptsController extends Controller
 
                 $storeOptions = \App\Models\Inventory\Store::where('BranchID', $branchId)
                     ->get(['Id', 'StoreName'])
-                    ->map(fn ($s) => ['Id' => $s->Id, 'StoreName' => $s->StoreName])
+                    ->map(fn($s) => ['Id' => $s->Id, 'StoreName' => $s->StoreName])
                     ->toArray();
 
                 $item['store_options'] = $storeOptions;

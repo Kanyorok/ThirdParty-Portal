@@ -56,6 +56,7 @@ class BudgetManualEntry extends Model
     {
         return $this->belongsTo(BudgetLine::class, 'BudgetLineID', 'Id');
     }
+
     public function allocations()
     {
         return $this->hasMany(BudgetManualEntryAllocations::class, 'EntryID', 'Id');

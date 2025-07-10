@@ -21,6 +21,7 @@ class RFQResponseItem extends Model
     {
         return $this->belongsTo(RFQResponse::class);
     }
+
     public function uom()
     {
         return $this->belongsTo(UnitOfMeasure::class, 'UOM', 'Id');

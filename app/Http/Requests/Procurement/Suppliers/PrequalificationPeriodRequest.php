@@ -24,12 +24,12 @@ class PrequalificationPeriodRequest extends FormRequest
     public function rules(): array
     {
         return [
-        'Title' => 'required|string',
-        'Description' => 'nullable|string',
-        'StartDate' => 'required|date_format:d/m/Y',
-        'EndDate' => 'required|date_format:d/m/Y|after_or_equal:StartDate',
-        'MaxVendors' => 'required|integer|min:1',
-        'Status' => ['required', new Enum(PrequalificationPeriodEnum::class)], 
+            'Title' => 'required|string',
+            'Description' => 'nullable|string',
+            'StartDate' => 'required|date_format:d/m/Y',
+            'EndDate' => 'required|date_format:d/m/Y|after_or_equal:StartDate',
+            'MaxVendors' => 'required|integer|min:1',
+            'Status' => ['required', new Enum(PrequalificationPeriodEnum::class)],
         ];
     }
 }

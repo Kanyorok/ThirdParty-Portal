@@ -23,69 +23,69 @@ class InventoryHoldReviewService
         Log::info('Reviewing Inventory Hold', ['id' => $hold->Id]);
 
         $hold->update([
-            'Condition'  => $data['Condition'],
-            'Notes'      => $data['Notes'],
+            'Condition' => $data['Condition'],
+            'Notes' => $data['Notes'],
             'ModifiedBy' => Auth::id(),
             'ModifiedOn' => now(),
         ]);
     }
 
-   public function dispose(int $id, array $extras = []): void
-{
-    DB::transaction(function () use ($id, $extras) {
-        $hold = InventoryHold::with('item')->findOrFail($id);
-
-        if (!$hold->Reason) {
-            Log::error("Disposal blocked: Missing reason for InventoryHold ID {$id}");
-            throw new \Exception("Cannot dispose item without a defect reason.");
-        }
-
-        $review = InventoryHoldReview::create([
-            'InventoryHoldID' => $hold->Id,
-            'ItemID'          => $hold->ItemID,
-            'FromBranch'      => $hold->BranchID,
-            'Store'           => $hold->Store,
-            'Quantity'        => $hold->Quantity,
-            'Defect'          => $hold->Reason,
-            'Condition'       => $extras['Condition'] ?? null,
-            'Notes'           => $extras['Notes'] ?? null,
-            'Status'          => Transfers::Disposed->value,
-            'CreatedBy'       => Auth::id(),
-            'CreatedOn'       => now(),
-            'ModifiedBy'      => Auth::id(),
-            'ModifiedOn'      => now(),
-        ]);
-
-        Log::info("Disposal record created", ['review_id' => $review->Id]);
-
-        $hold->update([
-            'Status'     => Transfers::Disposed->value,
-            'DeletedBy'  => Auth::id(),
-            'ModifiedBy' => Auth::id(),
-            'ModifiedOn' => now(),
-        ]);
-
-        $hold->delete();
-
-        Log::info("InventoryHold marked as disposed and soft-deleted", ['id' => $hold->Id]);
-    });
-}
-
-
-   //**  public function markUnderRepair(int $id): void
-/*
+    public function dispose(int $id, array $extras = []): void
     {
-        $hold = InventoryHold::findOrFail($id);
-        $hold->update([
-            'Status'     => \App\Enums\Inventory\Transfers::UnderRepair->value,
-            'ModifiedBy' => Auth::id(),
-            'ModifiedOn' => now(),
-        ]);
+        DB::transaction(function () use ($id, $extras) {
+            $hold = InventoryHold::with('item')->findOrFail($id);
 
-        Log::info("Marked under repair", ['id' => $id]);
+            if (!$hold->Reason) {
+                Log::error("Disposal blocked: Missing reason for InventoryHold ID {$id}");
+                throw new \Exception("Cannot dispose item without a defect reason.");
+            }
+
+            $review = InventoryHoldReview::create([
+                'InventoryHoldID' => $hold->Id,
+                'ItemID' => $hold->ItemID,
+                'FromBranch' => $hold->BranchID,
+                'Store' => $hold->Store,
+                'Quantity' => $hold->Quantity,
+                'Defect' => $hold->Reason,
+                'Condition' => $extras['Condition'] ?? null,
+                'Notes' => $extras['Notes'] ?? null,
+                'Status' => Transfers::Disposed->value,
+                'CreatedBy' => Auth::id(),
+                'CreatedOn' => now(),
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
+            ]);
+
+            Log::info("Disposal record created", ['review_id' => $review->Id]);
+
+            $hold->update([
+                'Status' => Transfers::Disposed->value,
+                'DeletedBy' => Auth::id(),
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
+            ]);
+
+            $hold->delete();
+
+            Log::info("InventoryHold marked as disposed and soft-deleted", ['id' => $hold->Id]);
+        });
     }
-    */
-  
+
+
+    //**  public function markUnderRepair(int $id): void
+    /*
+        {
+            $hold = InventoryHold::findOrFail($id);
+            $hold->update([
+                'Status'     => \App\Enums\Inventory\Transfers::UnderRepair->value,
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
+            ]);
+
+            Log::info("Marked under repair", ['id' => $id]);
+        }
+        */
+
     public function returnToSender(int $id): void
     {
         $hold = InventoryHold::findOrFail($id);
@@ -95,8 +95,8 @@ class InventoryHoldReviewService
 
         $hold->update([
             'FromBranch' => $to,
-            'BranchID'   => $from,
-            'Status'     => \App\Enums\Inventory\Transfers::InTransit->value,
+            'BranchID' => $from,
+            'Status' => \App\Enums\Inventory\Transfers::InTransit->value,
             'ModifiedBy' => Auth::id(),
             'ModifiedOn' => now(),
         ]);
@@ -104,5 +104,5 @@ class InventoryHoldReviewService
         Log::info("Returned to sender", ['id' => $id, 'from' => $from, 'to' => $to]);
     }
 
-    
+
 }

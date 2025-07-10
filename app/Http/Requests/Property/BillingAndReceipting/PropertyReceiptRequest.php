@@ -21,13 +21,13 @@ class PropertyReceiptRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [                
+        return [
             'InvoiceID' => 'required',
             'BillingMonth' => 'required',
             'InvoiceDate' => 'required',
             'RentAmount' => 'required',
-            'ServicesCharge'=>'required',
-            'OtherCharges'=>'required',
+            'ServicesCharge' => 'required',
+            'OtherCharges' => 'required',
             'TotalDue' => 'required',
             'AmountPaid' => 'required',
             'Balance' => 'required',

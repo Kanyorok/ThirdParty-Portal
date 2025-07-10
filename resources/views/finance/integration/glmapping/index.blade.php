@@ -1,13 +1,13 @@
 @extends('layouts.app')
 @section('title', 'GL Posting Map')
 @section('content')
-<div class="container mt-4">
-    <h4 class="mb-4">📄 GL Posting Map</h4>
+    <div class="container mt-4">
+        <h4 class="mb-4">📄 GL Posting Map</h4>
 
-    <a href="{{ route('glpostingmap.create') }}" class="btn btn-primary mb-3">➕ Add New Mapping</a>
+        <a href="{{ route('glpostingmap.create') }}" class="btn btn-primary mb-3">➕ Add New Mapping</a>
 
-    <table class="table table-bordered">
-        <thead>
+        <table class="table table-bordered">
+            <thead>
             <tr>
                 <th>Module</th>
                 <th>Source Document</th>
@@ -17,8 +17,8 @@
                 <th>Narration</th>
                 <th>Actions</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             @forelse ($mappings as $map)
                 <tr>
                     <td>{{ $map->Module }}</td>
@@ -36,7 +36,7 @@
                     <td colspan="7">No mappings found.</td>
                 </tr>
             @endforelse
-        </tbody>
-    </table>
-</div>
+            </tbody>
+        </table>
+    </div>
 @endsection

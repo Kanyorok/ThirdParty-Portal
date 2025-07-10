@@ -32,7 +32,7 @@ class CategoryMasterSeeder extends Seeder
             'ModifiedOn' => Carbon::now(),
         ]);
 
-            CategoryMaster::create([
+        CategoryMaster::create([
             'Name' => 'Residential',
             'Description' => 'Residential category',
             'Type' => 'PropertyCategory',

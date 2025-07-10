@@ -13,7 +13,8 @@ class AwardsController extends Controller
         return view('procurement.awards.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('procurement.awards.create');
     }
 

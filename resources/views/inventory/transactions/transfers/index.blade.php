@@ -121,38 +121,38 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script>
-    $(document).ready(function () {
-        @if(!$transfers->isEmpty())
-        $('#transferTable').DataTable({
-            pageLength: 10,
-            ordering: true,
-            searching: true,
-            lengthChange: true,
-            dom: 'rt<"bottom"ip><"clear">',  
-            language: {
-                emptyTable: "No transfers available"
-            }
+        $(document).ready(function () {
+            @if(!$transfers->isEmpty())
+            $('#transferTable').DataTable({
+                pageLength: 10,
+                ordering: true,
+                searching: true,
+                lengthChange: true,
+                dom: 'rt<"bottom"ip><"clear">',
+                language: {
+                    emptyTable: "No transfers available"
+                }
+            });
+            @endif
         });
-        @endif
-    });
 
-    function confirmDelete(id) {
-        if (confirm('⚠️ Are you sure you want to delete this transfer?')) {
-            document.getElementById('delete-form-' + id).submit();
+        function confirmDelete(id) {
+            if (confirm('⚠️ Are you sure you want to delete this transfer?')) {
+                document.getElementById('delete-form-' + id).submit();
+            }
+            return false;
         }
-        return false;
-    }
 
-    function showCustomError(message) {
-        document.getElementById('customErrorMessage').textContent = message;
-        document.getElementById('customErrorContainer').style.display = 'block';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        return false;
-    }
+        function showCustomError(message) {
+            document.getElementById('customErrorMessage').textContent = message;
+            document.getElementById('customErrorContainer').style.display = 'block';
+            window.scrollTo({top: 0, behavior: 'smooth'});
+            return false;
+        }
 
-    function hideCustomError() {
-        document.getElementById('customErrorContainer').style.display = 'none';
-    }
-</script>
+        function hideCustomError() {
+            document.getElementById('customErrorContainer').style.display = 'none';
+        }
+    </script>
 
 @endsection

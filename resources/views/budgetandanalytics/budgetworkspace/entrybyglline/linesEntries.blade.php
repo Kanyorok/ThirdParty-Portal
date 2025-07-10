@@ -2,7 +2,7 @@
 @section('title', 'Budget Entry Listing')
 @section('content')
     <div class="card mt-4">
-      
+
         <div class="card-header bg-dark text-white">📑 Budget Entries by Line (Manual Entry)</div>
         <div class="card-body">
             <!-- Filters -->
@@ -19,17 +19,18 @@
                 </div> --}}
             </form>
             <div>
-                <p class="text-muted">This page lists all budget entries by budget line. You can view, edit, or delete entries as needed.</p>
+                <p class="text-muted">This page lists all budget entries by budget line. You can view, edit, or delete
+                    entries as needed.</p>
             </div>
 
             <!-- Budget Table -->
-              <div class="mb-2 d-flex justify-content-between">
-                    <a href="{{ route('entrybyglline.create') }}" class="btn btn-success">➕ Add Entry</a>
-              </div>
+            <div class="mb-2 d-flex justify-content-between">
+                <a href="{{ route('entrybyglline.create') }}" class="btn btn-success">➕ Add Entry</a>
+            </div>
             <div style="overflow-x: auto;">
                 @if($entries->count())
-                <table class="table table-bordered table-striped text-center" style="min-width: 800px;">
-                    <thead class="table-light">
+                    <table class="table table-bordered table-striped text-center" style="min-width: 800px;">
+                        <thead class="table-light">
                         <tr>
                             <th>#</th>
                             <th>Budget</th>
@@ -39,30 +40,31 @@
                             {{-- <th>Source</th> --}}
                             <th>Actions</th>
                         </tr>
-                    </thead>
-                    <tbody>
+                        </thead>
+                        <tbody>
                         @foreach ($entries as $item)
-                        <tr>
-                            <td>{{ $loop->iteration}}</td>
-                            <td>{{$item->budget->Name}}</td>
-                            <td>{{$item->branch->Name}}</td>
-                            <td>{{$item->budgetLine->LineName}}</td>
-                            <td>{{ $item->Amount}}</td>
-                            {{-- <td>Manual Entry</td> --}}
-                            <td>
-                                <a href="{{ route('entrybyglline.show', $item->Id) }}" class="btn btn-sm btn-info">View Allocations</a>
-                            </td>
-                        </tr>
+                            <tr>
+                                <td>{{ $loop->iteration}}</td>
+                                <td>{{$item->budget->Name}}</td>
+                                <td>{{$item->branch->Name}}</td>
+                                <td>{{$item->budgetLine->LineName}}</td>
+                                <td>{{ $item->Amount}}</td>
+                                {{-- <td>Manual Entry</td> --}}
+                                <td>
+                                    <a href="{{ route('entrybyglline.show', $item->Id) }}" class="btn btn-sm btn-info">View
+                                        Allocations</a>
+                                </td>
+                            </tr>
                         @endforeach
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
                 @else
-                <div class="alert alert-info text-center">
-                    <strong>No budget entries found.</strong> Please add a new entry to get started.
-                </div>
+                    <div class="alert alert-info text-center">
+                        <strong>No budget entries found.</strong> Please add a new entry to get started.
+                    </div>
                 @endif
             </div>
 
         </div>
-</div>
+    </div>
 @endsection

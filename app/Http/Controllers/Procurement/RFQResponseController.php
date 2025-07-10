@@ -16,7 +16,7 @@ class RFQResponseController extends Controller
 {
     public function index()
     {
-        $rfqResponses = RFQResponse::with(['rfq', 'items','items.uom'])->get();
+        $rfqResponses = RFQResponse::with(['rfq', 'items', 'items.uom'])->get();
         return view('procurement.rfqresponses.index', compact('rfqResponses'));
     }
     public function create()

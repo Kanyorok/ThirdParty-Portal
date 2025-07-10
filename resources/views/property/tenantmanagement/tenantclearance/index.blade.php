@@ -6,10 +6,10 @@
 @section('content')
 <div class="container mt-4">
 <a href="{{ route('tenantclearance.create') }}" class="btn btn-primary mb-3">New Clearance</a>
-  <h4 class="fw-bold mb-3">Tenant Exit & Clearance Records</h4>
+    <h4 class="fw-bold mb-3">Tenant Exit & Clearance Records</h4>
 
     @if($clearancetenants->count())
-  <table class="table table-bordered table-striped align-middle" id="tenantclearance">
+        <table class="table table-bordered table-striped align-middle" id="tenantclearance">
     <thead class="table-light">
       <tr>
         <th>#</th>
@@ -52,14 +52,18 @@
                   {{ $clearancetenant->Status->label() }}
               </span>
           </td>
-        <td>
-            <a href="{{ route('tenantclearance.show', $clearancetenant->Id) }}" class="btn btn-sm btn-info">👁 View</a>
-            <a href="{{ route('tenantclearance.edit', $clearancetenant->Id) }}" class="btn btn-sm btn-warning">Edit</a>
-            <form action="{{ route('tenantclearance.destroy', $clearancetenant->Id) }}" method="POST" class="d-inline">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this property?');">Delete</button>
-            </form>
+          <td>
+              <a href="{{ route('tenantclearance.show', $clearancetenant->Id) }}" class="btn btn-sm btn-info">👁 View</a>
+              <a href="{{ route('tenantclearance.edit', $clearancetenant->Id) }}"
+                 class="btn btn-sm btn-warning">Edit</a>
+              <form action="{{ route('tenantclearance.destroy', $clearancetenant->Id) }}" method="POST"
+                    class="d-inline">
+                  @csrf
+                  @method('DELETE')
+                  <button type="submit" class="btn btn-sm btn-danger"
+                          onclick="return confirm('Are you sure you want to delete this property?');">Delete
+                  </button>
+              </form>
         </td>
       </tr>
     @endforeach

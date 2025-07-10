@@ -13,7 +13,8 @@ class COASegmentController extends Controller
         return view('finance.chartofaccounts.segmentconfiguration.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('finance.chartofaccounts.segmentconfiguration.create');
-    } 
+    }
 }

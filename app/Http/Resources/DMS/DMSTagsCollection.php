@@ -20,9 +20,9 @@ class DMSTagsCollection extends ResourceCollection
                     'id' => $tag->TagID,
                     'Name' => $tag->Name,
                     'visibility' => [
-                        'value' => $this->resource->Visibility->value,
-                        'name' => $this->resource->Visibility->name,
-                        'icon' => $this->resource->Visibility->icon(),
+                        'value' => $tag->Visibility->value,
+                        'name' => $tag->Visibility->name,
+                        'icon' => $tag->Visibility->icon(),
                     ],
                 ];
             }),

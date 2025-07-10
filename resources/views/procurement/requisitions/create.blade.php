@@ -13,34 +13,34 @@
 @endsection
 
 @section('content')
-<div class="row mb-3">
-    <div class="col-md-12 text-end">
-        <button class="btn btn-primary modal-create-item" type="button">
-            <i class="fas fa-plus-circle"></i> New Requisition
+    <div class="row mb-3">
+        <div class="col-md-12 text-end">
+            <button class="btn btn-primary modal-create-item" type="button">
+                <i class="fas fa-plus-circle"></i> New Requisition
         </button>
     </div>
-</div>
+    </div>
 
-<div class="row">
-    <div class="col-12">
-        <div class="card mb-3">
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table id="requisitionTable" class="table table-bordered table-striped align-middle">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="requisitionTable" class="table table-bordered table-striped align-middle">
                         <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Requisition No</th>
-                                <th>Procurement Plan</th>
-                                <th>Requisition Date</th>
-                                <th>Branch</th>
-                                <th>Department</th>
-                                <th>Remarks</th>
-                                <th>Total Items</th>
-                                <th>Total Cost</th>
-                                <th>Status</th>
-                                <th>Action</th>
-                            </tr>
+                        <tr>
+                            <th>#</th>
+                            <th>Requisition No</th>
+                            <th>Procurement Plan</th>
+                            <th>Requisition Date</th>
+                            <th>Branch</th>
+                            <th>Department</th>
+                            <th>Remarks</th>
+                            <th>Total Items</th>
+                            <th>Total Cost</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
                         </thead>
                         <tbody>
                             @forelse($details as $item)
@@ -71,20 +71,20 @@
             </div>
         </div>
     </div>
-</div>
+    </div>
 
-<!-- Modal -->
-<div class="modal fade" id="RequisitionItemModal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">..</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="onboarding-content with-gradient d-none modal-item" id="createRequisition">
-                    <form action="{{ route('requisition.store') }}" method="post" id="createRequisitionForm">
-                        @csrf
+    <!-- Modal -->
+    <div class="modal fade" id="RequisitionItemModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">..</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="onboarding-content with-gradient d-none modal-item" id="createRequisition">
+                        <form action="{{ route('requisition.store') }}" method="post" id="createRequisitionForm">
+                            @csrf
 
                         <!-- Procurement Plan -->
                         <div class="mb-3">
@@ -125,36 +125,40 @@
                             <p id="Department_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                         </div>
 
-                        <!-- Remarks -->
-                        <div class="mb-3">
-                            <label class="form-label" for="Remarks">Remarks <span class="text-danger">*</span></label>
-                            <textarea name="Remarks" id="Remarks" rows="3" class="form-control" maxlength="1000" required></textarea>
-                            <p id="Remarks_error" class="invalid-feedback d-none error col-12" role="alert"></p>
-                        </div>
+                            <!-- Remarks -->
+                            <div class="mb-3">
+                                <label class="form-label" for="Remarks">Remarks <span
+                                        class="text-danger">*</span></label>
+                                <textarea name="Remarks" id="Remarks" rows="3" class="form-control" maxlength="1000"
+                                          required></textarea>
+                                <p id="Remarks_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                            </div>
 
-                        <hr>
-                        <div class="mt-4">
-                            <button type="button" class="btn btn-secondary float-start" data-bs-dismiss="modal">Cancel</button>
-                            <button class="btn btn-primary float-end" id="createRequisitionBtn" type="submit">
-                                <i class="fas fa-save"></i> Add Requisition
-                            </button>
-                        </div>
-                    </form>
+                            <hr>
+                            <div class="mt-4">
+                                <button type="button" class="btn btn-secondary float-start" data-bs-dismiss="modal">
+                                    Cancel
+                                </button>
+                                <button class="btn btn-primary float-end" id="createRequisitionBtn" type="submit">
+                                    <i class="fas fa-save"></i> Add Requisition
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 @endsection
 
 @section('scripts')
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
-<script src="{{ asset('assets/js/datatables.js') }}"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
+    <script src="{{ asset('assets/js/datatables.js') }}"></script>
 
-<script>
-    const $Modal = $('#RequisitionItemModal');
+    <script>
+        const $Modal = $('#RequisitionItemModal');
 
     $(function() {
         @if(!$details->isEmpty())
@@ -188,33 +192,33 @@
             let planId = this.value;
             if (!planId) return;
 
-            fetch("{{ route('procurement.plan.details', '__ID__') }}".replace('__ID__', planId))
-                .then(response => response.json())
-                .then(data => {
-                    const branchSelect = document.getElementById('Branch');
-                    const departmentSelect = document.getElementById('Department');
+                fetch("{{ route('procurement.plan.details', '__ID__') }}".replace('__ID__', planId))
+                    .then(response => response.json())
+                    .then(data => {
+                        const branchSelect = document.getElementById('Branch');
+                        const departmentSelect = document.getElementById('Department');
 
-                    branchSelect.innerHTML = '<option selected disabled>Select Branch</option>';
-                    departmentSelect.innerHTML = '<option selected disabled>Select Department</option>';
+                        branchSelect.innerHTML = '<option selected disabled>Select Branch</option>';
+                        departmentSelect.innerHTML = '<option selected disabled>Select Department</option>';
 
-                    data.branches.forEach(branch => {
-                        const opt = document.createElement('option');
-                        opt.value = branch.Id;
-                        opt.textContent = branch.Name;
-                        branchSelect.appendChild(opt);
+                        data.branches.forEach(branch => {
+                            const opt = document.createElement('option');
+                            opt.value = branch.Id;
+                            opt.textContent = branch.Name;
+                            branchSelect.appendChild(opt);
+                        });
+
+                        data.departments.forEach(dept => {
+                            const opt = document.createElement('option');
+                            opt.value = dept.Id;
+                            opt.textContent = dept.Name;
+                            departmentSelect.appendChild(opt);
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error fetching plan details:', error);
                     });
-
-                    data.departments.forEach(dept => {
-                        const opt = document.createElement('option');
-                        opt.value = dept.Id;
-                        opt.textContent = dept.Name;
-                        departmentSelect.appendChild(opt);
-                    });
-                })
-                .catch(error => {
-                    console.error('Error fetching plan details:', error);
-                });
+            });
         });
-    });
-</script>
+    </script>
 @endsection

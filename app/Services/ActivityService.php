@@ -88,7 +88,6 @@ class ActivityService
         return $activity;
     }
 
-    
 
     public static function campaignRun(string|array $PartyIDs, string $Party, string $description, Campaign $campaign, User $actor, Carbon $dated): void
     {
@@ -97,10 +96,10 @@ class ActivityService
 
 
     public static function schedule(string|array $PartyIDs, string $Party, Schedule $schedule, string $description, User $actor, ?Carbon $dated = null): void
-{
-    self::_save( $PartyIDs, $Party,Schedule::getPrimaryKey(), $schedule->ScheduleID,$description,$actor,$dated ?? ($schedule->CreatedOn ?? now())
-    );
-}
+    {
+        self::_save($PartyIDs, $Party, Schedule::getPrimaryKey(), $schedule->ScheduleID, $description, $actor, $dated ?? ($schedule->CreatedOn ?? now())
+        );
+    }
 
 
     public static function call(Call $call, string $description, User $actor): void
@@ -119,9 +118,9 @@ class ActivityService
     }
 
     public static function task(Task $task, string $description, User $actor, ?Carbon $dated = null): array
-{
-    return self::rendering(self::_save($task->PartyID,$task->Party,Task::getPrimaryKey(),$task->TaskID,$description,$actor,$dated ?? ($task->CreatedOn ?? now()) ) );
-}
+    {
+        return self::rendering(self::_save($task->PartyID, $task->Party, Task::getPrimaryKey(), $task->TaskID, $description, $actor, $dated ?? ($task->CreatedOn ?? now())));
+    }
 
 
     public static function email(Email $email, Carbon $dated, string $description = null): array

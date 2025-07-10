@@ -13,7 +13,8 @@ class LedgerReportController extends Controller
         return view('finance.generalledger.glreporting.ledgerreport.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('finance.generalledger.glreporting.ledgerreport.create');
-    } 
+    }
 }

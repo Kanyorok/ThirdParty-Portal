@@ -27,7 +27,7 @@
             @foreach($leaseschedules as $leaseschedule)
                 <tr>
                     <td>{{ $loop->iteration ?? '-' }}</td>
-                    <td>{{ $leaseschedule->lease->LeaseNumber ?? '-' }}</td>       
+                    <td>{{ $leaseschedule->lease->LeaseNumber ?? '-' }}</td>
                     <td>{{ $leaseschedule->tenant->TenantName ?? '-' }}</td>
                     <td>{{ $leaseschedule->property->PropertyName ?? '-' }}</td>
                     <td>{{ $leaseschedule->paymentFrequency->Description ?? '-' }}</td>
@@ -38,13 +38,18 @@
                     <td>{{ $leaseschedule->ParkingFee ?? '-' }}</td>
                     <td>{{ $leaseschedule->OtherCharges ?? '-' }}</td>
                     <td>
-            <a href="{{ route('schedulelease.show', $leaseschedule->Id) }}" class="btn btn-sm btn-info">👁 View</a>
-            <a href="{{ route('schedulelease.edit', $leaseschedule->Id) }}" class="btn btn-sm btn-warning">Edit</a>
-            <form action="{{ route('schedulelease.destroy', $leaseschedule->Id) }}" method="POST" class="d-inline">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this lease schedule?');">Delete</button>
-            </form>
+                        <a href="{{ route('schedulelease.show', $leaseschedule->Id) }}" class="btn btn-sm btn-info">👁
+                            View</a>
+                        <a href="{{ route('schedulelease.edit', $leaseschedule->Id) }}" class="btn btn-sm btn-warning">Edit</a>
+                        <form action="{{ route('schedulelease.destroy', $leaseschedule->Id) }}" method="POST"
+                              class="d-inline">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-sm btn-danger"
+                                    onclick="return confirm('Are you sure you want to delete this lease schedule?');">
+                                Delete
+                            </button>
+                        </form>
                     </td>
                 </tr>
             @endforeach
@@ -55,18 +60,18 @@
         <p>No lease renewals registered yet.</p>
         @endif
 </div>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
-<script>
-    $(document).ready(function () {
-        $('#LeaseSchedule').DataTable({
-            pageLength: 10,
-            ordering: true,
-            searching: true,
-            lengthChange: true
-        });
-    });
-</script>
+        <script>
+            $(document).ready(function () {
+                $('#LeaseSchedule').DataTable({
+                    pageLength: 10,
+                    ordering: true,
+                    searching: true,
+                    lengthChange: true
+                });
+            });
+        </script>
 
 @endsection

@@ -1,4 +1,5 @@
 <?php
+
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Procurement\ApprovalSetupController;
@@ -95,7 +96,7 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::post('requisition/approve/{id}', [RequisitionsController::class, 'approve'])->name('requisition.approve');
     Route::get('requisition/approval/{id}', [RequisitionsController::class, 'approval'])->name('requisition.approval');
     Route::get('procurementplan/details/{id}', [RequisitionsController::class, 'getPlanDetails'])
-     ->name('procurement.plan.details');
+        ->name('procurement.plan.details');
     Route::prefix('admin')->group(function () {
         Route::put('/approval-settings/{id}', [ApprovalSetupController::class, 'update'])->name('approval-setup.update');
         Route::post('/approval-settings', [ApprovalSetupController::class, 'store'])->name('approval-settings.store');
@@ -375,7 +376,6 @@ Route::prefix('planning')->name('planning.')->group(function () {
 
 });
 
- 
 
 //Route::resource('preqrounds', PrequalificationRoundsController::class);
 Route::get('preqrounds', [PrequalificationPeriodController::class, 'index'])->name('preqrounds.index');
@@ -398,24 +398,19 @@ Route::put('preqcriteria/update/{id}', [PrequalificationCriteriaSetupController:
 Route::delete('preqcriteria/destroy/{id}', [PrequalificationCriteriaSetupController::class, 'destroy'])->name('preqcriteria.destroy');
 
 
-
-
-
-
-
 Route::resource('supplierslist', SupplierListingController::class);
  Route::resource('preqapplications', PrequalificationApplicationsController::class);
  Route::resource('preqevaluation', PrequalificationEvaluationController::class);
  Route::resource('preqevalapproval', PrequalificationEvalAprovalController::class);
  Route::resource('preqsuppliers', PrequalifiedSuppliersController::class);
- Route::resource('bidresponsiveness', TenderBidResponsivenessController::class);
+Route::resource('bidresponsiveness', TenderBidResponsivenessController::class);
 Route::get('bidresponsiveness/create/{tenderSupplier}', [TenderBidResponsivenessController::class, 'create'])->name('bidresponsiveness.create');
 
 Route::get('/awards-tender/view/{id}', [AwardsController::class, 'view_tender'])->name('awards.view');
-  Route::get('/awards-rfq/view/{id}', [AwardsController::class, 'view_rfq'])->name('awards.view');
+Route::get('/awards-rfq/view/{id}', [AwardsController::class, 'view_rfq'])->name('awards.view');
 
-  Route::resource('procawards', AwardsController::class);
- 
+Route::resource('procawards', AwardsController::class);
+
 // Contracts - Core CRUD
 Route::get('contracts', [ContractsController::class, 'index'])->name('contracts.index');
 Route::get('contracts/create', [ContractsController::class, 'create'])->name('contracts.create');

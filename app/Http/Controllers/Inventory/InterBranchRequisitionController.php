@@ -46,7 +46,7 @@ class InterBranchRequisitionController extends Controller
     {
         // $this->authorize('create', InterBranchRequisition::class);
         $branches = Branch::all();
-        $uoms = UnitOfMeasure::all(); 
+        $uoms = UnitOfMeasure::all();
         return view('inventory.interbranchrequisition.create', compact('branches', 'uoms'));
     }
 
@@ -103,8 +103,8 @@ class InterBranchRequisitionController extends Controller
             'items.item.category.parent',
         ])->findOrFail($Id);
 
-      
-        $categories = ItemCategories::whereNull('ParentId')->get(); 
+
+        $categories = ItemCategories::whereNull('ParentId')->get();
         $branches = Branch::all();
         $uoms = UnitOfMeasure::all();
 
@@ -153,7 +153,7 @@ class InterBranchRequisitionController extends Controller
         return redirect()->route('interbranchrequisition.index')->with('success', 'Requisition deleted successfully.');
     }
 
-   
+
     public function getSubcategories(Request $request)
     {
         $categoryId = $request->get('category_id');
@@ -203,7 +203,7 @@ class InterBranchRequisitionController extends Controller
             ->select(
                 't_ItemCategories.Id',
                 't_ItemCategories.Name',
-                't_ItemCategories.ParentId', 
+                't_ItemCategories.ParentId',
                 'parent_category.Name as ParentName'
             )
             ->where('t_Stockitems.Branch', $fromBranchId)

@@ -2,11 +2,11 @@
 @section('title', 'Pending Invoice Approvals')
 @section('content')
 
-<div class="container mt-4">
-    <h4 class="mb-3">🧾 Pending Invoice Approvals</h4>
+    <div class="container mt-4">
+        <h4 class="mb-3">🧾 Pending Invoice Approvals</h4>
 
-    <table class="table table-bordered">
-        <thead class="table-light">
+        <table class="table table-bordered">
+            <thead class="table-light">
             <tr>
                 <th>#</th>
                 <th>Invoice No</th>
@@ -17,8 +17,8 @@
                 <th>File</th>
                 <th>Action</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             @foreach ($invoices as $inv)
                 <tr>
                     <td>{{ $inv->id }}</td>
@@ -39,11 +39,12 @@
                         @endif
                     </td>
                     <td>
-                        <a href="{{ route('invoiceapproval.create', $inv->id) }}" class="btn btn-sm btn-primary">Review</a>
+                        <a href="{{ route('invoiceapproval.create', $inv->id) }}"
+                           class="btn btn-sm btn-primary">Review</a>
                     </td>
                 </tr>
             @endforeach
-        </tbody>
-    </table>
-</div>
+            </tbody>
+        </table>
+    </div>
 @endsection

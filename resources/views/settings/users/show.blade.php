@@ -128,18 +128,18 @@
                         </div>
                     </div>
                     <div class="tab-pane m-2" id="tab-4" role="tabpanel">
-                    <h5 class="mb-3">Branch Role Assignments</h5>
+                        <h5 class="mb-3">Branch Role Assignments</h5>
 
-                    <table class="table table-bordered">
-                        <thead>
+                        <table class="table table-bordered">
+                            <thead>
                             <tr>
                                 <th>Branch</th>
                                 <th>Role</th>
                                 <th>Actions</th>
                             </tr>
-                        </thead>
-                        <tbody>
-                             @foreach($user->branchRoles as $assignment)
+                            </thead>
+                            <tbody>
+                            @foreach($user->branchRoles as $assignment)
                                 <tr>
                                     <td>{{ $assignment->branch->Name ?? '—' }}</td>
                                     <td>{{ $assignment->role->name ?? '—' }}</td>
@@ -147,48 +147,49 @@
                                         <form method="POST" action="#">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
+                                            <button type="submit" class="btn btn-sm btn-danger"><i
+                                                    class="fas fa-trash"></i></button>
                                         </form>
                                     </td>
                                 </tr>
                             @endforeach
-                        </tbody>
-                    </table>
+                            </tbody>
+                        </table>
 
-                    <hr>
+                        <hr>
 
-                    <form method="POST" action="{{ route('user_roles.store',$user->UserID)}}">
-                        @csrf
-                        <input type="hidden" name="model_id" value="{{ $user->UserID }}">
-                        <input type="hidden" name="model_type" value="App\Models\User">
+                        <form method="POST" action="{{ route('user_roles.store',$user->UserID)}}">
+                            @csrf
+                            <input type="hidden" name="model_id" value="{{ $user->UserID }}">
+                            <input type="hidden" name="model_type" value="App\Models\User">
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <label>Branch</label>
-                                <select name="BranchId" class="form-control select2">
-                                    <option disabled selected>Select Branch</option>
-                                    @foreach($branches as $branch)
-                                        <option value="{{ $branch->Id }}">{{ $branch->Name }}</option>
-                                    @endforeach
-                                </select>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label>Branch</label>
+                                    <select name="BranchId" class="form-control select2">
+                                        <option disabled selected>Select Branch</option>
+                                        @foreach($branches as $branch)
+                                            <option value="{{ $branch->Id }}">{{ $branch->Name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label>Role</label>
+                                    <select name="role_id" class="form-control select2">
+                                        <option disabled selected>Select Role</option>
+                                        @foreach($roles as $role)
+                                            <option value="{{ $role->id }}">{{ $role->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="col-12 text-end mt-3">
+                                    <button class="btn btn-primary">Assign Role to Branch</button>
+                                </div>
                             </div>
-
-                            <div class="col-md-6">
-                                <label>Role</label>
-                                <select name="role_id" class="form-control select2">
-                                    <option disabled selected>Select Role</option>
-                                    @foreach($roles as $role)
-                                        <option value="{{ $role->id }}">{{ $role->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div class="col-12 text-end mt-3">
-                                <button class="btn btn-primary">Assign Role to Branch</button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
+                        </form>
+                    </div>
 
                 </div>
             </div>

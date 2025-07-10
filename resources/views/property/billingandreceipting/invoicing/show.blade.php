@@ -6,7 +6,7 @@
         <div class="card">
             <div class="card-body">
                 <dl class="row">
-                    
+
                     <dt class="col-sm-4">Invoice Number</dt>
                     <dd class="col-sm-8">{{ $invoice->InvoiceNumber ?? '-' }}</dd>
 

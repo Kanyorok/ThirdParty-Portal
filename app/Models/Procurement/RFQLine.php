@@ -41,7 +41,7 @@ class RFQLine extends Model
 
     public function uom()
     {
-        return  $this->belongsTo(UnitOfMeasure::class, 'UOM','Id');
+        return $this->belongsTo(UnitOfMeasure::class, 'UOM', 'Id');
     }
 
     public function suppliers()

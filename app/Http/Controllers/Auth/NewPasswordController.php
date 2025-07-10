@@ -39,8 +39,8 @@ class NewPasswordController extends Controller
     public function store(Request $request): JsonResponse
     {
         $request->validate([
-            'token'    => ['required'],
-            'email'    => ['required', 'email'],
+            'token' => ['required'],
+            'email' => ['required', 'email'],
             'password' => [
                 'required',
                 'confirmed',
@@ -63,7 +63,7 @@ class NewPasswordController extends Controller
         }
 
         $user->forceFill([
-            'Password'       => BREncryption::hashUser($user, $request->password),
+            'Password' => BREncryption::hashUser($user, $request->password),
             'remember_token' => Str::random(60),
         ])->save();
 

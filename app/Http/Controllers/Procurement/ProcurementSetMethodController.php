@@ -20,7 +20,7 @@ class ProcurementSetMethodController extends Controller
     {
         $approvedPlans = ConsolidatedProcurementPlan::where('Status', ProcurementPlanStatusEnum::Draft)->get();
         $procurementModes = CodeDetail::where('CodeID', 'ProcurementMethod')->get();
-        return view('procurement.procurementplan.planneditemsandactivities.assignprocurementmethod.index', compact('approvedPlans','procurementModes'));
+        return view('procurement.procurementplan.planneditemsandactivities.assignprocurementmethod.index', compact('approvedPlans', 'procurementModes'));
     }
 
     public function create()
@@ -73,7 +73,7 @@ class ProcurementSetMethodController extends Controller
 
         foreach ($assignedMethods as $lineItemId => $method) {
             if ($method && $method !== '') {
-            $lineItem = PlanLineItem::find($lineItemId);
+                $lineItem = PlanLineItem::find($lineItemId);
 
                 if ($method && $lineItem) {
                     $lineItem->ProcurementMethod = $method;

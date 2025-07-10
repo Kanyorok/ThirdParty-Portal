@@ -13,7 +13,8 @@ class DeliveryController extends Controller
         return view('procurement.deliverynotes.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('procurement.deliverynotes.create');
-    } 
+    }
 }

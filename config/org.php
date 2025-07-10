@@ -13,10 +13,10 @@ return [
     |
     */
 
-        'name'    => env('ORG_NAME', 'Craft Silicon Limited'),
-        'address' => env('ORG_ADDRESS', 'Craft Silicon, Nairobi, Kenya'),
-        'phone'   => env('ORG_PHONE', '0709 044000'),
-        'email'   => env('ORG_EMAIL', 'support@craftsilicon.com'),
-        'website' => env('ORG_WEBSITE', 'www.craftsilicon.com'),
+    'name' => env('ORG_NAME', 'Craft Silicon Limited'),
+    'address' => env('ORG_ADDRESS', 'Craft Silicon, Nairobi, Kenya'),
+    'phone' => env('ORG_PHONE', '0709 044000'),
+    'email' => env('ORG_EMAIL', 'support@craftsilicon.com'),
+    'website' => env('ORG_WEBSITE', 'www.craftsilicon.com'),
 
        ];

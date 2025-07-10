@@ -61,7 +61,7 @@
                                 class="btn btn-success btn-sm"
                                 data-bs-toggle="modal"
                                 data-bs-target="#approveModal"
-                                {{ $rfq->rfqLines->isEmpty() ? 'disabled title=Please add at least one RFQ line' : '' }}>
+                            {{ $rfq->rfqLines->isEmpty() ? 'disabled title=Please add at least one RFQ line' : '' }}>
                             Approve
                         </button>
                     </form>
@@ -71,18 +71,19 @@
 
             <td colspan="2" class="text-center">
                 @if ($rfq->Status === 'Pending')
-                    <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#rejectModal"
-                            {{ $rfq->rfqLines->isEmpty() ? 'disabled title=Please add at least one RFQ line' : '' }}>
+                    <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal"
+                            data-bs-target="#rejectModal"
+                        {{ $rfq->rfqLines->isEmpty() ? 'disabled title=Please add at least one RFQ line' : '' }}>
                         Reject
                     </button>
                 @endif
             </td>
 
-{{--            <td class="text-center">--}}
-{{--                @if ($rfq->Status === 'Approved')--}}
-{{--                    <button type="button" class="btn btn-primary btn-sm">Save</button>--}}
-{{--                @endif--}}
-{{--            </td>--}}
+            {{--            <td class="text-center">--}}
+            {{--                @if ($rfq->Status === 'Approved')--}}
+            {{--                    <button type="button" class="btn btn-primary btn-sm">Save</button>--}}
+            {{--                @endif--}}
+            {{--            </td>--}}
 
 
         </tr>
@@ -164,7 +165,8 @@
                 <!-- Requisition No (readonly) -->
                 <div class="mb-3">
                     <label for="requisitionNo">Requisition No</label>
-                    <input type="text" class="form-control" id="requisitionNo" value="{{ $rfq->requisition->RequisitionNo ?? 'N/A' }}" readonly>
+                    <input type="text" class="form-control" id="requisitionNo"
+                           value="{{ $rfq->requisition->RequisitionNo ?? 'N/A' }}" readonly>
                 </div>
 
                 <!-- Item Category Dropdown -->
@@ -270,6 +272,5 @@
         });
     });
 </script>
-
 
 @endsection

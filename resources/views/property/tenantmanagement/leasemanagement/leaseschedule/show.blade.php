@@ -8,10 +8,10 @@
                 <dl class="row">
                     <dt class="col-sm-4">Property Leased</dt>
                     <dd class="col-sm-8">{{ $leaseschedule->property->PropertyName ?? '-' }}</dd>
-                    
+
                     <dt class="col-sm-4">Lease Number</dt>
                     <dd class="col-sm-8">{{ $leaseschedule->lease->LeaseNumber ?? '-' }}</dd>
-                    
+
                     <dt class="col-sm-4">Tenant Name</dt>
                     <dd class="col-sm-8">{{ $leaseschedule->tenant->TenantName ?? '-' }}</dd>
 

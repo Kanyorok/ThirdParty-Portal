@@ -307,7 +307,7 @@ class TenderController extends Controller
         if ($tender->ApprovalStatus === TenderApprovalStatusEnum::REJECTED || $tender->ApprovalStatus === TenderApprovalStatusEnum::APPROVED) {
             $show = true;
         }
-        $items = TenderItems::where('TenderID', $id)->with(['item', 'category','item.price'])->get();
+        $items = TenderItems::where('TenderID', $id)->with(['item', 'category', 'item.price'])->get();
 
         $totalEstimatedCost = $items->sum(function ($item) {
             $qty = $item->QtyToTender ?? 0;

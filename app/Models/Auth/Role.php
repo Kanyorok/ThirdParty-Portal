@@ -102,7 +102,7 @@ class Role extends Model implements RoleContract
 
         $role = static::findByParam(['name' => $name, 'guard_name' => $guardName]);
 
-        if (! $role) {
+        if (!$role) {
             throw RoleDoesNotExist::named($name, $guardName);
         }
 
@@ -120,7 +120,7 @@ class Role extends Model implements RoleContract
 
         $role = static::findByParam([(new static)->getKeyName() => $id, 'guard_name' => $guardName]);
 
-        if (! $role) {
+        if (!$role) {
             throw RoleDoesNotExist::withId($id, $guardName);
         }
 
@@ -138,7 +138,7 @@ class Role extends Model implements RoleContract
 
         $role = static::findByParam(['name' => $name, 'guard_name' => $guardName]);
 
-        if (! $role) {
+        if (!$role) {
             return static::query()->create(['name' => $name, 'guard_name' => $guardName] + (app(PermissionRegistrar::class)->teams ? [app(PermissionRegistrar::class)->teamsKey => getPermissionsTeamId()] : []));
         }
 
@@ -162,7 +162,7 @@ class Role extends Model implements RoleContract
         if (app(PermissionRegistrar::class)->teams) {
             $teamsKey = app(PermissionRegistrar::class)->teamsKey;
 
-            $query->where(fn ($q) => $q->whereNull($teamsKey)
+            $query->where(fn($q) => $q->whereNull($teamsKey)
                 ->orWhere($teamsKey, $params[$teamsKey] ?? getPermissionsTeamId())
             );
             unset($params[$teamsKey]);
@@ -178,7 +178,7 @@ class Role extends Model implements RoleContract
     /**
      * Determine if the role may perform the given permission.
      *
-     * @param  string|int|\Spatie\Permission\Contracts\Permission|\BackedEnum  $permission
+     * @param string|int|\Spatie\Permission\Contracts\Permission|\BackedEnum $permission
      *
      * @throws PermissionDoesNotExist|GuardDoesNotMatch
      */
@@ -190,7 +190,7 @@ class Role extends Model implements RoleContract
 
         $permission = $this->filterPermission($permission, $guardName);
 
-        if (! $this->getGuardNames()->contains($permission->guard_name)) {
+        if (!$this->getGuardNames()->contains($permission->guard_name)) {
             throw GuardDoesNotMatch::create($permission->guard_name, $guardName ? collect([$guardName]) : $this->getGuardNames());
         }
 

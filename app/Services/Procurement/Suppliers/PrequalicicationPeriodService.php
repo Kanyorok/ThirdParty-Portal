@@ -20,14 +20,15 @@ class PrequalicicationPeriodService
      * Create a new PrequalificationPeriod
      */
     public static function create(
-        string $Title,
-        string $Description,
-        DateTime $StartDate,
-        DateTime $EndDate,
-        int $MaxVendors,
+        string                     $Title,
+        string                     $Description,
+        DateTime                   $StartDate,
+        DateTime                   $EndDate,
+        int                        $MaxVendors,
         PrequalificationPeriodEnum $Status,
-        User $user
-    ): self {
+        User                       $user
+    ): self
+    {
         $newPeriod = PrequalificationPeriod::create([
             'Title' => $Title,
             'Description' => $Description,
@@ -52,15 +53,16 @@ class PrequalicicationPeriodService
      * Update an existing PrequalificationPeriod
      */
     public function update(
-        PrequalificationPeriod $period,
-        string $Title,
-        string $Description,
-        DateTime $StartDate,
-        DateTime $EndDate,
-        int $MaxVendors,
+        PrequalificationPeriod     $period,
+        string                     $Title,
+        string                     $Description,
+        DateTime                   $StartDate,
+        DateTime                   $EndDate,
+        int                        $MaxVendors,
         PrequalificationPeriodEnum $Status,
-        User $user
-    ): self {
+        User                       $user
+    ): self
+    {
         $this->period = $period;
 
         $this->period->update([
@@ -82,7 +84,6 @@ class PrequalicicationPeriodService
         return $this;
     }
 
-    
 
     /**
      * Delete a PrequalificationPeriod

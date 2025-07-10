@@ -86,7 +86,7 @@ class BudgetPeriodController extends Controller
     {
         $this->authorize(PermissionEnum::BudgetSetupCreate, BudgetLine::class);
 
-         $validated = $request->validate([
+        $validated = $request->validate([
             'Name' => 'required|string|max:255',
             'FiscalYear' => 'required|integer|min:2020|max:2100',
             'From' => 'required|date',
@@ -194,16 +194,16 @@ class BudgetPeriodController extends Controller
         // Fetch all GL Accounts with GLAccountTypeID and filter out the ones already attached
         //Get attached AccountIDs for this budget
         $attachedAccountIDs = BudgetGLsAttachments::where('BudgetID', $id)
-                    ->pluck('AccountID')
-                    ->toArray();
+            ->pluck('AccountID')
+            ->toArray();
 
         //Get GL Accounts that are NOT attached
         $glAccounts = DB::table('t_BudgetGLMaster')
-                    ->select('AccountID', 'Description', 'GLSubAccountTypeID', 'GLAccountTypeID')
-                    ->whereNotIn('AccountID', $attachedAccountIDs)
-                    ->get();
-        $budget=Budget::find($id);
-        return view('budgetandanalytics.budgetperiod.edit', compact('types', 'glSubtypes', 'glAccounts','budget'));
+            ->select('AccountID', 'Description', 'GLSubAccountTypeID', 'GLAccountTypeID')
+            ->whereNotIn('AccountID', $attachedAccountIDs)
+            ->get();
+        $budget = Budget::find($id);
+        return view('budgetandanalytics.budgetperiod.edit', compact('types', 'glSubtypes', 'glAccounts', 'budget'));
 
         //return$budgetGLAttachments=BudgetGLsAttachments::select('Id','BudgetID','AccountID','GLID','GLAccountTypeID','Description')->where('BudgetID',$id)->get();
 
@@ -218,11 +218,11 @@ class BudgetPeriodController extends Controller
         $this->authorize(PermissionEnum::BudgetSetupUpdate, BudgetPeriods::class);
 
         $validated = $request->validate([
-            'Name'        => 'required|string|max:255',
-            'FiscalYear'  => 'required|integer|min:2000|max:2100',
-            'From'        => 'required|date',
-            'To'          => 'required|date|after_or_equal:From',
-            'Notes'       => 'nullable|string|max:1000',
+            'Name' => 'required|string|max:255',
+            'FiscalYear' => 'required|integer|min:2000|max:2100',
+            'From' => 'required|date',
+            'To' => 'required|date|after_or_equal:From',
+            'Notes' => 'nullable|string|max:1000',
         ]);
 
         DB::beginTransaction();
@@ -231,12 +231,12 @@ class BudgetPeriodController extends Controller
             $period = Budget::findOrFail($id);
 
             $period->update([
-                'Name'        => $validated['Name'],
-                'FiscalYear'  => $validated['FiscalYear'],
-                'From'        => $validated['From'],
-                'To'          => $validated['To'],
-                'Notes'       => $validated['Notes'] ?? null,
-                'ModifiedBy'  => Auth::id(),
+                'Name' => $validated['Name'],
+                'FiscalYear' => $validated['FiscalYear'],
+                'From' => $validated['From'],
+                'To' => $validated['To'],
+                'Notes' => $validated['Notes'] ?? null,
+                'ModifiedBy' => Auth::id(),
             ]);
 
             DB::commit();
@@ -257,13 +257,12 @@ class BudgetPeriodController extends Controller
     }
 
 
-
     public function destroy(string $id)
     {
         $this->authorize(PermissionEnum::BudgetSetupDelete, BudgetPeriods::class);
-        try{
+        try {
             $period = BudgetPeriods::findOrFail($id); // safer: throws 404 if not found
-            $period -> DeletedBy = Auth::Id();
+            $period->DeletedBy = Auth::Id();
             $period->delete();
 
             activity()
@@ -292,8 +291,8 @@ class BudgetPeriodController extends Controller
 
             //Delete the associated BudgetGLMasterAllocations if they exist
             //
-            $findAlloc=BudgetGLMasterAllocations::find($id);
-            $findAlloc->DeletedBy=Auth::id();
+            $findAlloc = BudgetGLMasterAllocations::find($id);
+            $findAlloc->DeletedBy = Auth::id();
             $findAlloc->delete();
 
             BudgetGLMasterAllocations::where('GLAttachmentID', $id)->delete();
@@ -328,13 +327,13 @@ class BudgetPeriodController extends Controller
             ],
         ]);
 
-        $budgetID=$request->budgetID;
+        $budgetID = $request->budgetID;
         DB::beginTransaction();
         try {
             // Handle selected GLs
             $selectedGls = json_decode($validated['selected_gls'], true);
             foreach ($selectedGls as $gl) {
-                $action=BudgetGLsAttachments::create([
+                $action = BudgetGLsAttachments::create([
                     'BudgetID' => $budgetID,
                     'GLID' => $gl['AccountID'], // Assuming AccountID maps to BudgetGLID
                     'AccountID' => $gl['AccountID'],

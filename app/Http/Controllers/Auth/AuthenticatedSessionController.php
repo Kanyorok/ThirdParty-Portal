@@ -78,9 +78,9 @@ class AuthenticatedSessionController extends Controller
             ->value('Name');
 
         session([
-            'LoginBranchId'   => $selectedBranchId,
+            'LoginBranchId' => $selectedBranchId,
             'LoginBranchName' => $branchName,
-            'LoginRoleName'   => $roleName
+            'LoginRoleName' => $roleName
         ]);
 
         $user->setEffectiveRole($roleName); // Tell Spatie the effective role

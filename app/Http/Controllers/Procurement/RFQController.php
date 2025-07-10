@@ -149,7 +149,7 @@ class RFQController extends Controller
     public function show($id)
     {
         // Get the RFQ and its associated RFQLines
-        $rfq = RFQ::with('rfqLines','rfqLines.uom')->findOrFail($id);
+        $rfq = RFQ::with('rfqLines', 'rfqLines.uom')->findOrFail($id);
 
         // Get unique itemCategoryIds from the RFQLines
         $itemCategoryIds = $rfq->rfqLines->pluck('ItemCategoryId')->unique();

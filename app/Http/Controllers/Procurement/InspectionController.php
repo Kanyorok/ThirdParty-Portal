@@ -13,8 +13,9 @@ class InspectionController extends Controller
         return view('procurement.goodinspection.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('procurement.goodinspection.create');
-    } 
+    }
 }
 
