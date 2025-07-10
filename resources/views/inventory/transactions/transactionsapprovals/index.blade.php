@@ -1,5 +1,5 @@
 @php
-    use App\Enums\Inventory\Transfers;
+    use App\Enums\Inventory\Transfers;use Carbon\Carbon;
 @endphp
 
 @extends('layouts.app')
@@ -102,7 +102,7 @@
                                 {{ $record->branch->Name ?? 'N/A' }}
                             @endif
                         </td>
-                        <td>{{ \Carbon\Carbon::parse($record->CreatedOn)->format('d/m/Y') }}</td>
+                        <td>{{ Carbon::parse($record->CreatedOn)->format('d/m/Y') }}</td>
                         <td>
                             @if($transactionType == 'Stock Transfer')
                                 {{ $record->transferredBy->Name ?? 'N/A'}}

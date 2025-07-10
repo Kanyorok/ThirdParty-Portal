@@ -1,3 +1,4 @@
+@php use Carbon\Carbon; @endphp
 @extends('layouts.app')
 @section('title', '')
 @section('styles')
@@ -68,7 +69,7 @@
                                 <td>{{ $index + 1 }}</td>
                                 <td>{{ $bid->supplier->SupplierName ?? '-' }}</td>
                                 <td>{{ $bid->tender->TenderNo ?? '-' }}</td>
-                                <td>{{ \Carbon\Carbon::parse($bid->CreatedOn)->format('Y-m-d') }}</td>
+                                <td>{{ Carbon::parse($bid->CreatedOn)->format('Y-m-d') }}</td>
 
                                 <td>
                                     @if($bid->bidResponsiveness)

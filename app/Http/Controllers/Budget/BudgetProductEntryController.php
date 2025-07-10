@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class BudgetProductEntryController extends Controller
 {
@@ -108,7 +109,7 @@ class BudgetProductEntryController extends Controller
 
             return redirect()->route('entrybyproduct.index')
                 ->with('success', 'Driver Projections created successfully.');
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             DB::rollBack();
 
             Log::error('Error Adding Projection: ' . $th->getMessage());

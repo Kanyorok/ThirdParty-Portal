@@ -1,3 +1,4 @@
+@php use Carbon\Carbon; @endphp
 @extends('layouts.app')
 
 @section('title', 'Lease Termination Details')
@@ -21,7 +22,7 @@
                     <div class="mb-3">
                         <label class="form-label">Termination Date</label>
                         <input type="text" class="form-control"
-                               value="{{ $leasetermination->TerminationDate ? \Carbon\Carbon::parse($leasetermination->TerminationDate)->format('d/m/Y') : '-' }}"
+                               value="{{ $leasetermination->TerminationDate ? Carbon::parse($leasetermination->TerminationDate)->format('d/m/Y') : '-' }}"
                                readonly>
                     </div>
 

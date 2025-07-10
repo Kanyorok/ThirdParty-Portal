@@ -11,6 +11,7 @@ use App\Models\CRM\DebtRecovery\LoanAssignment;
 use App\Models\CRM\Ticket;
 use App\Models\HRM\Employee;
 use App\Services\HRM\UserService;
+use App\Traits\Controller\HasBranchRoles;
 use App\Traits\Model\ImageTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Builder;
@@ -22,9 +23,6 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use App\Models\Auth\Role;
-use App\Traits\Controller\HasBranchRoles;
-use App\Models\Auth\ModelRole;
 use Illuminate\Support\Collection;
 use Spatie\Permission\Models\Permission;
 

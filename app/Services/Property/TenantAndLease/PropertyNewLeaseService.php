@@ -23,18 +23,18 @@ class PropertyNewLeaseService
 
     public static function create(
         PropertyNewTenant $Tenant,
-        PropertyRegistry  $PropertyID,
-        PropertyBlock     $BlockID,
-        PropertyFloor     $FloorID,
-        PropertyUnit      $Unit,
-        DateTime          $StartDate,
-        DateTime          $EndDate,
-        CodeDetail        $PaymentFrequency,
-        float             $MonthlyRent,
-        float             $Deposit,
-        int               $DueDay,
-        string            $SpecialTerms,
-        User              $user
+        PropertyRegistry $PropertyID,
+        PropertyBlock    $BlockID,
+        PropertyFloor    $FloorID,
+        PropertyUnit     $Unit,
+        DateTime         $StartDate,
+        DateTime         $EndDate,
+        CodeDetail       $PaymentFrequency,
+        float            $MonthlyRent,
+        float            $Deposit,
+        int              $DueDay,
+        string           $SpecialTerms,
+        User             $user
     ): self
     {
 

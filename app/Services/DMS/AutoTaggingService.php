@@ -24,10 +24,10 @@ class AutoTaggingService
         $tags = DocumentTaggingRules::query()
             ->where('Content', $contentEnum->value)
             ->whereIn('TagId', DMSTags::query()->where('Visibility', VisibilityEnum::Public->value)//this filters out deleted tags also
-                ->orWhere(function (Builder $query) use ($actor) {
-                    $query->where('Visibility', VisibilityEnum::Private->value)
-                        ->where('t_DMSTags.CreatedBy', $actor->Id);
-                })->select('t_DMSTags.Id'))
+            ->orWhere(function (Builder $query) use ($actor) {
+                $query->where('Visibility', VisibilityEnum::Private->value)
+                    ->where('t_DMSTags.CreatedBy', $actor->Id);
+            })->select('t_DMSTags.Id'))
             ->with('tag')
             ->get();
 

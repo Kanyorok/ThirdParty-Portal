@@ -2,19 +2,20 @@
 
 namespace App\Http\Controllers\Property;
 
+use App\Enums\Core\PermissionEnum;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Property\TenantAndLease\PropertyLeaseScheduleRequest;
+use App\Models\Core\CodeDetail;
+use App\Models\PropertyManagement\PropertyLeaseSchedule;
+use App\Models\PropertyManagement\PropertyNewLease;
+use App\Models\PropertyManagement\PropertyNewTenant;
+use App\Services\Property\TenantAndLease\PropertyLeaseScheduleService;
+use Exception;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\Controller;
-use App\Enums\Core\PermissionEnum;
-use App\Http\Requests\Property\TenantAndLease\PropertyLeaseScheduleRequest;
-use App\Services\Property\TenantAndLease\PropertyLeaseScheduleService;
-use Illuminate\Http\Request;
-use App\Models\Core\CodeDetail;
-use Illuminate\Support\Facades\Validator;
-use App\Models\PropertyManagement\PropertyLeaseSchedule;
-use App\Models\PropertyManagement\PropertyNewTenant;
-use App\Models\PropertyManagement\PropertyNewLease;
+use Throwable;
 
 
 class PropertyLeaseScheduleController extends Controller
@@ -79,7 +80,7 @@ class PropertyLeaseScheduleController extends Controller
             );
 
             return redirect()->route('schedulelease.index')->with('success', 'Lease schedule added!');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // Redirect back with error message
             return redirect()->back()->with('error', $e->getMessage());
         }
@@ -140,7 +141,7 @@ class PropertyLeaseScheduleController extends Controller
                 ->log('Updated Lease Schedule');
 
             return redirect()->route('schedulelease.index')->with('success', 'Lease schedule updated successfully');
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             DB::rollBack();
             Log::error('Failed to Update Lease Schedule:' . $th->getMessage());
 
@@ -158,7 +159,7 @@ class PropertyLeaseScheduleController extends Controller
 
             return redirect()->route('schedulelease.index')
                 ->with('success', 'Lease Schedule Deleted Successfully!');
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             // Log the error for debugging
             Log::error('Error deleting Lease Schedule: ' . $th->getMessage());
             return redirect()->back()

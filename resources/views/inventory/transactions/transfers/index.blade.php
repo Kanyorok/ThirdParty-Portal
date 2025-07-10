@@ -1,3 +1,5 @@
+@php use App\Enums\Inventory\Transfers; @endphp
+@php use Carbon\Carbon; @endphp
 @extends('layouts.app')
 
 @section('title', 'View Transfers')
@@ -48,17 +50,17 @@
                 <tbody>
                 @forelse($transfers as $i => $transfer)
                     @php
-                        $statusEnum = $transfer->Status instanceof \App\Enums\Inventory\Transfers
+                        $statusEnum = $transfer->Status instanceof Transfers
                             ? $transfer->Status
-                            : (\App\Enums\Inventory\Transfers::tryFrom($transfer->Status) ?? null);
+                            : (Transfers::tryFrom($transfer->Status) ?? null);
 
                         $isPending = $statusEnum
-                            && $statusEnum->value === \App\Enums\Inventory\Transfers::Pending->value;
+                            && $statusEnum->value === Transfers::Pending->value;
                     @endphp
                     <tr>
                         <td>{{ $i + 1 }}</td>
                         <td>{{ $transfer->TransferID ?? '-' }}</td>
-                        <td>{{ \Carbon\Carbon::parse($transfer->TransferDate)->format('d/m/Y') }}</td>
+                        <td>{{ Carbon::parse($transfer->TransferDate)->format('d/m/Y') }}</td>
                         <td>{{ optional($transfer->fromBranch)->Name ?? '-' }}</td>
                         <td>{{ optional($transfer->toBranch)->Name ?? '-' }}</td>
                         <td>{{$transfer->transferredBy->Name ?? 'N/A'}}</td>

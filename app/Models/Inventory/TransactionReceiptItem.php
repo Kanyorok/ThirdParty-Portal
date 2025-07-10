@@ -2,12 +2,9 @@
 
 namespace App\Models\Inventory;
 
+use App\Models\Auth\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Auth\User;
-use App\Models\Inventory\ItemMasterList;
-use App\Models\Inventory\TransactionReceipt;
-use App\Models\Inventory\TransactionTransferItem;
 
 class TransactionReceiptItem extends Model
 {

@@ -5,11 +5,9 @@ namespace App\Http\Controllers\Procurement;
 use App\Http\Controllers\Controller;
 use App\Models\Inventory\ItemCategories;
 use App\Models\Procurement\RFQ;
-use App\Models\Procurement\RFQLine;
 use App\Models\ThirdParies\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Models\Procurement\Requisitions;
 
 class RFQController extends Controller
 {

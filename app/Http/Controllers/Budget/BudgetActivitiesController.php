@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class BudgetActivitiesController extends Controller
 {
@@ -121,7 +122,7 @@ class BudgetActivitiesController extends Controller
                 ->log('Created a budget activity');
             DB::commit();
             return redirect()->route('budgetactivities.index')->with('success', 'Budget Activity created successfully.');
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             DB::rollBack();
             return $th->getMessage();
             Log::error('Failed to store budget activity.', [
@@ -242,7 +243,7 @@ class BudgetActivitiesController extends Controller
                 ->log('Updated a budget activity');
             DB::commit();
             return redirect()->route('budgetactivities.show', $budgetId)->with('success', 'Budget Activity updated successfully.');
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             DB::rollBack();
             Log::error('Failed to update budget activity.', [
                 'error' => $th->getMessage(),
@@ -277,7 +278,7 @@ class BudgetActivitiesController extends Controller
                 ->log('Deleted a budget activity');
             DB::commit();
             return back()->with('success', 'Budget Activity deleted successfully.');
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             DB::rollBack();
             Log::error('Failed to delete budget activity.', [
                 'error' => $th->getMessage(),

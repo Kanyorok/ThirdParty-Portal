@@ -3,31 +3,35 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Enums\Core\PermissionEnum;
+use App\Enums\ProcurementPlanStatusEnum;
 use App\Enums\TenderApprovalStatusEnum;
-use App\Models\Inventory\ItemCategories;
-use App\Models\Inventory\ItemMasterList;
-use App\Models\Procurement\Tender;
-use App\Models\Procurement\ProcurementMode;
-use App\Models\Core\Currency;
-use App\Enums\TenderTypeEnum;
-use App\Http\Controllers\Controller;
 use App\Enums\TenderCategoryEnum;
 use App\Enums\TenderStatusEnum;
+use App\Enums\TenderTypeEnum;
+use App\Http\Controllers\Controller;
+use App\Models\Core\Currency;
+use App\Models\Inventory\ItemCategories;
+use App\Models\Inventory\ItemMasterList;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
+use App\Models\Procurement\ModeTimeline;
 use App\Models\Procurement\PlanLineItems;
+use App\Models\Procurement\ProcurementMode;
 use App\Models\Procurement\ProcurementPlan;
+use App\Models\Procurement\Tender;
 use App\Models\Procurement\TenderCategory;
 use App\Models\Procurement\TenderItems;
+use App\Models\Procurement\TenderStage;
 use App\Models\Procurement\TenderSupplier;
 use App\Models\ThirdParies\Supplier;
-use Illuminate\Http\Request;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Exception;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Enum;
-use App\Enums\ProcurementPlanStatusEnum;
+use Throwable;
 
 class TenderController extends Controller
 {
@@ -285,7 +289,7 @@ class TenderController extends Controller
             //     'message' => 'Tender created successfully.',
             //     'tender_id' => $tenderId
             // ]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             return $e->getMessage();
             Log::error("--- CREATE TENDER ERROR --- " . $e->getMessage());
@@ -457,7 +461,7 @@ class TenderController extends Controller
                     ->log('Tender updated successfully with ID: ' . $id);
 
                 return redirect()->route('initiatetender.edit', $id)->with('success', 'Tender Info updated successfully.');
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 DB::rollBack();
                 Log::error('--- UPDATE TENDER ERROR --- ' . $e->getMessage());
                 Log::error($e);
@@ -502,7 +506,7 @@ class TenderController extends Controller
                         ->log('Tender Item created successfully with ID: ' . $tenderItem->Id);
 
                     return redirect()->route('initiatetender.edit', $id)->with('success', 'Tender Item created successfully.');
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     DB::rollBack();
                     Log::error("--- CREATE TENDER ITEM ERROR --- " . $e->getMessage());
                     Log::error($e);
@@ -526,7 +530,7 @@ class TenderController extends Controller
                         ->log('Tender Item deleted successfully with ID: ' . $tenderItem->Id);
 
                     return redirect()->route('initiatetender.edit', $id)->with('success', 'Tender Item deleted successfully.');
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     DB::rollBack();
                     return $e->getMessage();
                     Log::error("--- DELETE TENDER ITEM ERROR --- " . $e->getMessage());
@@ -564,7 +568,7 @@ class TenderController extends Controller
                         ->log('Tender Supplier created successfully with ID: ' . $tenderSupplier->Id);
 
                     return redirect()->route('initiatetender.edit', $id)->with('success', 'Tender Supplier created successfully.');
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     DB::rollBack();
                     Log::error("--- CREATE TENDER SUPPLIER ERROR --- " . $e->getMessage());
                     Log::error($e);
@@ -589,7 +593,7 @@ class TenderController extends Controller
                         ->log('Tender Supplier deleted successfully with ID: ' . $tenderSupplier->Id);
 
                     return redirect()->route('initiatetender.edit', $id)->with('success', 'Tender Supplier deleted successfully.');
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     DB::rollBack();
                     Log::error("--- DELETE TENDER SUPPLIER ERROR --- " . $e->getMessage());
                     Log::error($e);
@@ -655,7 +659,7 @@ class TenderController extends Controller
                 ->withProperties(['action' => 'update'])
                 ->log('Tender updated successfully with ID: ' . $id);
             return redirect()->route('initiatetender.index')->with('success', 'Tender updated successfully.');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             Log::error("--- UPDATE TENDER ERROR --- " . $e->getMessage());
             Log::error($e);
@@ -677,7 +681,7 @@ class TenderController extends Controller
                 ->withProperties(['action' => 'delete'])
                 ->log('Tender deleted successfully with ID: ' . $id);
             return redirect()->route('initiatetender.index')->with('success', 'Tender deleted successfully.');
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             Log::error("--- DELETE TENDER ERROR --- " . $th->getMessage());
             Log::error($th);
             return redirect()->route('initiatetender.index')->with('error', 'Failed to delete Tender. Please try again.');
@@ -689,13 +693,13 @@ class TenderController extends Controller
      */
     protected function generateTenderStages(Tender $tender, $procurementModeId, $startDate)
     {
-        $timelineStages = \App\Models\Procurement\ModeTimeline::where('ProcurementModeId', $procurementModeId)->get();
+        $timelineStages = ModeTimeline::where('ProcurementModeId', $procurementModeId)->get();
         $startDate = Carbon::parse($startDate);
 
         foreach ($timelineStages as $stage) {
             $endDate = (clone $startDate)->addDays($stage->DurationDays - 1);
 
-            \App\Models\Procurement\TenderStage::create([
+            TenderStage::create([
                 'TenderId' => $tender->Id,
                 'Stage' => $stage->Stage,
                 'DurationDays' => $stage->DurationDays,
@@ -734,7 +738,7 @@ class TenderController extends Controller
                 ->log('Tender approved successfully with ID: ' . $tender->Id);
 
             return redirect()->route('initiatetender.index')->with('success', 'Tender approved successfully.');
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             Log::error("--- APPROVE TENDER ERROR --- " . $th->getMessage());
             Log::error($th);
             return redirect()->route('initiatetender.index')->with('error', 'Failed to approve Tender. Please try again.');
@@ -765,7 +769,7 @@ class TenderController extends Controller
                 ->log('Tender rejected successfully with ID: ' . $tender->Id);
 
             return redirect()->route('initiatetender.index')->with('success', 'Tender rejected successfully.');
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             Log::error("--- REJECT TENDER ERROR --- " . $th->getMessage());
             Log::error($th);
             return redirect()->route('initiatetender.index')->with('error', 'Failed to reject Tender. Please try again.');

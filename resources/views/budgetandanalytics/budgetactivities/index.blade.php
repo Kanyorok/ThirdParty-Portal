@@ -112,7 +112,7 @@
                             <tbody>
                             @foreach ($item->allocations as $alloc)
                                 <tr>
-                                    <td>{{ \DateTime::createFromFormat('!m', $alloc->Month)->format('F') }}</td>
+                                    <td>{{ DateTime::createFromFormat('!m', $alloc->Month)->format('F') }}</td>
                                     <td>{{ number_format($alloc->Amount) }}</td>
                                 </tr>
                             @endforeach

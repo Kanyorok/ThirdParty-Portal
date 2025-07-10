@@ -1,3 +1,4 @@
+@php use Carbon\Carbon; @endphp
 @extends('layouts.app')
 @section('title', 'Lease Renewal')
 @section('content')
@@ -68,19 +69,19 @@
         <div class="col-md-3">
             <label class="form-label">End Date of Current Lease</label>
             <input type="date" class="form-control" name="EndDateCurrentLease"
-                   value="{{ old('EndDateCurrentLease', $leaserenewal->EndDateCurrentLease ? \Carbon\Carbon::parse($leaserenewal->EndDateCurrentLease)->format('Y-m-d') : '') }}">
+                   value="{{ old('EndDateCurrentLease', $leaserenewal->EndDateCurrentLease ? Carbon::parse($leaserenewal->EndDateCurrentLease)->format('Y-m-d') : '') }}">
         </div>
         <div class="col-md-3">
             <label class="form-label">New Start Date</label>
             <input type="date" class="form-control" name="NewStartDate"
-                   value="{{ old('NewStartDate', $leaserenewal->NewStartDate ? \Carbon\Carbon::parse($leaserenewal->NewStartDate)->format('Y-m-d') : '') }}">
+                   value="{{ old('NewStartDate', $leaserenewal->NewStartDate ? Carbon::parse($leaserenewal->NewStartDate)->format('Y-m-d') : '') }}">
         </div>
         <!-- New Terms -->
         <div class="row g-3 mb-3">
             <div class="col-md-3">
                 <label class="form-label">New End Date</label>
                 <input type="date" class="form-control" name="NewEndDate"
-                       value="{{ old('NewEndDate', $leaserenewal->NewEndDate ? \Carbon\Carbon::parse($leaserenewal->NewEndDate)->format('Y-m-d') : '') }}">
+                       value="{{ old('NewEndDate', $leaserenewal->NewEndDate ? Carbon::parse($leaserenewal->NewEndDate)->format('Y-m-d') : '') }}">
             </div>
             <div class="col-md-3">
                 <label class="form-label">New Monthly Rent</label>

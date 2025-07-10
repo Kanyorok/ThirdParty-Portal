@@ -4,16 +4,13 @@ namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\StockAdjustmentRequest;
+use App\Models\Auth\User;
+use App\Models\Core\Branch;
+use App\Models\Core\CodeDetail;
 use App\Models\Inventory\StockAdjustment;
-use App\Models\Inventory\StockAdjustmentItem;
 use App\Models\Inventory\StockItem;
 use App\Services\Inventory\StockAdjustmentService;
-use Illuminate\Http\Request;
-use App\Enums\Inventory\Transfers;
-use App\Models\Core\Branch;
-use App\Models\Auth\User;
-use App\Models\Core\CodeDetail;
-use Illuminate\Support\Facades\Log;
+use Log;
 
 class TransactionAdjustmentController extends Controller
 {
@@ -87,7 +84,7 @@ class TransactionAdjustmentController extends Controller
 
     public function update(StockAdjustmentRequest $request, StockAdjustment $stockAdjustment)
     {
-        \Log::info('TransactionAdjustmentController@update: Attempting to update StockAdjustment ID: ' . $stockAdjustment->Id);
+        Log::info('TransactionAdjustmentController@update: Attempting to update StockAdjustment ID: ' . $stockAdjustment->Id);
         $validated = $request->validated();
         $this->service->update($stockAdjustment, $validated);
         return redirect()->route('transactionsadjustment.index')->with('success', 'Stock adjustment updated successfully.');

@@ -5,11 +5,11 @@ namespace App\Http\Controllers\Inventory;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\InventoryHoldReviewRequest;
 use App\Models\Inventory\InventoryHold;
-use App\Services\Inventory\InventoryHoldReviewService;
-use Illuminate\Http\Request;
 use App\Models\Inventory\InventoryHoldReview;
-use App\Models\Auth\User;
-use Illuminate\Support\Facades\Auth;
+use App\Services\Inventory\InventoryHoldReviewService;
+use Exception;
+use Illuminate\Http\Request;
+use Throwable;
 
 class InventoryHoldReviewController extends Controller
 {
@@ -100,12 +100,12 @@ class InventoryHoldReviewController extends Controller
             match ($action) {
                 'dispose' => $this->service->dispose($id, $extras),
                 'return' => $this->service->returnToSender($id),
-                default => throw new \Exception('Unknown action')
+                default => throw new Exception('Unknown action')
             };
 
             return redirect()->route('inventoryholdreview.index')
                 ->with('success', "Item marked as {$action} successfully.");
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             return redirect()->back()->with('error', $th->getMessage());
         }
     }

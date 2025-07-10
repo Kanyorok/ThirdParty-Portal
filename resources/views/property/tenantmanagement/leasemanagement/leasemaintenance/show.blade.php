@@ -1,3 +1,4 @@
+@php use Carbon\Carbon; @endphp
 @extends('layouts.app')
 
 @section('title', 'Lease Details')
@@ -49,12 +50,12 @@
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Start Date</label>
                             <input type="text" class="form-control"
-                                   value="{{ \Carbon\Carbon::parse($newlease->StartDate)->format('d/m/Y') }}" readonly>
+                                   value="{{ Carbon::parse($newlease->StartDate)->format('d/m/Y') }}" readonly>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">End Date</label>
                             <input type="text" class="form-control"
-                                   value="{{ \Carbon\Carbon::parse($newlease->EndDate)->format('d/m/Y') }}" readonly>
+                                   value="{{ Carbon::parse($newlease->EndDate)->format('d/m/Y') }}" readonly>
                         </div>
                     </div>
 
@@ -86,7 +87,7 @@
                         <label class="form-label">Special Terms</label>
                         <textarea class="form-control" rows="3" readonly>{{ $newlease->SpecialTerms ?? '—' }}</textarea>
                     </div>
-            </div>
+                </div>
 
                 <div class="card-footer bg-light d-flex justify-content-between">
                     <a href="{{ route('addlease.edit', $newlease->Id) }}" class="btn btn-outline-primary"><i

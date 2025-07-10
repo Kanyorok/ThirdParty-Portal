@@ -14,7 +14,6 @@ use App\Http\Controllers\Property\PropertyMaintenanceRequestController;
 use App\Http\Controllers\Property\PropertyMaintenanceWorkCompletionController;
 use App\Http\Controllers\Property\PropertyNewLeaseController;
 use App\Http\Controllers\Property\PropertyNewTenantController;
-use App\Http\Controllers\Property\PropertyPaymentFrequencyController;
 use App\Http\Controllers\Property\PropertyReceiptController;
 use App\Http\Controllers\Property\PropertyRegistryController;
 use App\Http\Controllers\Property\PropertyReportsController;

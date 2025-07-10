@@ -162,7 +162,7 @@ class DocumentService extends PermissionsService
      * @throws ErroredException
      */
     private static function _create(
-        Repository $repository, User $actor, DisksEnum $disk, string $name, ExtensionsEnum $extension, string $path, int $sizeInBytes, string $checksum, string $blob, Collection $properties,
+        Repository          $repository, User $actor, DisksEnum $disk, string $name, ExtensionsEnum $extension, string $path, int $sizeInBytes, string $checksum, string $blob, Collection $properties,
         CategoryMaster|null $category = null, bool $copyPermissions = true): DocumentService
     {
         try {

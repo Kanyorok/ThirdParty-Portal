@@ -2,17 +2,18 @@
 
 namespace App\Services\Inventory;
 
-use App\Models\Inventory\TransactionReceipt;
-use App\Models\Inventory\StockItem;
-use App\Models\Inventory\InventoryHold;
-use App\Models\Core\Workflow;
-use App\Models\Core\PendingWorkflow;
-use App\Models\Core\CodeDetail;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Carbon;
-use Illuminate\Validation\ValidationException;
 use App\Enums\Inventory\Transfers;
+use App\Models\Core\CodeDetail;
+use App\Models\Core\PendingWorkflow;
+use App\Models\Core\Workflow;
+use App\Models\Inventory\InventoryHold;
+use App\Models\Inventory\StockItem;
+use App\Models\Inventory\TransactionReceipt;
+use Exception;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+use Log;
 
 class TransactionReceiptService
 {
@@ -104,8 +105,8 @@ class TransactionReceiptService
             ->value('ID');
 
         if (!$transferSource) {
-            \Log::error('Transfer Source CodeDetail ID not found.');
-            throw new \Exception("Source type 'Transfer Receipts' not found in t_CodeDetails.");
+            Log::error('Transfer Source CodeDetail ID not found.');
+            throw new Exception("Source type 'Transfer Receipts' not found in t_CodeDetails.");
         }
 
         foreach ($items as $index => $itemData) {
@@ -144,7 +145,7 @@ class TransactionReceiptService
 
             $damagedQty = (float)($itemData['damaged_qty'] ?? 0);
             if ($damagedQty > 0) {
-                \Log::info('Recording to InventoryHold', [
+                Log::info('Recording to InventoryHold', [
                     'ItemID' => $itemId,
                     'Quantity' => $damagedQty,
                     'SourceID' => $receipt->Id,

@@ -1,3 +1,4 @@
+@php use App\Enums\Inventory\Transfers; @endphp
 @extends('layouts.app')
 
 @section('title', 'Inventory Review List')
@@ -68,7 +69,7 @@
                                 <td>{{ $hold->defectDetail->Description ?? 'N/A' }}</td>
                                 <td>
                                     @php
-                                        $statusEnum = \App\Enums\Inventory\Transfers::tryFrom($hold->Status);
+                                        $statusEnum = Transfers::tryFrom($hold->Status);
                                     @endphp
                                     @if($statusEnum)
                                         <span class="badge bg-{{ $statusEnum->badgeColor() }}">

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\CRM;
+namespace App\Http\Controllers\DMS;
 
 use App\Enums\Core\ModulesEnum;
 use App\Http\Controllers\Controller;
@@ -13,7 +13,7 @@ class ReportsController extends Controller
 {
     use ReportsTrait;
 
-    protected const ModulesEnum MODULE = ModulesEnum::CRM;
+    protected const ModulesEnum MODULE = ModulesEnum::DMS;
 
     public function index(Request $request): JsonResponse|View
     {

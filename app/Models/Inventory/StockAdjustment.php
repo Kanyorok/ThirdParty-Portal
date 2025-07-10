@@ -2,13 +2,11 @@
 
 namespace App\Models\Inventory;
 
+use App\Models\Auth\User;
+use App\Models\Core\Branch;
+use App\Models\Core\CodeDetail;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\Model\UserActorTrait;
-use App\Models\Core\Branch;
-use App\Models\Auth\User;
-use App\Models\Core\CodeDetail;
-
 
 
 class StockAdjustment extends Model
@@ -77,8 +75,6 @@ class StockAdjustment extends Model
     {
         return $this->belongsTo(CodeDetail::class, 'Reason', 'Id');
     }
-
-
 
 
 }

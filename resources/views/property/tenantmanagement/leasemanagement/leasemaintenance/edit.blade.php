@@ -1,3 +1,4 @@
+@php use Carbon\Carbon; @endphp
 @extends('layouts.app')
 
 @section('title', 'Edit Lease')
@@ -88,9 +89,9 @@
                             <label class="form-label">Start Date</label>
                             <input type="text" id="startDateDisplay"
                                    class="form-control flatpickr @error('StartDate') is-invalid @enderror"
-                                   value="{{ old('StartDate', \Carbon\Carbon::parse($newlease->StartDate)->format('d/m/Y')) }}">
+                                   value="{{ old('StartDate', Carbon::parse($newlease->StartDate)->format('d/m/Y')) }}">
                             <input type="hidden" name="StartDate" id="startDate"
-                                   value="{{ old('StartDate', \Carbon\Carbon::parse($newlease->StartDate)->format('Y-m-d')) }}">
+                                   value="{{ old('StartDate', Carbon::parse($newlease->StartDate)->format('Y-m-d')) }}">
                             @error('StartDate')
                             <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
@@ -99,9 +100,9 @@
                             <label class="form-label">End Date</label>
                             <input type="text" id="endDateDisplay"
                                    class="form-control flatpickr @error('EndDate') is-invalid @enderror"
-                                   value="{{ old('EndDate', \Carbon\Carbon::parse($newlease->EndDate)->format('d/m/Y')) }}">
+                                   value="{{ old('EndDate', Carbon::parse($newlease->EndDate)->format('d/m/Y')) }}">
                             <input type="hidden" name="EndDate" id="endDate"
-                                   value="{{ old('EndDate', \Carbon\Carbon::parse($newlease->EndDate)->format('Y-m-d')) }}">
+                                   value="{{ old('EndDate', Carbon::parse($newlease->EndDate)->format('Y-m-d')) }}">
                             @error('EndDate')
                             <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>

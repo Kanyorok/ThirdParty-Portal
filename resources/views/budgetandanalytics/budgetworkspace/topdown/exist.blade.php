@@ -1,3 +1,4 @@
+@php use Carbon\Carbon; @endphp
 @extends('layouts.app')
 @section('title', 'General Ledger Entries')
 @section('content')
@@ -38,8 +39,8 @@
                         @foreach ($budgets as $item)
                             <option
                                 value="{{ $item->Id }}" {{ $budgetId == $item->Id ? 'selected' : '' }}>{{ $item->Name }}
-                                - {{ \Carbon\Carbon::parse($item->From)->format('Y-m-d') }}
-                                to {{ \Carbon\Carbon::parse($item->To)->format('Y-m-d') }}</option>
+                                - {{ Carbon::parse($item->From)->format('Y-m-d') }}
+                                to {{ Carbon::parse($item->To)->format('Y-m-d') }}</option>
                         @endforeach
                     </select>
                 </div>

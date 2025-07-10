@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class YieldRateController extends Controller
 {
@@ -72,7 +73,7 @@ class YieldRateController extends Controller
                 ->log('Created Budget Driver Rate');
 
             return back()->with('success', 'Driver created successfully');
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             DB::rollBack();
             Log::error('Failed to Update period:' . $th->getMessage());
 
@@ -99,7 +100,7 @@ class YieldRateController extends Controller
                 ->log('Deleted Product Rate: ' . $yieldrate->ProductTypeID);
 
             return redirect()->route('yieldexpenserate.index')->with('success', 'Yield Expense Rate deleted successfully.');
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             DB::rollBack();
             Log::error('Failed to delete Product Rate: ' . $th->getMessage());
             return redirect()->back()->withErrors(['error' => 'Failed to delete Product Rate: ' . $th->getMessage()]);
@@ -157,7 +158,7 @@ class YieldRateController extends Controller
                 ->log('Updated Budget Driver Rate');
 
             return redirect()->route('yieldexpenserate.index')->with('success', 'Driver updated successfully');
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             DB::rollBack();
             Log::error('Failed to Update Driver Rate: ' . $th->getMessage());
 

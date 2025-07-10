@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Budget;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Budget\BudgetLineCategories;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -55,7 +56,7 @@ class BudgetLineCategoriesController extends Controller
                 ->withProperties(['action' => 'create'])
                 ->log('Created budget line category: ' . $budgetLineCategory->CategoryName);
             return redirect()->route('budgetlinecategories.index')->with('success', 'Budget Line Category created successfully.');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             Log::error('Failed to create Budget Line Category: ' . $e->getMessage());
 
@@ -97,7 +98,7 @@ class BudgetLineCategoriesController extends Controller
                 ->withProperties(['action' => 'update'])
                 ->log('Updated budget line category: ' . $budgetLineCategory->CategoryName);
             return redirect()->route('budgetlinecategories.index')->with('success', 'Budget Line Category updated successfully.');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             Log::error('Failed to update Budget Line Category: ' . $e->getMessage());
             return redirect()->back()->withErrors(['error' => 'Failed to update Budget Line Category: ' . $e->getMessage()]);
@@ -121,7 +122,7 @@ class BudgetLineCategoriesController extends Controller
                 ->log('Deleted budget line category: ' . $budgetLineCategory->CategoryName);
             DB::commit();
             return redirect()->route('budgetlinecategories.index')->with('success', 'Budget Line Category deleted successfully.');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             Log::error('Failed to delete Budget Line Category: ' . $e->getMessage());
             return redirect()->back()->withErrors(['error' => 'Failed to delete Budget Line Category: ' . $e->getMessage()]);
