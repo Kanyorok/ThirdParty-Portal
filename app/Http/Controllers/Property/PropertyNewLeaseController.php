@@ -27,13 +27,13 @@ class PropertyNewLeaseController extends Controller
     //
     public function index()
     {
-        $newleases = PropertyNewLease::with('tenant', 'property')->get();
+        $newleases = PropertyNewLease::with('tenant', 'property')->where('isActive', true)->get();
         return view('property.tenantmanagement.leasemanagement.leasemaintenance.index', compact('newleases'));
     }
 
     public function create(){
         $properties = PropertyRegistry::with('getBlockByProperty.floor.units')->get();
-        $newtenants = PropertyNewTenant::where('IsActive', '1')->get();
+        $newtenants = PropertyNewTenant::where('IsActive', true)->get();
         $codes = CodeDetail::where('CodeID', 'PaymentFrequency')->get();
         return view('property.tenantmanagement.leasemanagement.leasemaintenance.create', compact('newtenants', 'properties', 'codes'));
     }
@@ -58,7 +58,7 @@ class PropertyNewLeaseController extends Controller
 
     public function show($Id)
     {
-        $newlease = PropertyNewLease::findOrFail($Id);
+        $newlease = PropertyNewLease::where('isActive', true)->findOrFail($Id);
         return view('property.tenantmanagement.leasemanagement.leasemaintenance.show', compact('newlease'));
     }
 
@@ -96,7 +96,7 @@ class PropertyNewLeaseController extends Controller
 
     public function edit($Id)
     {
-        $newlease = PropertyNewLease::findOrFail($Id);
+        $newlease = PropertyNewLease::where('isActive', true)->findOrFail($Id);
         $properties = PropertyRegistry::with('getBlockByProperty.floor.units')->get();
         $newtenants = PropertyTenantClearance::with('tenant')->where('Status', TenantClearanceEnum::Cleared->value)->get();
         $codes = CodeDetail::where('CodeID', 'PaymentFrequency')->get();

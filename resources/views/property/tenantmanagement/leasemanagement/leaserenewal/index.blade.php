@@ -14,15 +14,10 @@
       <tr>
         <th>#</th>
           <th>Lease Number</th>
-          <th>Tenant Name</th>
-          <th>Property Leased</th>
-          <th>Payment Frequency</th>
           <th>End Date of Current Lease</th>
           <th>New Start Date</th>
           <th>New End Date</th>
-          <th>New Monthly Rent</th>
           <th>Payment Frequency</th>
-          <th>Remarks or Changes</th>
         <th>Action</th>
       </tr>
     </thead>
@@ -31,16 +26,11 @@
       <tr>
           <td>{{ $loop->iteration ?? '-' }}</td>
           <td>{{ $leaserenewal->lease->LeaseNumber ?? '-' }}</td>
-          <td>{{ $leaserenewal->tenant->TenantName ?? '-' }}</td>
-          <td>{{ $leaserenewal->property->PropertyName ?? '-' }}</td>
+          <td>{{ $leaserenewal->EndDateCurrentLease ? \Carbon\Carbon::parse($leaserenewal->EndDateCurrentLease ) ->format('d/m/Y') :  '-' }}</td>
+          <td>{{ $leaserenewal->NewStartDate ? \Carbon\Carbon::parse($leaserenewal->NewStartDate)->format('d/m/Y') : '-' }}</td>
+          <td>{{ $leaserenewal->NewEndDate ? \Carbon\Carbon::parse($leaserenewal->NewEndDate)->format('d/m/Y') : '-' }}</td>
           <td>{{ $leaserenewal->paymentFrequency->Description ?? '-' }}</td>
-          <td>{{ $leaserenewal->EndDateCurrentLease ?? '-' }}</td>
-          <td>{{ $leaserenewal->NewStartDate ?? '-' }}</td>
-          <td>{{ $leaserenewal->NewEndDate ?? '-' }}</td>
-          <td>{{ $leaserenewal->NewMonthlyRent ?? '-' }}</td>
-          <td>{{ $leaserenewal->PaymentFrequency ?? '-' }}</td>
-          <td>{{ $leaserenewal->Remarks ?? '-' }}</td>
-          <td><a href="{{ route('renewlease.show', $leaserenewal->Id) }}" class="btn btn-sm btn-outline-secondary">📄 View</a>
+          <td><a href="{{ route('renewlease.show', $leaserenewal->Id) }}" class="btn btn-sm btn-outline-secondary">View</a>
             <a href="{{ route('renewlease.edit', $leaserenewal->Id) }}" class="btn btn-sm btn-warning">Edit</a>
             <form action="{{ route('renewlease.destroy', $leaserenewal->Id) }}" method="POST" class="d-inline">
                 @csrf

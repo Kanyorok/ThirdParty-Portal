@@ -21,7 +21,7 @@ class PropertyLeaseScheduleController extends Controller
     //
     public function index()
     {
-        $leaseschedules = PropertyLeaseSchedule::with(['lease'])->get();
+        $leaseschedules = PropertyLeaseSchedule::with(['lease'])->where('isActive', true)->get();
         return view('property.tenantmanagement.leasemanagement.leaseschedule.index', compact('leaseschedules'));
     }
 
@@ -35,6 +35,7 @@ class PropertyLeaseScheduleController extends Controller
         // Get leases that are not scheduled
         $newleases = PropertyNewLease::with(['getPropertyByTenant', 'getLeaseByProperty'])
             ->whereNotIn('Id', $scheduledLeaseIds)
+            ->where('isActive', true)
             ->get();
 
         $codes = CodeDetail::where('CodeID', 'PaymentFrequency')->get();
@@ -57,7 +58,7 @@ class PropertyLeaseScheduleController extends Controller
     public function show($id)
     {
         $this->authorize(PermissionEnum::PropertyLeaseScheduleView, PropertyLeaseSchedule::class);
-        $leaseschedule = PropertyLeaseSchedule::find($id);
+        $leaseschedule = PropertyLeaseSchedule::where('isActive', true)->find($id);
         return view('property.tenantmanagement.leasemanagement.leaseschedule.show', compact('leaseschedule'));
     }
 
@@ -93,7 +94,7 @@ public function store(PropertyLeaseScheduleRequest $request)
     {
         //Check if user has permission to edit tender categories
          $this->authorize(PermissionEnum::PropertyLeaseScheduleUpdate, PropertyLeaseSchedule::class);
-        $leaseschedules = PropertyLeaseSchedule::findOrFail($id);
+        $leaseschedules = PropertyLeaseSchedule::where('isActive', true)->findOrFail($id);
         $newtenants = PropertyNewTenant::all();
         $newleases = PropertyNewLease::all();
         $codes = CodeDetail::where('CodeID', 'PaymentFrequency')->get();

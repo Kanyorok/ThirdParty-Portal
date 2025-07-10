@@ -18,8 +18,6 @@ class PropertyLeaseSchedule extends Model
 
     protected $fillable = [
         'LeaseNumber',
-        'TenantId',
-        'PropertyId',
         'PaymentFrequency',
         'StartDate',
         'EndDate',

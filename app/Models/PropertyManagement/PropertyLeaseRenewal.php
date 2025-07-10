@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PropertyLeaseRenewal extends Model
 {
+
+     use SoftDeletes, UserActorTrait;
     //
     protected $table = 't_RenewLease';
     public const CREATED_AT = 'CreatedOn';
@@ -19,13 +21,14 @@ class PropertyLeaseRenewal extends Model
 
     protected $fillable = [
         'LeaseNumber',
-        'TenantId',
-        'PropertyId',
         'PaymentFrequency',
         'EndDateCurrentLease',
         'NewStartDate',
         'NewEndDate',
         'NewMonthlyRent',
+        'ServiceCharge',
+        'ParkingFee',
+        'OtherCharges',
         'Remarks',
         'CreatedBy',
         'ModifiedBy',
@@ -35,25 +38,9 @@ class PropertyLeaseRenewal extends Model
     {
         return 'ScheduleRenewalId';
     }
-        public function getPropertyByTenant()
-    {
-        return $this->hasMany(PropertyNewLease::class, 'TenantId', 'Id');
-    }
-        public function getLeaseByProperty()
-    {
-        return $this->hasMany(PropertyNewLease::class, 'PropertyId', 'Id');
-    }
     public function lease()
     {
         return $this->belongsTo(PropertyNewLease::class, 'LeaseNumber', 'Id');
-    }
-    public function tenant()
-    {
-        return $this->belongsTo(PropertyNewTenant::class, 'TenantId', 'Id');
-    }
-    public function property()
-    {
-        return $this->belongsTo(PropertyRegistry::class, 'PropertyId', 'Id');
     }
      public function paymentFrequency()
     {

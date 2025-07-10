@@ -2,10 +2,14 @@
 
 namespace App\Services\Property\TenantAndLease;
 
+use App\Enums\Property\PropertyNewLeaseEnum;
 use App\Models\Auth\User;
 use App\Models\Core\CodeDetail;
+use App\Models\PropertyManagement\PropertyLeaseRenewal;
+use App\Models\PropertyManagement\PropertyLeaseSchedule;
 use App\Models\PropertyManagement\PropertyLeaseTermination;
 use App\Models\PropertyManagement\PropertyNewLease;
+use Illuminate\Support\Facades\DB;
 
 class PropertyLeaseTerminationService
 {
@@ -22,24 +26,53 @@ class PropertyLeaseTerminationService
         CodeDetail $TerminationReason,
         string $Remarks,
         User $user
-    ): Self {
-        $leasetermination = PropertyLeaseTermination::create([
-            'LeaseID' => $LeaseID->Id,
-            'TerminationDate' => $TerminationDate,
-            'TerminationReason' => $TerminationReason->ID,
-            'Remarks' => $Remarks,
-            'CreatedBy' => $user->Id,
-            'ModifiedBy' => $user->Id,
-        ]);
+    ): self {
+        DB::beginTransaction();
 
-        $LeaseID->IsActive = 0; //feature reference 0 means inactive on the leasecreation as it uses boolean for active status
-        $LeaseID->ModifiedBy = $user->Id;
-        $LeaseID->save();
+        try {
+            // Create termination record
+            $termination = PropertyLeaseTermination::create([
+                'LeaseID' => $LeaseID->Id,
+                'TerminationDate' => $TerminationDate,
+                'TerminationReason' => $TerminationReason->ID,
+                'Remarks' => $Remarks,
+                'CreatedBy' => $user->Id,
+                'ModifiedBy' => $user->Id,
+            ]);
 
+            // Deactivate the main lease
+            $LeaseID->IsActive = false;
+            $LeaseID->Status = PropertyNewLeaseEnum::Terminate;
+            $LeaseID->ModifiedBy = $user->Id;
+            $LeaseID->save();
 
-        activity()->causedBy($user->Id)->performedOn($leasetermination)->event('create')
-        ->log("Added New Lease {$leasetermination->Id}.");
-        
-        return new self($leasetermination);
+            // Deactivate all related schedules
+            PropertyLeaseSchedule::where('LeaseNumber', $LeaseID->Id)
+                ->update([
+                    'IsActive' => false,
+                    'ModifiedBy' => $user->Id,
+                ]);
+
+            // Deactivate all related renewals
+            PropertyLeaseRenewal::where('LeaseNumber', $LeaseID->Id)
+                ->update([
+                    'IsActive' => false,
+                    'ModifiedBy' => $user->Id,
+                ]);
+
+            // Log activity
+            activity()
+                ->causedBy($user->Id)
+                ->performedOn($termination)
+                ->event('create')
+                ->log("Terminated Lease ID {$LeaseID->Id}");
+
+            DB::commit();
+
+            return new self($termination);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
 }
