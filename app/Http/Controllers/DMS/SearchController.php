@@ -2,12 +2,9 @@
 
 namespace App\Http\Controllers\DMS;
 
-use App\Enums\Core\VisibilityEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\DMS\FilesCollection;
 use App\Http\Resources\DMS\RepositoryCollection;
-use App\Models\Auth\Team;
-use App\Models\Auth\User;
 use App\Models\DMS\Document;
 use App\Models\DMS\Repository;
 use Illuminate\Database\Eloquent\Builder;
@@ -34,18 +31,7 @@ class SearchController extends Controller
             if (empty($search)) {
                 return new FilesCollection(collect([]));
             }
-            $files = Document::query()->whereHas('current')->where(function (Builder $query) use ($actor) {
-                $query->where('t_Documents.Visibility', VisibilityEnum::Public->value)
-                    ->orWhereHas('permissions', function (Builder $q) use ($actor) {
-                        $q->where(function (Builder $q) use ($actor) {
-                            $q->where('Party', User::getPrimaryKey())
-                                ->where('PartyID', $actor->Id);
-                        })->orWhere(function (Builder $q) use ($actor) {
-                            $q->where('Party', Team::getPrimaryKey())
-                                ->whereIn('PartyID', $actor->teams()->select('t_Teams.TeamID'));
-                        });
-                    });
-            })->with(['current', 'repository'])->where(function (Builder $query) use ($search) {
+            $files = Document::query()->user($actor)->whereHas('current')->where(function (Builder $query) use ($search) {
                 $query->where('t_Documents.Name', 'LIKE', "%{$search}%")
                     ->orWhereHas('current', function (Builder $q) use ($search) {
                         $q->where('t_DocumentVersions.Name', 'LIKE', "%{$search}%")
@@ -54,7 +40,7 @@ class SearchController extends Controller
                     ->orWhereHas('tags', function (Builder $q) use ($search) {
                         $q->where('t_DMSTags.Name', 'LIKE', "%{$search}%");
                     });
-            })->limit(10)->get();
+            })->with(['current', 'repository'])->limit(5)->get();//todo search limit to db
 
             return (new FilesCollection($files))->setMinified(true);
         }
@@ -63,27 +49,12 @@ class SearchController extends Controller
                 return new RepositoryCollection(collect([]));
             }
 
-            $repos = Repository::query()->where(function (Builder $query) use ($actor) {
-                $query->where('t_Repositories.Visibility', VisibilityEnum::Public->value)
-                    ->orWhereHas('permissions', function (Builder $q) use ($actor) {
-                        $q->where(function (Builder $q) use ($actor) {
-                            $q->where('Party', User::getPrimaryKey())
-                                ->where('PartyID', $actor->Id);
-                        })->orWhere(function (Builder $q) use ($actor) {
-                            $q->where('Party', Team::getPrimaryKey())
-                                ->whereIn('PartyID', $actor->teams()->select('t_Teams.TeamID'));
-                        });
-                    });
-            })->with(['current', 'repository'])->where(function (Builder $query) use ($search) {
-                $query->where('t_Documents.Name', 'LIKE', "%{$search}%")
-                    ->orWhereHas('current', function (Builder $q) use ($search) {
-                        $q->where('t_DocumentVersions.Name', 'LIKE', "%{$search}%")
-                            ->orWhere('t_DocumentVersions.Blob', 'LIKE', "%{$search}%");
-                    })
-                    ->orWhereHas('tags', function (Builder $q) use ($search) {
-                        $q->where('t_DMSTags.Name', 'LIKE', "%{$search}%");
-                    });
-            })->limit(10)->get();
+            $repos = Repository::query()->user($actor)->where(function (Builder $query) use ($search) {
+                $query->where('t_Repositories.Name', 'LIKE', "%{$search}%")
+                    ->Orwhere('t_Repositories.Description', 'LIKE', "%{$search}%");
+            })->limit(5)->get();//todo search limit to db
+
+            return (new RepositoryCollection($repos))->setMinified(true);
         }
 
 

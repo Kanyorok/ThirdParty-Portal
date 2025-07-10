@@ -19,7 +19,7 @@ trait SpecialPermissionTrait
     public function scopeUser(Builder $q, User $user): Builder
     {
         return $q->where(function (Builder $query) use ($user) {
-            $query->where('t_Repositories.Visibility', VisibilityEnum::Public->value)
+            $query->where($this->getTable() . '.Visibility', VisibilityEnum::Public->value)
                 ->orWhereHas('permissions', function (Builder $q) use ($user) {
                     $q->where(function (Builder $q) use ($user) {
                         $q->where('Party', User::getPrimaryKey())

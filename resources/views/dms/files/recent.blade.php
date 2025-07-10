@@ -9,12 +9,6 @@
 @endsection
 @section('styles')
     <link rel="stylesheet" href="{{ asset('assets/libs/dropzone/dropzone.min.css') }}">
-    <style>
-        .icon-size {
-            height: 30px !important;
-            width: 30px !important;
-        }
-    </style>
 @endsection
 @section('search-form')
     <style>
@@ -156,31 +150,31 @@
                     }
                 }
             });
-
-            const nhlTeams = new Bloodhound({
-                datumTokenizer: Bloodhound.tokenizers.obj.whitespace('team'),
+            const repoEngine = new Bloodhound({
+                datumTokenizer: function (repository) {
+                    return Bloodhound.tokenizers.whitespace(repository.name);
+                },
                 queryTokenizer: Bloodhound.tokenizers.whitespace,
-                prefetch: '{{ asset('nhl.json') }}'
+                remote: {
+                    url: "{{ route('dms.search') }}?type=repositories&q=%QUERY",
+                    wildcard: '%QUERY',
+                    filter: function (response) {
+                        return response.data;
+                    }
+                }
             });
 
             filesEngine.initialize();
+            repoEngine.initialize();
 
             $('#SearchInput').typeahead({
                     highlight: false
                 },
-                /* {
-                     name: 'nba-teams',
-                     display: 'team',
-                     source: nbaTeams,
-                     templates: {
-                         header: '<h6>NBA Teams</h6>'
-                     }
-                 },*/
                 {
                     name: 'files',
                     displayKey: 'value',
                     source: filesEngine.ttAdapter(),
-                    limit: 5,
+                    limit: 5,//todo search limit to db
                     templates: {
                         header: '<h6 class="suggestions-header text-primary mb-0 mx-3 mt-3 pb-2">Files</h6>',
                         suggestion: function (document) {
@@ -193,13 +187,27 @@
                     }
                 },
                 {
-                    name: 'nhl-teams',
-                    display: 'team',
-                    source: nhlTeams,
+                    name: 'repositories',
+                    displayKey: 'value',
+                    source: repoEngine.ttAdapter(),
+                    limit: 5, //todo search limit to db
                     templates: {
-                        header: '<h6>NHL Teams</h6>'
+                        header: '<h6 class="suggestions-header text-primary mb-0 mx-3 mt-3 pb-2">Repositories</h6>',
+                        suggestion: function (repo) {
+                            let content = '<a href="' + repo.links.route + '" > <div class="d-flex"> <div class="flex-shrink-0">' +
+                                ' <svg class="pc-icon wid-20 hei-20 ';
+                            content += (repo.visibility.value === '{{ VisibilityEnum::Private->value }}') ? ' text-warning' : ' text-primary';
+                            content += '"> <use xlink:href="#custom-folder-open"></use> </svg>' +
+                                ' </div> <div class="flex-grow-1 mx-3">' +
+                                '<h5 class="mb-1 d-grid"><span class="text-truncate w-100">' + repo.name + '</span></h5> </div></div></a>';
+                            return content;
+                        },
+                        notFound: '<div class="not-found px-3 py-2"><h6 class="suggestions-header text-primary mb-2' +
+                            '">Repository</h6><p class="py-2 mb-0"><i class="bx bx-error-circle bx-xs me-2"></i>' +
+                            ' No Results Found</p></div>'
                     }
-                });
+                },
+            );
         });
 
 
