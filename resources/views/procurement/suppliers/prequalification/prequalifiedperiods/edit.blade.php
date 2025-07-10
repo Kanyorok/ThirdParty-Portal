@@ -1,3 +1,5 @@
+@php use Carbon\Carbon; @endphp
+@php use App\Enums\Procurement\PrequalificationPeriodEnum; @endphp
 @extends('layouts.app')
 
 @section('title', 'Edit Prequalification Period')
@@ -19,14 +21,14 @@
                 <div class="mb-3">
                     <label class="form-label" for="start-date">Start Date</label>
                     <input type="text" id="start-date" name="StartDate"
-                           value="{{ old('StartDate', \Carbon\Carbon::parse($period->StartDate)->format('d/m/Y')) }}"
+                           value="{{ old('StartDate', Carbon::parse($period->StartDate)->format('d/m/Y')) }}"
                            class="form-control">
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label" for="end-date">End Date</label>
                     <input type="text" id="end-date" name="EndDate"
-                           value="{{ old('EndDate', \Carbon\Carbon::parse($period->EndDate)->format('d/m/Y')) }}"
+                           value="{{ old('EndDate', Carbon::parse($period->EndDate)->format('d/m/Y')) }}"
                            class="form-control">
                 </div>
 
@@ -45,7 +47,7 @@
                 <div class="mb-3">
                     <label class="form-label">Status</label>
                     <select name="Status" class="form-select">
-                        @foreach(\App\Enums\Procurement\PrequalificationPeriodEnum::cases() as $status)
+                        @foreach(PrequalificationPeriodEnum::cases() as $status)
                             <option
                                 value="{{ $status->value }}" {{ old('Status', $period->Status->Label()) == $status->value ? 'selected' : '' }}>
                                 {{ $status->Label() }}

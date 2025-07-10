@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers\Inventory;
 
-use App\Http\Controllers\Controller;
-use App\Models\Inventory\TransactionTransfer;
-use Illuminate\Http\Request;
 use App\Enums\Inventory\Transfers;
+use App\Http\Controllers\Controller;
+use App\Models\Inventory\StockAdjustment;
+use App\Models\Inventory\StockIssue;
+use App\Models\Inventory\TransactionTransfer;
 use App\Services\Inventory\StockAdjustmentService;
 use App\Services\Inventory\TransactionTransferService;
+use Exception;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
 
 class TransactionApprovalController extends Controller
 {
@@ -42,7 +46,7 @@ class TransactionApprovalController extends Controller
             }
 
         } elseif ($transactionType === 'Stock Issue') {
-            $query = \App\Models\Inventory\StockIssue::with(['branch', 'creator'])
+            $query = StockIssue::with(['branch', 'creator'])
                 ->where('Status', 'Pending');
 
             if ($branch) {
@@ -53,7 +57,7 @@ class TransactionApprovalController extends Controller
             }
 
         } elseif ($transactionType === 'Stock Adjustment') {
-            $query = \App\Models\Inventory\StockAdjustment::with('branch')
+            $query = StockAdjustment::with('branch')
                 ->where('Status', Transfers::Pending);
 
             if ($branch) {
@@ -67,7 +71,7 @@ class TransactionApprovalController extends Controller
             $query = collect(); // fallback if type is unknown
         }
 
-        if (is_a($query, \Illuminate\Database\Eloquent\Builder::class)) {
+        if (is_a($query, Builder::class)) {
             if ($fromDate) {
                 $query->whereDate('CreatedOn', '>=', $fromDate);
             }
@@ -98,7 +102,7 @@ class TransactionApprovalController extends Controller
                 $this->adjustmentService->approve($id);
                 return redirect()->back()->with('success', 'Stock Adjustment approved.');
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
 
@@ -127,16 +131,16 @@ class TransactionApprovalController extends Controller
         $transactionType = $request->get('transaction_type');
 
         if ($transactionType === 'Stock Transfer') {
-            $record = \App\Models\Inventory\TransactionTransfer::with([
+            $record = TransactionTransfer::with([
                 'fromBranch', 'toBranch', 'transferredBy', 'items.item.uom'
             ])->findOrFail($id);
         } elseif ($transactionType === 'Stock Adjustment') {
-            $record = \App\Models\Inventory\StockAdjustment::with([
+            $record = StockAdjustment::with([
                 'branch', 'adjustedBy', 'items.item.uom'
             ])->findOrFail($id);
         } else {
             // Try to find as Transfer
-            $record = \App\Models\Inventory\TransactionTransfer::with([
+            $record = TransactionTransfer::with([
                 'fromBranch', 'toBranch', 'transferredBy', 'items.item.uom'
             ])->find($id);
 
@@ -144,7 +148,7 @@ class TransactionApprovalController extends Controller
                 $transactionType = 'Stock Transfer';
             } else {
                 // Try to find as Adjustment
-                $record = \App\Models\Inventory\StockAdjustment::with([
+                $record = StockAdjustment::with([
                     'branch', 'adjustedBy', 'items.item.uom'
                 ])->find($id);
 

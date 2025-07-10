@@ -2,11 +2,8 @@
 
 namespace App\Models\PropertyManagement;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Models\Core\CodeDetail;
-use App\Traits\Model\UserActorTrait;
-use App\Models\PropertyManagement\PropertyNewLease;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Model;
 
 class PropertyLeaseRenewal extends Model
 {

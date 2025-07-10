@@ -18,13 +18,13 @@ class PropertyInvoiceService
 
     public static function create(
         PropertyNewLease $Lease,
-        string           $BillingMonth,
-        string           $InvoiceDate,
-        float            $RentAmount,
-        float            $ServicesCharge,
-        float            $OtherCharges,
-        string           $InvoiceNotes,
-        User             $user
+        string $BillingMonth,
+        string $InvoiceDate,
+        float  $RentAmount,
+        float  $ServicesCharge,
+        float  $OtherCharges,
+        string $InvoiceNotes,
+        User   $user
     ): self
     {
 

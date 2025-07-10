@@ -5,11 +5,9 @@ namespace App\Http\Controllers\Property;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\TenantAndLease\PropertyLeaseTerminationRequest;
 use App\Models\Core\CodeDetail;
+use App\Models\PropertyManagement\PropertyLeaseTermination;
 use App\Models\PropertyManagement\PropertyNewLease;
 use App\Services\Property\TenantAndLease\PropertyLeaseTerminationService;
-use Illuminate\Http\Request;
-use App\Models\PropertyManagement\PropertyLeaseTermination;
-use App\Models\PropertyManagement\PropertyNewTenant;
 
 class PropertyLeaseTerminationController extends Controller
 {

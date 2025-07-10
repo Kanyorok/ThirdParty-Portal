@@ -22,14 +22,14 @@ class PropertyTenantClearanceService
 
     public static function create(
         PropertyNewTenant $Tenant,
-        DateTime            $ExitDate,
-        bool                $FinalInspection,
-        bool                $AllDuesPaid,
-        bool                $KeysReturned,
-        CodeDetail          $DepositRefunded,
-        string              $AdditionalNotes,
+        DateTime   $ExitDate,
+        bool       $FinalInspection,
+        bool       $AllDuesPaid,
+        bool       $KeysReturned,
+        CodeDetail $DepositRefunded,
+        string     $AdditionalNotes,
         TenantClearanceEnum $Status,
-        User                $user
+        User       $user
     ): self
     {
         $clearance = PropertyTenantClearance::create([

@@ -9,6 +9,7 @@ use App\Models\Budget\BudgetLine;
 use App\Models\Budget\BudgetManualEntry;
 use App\Models\Budget\BudgetManualEntryAllocations;
 use App\Models\Core\Branch;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -95,7 +96,7 @@ class BudgetGLLineEntryController extends Controller
                 ->withProperties(['action' => 'create'])
                 ->log('Created a Manual Budget Line Entry');
             return redirect()->route('entrybyglline.index')->with('success', 'Manual Budget Line Entry Created Successfully!');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollback();
             return $e->getMessage();
             Log::error('Failed to save budget entry.', [
@@ -141,7 +142,7 @@ class BudgetGLLineEntryController extends Controller
                 ->withProperties(['action' => 'delete'])
                 ->log('Deleted a Manual Budget Line Entry');
             return back()->with('success', 'Manual Budget Line Entry Deleted Successfully!');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             return $e->getMessage();
             Log::error('Failed to delete budget entry.', $e->getMessage());
@@ -222,7 +223,7 @@ class BudgetGLLineEntryController extends Controller
                 ->withProperties(['action' => 'update'])
                 ->log('Updated a Manual Budget Line Entry');
             return redirect()->route('entrybyglline.index')->with('success', 'Manual Budget Line Entry Updated Successfully!');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             Log::error('Failed to update budget entry.', [
                 'error' => $e->getMessage(),

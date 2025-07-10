@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers\Inventory;
 
-use App\Http\Controllers\Controller;
-use App\Models\Inventory\TransactionTransfer;
-use App\Models\Inventory\TransactionReceipt;
-use App\Http\Requests\Inventory\TransactionReceiptRequest;
-use App\Services\Inventory\TransactionReceiptService;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Auth\User;
-use App\Models\Core\Branch;
 use App\Enums\Inventory\Transfers;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Inventory\TransactionReceiptRequest;
+use App\Models\Auth\User;
+use App\Models\Inventory\ItemMasterList;
+use App\Models\Inventory\Store;
+use App\Models\Inventory\TransactionReceipt;
+use App\Models\Inventory\TransactionTransfer;
+use App\Services\Inventory\TransactionReceiptService;
+use Illuminate\Validation\ValidationException;
 
 class TransactionReceiptsController extends Controller
 {
@@ -54,16 +55,16 @@ class TransactionReceiptsController extends Controller
         try {
             $receipt = $this->service->createReceipt($validatedData, $items);
             return redirect()->route('transactionsreceipts.index')->with('success', 'Transaction receipt posted successfully.');
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             $transferId = $validatedData['TransferID'] ?? null;
             $transfer = TransactionTransfer::find($transferId);
             $branchId = $transfer?->ToBranch;
 
             $itemsWithDetails = collect($items)->map(function ($item) use ($branchId) {
-                $itemModel = \App\Models\Inventory\ItemMasterList::find($item['item']);
+                $itemModel = ItemMasterList::find($item['item']);
                 $item['item_name'] = $itemModel->ItemName ?? 'Unknown';
 
-                $storeOptions = \App\Models\Inventory\Store::where('BranchID', $branchId)
+                $storeOptions = Store::where('BranchID', $branchId)
                     ->get(['Id', 'StoreName'])
                     ->map(fn($s) => ['Id' => $s->Id, 'StoreName' => $s->StoreName])
                     ->toArray();
@@ -103,7 +104,7 @@ class TransactionReceiptsController extends Controller
         $transfer = TransactionTransfer::with('items.item')->findOrFail($id);
         $branchId = $transfer->ToBranch;
 
-        $branchStores = \App\Models\Inventory\Store::where('BranchID', $branchId)
+        $branchStores = Store::where('BranchID', $branchId)
             ->select('Id', 'StoreName')
             ->get();
 

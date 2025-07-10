@@ -14,6 +14,7 @@ use App\Models\CRM\Meeting;
 use App\Models\CRM\MeetingRoom;
 use App\Models\CRM\Schedule;
 use App\Models\CRM\ScheduleUser;
+use App\Models\ThirdParies\Board;
 use App\Services\ScheduleService;
 use Carbon\Carbon;
 use Exception;
@@ -178,7 +179,7 @@ class ScheduleController extends Controller
                     return $this->errored('appointment party not found');
                 }
 
-            } elseif ($schedule->Type === \App\Models\ThirdParies\Board::getPrimaryKey()) {
+            } elseif ($schedule->Type === Board::getPrimaryKey()) {
                 $parties_count = $scheduleService->boardsCount();
                 if ($parties_count === 1) {
                     $parties = $scheduleService->boards()->first();

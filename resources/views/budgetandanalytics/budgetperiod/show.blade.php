@@ -1,3 +1,4 @@
+@php use Carbon\Carbon; @endphp
 @extends('layouts.app')
 @section('title', 'View Budget')
 @section('content')
@@ -29,12 +30,12 @@
             <div class="col-md-6 mb-3">
                 <label class="form-label fw-medium">From (Date)</label>
                 <input type="text" class="form-control rounded-3"
-                       value="{{ \Carbon\Carbon::parse($budget->From)->format('Y-m-d') }}" readonly>
+                       value="{{ Carbon::parse($budget->From)->format('Y-m-d') }}" readonly>
             </div>
             <div class="col-md-6 mb-3">
                 <label class="form-label fw-medium">To (Date)</label>
                 <input type="text" class="form-control rounded-3"
-                       value="{{ \Carbon\Carbon::parse($budget->To)->format('Y-m-d') }}" readonly>
+                       value="{{ Carbon::parse($budget->To)->format('Y-m-d') }}" readonly>
             </div>
             <div class="col-md-12 mb-3">
                 <label class="form-label fw-medium">Notes</label>

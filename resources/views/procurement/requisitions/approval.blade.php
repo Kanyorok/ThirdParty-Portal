@@ -1,3 +1,4 @@
+@php use Carbon\Carbon; @endphp
 @extends('layouts.app')
 
 @section('title', 'Requisition Approval')
@@ -16,7 +17,7 @@
                         <h5>Requisition Information</h5>
                         <p><strong>Requisition Number:</strong> {{ $requisitionInfo->RequisitionNo ?? 'N/A' }}</p>
                         <p>
-                            <strong>Date:</strong> {{ isset($requisitionInfo->CreatedOn) ? \Carbon\Carbon::parse($requisitionInfo->CreatedOn)->format('d/m/Y') : '' }}
+                            <strong>Date:</strong> {{ isset($requisitionInfo->CreatedOn) ? Carbon::parse($requisitionInfo->CreatedOn)->format('d/m/Y') : '' }}
                         </p>
                         <p><strong>Branch:</strong> {{ $requisitionInfo->BranchID ?? 'N/A' }}</p>
                         <p><strong>Department:</strong> {{ $requisitionInfo->DepartmentID ?? 'N/A' }}</p>

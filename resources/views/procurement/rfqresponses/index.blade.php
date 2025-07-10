@@ -1,3 +1,4 @@
+@php use Carbon\Carbon; @endphp
 @extends('layouts.app')
 @section('title', 'RFQ Responses')
 @section('content')
@@ -24,8 +25,8 @@
                 <tbody>
                 @foreach($rfqResponses as $response)
                     @php
-                        $deliveryDate = \Carbon\Carbon::parse($response->CreatedOn)->addDays((int) $response->DurationDays)->startOfDay();
-                        $today = \Carbon\Carbon::now()->startOfDay();
+                        $deliveryDate = Carbon::parse($response->CreatedOn)->addDays((int) $response->DurationDays)->startOfDay();
+                        $today = Carbon::now()->startOfDay();
                         $daysRemaining = $today->diffInDays($deliveryDate, false);
                     @endphp
                     <tr>

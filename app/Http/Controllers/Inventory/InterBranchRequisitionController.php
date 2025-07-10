@@ -12,6 +12,7 @@ use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\UnitOfMeasure;
 use App\Providers\Inventory\InterBranchRequisitionPolicy;
 use App\Services\Inventory\InterBranchRequisitionService;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -140,7 +141,7 @@ class InterBranchRequisitionController extends Controller
         try {
             $this->service->update($item, $data);
             return redirect()->route('interbranchrequisition.index')->with('success', 'Requisition updated successfully!');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return back()->withErrors('Failed to update Requisition: ' . $e->getMessage())->withInput();
         }
     }

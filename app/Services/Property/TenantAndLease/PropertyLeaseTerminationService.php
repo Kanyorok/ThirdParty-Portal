@@ -18,10 +18,10 @@ class PropertyLeaseTerminationService
 
     public static function create(
         PropertyNewLease $LeaseID,
-        string           $TerminationDate,
-        CodeDetail       $TerminationReason,
-        string           $Remarks,
-        User             $user
+        string     $TerminationDate,
+        CodeDetail $TerminationReason,
+        string     $Remarks,
+        User       $user
     ): Self
     {
         $leasetermination = PropertyLeaseTermination::create([

@@ -1,3 +1,4 @@
+@php use Carbon\Carbon; @endphp
 @extends('layouts.app')
 @section('title', 'Edit Rent Invoice')
 @section('content')
@@ -34,12 +35,12 @@
                     <div class="col-md-3">
                         <label class="form-label">Billing Month</label>
                         <input type="month" class="form-control" name="BillingMonth"
-                               value="{{ old('BillingMonth', $invoices->BillingMonth ? \Carbon\Carbon::parse($invoices->BillingMonth)->format('Y-m') : '') }}">
+                               value="{{ old('BillingMonth', $invoices->BillingMonth ? Carbon::parse($invoices->BillingMonth)->format('Y-m') : '') }}">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Invoice Date</label>
                         <input type="date" class="form-control" name="InvoiceDate"
-                               value="{{ old('InvoiceDate', $invoices->InvoiceDate ? \Carbon\Carbon::parse($invoices->InvoiceDate)->format('Y-m-d') : '') }}">
+                               value="{{ old('InvoiceDate', $invoices->InvoiceDate ? Carbon::parse($invoices->InvoiceDate)->format('Y-m-d') : '') }}">
                     </div>
                 </div>
 

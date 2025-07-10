@@ -5,19 +5,19 @@ namespace App\Http\Controllers\Budget;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Budget\BudgetGLAccount;
+use App\Models\Budget\BudgetGLAccountSubType;
 use App\Models\Budget\BudgetLine;
 use App\Models\Budget\BudgetLineCategories;
+use App\Models\Budget\BudgetLineProductTypes;
 use App\Models\Budget\BudgetLinesGLAccount;
 use App\Models\Budget\BudgetProductType;
 use App\Models\Core\CodeDetail;
+use App\Models\HRM\Department;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use PhpOffice\PhpSpreadsheet\Calculation\Category;
-use App\Models\HRM\Department;
-use App\Models\Budget\BudgetGLAccountSubType;
-use App\Models\Budget\BudgetLineProductTypes;
+use Throwable;
 
 class BudgetLineMappingController extends Controller
 {
@@ -141,7 +141,7 @@ class BudgetLineMappingController extends Controller
 
             //return back()->with('success', 'Budget Line Mapping created successfully.');
             return redirect()->route('budgetlinemapping.index')->with('success', 'Budget Line Mapping created successfully.');
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             DB::rollBack();
             return $th->getMessage();
             Log::error('Failed to store budget line mapping.', [
@@ -159,16 +159,16 @@ class BudgetLineMappingController extends Controller
         $budgetCategories = BudgetLineCategories::all();
         $gls = BudgetGLAccount::select('Id', 'Description')->get();
         $productTypes = BudgetProductType::select('Id', 'Name')->get();
-        $departments = \App\Models\HRM\Department::all();
-        $glAccountTypes = \App\Models\Core\CodeDetail::select('Id', 'CodeID', 'Value', 'Description')->where('CodeID', 'GLAccountType')->get();
-        $glSubtype = \App\Models\Budget\BudgetGLAccountSubType::select('Id', 'GLAccountTypeValue', 'GLAccountSubTypeName')->get();
+        $departments = Department::all();
+        $glAccountTypes = CodeDetail::select('Id', 'CodeID', 'Value', 'Description')->where('CodeID', 'GLAccountType')->get();
+        $glSubtype = BudgetGLAccountSubType::select('Id', 'GLAccountTypeValue', 'GLAccountSubTypeName')->get();
 
         // Get currently selected GLs for this budget line
         $selectedGLs = BudgetLinesGLAccount::where('BudgetLineID', $budgetLine->Id)
             ->pluck('BudgetGLAccountID')
             ->toArray();
         // Get currently selected Product Types for this budget line
-        $selectedProductTypes = \App\Models\Budget\BudgetLineProductTypes::where('BudgetLineId', $budgetLine->Id)
+        $selectedProductTypes = BudgetLineProductTypes::where('BudgetLineId', $budgetLine->Id)
             ->pluck('ProductTypeId')
             ->toArray();
 
@@ -271,7 +271,7 @@ class BudgetLineMappingController extends Controller
 
             return redirect()->route('budgetlinemapping.index')->with('success', 'Budget Line Mapping updated successfully.');
 
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             DB::rollBack();
 
             Log::error('Failed to update budget line mapping.', [
@@ -316,7 +316,7 @@ class BudgetLineMappingController extends Controller
                 ->log('Delete a budget line mapping');
             DB::commit();
             return redirect()->back()->with('success', 'Budget Line and its mappings deleted successfully.');
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             DB::rollBack();
 
             Log::error('Failed to delete Budget Line: ' . $th->getMessage());
@@ -327,7 +327,7 @@ class BudgetLineMappingController extends Controller
 
     public function getGLAccountSubTypes($typeId)
     {
-        $subTypes = \App\Models\Budget\BudgetGLAccountSubType::where('GLAccountTypeValue', $typeId)->get();
+        $subTypes = BudgetGLAccountSubType::where('GLAccountTypeValue', $typeId)->get();
         return response()->json($subTypes);
     }
 

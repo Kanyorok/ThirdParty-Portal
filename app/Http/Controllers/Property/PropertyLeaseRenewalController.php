@@ -2,18 +2,17 @@
 
 namespace App\Http\Controllers\Property;
 
+use App\Enums\Core\PermissionEnum;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Property\TenantAndLease\PropertyLeaseRenewalRequest;
+use App\Models\PropertyManagement\PropertyLeaseRenewal;
+use App\Models\PropertyManagement\PropertyNewLease;
+use App\Services\Property\TenantAndLease\PropertyLeaseRenewalService;
+use Exception;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use App\Enums\Core\PermissionEnum;
-use App\Http\Requests\Property\TenantAndLease\PropertyLeaseRenewalRequest;
-use App\Services\Property\TenantAndLease\PropertyLeaseRenewalService;
-use App\Models\Core\CodeDetail;
-use App\Models\PropertyManagement\PropertyNewLease;
-use App\Models\PropertyManagement\PropertyLeaseRenewal;
-use App\Models\PropertyManagement\PropertyNewTenant;
+use Throwable;
 
 class PropertyLeaseRenewalController extends Controller
 
@@ -75,7 +74,7 @@ class PropertyLeaseRenewalController extends Controller
             );
 
             return redirect()->route('renewlease.index')->with('success', 'Lease renewal created successfully');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // Redirect back with error message
             return redirect()->back()->with('error', $e->getMessage());
         }
@@ -123,7 +122,7 @@ class PropertyLeaseRenewalController extends Controller
                 ->log('Updated Lease Renewal');
 
             return redirect()->route('renewlease.index')->with('success', 'Lease renewal updated successfully');
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             DB::rollBack();
             Log::error('Failed to Update Lease Renewal:' . $th->getMessage());
 
@@ -141,7 +140,7 @@ class PropertyLeaseRenewalController extends Controller
 
             return redirect()->route('renewlease.index')
                 ->with('success', 'Lease Renewal Deleted Successfully!');
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             // Log the error for debugging
             Log::error('Error deleting Lease Renewal: ' . $th->getMessage());
             return redirect()->back()

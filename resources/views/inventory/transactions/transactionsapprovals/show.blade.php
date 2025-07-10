@@ -1,3 +1,5 @@
+@php use App\Enums\Inventory\Transfers; @endphp
+@php use Carbon\Carbon; @endphp
 @extends('layouts.app')
 
 @section('title', 'View Stock Transaction')
@@ -34,13 +36,13 @@
                         </tr>
                         <tr>
                             <th>Date</th>
-                            <td>{{ \Carbon\Carbon::parse($record->CreatedOn)->format('d/m/Y H:i') }}</td>
+                            <td>{{ Carbon::parse($record->CreatedOn)->format('d/m/Y H:i') }}</td>
                         </tr>
                         <tr>
                             <th>Status</th>
                             <td>
                                 @php
-                                    $statusEnum = \App\Enums\Inventory\Transfers::tryFrom($record->Status);
+                                    $statusEnum = Transfers::tryFrom($record->Status);
                                 @endphp
                                 <span class="badge bg-{{ $statusEnum?->badgeColor() }}">
                                     {{ $statusEnum?->label() ?? $record->Status }}
@@ -63,7 +65,7 @@
                         </tr>
                         <tr>
                             <th>Date</th>
-                            <td>{{ \Carbon\Carbon::parse($record->CreatedOn)->format('d/m/Y H:i') }}</td>
+                            <td>{{ Carbon::parse($record->CreatedOn)->format('d/m/Y H:i') }}</td>
                         </tr>
                         <tr>
                             <th>Status</th>

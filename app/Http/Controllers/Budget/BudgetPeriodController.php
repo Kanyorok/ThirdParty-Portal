@@ -5,18 +5,17 @@ namespace App\Http\Controllers\Budget;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Budget\Budget;
-use App\Models\Budget\BudgetGLMaster;
 use App\Models\Budget\BudgetGLMasterAllocations;
 use App\Models\Budget\BudgetGLsAttachments;
 use App\Models\Budget\BudgetLine;
-use Illuminate\Http\Request;
 use App\Models\Budget\BudgetPeriods;
 use App\Models\Budget\BudgetPeriodTypes;
-use App\Models\Budget\BudgetProductType;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class BudgetPeriodController extends Controller
 {
@@ -144,7 +143,7 @@ class BudgetPeriodController extends Controller
 
             DB::commit();
             return redirect()->route('budgetperiod.index')->with('success', 'Budget created successfully.');
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             DB::rollBack();
             Log::error('Failed to create budget: ' . $th->getMessage());
 
@@ -173,7 +172,7 @@ class BudgetPeriodController extends Controller
                 ->get();
 
             return view('budgetandanalytics.budgetperiod.show', compact('budget', 'glAttachments', 'glAccountTypes'));
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             Log::error('Failed to load budget: ' . $th->getMessage());
             return redirect()->route('budgetperiod.index')->withErrors(['error' => 'Failed to load budget']);
         }
@@ -248,7 +247,7 @@ class BudgetPeriodController extends Controller
                 ->log('Updated Budget Period');
 
             return redirect()->route('budgetperiod.index')->with('success', 'Budget updated successfully');
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             DB::rollBack();
             Log::error('Failed to update budget period: ' . $th->getMessage());
 
@@ -272,7 +271,7 @@ class BudgetPeriodController extends Controller
                 ->log('Deleted Period Successfully:' . $id);
 
             return redirect()->route('budgetperiod.index')->with('Success', 'Period Deleted Successfully');
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             Log::error('---DELETE PERIOD ERROR---' . $th->getMessage());
             return redirect()->route('budgetperiod.index')->with('error', 'Failed to delete Period. Please try again.');
         }
@@ -305,7 +304,7 @@ class BudgetPeriodController extends Controller
 
             return back()->with('success', 'GL Attachment deleted successfully.');
             //return response()->json(['success' => true, 'message' => 'GL Attachment deleted successfully.']);
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             Log::error('Failed to delete GL Attachment: ' . $th->getMessage());
             return response()->json(['success' => false, 'message' => 'Failed to delete GL Attachment.'], 500);
         }
@@ -356,7 +355,7 @@ class BudgetPeriodController extends Controller
 
             DB::commit();
             return redirect()->route('budgetperiod.index')->with('success', 'GL Attached Successfully.');
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             DB::rollBack();
             Log::error('Failed to attach GLs: ' . $th->getMessage());
 

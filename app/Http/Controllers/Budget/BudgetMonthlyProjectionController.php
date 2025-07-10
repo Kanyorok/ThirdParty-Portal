@@ -6,6 +6,7 @@ use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Budget\BudgetDriverProjections;
 use App\Models\Budget\BudgetMonthlyProjectionAllocation;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -65,7 +66,7 @@ class BudgetMonthlyProjectionController extends Controller
             }
             DB::commit();
             return redirect()->route('budgetprojections.index')->with('success', 'Monthly projection allocation created successfully.');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
 
             activity()

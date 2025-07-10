@@ -1,3 +1,4 @@
+@php use Carbon\Carbon; @endphp
 @extends('layouts.app')
 
 @section('title', 'View Prequalification Period')
@@ -26,13 +27,13 @@
                     <div class="col-md-6">
                         <label class="form-label text-muted">Start Date</label>
                         <div
-                            class="form-control bg-light">{{ \Carbon\Carbon::parse($period->StartDate)->format('d/m/Y') }}</div>
+                            class="form-control bg-light">{{ Carbon::parse($period->StartDate)->format('d/m/Y') }}</div>
                     </div>
 
                     <div class="col-md-6">
                         <label class="form-label text-muted">End Date</label>
                         <div
-                            class="form-control bg-light">{{ \Carbon\Carbon::parse($period->EndDate)->format('d/m/Y') }}</div>
+                            class="form-control bg-light">{{ Carbon::parse($period->EndDate)->format('d/m/Y') }}</div>
                     </div>
                 </div>
 

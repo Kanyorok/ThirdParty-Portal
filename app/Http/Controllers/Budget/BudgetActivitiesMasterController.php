@@ -6,6 +6,7 @@ use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Budget\BudgetActivityMaster;
 use App\Models\Budget\BudgetLine;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -59,7 +60,7 @@ class BudgetActivitiesMasterController extends Controller
                 ->log('Created budget activity: ' . $activity->ActivityName);
 
             return redirect()->route('activitymaster.index')->with('success', 'Budget activity created successfully.');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             Log::error('Failed to create budget activity: ' . $e->getMessage());
             return redirect()->back()->withErrors(['error' => 'Failed to create budget activity: ' . $e->getMessage()]);
@@ -108,7 +109,7 @@ class BudgetActivitiesMasterController extends Controller
                 ->log('Updated budget activity: ' . $activity->ActivityName);
 
             return redirect()->route('activitymaster.index')->with('success', 'Budget activity updated successfully.');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             Log::error('Failed to update budget activity: ' . $e->getMessage());
             return redirect()->back()->withErrors(['error' => 'Failed to update budget activity: ' . $e->getMessage()]);
@@ -132,7 +133,7 @@ class BudgetActivitiesMasterController extends Controller
                 ->withProperties(['action' => 'delete'])
                 ->log('Deleted budget activity: ' . $activity->ActivityName);
             return redirect()->route('activitymaster.index')->with('success', 'Budget activity deleted successfully.');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             Log::error('Failed to delete budget activity: ' . $e->getMessage());
             return redirect()->back()->withErrors(['error' => 'Failed to delete budget activity: ' . $e->getMessage()]);

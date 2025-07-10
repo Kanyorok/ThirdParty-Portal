@@ -8,17 +8,14 @@ use App\Models\Budget\Budget;
 use App\Models\Budget\BudgetGLMaster;
 use App\Models\Budget\BudgetGLMasterAllocations;
 use App\Models\Budget\BudgetGLsAttachments;
-use App\Models\Budget\BudgetLine;
-use App\Models\Budget\BudgetPeriods;
-use App\Models\Budget\BudgetScenarioPlanning;
-use App\Models\Budget\BudgetTopDown;
-use App\Models\Budget\BudgetTopDownData;
 use App\Models\Core\Branch;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class BudgetTopDownAllocationController extends Controller
 {
@@ -240,7 +237,7 @@ class BudgetTopDownAllocationController extends Controller
             DB::commit();
             return redirect()->route('topdownallocation.index')
                 ->with('success', 'GL Budget Allocations saved successfully.');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             Log::error('Budget allocation failed: ' . $e->getMessage());
             return redirect()->back()->with('error', 'An error occurred while saving budget allocations. Please try again.');
@@ -326,7 +323,7 @@ class BudgetTopDownAllocationController extends Controller
 
             return redirect()->route('topdownallocation.index')
                 ->with('success', 'Budget allocations updated successfully.');
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             DB::rollBack();
             Log::error('Budget Allocation Update Failed: ' . $th->getMessage());
 

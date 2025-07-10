@@ -1,3 +1,4 @@
+@php use Carbon\Carbon; @endphp
 @extends('layouts.app')
 @section('title', 'Scheduled Leases')
 @section('styles')
@@ -31,8 +32,8 @@
                     <td>{{ $leaseschedule->tenant->TenantName ?? '-' }}</td>
                     <td>{{ $leaseschedule->property->PropertyName ?? '-' }}</td>
                     <td>{{ $leaseschedule->paymentFrequency->Description ?? '-' }}</td>
-                    <td>{{ $leaseschedule->StartDate ? \Carbon\Carbon::parse($leaseschedule->StartDate)->format('d m Y') : '-' }}</td>
-                    <td>{{ $leaseschedule->EndDate ? \Carbon\Carbon::parse($leaseschedule->EndDate)->format('d m Y') : '-' }}</td>
+                    <td>{{ $leaseschedule->StartDate ? Carbon::parse($leaseschedule->StartDate)->format('d m Y') : '-' }}</td>
+                    <td>{{ $leaseschedule->EndDate ? Carbon::parse($leaseschedule->EndDate)->format('d m Y') : '-' }}</td>
                     <td>{{ $leaseschedule->BaseRent ?? '-' }}</td>
                     <td>{{ $leaseschedule->ServiceCharge ?? '-' }}</td>
                     <td>{{ $leaseschedule->ParkingFee ?? '-' }}</td>
@@ -59,7 +60,7 @@
     @else
         <p>No lease renewals registered yet.</p>
         @endif
-</div>
+        </div>
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
@@ -74,4 +75,4 @@
             });
         </script>
 
-@endsection
+        @endsection

@@ -1,3 +1,5 @@
+@php use Carbon\Carbon; @endphp
+@php use App\Enums\Property\TenantClearanceEnum; @endphp
 @extends('layouts.app')
 
 @section('title', 'Edit Tenant Clearance')
@@ -22,7 +24,7 @@
                     </div>
 
                     <input type="text" id="exit-date" name="ExitDate" class="form-control"
-                           value="{{ old('ExitDate', \Carbon\Carbon::parse($clearancetenant->ExitDate)->format('d/m/Y')) }}"
+                           value="{{ old('ExitDate', Carbon::parse($clearancetenant->ExitDate)->format('d/m/Y')) }}"
                            required>
 
                     <div class="mb-3">
@@ -88,7 +90,7 @@
                     <div class="mb-3">
                         <label class="form-label">Status</label>
                         <select name="Status" class="form-select" required>
-                            @foreach (\App\Enums\Property\TenantClearanceEnum::cases() as $status)
+                            @foreach (TenantClearanceEnum::cases() as $status)
                                 <option value="{{ $status->value }}"
                                     {{ old('Status', $clearancetenant->Status) == $status->value ? 'selected' : '' }}>
                                     {{ $status->name }}

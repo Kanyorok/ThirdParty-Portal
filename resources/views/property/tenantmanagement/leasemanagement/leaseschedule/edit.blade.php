@@ -1,3 +1,4 @@
+@php use Carbon\Carbon; @endphp
 @extends('layouts.app')
 @section('title', 'Lease Schedule')
 @section('content')
@@ -68,12 +69,12 @@
                 <div class="col-md-4">
                     <label class="form-label">Start Date</label>
                     <input type="date" class="form-control" name="StartDate"
-                           value="{{ old('StartDate', $leaseschedules->StartDate ? \Carbon\Carbon::parse($leaseschedules->StartDate)->format('Y-m-d') : '') }}">
+                           value="{{ old('StartDate', $leaseschedules->StartDate ? Carbon::parse($leaseschedules->StartDate)->format('Y-m-d') : '') }}">
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">End Date</label>
                     <input type="date" class="form-control" name="EndDate"
-                           value="{{ old('EndDate', $leaseschedules->EndDate ? \Carbon\Carbon::parse($leaseschedules->EndDate)->format('Y-m-d') : '') }}">
+                           value="{{ old('EndDate', $leaseschedules->EndDate ? Carbon::parse($leaseschedules->EndDate)->format('Y-m-d') : '') }}">
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Base Rent per Period (KES)</label>

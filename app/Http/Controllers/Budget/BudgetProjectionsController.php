@@ -5,18 +5,17 @@ namespace App\Http\Controllers\Budget;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Budget\Budget;
-use Illuminate\Http\Request;
 use App\Models\Budget\BudgetDriverProjections;
 use App\Models\Budget\BudgetDriverProjectionsData;
 use App\Models\Budget\BudgetMonthlyProjectionAllocation;
-use App\Models\Budget\BudgetPeriods;
 use App\Models\Budget\BudgetProduct;
 use App\Models\Budget\BudgetProductType;
-use App\Models\Budget\BudgetScenarioPlanning;
 use App\Models\Core\Currency;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class BudgetProjectionsController extends Controller
 {
@@ -116,7 +115,7 @@ class BudgetProjectionsController extends Controller
 
             return redirect()->route('budgetprojections.index')
                 ->with('success', 'Driver Projections created successfully.');
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             DB::rollBack();
 
             Log::error('Error Adding Projection: ' . $th->getMessage());
@@ -226,7 +225,7 @@ class BudgetProjectionsController extends Controller
             }
             DB::commit();
             return redirect()->route('budgetprojections.index')->with('success', 'Budget entry updated successfully.');
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             DB::rollBack();
             return back()->withErrors(['Error' => 'Failed to update: ' . $th->getMessage()])->withInput();
         }
@@ -244,7 +243,7 @@ class BudgetProjectionsController extends Controller
             $budget->delete();
             DB::commit();
             return redirect()->route('budgetprojections.index')->with('success', 'Budget projection deleted successfully.');
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             DB::rollBack();
             Log::error('Failed to delete budget projection: ' . $th->getMessage());
             return back()->withErrors(['Error' => 'Failed to delete: ' . $th->getMessage()]);

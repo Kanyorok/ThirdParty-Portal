@@ -4,14 +4,12 @@ use App\Http\Controllers\Inventory\BinTrackingController;
 use App\Http\Controllers\Inventory\ExpiryBatchTrackingController;
 use App\Http\Controllers\Inventory\InterBranchRequisitionApprovalController;
 use App\Http\Controllers\Inventory\InterBranchRequisitionController;
-use App\Http\Controllers\Inventory\InventoryDashboardController;
 use App\Http\Controllers\Inventory\InventoryHoldReviewController;
 use App\Http\Controllers\Inventory\InventoryTypeController;
 use App\Http\Controllers\Inventory\ItemCategoryController;
 use App\Http\Controllers\Inventory\ItemMasterListController;
 use App\Http\Controllers\Inventory\ItemSubCategoryController;
 use App\Http\Controllers\Inventory\ItemTypeController;
-use App\Http\Controllers\Inventory\MovementDashboardController;
 use App\Http\Controllers\Inventory\OpeningStockController;
 use App\Http\Controllers\Inventory\PriceManagementController;
 use App\Http\Controllers\Inventory\ReportsController;
@@ -26,9 +24,8 @@ use App\Http\Controllers\Inventory\TransactionReceiptsController;
 use App\Http\Controllers\Inventory\TransactionTransfersController;
 use App\Http\Controllers\Inventory\UOMController;
 use App\Http\Controllers\Inventory\UOMConversionController;
-
-
 use Illuminate\Support\Facades\Route;
+
 
 //use App\Http\Controllers\Inventory\ReceiptController;
 
@@ -187,7 +184,6 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/inventoryholdreview/{Id}/edit', [InventoryHoldReviewController::class, 'edit'])->name('inventoryholdreview.edit');
     Route::put('/inventoryholdreview/{id}', [InventoryHoldReviewController::class, 'update'])->name('inventoryholdreview.update');
     Route::delete('/inventoryholdreview/{id}', [InventoryHoldReviewController::class, 'destroy'])->name('inventoryholdreview.destroy');
-
 
 
     //Route::resource('interbranchrequisitionapproval', InterBranchRequisitionApprovalController::class);

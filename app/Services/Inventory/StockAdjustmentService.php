@@ -2,18 +2,17 @@
 
 namespace App\Services\Inventory;
 
+use App\Enums\Inventory\Transfers;
+use App\Models\Core\CodeDetail;
+use App\Models\Core\PendingWorkflow;
+use App\Models\Core\Workflow;
+use App\Models\Inventory\InventoryHold;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\StockAdjustmentItem;
 use App\Models\Inventory\StockItem;
-use App\Models\Core\Workflow;
-use App\Models\Core\PendingWorkflow;
-use App\Enums\Inventory\Transfers;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Models\Inventory\InventoryHold;
-use App\Models\Core\CodeDetail;
 
 class StockAdjustmentService
 {

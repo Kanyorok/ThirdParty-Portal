@@ -2,8 +2,8 @@
 
 namespace App\Models\Procurement;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Models\Inventory\UnitOfMeasure;
+use Illuminate\Database\Eloquent\Model;
 
 class RFQResponseItem extends Model
 {

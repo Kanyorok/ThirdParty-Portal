@@ -1,3 +1,4 @@
+@php use App\Enums\Procurement\PrequalificationPeriodEnum; @endphp
 @extends('layouts.app')
 
 @section('title', 'New Prequalification Period')
@@ -66,7 +67,7 @@
                 <div class="mb-3">
                     <label class="form-label">Status</label>
                     <select name="Status" class="form-select @error('Status') is-invalid @enderror">
-                        @foreach (\App\Enums\Procurement\PrequalificationPeriodEnum::cases() as $status)
+                        @foreach (PrequalificationPeriodEnum::cases() as $status)
                             <option value="{{ $status->value }}"
                                 {{ old('Status') === $status->value ? 'selected' : '' }}>
                                 {{ $status->name }}
