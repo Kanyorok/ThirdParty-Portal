@@ -486,7 +486,7 @@
                         <li class="nav-item"><a class="nav-link " href="#tab-8" data-bs-toggle="tab" role="tab"
                                                 aria-selected="false" onclick="fetchContactsTable()">Contacts</a></li>
                         <li class="nav-item"><a class="nav-link " href="#tab-2" data-bs-toggle="tab" role="tab"
-                                                aria-selected="false" onclick="fetchProductsTable()">Products
+                                                aria-selected="false" onclick="fetchProductsTable()">Product
                                 Interested</a>
                         </li>
                         <li class="nav-item"><a class="nav-link" href="#tab-4" data-bs-toggle="tab" role="tab"
