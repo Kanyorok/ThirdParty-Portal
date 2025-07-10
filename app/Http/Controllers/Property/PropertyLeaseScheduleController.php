@@ -21,17 +21,27 @@ class PropertyLeaseScheduleController extends Controller
     //
     public function index()
     {
-        $leaseschedules = PropertyLeaseSchedule::with(['tenant', 'property'])->get();
+        $leaseschedules = PropertyLeaseSchedule::with(['lease'])->get();
         return view('property.tenantmanagement.leasemanagement.leaseschedule.index', compact('leaseschedules'));
     }
 
     public function create()
     {
         $this->authorize(PermissionEnum::PropertyLeaseScheduleCreate, PropertyLeaseSchedule::class);
-        $newleases = PropertyNewLease::with('getPropertyByTenant','getLeaseByProperty')->get();
+
+        // Get all LeaseNumber values already scheduled
+        $scheduledLeaseIds = PropertyLeaseSchedule::pluck('LeaseNumber');
+
+        // Get leases that are not scheduled
+        $newleases = PropertyNewLease::with(['getPropertyByTenant', 'getLeaseByProperty'])
+            ->whereNotIn('Id', $scheduledLeaseIds)
+            ->get();
+
         $codes = CodeDetail::where('CodeID', 'PaymentFrequency')->get();
+
         return view('property.tenantmanagement.leasemanagement.leaseschedule.create', compact('newleases', 'codes'));
     }
+
 
     public function getPropertyByTenant($tenantId)
     {
@@ -135,7 +145,7 @@ public function store(PropertyLeaseScheduleRequest $request)
                 return back()->withErrors(['error'=>'Failed to update Lease Schedule'])->withInput();
             }
        }
-       public function destroy($id)
+    public function destroy($id)
     {
         //Check if user has permission to delete property categories
         $this->authorize(PermissionEnum::PropertyLeaseScheduleDelete , PropertyLeaseSchedule::class);
@@ -152,7 +162,15 @@ public function store(PropertyLeaseScheduleRequest $request)
                 ->withErrors(['error' => 'Failed to delete Lease Schedule. Please try again.'])
                 ->withInput();
         }
-    }   
+    }
+    public function print($Id)
+    {
+        $leaseschedule = PropertyLeaseSchedule::with('lease.tenant', 'lease.property', 'paymentFrequency')
+                        ->findOrFail($Id);
+
+        return view('property.tenantmanagement.leasemanagement.leaseschedule.print', compact('leaseschedule'));
+    }
+   
 
 
 }

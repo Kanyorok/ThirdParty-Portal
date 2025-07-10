@@ -48,14 +48,6 @@ class PropertyNewLease extends Model
     protected $casts = [
         'Status' => PropertyNewLeaseEnum::class,
     ];
-    public function getPropertyByTenant()
-    {
-        return $this->hasMany(PropertyNewLease::class, 'Id', 'Tenant');
-    }
-    public function getLeaseByProperty()
-    {
-        return $this->hasMany(PropertyNewLease::class, 'Id', 'PropertyID');
-    }
     public function tenant()
     {
         return $this->belongsTo(PropertyNewTenant::class, 'Tenant', 'Id');

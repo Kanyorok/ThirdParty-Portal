@@ -24,13 +24,14 @@
                 <tr>
                     <td>{{ $loop->iteration ?? '-' }}</td>
                     <td>{{ $leaseschedule->lease->LeaseNumber ?? '-' }}</td>       
-                    <td>{{ $leaseschedule->tenant->TenantName ?? '-' }}</td>
-                    <td>{{ $leaseschedule->property->PropertyName ?? '-' }}</td>
+                    <td>{{ $leaseschedule->lease->tenant->TenantName ?? '-' }}</td>
+                    <td>{{ $leaseschedule->lease->property->PropertyName ?? '-' }}</td>
                     <td>{{ $leaseschedule->paymentFrequency->Description ?? '-' }}</td>
                     <td>{{ $leaseschedule->StartDate ? \Carbon\Carbon::parse($leaseschedule->StartDate)->format('d/m/Y') : '-' }}</td>
                     <td>{{ $leaseschedule->EndDate ? \Carbon\Carbon::parse($leaseschedule->EndDate)->format('d/m/Y') : '-' }}</td>
                     <td>
-            <a href="{{ route('schedulelease.show', $leaseschedule->Id) }}" class="btn btn-sm btn-info">👁 View</a>
+            <a href="{{ route('schedulelease.show', $leaseschedule->Id) }}" class="btn btn-sm btn-info">View</a>
+            <a href="{{ route('schedulelease.print', $leaseschedule->Id) }}" target="_blank" class="btn btn-sm btn-secondary">Print</a>
             <a href="{{ route('schedulelease.edit', $leaseschedule->Id) }}" class="btn btn-sm btn-warning">Edit</a>
             <form action="{{ route('schedulelease.destroy', $leaseschedule->Id) }}" method="POST" class="d-inline">
                 @csrf
@@ -42,7 +43,6 @@
             @endforeach
             </tbody>
         </table>
-        <button class="btn btn-outline-primary" onclick="window.print()">🖨️ Print Schedule</button>
     @else
         <p>No lease renewals registered yet.</p>
         @endif

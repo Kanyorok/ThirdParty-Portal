@@ -149,6 +149,8 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::get('schedulelease/edit/{Id}',[PropertyLeaseScheduleController::class,'edit'])->name('schedulelease.edit');
     Route::put('schedulelease/edit/{Id}',[PropertyLeaseScheduleController::class,'update'])->name('schedulelease.update');
     Route::delete('schedulelease/delete/{Id}', [PropertyLeaseScheduleController::class,'destroy'])->name('schedulelease.destroy');
+    Route::get('/schedulelease/print/{Id}', [PropertyLeaseScheduleController::class, 'print'])->name('schedulelease.print');
+
 
     //Route::resource('renewlease', PropertyLeaseRenewalController::class);
     Route::get('renewlease', [PropertyLeaseRenewalController::class,'index'])->name('renewlease.index');
