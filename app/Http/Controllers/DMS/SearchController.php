@@ -43,7 +43,7 @@ class SearchController extends Controller
                                 ->whereIn('PartyID', $actor->teams()->select('t_Teams.TeamID'));
                         });
                     });
-            })->with(['current'])->where(function (Builder $query) use ($search) {
+            })->with(['current', 'repository'])->where(function (Builder $query) use ($search) {
                 $query->where('t_Documents.Name', 'LIKE', "%{$search}%")
                     ->orWhereHas('current', function (Builder $q) use ($search) {
                         $q->where('t_DocumentVersions.Name', 'LIKE', "%{$search}%")
@@ -54,7 +54,7 @@ class SearchController extends Controller
                     });
             })->limit(10)->get();
 
-            return new FilesCollection($files);
+            return (new FilesCollection($files))->setMinified(true);
         }//type=files&q
 
         return $this->errored('Search functionality is not implemented yet.', status: 501);
