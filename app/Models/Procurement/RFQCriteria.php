@@ -44,12 +44,12 @@ class RFQCriteria extends Model
 
     public function criteria()
     {
-        return $this->belongsTo(Criteria::class, 'CriteriaID', 'id');
+        return $this->belongsTo(RFQSettingCriteria::class, 'CriteriaID', 'id');
     }
 
     public function section()
     {
-        return $this->belongsTo(Section::class, 'SectionID', 'id');
+        return $this->belongsTo(RFQSettingSection::class, 'SectionID', 'id');
     }
 
     public function rfq()

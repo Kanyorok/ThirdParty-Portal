@@ -84,11 +84,6 @@ class RFQCommitteeMember extends Model
         return $this->belongsTo(User::class, 'DeletedBy', 'Id');
     }
 
-    public function employee()
-    {
-        return $this->belongsTo(Employee::class, 'UserID', 'Id');
-    }
-
     public static function getPrimaryKey(): string
     {
         return (new self())->getRouteKeyName();
@@ -98,4 +93,18 @@ class RFQCommitteeMember extends Model
     {
         return 'RFQCommitteeMemberID';
     }
+    public function employee()
+    {
+        return $this->user?->employee();
+    }
+    public function getCommitteeMemberNameAttribute(): string
+    {
+        return $this->employee?->full_name ?? 'Unknown';
+    }
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'UserID', 'EmployeeId');
+    }
+
+
 }

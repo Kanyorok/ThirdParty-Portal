@@ -64,5 +64,10 @@ class RFQ extends Model
     {
         return $this->hasMany(RFQCriteria::class, 'RFQID', 'Id');
     }
+    public function committeeMembers()
+    {
+        return $this->hasMany(RFQCommitteeMember::class, 'RFQID', 'Id');
+    }
+
 
 }

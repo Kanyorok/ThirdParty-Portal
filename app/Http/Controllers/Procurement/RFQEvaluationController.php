@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\RFQ;
+use App\Models\Procurement\RFQCommittee;
+use App\Models\Procurement\RFQCommitteeMember;
 use App\Models\Procurement\RFQCriteria;
 use App\Models\Procurement\RFQEvaluation;
 use App\Models\Procurement\RFQResponse;
@@ -26,8 +28,7 @@ class RFQEvaluationController extends Controller
     {
         // Load RFQs with sections and criteria
         $rfqs = RFQ::with([
-            'sections.criteriaSettings', // assuming this is how RFQ links to criteria
-            'rfqResponses.supplier'
+            'sections.criteriaSettings', 'rfqResponses.supplier','committeeMembers.user.employee'
         ])->whereHas('rfqResponses')->get();
 
         $currencies = config('app.currencies');
@@ -86,7 +87,7 @@ class RFQEvaluationController extends Controller
     public function getRFQResponses($rfqId)
     {
         $rfqResponses = RFQResponse::where('RFQId', $rfqId)
-            ->with('supplier')
+            ->with('supplier', 'items.uom')
             ->get();
 
         // Fetch criteria by section
@@ -98,6 +99,30 @@ class RFQEvaluationController extends Controller
         return response()->json([
             'responses' => $rfqResponses,
             'criteria' => $criteria
+        ]);
+    }
+    public function getCommitteeMemberInfo($rfqId)
+    {
+        $rfq = RFQ::find($rfqId);
+
+        if (!$rfq) {
+            return response()->json(['error' => 'RFQ not found'], 404);
+        }
+
+        $employeeId = auth()->user()?->employee?->Id;
+
+        $member = RFQCommitteeMember::with('user.employee')
+            ->where('RFQID', $rfq->Id)
+            ->where('UserID', $employeeId)
+            ->first();
+
+        if (!$member) {
+            return response()->json(['error' => 'User not part of committee']);
+        }
+
+        return response()->json([
+            'CommitteeMember' => $member->user->Name,
+            'UserID' => $member->UserID
         ]);
     }
 }

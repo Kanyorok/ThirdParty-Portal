@@ -40,7 +40,7 @@ class RFQResponseController extends Controller
             'RFQNumber' => 'required|string|max:255',
             'RequisitionItems' => 'required|array|min:1',
             'RequisitionItems.*.name' => 'required|string|max:255',
-            'RequisitionItems.*.uom' => 'nullable|string|max:50',
+            'RequisitionItems.*.uom_id' => 'required|integer|exists:t_UOM,Id',
             'RequisitionItems.*.quantity' => 'required|integer|min:1',
             'RequisitionItems.*.quotedprice' => 'required|numeric|min:0',
             'RequisitionItems.*.totalpayable' => 'required|numeric|min:0',
@@ -78,7 +78,7 @@ class RFQResponseController extends Controller
                 $rfqResponse->items()->create([
                     'RfqResponseId' => $rfqResponse->Id,
                     'ItemName' => $item['name'],
-                    'UOM' => $item['uom'] ?? null,
+                    'UOM' => $item['uom_id'],
                     'Quantity' => $item['quantity'],
                     'QuotedPrice' => $item['quotedprice'],
                     'TotalPayable' => $item['totalpayable'],

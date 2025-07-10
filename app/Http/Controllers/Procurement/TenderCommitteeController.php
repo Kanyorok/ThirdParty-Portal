@@ -46,7 +46,10 @@ class TenderCommitteeController extends Controller
         });
 
         // Combine both
-        $committees = $tenderCommittees->merge($rfqCommittees)->sortByDesc('appointment_date');
+        $committees = collect($tenderCommittees)
+            ->merge($rfqCommittees)
+            ->sortByDesc('appointment_date')
+            ->values();
 
         // All employees (used in modal)
         $employees = Employee::select('Id', 'EmployeeID', 'FirstName', 'LastName', 'JobTitle')->get();

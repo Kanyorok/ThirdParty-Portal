@@ -12,18 +12,6 @@
             <h3>Supplier Evaluation Form</h3>
         </div>
 
-        <!-- Committee Info -->
-        <div class="mb-3 row">
-            <label class="col-sm-2 col-form-label">Committee Member</label>
-            <div class="col-sm-4">
-                <input type="text" class="form-control" name="CommitteeMember" placeholder="John Doe"/>
-            </div>
-            <label class="col-sm-2 col-form-label">UserID</label>
-            <div class="col-sm-4">
-                <input type="text" class="form-control" name="UserID" placeholder="Enter User ID"/>
-            </div>
-        </div>
-
         <!-- RFQ Section -->
         <div class="mb-3 row">
             <label class="col-sm-2 col-form-label">RFQ No</label>
@@ -38,6 +26,19 @@
             <label class="col-sm-2 col-form-label">RFQ Comments</label>
             <div class="col-sm-4">
                 <input type="text" class="form-control" id="rfq-total-comments" name="RFQComments" placeholder="Load from DB" readonly />
+            </div>
+        </div>
+
+        <!-- Committee Info -->
+        <div class="mb-3 row">
+            <label class="col-sm-2 col-form-label">Committee Member</label>
+            <div class="col-sm-4">
+                <input type="text" class="form-control" name="CommitteeMember" id="committee-member" readonly />
+            </div>
+
+            <label hidden class="col-sm-2 col-form-label">UserID</label>
+            <div class="col-sm-4">
+                <input type="hidden" class="form-control" name="UserID" id="user-id" readonly />
             </div>
         </div>
 
@@ -91,20 +92,45 @@
             const rfqComments = document.getElementById('rfq-total-comments');
             const supplierTableBody = document.querySelector('#supplier-table tbody');
             const evaluationFormsContainer = document.getElementById('evaluation-forms-container');
+            const committeeMemberInput = document.querySelector('[name="CommitteeMember"]');
+            const userIdInput = document.querySelector('[name="UserID"]');
 
             rfqSelect.addEventListener('change', function () {
-                const selectedOption = rfqSelect.options[rfqSelect.selectedIndex];
-                rfqComments.value = selectedOption.getAttribute('data-comments') || '';
-
                 const rfqId = this.value;
-                supplierTableBody.innerHTML = '<tr><td colspan="5" class="text-center">Loading...</td></tr>';
-                evaluationFormsContainer.innerHTML = '';
 
                 if (!rfqId) {
-                    supplierTableBody.innerHTML = '<tr><td colspan="5" class="text-center">Select an RFQ to view supplier details</td></tr>';
+                    committeeMemberInput.value = '';
+                    userIdInput.value = '';
                     return;
                 }
+                document.addEventListener('click', function (e) {
+                    if (e.target && e.target.classList.contains('view-quote-btn')) {
+                        const raw = e.target.getAttribute('data-response');
+                        const response = JSON.parse(raw.replace(/&#39;/g, "'"));
+                        showQuote(response);
+                    }
+                });
 
+
+                fetch(`/procurement/rfq-committee-member/${rfqId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (!data.error) {
+                            committeeMemberInput.value = data.CommitteeMember;
+                            userIdInput.value = data.UserID;
+                        } else {
+                            committeeMemberInput.value = 'You are not assigned to the committee';
+                            userIdInput.value = '';
+                            console.warn(data.error);
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error fetching committee member info:', err);
+                        committeeMemberInput.value = 'Error';
+                        userIdInput.value = 'Error';
+                    });
+
+                // Fetch RFQ responses and criteria
                 fetch(`/procurement/rfq-responses/${rfqId}`)
                     .then(response => response.json())
                     .then(data => {
@@ -116,46 +142,52 @@
 
                             responses.forEach((response, index) => {
                                 const status = response.TotalPayable ? 'Submitted' : 'No Reply';
-                                const action = response.TotalPayable
-                                    ? `<a href="#" class="btn btn-sm btn-link">View Quote</a>`
-                                    : `<a href="#" class="btn btn-sm btn-link disabled">View Quote</a>`;
+                                const viewQuoteButton = response.TotalPayable
+                                    ? `<button
+                                                type="button"
+                                                class="btn btn-sm btn-link view-quote-btn"
+                                                data-response='${JSON.stringify(response).replace(/'/g, '&#39;')}'>
+                                            View Quote
+                                        </button>`
+                                    : `<button type="button" class="btn btn-sm btn-link disabled">View Quote</button>`;
+
+                                const action = viewQuoteButton;
 
                                 supplierTableBody.innerHTML += `
-                            <tr>
-                                <td>${response.SupplierName || 'Unknown'}</td>
-                                <td>${response.TotalPayable ? `Kes. ${response.TotalPayable}` : '-'}</td>
-                                <td>${response.DurationDays ? `${response.DurationDays} Days` : '-'}</td>
-                                <td>${status}</td>
-                                <td>${action}</td>
-                            </tr>
-                        `;
+                                <tr>
+                                    <td>${response.SupplierName || 'Unknown'}</td>
+                                    <td>${response.TotalPayable ? `Kes. ${response.TotalPayable}` : '-'}</td>
+                                    <td>${response.DurationDays ? `${response.DurationDays} Days` : '-'}</td>
+                                    <td>${status}</td>
+                                    <td>${action}</td>
+                                </tr>
+                            `;
 
                                 let formHtml = `
-                            <div class="card mb-4">
-                                <div class="card-header">
-                                    Supplier ${response.SupplierName || `#${index + 1}`}
-                                    <input type="hidden" name="Evaluations[${response.SupplierId}][SupplierId]" value="${response.SupplierId}">
-                                </div>
-                                <div class="card-body p-0">
-                                    <table class="table mb-0">
-                                        <thead class="table-light">
-                                            <tr>
-                                                <th>Evaluation Criteria</th>
-                                                <th>Weight (%)</th>
-                                                <th>Score (1-10)</th>
-                                                <th>Comments</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>`;
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        Supplier ${response.SupplierName || `#${index + 1}`}
+                                        <input type="hidden" name="Evaluations[${response.SupplierId}][SupplierId]" value="${response.SupplierId}">
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <table class="table mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Evaluation Criteria</th>
+                                                    <th>Weight (%)</th>
+                                                    <th>Score (1-10)</th>
+                                                    <th>Comments</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>`;
 
-                                // Loop through grouped criteria by section
                                 for (const sectionId in criteria) {
                                     const sectionGroup = criteria[sectionId];
                                     const sectionName = sectionGroup[0]?.section?.SectionName || 'Unnamed Section';
 
                                     formHtml += `<tr class="table-secondary">
-                                            <td colspan="4" class="fw-bold">${sectionName}</td>
-                                         </tr>`;
+                                    <td colspan="4" class="fw-bold">${sectionName}</td>
+                                </tr>`;
 
                                     sectionGroup.forEach(criterion => {
                                         const critId = criterion.CriteriaID;
@@ -163,11 +195,11 @@
                                         const maxScore = parseFloat(criterion.MaxScore).toFixed(2);
 
                                         formHtml += `<tr>
-                                    <td>${name}</td>
-                                    <td>${maxScore}%</td>
-                                    <td><input type="number" name="Evaluations[${response.SupplierId}][${critId}][Score]" class="form-control" min="1" max="10" required></td>
-                                    <td><input type="text" name="Evaluations[${response.SupplierId}][${critId}][Comments]" class="form-control"></td>
-                                </tr>`;
+                                        <td>${name}</td>
+                                        <td>${maxScore}%</td>
+                                        <td><input type="number" name="Evaluations[${response.SupplierId}][${critId}][Score]" class="form-control" min="1" max="10" required></td>
+                                        <td><input type="text" name="Evaluations[${response.SupplierId}][${critId}][Comments]" class="form-control"></td>
+                                    </tr>`;
                                     });
                                 }
 
@@ -185,4 +217,76 @@
             });
         });
     </script>
+    <!-- Quote View Modal -->
+    <div class="modal fade" id="quoteModal" tabindex="-1" aria-labelledby="quoteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="quoteModalLabel">Supplier Quote</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="quoteModalBody">
+                    <!-- Supplier quote details will be injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function showQuote(response) {
+            const modalTitle = document.getElementById('quoteModalLabel');
+            const modalBody = document.getElementById('quoteModalBody');
+
+            modalTitle.textContent = `Quote Details: ${response.SupplierName}`;
+
+            if (!response.items || response.items.length === 0) {
+                modalBody.innerHTML = '<p>No quote details available.</p>';
+            } else {
+                let html = `
+                <table class="table table-bordered table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Item</th>
+                            <th>UOM</th>
+                            <th>Quantity</th>
+                            <th>Quoted Price</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+                response.items.forEach(item => {
+                    html += `
+                    <tr>
+                        <td>${item.ItemName}</td>
+                        <td>${item.uom?.Name ?? 'N/A'}</td>
+                        <td>${item.Quantity}</td>
+                        <td>${parseFloat(item.QuotedPrice).toFixed(2)}</td>
+                        <td>${parseFloat(item.TotalPayable).toFixed(2)}</td>
+                    </tr>
+                `;
+                });
+
+                html += `</tbody></table>`;
+                modalBody.innerHTML = html;
+            }
+
+            // Open the Bootstrap modal
+            const modal = new bootstrap.Modal(document.getElementById('quoteModal'));
+            modal.show();
+        }
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const rfqSelect = document.getElementById('rfq-select');
+            const commentsInput = document.getElementById('rfq-total-comments');
+
+            rfqSelect.addEventListener('change', function () {
+                const selectedOption = this.options[this.selectedIndex];
+                const comments = selectedOption.getAttribute('data-comments') || '';
+                commentsInput.value = comments;
+            });
+        });
+    </script>
+
 @endsection
