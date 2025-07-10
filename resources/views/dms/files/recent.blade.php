@@ -1,31 +1,14 @@
 @php use App\Enums\Core\ExtensionsEnum; use App\Enums\Core\VisibilityEnum; @endphp
-@extends('layouts.app')
+@extends('dms.layout')
 
 @section('title')
     Recent Files
 @endsection
-@section('breadcrumbs')
-    <li class="breadcrumb-item"><a href="#">DMS</a></li>
-@endsection
+
 @section('styles')
     <link rel="stylesheet" href="{{ asset('assets/libs/dropzone/dropzone.min.css') }}">
 @endsection
-@section('search-form')
-    <style>
-        .tt-menu {
-            width: 100% !important;
-            padding: .5rem 1.5rem !important;
-            opacity: 0.98;
-        }
-    </style>
-    <div class="form-search" action="" method="get"><i class="search-icon">
-            <svg class="pc-icon">
-                <use xlink:href="#custom-search-normal-1"></use>
-            </svg>
-        </i><input type="search" name="q" class="form-control typeahead" id="SearchInput" style="width: 50vw;"
-                   placeholder="Search Files & Folders">
-    </div>
-@endsection
+
 @section('content')
     <div class="row">
         <div class="col-12 file-manger-wrapper">
@@ -99,7 +82,6 @@
     </div>
 @endsection
 @section('scripts')
-    <script src="{{ asset('assets/libs/typeahead/typeahead.bundle.min.js') }}"></script>
     <script src="{{ asset('assets/libs/dropzone/dropzone.min.js') }}"></script>
     <script>const $Modal = $('#dmsActionsModal');
         Dropzone.options.uploadForm = {
@@ -126,7 +108,6 @@
                 $('#trashFileModal').removeClass('d-none');
                 $Modal.modal('show');
             });
-
             $('form#trashFileForm').submit(async function (e) {
                 e.preventDefault();
                 const response = await saveForm($(this), $('#trashFileBtn'), false, true, true);
@@ -136,80 +117,7 @@
                 }
             });
             fetchFiles();
-
-            const filesEngine = new Bloodhound({
-                datumTokenizer: function (document) {
-                    return Bloodhound.tokenizers.whitespace(document.name);
-                },
-                queryTokenizer: Bloodhound.tokenizers.whitespace,
-                remote: {
-                    url: "{{ route('dms.search') }}?type=files&q=%QUERY",
-                    wildcard: '%QUERY',
-                    filter: function (response) {
-                        return response.data;
-                    }
-                }
-            });
-            const repoEngine = new Bloodhound({
-                datumTokenizer: function (repository) {
-                    return Bloodhound.tokenizers.whitespace(repository.name);
-                },
-                queryTokenizer: Bloodhound.tokenizers.whitespace,
-                remote: {
-                    url: "{{ route('dms.search') }}?type=repositories&q=%QUERY",
-                    wildcard: '%QUERY',
-                    filter: function (response) {
-                        return response.data;
-                    }
-                }
-            });
-
-            filesEngine.initialize();
-            repoEngine.initialize();
-
-            $('#SearchInput').typeahead({
-                    highlight: false
-                },
-                {
-                    name: 'files',
-                    displayKey: 'value',
-                    source: filesEngine.ttAdapter(),
-                    limit: 5,//todo search limit to db
-                    templates: {
-                        header: '<h6 class="suggestions-header text-primary mb-0 mx-3 mt-3 pb-2">Files</h6>',
-                        suggestion: function (document) {
-                            return '<a href="' + document.detail + '"><div class="d-flex align-items-center"><img' +
-                                ' class="rounded-circle me-3" src="' + document.type.img + '" alt="' + document.id + '" height="32"><div class="user-info"><h6 class="mb-0">' + document.name + '</h6><small class="text-muted">' + document.size.string + "</small></div></div></a>"
-                        },
-                        notFound: '<div class="not-found px-3 py-2"><h6 class="suggestions-header text-primary mb-2' +
-                            '">Files</h6><p class="py-2 mb-0"><i class="bx bx-error-circle bx-xs me-2"></i>' +
-                            ' No Results Found</p></div>'
-                    }
-                },
-                {
-                    name: 'repositories',
-                    displayKey: 'value',
-                    source: repoEngine.ttAdapter(),
-                    limit: 5, //todo search limit to db
-                    templates: {
-                        header: '<h6 class="suggestions-header text-primary mb-0 mx-3 mt-3 pb-2">Repositories</h6>',
-                        suggestion: function (repo) {
-                            let content = '<a href="' + repo.links.route + '" > <div class="d-flex"> <div class="flex-shrink-0">' +
-                                ' <svg class="pc-icon wid-20 hei-20 ';
-                            content += (repo.visibility.value === '{{ VisibilityEnum::Private->value }}') ? ' text-warning' : ' text-primary';
-                            content += '"> <use xlink:href="#custom-folder-open"></use> </svg>' +
-                                ' </div> <div class="flex-grow-1 mx-3">' +
-                                '<h5 class="mb-1 d-grid"><span class="text-truncate w-100">' + repo.name + '</span></h5> </div></div></a>';
-                            return content;
-                        },
-                        notFound: '<div class="not-found px-3 py-2"><h6 class="suggestions-header text-primary mb-2' +
-                            '">Repository</h6><p class="py-2 mb-0"><i class="bx bx-error-circle bx-xs me-2"></i>' +
-                            ' No Results Found</p></div>'
-                    }
-                },
-            );
         });
-
 
         async function fetchFiles() {
             const parent = $('#fileContents'), cmtMsg = $('#filesMessage');

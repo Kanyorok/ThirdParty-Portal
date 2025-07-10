@@ -1,6 +1,6 @@
 @php use App\Enums\Core\VisibilityEnum; @endphp
 @php use App\Enums\Core\RoleEnum; @endphp
-@extends('layouts.app')
+@extends('dms.layout')
 
 @section('title')
     {{ $file->Name }}

@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('dms.layout')
 
 @section('title','Tags')
 @section('styles')

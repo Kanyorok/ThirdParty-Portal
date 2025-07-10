@@ -1,6 +1,6 @@
 @php use App\Enums\Core\ExtensionsEnum; @endphp
 @php use App\Enums\Core\VisibilityEnum; @endphp
-@extends('layouts.app')
+@extends('dms.layout')
 
 @section('title')
     {{ ($service->isRoot())?'Repositories': $repository->Name }}

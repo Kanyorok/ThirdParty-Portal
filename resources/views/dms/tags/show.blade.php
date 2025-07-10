@@ -1,5 +1,5 @@
 @php use App\Enums\Core\VisibilityEnum; @endphp
-@extends('layouts.app')
+@extends('dms.layout')
 
 @section('title')
     {{ Str::limit($tag->TagID,50) }}
