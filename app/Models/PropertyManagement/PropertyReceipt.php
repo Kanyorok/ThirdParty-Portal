@@ -33,10 +33,12 @@ class PropertyReceipt extends Model
         'ModifiedBy',
         'DeletedBy'
     ];
+
     public static function getPrimaryKey(): string
     {
         return 'PropertyReceiptId';
     }
+
     public function invoice()
     {
         return $this->belongsTo(PropertyInvoice::class, 'InvoiceID', 'Id');

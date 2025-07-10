@@ -9,7 +9,6 @@ use App\Models\Inventory\InterBranchRequisition;
 use App\Models\Inventory\InterBranchRequisitionItem;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB; 
 
 class InterBranchRequisitionService
 {
@@ -33,9 +32,9 @@ class InterBranchRequisitionService
         $requisition->ModifiedOn = Carbon::now();
         $requisition->save();
 
-       
+
         $requisition->ReqNo = $this->generateReqNo($requisition);
-        $requisition->save(); 
+        $requisition->save();
 
         foreach ($items as $item) {
             $item['RequisitionId'] = $requisition->Id;
@@ -153,7 +152,7 @@ class InterBranchRequisitionService
         $requisition->save();
         $requisition->delete();
 
-      
+
         $requisition->items()->delete();
 
         activity()

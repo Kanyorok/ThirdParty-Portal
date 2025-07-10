@@ -1,15 +1,15 @@
 @extends('layouts.app')
 @section('title', 'Reversing Journals')
 @section('content')
-<div class="container mt-4">
-    <h4 class="mb-3">🔁 Reversing Journals</h4>
+    <div class="container mt-4">
+        <h4 class="mb-3">🔁 Reversing Journals</h4>
 
-    <div class="mb-3 text-end">
-        <a href="{{ route('reversingjournal.create') }}" class="btn btn-danger">➕ New Reversal</a>
-    </div>
+        <div class="mb-3 text-end">
+            <a href="{{ route('reversingjournal.create') }}" class="btn btn-danger">➕ New Reversal</a>
+        </div>
 
-    <table class="table table-striped table-bordered">
-        <thead class="table-light">
+        <table class="table table-striped table-bordered">
+            <thead class="table-light">
             <tr>
                 <th>#</th>
                 <th>Original Ref</th>
@@ -18,8 +18,8 @@
                 <th>Status</th>
                 <th>Reversed By</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             <tr>
                 <td>1</td>
                 <td>JV20240510</td>
@@ -36,7 +36,7 @@
                 <td><span class="badge bg-warning text-dark">Pending</span></td>
                 <td>Jane Wanjiku</td>
             </tr>
-        </tbody>
-    </table>
-</div>
+            </tbody>
+        </table>
+    </div>
 @endsection

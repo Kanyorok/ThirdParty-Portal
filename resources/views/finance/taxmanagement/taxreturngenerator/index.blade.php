@@ -1,15 +1,15 @@
 @extends('layouts.app')
 @section('title', 'Tax Return History')
 @section('content')
-<div class="container mt-4">
-    <h4 class="mb-3">📄 Tax Return History</h4>
+    <div class="container mt-4">
+        <h4 class="mb-3">📄 Tax Return History</h4>
 
-    <div class="mb-3 text-end">
-        <a href="{{ route('taxreturngenerator.create') }}" class="btn btn-primary">➕ Generate New Return</a>
-    </div>
+        <div class="mb-3 text-end">
+            <a href="{{ route('taxreturngenerator.create') }}" class="btn btn-primary">➕ Generate New Return</a>
+        </div>
 
-    <table class="table table-bordered table-hover">
-        <thead>
+        <table class="table table-bordered table-hover">
+            <thead>
             <tr>
                 <th>Return ID</th>
                 <th>Tax Type</th>
@@ -20,8 +20,8 @@
                 <th>Filed At</th>
                 <th>Actions</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             <!-- Sample static data -->
             <tr>
                 <td>RET-0001</td>
@@ -49,7 +49,7 @@
                     <a href="#" class="btn btn-sm btn-primary">Submit</a>
                 </td>
             </tr>
-        </tbody>
-    </table>
-</div>
+            </tbody>
+        </table>
+    </div>
 @endsection

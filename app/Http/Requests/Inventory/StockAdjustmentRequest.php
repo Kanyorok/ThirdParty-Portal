@@ -2,9 +2,14 @@
 
 namespace App\Http\Requests\Inventory;
 
+use App\Models\Inventory\StockItem;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Validator; // Correctly import Illuminate\Validation\Validator
-use App\Models\Inventory\StockItem; // Import StockItem model
+use Illuminate\Validation\Validator;
+
+// Correctly import Illuminate\Validation\Validator
+
+// Import StockItem model
 
 class StockAdjustmentRequest extends FormRequest
 {
@@ -22,7 +27,7 @@ class StockAdjustmentRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -30,7 +35,7 @@ class StockAdjustmentRequest extends FormRequest
             'AdjustmentDate' => ['required', 'date'],
             'Branch' => ['required', 'integer', 'exists:t_Branches,Id'],
             'Reason' => ['required', 'integer', 'exists:t_CodeDetails,ID'],
-            'AdjustedBy' => ['required', 'integer', 'exists:t_Users,Id'], 
+            'AdjustedBy' => ['required', 'integer', 'exists:t_Users,Id'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.Item' => ['required', 'integer', 'exists:t_Items,Id'],
             'items.*.AdjustmentQty' => ['required', 'numeric'],
@@ -41,7 +46,7 @@ class StockAdjustmentRequest extends FormRequest
     /**
      * Configure the validator instance.
      *
-     * @param  \Illuminate\Validation\Validator  $validator // Changed the type hint here!
+     * @param Validator $validator // Changed the type hint here!
      * @return void
      */
     public function withValidator(Validator $validator): void
@@ -59,8 +64,8 @@ class StockAdjustmentRequest extends FormRequest
 
             // Fetch current quantities for all relevant items in the specified branch
             $currentStocks = StockItem::where('Branch', $branchId)
-                                     ->whereIn('ItemID', $requestedItemIds)
-                                     ->pluck('CurrentQty', 'ItemID');
+                ->whereIn('ItemID', $requestedItemIds)
+                ->pluck('CurrentQty', 'ItemID');
 
             foreach ($items as $index => $itemData) {
                 $itemId = $itemData['Item'] ?? null;
@@ -72,7 +77,7 @@ class StockAdjustmentRequest extends FormRequest
                     $currentQty = $currentStocks->get($itemId, 0);
 
                     // Calculate the potential new quantity after adjustment
-                    $newQty = $currentQty + (float) $adjustmentQty; 
+                    $newQty = $currentQty + (float)$adjustmentQty;
 
                     // Add an error if the new quantity would be negative
                     if ($newQty < 0) {

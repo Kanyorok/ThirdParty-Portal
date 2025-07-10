@@ -7,15 +7,18 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
-use App\Enums\Core\PermissionEnum;
 use App\Http\Requests\Property\TenantAndLease\PropertyLeaseScheduleRequest;
-use App\Services\Property\TenantAndLease\PropertyLeaseScheduleService;
-use Illuminate\Http\Request;
 use App\Models\Core\CodeDetail;
-use Illuminate\Support\Facades\Validator;
 use App\Models\PropertyManagement\PropertyLeaseSchedule;
-use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Models\PropertyManagement\PropertyNewLease;
+use App\Models\PropertyManagement\PropertyNewTenant;
+use App\Services\Property\TenantAndLease\PropertyLeaseScheduleService;
+use Exception;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 
 class PropertyLeaseScheduleController extends Controller
@@ -30,7 +33,7 @@ class PropertyLeaseScheduleController extends Controller
     public function create()
     {
         $this->authorize(PermissionEnum::PropertyLeaseScheduleCreate, PropertyLeaseSchedule::class);
-        $newleases = PropertyNewLease::with('getPropertyByTenant','getLeaseByProperty')->get();
+        $newleases = PropertyNewLease::with('getPropertyByTenant', 'getLeaseByProperty')->get();
         $codes = CodeDetail::where('CodeID', 'PaymentFrequency')->get();
         return view('property.tenantmanagement.leasemanagement.leaseschedule.create', compact('newleases', 'codes'));
     }
@@ -40,6 +43,7 @@ class PropertyLeaseScheduleController extends Controller
         $newlease = PropertyNewLease::where('TenantId', $tenantId)->get();
         return response()->json($newlease);
     }
+
     public function getLeaseByProperty($propertyId)
     {
         $newlease = PropertyNewLease::where('PropertyId', $propertyId)->get();
@@ -53,53 +57,55 @@ class PropertyLeaseScheduleController extends Controller
         return view('property.tenantmanagement.leasemanagement.leaseschedule.show', compact('leaseschedule'));
     }
 
-public function store(PropertyLeaseScheduleRequest $request)
-{
-    try {
-    $validated = $request->validated();
-    $leaseId = (int) $validated['LeaseId'];
-    $tenantId = (int) $validated['TenantId'];
-    $propertyId = (int) $validated['PropertyId'];
-    $paymentFrequencyId = (int) $validated['PaymentFrequency'];
+    public function store(PropertyLeaseScheduleRequest $request)
+    {
+        try {
+            $validated = $request->validated();
+            $leaseId = (int)$validated['LeaseId'];
+            $tenantId = (int)$validated['TenantId'];
+            $propertyId = (int)$validated['PropertyId'];
+            $paymentFrequencyId = (int)$validated['PaymentFrequency'];
 
-    // Use the lease ID to get the full lease
-    $lease = PropertyNewLease::findOrFail($leaseId);
-    PropertyLeaseScheduleService::create(
-        $leaseId,                  // from DB
-        $tenantId,
-        $propertyId,
-        $paymentFrequencyId,
-        $validated['StartDate'],
-        $validated['EndDate'],
-        $validated['BaseRent'],
-        $validated['ServiceCharge'],
-        $validated['ParkingFee'],
-        $validated['OtherCharges'],
-        Auth::user()
-    );
+            // Use the lease ID to get the full lease
+            $lease = PropertyNewLease::findOrFail($leaseId);
+            PropertyLeaseScheduleService::create(
+                $leaseId,                  // from DB
+                $tenantId,
+                $propertyId,
+                $paymentFrequencyId,
+                $validated['StartDate'],
+                $validated['EndDate'],
+                $validated['BaseRent'],
+                $validated['ServiceCharge'],
+                $validated['ParkingFee'],
+                $validated['OtherCharges'],
+                Auth::user()
+            );
 
-    return redirect()->route('schedulelease.index')->with('success', 'Lease schedule added!');
-    } catch (\Exception $e) {
-        // Redirect back with error message
-        return redirect()->back()->with('error', $e->getMessage());
+            return redirect()->route('schedulelease.index')->with('success', 'Lease schedule added!');
+        } catch (Exception $e) {
+            // Redirect back with error message
+            return redirect()->back()->with('error', $e->getMessage());
+        }
     }
-}
 
     public function edit($id)
     {
         //Check if user has permission to edit tender categories
-         $this->authorize(PermissionEnum::PropertyLeaseScheduleUpdate, PropertyLeaseSchedule::class);
+        $this->authorize(PermissionEnum::PropertyLeaseScheduleUpdate, PropertyLeaseSchedule::class);
         $leaseschedules = PropertyLeaseSchedule::findOrFail($id);
         $newtenants = PropertyNewTenant::all();
         $newleases = PropertyNewLease::all();
         $codes = CodeDetail::where('CodeID', 'PaymentFrequency')->get();
 
-        return view('property.tenantmanagement.leasemanagement.leaseschedule.edit',compact('leaseschedules','newtenants','newleases','codes'));
+        return view('property.tenantmanagement.leasemanagement.leaseschedule.edit', compact('leaseschedules', 'newtenants', 'newleases', 'codes'));
     }
-     public function update(Request $request, $id){
+
+    public function update(Request $request, $id)
+    {
 
         $this->authorize(PermissionEnum::PropertyLeaseScheduleUpdate, PropertyLeaseSchedule::class);
-        $validated=$request->validate([
+        $validated = $request->validate([
             'LeaseId' => 'required|exists:t_LeaseCreation,Id',
             'TenantId' => 'required|exists:t_LeaseCreation,Id',
             'PropertyId' => 'required|exists:t_LeaseCreation,Id',
@@ -129,40 +135,41 @@ public function store(PropertyLeaseScheduleRequest $request)
                 'OtherCharges' => $validated['OtherCharges'],
                 'ModifiedBy' => Auth::Id(),
             ]);
- 
-        DB::commit();
-        activity()
+
+            DB::commit();
+            activity()
                 ->performedOn($leaseschedules)
                 ->causedBy(Auth::user())
-                ->withProperties(['action'=>'update'])
+                ->withProperties(['action' => 'update'])
                 ->log('Updated Lease Schedule');
 
-                return redirect()->route('schedulelease.index')->with('success' , 'Lease schedule updated successfully');
-            }catch(\Throwable $th) {
-                DB::rollBack();
-                Log::error('Failed to Update Lease Schedule:' . $th->getMessage());
+            return redirect()->route('schedulelease.index')->with('success', 'Lease schedule updated successfully');
+        } catch (Throwable $th) {
+            DB::rollBack();
+            Log::error('Failed to Update Lease Schedule:' . $th->getMessage());
 
-                return back()->withErrors(['error'=>'Failed to update Lease Schedule'])->withInput();
-            }
-       }
-       public function destroy($id)
+            return back()->withErrors(['error' => 'Failed to update Lease Schedule'])->withInput();
+        }
+    }
+
+    public function destroy($id)
     {
         //Check if user has permission to delete property categories
-        $this->authorize(PermissionEnum::PropertyLeaseScheduleDelete , PropertyLeaseSchedule::class);
+        $this->authorize(PermissionEnum::PropertyLeaseScheduleDelete, PropertyLeaseSchedule::class);
         try {
             $leaseschedules = PropertyLeaseSchedule::findOrFail($id);
             $leaseschedules->delete();
 
             return redirect()->route('schedulelease.index')
                 ->with('success', 'Lease Schedule Deleted Successfully!');
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             // Log the error for debugging
             Log::error('Error deleting Lease Schedule: ' . $th->getMessage());
             return redirect()->back()
                 ->withErrors(['error' => 'Failed to delete Lease Schedule. Please try again.'])
                 ->withInput();
         }
-    }   
+    }
 
 
 }

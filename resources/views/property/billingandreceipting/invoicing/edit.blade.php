@@ -1,3 +1,4 @@
+@php use Carbon\Carbon; @endphp
 @extends('layouts.app')
 @section('title', 'Rent Invoice')
 @section('content')
@@ -54,33 +55,34 @@
                         value="{{ old('InvoiceDate', $invoices->InvoiceDate ? \Carbon\Carbon::parse($invoices->InvoiceDate)->format('Y-m-d') : '') }}">
                </div>
 
-            <!-- Charges Summary -->
-            <div class="row g-3 mb-3">
-                <div class="col-md-4">
-                    <label class="form-label">Rent Amount</label>
-                    <input type="number" class="form-control" name="RentAmount"
-                        value="{{ old('RentAmount', $invoices->RentAmount) }}">
+                <!-- Charges Summary -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Rent Amount</label>
+                        <input type="number" class="form-control" name="RentAmount"
+                               value="{{ old('RentAmount', $invoices->RentAmount) }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Service Charge</label>
+                        <input type="number" class="form-control" name="ServicesCharge"
+                               value="{{ old('ServicesCharge', $invoices->ServicesCharge) }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Other Charges</label>
+                        <input type="number" class="form-control" name="OtherCharges"
+                               value="{{ old('OtherCharges', $invoices->OtherCharges) }}">
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    <label class="form-label">Service Charge</label>
-                    <input type="number" class="form-control" name="ServicesCharge"
-                        value="{{ old('ServicesCharge', $invoices->ServicesCharge) }}">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Other Charges</label>
-                    <input type="number" class="form-control" name="OtherCharges"
-                        value="{{ old('OtherCharges', $invoices->OtherCharges) }}">
-                </div>
-            </div>
 
-            <!-- Optional Notes -->
-            <div class="mb-3">
-                <label class="form-label">Invoice Notes</label>
-                <textarea class="form-control" rows="2" placeholder="Optional notes or remarks..." name="InvoiceNotes">{{ old('InvoiceNotes', $invoices->InvoiceNotes) }}</textarea>
+                <!-- Optional Notes -->
+                <div class="mb-3">
+                    <label class="form-label">Invoice Notes</label>
+                    <textarea class="form-control" rows="2" placeholder="Optional notes or remarks..."
+                              name="InvoiceNotes">{{ old('InvoiceNotes', $invoices->InvoiceNotes) }}</textarea>
+                </div>
+                <button type="submit" class="btn btn-success">Update invoice</button>
+                <a href="{{ route('rentinvoice.index') }}" class="btn btn-secondary">Cancel</a>
             </div>
-            <button type="submit" class="btn btn-success">Update invoice</button>
-            <a href="{{ route('rentinvoice.index') }}" class="btn btn-secondary">Cancel</a>
         </div>
-    </div>
-</form>
+    </form>
 @endsection

@@ -9,7 +9,7 @@
 @section('content')
 
     @php
-        use App\Enums\Inventory\Transfers;
+        use App\Enums\Inventory\Transfers;use Carbon\Carbon;
     @endphp
 
     {{-- Custom Error/Success Message Containers --}}
@@ -46,7 +46,7 @@
     <div class="card mb-4">
         <div class="mb-2 d-flex justify-content-between">
             <a href="{{ route('transactionsreceipts.create') }}" class="btn btn-success">➕ New Receipt</a>
-    </div>
+        </div>
 
         <div class="card-header bg-light">Transfers Receipts</div>
         <div class="card-body">
@@ -73,7 +73,7 @@
                             <td>{{ optional($receipt->transfer)->TransferID ?? 'N/A' }}</td>
                             <td>{{ optional(optional($receipt->transfer)->fromBranch)->Name ?? 'N/A' }}</td>
                             <td>{{$receipt->receivedBy->Name ?? 'N/A'}}</td>
-                            <td>{{ \Carbon\Carbon::parse($receipt->ReceivedDate)->format('d/m/Y') }}</td>
+                            <td>{{ Carbon::parse($receipt->ReceivedDate)->format('d/m/Y') }}</td>
                             <td>
                                 @php
                                     $statusEnum = $receipt->Status instanceof Transfers
@@ -115,34 +115,34 @@
                 <div class="d-flex justify-content-center">
                     {{ $receipts->links() }}
                 </div>
-    </div>
+            </div>
         </div>
 
-@endsection
+        @endsection
 
         @push('scripts')
             <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
             <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
-    <script>
-        $(document).ready(function () {
-        @if(!$receipts->isEmpty())
-        $('#receiptsTable').DataTable({
-            pageLength: 10,
-            ordering: true,
-            searching: true,
-            lengthChange: true,
-            language: {
-                emptyTable: ""
-            }
-        });
-        @endif
-    });
-        
+            <script>
+                $(document).ready(function () {
+                    @if(!$receipts->isEmpty())
+                    $('#receiptsTable').DataTable({
+                        pageLength: 10,
+                        ordering: true,
+                        searching: true,
+                        lengthChange: true,
+                        language: {
+                            emptyTable: ""
+                        }
+                    });
+                    @endif
+                });
 
-    $(document).ready(function () {
-     
-    });
+
+                $(document).ready(function () {
+
+                });
 
 
                 function confirmDelete(id) {

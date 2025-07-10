@@ -14,6 +14,7 @@ use App\Services\DMS\RepositoryService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
@@ -46,11 +47,19 @@ class DocumentController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Repository $repository, Document $document): View
+    public function show(Request $request, Repository $repository, Document $document): View
     {
+        $actor = $request->user();
         $document->load(['current', 'repository', 'creator', 'category', 'properties'])->withCount('versions');
-        activity()->causedBy(auth()->user())->performedOn($document)->event('view')->log('viewed document  ' . $document->Name . '.');
-        return view('dms.files.show')->with('repoService', new RepositoryService($repository))->with('file', $document);
+
+        $lock = Cache::lock('view-document-' . $document->DocumentId, 100);
+        if ($lock->get()) {
+            activity()->causedBy($actor)->performedOn($document)->event('view')->log('viewed document  ' . $document->Name . '.');
+        }
+
+        return view('dms.files.show')->with('repoService', new RepositoryService($repository))
+            ->with('tags', (new DocumentService($document))->tags($actor)->get())
+            ->with('file', $document);
     }
 
     /**

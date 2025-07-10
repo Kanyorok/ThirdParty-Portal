@@ -1,3 +1,4 @@
+@php use Carbon\Carbon; @endphp
 @extends('layouts.app')
 @section('title', 'Lease Schedule Details')
 @section('content')
@@ -8,10 +9,10 @@
                 <dl class="row">
                     <dt class="col-sm-4">Property Leased</dt>
                     <dd class="col-sm-8">{{ $leaseschedule->property->PropertyName ?? '-' }}</dd>
-                    
+
                     <dt class="col-sm-4">Lease Number</dt>
                     <dd class="col-sm-8">{{ $leaseschedule->lease->LeaseNumber ?? '-' }}</dd>
-                    
+
                     <dt class="col-sm-4">Tenant Name</dt>
                     <dd class="col-sm-8">{{ $leaseschedule->tenant->TenantName ?? '-' }}</dd>
 
@@ -19,10 +20,10 @@
                     <dd class="col-sm-8">{{ $leaseschedule->paymentFrequency->Description ?? '-' }}</dd>
 
                     <dt class="col-sm-4">Start Date</dt>
-                    <dd class="col-sm-8">{{ $leaseschedule->StartDate ? \Carbon\Carbon::parse($leaseschedule->StartDate)->format('d m Y') : '-' }}</dd>
+                    <dd class="col-sm-8">{{ $leaseschedule->StartDate ? Carbon::parse($leaseschedule->StartDate)->format('d m Y') : '-' }}</dd>
 
                     <dt class="col-sm-4">End Date</dt>
-                    <dd class="col-sm-8">{{ $leaseschedule->EndDate ? \Carbon\Carbon::parse($leaseschedule->EndDate)->format('d m Y') : '-' }}</dd>
+                    <dd class="col-sm-8">{{ $leaseschedule->EndDate ? Carbon::parse($leaseschedule->EndDate)->format('d m Y') : '-' }}</dd>
 
                     <dt class="col-sm-4">Base Rent</dt>
                     <dd class="col-sm-8">{{ $leaseschedule->BaseRent }}</dd>

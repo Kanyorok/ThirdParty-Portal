@@ -26,7 +26,7 @@
                 </div>
             </a>
         </div>
-        
+
         <div class="navbar-content">
             <div class="card pc-user-card">
                 <div class="card-body">
@@ -450,23 +450,7 @@
                     </a>
                     <ul class="pc-submenu">
                         <li class="pc-item"><a class="pc-link" href="{{ route('drepositorymanagement.index') }}"
-                                               data-i18n="drepositorymanagement">Repository Management</a></li>
-                        <li class="pc-item"><a class="pc-link" href="{{ route('dtypessetupmanagement.index') }}"
-                                               data-i18n="dtypessetupmanagement">setup Management</a></li>
-                        <li class="pc-item"><a class="pc-link" href="{{ route('categoriesmanagement.index') }}"
-                                               data-i18n="categoriesmanagement">Categories Management</a></li>
-                        <li class="pc-item"><a class="pc-link" href="{{ route('versioncontrolmanagement.index') }}"
-                                               data-i18n="versioncontrolmanagement">Version Control</a></li>
-                        <li class="pc-item"><a class="pc-link" href="{{ route('searchmanagement.index') }}"
-                                               data-i18n="searchmanagement">Search Management </a></li>
-                        <li class="pc-item"><a class="pc-link" href="{{ route('renewalmanagement.index') }}"
-                                               data-i18n="renewalmanagement"> Renewal Management</a></li>
-                        <li class="pc-item"><a class="pc-link" href="{{ route('accessmanagement.index') }}"
-                                               data-i18n="accessmanagement"> Access Control</a></li>
-                        <li class="pc-item"><a class="pc-link" href="{{ route('trailmanagement.index') }}"
-                                               data-i18n="trailmanagement"> Audit trail</a></li>
-                        <li class="pc-item"><a class="pc-link" href="{{ route('uploadmanagement.index') }}"
-                                               data-i18n="uploadmanagement"> Bulk Upload</a></li>
+
 
                     </ul>
                 </li>
@@ -905,11 +889,7 @@
                 <li class="pc-h-item pc-sidebar-popup"><a href="#" class="pc-head-link ms-0" id="mobile-collapse"><i
                             class="ti ti-menu-2"></i></a></li>
                 <li class="pc-h-item d-none d-md-inline-flex">
-                    <form class="form-search"><i class="search-icon">
-                            <svg class="pc-icon">
-                                <use xlink:href="#custom-search-normal-1"></use>
-                            </svg>
-                        </i><input type="search" class="form-control" placeholder="Ctrl + K"></form>
+                    @yield('search-form')
                 </li>
 
             </ul>

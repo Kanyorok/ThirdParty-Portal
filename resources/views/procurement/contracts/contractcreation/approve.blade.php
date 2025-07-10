@@ -2,28 +2,28 @@
 @section('title', 'Contract Approval')
 
 @section('content')
-<div class="container mt-4">
-    <h4>✅ Contract Approval & Sign-Off</h4>
+    <div class="container mt-4">
+        <h4>✅ Contract Approval & Sign-Off</h4>
 
-    <!-- Contract Overview -->
-    <div class="mb-4">
-        <h5>📝 CONTRACT/PROC/2025/009 – Supply of Office Furniture</h5>
-        <p><strong>Awarded To:</strong> OfficePro Suppliers</p>
-        <p><strong>Duration:</strong> 01-Jul-2025 to 31-Dec-2025</p>
-    </div>
+        <!-- Contract Overview -->
+        <div class="mb-4">
+            <h5>📝 CONTRACT/PROC/2025/009 – Supply of Office Furniture</h5>
+            <p><strong>Awarded To:</strong> OfficePro Suppliers</p>
+            <p><strong>Duration:</strong> 01-Jul-2025 to 31-Dec-2025</p>
+        </div>
 
-    <!-- Internal Approvers Table -->
-    <h5 class="mb-2">👤 Internal Approvers</h5>
-    <table class="table table-bordered">
-        <thead class="table-light">
+        <!-- Internal Approvers Table -->
+        <h5 class="mb-2">👤 Internal Approvers</h5>
+        <table class="table table-bordered">
+            <thead class="table-light">
             <tr>
                 <th>Role</th>
                 <th>Approver</th>
                 <th>Status</th>
                 <th>Action</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             <tr>
                 <td>Legal</td>
                 <td>Mary Wanjiru</td>
@@ -45,22 +45,22 @@
                     </form>
                 </td>
             </tr>
-        </tbody>
-    </table>
+            </tbody>
+        </table>
 
-    <!-- Vendor Upload Section -->
-    <h5 class="mt-4">📎 Vendor Signed Contract</h5>
-    <div class="mb-3">
-        <p><strong>Status:</strong> <span class="badge bg-warning text-dark">Pending Upload</span></p>
-        <label class="form-label">Upload Signed Copy (PDF)</label>
-        <input type="file" class="form-control mb-2">
-        <button class="btn btn-success btn-sm">📤 Upload</button>
-    </div>
+        <!-- Vendor Upload Section -->
+        <h5 class="mt-4">📎 Vendor Signed Contract</h5>
+        <div class="mb-3">
+            <p><strong>Status:</strong> <span class="badge bg-warning text-dark">Pending Upload</span></p>
+            <label class="form-label">Upload Signed Copy (PDF)</label>
+            <input type="file" class="form-control mb-2">
+            <button class="btn btn-success btn-sm">📤 Upload</button>
+        </div>
 
-    <!-- Finalize -->
-    <div class="mt-4 text-end">
-        <button class="btn btn-outline-secondary">⬅ Back</button>
-        <button class="btn btn-primary">✅ Mark Contract as Signed</button>
+        <!-- Finalize -->
+        <div class="mt-4 text-end">
+            <button class="btn btn-outline-secondary">⬅ Back</button>
+            <button class="btn btn-primary">✅ Mark Contract as Signed</button>
+        </div>
     </div>
-</div>
 @endsection

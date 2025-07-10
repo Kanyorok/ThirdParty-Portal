@@ -32,17 +32,16 @@ trait DMSTagTrait
         if (!empty($with)) {
             $query->with($with);
         }
+        if (!empty($withCount)) {
+            $query->withCount($withCount);
+        }
 
         try {
-            return Datatables::of($query->lock('WITH(NOLOCK)')->select('*'))->addIndexColumn()
+            return Datatables::of($query->lock('WITH(NOLOCK)'))->addIndexColumn()
                 ->addColumn('action', function (DMSTags $tag) use ($extra) {
-                    /*   if (array_key_exists('action_team', $extra)) {
-                           return '<button type="button"  data-action="' . route('team-users.destroy', [$extra['action_team'], $user->UserID]) . '" data-name="' . $user->Name . '" class="btn btn-danger btn-sm modal-trash-team-users"><i class="fas fa-trash"></i></button>';
-                       }
-                       return '<a  href="' . route('users.show', [$user->UserID]) . '" class="btn btn-info btn-sm"><i class="fas fa-eye"></i> details</button>';*/
-                    return '';
+                    return '<a  href="' . route('file-tags.show', [$tag->TagID]) . '" class="btn btn-info btn-sm"><i class="fas fa-eye"></i> details</button>';
                 })->editColumn('documents_count', function (DMSTags $tag) use ($withCount) {
-                    return (in_array('documents_count', $withCount, true)) ? number_format($tag->documents_count) : 0;
+                    return (in_array('documents', $withCount, true)) ? number_format($tag->documents_count) : 0;
                 })->addColumn('Description', function (DMSTags $tag) {
                     return Str::of($tag->Description)->limit(100);
                 })->rawColumns(['action'])->make();
@@ -55,7 +54,7 @@ trait DMSTagTrait
     /**
      * @throws ErroredException
      */
-    public function new(string $Name, string $Description, User $actor, VisibilityEnum $visibility, Document $document = null): DMSTags
+    public function new(string $Name, string $Description, User $actor, VisibilityEnum $visibility, Document|null $document = null): DMSTags
     {
         try {
             return DB::transaction(static function () use ($visibility, $Name, $actor, $Description, $document) {

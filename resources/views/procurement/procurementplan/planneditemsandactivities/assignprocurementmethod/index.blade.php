@@ -38,15 +38,15 @@
                 <div class="table-responsive">
                     <table class="table table-bordered align-middle">
                         <thead class="table-light">
-                            <tr>
-                                <th>Need ID</th>
-                                <th>Item</th>
-                                <th>Qty</th>
-                                <th>Est. Cost</th>
-                                <th>Assigned Method</th>
-                                <th>Assign Method</th>
-                                <th class="d-none">Justification (if override)</th>
-                            </tr>
+                        <tr>
+                            <th>Need ID</th>
+                            <th>Item</th>
+                            <th>Qty</th>
+                            <th>Est. Cost</th>
+                            <th>Assigned Method</th>
+                            <th>Assign Method</th>
+                            <th class="d-none">Justification (if override)</th>
+                        </tr>
                         </thead>
                         <tbody id="items-table-body">
                         <!-- Items will load here dynamically -->
@@ -87,13 +87,13 @@
                         const tbody = document.getElementById('items-table-body');
                         tbody.innerHTML = '';
 
-                    const selectOptions = procurementModes.map(mode =>
-                        `<option value="${mode.ID}">${mode.Description}</option>`
-                    ).join('');
+                        const selectOptions = procurementModes.map(mode =>
+                            `<option value="${mode.ID}">${mode.Description}</option>`
+                        ).join('');
 
 
-                    data.forEach(line => {
-                        const row = `
+                        data.forEach(line => {
+                            const row = `
                             <tr>
                                <td>${line.NeedID || 'N/A'}</td>
                                 <td>${line.item_name}</td>

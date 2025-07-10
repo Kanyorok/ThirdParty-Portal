@@ -32,6 +32,7 @@ class PropertyInvoice extends Model
     {
         return 'PropertyInvoiceId';
     }
+
     public function lease()
     {
         return $this->belongsTo(PropertyNewLease::class, 'Lease', 'Id');

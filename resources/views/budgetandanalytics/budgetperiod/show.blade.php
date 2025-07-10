@@ -1,3 +1,4 @@
+@php use Carbon\Carbon; @endphp
 @extends('layouts.app')
 @section('title', 'View Budget')
 @section('content')
@@ -28,11 +29,13 @@
             </div>
             <div class="col-md-6 mb-3">
                 <label class="form-label fw-medium">From (Date)</label>
-                <input type="text" class="form-control rounded-3" value="{{ \Carbon\Carbon::parse($budget->From)->format('Y-m-d') }}" readonly>
+                <input type="text" class="form-control rounded-3"
+                       value="{{ Carbon::parse($budget->From)->format('Y-m-d') }}" readonly>
             </div>
             <div class="col-md-6 mb-3">
                 <label class="form-label fw-medium">To (Date)</label>
-                <input type="text" class="form-control rounded-3" value="{{ \Carbon\Carbon::parse($budget->To)->format('Y-m-d') }}" readonly>
+                <input type="text" class="form-control rounded-3"
+                       value="{{ Carbon::parse($budget->To)->format('Y-m-d') }}" readonly>
             </div>
             <div class="col-md-12 mb-3">
                 <label class="form-label fw-medium">Notes</label>
@@ -50,41 +53,41 @@
         <div class="table-responsive">
             <table class="table table-hover table-bordered rounded-3" id="glAttachmentsTable">
                 <thead class="table-light">
-                    <tr>
-                        <th scope="col">Type</th>
-                        <th scope="col">Account ID</th>
-                        <th scope="col">Description</th>
-                        <th scope="col">Account Type</th>
-                        <th scope="col">Actions</th>
-                    </tr>
+                <tr>
+                    <th scope="col">Type</th>
+                    <th scope="col">Account ID</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">Account Type</th>
+                    <th scope="col">Actions</th>
+                </tr>
                 </thead>
                 <tbody id="glAttachmentsBody">
-                    @foreach ($glAttachments as $gl)
-                        <tr data-gl-id="{{ $gl->Id }}">
-                            <td>{{ $gl->GLAccountTypeID }}</td>
-                            <td>{{ $gl->AccountID }}</td>
-                            <td class="description-cell">{{ $gl->Description ?? 'N/A' }}</td>
-                            <td>
-                                {{ $glAccountTypes->firstWhere('GLAccountTypeID', $gl->GLAccountTypeID)->Description ?? 'Unknown Type' }}
-                            </td>
-                            <td>
-                                {{-- <button type="button" class="btn btn-sm btn-primary edit-gl-btn me-1" data-gl-id="{{ $gl->Id }}" data-description="{{ $gl->Description ?? '' }}">
-                                    <i class="bi bi-pencil"></i> Edit
-                                </button> --}}
-                                <button type="button"
-                                        class="btn btn-sm btn-danger custom-delete-btn"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#customDeleteConfirmModal"
-                                        data-name="{{ $gl->Description }}"    {{-- Pass item name --}}
-                                        data-route="{{ route('budget.delete-gl-attachment', $gl->Id) }}"> {{-- Pass delete route --}}
-                                    Delete
-                                </button>
-{{--                                <button type="button" class="btn btn-sm btn-danger delete-gl-btn" data-gl-id="{{ $gl->Id }}">--}}
-{{--                                    <i class="bi bi-trash"></i> Delete--}}
-{{--                                </button>--}}
-                            </td>
-                        </tr>
-                    @endforeach
+                @foreach ($glAttachments as $gl)
+                    <tr data-gl-id="{{ $gl->Id }}">
+                        <td>{{ $gl->GLAccountTypeID }}</td>
+                        <td>{{ $gl->AccountID }}</td>
+                        <td class="description-cell">{{ $gl->Description ?? 'N/A' }}</td>
+                        <td>
+                            {{ $glAccountTypes->firstWhere('GLAccountTypeID', $gl->GLAccountTypeID)->Description ?? 'Unknown Type' }}
+                        </td>
+                        <td>
+                            {{-- <button type="button" class="btn btn-sm btn-primary edit-gl-btn me-1" data-gl-id="{{ $gl->Id }}" data-description="{{ $gl->Description ?? '' }}">
+                                <i class="bi bi-pencil"></i> Edit
+                            </button> --}}
+                            <button type="button"
+                                    class="btn btn-sm btn-danger custom-delete-btn"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#customDeleteConfirmModal"
+                                    data-name="{{ $gl->Description }}" {{-- Pass item name --}}
+                                    data-route="{{ route('budget.delete-gl-attachment', $gl->Id) }}"> {{-- Pass delete route --}}
+                                Delete
+                            </button>
+                            {{--                                <button type="button" class="btn btn-sm btn-danger delete-gl-btn" data-gl-id="{{ $gl->Id }}">--}}
+                            {{--                                    <i class="bi bi-trash"></i> Delete--}}
+                            {{--                                </button>--}}
+                        </td>
+                    </tr>
+                @endforeach
                 </tbody>
             </table>
         </div>
@@ -107,11 +110,14 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label for="editDescription" class="form-label fw-medium">Description</label>
-                            <input type="text" class="form-control rounded-3" id="editDescription" name="Description" placeholder="Enter description">
+                            <input type="text" class="form-control rounded-3" id="editDescription" name="Description"
+                                   placeholder="Enter description">
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary rounded-3" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-outline-secondary rounded-3" data-bs-dismiss="modal">
+                            Cancel
+                        </button>
                         <button type="submit" class="btn btn-primary rounded-3" id="saveGlButton">
                             <i class="bi bi-save me-1"></i>Save
                         </button>
@@ -130,32 +136,40 @@
             background-color: #f8f9fa;
             transition: all 0.3s ease;
         }
+
         .card:hover {
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
+
         .form-control, .form-control[readonly] {
             border-color: #ced4da;
             background-color: #e9ecef;
             transition: border-color 0.2s ease;
         }
+
         .form-control:focus {
             border-color: #0d6efd;
             box-shadow: 0 0 5px rgba(13, 110, 253, 0.3);
         }
+
         .btn-primary, .btn-danger {
             transition: all 0.2s ease;
         }
+
         .btn-primary:hover {
             background-color: #0d6efd;
             border-color: #0d6efd;
         }
+
         .btn-danger:hover {
             background-color: #dc3545;
             border-color: #dc3545;
         }
+
         .table-hover tbody tr:hover {
             background-color: #e9ecef;
         }
+
         .alert {
             border-radius: 0.5rem;
         }

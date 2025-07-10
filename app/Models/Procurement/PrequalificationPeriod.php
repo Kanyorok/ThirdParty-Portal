@@ -33,7 +33,8 @@ class PrequalificationPeriod extends Model
     {
         return 'prequalificationperiodId';
     }
+
     protected $casts = [
-    'Status' => PrequalificationPeriodEnum::class,
+        'Status' => PrequalificationPeriodEnum::class,
     ];
 }

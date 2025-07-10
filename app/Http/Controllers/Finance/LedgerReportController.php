@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Finance;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 
 class LedgerReportController extends Controller
 {
@@ -13,7 +12,8 @@ class LedgerReportController extends Controller
         return view('finance.generalledger.glreporting.ledgerreport.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('finance.generalledger.glreporting.ledgerreport.create');
-    } 
+    }
 }

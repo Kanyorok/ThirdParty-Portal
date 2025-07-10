@@ -1,11 +1,11 @@
 @extends('layouts.app')
 @section('title', 'Tenant Payments')
 @section('content')
-@if(session('error'))
-    <script>
-        alert("{{ session('error') }}");
-    </script>
-@endif
+    @if(session('error'))
+        <script>
+            alert("{{ session('error') }}");
+        </script>
+    @endif
 <div class="container mt-4">
   <h4 class="fw-bold mb-3">💳 Record Tenant Payment (Supports Partials)</h4>
 
@@ -18,8 +18,8 @@
       <div class="row g-3 mb-3">
           <div class="col-md-3">
               <label class="form-label">InvoiceID</label>
-              <select name="InvoiceID"id="invoice-select" class="form-select" required>
-                <option value="">-- Select InvoiceID --</option>
+              <select name="InvoiceID" id="invoice-select" class="form-select" required>
+                  <option value="">-- Select InvoiceID --</option>
                   @foreach ($invoices as $invoice)
                       <option value="{{ $invoice->Id }}"                
                     
@@ -58,35 +58,35 @@
           <input type="hidden" name="BillingMonth" id="billingmonth-id">
         </div>
 
-        <div class="col-md-6">
-          <label class="form-label">Invoice Date</label>
-          <input type="date" id="invoicedate-display" class="form-control" readonly>
-          <input type="hidden" name="InvoiceDate" id="invoicedate-id"> 
-        </div>
+          <div class="col-md-6">
+              <label class="form-label">Invoice Date</label>
+              <input type="date" id="invoicedate-display" class="form-control" readonly>
+              <input type="hidden" name="InvoiceDate" id="invoicedate-id">
+          </div>
 
-        <div class="col-md-6">
-          <label class="form-label">Rent Amount</label>
-          <input type="number" id="rentamount-display" class="form-control" readonly>
-          <input type="hidden" name="RentAmount" id="rentamount-id">
-        </div>
+          <div class="col-md-6">
+              <label class="form-label">Rent Amount</label>
+              <input type="number" id="rentamount-display" class="form-control" readonly>
+              <input type="hidden" name="RentAmount" id="rentamount-id">
+          </div>
 
-        <div class="col-md-6">
-          <label class="form-label">Services Charge</label>
-          <input type="number" id="servicescharge-display" class="form-control" readonly>
-          <input type="hidden" name="ServicesCharge" id="servicescharge-id">
-        </div>
+          <div class="col-md-6">
+              <label class="form-label">Services Charge</label>
+              <input type="number" id="servicescharge-display" class="form-control" readonly>
+              <input type="hidden" name="ServicesCharge" id="servicescharge-id">
+          </div>
 
-        <div class="col-md-6">
-          <label class="form-label">Other Charges</label>
-          <input type="number" id="OtherCharges-display" class="form-control" readonly>
-          <input type="hidden" name="OtherCharges" id="OtherCharges-id">
-        </div>
+          <div class="col-md-6">
+              <label class="form-label">Other Charges</label>
+              <input type="number" id="OtherCharges-display" class="form-control" readonly>
+              <input type="hidden" name="OtherCharges" id="OtherCharges-id">
+          </div>
 
-      <!-- Invoice Summary (Static example, should populate dynamically) -->
+          <!-- Invoice Summary (Static example, should populate dynamically) -->
       <div class="row g-3 mb-3">
         <div class="col-md-3">
           <label class="form-label">Total Due</label>
-          <input type="number" class="form-control" name="TotalDue" id="totaldue" readonly step="0.01">
+            <input type="number" class="form-control" name="TotalDue" id="totaldue" readonly step="0.01">
         </div>
         <div class="col-md-3">
           <label class="form-label">Amount Paid So Far</label>
@@ -106,7 +106,7 @@
       <div class="row g-3 mb-3">
         <div class="col-md-4">
           <label class="form-label">Amount Paid Now</label>
-            <input type="number" class="form-control" placeholder="e.g. 5000"  name="Amount">
+            <input type="number" class="form-control" placeholder="e.g. 5000" name="Amount">
         </div>
         <div class="col-md-4">
           <label class="form-label">Payment Method</label>
@@ -134,20 +134,20 @@
     </div>
   </div>
 </div>
-<script>
-    function updateTotals() {
-        const rent = parseFloat(document.getElementById('rentamount-display').value) || 0;
-        const service = parseFloat(document.getElementById('servicescharge-display').value) || 0;
-        const other = parseFloat(document.getElementById('OtherCharges-display').value) || 0;
-        const totalDue = rent + service + other;
-        document.getElementById('totaldue').value = totalDue;
+    <script>
+        function updateTotals() {
+            const rent = parseFloat(document.getElementById('rentamount-display').value) || 0;
+            const service = parseFloat(document.getElementById('servicescharge-display').value) || 0;
+            const other = parseFloat(document.getElementById('OtherCharges-display').value) || 0;
+            const totalDue = rent + service + other;
+            document.getElementById('totaldue').value = totalDue;
 
-        const amountPaid = parseFloat(document.getElementsByName('AmountPaid')[0].value) || 0;
-        document.getElementById('balance').value = totalDue - amountPaid;
-    }
+            const amountPaid = parseFloat(document.getElementsByName('AmountPaid')[0].value) || 0;
+            document.getElementById('balance').value = totalDue - amountPaid;
+        }
 
-    document.getElementById('invoice-select').addEventListener('change', function () {
-        const selected = this.options[this.selectedIndex];
+        document.getElementById('invoice-select').addEventListener('change', function () {
+            const selected = this.options[this.selectedIndex];
 
         document.getElementById('invoice-display').value = selected.getAttribute('data-invoicenumber');
         document.getElementById('tenantid-id').value = selected.getAttribute('data-tenantid-id');
@@ -164,10 +164,10 @@
         document.getElementById('OtherCharges-id').value = selected.getAttribute('data-OtherCharges-id');
         document.getElementById('OtherCharges-display').value = selected.getAttribute('data-OtherCharges-name');
 
-        updateTotals();
-    });
+            updateTotals();
+        });
 
-    // Update balance when Amount Paid So Far changes
-    document.getElementsByName('AmountPaid')[0].addEventListener('input', updateTotals);
-</script>
+        // Update balance when Amount Paid So Far changes
+        document.getElementsByName('AmountPaid')[0].addEventListener('input', updateTotals);
+    </script>
 @endsection

@@ -1,3 +1,4 @@
+@php use Carbon\Carbon; @endphp
 @extends('layouts.app')
 
 @section('title', 'Requisition Approval')
@@ -16,7 +17,7 @@
                         <h5>Requisition Information</h5>
                         <p><strong>Requisition Number:</strong> {{ $requisitionInfo->RequisitionNo ?? 'N/A' }}</p>
                         <p>
-                            <strong>Date:</strong> {{ isset($requisitionInfo->CreatedOn) ? \Carbon\Carbon::parse($requisitionInfo->CreatedOn)->format('d/m/Y') : '' }}
+                            <strong>Date:</strong> {{ isset($requisitionInfo->CreatedOn) ? Carbon::parse($requisitionInfo->CreatedOn)->format('d/m/Y') : '' }}
                         </p>
                         <p><strong>Branch:</strong> {{ $requisitionInfo->BranchID ?? 'N/A' }}</p>
                         <p><strong>Department:</strong> {{ $requisitionInfo->DepartmentID ?? 'N/A' }}</p>
@@ -99,11 +100,13 @@
                                 </button>
                             </form>
 
-                            <button type="button" class="btn btn-danger btn-lg ms-2" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                            <button type="button" class="btn btn-danger btn-lg ms-2" data-bs-toggle="modal"
+                                    data-bs-target="#rejectModal">
                                 <i class="fas fa-times"></i> Reject
                             </button>
 
-                            <button type="button" class="btn btn-warning btn-lg ml-2" data-bs-toggle="modal" data-bs-target="#statusModal">
+                            <button type="button" class="btn btn-warning btn-lg ml-2" data-bs-toggle="modal"
+                                    data-bs-target="#statusModal">
                                 <i class="fas fa-info-circle"></i> Approval Status
                             </button>
 
@@ -120,7 +123,8 @@
     </div>
 
     <!-- Approval Status Modal -->
-    <div class="modal fade" id="statusModal" tabindex="-1" role="dialog" aria-labelledby="statusModalLabel" aria-hidden="true">
+    <div class="modal fade" id="statusModal" tabindex="-1" role="dialog" aria-labelledby="statusModalLabel"
+         aria-hidden="true">
         <div class="modal-dialog modal-dialog-scrollable modal-md" role="document">
             <div class="modal-content">
                 <div class="modal-header bg-secondary text-white">
@@ -192,6 +196,7 @@
         .badge {
             font-size: 0.9em;
         }
+
         .modal .list-group-item {
             font-size: 0.95rem;
         }

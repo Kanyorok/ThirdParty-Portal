@@ -40,31 +40,31 @@
                           placeholder="Describe the scenario purpose or assumptions...">{{ old('description', $scenario->description) }}</textarea>
             </div>
 
-    <div class="mb-3">
-      <label for="budgetPeriod" class="form-label">Budget Period</label>
-      <select class="form-select" id="budgetPeriod" name="budgetPeriod">
-        <option disabled>Select Period</option>
-        @foreach ($periods as $period)
-          <option value="{{ $period->Id }}"
-            {{ old('budgetPeriod', $scenario->Id) == $period->fiscalYear ? 'selected' : '' }}>
-            {{ $period->fiscalYear }}
-          </option>
-        @endforeach
-      </select>
-    </div>
+            <div class="mb-3">
+                <label for="budgetPeriod" class="form-label">Budget Period</label>
+                <select class="form-select" id="budgetPeriod" name="budgetPeriod">
+                    <option disabled>Select Period</option>
+                    @foreach ($periods as $period)
+                        <option value="{{ $period->Id }}"
+                            {{ old('budgetPeriod', $scenario->Id) == $period->fiscalYear ? 'selected' : '' }}>
+                            {{ $period->fiscalYear }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
 
-    <div class="mb-3">
-      <label class="form-label">Planning Method</label>
-      <select class="form-select" id="planningMethod" name="planningMethod">
-        <option disabled>Select Method</option>
-        @foreach ($methods as $method)
-          <option value="{{ $method->Id }}"
-            {{ old('planningMethod', $scenario->Id) == $method->MethodName ? 'selected' : '' }}>
-            {{ $method->MethodName }}
-          </option>
-        @endforeach
-      </select>
-    </div>
+            <div class="mb-3">
+                <label class="form-label">Planning Method</label>
+                <select class="form-select" id="planningMethod" name="planningMethod">
+                    <option disabled>Select Method</option>
+                    @foreach ($methods as $method)
+                        <option value="{{ $method->Id }}"
+                            {{ old('planningMethod', $scenario->Id) == $method->MethodName ? 'selected' : '' }}>
+                            {{ $method->MethodName }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
 
             <div class="form-check mb-3">
                 <input class="form-check-input" type="checkbox" id="isDefault" name="isDefault"
