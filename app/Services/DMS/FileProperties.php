@@ -7,18 +7,21 @@ use App\Enums\Core\ExtensionsEnum;
 use App\Helpers\SystemHelper;
 use Carbon\Carbon;
 use Exception;
-use getID3;
 use Illuminate\Support\Collection;
+
+// Add getID3 import for media file analysis
+use getID3;
 use Illuminate\Support\Str;
-use Log;
+use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpPresentation\IOFactory as PptFactory;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpWord\IOFactory as WordFactory;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class FileProperties
 {
-    public const string TIME_FORMAT = 'H:i:s';
-    public const string DATE_TIME_FORMAT = 'Y-m-d H:i:s T';
+    public const TIME_FORMAT = 'H:i:s';
+    public const DATE_TIME_FORMAT = 'Y-m-d H:i:s T';
 
     protected Collection $properties;
 
@@ -204,6 +207,94 @@ class FileProperties
         $this->extractVideoProperties();
     }
 
+    /**
+     * Extract Office document properties
+     */
+    private function extractDocumentProperties(): void
+    {
+        try {
+            $reader = $this->type->getDocumentType();
+            if (empty($reader)) {
+                return;
+            }
+            $document = WordFactory::load($this->file->getRealPath(), $reader);
+            $properties = $document->getDocInfo();
+
+            if ($creator = $properties->getCreator()) {
+                $this->add('creator', $creator);
+            }
+            if ($company = $properties->getCompany()) {
+                $this->add('company', $company);
+            }
+            if ($title = $properties->getTitle()) {
+                $this->add('title', $title);
+            }
+            if ($description = $properties->getDescription()) {
+                $this->add('description', $description);
+            }
+            if ($lastModifiedBy = $properties->getLastModifiedBy()) {
+                $this->add('modified_by', $lastModifiedBy);
+            }
+            if ($created = $properties->getCreated()) {
+                try {
+                    $this->add('creation_date', Carbon::createFromFormat('U', $created)?->format(self::DATE_TIME_FORMAT), DataTypesEnum::DateTime);
+                } catch (Exception $e) {
+                }
+            }
+            if ($modified = $properties->getModified()) {
+                try {
+                    $this->add('modified_date', Carbon::createFromFormat('U', $modified)?->format(self::DATE_TIME_FORMAT), DataTypesEnum::DateTime);
+                } catch (Exception $e) {
+                }
+            }
+            /* if ($words = $properties->getWords()) {
+                 $this->add('word_count', $words, DataTypesEnum::Integer);
+             }
+             if ($pages = $properties->getPages()) {
+                 $this->add('page_count', $pages, DataTypesEnum::Integer);
+             }*/
+        } catch (Exception $e) {
+            Log::warning('Failed to extract document properties: ' . $e->getMessage());
+        }
+    }
+
+    private function extractPresentationProperties(): void
+    {
+        try {
+            $presentation = PptFactory::load($this->file->getRealPath());
+            $properties = $presentation->getDocumentProperties();
+
+            if ($creator = $properties->getCreator()) {
+                $this->add('creator', $creator);
+            }
+            if ($lastModifiedBy = $properties->getLastModifiedBy()) {
+                $this->add('modified_by', $lastModifiedBy);
+            }
+            if ($title = $properties->getTitle()) {
+                $this->add('title', $title);
+            }
+            if ($description = $properties->getDescription()) {
+                $this->add('description', $description);
+            }
+            if ($created = $properties->getCreated()) {
+                try {
+                    $this->add('creation_date', Carbon::createFromFormat('U', $created)?->format(self::DATE_TIME_FORMAT), DataTypesEnum::DateTime);
+                } catch (Exception $e) {
+                }
+            }
+            if ($modified = $properties->getModified()) {
+                try {
+                    $this->add('modified_date', Carbon::createFromFormat('U', $modified)?->format(self::DATE_TIME_FORMAT), DataTypesEnum::DateTime);
+                } catch (Exception $e) {
+                }
+            }
+
+            $this->add('slide_count', $presentation->getSlideCount(), DataTypesEnum::Integer);
+        } catch (Exception $e) {
+            Log::warning('Failed to extract presentation properties: ' . $e->getMessage());
+        }
+    }
+
     private function extractSpreadsheetProperties(): void
     {
         try {
@@ -307,94 +398,6 @@ class FileProperties
             ->add('mime_type', $this->file->getMimeType() ?? $this->file->getClientMimeType())
             ->add('size', $this->file->getSize(), DataTypesEnum::Integer)
             ->add('extension', $this->type->value);
-    }
-
-    /**
-     * Extract Office document properties
-     */
-    private function extractDocumentProperties(): void
-    {
-        try {
-            $reader = $this->type->getDocumentType();
-            if (empty($reader)) {
-                return;
-            }
-            $document = \PhpOffice\PhpWord\IOFactory::load($this->file->getRealPath(), $reader);
-            $properties = $document->getDocInfo();
-
-            if ($creator = $properties->getCreator()) {
-                $this->add('creator', $creator);
-            }
-            if ($company = $properties->getCompany()) {
-                $this->add('company', $company);
-            }
-            if ($title = $properties->getTitle()) {
-                $this->add('title', $title);
-            }
-            if ($description = $properties->getDescription()) {
-                $this->add('description', $description);
-            }
-            if ($lastModifiedBy = $properties->getLastModifiedBy()) {
-                $this->add('modified_by', $lastModifiedBy);
-            }
-            if ($created = $properties->getCreated()) {
-                try {
-                    $this->add('creation_date', Carbon::createFromFormat('U', $created)?->format(self::DATE_TIME_FORMAT), DataTypesEnum::DateTime);
-                } catch (Exception $e) {
-                }
-            }
-            if ($modified = $properties->getModified()) {
-                try {
-                    $this->add('modified_date', Carbon::createFromFormat('U', $modified)?->format(self::DATE_TIME_FORMAT), DataTypesEnum::DateTime);
-                } catch (Exception $e) {
-                }
-            }
-            /* if ($words = $properties->getWords()) {
-                 $this->add('word_count', $words, DataTypesEnum::Integer);
-             }
-             if ($pages = $properties->getPages()) {
-                 $this->add('page_count', $pages, DataTypesEnum::Integer);
-             }*/
-        } catch (Exception $e) {
-            Log::warning('Failed to extract document properties: ' . $e->getMessage());
-        }
-    }
-
-    private function extractPresentationProperties(): void
-    {
-        try {
-            $presentation = PptFactory::load($this->file->getRealPath());
-            $properties = $presentation->getDocumentProperties();
-
-            if ($creator = $properties->getCreator()) {
-                $this->add('creator', $creator);
-            }
-            if ($lastModifiedBy = $properties->getLastModifiedBy()) {
-                $this->add('modified_by', $lastModifiedBy);
-            }
-            if ($title = $properties->getTitle()) {
-                $this->add('title', $title);
-            }
-            if ($description = $properties->getDescription()) {
-                $this->add('description', $description);
-            }
-            if ($created = $properties->getCreated()) {
-                try {
-                    $this->add('creation_date', Carbon::createFromFormat('U', $created)?->format(self::DATE_TIME_FORMAT), DataTypesEnum::DateTime);
-                } catch (Exception $e) {
-                }
-            }
-            if ($modified = $properties->getModified()) {
-                try {
-                    $this->add('modified_date', Carbon::createFromFormat('U', $modified)?->format(self::DATE_TIME_FORMAT), DataTypesEnum::DateTime);
-                } catch (Exception $e) {
-                }
-            }
-
-            $this->add('slide_count', $presentation->getSlideCount(), DataTypesEnum::Integer);
-        } catch (Exception $e) {
-            Log::warning('Failed to extract presentation properties: ' . $e->getMessage());
-        }
     }
 
 

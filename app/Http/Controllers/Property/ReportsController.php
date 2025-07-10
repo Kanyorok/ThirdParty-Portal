@@ -11,9 +11,9 @@ use Illuminate\View\View;
 
 class ReportsController extends Controller
 {
-    protected const ModulesEnum Module = ModulesEnum::Property;
-
     use ReportsTrait;
+
+    protected const MODULE = ModulesEnum::Property;
 
     public function index(Request $request): JsonResponse|View
     {

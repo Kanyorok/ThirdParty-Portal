@@ -52,7 +52,7 @@ class StockTakeService
      */
     public static function create(
         Branch $branch,
-        Store  $store,
+        Store $store,
         string $countedBy,
         Carbon $countDate
     ): self
@@ -81,9 +81,9 @@ class StockTakeService
      * Adds a line to the current StockTake
      */
     public function addLine(
-        int     $itemId,
-        float   $actualQuantity,
-        float   $countedQuantity,
+        int   $itemId,
+        float $actualQuantity,
+        float $countedQuantity,
         ?string $remarks = null
     ): StockTakeLines
     {

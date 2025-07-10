@@ -2,7 +2,6 @@
 
 namespace App\Models\Budget;
 
-use App\Http\Controllers\Budget\BudgetTopDownAllocationController;
 use App\Models\Core\Branch;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;

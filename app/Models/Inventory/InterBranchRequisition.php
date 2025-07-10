@@ -2,11 +2,11 @@
 
 namespace App\Models\Inventory;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\Model\UserActorTrait;
 use App\Models\Auth\User;
 use App\Models\Core\Branch;
+use App\Traits\Model\UserActorTrait;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class InterBranchRequisition extends Model
 {

@@ -50,11 +50,11 @@
                                 <td>{{$loop->index+1}}</td>
                                 <td>{{ $item->item?->ItemName }}</td>
                                 <td>{{ $item->category?->Name }}</td>
-                                <td>{{$item->item?->QtyToTender}}</td>
-                                <td>KES {{number_format(8000)}}</td>
-                                <td>KES {{number_format(80000)}}</td>
-                                {{-- <td>Nairobi HQ</td>
-                                <td>30 Days</td> --}}
+                                <td>{{$item->QtyToTender}}</td>
+                                <td> KES {{ number_format($item->item->price?->ActualPrice ?? 0, 2) }}</td>
+                                <td>
+                                    KES {{ number_format(($item->QtyToTender ?? 0) * ($item->item->price?->ActualPrice ?? 0), 2) }}</td>
+
                             </tr>
                         @endforeach
 
@@ -62,9 +62,10 @@
                         <tfoot class="table-light fw-bold text-end">
                         <tr>
                             <td colspan="5">Total Estimated Cost:</td>
-                            <td colspan="3">KES 240,000</td>
+                            <td colspan="3">KES {{ number_format($totalEstimatedCost, 2) }}</td>
                         </tr>
                         </tfoot>
+
                     </table>
                 </div>
             </div>

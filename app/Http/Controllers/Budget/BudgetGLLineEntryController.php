@@ -24,11 +24,12 @@ class BudgetGLLineEntryController extends Controller
 
         $entries = BudgetManualEntry::with([
             'budget:Id,Name',
-            'branch:Id,Name',
             'budgetLine:Id,LineName',])
             ->get();
 
-        return view('budgetandanalytics.budgetworkspace.entrybyglline.index', compact('entries'));
+        $groupedEntries = $entries->groupBy('BudgetID');
+
+        return view('budgetandanalytics.budgetworkspace.entrybyglline.index', ['groupedEntries' => $groupedEntries]);
     }
 
     public function create()
@@ -47,6 +48,7 @@ class BudgetGLLineEntryController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorize(PermissionEnum::BudgetSetupCreate, BudgetManualEntry::class);
         $request->validate([
             'BudgetID' => 'required|exists:t_Budgets,Id',
             'BranchID' => 'required|exists:t_Branches,Id',
@@ -76,7 +78,7 @@ class BudgetGLLineEntryController extends Controller
                 BudgetManualEntryAllocations::create([
                     'EntryID' => $entry->Id,
                     'BudgetID' => $request->BudgetID,
-                    'Month' => str_pad($month, 2, '0', STR_PAD_LEFT),
+                    'Month' => $month,
                     'Allocation' => $allocation,
                     'CreatedBy' => $userId,
                     'CreatedOn' => now(),
@@ -106,15 +108,128 @@ class BudgetGLLineEntryController extends Controller
 
     public function show($id)
     {
-        $entry = BudgetManualEntry::with([
-            'budget:Id,Name',
-            'branch:Id,Name',
+        $this->authorize(PermissionEnum::BudgetSetupView, BudgetManualEntry::class);
+        $entries = BudgetManualEntry::with([
             'budgetLine:Id,LineName',
-        ])->findOrFail($id);
+            'allocations:Id,Month,Allocation,EntryID',
+        ])->where('BudgetID', $id)->get();
 
-        $monthlyAllocations = BudgetManualEntryAllocations::where('EntryID', $id)->get();
-        return view('budgetandanalytics.budgetworkspace.entrybyglline.show', compact('entry', 'monthlyAllocations'));
+        return view('budgetandanalytics.budgetworkspace.entrybyglline.show', compact('entries'));
     }
 
+    public function destroy($id)
+    {
+        $this->authorize(PermissionEnum::BudgetSetupDelete, BudgetManualEntry::class);
+
+
+        DB::beginTransaction();
+        try {
+            $entry = BudgetManualEntry::findOrFail($id);
+            $monthlydelete = BudgetManualEntryAllocations::where('EntryId', $id)->update([
+                'DeletedBy' => Auth::Id()
+            ]);
+            $monthlydelete = BudgetManualEntryAllocations::where('EntryId', $id)->delete();
+            $entry->DeletedBy = Auth:: Id();
+            $entry->save();
+
+            $entry->delete(); // Delete the entry itself
+            DB::commit();
+            activity()
+                ->performedOn($entry)
+                ->causedBy(Auth::user())
+                ->event('delete')
+                ->withProperties(['action' => 'delete'])
+                ->log('Deleted a Manual Budget Line Entry');
+            return back()->with('success', 'Manual Budget Line Entry Deleted Successfully!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $e->getMessage();
+            Log::error('Failed to delete budget entry.', $e->getMessage());
+            return redirect()->back()->withErrors(['error' => 'Failed to delete budget entry. ' . $e->getMessage()]);
+        }
+    }
+
+    public function glview($budgetId)
+    {
+        $this->authorize(PermissionEnum::BudgetSetupView, BudgetManualEntry::class);
+
+        $entries = BudgetManualEntry::with([
+            'branch:Id,Name',
+            'budgetLine:Id,LineName',
+            'allocations', // eager load allocations
+        ])
+            ->where('BudgetID', $budgetId)
+            ->get();
+
+        return view('budgetandanalytics.budgetworkspace.entrybyglline.glview', compact('entries'));
+    }
+
+    public function edit($id)
+    {
+        $entry = BudgetManualEntry::with(['budget:Id,Name', 'branch:Id,Name', 'budgetLine:Id,LineName', 'allocations'])->findOrFail($id);
+        $branches = Branch::select('Id', 'Name')->get();
+        $budgetLines = BudgetLine::select('Id', 'LineName')->get();
+        return view('budgetandanalytics.budgetworkspace.entrybyglline.edit', compact('entry', 'branches', 'budgetLines'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $this->authorize(PermissionEnum::BudgetSetupUpdate, BudgetManualEntry::class);
+
+        $request->validate([
+            'BranchID' => 'required|exists:t_Branches,Id',
+            'BudgetLineID' => 'required|exists:t_BudgetLines,Id',
+            'Amount' => 'required|numeric|min:0',
+            'monthly_allocations' => 'required|array',
+            'monthly_allocations.*' => 'nullable|numeric|min:0',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $entry = BudgetManualEntry::with('allocations')->findOrFail($id);
+            $userId = Auth::id();
+
+            $entry->update([
+                // 'BudgetID' => $entry->BudgetID, // BudgetID should not be changed
+                'BranchID' => $request->BranchID,
+                'BudgetLineID' => $request->BudgetLineID,
+                'Amount' => $request->Amount,
+                'Comments' => $request->Comments,
+                'ModifiedBy' => $userId,
+                'ModifiedOn' => now(),
+            ]);
+
+            // Update allocations
+            $entry->allocations()->delete();
+            foreach ($request->monthly_allocations as $month => $allocation) {
+                BudgetManualEntryAllocations::create([
+                    'EntryID' => $entry->Id,
+                    'BudgetID' => $entry->BudgetID,
+                    'Month' => str_pad($month, 2, '0', STR_PAD_LEFT),
+                    'Allocation' => $allocation,
+                    'CreatedBy' => $userId,
+                    'CreatedOn' => now(),
+                    'ModifiedBy' => $userId,
+                    'ModifiedOn' => now(),
+                ]);
+            }
+
+            DB::commit();
+            activity()
+                ->performedOn($entry)
+                ->causedBy(Auth::user())
+                ->event('update')
+                ->withProperties(['action' => 'update'])
+                ->log('Updated a Manual Budget Line Entry');
+            return redirect()->route('entrybyglline.index')->with('success', 'Manual Budget Line Entry Updated Successfully!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to update budget entry.', [
+                'error' => $e->getMessage(),
+                'stack' => $e->getTraceAsString()
+            ]);
+            return redirect()->back()->withErrors(['error' => 'Failed to update budget entry. ' . $e->getMessage()]);
+        }
+    }
 }
 

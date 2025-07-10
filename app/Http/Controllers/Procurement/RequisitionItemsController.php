@@ -55,8 +55,8 @@ class RequisitionItemsController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => $items,
-            ]);}
-        catch(Exception $e){
+            ]);
+        } catch (Exception $e) {
             Log::error('Failed to fetch items', [
                 'type' => $type,
                 'requisition_id' => $request->query('requisition_id'),
@@ -113,8 +113,8 @@ class RequisitionItemsController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => $details,
-            ]);}
-        catch(Exception $e){
+            ]);
+        } catch (Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch inventory.',

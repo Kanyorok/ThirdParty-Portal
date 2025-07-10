@@ -1,7 +1,10 @@
 @extends('layouts.app')
 @section('content')
-    <div class="container-fluid">
-        <h4 class="mb-0">📊 Financial Dashboard – Statement of Financial Position & Income Statement</h4>
+    <div class="container-fluid" style="margin-top:-50px">
+        <h4 class="mb-0">📊 Statement of Financial Position</h4>
+        @if ($isSet)
+            <h4>{{ $budgetName }} for {{ $period }}</h4>
+        @endif
 
         <!-- Budget Selection Form -->
         <form action="{{ route('budgetconsolidation.index') }}" method="POST">
@@ -9,12 +12,24 @@
             @method('GET')
             <div class="row mb-4">
                 <div class="col-md-12">
+                    @if ($isSet)
+                        {{-- <label class="form-label fw-semibold">{{ $budgetName }}</label> --}}
+                    @else
                     <label class="form-label fw-semibold">Select a Budget</label>
+                    @endif
                     <select name="BudgetLineID" class="form-select" required onchange="this.form.submit()">
+                        @if ($isSet)
+                            <option disabled value="">-- Select Budget --</option>
+                            @foreach ($budgets as $item)
+                                <option
+                                    value="{{ $item->Id }}" {{ $budgetId==$item->Id?'slected':'' }}>{{ $item->Name }}</option>
+                            @endforeach
+                        @else
                         <option disabled selected>-- Select Budget --</option>
                         @foreach ($budgets as $item)
                             <option value="{{ $item->Id }}">{{ $item->Name }}</option>
                         @endforeach
+                        @endif
                     </select>
                     @error('BudgetLineID')
                     <small class="text-danger">{{ $message }}</small>
@@ -23,9 +38,9 @@
             </div>
         </form>
 
-        @php $months = range(1, 12); @endphp
-
+        @php $months = range(1, 12);$grandTotal = 0; @endphp
         @foreach($data as $category => $subTypes)
+            @php $categoryTotal = 0; @endphp
             <div class="card mb-5 shadow border-0">
                 <div class="card-header bg-primary text-white fw-bold fs-5">{{ strtoupper($category) }}</div>
                 <div class="card-body p-0 overflow-auto">
@@ -97,9 +112,13 @@
                     <div class="text-end mt-3 mb-3 pe-3 fw-bold text-primary">
                         Total for {{ $category }}: {{ number_format($categoryTotal, 2) }}
                     </div>
-        </div>
-    </div>
+                </div>
+            </div>
+            @php $grandTotal += $categoryTotal; @endphp
         @endforeach
+        <div class="text-end fs-5 fw-bold text-success me-3 mb-4">
+            💰 Total Budget Cost: {{ number_format($grandTotal, 2) }}
+        </div>
 
         <div class="text-end mb-5">
             {{-- <a href="{{ route('budgetconsolidation.export', ['format' => 'excel']) }}" class="btn btn-success me-2">📥 Export to Excel</a>

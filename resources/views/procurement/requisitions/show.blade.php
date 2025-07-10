@@ -10,9 +10,11 @@
 @endsection
 @section('content')
     <div class="mb-3">
-        <button class="btn btn-primary float-end ms-2 modal-create-item" type="button"><i class="fas fa-plus-circle"></i> Add
-            Items
-        </button>
+        @if(isset($requisitionInfo) && $requisitionInfo->StatusID != 26)
+            <button class="btn btn-primary float-end ms-2 modal-create-item" type="button">
+                <i class="fas fa-plus-circle"></i> Add Items
+            </button>
+        @endif
     </div>
     <div class="row">
         <div class="col-12">
@@ -52,7 +54,7 @@
                                 <td>{{ $item->Urgency }}</td>
                                 {{--                                <td>{{ $item->Status }}</td>--}}
                                 <td>{{ $item->UserName }}</td>
-                                <td>{{ $item->CreatedOn }}</td>
+                                <td>{{ \Carbon\Carbon::parse($item->CreatedOn)->format('d/m/Y') }}</td>
                                 {{--                                <td>{{ $item->ModifiedBy }}</td> --}}
                                 {{--                                <td>{{ $item->ModifiedOn }}</td> --}}
                             </tr>

@@ -18,15 +18,15 @@ class PropertyNewTenantService
 
     public static function create(
         CodeDetail $TenantType,
-        string     $TenantName,
-        string     $IDRegistrationNo,
-        string     $PhoneNumber,
-        string     $EmailAddress,
-        string     $Nationality,
-        string     $PostalAddress,
-        string     $Remarks,
-        bool       $IsActive,
-        User       $user
+        string $TenantName,
+        string $IDRegistrationNo,
+        string $PhoneNumber,
+        string $EmailAddress,
+        string $Nationality,
+        string $PostalAddress,
+        string $Remarks,
+        bool   $IsActive,
+        User   $user
     ): self
     {
         $newtenant = PropertyNewTenant::create([
@@ -52,16 +52,16 @@ class PropertyNewTenantService
 
     public static function update(
         PropertyNewTenant $propertyNewTenant,
-        CodeDetail        $TenantType,
-        string            $TenantName,
-        string            $IDRegistrationNo,
-        string            $PhoneNumber,
-        string            $EmailAddress,
-        string            $Nationality,
-        string            $PostalAddress,
-        string            $Remarks,
-        bool              $IsActive,
-        User              $user
+        CodeDetail $TenantType,
+        string     $TenantName,
+        string     $IDRegistrationNo,
+        string     $PhoneNumber,
+        string     $EmailAddress,
+        string     $Nationality,
+        string     $PostalAddress,
+        string     $Remarks,
+        bool       $IsActive,
+        User       $user
     ): self
     {
         $propertyNewTenant->update([

@@ -32,7 +32,7 @@
             @csrf
 
             <div class="row mb-3">
-                <div class="col-md-6">
+                <div class="col-md-12">
                     <label for="scenario" class="form-label">Budget</label>
                     <select class="form-select" name="BudgetID" required>
                         <option disabled selected>-- Select Budget --</option>
@@ -42,7 +42,7 @@
                     </select>
                 </div>
 
-                <div class="col-md-6">
+                {{-- <div class="col-md-6">
                     <label for="currency" class="form-label">Currency</label>
                     <select class="form-select" name="CurrencyID" required>
                         <option disabled selected>-- Select Currency --</option>
@@ -50,7 +50,7 @@
                             <option value="{{ $currency->Id }}">{{ $currency->Name }}</option>
                         @endforeach
                     </select>
-                </div>
+                </div> --}}
         </div>
 
             {{-- <div class="mt-3">
@@ -69,7 +69,7 @@
                 <tr>
                     <th>Product</th>
                     <th>No of Accounts</th>
-                    <th>Projected Value</th>
+                    {{-- <th>Projected Value</th> --}}
                 </tr>
                 </thead>
                 <tbody id="BudgetProducts">
@@ -81,10 +81,9 @@
                         <input type="number" class="form-control" name="Products[0][Volume]" placeholder="e.g., 120"
                                required/>
                     </td>
-                    <td>
-                        <input type="number" step="0.01" class="form-control" name="Products[0][Value]"
-                               placeholder="e.g., 12000000" required/>
-                    </td>
+                    {{-- <td>
+                         <input type="number" step="0.01" class="form-control" name="Products[0][Value]" placeholder="e.g., 12000000" required />
+                    </td> --}}
                 </tr>
                 </tbody>
             </table>

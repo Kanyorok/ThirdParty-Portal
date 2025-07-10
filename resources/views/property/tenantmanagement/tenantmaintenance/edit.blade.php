@@ -3,7 +3,7 @@
 
 @section('content')
     <div class="container mt-5" style="max-width: 850px;">
-        <h4 class="fw-bold mb-4">✏️ Edit Tenant Details</h4>
+        <h4 class="fw-bold mb-4">Edit Tenant Details</h4>
 
         <div class="card shadow border-0">
             <div class="card-header bg-light fw-semibold text-primary">
@@ -97,8 +97,8 @@
 
                     <!-- Buttons -->
                     <div class="text-end">
-                        <button type="submit" class="btn btn-success">💾 Update Tenant</button>
-                        <a href="{{ route('addtenant.index') }}" class="btn btn-outline-secondary">↩ Cancel</a>
+                        <button type="submit" class="btn btn-success">Update Tenant</button>
+                        <a href="{{ route('addtenant.index') }}" class="btn btn-outline-secondary">Cancel</a>
                     </div>
                 </div>
             </form>

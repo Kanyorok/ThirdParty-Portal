@@ -21,39 +21,45 @@
             <tr>
                 <th>#</th>
                 <th>Budget</th>
-                <th>Currency</th>
+                {{-- <th>Currency</th> --}}
                 <th>Products</th>
                 <th>No of Accounts</th>
-                <th>Projected Value</th>
+                {{-- <th>Projected Value</th> --}}
                 <th>Actions</th>
             </tr>
             </thead>
             <tbody>
-            @foreach ($projections as $projection)
+            @foreach ($groupedProjections as $budgetId => $projection)
+                @php
+                    $item = $projection->first();
+                    $total_volume = $projection->flatMap->projections->sum('Volume');
+                    $total_value = $projection->flatMap->projections->sum('Value');
+                    $total_products = $projection->flatMap->projections->count();
+                @endphp
                 <tr>
                     <td>{{ $loop->iteration }}</td>
-                    <td>{{ $projection->budget ? $projection->budget->Name : '-' }}</td>
+                    <td>{{ $item->budget->Name  ?? $item->BudgetID }}</td>
                     {{-- <td>Branch</td> --}}
                     {{-- <td>{{ $projection->scenario->scenarioName }}</td> --}}
-                    <td>{{ $projection->currency ? $projection->currency->Code : '-' }}</td>
-                    <td>{{ $projection->projections ? $projection->projections->count() : 0 }}</td>
+                    {{-- <td>{{ $item->currency->Code ?? $item->BudgetID}}</td> --}}
+                    <td>{{ $projection->flatMap->projections->count() }}</td>
                     {{-- <td>{{ $projection->period->fiscalYear }}</td> --}}
-                    <td>{{ isset($projection->total_volume) ? number_format($projection->total_volume) : '0' }}</td>
-                    <td>{{ isset($projection->total_value) ? number_format($projection->total_value, 2) : '0.00' }}</td>
+                    <td>{{ isset($item->total_volume) ? number_format($item->total_volume) : '0' }}</td>
+                    {{-- <td>{{ isset($item->total_value) ? number_format($item->total_value, 2) : '0.00' }}</td> --}}
                     {{-- <td><span class="badge bg-warning">Pending</span></td> --}}
                     <td>
-                        <a href="{{route('budgetprojections.show',$projection->Id)}}"
+                        <a href="{{route('budgetprojections.show',$item->Id)}}"
                            class="btn btn-sm btn-outline-info">👁</a>
-                        <form action="#" method="POST" class="d-inline">
+                        <form action="{{ route('budgetprojections.destroy', $item->Id) }}" method="POST"
+                              class="d-inline">
                             @csrf @method('DELETE')
                             <button class="btn btn-sm btn-outline-danger"
                                     onclick="return confirm('Delete this entry?')">🗑
                             </button>
                         </form>
-                        <a href="{{route('budgetprojections.edit',$projection->Id)}}"
+                        <a href="{{route('budgetprojections.edit',$item->Id)}}"
                            class="btn btn-sm btn-outline-info">🖉 </a>
-                        <a href="{{route('monthly.create', ['id'=>$projection->Id])}}"
-                           class="btn btn-sm btn-outline-info">Monthly</a>
+                        <a href="{{route('monthly.create', ['id'=>$item->Id])}}" class="btn btn-sm btn-outline-info">Monthly</a>
                     </td>
                 </tr>
             @endforeach

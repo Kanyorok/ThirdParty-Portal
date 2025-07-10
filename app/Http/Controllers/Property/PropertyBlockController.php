@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers\Property;
 
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\PropertyRegistry\PropertyBlockRequest;
-use App\Services\Property\PropertyRegistry\PropertyBlockService;
 use App\Models\PropertyManagement\PropertyBlock;
 use App\Models\PropertyManagement\PropertyRegistry;
+use App\Services\Property\PropertyRegistry\PropertyBlockService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 
 class PropertyBlockController extends Controller
@@ -24,10 +24,6 @@ class PropertyBlockController extends Controller
     public function create(){
         $properties = PropertyRegistry::all();
         return view('property.propertyregistry.structuralmapping.addblock.create', compact('properties'));
-    }
-    public function show($id){
-        $block = PropertyBlock::find($id);
-        return view('property.propertyregistry.structuralmapping.addblock.show',compact('block'));
     }
 
     public function store(PropertyBlockRequest $request)

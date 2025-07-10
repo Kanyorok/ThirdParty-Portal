@@ -53,13 +53,20 @@
                         <td>
                             <a href="{{route('yieldexpenserate.edit', $item->Id)}}"
                                class="btn btn-sm btn-secondary">✏️</a>
-                            <form method="POST" action="{{ route('yieldexpenserate.destroy', $item->Id) }}"
-                                  class="delete-form d-inline"
-                                  onsubmit="return confirm('Are you sure you want to delete this category?');">
+                            {{-- <form method="POST" action="{{ route('yieldexpenserate.destroy', $item->Id) }}" class="delete-form d-inline"
+                                onsubmit="return confirm('Are you sure you want to delete this category?');">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-danger delete-btn">🗑</button>
-                            </form>
+                                <button type="submit" class="btn btn-sm btn-danger delete-btn">🗑 </button>
+                            </form> --}}
+                            <button type="button"
+                                    class="btn btn-sm btn-danger custom-delete-btn"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#customDeleteConfirmModal"
+                                    data-name="{{ $item->productType->Name  }}"
+                                    data-route="{{route('yieldexpenserate.destroy', $item->Id)}}">
+                                🗑️
+                            </button>
                         </td>
                     </tr>
                 @endforeach
@@ -165,4 +172,5 @@
                 </div>
             </div>
         </div>
+    @include('components.modals.delete-confirm')
 @endsection

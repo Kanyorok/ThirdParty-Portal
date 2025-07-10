@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Inventory;
 
 
 use App\Http\Controllers\Controller;
-use App\Models\Inventory\ItemCategories;
 use App\Http\Requests\Inventory\StoreItemCategoryRequest;
 use App\Http\Requests\Inventory\UpdateItemCategoryRequest;
+use App\Models\Inventory\ItemCategories;
 use App\Services\Inventory\ItemCategoryService;
 
 class ItemCategoryController extends Controller

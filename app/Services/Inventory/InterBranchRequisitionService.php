@@ -2,16 +2,14 @@
 
 namespace App\Services\Inventory;
 
+use App\Enums\Inventory\InterBranchRequisitionEnum;
+use App\Models\Core\PendingWorkflow;
+use App\Models\Core\Workflow;
 use App\Models\Inventory\InterBranchRequisition;
 use App\Models\Inventory\InterBranchRequisitionItem;
-use App\Models\Core\Workflow;
-use App\Models\Core\PendingWorkflow;
-use App\Enums\Inventory\InterBranchRequisitionEnum;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-
-// Ensure DB facade is imported if not already
 
 class InterBranchRequisitionService
 {
@@ -35,9 +33,9 @@ class InterBranchRequisitionService
         $requisition->ModifiedOn = Carbon::now();
         $requisition->save();
 
-        // Generate ReqNo after saving to ensure ID is available
+
         $requisition->ReqNo = $this->generateReqNo($requisition);
-        $requisition->save(); // Save again to persist ReqNo
+        $requisition->save();
 
         foreach ($items as $item) {
             $item['RequisitionId'] = $requisition->Id;
@@ -113,9 +111,7 @@ class InterBranchRequisitionService
                     $existingItem->ModifiedOn = Carbon::now();
                     $existingItem->save();
                 } else {
-                    // This scenario should ideally not happen if 'Id' is provided but doesn't exist.
-                    // For robustness, treat it as a new item or log an error.
-                    // For this context, we'll treat it as a new item to avoid breaking.
+
                     $itemData['RequisitionId'] = $requisition->Id;
                     $itemData['CreatedBy'] = Auth::id();
                     $itemData['ModifiedBy'] = Auth::id();
@@ -157,7 +153,7 @@ class InterBranchRequisitionService
         $requisition->save();
         $requisition->delete();
 
-        // Also delete associated items (soft delete if model uses SoftDeletes)
+
         $requisition->items()->delete();
 
         activity()
@@ -206,7 +202,7 @@ class InterBranchRequisitionService
         $enum = match ($action) {
             'APPROVED' => InterBranchRequisitionEnum::Approved,
             'REJECTED' => InterBranchRequisitionEnum::Rejected,
-            default => InterBranchRequisitionEnum::Pending
+            default => InterBranchRequisitionEnum::Submitted
         };
 
         Workflow::create([

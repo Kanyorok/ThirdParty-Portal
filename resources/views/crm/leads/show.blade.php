@@ -57,32 +57,45 @@
                 <div class="card-body mx-1 mb-0 mt-1">
                     @include('snippets.lead_summary', ['lead'=>$lead, 'show_summary'=>true])
                     <hr>
-                    <h5 class="h6 card-title">Contacts @if(!$won)
-                            <a href="#" class="float-end trigger-update-lead-modal"><i
-                                    class="fas fa-edit"></i></a>
+                    <h5 class="h6 card-title">
+                        Contacts
+                        @if(!$won)
+                            <a href="#" class="float-end trigger-update-lead-modal">
+                                <i class="fas fa-edit"></i>
+                            </a>
                         @endif
                     </h5>
-                    <div class="text center">
+
+                    <div class="text-start">
                         <div class="btn-group">
                             <button type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
-                                    class="btn btn-link dropdown-toggle">
+                                    class="btn btn-link dropdown-toggle text-break text-start">
                                 {{ $lead->Phone }}
                             </button>
-                            <div class="dropdown-menu" style="">
+                            <div class="dropdown-menu">
                                 <a class="dropdown-item disabled text-decoration-line-through"
-                                   href="javascript:void(0)"><i class="fas fa-phone-alt"></i> Call</a>
+                                   href="javascript:void(0)">
+                                    <i class="fas fa-phone-alt"></i> Call
+                                </a>
                                 <div class="dropdown-divider"></div>
                                 <a class="dropdown-item send-message-to-action" href="javascript:void(0)"
                                    data-info="{{ route('lead-sms.store', [$lead->LeadID]) }}~{{ $lead->Name }}~{{ $lead->Phone }}">
-                                    <i class="fas fa-message"></i> Message</a>
+                                    <i class="fas fa-message"></i> Message
+                                </a>
                             </div>
                         </div>
+
                         @if(!empty($lead->Email))
-                            <a href="javascript:void(0)"
-                               data-info="{{ route('lead-mail.store', [$lead->LeadID]) }}~{{ $lead->Name }}~{{ $lead->Email }}"
-                               class="btn btn-lg btn-link me-1 my-1 send-mail-to-action">{{ $lead->Email }}</a>
+                            <div class="d-block mt-2">
+                                <a href="javascript:void(0)"
+                                   data-info="{{ route('lead-mail.store', [$lead->LeadID]) }}~{{ $lead->Name }}~{{ $lead->Email }}"
+                                   class="btn btn-link text-break send-mail-to-action w-100 text-start">
+                                    {{ $lead->Email }}
+                                </a>
+                            </div>
                         @endif
                     </div>
+
                 </div>
                 <hr class="my-0">
                 <div class="card-body">
@@ -515,7 +528,7 @@
                     <div class="card">
                         <div class="card-header">
                             <div class="row">
-                                <div class="col-md-6 col-12"><h5>Products Intrested</h5></div>
+                                <div class="col-md-6 col-12"><h5>Product Interested</h5></div>
                                 <div class="col-md-6 col-12">
                                     <div class="float-end">
                                         <button class="btn btn-primary add-lead-product" type="button"><i
@@ -563,7 +576,7 @@
                 </div>
                 <div class="tab-pane m-2" id="tab-4" role="tabpanel">
                     <div class="card">
-                        <div class="card-header"><h5>Discusions</h5></div>
+                        <div class="card-header"><h5>Discussions</h5></div>
                         <div class="card-body">
                             <table id="discussionsTable"
                                    class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">

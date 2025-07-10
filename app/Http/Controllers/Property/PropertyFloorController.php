@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers\Property;
 
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\PropertyRegistry\PropertyFloorRequest;
-use App\Services\Property\PropertyRegistry\PropertyFloorService;
-use Illuminate\Http\Request;
+use App\Models\PropertyManagement\PropertyBlock;
 use App\Models\PropertyManagement\PropertyFloor;
 use App\Models\PropertyManagement\PropertyRegistry;
-use App\Models\PropertyManagement\PropertyBlock;
+use App\Services\Property\PropertyRegistry\PropertyFloorService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PropertyFloorController extends Controller
 {
@@ -67,11 +67,7 @@ class PropertyFloorController extends Controller
         } catch (\Exception $e) {
             return back()->withErrors('Failed: ' . $e->getMessage())->withInput();
         }
-
-        //return redirect()->route('addfloor.index')->with('success', 'property floor created successfully');
-
     }
-
 
     public function edit($id)
     {

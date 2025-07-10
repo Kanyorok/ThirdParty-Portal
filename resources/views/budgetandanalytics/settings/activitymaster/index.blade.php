@@ -1,10 +1,10 @@
 @extends('layouts.app')
-@section('title', 'Budget Activities')
+@section('title', 'Budget Activity Master')
 
 @section('content')
     <div class="card p-4">
         <div class="card-header bg-dark text-white py-4 mb-0" style="font-size: 20px; font-weight: bold;">
-            📊 Budget Activities
+            📊 Budget Activity Master
         </div>
 
         <div class="card-body mb-0">
@@ -53,15 +53,21 @@
                                     <div class="btn-group" role="group">
                                         <a href="{{ route('activitymaster.edit', $activity->Id) }}"
                                            class="btn btn-sm btn-warning">✏️</a>
-                                        <form action="{{ route('activitymaster.destroy', $activity->Id) }}"
-                                              method="POST"
-                                              onsubmit="return confirm('Are you sure you want to delete this activity?');">
+                                        {{-- <form action="{{ route('activitymaster.destroy', $activity->Id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this activity?');">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-danger">
                                                 🗑️
                                             </button>
-                                        </form>
+                                        </form> --}}
+                                        <button type="button"
+                                                class="btn btn-sm btn-danger custom-delete-btn"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#customDeleteConfirmModal"
+                                                data-name="{{ $activity->ActivityName  }}" {{-- Pass item name --}}
+                                                data-route="{{route('activitymaster.destroy', $activity->Id)}}"> {{--Pass delete route--}}
+                                            🗑️
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -80,7 +86,6 @@
 
             </div>
         </div>
-
-
     </div>
+    @include('components.modals.delete-confirm')
 @endsection

@@ -13,14 +13,19 @@
                     <div class="card-body">
 
                         {{-- Requisition Dropdown --}}
+                        {{--                        <div class="mb-3">--}}
+                        {{--                            <label>Requisition</label>--}}
+                        {{--                            <select id="requisitionDropdown" name="RequisitionID" class="form-control" required>--}}
+                        {{--                                <option value="">-- Select Requisition --</option>--}}
+                        {{--                                @foreach($requisitions as $req)--}}
+                        {{--                                    <option value="{{ $req->Id }}">{{ 'Requisition #' . $req->RequisitionNo }}</option>--}}
+                        {{--                                @endforeach--}}
+                        {{--                            </select>--}}
+                        {{--                        </div>--}}
                         <div class="mb-3">
                             <label>Requisition</label>
-                            <select id="requisitionDropdown" name="RequisitionID" class="form-control" required>
-                                <option value="">-- Select Requisition --</option>
-                                @foreach($requisitions as $req)
-                                    <option value="{{ $req->Id }}">{{ 'Requisition #' . $req->RequisitionNo }}</option>
-                                @endforeach
-                            </select>
+                            <input class="form-control" value="{{ $requisition->RequisitionNo }}" readonly>
+                            <input type="hidden" name="RequisitionID" value="{{ $requisition->Id }}">
                         </div>
 
                         {{-- Item Category Dropdown (Initially empty) --}}
@@ -39,30 +44,28 @@
 
     {{-- JavaScript Section --}}
     <script>
-        document.getElementById('requisitionDropdown').addEventListener('change', function () {
-            const reqId = this.value;
+        document.addEventListener('DOMContentLoaded', function () {
             const categoryDropdown = document.getElementById('categoryDropdown');
+            const rfqId = {{ $rfqId }}; // This assumes you're passing $rfqId to the blade
 
-            // Clear existing options
-            categoryDropdown.innerHTML = '<option value="">-- Select Category --</option>';
-            categoryDropdown.disabled = true;
-
-            if (reqId) {
-                fetch(`/requisition/${reqId}/categories`)
-                    .then(response => response.json())
-                    .then(data => {
-                        data.forEach(cat => {
-                            const option = document.createElement('option');
-                            option.value = cat.Id;
-                            option.textContent = cat.Name;
-                            categoryDropdown.appendChild(option);
-                        });
-                        categoryDropdown.disabled = false;
-                    })
-                    .catch(error => {
-                        console.error('Error fetching categories:', error);
+            fetch(`/rfq/${rfqId}/categories`)
+                .then(response => response.json())
+                .then(data => {
+                    categoryDropdown.innerHTML = '<option value="">-- Select Category --</option>';
+                    data.forEach(cat => {
+                        const option = document.createElement('option');
+                        option.value = cat.Id;
+                        option.textContent = cat.Name;
+                        categoryDropdown.appendChild(option);
                     });
-            }
+                    categoryDropdown.disabled = false;
+                })
+                .catch(error => {
+                    console.error('Error fetching categories:', error);
+                    categoryDropdown.innerHTML = '<option value="">⚠️ Failed to load categories</option>';
+                    categoryDropdown.disabled = true;
+                });
         });
     </script>
+
 @endsection

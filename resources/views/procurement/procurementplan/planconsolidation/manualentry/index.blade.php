@@ -66,7 +66,7 @@
           <td>{{ $item->item->uom->Name ?? 'N/A' }}</td>
           <td>{{ number_format($item->EstimatedUnitCost, 2) }}</td>
           <td>{{ $item->SchedulePeriod ?? 'N/A' }}</td>
-          <td>{{ \Carbon\Carbon::parse($item->ExpectedDeliveryDate)->format('Y-m-d') ?? 'N/A' }}</td>
+          <td>{{ \Carbon\Carbon::parse($item->ExpectedDeliveryDate)->format('d/m/Y') ?? 'N/A' }}</td>
           <td>
               <a href="{{ route('planmanualinput.edit', $item->LineItemID) }}" class="btn btn-sm btn-outline-primary">Edit</a>
               <form method="POST" action="{{ route('planmanualinput.destroy', $item->LineItemID) }}"

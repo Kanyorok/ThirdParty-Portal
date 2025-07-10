@@ -1,6 +1,15 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Generate Rent Invoice')
 @section('content')
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 <div class="container mt-4">
   <h4 class="fw-bold mb-3">🧾 Generate Rent Invoice</h4>
 
@@ -14,8 +23,11 @@
         <div class="col-md-6">
           <label class="form-label">Select Lease</label>
             <select name="Lease" class="form-select" required>
-                @foreach ($newleases as $newlease)
-                    <option value="{{ $newlease->id }}">{{ $newlease->Tenant }}</option>
+                <option value="">-- Select Lease --</option>
+                @foreach ($newtenants as $newtenant)
+                    <option value="{{ $newtenant->Id }}">
+                        LSno: {{ $newtenant->LeaseNumber }} — Name: {{ $newtenant->tenant->TenantName }}
+                    </option>
                 @endforeach
             </select>
         </div>

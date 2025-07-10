@@ -84,10 +84,12 @@ class YieldRateController extends Controller
     {
         $this->authorize(PermissionEnum::BudgetSetupDelete, BudgetDriverRates::class);
 
-
+        //    return $id;
         DB::beginTransaction();
         try {
             $yieldrate = BudgetDriverRates::findOrFail($id);
+            $yieldrate->DeletedBy = Auth::id();
+            $yieldrate->save();
             $yieldrate->delete();
             DB::commit();
             activity()

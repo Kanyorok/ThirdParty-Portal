@@ -38,6 +38,7 @@
                                 <th>Responsive?</th>
                                 <th>Select</th>
                             </tr>
+
                             </thead>
                             <tbody>
                             <tr>

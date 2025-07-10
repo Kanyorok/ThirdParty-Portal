@@ -20,14 +20,14 @@ class PropertyUnitService
 
     public static function create(
         PropertyRegistry $propertyId,
-        PropertyBlock    $blockId,
-        PropertyFloor    $FloorID,
-        string           $UnitCode,
-        int              $UnitSize,
-        bool             $IsRentable,
-        bool             $CurrentStatus,
-        string           $Remarks,
-        User             $user
+        PropertyBlock $blockId,
+        PropertyFloor $FloorID,
+        string        $UnitCode,
+        int           $UnitSize,
+        bool          $IsRentable,
+        bool          $CurrentStatus,
+        string        $Remarks,
+        User          $user
     ): self
     {
         $propertyUnit = PropertyUnit::create([

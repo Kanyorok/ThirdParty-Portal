@@ -47,11 +47,11 @@ return new class extends Migration {
             $table->string('Version');
             $table->string('Path', 2000);
             $table->char('Disk', 2)->comment('Disk Enum');
-            $table->string('Checksum', 250);
+            $table->string('Checksum', 100);
             $table->unsignedBigInteger('Size');
             $table->foreignId('DocumentId')->constrained('t_Documents', 'Id');
             $table->longText('Description')->nullable();
-            $table->longText('Blob')->nullable()->index();
+            $table->longText('Blob')->nullable();
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');

@@ -13,83 +13,88 @@
     @endif
     <div class="container mt-4">
         <div class="card p-4">
-            <p class="muted">
-                Please use this form to add a new activity under your selected budget line. An activity represents a
-                specific task or
-                project planned within the broader budget. Make sure to associate it with the appropriate budget and
-                budget line. You can
-                also define how funds will be allocated across different months to track planned expenditures throughout
-                the budget period.
-            </p>
-            {{-- <h5>➕ New Budget Activity</h5> --}}
-            <form action="{{ route('budgetactivities.store') }}" method="POST">
-                @csrf
-                @method('POST')
+            <div class="card-header bg-dark text-white">
+                ➕ New Budget Activity
+                <a href="{{ route('budgetactivities.index') }}" class="btn btn-secondary btn-sm float-end">← Back to
+                    Activities</a>
+            </div>
+            <div class="card-body">
+                <p class="muted">
+                    Please use this form to add a new activity under your selected budget line. An activity represents a
+                    specific task or
+                    project planned within the broader budget. Make sure to associate it with the appropriate budget and
+                    budget line. You can
+                    also define how funds will be allocated across different months to track planned expenditures
+                    throughout the budget period.
+                </p>
+                {{-- <h5>➕ New Budget Activity</h5> --}}
+                <form action="{{ route('budgetactivities.store') }}" method="POST">
+                    @csrf
+                    @method('POST')
 
-                <!-- Budget Line and Activity Info -->
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Budget</label>
-                        <select name="BudgetID" class="form-select" required>
-                            <option disabled selected required>-- Select Budget --</option>
-                            @foreach ($budgets as $item)
-                                <option value="{{ $item->Id }}">{{ $item->Name }}</option>
-                            @endforeach
-                        </select>
-                        @error('BudgetLineID') <small class="text-danger">{{ $message }}</small> @enderror
+                    <!-- Budget Line and Activity Info -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Budget</label>
+                            <select name="BudgetID" class="form-select" required>
+                                <option disabled selected required>-- Select Budget --</option>
+                                @foreach ($budgets as $item)
+                                    <option value="{{ $item->Id }}">{{ $item->Name }}</option>
+                                @endforeach
+                            </select>
+                            @error('BudgetLineID') <small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Budget Line</label>
+                            <select name="BudgetLineID" class="form-select" id="budgetLineSelect" required>
+                                <option disabled selected>-- Select Budget Line --</option>
+                                @foreach ($budgetLines as $item)
+                                    <option value="{{ $item->Id }}">{{ $item->LineName }}</option>
+                                @endforeach
+                            </select>
+                            @error('BudgetLineID') <small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Activity</label>
+                            <select name="ActivityID" id="activitySelect" class="form-select" required disabled>
+                                <option selected disabled>-- Select Activity --</option>
+                            </select>
+                            <div id="activity-loading" class="form-text text-muted d-none">Loading activities...</div>
+                            @error('ActivityID') <small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Allocation Type</label>
+                            <select name="AllocationType" class="form-select" id="allocationType" required>
+                                <option disabled selected>-- Select allocation type --</option>
+                                <option value="full">Annual or Full Allocation</option>
+                                <option value="monthly">Monthly Allocation</option>
+                            </select>
+                            @error('AllocationType') <small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+
+                        {{-- <div class="col-md-6 mb-3">
+                            <label class="form-label">Branch</label>
+                            <select name="BranchID" class="form-select" required>
+                                <option disabled selected>--Select Branch --</option>
+                                @foreach ($branches as $item)
+                                    <option value="{{ $item->Id }}">{{ $item->Name }}</option>
+                                @endforeach
+                            </select>
+                            @error('BranchID') <small class="text-danger">{{ $message }}</small> @enderror
+                        </div> --}}
+
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea name="Description" class="form-control" rows="3"
+                                      placeholder="Brief description..." required></textarea>
+                            @error('Description') <small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
                     </div>
 
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Budget Line</label>
-                        <select name="BudgetLineID" class="form-select" id="budgetLineSelect" required>
-                            <option disabled selected>-- Select Budget Line --</option>
-                            @foreach ($budgetLines as $item)
-                                <option value="{{ $item->Id }}">{{ $item->LineName }}</option>
-                            @endforeach
-                        </select>
-                        @error('BudgetLineID') <small class="text-danger">{{ $message }}</small> @enderror
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Activity</label>
-                        <select name="ActivityID" id="activitySelect" class="form-select" required disabled>
-                            <option selected disabled>-- Select Activity --</option>
-                        </select>
-                        <div id="activity-loading" class="form-text text-muted d-none">Loading activities...</div>
-                        @error('ActivityID') <small class="text-danger">{{ $message }}</small> @enderror
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Allocation Type</label>
-                        <select name="AllocationType" class="form-select" id="allocationType" required>
-                            <option disabled selected>-- Select allocation type --</option>
-                            <option value="full">Annual or Full Allocation</option>
-                            <option value="monthly">Monthly Allocation</option>
-                        </select>
-                        @error('AllocationType') <small class="text-danger">{{ $message }}</small> @enderror
-                    </div>
-
-                    {{-- <div class="col-md-6 mb-3">
-                        <label class="form-label">Branch</label>
-                        <select name="BranchID" class="form-select" required>
-                            <option disabled selected>--Select Branch --</option>
-                            @foreach ($branches as $item)
-                                <option value="{{ $item->Id }}">{{ $item->Name }}</option>
-                            @endforeach
-                        </select>
-                        @error('BranchID') <small class="text-danger">{{ $message }}</small> @enderror
-                    </div> --}}
-
-                    <div class="col-md-12 mb-3">
-                        <label class="form-label">Description</label>
-                        <textarea name="Description" class="form-control" rows="3" placeholder="Brief description..."
-                                  required></textarea>
-                        @error('Description') <small class="text-danger">{{ $message }}</small> @enderror
-                    </div>
-                </div>
-        </div>
-
-        <!-- Full Allocation Fields -->
+                    <!-- Full Allocation Fields -->
         <div id="fullAllocationSection" class="mb-3" style="display:none;">
             <h6>Full Allocation (KES)</h6>
             <input type="number" name="FullAllocation" min="0" class="form-control" placeholder="0.00">
@@ -126,8 +131,10 @@
                 💾 Save Activity
             </button>
         </div>
-        </form>
+                </form>
 
+            </div>
+        </div>
     </div>
     </div>
 

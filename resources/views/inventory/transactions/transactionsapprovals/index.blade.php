@@ -12,7 +12,7 @@
 
 @section('content')
     <div class="container">
-        <h4 class="mb-4">Approve Stock Transactions</h4>
+        <h4 class="mb-4">Select Transactions to Approve</h4>
 
         @if(session('success'))
             <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -73,6 +73,7 @@
                     <th>STATUS</th>
                     <th>APPROVE</th>
                     <th>REJECT</th>
+                    <th>ACTIONS</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -104,10 +105,10 @@
                         <td>{{ \Carbon\Carbon::parse($record->CreatedOn)->format('d/m/Y') }}</td>
                         <td>
                             @if($transactionType == 'Stock Transfer')
-                                {{$record->transferredBy->Name ?? 'N/A'}}
+                                {{ $record->transferredBy->Name ?? 'N/A'}}
                             @elseif($transactionType == 'Stock Adjustment')
-                                {{$record->adjustedBy->Name ?? 'N/A'}}
-                                {{ $record->AdjustedBy ?? 'N/A' }}
+                                {{-- CORRECTED LINE: Only display the user's Name via the relationship --}}
+                                {{ $record->adjustedBy->Name ?? 'N/A' }}
                             @else
                                 {{ $record->creator->name ?? 'N/A' }}
                             @endif
@@ -134,7 +135,14 @@
                                 <button type="submit" class="btn btn-danger btn-sm">Reject</button>
                             </form>
                         </td>
+                        <td>
+                            <a href="{{ route('transactionsapproval.show', ['Id' => $record->Id, 'transaction_type' => $transactionType]) }}"
+                               class="btn btn-sm btn-primary">
+                                View
+                            </a>
+                        </td>
                     </tr>
+
                 @empty
                     <tr>
                         <td colspan="9" class="text-center">No pending {{ strtolower($transactionType) }}s found.</td>

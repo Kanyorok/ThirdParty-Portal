@@ -10,7 +10,6 @@ use App\Http\Controllers\Budget\BudgetDriversSetupController;
 use App\Http\Controllers\Budget\BudgetFormulaController;
 use App\Http\Controllers\Budget\BudgetGLLineEntryController;
 use App\Http\Controllers\Budget\BudgetGLMappingController;
-use App\Http\Controllers\Budget\BudgetItemsController;
 use App\Http\Controllers\Budget\BudgetKPIscorecardsController;
 use App\Http\Controllers\Budget\BudgetKPIscorecardsOfficerController;
 use App\Http\Controllers\Budget\BudgetLineCategoriesController;
@@ -54,9 +53,9 @@ use App\Http\Controllers\Budget\NPLTrendByProductController;
 use App\Http\Controllers\Budget\OfficerPerformanceController;
 use App\Http\Controllers\Budget\ProductProfitabilityController;
 use App\Http\Controllers\Budget\RegulatoryRatiosController;
+use App\Http\Controllers\Budget\ReportsController;
 use App\Http\Controllers\Budget\ReturnOnAssetsController;
 use App\Http\Controllers\Budget\ReturnOnEquityController;
-use App\Http\Controllers\Budget\SystemSettingsController;
 use App\Http\Controllers\Budget\TopContibutorsController;
 use App\Http\Controllers\Budget\TopCurrentAccountsController;
 use App\Http\Controllers\Budget\TopDepositorsController;
@@ -67,12 +66,10 @@ use App\Http\Controllers\Budget\YieldRateController;
 use Illuminate\Support\Facades\Route;
 
 
-//TODO:Make Controllers
-
-
-Route::namespace('Budget')->group(function () {
+Route::namespace('Budget')->prefix('budget')->group(function () {
     Route::resource('budgetline', BudgetLinesController::class);
     Route::resource('budgetperiod', BudgetPeriodController::class);
+    Route::post('/budgetperiod/attachGL', [BudgetPeriodController::class, 'attachGL'])->name('budgetperiod.attachGL');;
     Route::resource('budgetproductmaster', BudgetProductMasterController::class);
     Route::resource('budgetproducttype', BudgetProductTypeController::class);
     Route::resource('budgetlinemapping', BudgetLineMappingController::class);
@@ -84,8 +81,11 @@ Route::namespace('Budget')->group(function () {
     //Route::resource('budgetprojections', BudgetProjectionsController::class);
     Route::resource('budgetprojections', BudgetProjectionsController::class);
     Route::resource('entrybyglline', BudgetGLLineEntryController::class);
+    Route::get('/entrybyglline/glview/{budgetId}', [BudgetGLLineEntryController::class, 'glview'])->name('entrybyglline.glview');
     Route::resource('submitapproval', BudgetSubmitController::class);
     Route::resource('budgetapproval', BudgetApprovalController::class);
+    Route::resource('topdownallocation', BudgetTopDownAllocationController::class);
+    Route::post('/topdownallocation/display', [BudgetTopDownAllocationController::class, 'display'])->name('topdownallocation.display');
     Route::resource('topdownallocation', BudgetTopDownAllocationController::class);
     Route::resource('activitymaster', BudgetActivitiesMasterController::class);
     Route::resource('budgetscenerios', BudgetSceneriosController::class);
@@ -147,4 +147,11 @@ Route::namespace('Budget')->group(function () {
 
     Route::resource('budgetdriverssetup', BudgetDriversSetupController::class);
     Route::get('budgetlinemapping/gl-subtypes/{typeId}', [BudgetLineMappingController::class, 'getGLAccountSubTypes']);
+
+    Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('budgetline-reports.export');
+    Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
+        'index' => 'budgetline-reports.index',
+        'show' => 'budgetline-reports.show'
+    ]);
+    Route::delete('budget/delete-gl-attachment/{id}', [BudgetPeriodController::class, 'delGLAttachment'])->name('budget.delete-gl-attachment');
 });

@@ -2,6 +2,7 @@
 
 namespace App\Models\Procurement;
 
+use App\Models\Inventory\UnitOfMeasure;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Inventory\ItemCategories;
 use App\Models\ThirdParies\Supplier;
@@ -17,7 +18,7 @@ class RFQLine extends Model
 
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
         'RFQLineNo', 'RequisitionId', 'RequisitionLineId', 'RFQId', 'ItemId', 'UOM', 'Quantity', 'ItemName', 'ItemCategoryId', 'CreatedOn', 'ModifiedOn', 'CreatedBy', 'ModifiedBy'
@@ -36,6 +37,11 @@ class RFQLine extends Model
     public function category()
     {
         return $this->belongsTo(ItemCategories::class, 'ItemCategoryId');
+    }
+
+    public function uom()
+    {
+        return $this->belongsTo(UnitOfMeasure::class, 'UOM', 'Id');
     }
 
     public function suppliers()

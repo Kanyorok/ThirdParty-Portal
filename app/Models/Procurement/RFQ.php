@@ -17,7 +17,7 @@ class RFQ extends Model
 
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    const DELETED_AT = 'DeletedOn';
 
 
     public static function getPrimaryKey(): string
@@ -26,7 +26,7 @@ class RFQ extends Model
     }
 
     protected $fillable = [
-        'RFQNumber', 'Comments', 'Status', 'SubmissionDeadline', 'CreatedBy', 'ModifiedBy'
+        'RFQNumber', 'RequisitionId', 'Comments', 'Status', 'SubmissionDeadline', 'CreatedBy', 'ModifiedBy', 'Remarks'
     ];
 
     public function rfqLines()
@@ -52,4 +52,10 @@ class RFQ extends Model
                     ->withPivot('Status')
                     ->withTimestamps();
     }
+
+    public function requisition()
+    {
+        return $this->belongsTo(Requisitions::class, 'RequisitionId', 'Id');
+    }
+
 }

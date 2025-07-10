@@ -5,8 +5,10 @@ namespace App\Models\Procurement;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+
 use App\Models\Auth\User;
 use App\Models\Procurement\TenderSupplier;
+
 
 class BidResponsiveness extends Model
 {
@@ -14,9 +16,9 @@ class BidResponsiveness extends Model
 
     protected $table = 't_BidResponsiveness';
     protected $primaryKey = 'Id';
-    const string CREATED_AT = 'CreatedOn';
-    const string UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    const CREATED_AT = 'CreatedOn';
+    const UPDATED_AT = 'ModifiedOn';
+    const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
         'TenderSupplierID',
@@ -45,6 +47,7 @@ class BidResponsiveness extends Model
     {
         return 'BidResponsivenessId';
     }
+
 
     public function tenderSupplier()
     {

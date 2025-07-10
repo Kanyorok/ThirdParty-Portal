@@ -20,7 +20,7 @@
           <th>Payment Date</th>
           <th>Amount Paid Now</th>
           <th>Payment Method</th>
-        <th>Reference</th>
+          <th>Reference</th>
           <th>Remarks</th>
         <th>Action</th>
       </tr>

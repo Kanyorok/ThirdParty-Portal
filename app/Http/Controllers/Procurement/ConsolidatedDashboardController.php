@@ -2,29 +2,24 @@
 
 namespace App\Http\Controllers\Procurement;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Procurement\DepartmentNeeds;
-use App\Models\HRM\Department;
-use App\Models\Core\Branch;
-use App\Policies\Procurement\ConsolidatedProcurementPlanPolicy;
 use App\Exports\NeedsExport;
+use App\Http\Controllers\Controller;
+use App\Models\Procurement\DepartmentNeed;
+use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
-
-
 
 
 class ConsolidatedDashboardController extends Controller
 {
     public function index(Request $request)
     {
-        $this->authorize('viewAny', DepartmentNeeds::class);
+        $this->authorize('viewAny', DepartmentNeed::class);
         $branch = $request->input('branch', 'All Branches');
         $department = $request->input('department', 'All Departments');
         $year = $request->input('year', 'All Years');
 
 
-        $query = DepartmentNeeds::with(['item', 'branch', 'department']);
+        $query = DepartmentNeed::with(['item', 'branch', 'department']);
 
         if ($branch !== 'All Branches' && !empty($branch)) {
             $query->where('BranchID', $branch);
@@ -52,7 +47,7 @@ class ConsolidatedDashboardController extends Controller
 
     public function show($needId)
     {
-        $needs = DepartmentNeeds::with('item')
+        $needs = DepartmentNeed::with('item')
             ->where('NeedID', $needId)
             ->get()
             ->map(function ($need) {
@@ -79,7 +74,7 @@ class ConsolidatedDashboardController extends Controller
 
     public function create()
     {
-        $this->authorize('create', DepartmentNeeds::class);
+        $this->authorize('create', DepartmentNeed::class);
         // Fetch branches and departments for the create form dropdowns
         $branches = DepartmentNeed::distinct()->pluck('branch');
         $departments = DepartmentNeed::distinct()->pluck('department');

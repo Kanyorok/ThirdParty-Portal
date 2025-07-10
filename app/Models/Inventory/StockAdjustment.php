@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Model\UserActorTrait;
 use App\Models\Core\Branch;
 use App\Models\Auth\User;
+use App\Models\Core\CodeDetail;
+
 
 
 class StockAdjustment extends Model
@@ -16,7 +18,8 @@ class StockAdjustment extends Model
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
-    public $timestamps = false;
+
+
     protected $table = 't_StockAdjustments';
     protected $connection = 'sqlsrv';
     protected $primaryKey = 'Id';
@@ -38,11 +41,6 @@ class StockAdjustment extends Model
     public function adjustedBy()
     {
         return $this->belongsTo(User::class, 'AdjustedBy', 'Id');
-    }
-
-    public static function getPrimaryKey(): string
-    {
-        return 'Id';
     }
 
     public function items()
@@ -69,6 +67,18 @@ class StockAdjustment extends Model
     {
         return $this->belongsTo(Branch::class, 'Branch', 'Id');
     }
+
+    public static function getPrimaryKey(): string
+    {
+        return 'Id';
+    }
+
+    public function reason()
+    {
+        return $this->belongsTo(CodeDetail::class, 'Reason', 'Id');
+    }
+
+
 
 
 }

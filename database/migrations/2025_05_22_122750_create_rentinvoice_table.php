@@ -11,8 +11,9 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('t_RentInvoice', function (Blueprint $table) {
-            $table->id();
-            $table->string('Lease');
+            $table->id('Id');
+            $table->string('InvoiceNumber')->unique();
+            $table->foreignId('Lease')->constrained('t_LeaseCreation', 'Id');
             $table->string('BillingMonth');
             $table->string('InvoiceDate');
             $table->string('RentAmount');

@@ -2,9 +2,9 @@
 
 namespace App\Models\Budget;
 
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\Model\UserActorTrait;
 
 class BudgetLineCategories extends Model
 {

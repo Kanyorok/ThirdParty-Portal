@@ -11,9 +11,9 @@ class PropertyBlock extends Model
     use SoftDeletes, UserActorTrait;
     //
     protected $table = 't_PropertyBlock';
-    const string CREATED_AT = 'CreatedOn';
-    const string UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    const CREATED_AT = 'CreatedOn';
+    const UPDATED_AT = 'ModifiedOn';
+    const DELETED_AT = 'DeletedOn';
     protected $primaryKey = 'Id';
 
     protected $fillable = [
@@ -35,7 +35,6 @@ class PropertyBlock extends Model
     {
         return $this->belongsTo(PropertyRegistry::class,'PropertyID','Id');
     }
-
     public function getFloorByBlock()
     {
         return $this->hasMany(PropertyFloor::class, 'BlockID', 'Id');

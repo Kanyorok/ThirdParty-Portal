@@ -27,13 +27,14 @@ class BudgetMonthlyProjectionController extends Controller
 
     public function create(Request $request)
     {
+        $this->authorize(PermissionEnum::BudgetSetupCreate, BudgetMonthlyProjectionAllocation::class);
         $projectionID = $request->query('id');
         return view('budgetandanalytics.budgetworkspace.monthly.create', compact('projectionID'));
     }
 
     public function store(Request $request)
     {
-        $this->authorize(PermissionEnum::BudgetSetupView, BudgetMonthlyProjectionAllocation::class);
+        $this->authorize(PermissionEnum::BudgetSetupCreate, BudgetMonthlyProjectionAllocation::class);
 
         // $validated = $request->validate([
         //     'BudgetID' => 'required|exists:t_Budgets,Id',

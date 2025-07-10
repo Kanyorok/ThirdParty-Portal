@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Procurement;
 
+use App\Enums\ProcurementPlanStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Procurement\PlanManualInputRequest;
-use App\Models\Auth\User;
 use App\Models\Inventory\ItemCategories;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Procurement\BudgetMaster;
@@ -12,9 +12,6 @@ use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\PlanLineItems;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use App\Models\Inventory\UnitOfMeasure;
-use App\Enums\ProcurementPlanStatusEnum;
-use App\Policies\Procurement\PlanManualInputPolicy;
 
 
 class PlanManualInputController extends Controller
