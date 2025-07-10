@@ -37,7 +37,7 @@ class TagService
 
         do {
             $number++;
-            $slug = "T" . Str::of($number)->padLeft(4);
+            $slug = "T" . Str::of($number)->padLeft(4, '0');
         } while (DMSTags::where('TagID', $slug)->withTrashed()->exists());
 
         return $slug;

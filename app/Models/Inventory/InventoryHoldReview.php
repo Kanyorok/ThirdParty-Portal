@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models\Inventory;
 
 use Illuminate\Database\Eloquent\Model;
@@ -10,7 +11,6 @@ use App\Traits\Model\UserActorTrait;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Auth\User;
 use App\Models\Inventory\UnitOfMeasure;
-
 
 
 class InventoryHoldReview extends Model
@@ -43,23 +43,25 @@ class InventoryHoldReview extends Model
         'DeletedOn',
     ];
 
-  public static function getPrimaryKey(): string
+    public static function getPrimaryKey(): string
     {
         return 'InventoryHoldReviewID';
     }
-        public function defectDetail()
-        {
-            return $this->belongsTo(\App\Models\Core\CodeDetail::class, 'Defect', 'ID');
-        }
 
-        public function conditionDetail()
-        {
-            return $this->belongsTo(\App\Models\Core\CodeDetail::class, 'Condition', 'ID');
-        }
-        public function inventoryHold()
-{
-    return $this->belongsTo(InventoryHold::class, 'InventoryHoldID', 'Id')->withTrashed();
-}
+    public function defectDetail()
+    {
+        return $this->belongsTo(\App\Models\Core\CodeDetail::class, 'Defect', 'ID');
+    }
+
+    public function conditionDetail()
+    {
+        return $this->belongsTo(\App\Models\Core\CodeDetail::class, 'Condition', 'ID');
+    }
+
+    public function inventoryHold()
+    {
+        return $this->belongsTo(InventoryHold::class, 'InventoryHoldID', 'Id')->withTrashed();
+    }
 
 
     public function item()
@@ -69,16 +71,17 @@ class InventoryHoldReview extends Model
 
 
     public function fromBranch()
-{
-    return $this->belongsTo(\App\Models\Core\Branch::class, 'FromBranch');
-}
+    {
+        return $this->belongsTo(\App\Models\Core\Branch::class, 'FromBranch');
+    }
 
 
     public function store()
     {
         return $this->belongsTo(Store::class, 'Store');
     }
-     public function creator()
+
+    public function creator()
     {
         return $this->belongsTo(User::class, 'CreatedBy', 'Id');
     }

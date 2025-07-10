@@ -27,7 +27,7 @@ class PropertyInvoiceController extends Controller
         $this->authorize(PermissionEnum::PropertyInvoiceCreate, PropertyInvoice::class);
         $newleases = PropertyNewLease::all();
         $newtenants = PropertyNewLease::all();
-        return view('property.billingandreceipting.invoicing.create', compact('newleases','newtenants'));
+        return view('property.billingandreceipting.invoicing.create', compact('newleases', 'newtenants'));
     }
 
     public function show($id)
@@ -37,7 +37,7 @@ class PropertyInvoiceController extends Controller
         return view('property.billingandreceipting.invoicing.show', compact('invoice'));
     }
 
-    public function store( PropertyInvoiceRequest $request)
+    public function store(PropertyInvoiceRequest $request)
     {
         //dd($request->all());
         $this->authorize(PermissionEnum::PropertyInvoiceCreate, PropertyInvoice::class);
@@ -45,19 +45,20 @@ class PropertyInvoiceController extends Controller
 
         $Lease = PropertyNewLease::findOrFail($validated['Lease']);
         //dd('validation');
-         PropertyInvoiceService::create(
-         $Lease,
-        $validated['BillingMonth'],
-        $validated['InvoiceDate'],
-        $validated['RentAmount'],
-        $validated['ServicesCharge'],
-        $validated['OtherCharges'],
-        $validated['InvoiceNotes'],
-        Auth::user()
-    );
+        PropertyInvoiceService::create(
+            $Lease,
+            $validated['BillingMonth'],
+            $validated['InvoiceDate'],
+            $validated['RentAmount'],
+            $validated['ServicesCharge'],
+            $validated['OtherCharges'],
+            $validated['InvoiceNotes'],
+            Auth::user()
+        );
 
         return redirect()->route('rentinvoice.index')->with('success', 'Invoice created successfully');
     }
+
     public function edit($id)
     {
         $this->authorize(PermissionEnum::PropertyInvoiceUpdate, PropertyInvoice::class);
@@ -73,7 +74,7 @@ class PropertyInvoiceController extends Controller
         $validated = $request->validated();
 
         $Lease = PropertyNewLease::findOrFail($validated['Lease']);
-        
+
         DB::beginTransaction();
 
         try {

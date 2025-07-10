@@ -39,7 +39,7 @@ class TenderBidResponsivenessController extends Controller
         $bidResponses = $query->get();
 
         // Distinct tender list for dropdown
-        $tenders = Tender::whereIn('Id',TenderSupplier::select('TenderID')
+        $tenders = Tender::whereIn('Id', TenderSupplier::select('TenderID')
         )->pluck('TenderNo');
 
 

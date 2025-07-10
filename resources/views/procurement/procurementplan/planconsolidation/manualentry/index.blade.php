@@ -1,4 +1,4 @@
-    @extends('layouts.app')
+@extends('layouts.app')
 @section('title', 'Manual Entry – Procurement Plan Items')
 @section('styles')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">

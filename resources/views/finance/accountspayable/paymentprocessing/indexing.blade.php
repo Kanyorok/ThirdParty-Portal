@@ -1,13 +1,13 @@
 @extends('layouts.app')
 @section('title', 'Payment Processing - Accounts Payable')
 @section('content')
-<div class="container mt-5">
-    <h2>Payment Processing - Accounts Payable</h2>
-    <a href="{{ route('paymentprocessing.create') }}" class="btn btn-primary mb-3">Schedule/Make Payment</a>
+    <div class="container mt-5">
+        <h2>Payment Processing - Accounts Payable</h2>
+        <a href="{{ route('paymentprocessing.create') }}" class="btn btn-primary mb-3">Schedule/Make Payment</a>
 
-    <h4 class="mt-4">Scheduled Payments</h4>
-    <table class="table table-bordered table-striped">
-        <thead class="table-dark">
+        <h4 class="mt-4">Scheduled Payments</h4>
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
             <tr>
                 <th>#</th>
                 <th>Vendor</th>
@@ -16,8 +16,8 @@
                 <th>Scheduled Date</th>
                 <th>Remarks</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             <tr>
                 <td>1</td>
                 <td>ABC Supplies Ltd</td>
@@ -34,12 +34,12 @@
                 <td>2025-05-25</td>
                 <td>Payment after GRN approval</td>
             </tr>
-        </tbody>
-    </table>
+            </tbody>
+        </table>
 
-    <h4 class="mt-5">Completed Payments</h4>
-    <table class="table table-bordered table-striped">
-        <thead class="table-success">
+        <h4 class="mt-5">Completed Payments</h4>
+        <table class="table table-bordered table-striped">
+            <thead class="table-success">
             <tr>
                 <th>#</th>
                 <th>Vendor</th>
@@ -49,8 +49,8 @@
                 <th>Method</th>
                 <th>Remarks</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             <tr>
                 <td>1</td>
                 <td>Global Tech Ltd</td>
@@ -69,8 +69,8 @@
                 <td>Cheque</td>
                 <td>Advance for office supplies</td>
             </tr>
-        </tbody>
-    </table>
-</div>
+            </tbody>
+        </table>
+    </div>
 
 @endsection

@@ -13,7 +13,8 @@ class ReversingJournalController extends Controller
         return view('finance.generalledger.reversingjournal.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('finance.generalledger.reversingjournal.create');
-    } 
+    }
 }

@@ -23,14 +23,14 @@ class InventoryHoldReviewRequest extends FormRequest
     {
         return [
             'InventoryHoldID' => 'required|exists:t_InventoryHold,Id',
-            'ItemID'     => 'required|exists:t_Items,Id',
+            'ItemID' => 'required|exists:t_Items,Id',
             'FromBranch' => 'nullable|exists:t_Branches,Id',
-            'Store'      => 'nullable|exists:t_Stores,Id',
-            'Quantity'   => 'required|numeric|min:0.01',
-            'Defect'     => 'nullable|string|max:255',
-            'Condition'  => 'nullable|string|max:255',
-            'Status'     => 'nullable|string|max:50',
-            'Notes'      => 'nullable|string',
+            'Store' => 'nullable|exists:t_Stores,Id',
+            'Quantity' => 'required|numeric|min:0.01',
+            'Defect' => 'nullable|string|max:255',
+            'Condition' => 'nullable|string|max:255',
+            'Status' => 'nullable|string|max:50',
+            'Notes' => 'nullable|string',
         ];
     }
 }

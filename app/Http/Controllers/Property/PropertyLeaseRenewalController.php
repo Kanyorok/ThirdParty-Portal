@@ -27,14 +27,16 @@ class PropertyLeaseRenewalController extends Controller
 
     public function create(){
         $this->authorize(PermissionEnum::PropertyLeaseRenewalCreate, PropertyLeaseRenewal::class);
-        $newleases = PropertyNewLease::with('getPropertyByTenant','getLeaseByProperty')->get();
+        $newleases = PropertyNewLease::with('getPropertyByTenant', 'getLeaseByProperty')->get();
         return view('property.tenantmanagement.leasemanagement.leaserenewal.create', compact('newleases'));
     }
-     public function getPropertyByTenant($tenantId)
+
+    public function getPropertyByTenant($tenantId)
     {
         $newlease = PropertyNewLease::where('TenantId', $tenantId)->get();
         return response()->json($newlease);
     }
+
     public function getLeaseByProperty($propertyId)
     {
         $newlease = PropertyNewLease::where('PropertyId', $propertyId)->get();
@@ -50,46 +52,49 @@ class PropertyLeaseRenewalController extends Controller
 
     public function store(PropertyLeaseRenewalRequest $request)
     {
-       try {
-    $validated = $request->validated();
-    $leaseId = (int) $validated['LeaseId'];
-    $tenantId = (int) $validated['TenantId'];
-    $propertyId = (int) $validated['PropertyId'];
-    $paymentFrequencyId = (int) $validated['PaymentFrequency'];
+        try {
+            $validated = $request->validated();
+            $leaseId = (int)$validated['LeaseId'];
+            $tenantId = (int)$validated['TenantId'];
+            $propertyId = (int)$validated['PropertyId'];
+            $paymentFrequencyId = (int)$validated['PaymentFrequency'];
 
-    // Use the lease ID to get the full lease
-    $lease = PropertyNewLease::findOrFail($leaseId);
-    PropertyLeaseRenewalService::create(
-        $leaseId,                  // from DB
-        $tenantId,
-        $propertyId,
-        $paymentFrequencyId,
-        $validated['EndDateCurrentLease'],
-        $validated['NewStartDate'],
-        $validated['NewEndDate'],
-        $validated['NewMonthlyRent'],
-        $validated['Remarks'],
-        Auth::user()
-    );
+            // Use the lease ID to get the full lease
+            $lease = PropertyNewLease::findOrFail($leaseId);
+            PropertyLeaseRenewalService::create(
+                $leaseId,                  // from DB
+                $tenantId,
+                $propertyId,
+                $paymentFrequencyId,
+                $validated['EndDateCurrentLease'],
+                $validated['NewStartDate'],
+                $validated['NewEndDate'],
+                $validated['NewMonthlyRent'],
+                $validated['Remarks'],
+                Auth::user()
+            );
 
-    return redirect()->route('renewlease.index')->with('success', 'Lease renewal created successfully');
-    } catch (\Exception $e) {
-        // Redirect back with error message
-        return redirect()->back()->with('error', $e->getMessage());
+            return redirect()->route('renewlease.index')->with('success', 'Lease renewal created successfully');
+        } catch (\Exception $e) {
+            // Redirect back with error message
+            return redirect()->back()->with('error', $e->getMessage());
+        }
     }
-}
-public function edit($Id)
+
+    public function edit($Id)
     {
         //Check if user has permission to edit tender categories
-         $this->authorize(PermissionEnum::PropertyLeaseRenewalUpdate, PropertyLeaseRenewal::class);
+        $this->authorize(PermissionEnum::PropertyLeaseRenewalUpdate, PropertyLeaseRenewal::class);
         $leaserenewal = PropertyLeaseRenewal::findOrFail($Id);
-        $newleases = PropertyNewLease::with('getPropertyByTenant','getLeaseByProperty')->get();
-        return view('property.tenantmanagement.leasemanagement.leaserenewal.edit',compact('leaserenewal','newleases'));
+        $newleases = PropertyNewLease::with('getPropertyByTenant', 'getLeaseByProperty')->get();
+        return view('property.tenantmanagement.leasemanagement.leaserenewal.edit', compact('leaserenewal', 'newleases'));
     }
-     public function update(PropertyLeaseRenewalRequest $request, $Id){
+
+    public function update(PropertyLeaseRenewalRequest $request, $Id)
+    {
 
         $this->authorize(PermissionEnum::PropertyLeaseRenewalUpdate, PropertyLeaseRenewal::class);
-        $validated=$request->validated();
+        $validated = $request->validated();
 
         DB::beginTransaction();
 
@@ -109,26 +114,27 @@ public function edit($Id)
                 'Remarks' => $validated['Remarks'],
                 'ModifiedBy' => Auth::Id(),
             ]);
- 
-        DB::commit();
-        activity()
+
+            DB::commit();
+            activity()
                 ->performedOn($leaserenewals)
                 ->causedBy(Auth::user())
-                ->withProperties(['action'=>'update'])
+                ->withProperties(['action' => 'update'])
                 ->log('Updated Lease Renewal');
 
-                return redirect()->route('renewlease.index')->with('success' , 'Lease renewal updated successfully');
-            }catch(\Throwable $th) {
-                DB::rollBack();
-                Log::error('Failed to Update Lease Renewal:' . $th->getMessage());
+            return redirect()->route('renewlease.index')->with('success', 'Lease renewal updated successfully');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            Log::error('Failed to Update Lease Renewal:' . $th->getMessage());
 
-                return back()->withErrors(['error'=>'Failed to update Lease Renewal'])->withInput();
-            }
-       }
-       public function destroy($id)
+            return back()->withErrors(['error' => 'Failed to update Lease Renewal'])->withInput();
+        }
+    }
+
+    public function destroy($id)
     {
         //Check if user has permission to delete property categories
-        $this->authorize(PermissionEnum::PropertyLeaseRenewalDelete , PropertyLeaseRenewal::class);
+        $this->authorize(PermissionEnum::PropertyLeaseRenewalDelete, PropertyLeaseRenewal::class);
         try {
             $leaserenewals = PropertyLeaseRenewal::findOrFail($id);
             $leaserenewals->delete();

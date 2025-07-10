@@ -226,7 +226,7 @@ class AppServiceProvider extends ServiceProvider
             StockAdjustment::getPrimaryKey() => StockAdjustment::class,
             InventoryHoldReview::getPrimaryKey() => InventoryHoldReview::class,
             ModelRole::getPrimaryKey() => ModelRole::class,
-          
+
             ///////// Budget and Analytics /////////
             BudgetActivityMaster::getPrimaryKey() => BudgetActivityMaster::class,
             BudgetLinesGLAccount::getPrimaryKey() => BudgetLinesGLAccount::class,
@@ -292,7 +292,7 @@ class AppServiceProvider extends ServiceProvider
             PropertyLeaseRenewal::getPrimaryKey() => PropertyLeaseRenewal::class,
             PropertyInvoice::getPrimaryKey() => PropertyInvoice::class,
 
-            
+
             PrequalificationPeriod::getPrimaryKey() => PrequalificationPeriod::class,
         ]);
 

@@ -13,7 +13,8 @@ class RecurrentJournalController extends Controller
         return view('finance.generalledger.recurrentjournal.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('finance.generalledger.recurrentjournal.create');
-    } 
+    }
 }

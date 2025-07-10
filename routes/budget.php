@@ -69,7 +69,7 @@ use Illuminate\Support\Facades\Route;
 Route::namespace('Budget')->prefix('budget')->group(function () {
     Route::resource('budgetline', BudgetLinesController::class);
     Route::resource('budgetperiod', BudgetPeriodController::class);
-    Route::post('/budgetperiod/attachGL', [BudgetPeriodController::class,'attachGL'])->name('budgetperiod.attachGL');;
+    Route::post('/budgetperiod/attachGL', [BudgetPeriodController::class, 'attachGL'])->name('budgetperiod.attachGL');;
     Route::resource('budgetproductmaster', BudgetProductMasterController::class);
     Route::resource('budgetproducttype', BudgetProductTypeController::class);
     Route::resource('budgetlinemapping', BudgetLineMappingController::class);
@@ -101,7 +101,7 @@ Route::namespace('Budget')->prefix('budget')->group(function () {
     Route::resource('liquidityratio', LiquidityController::class);
 
     // API Routes to fetch data
-   Route::get('/api/budget-activities', [BudgetActivitiesController::class, 'fetchActivities'])->name('api.budget-activities');
+    Route::get('/api/budget-activities', [BudgetActivitiesController::class, 'fetchActivities'])->name('api.budget-activities');
 
     // Business Intelligence & Deep Analytics
     Route::resource('analyticsdashboard', BusinessAnalyticsDashboardController::class);
@@ -145,13 +145,13 @@ Route::namespace('Budget')->prefix('budget')->group(function () {
     Route::resource('planningmethods', BudgetPlanningMethodsController::class);
     Route::resource('periodtypes', BudgetPeriodTypesController::class);
 
-    Route::resource('budgetdriverssetup',BudgetDriversSetupController::class);
+    Route::resource('budgetdriverssetup', BudgetDriversSetupController::class);
     Route::get('budgetlinemapping/gl-subtypes/{typeId}', [BudgetLineMappingController::class, 'getGLAccountSubTypes']);
 
-   Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('budgetline-reports.export');
-   Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
-       'index' => 'budgetline-reports.index',
-       'show' => 'budgetline-reports.show'
-   ]);
+    Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('budgetline-reports.export');
+    Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
+        'index' => 'budgetline-reports.index',
+        'show' => 'budgetline-reports.show'
+    ]);
     Route::delete('budget/delete-gl-attachment/{id}', [BudgetPeriodController::class, 'delGLAttachment'])->name('budget.delete-gl-attachment');
 });

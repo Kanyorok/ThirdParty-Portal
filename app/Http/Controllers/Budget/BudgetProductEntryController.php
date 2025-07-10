@@ -18,26 +18,26 @@ use Illuminate\Support\Facades\Log;
 class BudgetProductEntryController extends Controller
 {
     // View budget entry list
-   public function index()
+    public function index()
     {
         $this->authorize(PermissionEnum::BudgetSetupView, BudgetDriverProjections::class);
         //$projections = BudgetDriverProjections::with(['scenario', 'product', 'period'])->get();
-        $projections=BudgetDriverProjections::with(
+        $projections = BudgetDriverProjections::with(
             'projections',
             'scenario:Id,scenarioName',
             'currency:Id,Code',
             'period:Id,fiscalYear',
-            )->get();
+        )->get();
 
-            // Compute totals for each main projection
-            foreach ($projections as $proj) {
-                $proj->total_volume = $proj->projections->sum(function ($item) {
-                    return (float) $item->Volume;
-                });
-                $proj->total_value = $proj->projections->sum(function ($item) {
-                    return (float) $item->Value;
-                });
-            }
+        // Compute totals for each main projection
+        foreach ($projections as $proj) {
+            $proj->total_volume = $proj->projections->sum(function ($item) {
+                return (float)$item->Volume;
+            });
+            $proj->total_value = $proj->projections->sum(function ($item) {
+                return (float)$item->Value;
+            });
+        }
         return view('budgetandanalytics.budgetworkspace.entry.index', compact('projections'));
     }
 
@@ -61,11 +61,11 @@ class BudgetProductEntryController extends Controller
         $validated = $request->validate([
             'ScenarioID' => 'required|exists:t_BudgetScenarioPlanning,Id',
             'CurrencyID' => 'required|exists:t_Currencies,Id',
-            'PeriodID'  => 'required|exists:t_BudgetPeriods,Id',
-            'Products'   => 'required|array|min:1',
+            'PeriodID' => 'required|exists:t_BudgetPeriods,Id',
+            'Products' => 'required|array|min:1',
             'Products.*.ProductID' => 'required|exists:t_BudgetProductTypes,Id',
-            'Products.*.Volume'    => 'required|integer|min:0',
-            'Products.*.Value'     => 'required|numeric|min:0',
+            'Products.*.Volume' => 'required|integer|min:0',
+            'Products.*.Value' => 'required|numeric|min:0',
         ]);
 
         DB::beginTransaction();
@@ -73,28 +73,28 @@ class BudgetProductEntryController extends Controller
         try {
             $ScenarioId = $validated['ScenarioID'];
             $CurrencyId = $validated['CurrencyID'];
-            $PeriodId   = $validated['PeriodID'];
+            $PeriodId = $validated['PeriodID'];
 
             //Store T1
-            $projection =BudgetDriverProjections::create([
+            $projection = BudgetDriverProjections::create([
                 'ScenarioID' => $ScenarioId,
                 'CurrencyID' => $CurrencyId,
                 'PeriodID' => $PeriodId,
-                'CreatedBy'  => Auth::id(),
-                'ModifiedBy'  => Auth::id(),
+                'CreatedBy' => Auth::id(),
+                'ModifiedBy' => Auth::id(),
             ]);
 
 
 
             foreach ($validated['Products'] as $product) {
                 //Store t2
-                $projectiondata=BudgetDriverProjectionsData::create([
-                    'BudgetDriverProjectionsID'=>$projection->Id,
-                    'ProductID'  => $product['ProductID'],
-                    'Volume'     => $product['Volume'],
-                    'Value'      => $product['Value'], // fixed casing
-                    'CreatedBy'  => Auth::id(),
-                    'ModifiedBy'  => Auth::id(),
+                $projectiondata = BudgetDriverProjectionsData::create([
+                    'BudgetDriverProjectionsID' => $projection->Id,
+                    'ProductID' => $product['ProductID'],
+                    'Volume' => $product['Volume'],
+                    'Value' => $product['Value'], // fixed casing
+                    'CreatedBy' => Auth::id(),
+                    'ModifiedBy' => Auth::id(),
                 ]);
             }
 
@@ -118,8 +118,9 @@ class BudgetProductEntryController extends Controller
         }
     }
 
-    public function show($id){
-        return view('budgetandanalytics.budgetworkspace.entry.show') ;
+    public function show($id)
+    {
+        return view('budgetandanalytics.budgetworkspace.entry.show');
     }
 
     public function edit($id)

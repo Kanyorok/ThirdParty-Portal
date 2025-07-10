@@ -19,22 +19,22 @@ class TransactionReceiptRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
-  public function rules()
-{
-    return [
-        'TransferID' => 'required|exists:t_Transfers,Id',
-        'ReceivedBy' => 'required|string',
-        'ReceivedDate' => 'required|date',
-        'GeneralRemarks' => 'nullable|string',
-        'items' => 'required|array|min:1',
-        'items.*.item' => 'required|exists:t_Items,Id',   
-        'items.*.dispatched_qty' => 'nullable|numeric|min:0', 
-        'items.*.discrepancy' => 'nullable|numeric',   
-        'items.*.received_qty' => 'required|numeric|min:0',
-        'items.*.store_id' => 'nullable|exists:t_Stores,Id',
-        'items.*.damaged_qty' => 'nullable|numeric|min:0',
-     
-    ];
-}
+    public function rules()
+    {
+        return [
+            'TransferID' => 'required|exists:t_Transfers,Id',
+            'ReceivedBy' => 'required|string',
+            'ReceivedDate' => 'required|date',
+            'GeneralRemarks' => 'nullable|string',
+            'items' => 'required|array|min:1',
+            'items.*.item' => 'required|exists:t_Items,Id',
+            'items.*.dispatched_qty' => 'nullable|numeric|min:0',
+            'items.*.discrepancy' => 'nullable|numeric',
+            'items.*.received_qty' => 'required|numeric|min:0',
+            'items.*.store_id' => 'nullable|exists:t_Stores,Id',
+            'items.*.damaged_qty' => 'nullable|numeric|min:0',
+
+        ];
+    }
 
 }

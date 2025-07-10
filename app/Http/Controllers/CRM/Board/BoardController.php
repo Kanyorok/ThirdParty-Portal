@@ -31,55 +31,48 @@ class BoardController extends Controller
      * Display a listing of the resource.
      * @throws Exception
      */
-   public function index(Request $request): JsonResponse|View
-{
-    if (!$request->ajax()) {
-        return view('crm.board.index')
-            ->with('rooms', MeetingRoom::query()->get(['RoomID', 'Name', 'Capacity']))
-            ->with('committees', Committee::query()->get(['t_Committees.CommitteeID', 't_Committees.Name']));
+    public function index(Request $request): JsonResponse|View
+    {
+        if (!$request->ajax()) {
+            return view('crm.board.index')
+                ->with('rooms', MeetingRoom::query()->get(['RoomID', 'Name', 'Capacity']))
+                ->with('committees', Committee::query()->get(['t_Committees.CommitteeID', 't_Committees.Name']));
+        }
+
+        $query = Board::query()->with('committees')->select('*');
+
+        return Datatables::of($query)
+            ->addIndexColumn()
+            ->filter(function ($query) use ($request) {
+                if ($search = $request->input('search.value')) {
+                    $query->where(function ($q) use ($search) {
+                        $q->where('BoardMemberID', 'like', "%{$search}%") // ✅ for "No"
+                        ->orWhere('Name', 'like', "%{$search}%")
+                            ->orWhere('Role', 'like', "%{$search}%")
+                            ->orWhereHas('committees', function ($c) use ($search) {
+                                $c->where('Name', 'like', "%{$search}%");
+                            });
+                    });
+                }
+            })
+            ->addColumn('committees', function (Board $board) {
+                return implode('&nbsp;', $board->committees->map(function ($committee) {
+                    return '<span class="badge rounded-pill bg-info">' . $committee->Name . '</span>';
+                })->toArray());
+            })
+            ->editColumn('BoardMemberID', function (Board $board) {
+                return Str::upper($board->BoardMemberID);
+            })
+            ->setRowClass('mouse_pointer user-select-none dbl-click-summary-data')
+            ->setRowData([
+                'dbl_click_url' => function (Board $board) {
+                    return route('board.show', [$board->BoardMemberID]);
+                },
+                'summary_title' => "Board Member",
+            ])
+            ->rawColumns(['committees'])
+            ->make();
     }
-
-    $query = Board::query()->with('committees')->select('*');
-
-    return Datatables::of($query)
-        ->addIndexColumn()
-
-        ->filter(function ($query) use ($request) {
-            if ($search = $request->input('search.value')) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('BoardMemberID', 'like', "%{$search}%") // ✅ for "No"
-                      ->orWhere('Name', 'like', "%{$search}%")
-                      ->orWhere('Role', 'like', "%{$search}%")
-                      ->orWhereHas('committees', function ($c) use ($search) {
-                          $c->where('Name', 'like', "%{$search}%");
-                      });
-                });
-            }
-        })
-
-        ->addColumn('committees', function (Board $board) {
-            return implode('&nbsp;', $board->committees->map(function ($committee) {
-                return '<span class="badge rounded-pill bg-info">' . $committee->Name . '</span>';
-            })->toArray());
-        })
-
-        ->editColumn('BoardMemberID', function (Board $board) {
-            return Str::upper($board->BoardMemberID);
-        })
-
-        ->setRowClass('mouse_pointer user-select-none dbl-click-summary-data')
-
-        ->setRowData([
-            'dbl_click_url' => function (Board $board) {
-                return route('board.show', [$board->BoardMemberID]);
-            },
-            'summary_title' => "Board Member",
-        ])
-
-        ->rawColumns(['committees'])
-
-        ->make();
-}
 
 
     /**

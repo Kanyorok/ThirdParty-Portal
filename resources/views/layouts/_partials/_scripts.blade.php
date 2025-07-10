@@ -27,6 +27,7 @@
 <script>main_layout_change('vertical');</script>--}}
 <script src="{{ asset('assets/js/_pages.js') }}"></script>
 @auth
+    @yield('script')
     <script>
         window.csrf_token = '{{ csrf_token() }}';
         window.bsOffcanvas = null;

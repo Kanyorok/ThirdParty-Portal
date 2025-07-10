@@ -13,7 +13,7 @@ use App\Models\Core\Branch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log; 
+use Illuminate\Support\Facades\Log;
 
 class BudgetActivitiesController extends Controller
 {
@@ -23,8 +23,8 @@ class BudgetActivitiesController extends Controller
         $this->authorize(PermissionEnum::BudgetSetupView, BudgetActivity::class);
         $activities = BudgetActivity::with([
             'budget:Id,Name,From,To',
-            //'allocations:Id,BudgetActivityID,Month,Amount', 
-            //'branch:Id,Name', 
+            //'allocations:Id,BudgetActivityID,Month,Amount',
+            //'branch:Id,Name',
             //'budgetLine:Id,LineName',
         ])->get();
 
@@ -40,11 +40,11 @@ class BudgetActivitiesController extends Controller
     {
         $this->authorize(PermissionEnum::BudgetSetupCreate, BudgetActivity::class);
 
-        $budgetLines=BudgetLine::select('Id','LineName')->get();
-        $branches=Branch::select('Id','Name')->get();
-        $budgets=Budget::all();
+        $budgetLines = BudgetLine::select('Id', 'LineName')->get();
+        $branches = Branch::select('Id', 'Name')->get();
+        $budgets = Budget::all();
 
-        return view('budgetandanalytics.budgetactivities.create',compact(
+        return view('budgetandanalytics.budgetactivities.create', compact(
             'budgetLines',
             'branches',
             'budgets'
@@ -52,9 +52,10 @@ class BudgetActivitiesController extends Controller
     }
 
 
-    public function store(Request $request){
+    public function store(Request $request)
+    {
         //Check for permission
-        $this->authorize(PermissionEnum::BudgetSetupCreate,BudgetActivity::class);
+        $this->authorize(PermissionEnum::BudgetSetupCreate, BudgetActivity::class);
         // Validate request
         $validated = $request->validate([
             'BudgetID' => 'required|exists:t_Budgets,Id',
@@ -103,7 +104,7 @@ class BudgetActivitiesController extends Controller
                 foreach ($validated['monthly_allocations'] as $month => $amount) {
                     BudgetMonthlyAllocation::create([
                         'BudgetActivityID' => $activity->Id,
-                        'Month' => (int) $month,
+                        'Month' => (int)$month,
                         'Amount' => floatval($amount),
                         'CreatedBy' => $userId,
                         'ModifiedBy' => $userId,
@@ -136,7 +137,7 @@ class BudgetActivitiesController extends Controller
     public function fetchActivities(Request $request)
     {
         $budgetLineId = $request->query('budget_line_id');
-        if (!$budgetLineId)  return response()->json(['error' => 'Missing budget_line_id'], 400);
+        if (!$budgetLineId) return response()->json(['error' => 'Missing budget_line_id'], 400);
         $activities = BudgetActivityMaster::where('BudgetLineID', $budgetLineId)
             ->select('Id', 'ActivityName')
             ->get();
@@ -149,10 +150,10 @@ class BudgetActivitiesController extends Controller
 
         $budget = Budget::findOrFail($budgetId);
         $activities = BudgetActivity::with([
-        'activity:Id,ActivityName', 
-        'budgetLine', 
-        'branch', 
-        'allocations'])
+            'activity:Id,ActivityName',
+            'budgetLine',
+            'branch',
+            'allocations'])
             ->where('BudgetID', $budgetId)
             ->get();
         return view('budgetandanalytics.budgetactivities.show', compact('budget', 'activities'));
@@ -163,10 +164,10 @@ class BudgetActivitiesController extends Controller
         $this->authorize(PermissionEnum::BudgetSetupUpdate, BudgetActivity::class);
         // Fetch the activity with its allocations
         $activity = BudgetActivity::with(['allocations'])->findOrFail($id);
-        $budgetLines = BudgetLine::select('Id','LineName')->get();
-        $branches = Branch::select('Id','Name')->get();
+        $budgetLines = BudgetLine::select('Id', 'LineName')->get();
+        $branches = Branch::select('Id', 'Name')->get();
         $budgets = Budget::all();
-        $budgetName=Budget::find($activity->BudgetID)->Name;
+        $budgetName = Budget::find($activity->BudgetID)->Name;
         $monthlyAllocations = $activity->allocations->keyBy('Month');
         return view('budgetandanalytics.budgetactivities.edit', compact(
             'activity',
@@ -197,7 +198,7 @@ class BudgetActivitiesController extends Controller
             $userId = Auth::id();
             $now = now();
             $activity = BudgetActivity::findOrFail($id);
-            $budgetId=$activity->BudgetID;
+            $budgetId = $activity->BudgetID;
             // Calculate full allocation from monthly if applicable
             $fullAllocation = 0;
             if ($validated['AllocationType'] === 'monthly' && !empty($validated['monthly_allocations'])) {
@@ -224,7 +225,7 @@ class BudgetActivitiesController extends Controller
                 foreach ($validated['monthly_allocations'] as $month => $amount) {
                     BudgetMonthlyAllocation::create([
                         'BudgetActivityID' => $activity->Id,
-                        'Month' => (int) $month,
+                        'Month' => (int)$month,
                         'Amount' => floatval($amount),
                         'CreatedBy' => $userId,
                         'ModifiedBy' => $userId,
@@ -233,14 +234,14 @@ class BudgetActivitiesController extends Controller
                     ]);
                 }
             }
-           
+
             activity()
                 ->performedOn($activity)
                 ->causedBy(Auth::user())
                 ->withProperties(['action' => 'update'])
                 ->log('Updated a budget activity');
             DB::commit();
-            return redirect()->route('budgetactivities.show',$budgetId)->with('success', 'Budget Activity updated successfully.');
+            return redirect()->route('budgetactivities.show', $budgetId)->with('success', 'Budget Activity updated successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
             Log::error('Failed to update budget activity.', [
@@ -257,7 +258,7 @@ class BudgetActivitiesController extends Controller
         try {
             DB::beginTransaction();
             $activity = BudgetActivity::findOrFail($id);
-            $activityId=$activity->BudgetActivityID;
+            $activityId = $activity->BudgetActivityID;
             // $activity->allocations()->delete();
             // $allocations = BudgetMonthlyAllocation::where('BudgetActivityID', $activityId)->get();
 
@@ -266,7 +267,7 @@ class BudgetActivitiesController extends Controller
             //     $allocation->save();
             //     $allocation->delete();
             // }
-            $activity->DeletedBy = Auth ::Id();
+            $activity->DeletedBy = Auth::Id();
             $activity->save();
             $activity->delete();
             activity()

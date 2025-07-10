@@ -13,8 +13,9 @@ class JournalEntryController extends Controller
         return view('finance.generalledger.journalentry.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('finance.generalledger.journalentry.create');
-    } 
+    }
 
 }

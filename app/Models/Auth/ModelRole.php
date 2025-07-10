@@ -24,7 +24,7 @@ class ModelRole extends Model
     {
         return 'ModelRoleId';
     }
-    
+
     public function branch()
     {
         return $this->belongsTo(Branch::class, 'BranchId', 'Id');

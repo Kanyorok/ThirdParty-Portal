@@ -58,15 +58,15 @@
             </div>
 
             <div class="modal-body">
-            <div class="mb-3">
-                <label for="RequisitionId" class="form-label">Select Requisition <span class="text-danger">*</span></label>
-                <select name="RequisitionId" id="RequisitionId" class="form-select" required>
-                    <option value="">-- Choose Requisition --</option>
-                    @foreach($requisitions as $requisition)
-                        <option value="{{ $requisition->Id }}">{{ $requisition->RequisitionNo }}</option>
-                    @endforeach
-                </select>
-            </div>
+                <div class="mb-3">
+                    <label for="RequisitionId" class="form-label">Select Requisition <span class="text-danger">*</span></label>
+                    <select name="RequisitionId" id="RequisitionId" class="form-select" required>
+                        <option value="">-- Choose Requisition --</option>
+                        @foreach($requisitions as $requisition)
+                            <option value="{{ $requisition->Id }}">{{ $requisition->RequisitionNo }}</option>
+                        @endforeach
+                    </select>
+                </div>
                 <div class="mb-3">
                     <label for="Comments" class="form-label">Comments <span class="text-danger">*</span></label>
                     <textarea name="Comments" id="Comments" rows="3" class="form-control" required></textarea>
@@ -74,8 +74,10 @@
 
                 <!-- Submission Deadline -->
                 <div class="mb-3">
-                    <label for="SubmissionDeadline" class="form-label">Submission Deadline <span class="text-danger">*</span></label>
-                    <input type="date" name="SubmissionDeadline" id="SubmissionDeadline" class="form-control" required min="{{ \Carbon\Carbon::now()->toDateString() }}">
+                    <label for="SubmissionDeadline" class="form-label">Submission Deadline <span
+                            class="text-danger">*</span></label>
+                    <input type="date" name="SubmissionDeadline" id="SubmissionDeadline" class="form-control" required
+                           min="{{ \Carbon\Carbon::now()->toDateString() }}">
 
                 </div>
             </div>

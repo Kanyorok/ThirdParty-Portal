@@ -111,7 +111,7 @@ Route::namespace('Finance')->prefix('finance')->group(function () {
     Route::resource('trialbalance', TrialBalanceController::class);
     Route::resource('ledgerreporting', LedgerReportController::class);
 
-        Route::get('agingreportar/drilldown', [AgingReportARController::class, 'drilldown'])->name('ar.aging.drilldown');
+    Route::get('agingreportar/drilldown', [AgingReportARController::class, 'drilldown'])->name('ar.aging.drilldown');
 
     // Existing Payment Processing Sub-Routes
     Route::prefix('accounts-payable/payment-processing')->group(function () {
@@ -120,21 +120,21 @@ Route::namespace('Finance')->prefix('finance')->group(function () {
         Route::get('/voucher/{voucherId}', [PaymentProcessingController::class, 'showVoucher'])->name('ap_payment.voucher');
 });
 
-Route::resource('taxruleconfig', TaxRuleController::class);
-Route::resource('efiling', TaxEfillingController::class);
-Route::resource('reconuploads', ReconUploadController::class);
-Route::resource('glpostingmap', GLMappingController::class);
+    Route::resource('taxruleconfig', TaxRuleController::class);
+    Route::resource('efiling', TaxEfillingController::class);
+    Route::resource('reconuploads', ReconUploadController::class);
+    Route::resource('glpostingmap', GLMappingController::class);
 
 
-Route::prefix('finance/integrations')->name('integration.')->group(function () {
-    Route::get('po-invoice-sync', [POInvoiceSyncController::class, 'index'])->name('po_invoice_sync.index');
-    Route::get('po-invoice-sync/create', [POInvoiceSyncController::class, 'create'])->name('po_invoice_sync.create');
-    Route::post('po-invoice-sync/store', [POInvoiceSyncController::class, 'store'])->name('po_invoice_sync.store');
-});
-
-Route::prefix('finance/integrations')->group(function () {
-    Route::get('salary-journal-templates', [SalaryJournalTemplateController::class, 'index'])->name('salary-journal-templates.index');
-    Route::get('salary-journal-templates/create', [SalaryJournalTemplateController::class, 'create'])->name('salary-journal-templates.create');
-    Route::post('salary-journal-templates/store', [SalaryJournalTemplateController::class, 'store'])->name('salary-journal-templates.store');
-});
+    Route::prefix('finance/integrations')->name('integration.')->group(function () {
+        Route::get('po-invoice-sync', [POInvoiceSyncController::class, 'index'])->name('po_invoice_sync.index');
+        Route::get('po-invoice-sync/create', [POInvoiceSyncController::class, 'create'])->name('po_invoice_sync.create');
+        Route::post('po-invoice-sync/store', [POInvoiceSyncController::class, 'store'])->name('po_invoice_sync.store');
     });
+
+    Route::prefix('finance/integrations')->group(function () {
+        Route::get('salary-journal-templates', [SalaryJournalTemplateController::class, 'index'])->name('salary-journal-templates.index');
+        Route::get('salary-journal-templates/create', [SalaryJournalTemplateController::class, 'create'])->name('salary-journal-templates.create');
+        Route::post('salary-journal-templates/store', [SalaryJournalTemplateController::class, 'store'])->name('salary-journal-templates.store');
+    });
+});

@@ -10,6 +10,7 @@ use App\Traits\Model\ImageTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -70,7 +71,7 @@ class Employee extends Model
         return $this->full_name;
     }
 
-    public function committees()
+    public function committees(): BelongsToMany
     {
         return $this->belongsToMany(Committee::class, 't_Committee_Employee', 'EmployeeId', 'CommitteeId')
             ->withPivot(['CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn', 'DeletedBy', 'DeletedOn']);

@@ -31,31 +31,38 @@ class PropertyLeaseRenewal extends Model
         'ModifiedBy',
         'DeletedBy'
     ];
-     public static function getPrimaryKey(): string
+
+    public static function getPrimaryKey(): string
     {
         return 'ScheduleRenewalId';
     }
-        public function getPropertyByTenant()
+
+    public function getPropertyByTenant()
     {
         return $this->hasMany(PropertyNewLease::class, 'TenantId', 'Id');
     }
-        public function getLeaseByProperty()
+
+    public function getLeaseByProperty()
     {
         return $this->hasMany(PropertyNewLease::class, 'PropertyId', 'Id');
     }
+
     public function lease()
     {
         return $this->belongsTo(PropertyNewLease::class, 'LeaseNumber', 'Id');
     }
+
     public function tenant()
     {
         return $this->belongsTo(PropertyNewTenant::class, 'TenantId', 'Id');
     }
+
     public function property()
     {
         return $this->belongsTo(PropertyRegistry::class, 'PropertyId', 'Id');
     }
-     public function paymentFrequency()
+
+    public function paymentFrequency()
     {
         return $this->belongsTo(CodeDetail::class, 'PaymentFrequency', 'ID');
     }

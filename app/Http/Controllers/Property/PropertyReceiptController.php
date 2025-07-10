@@ -32,38 +32,38 @@ class PropertyReceiptController extends Controller
     {
         //dd($request->all());
         $this->authorize(PermissionEnum::PropertyReceiptCreate, PropertyReceipt::class);
-            try {
-                $validated = $request->validated();
-                $InvoiceID = (int) $validated['InvoiceID'];
-                $BillingMonth = (int) $validated['BillingMonth'];
-                $InvoiceDate = (int) $validated['InvoiceDate'];
-                $RentAmount = (int) $validated['RentAmount'];
-                $ServicesCharge = (int) $validated['ServicesCharge'];
-                $OtherCharges = (int) $validated['OtherCharges'];
-          //dd('Validation');      
-    $receipt = PropertyInvoice::findOrFail($InvoiceID);
-       PropertyReceiptService::create(
-            $InvoiceID,
-            $BillingMonth,
-            $InvoiceDate,
-            $RentAmount,
-            $ServicesCharge,
-            $OtherCharges,
-            $validated ['TotalDue'], 
-            $validated['AmountPaid' ],
-            $validated['Balance'],
-            $validated['PaymentDate'],
-            $validated ['Amount' ],
-            $validated['PaymentMethod'],
-            $validated['ReferenceNo'],
-            $validated['Remarks'],
-             Auth::user()
-        );
+        try {
+            $validated = $request->validated();
+            $InvoiceID = (int)$validated['InvoiceID'];
+            $BillingMonth = (int)$validated['BillingMonth'];
+            $InvoiceDate = (int)$validated['InvoiceDate'];
+            $RentAmount = (int)$validated['RentAmount'];
+            $ServicesCharge = (int)$validated['ServicesCharge'];
+            $OtherCharges = (int)$validated['OtherCharges'];
+            //dd('Validation');
+            $receipt = PropertyInvoice::findOrFail($InvoiceID);
+            PropertyReceiptService::create(
+                $InvoiceID,
+                $BillingMonth,
+                $InvoiceDate,
+                $RentAmount,
+                $ServicesCharge,
+                $OtherCharges,
+                $validated ['TotalDue'],
+                $validated['AmountPaid'],
+                $validated['Balance'],
+                $validated['PaymentDate'],
+                $validated ['Amount'],
+                $validated['PaymentMethod'],
+                $validated['ReferenceNo'],
+                $validated['Remarks'],
+                Auth::user()
+            );
         //dd('Validation');
         return redirect()->route('rentreceipt.index')->with('success', 'Rent receipt created successfully');
         } catch (\Exception $e) {
-        // Redirect back with error message
-        return redirect()->back()->with('error', $e->getMessage());
+            // Redirect back with error message
+            return redirect()->back()->with('error', $e->getMessage());
     }
 
     }

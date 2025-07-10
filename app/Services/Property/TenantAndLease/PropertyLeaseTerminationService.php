@@ -15,14 +15,15 @@ class PropertyLeaseTerminationService
     public function __construct(PropertyLeaseTermination $propertyLeaseTermination)
     {
     }
-    
+
     public static function create(
         PropertyNewLease $LeaseID,
-        string $TerminationDate,
-        CodeDetail $TerminationReason,
-        string $Remarks,
-        User $user
-    ): Self {
+        string           $TerminationDate,
+        CodeDetail       $TerminationReason,
+        string           $Remarks,
+        User             $user
+    ): Self
+    {
         $leasetermination = PropertyLeaseTermination::create([
             'LeaseID' => $LeaseID->Id,
             'TerminationDate' => $TerminationDate,
@@ -38,8 +39,8 @@ class PropertyLeaseTerminationService
 
 
         activity()->causedBy($user->Id)->performedOn($leasetermination)->event('create')
-        ->log("Added New Lease {$leasetermination->Id}.");
-        
+            ->log("Added New Lease {$leasetermination->Id}.");
+
         return new self($leasetermination);
     }
 }

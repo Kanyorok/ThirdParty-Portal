@@ -18,6 +18,7 @@ class PrequalificationPeriodController extends Controller
     {
         $this->service = $service;
     }
+
     //
     public function index()
     {
@@ -31,7 +32,7 @@ class PrequalificationPeriodController extends Controller
         return view('procurement.suppliers.prequalification.prequalifiedperiods.create');
     }
 
-    Public function store(PrequalificationPeriodRequest $request)
+    public function store(PrequalificationPeriodRequest $request)
     {
         $this->authorize('store', PrequalificationPeriod::class);
         $status = PrequalificationPeriodEnum::from($request->input('Status'));
@@ -62,7 +63,7 @@ class PrequalificationPeriodController extends Controller
         return view('procurement.suppliers.prequalification.prequalifiedperiods.edit', compact('period'));
     }
 
-    public function update(PrequalificationPeriodRequest $request,$Id)
+    public function update(PrequalificationPeriodRequest $request, $Id)
     {
         $status = PrequalificationPeriodEnum::from($request->input('Status'));
 
@@ -79,12 +80,12 @@ class PrequalificationPeriodController extends Controller
             $status,
             $request->user()
         );
-        
+
         return redirect()->route('preqrounds.index')
-        ->with('success', 'Prequalification Period Updated Successfully');
+            ->with('success', 'Prequalification Period Updated Successfully');
     }
 
-        public function destroy($Id)
+    public function destroy($Id)
     {
         $periodId = PrequalificationPeriod::findOrFail($Id);
         $this->authorize('destroy', $periodId);

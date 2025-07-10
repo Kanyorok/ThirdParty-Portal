@@ -30,7 +30,7 @@ class UserRoleController extends Controller
      */
     public function store(Request $request, User $user)
     {
-      
+
         $validated = $request->validate([
             'role_id' => ['required', 'string'],
             'BranchId' => ['required', 'exists:t_Branches,Id'],
@@ -49,7 +49,7 @@ class UserRoleController extends Controller
         (new UserService($user))->setRole($role, $branch, $request->user());
 
         return back()->with('success', 'Role and Branch created successfully.');
-        
+
     }
 
     public function destroy(ModelRole $modelRole)

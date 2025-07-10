@@ -30,7 +30,7 @@ use Spatie\Permission\Models\Permission;
 
 class User extends Authenticatable
 {
-    use ImageTrait, HasFactory, Notifiable,UserActorTrait, SoftDeletes, HasBranchRoles;
+    use ImageTrait, HasFactory, Notifiable, UserActorTrait, SoftDeletes, HasBranchRoles;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -108,9 +108,9 @@ class User extends Authenticatable
     {
         // Remove existing roles for this user + branch
         ModelRole::where([
-            'model_id'   => $this->Id,
+            'model_id' => $this->Id,
             'model_type' => self::class,
-            'BranchId'   => $branchId,
+            'BranchId' => $branchId,
         ])->delete();
 
         foreach ($roles as $role) {
@@ -119,12 +119,12 @@ class User extends Authenticatable
                 : Role::where('name', $role)->firstOrFail();
 
             ModelRole::create([
-                'model_id'   => $this->Id,
+                'model_id' => $this->Id,
                 'model_type' => self::getPrimaryKey(),
-                'role_id'    => $roleModel->id,
-                'BranchId'   => $branchId,
-                'CreatedBy'  => $actorId,
-                'CreatedOn'  => now(),
+                'role_id' => $roleModel->id,
+                'BranchId' => $branchId,
+                'CreatedBy' => $actorId,
+                'CreatedOn' => now(),
                 'ModifiedBy' => $actorId,
                 'ModifiedOn' => now(),
             ]);
@@ -220,12 +220,15 @@ class User extends Authenticatable
         (new UserService($this))->sendPasswordResetNotification();
     }
 
-    public function scopeHasPermission(Builder $query, string $permission): Builder
+    public function scopeHasPermission(Builder $query, string|array $permissions): Builder
     {
-        return $query->whereHas('roles.permissions', function (Builder $query) use ($permission) {
-            $query->where('name', $permission);
-        })->orWhereHas('permissions', function (Builder $query) use ($permission) {
-            $query->where('name', $permission);
+        if (is_string($permissions)) {
+            $permissions = explode(',', $permissions);
+        }
+        return $query->whereHas('roles.permissions', function (Builder $query) use ($permissions) {
+            $query->whereIn('name', $permissions);
+        })->orWhereHas('permissions', function (Builder $query) use ($permissions) {
+            $query->whereIn('name', $permissions);
         });
     }
 

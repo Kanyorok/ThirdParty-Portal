@@ -1,15 +1,15 @@
 @extends('layouts.app')
 @section('title', 'Recurring Journals')
 @section('content')
-<div class="container mt-4">
-    <h4 class="mb-3">🔁 Recurring Journals</h4>
+    <div class="container mt-4">
+        <h4 class="mb-3">🔁 Recurring Journals</h4>
 
-    <div class="mb-3 text-end">
-        <a href="{{ route('recurrentjournal.create') }}" class="btn btn-primary">➕ New Recurring Journal</a>
-    </div>
+        <div class="mb-3 text-end">
+            <a href="{{ route('recurrentjournal.create') }}" class="btn btn-primary">➕ New Recurring Journal</a>
+        </div>
 
-    <table class="table table-striped table-bordered">
-        <thead class="table-light">
+        <table class="table table-striped table-bordered">
+            <thead class="table-light">
             <tr>
                 <th>#</th>
                 <th>Reference Name</th>
@@ -19,8 +19,8 @@
                 <th>Next Run</th>
                 <th>Actions</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             <tr>
                 <td>1</td>
                 <td>Monthly Rent Accrual</td>
@@ -45,7 +45,7 @@
                     <a href="#" class="btn btn-sm btn-warning">Edit</a>
                 </td>
             </tr>
-        </tbody>
-    </table>
-</div>
+            </tbody>
+        </table>
+    </div>
 @endsection

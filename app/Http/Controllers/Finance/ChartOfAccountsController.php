@@ -51,14 +51,14 @@ class ChartOfAccountsController extends Controller
         return view('finance.chartofaccounts.chartofaccounts.account_hierarchy', compact('accounts'));
     }
 
- public function show($code)
-{
-    $account = DB::table('t_GLAccounts')->where('GLCode', $code)->first();
+    public function show($code)
+    {
+        $account = DB::table('t_GLAccounts')->where('GLCode', $code)->first();
 
-    if (!$account) {
-        abort(404, 'Account not found.');
+        if (!$account) {
+            abort(404, 'Account not found.');
+        }
+
+        return view('finance.chartofaccounts.chartofaccounts.show', compact('account'));
     }
-
-    return view('finance.chartofaccounts.chartofaccounts.show', compact('account'));
-}
 }

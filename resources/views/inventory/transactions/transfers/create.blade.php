@@ -190,48 +190,48 @@
                     `;
                     });
 
-                transferDetails.style.display = 'block';
-            })
-            .catch(error => {
-                console.error('Error loading requisition details:', error);
-                requisitionIdHidden.value = '';
-            });
-    });
-
-    // AJAX Form Submission
-    document.getElementById('transferForm').addEventListener('submit', function (e) {
-        e.preventDefault();
-
-        const form = e.target;
-        const formData = new FormData(form);
-        const submitBtn = document.getElementById('submitBtn');
-        const errorBox = document.getElementById('ajax-error');
-
-        submitBtn.disabled = true;
-        errorBox.classList.add('d-none');
-        errorBox.innerHTML = '';
-
-        fetch(form.action, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': formData.get('_token'),
-            },
-            body: formData,
-        })
-        .then(async (response) => {
-            const data = await response.json();
-            if (!response.ok) {
-                throw new Error(data.message || 'An error occurred.');
-            }
-            window.location.href = data.redirect;
-        })
-        .catch(error => {
-            errorBox.innerHTML = `<strong>Error:</strong> ${error.message}`;
-            errorBox.classList.remove('d-none');
-        })
-        .finally(() => {
-            submitBtn.disabled = false;
+                    transferDetails.style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('Error loading requisition details:', error);
+                    requisitionIdHidden.value = '';
+                });
         });
-    });
-</script>
+
+        // AJAX Form Submission
+        document.getElementById('transferForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const form = e.target;
+            const formData = new FormData(form);
+            const submitBtn = document.getElementById('submitBtn');
+            const errorBox = document.getElementById('ajax-error');
+
+            submitBtn.disabled = true;
+            errorBox.classList.add('d-none');
+            errorBox.innerHTML = '';
+
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': formData.get('_token'),
+                },
+                body: formData,
+            })
+                .then(async (response) => {
+                    const data = await response.json();
+                    if (!response.ok) {
+                        throw new Error(data.message || 'An error occurred.');
+                    }
+                    window.location.href = data.redirect;
+                })
+                .catch(error => {
+                    errorBox.innerHTML = `<strong>Error:</strong> ${error.message}`;
+                    errorBox.classList.remove('d-none');
+                })
+                .finally(() => {
+                    submitBtn.disabled = false;
+                });
+        });
+    </script>
 @endsection

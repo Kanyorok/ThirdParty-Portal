@@ -6,10 +6,10 @@
 @section('content')
 <div class="container mt-4">
 <a href="{{ route('terminatelease.create') }}" class="btn btn-primary mb-3">Terminate Lease</a>
-  <h4 class="fw-bold mb-3">Lease Terminations</h4>
+    <h4 class="fw-bold mb-3">Lease Terminations</h4>
 
     @if($leaseterminations->count())
-  <table id="leasetermination" class="table table-bordered table-striped align-middle">
+        <table id="leasetermination" class="table table-bordered table-striped align-middle">
     <thead class="table-light">
       <tr>
         <th>#</th>

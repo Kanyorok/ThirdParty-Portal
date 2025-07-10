@@ -22,7 +22,7 @@ class RepositoryController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index(Request $request): View|RepositoryCollection
     {
         return $this->show($request, RepositoryService::root());
     }
@@ -109,11 +109,9 @@ class RepositoryController extends Controller
                 ]);
             });
         } catch (Throwable|Exception $e) {
-            Log::error('trash board member.');
-            Log::error($e);
+            Log::error('trash board member : ' . $e);
             return $this->errored('an unexpected error occurred');
         }
-
     }
 
     /**

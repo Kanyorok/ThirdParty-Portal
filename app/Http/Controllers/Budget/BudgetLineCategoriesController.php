@@ -45,7 +45,7 @@ class BudgetLineCategoriesController extends Controller
                 'CategoryName' => $validated['CategoryName'],
                 'Description' => $validated['Description'],
                 'IsActive' => $validated['IsActive'] ?? false, // Default to false if not provided
-                'CreatedBy' =>Auth::Id(),
+                'CreatedBy' => Auth::Id(),
                 'ModifiedBy' => Auth::Id(),
             ]);
             DB::commit();
@@ -113,7 +113,7 @@ class BudgetLineCategoriesController extends Controller
             $budgetLineCategory->DeletedBy = Auth::id();
             $budgetLineCategory->save();
             $budgetLineCategory->delete();
-            
+
             activity()
                 ->performedOn($budgetLineCategory)
                 ->causedBy(Auth::user())

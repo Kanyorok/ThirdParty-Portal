@@ -22,15 +22,16 @@ class PropertyTenantClearanceService
 
     public static function create(
         PropertyNewTenant $Tenant,
-        DateTime $ExitDate,
-        bool $FinalInspection,
-        bool $AllDuesPaid,
-        bool $KeysReturned,
-        CodeDetail $DepositRefunded,
-        string $AdditionalNotes,
+        DateTime            $ExitDate,
+        bool                $FinalInspection,
+        bool                $AllDuesPaid,
+        bool                $KeysReturned,
+        CodeDetail          $DepositRefunded,
+        string              $AdditionalNotes,
         TenantClearanceEnum $Status,
-        User $user
-    ): self {
+        User                $user
+    ): self
+    {
         $clearance = PropertyTenantClearance::create([
             'Tenant' => $Tenant->Id,
             'ExitDate' => $ExitDate,
@@ -53,32 +54,33 @@ class PropertyTenantClearanceService
     }
 
     public function update(
-    PropertyTenantClearance $tenantId,
-    DateTime $ExitDate,
-    bool $FinalInspection,
-    bool $AllDuesPaid,
-    bool $KeysReturned,
-    CodeDetail $DepositRefunded,
-    string $AdditionalNotes,
-    TenantClearanceEnum $Status,
-    User $user
-): self {
-    $tenantId->update([
-        'ExitDate' => $ExitDate,
-        'FinalInspection' => $FinalInspection,
-        'AllDuesPaid' => $AllDuesPaid,
-        'KeysReturned' => $KeysReturned,
-        'DepositRefunded' => $DepositRefunded->ID,
-        'AdditionalNotes' => $AdditionalNotes,
-        'Status' => $Status->value,
-        'ModifiedBy' => $user->Id,
-    ]);
+        PropertyTenantClearance $tenantId,
+        DateTime                $ExitDate,
+        bool                    $FinalInspection,
+        bool                    $AllDuesPaid,
+        bool                    $KeysReturned,
+        CodeDetail              $DepositRefunded,
+        string                  $AdditionalNotes,
+        TenantClearanceEnum     $Status,
+        User                    $user
+    ): self
+    {
+        $tenantId->update([
+            'ExitDate' => $ExitDate,
+            'FinalInspection' => $FinalInspection,
+            'AllDuesPaid' => $AllDuesPaid,
+            'KeysReturned' => $KeysReturned,
+            'DepositRefunded' => $DepositRefunded->ID,
+            'AdditionalNotes' => $AdditionalNotes,
+            'Status' => $Status->value,
+            'ModifiedBy' => $user->Id,
+        ]);
 
-    activity()->causedBy($user->Id)
-        ->performedOn($tenantId)
-        ->event('update')
-        ->log("Updated Tenant Clearance for Tenant ID {$tenantId->Tenant}.");
+        activity()->causedBy($user->Id)
+            ->performedOn($tenantId)
+            ->event('update')
+            ->log("Updated Tenant Clearance for Tenant ID {$tenantId->Tenant}.");
 
-    return $this;
-}
+        return $this;
+    }
 }

@@ -97,10 +97,8 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/inventorytracking/create', [BinTrackingController::class, 'create'])->name('bintracking.create');
 
 
-
-
-   // Route::resource('inventorydashboard', InventoryDashboardController::class);
-   // Route::resource('movementdashboard', MovementDashboardController::class);
+    // Route::resource('inventorydashboard', InventoryDashboardController::class);
+    // Route::resource('movementdashboard', MovementDashboardController::class);
 
     //Route::resource('stocktake', StockTakeController::class);
     Route::get('/stocktake/index', [StockTakeController::class, 'index'])->name('stocktake.index');
@@ -189,7 +187,7 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/inventoryholdreview/{Id}/edit', [InventoryHoldReviewController::class, 'edit'])->name('inventoryholdreview.edit');
     Route::put('/inventoryholdreview/{id}', [InventoryHoldReviewController::class, 'update'])->name('inventoryholdreview.update');
     Route::delete('/inventoryholdreview/{id}', [InventoryHoldReviewController::class, 'destroy'])->name('inventoryholdreview.destroy');
-    
+
 
 
     //Route::resource('interbranchrequisitionapproval', InterBranchRequisitionApprovalController::class);

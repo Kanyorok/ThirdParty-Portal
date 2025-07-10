@@ -55,15 +55,15 @@ class PropertyFloorController extends Controller
         //dd($request->all());
 
         $validated = $request->validated();
-    try {
-        PropertyFloorService::create(
-            PropertyRegistry::findOrFail($validated['PropertyID']),
-            PropertyBlock::findOrFail($validated['BlockID']),
-            $validated['FloorLabel'],
-            $validated['FloorNotes'],
-            auth()->user()
-        );
-        return redirect()->route('addfloor.index')->with('success', 'Floor added!');
+        try {
+            PropertyFloorService::create(
+                PropertyRegistry::findOrFail($validated['PropertyID']),
+                PropertyBlock::findOrFail($validated['BlockID']),
+                $validated['FloorLabel'],
+                $validated['FloorNotes'],
+                auth()->user()
+            );
+            return redirect()->route('addfloor.index')->with('success', 'Floor added!');
         } catch (\Exception $e) {
             return back()->withErrors('Failed: ' . $e->getMessage())->withInput();
         }
