@@ -14,7 +14,7 @@
 
     <div class="container bg-white shadow-sm rounded p-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4>Stock Adjustment List</h4>
+        
         <a href="{{ route('transactionsadjustment.create') }}" class="btn btn-success">➕ New Adjustment</a>
     </div>
 
