@@ -15,7 +15,7 @@
 @endif
 
 <div class="container bg-white shadow rounded p-4">
-    <h4 class="mb-4">Edit Stock Adjustment - {{ $adjustment->AdjustmentId }}</h4>
+    <h4 class="mb-4">Edit Adjustment - {{ $adjustment->AdjustmentId }}</h4>
 
     {{-- Ensure the form action points to the correct update route with the adjustment ID --}}
     <form method="POST" action="{{ route('transactionsadjustment.update', $adjustment->Id) }}">
