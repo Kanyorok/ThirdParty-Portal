@@ -4,14 +4,14 @@
 
 @section('content')
     <div class="auth-wrapper v2">
-        <div class="auth-sidecontent">
-            <img src="{{ asset('assets/images/authentication/img-auth-sideimg.jpg') }}" alt="images"
-                 class="img-fluid img-auth-side">
-        </div>
+{{--        <div class="auth-sidecontent">--}}
+{{--            <img src="{{ asset('assets/images/authentication/img-auth-sideimg.jpg') }}" alt="images"--}}
+{{--                 class="img-fluid img-auth-side">--}}
+{{--        </div>--}}
         <div class="auth-form">
             <div class="card my-5">
                 <form method="POST" action="{{ route('login') }}" class="card-body">@csrf
-                    <div class="text-center"><img src="{{ asset('assets/img/icons/craft-logo.png') }}" alt="">
+                    <div class="text-center"><img src="{{ asset('assets/img/icons/cbt-logo.png') }}" alt="">
                     </div>
                     <h4 class="text-center f-w-500 mb-3 mt-lg-5">Login with your USERID or Email </h4>
                     <div class="mb-3">
