@@ -36,8 +36,9 @@ class PropertyTenantClearance extends Model
     {
         return 'TenantClearanceId';
     }
+
     protected $casts = [
-    'Status' => TenantClearanceEnum::class,
+        'Status' => TenantClearanceEnum::class,
     ];
 
     public function lease()
@@ -49,6 +50,6 @@ class PropertyTenantClearance extends Model
     {
         return $this->belongsTo(CodeDetail::class, 'DepositRefunded', 'ID');
     }
-    
+
 
 }

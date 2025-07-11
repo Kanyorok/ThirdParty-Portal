@@ -1,15 +1,15 @@
 @extends('layouts.app')
 @section('title', 'Lease Renewals')
 @section('content')
-@section('styles')
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-@endsection
+    @section('styles')
+        <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    @endsection
 <div class="container mt-4">
 <a href="{{ route('renewlease.create') }}" class="btn btn-primary mb-3">Renew Lease</a>
   <h4 class="fw-bold mb-3">📋 Lease Renewals</h4>
 
     @if($leaserenewals->count())
-  <table class="table table-bordered table-striped align-middle" id="LeaseRenewal">
+        <table class="table table-bordered table-striped align-middle" id="LeaseRenewal">
     <thead class="table-light">
       <tr>
         <th>#</th>
@@ -46,18 +46,18 @@
         <p>No lease renewals registered yet.</p>
     @endif
 </div>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
-<script>
-    $(document).ready(function () {
-        $('#LeaseRenewal').DataTable({
-            pageLength: 10,
-            ordering: true,
-            searching: true,
-            lengthChange: true
+    <script>
+        $(document).ready(function () {
+            $('#LeaseRenewal').DataTable({
+                pageLength: 10,
+                ordering: true,
+                searching: true,
+                lengthChange: true
+            });
         });
-    });
-</script>
+    </script>
 
 @endsection

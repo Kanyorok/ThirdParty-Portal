@@ -15,6 +15,7 @@ use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyTenantClearance;
 use App\Models\PropertyManagement\PropertyUnit;
 use App\Services\Property\TenantAndLease\PropertyNewLeaseService;
+use DateTime;
 
 class PropertyNewLeaseController extends Controller
 {
@@ -37,6 +38,7 @@ class PropertyNewLeaseController extends Controller
         $codes = CodeDetail::where('CodeID', 'PaymentFrequency')->get();
         return view('property.tenantmanagement.leasemanagement.leasemaintenance.create', compact('newtenants', 'properties', 'codes'));
     }
+
     public function getBlockByProperty($propertyId)
     {
         $blocks = PropertyBlock::where('PropertyID', $propertyId)->get();
@@ -50,6 +52,7 @@ class PropertyNewLeaseController extends Controller
         $floors = PropertyFloor::where('BlockID', $blockId)->get();
         return response()->json($floors);
     }
+
     public function getUnitByFloor($floorId)
     {
         $units = PropertyUnit::where('FloorId', $floorId)->get();
@@ -64,7 +67,7 @@ class PropertyNewLeaseController extends Controller
 
     public function store(PropertyNewLeaseRequest $request)
     {
-    
+
 
         $data = $request->validated();
         $tenant = PropertyNewTenant::findOrFail($data['Tenant']);
@@ -79,8 +82,8 @@ class PropertyNewLeaseController extends Controller
             $block,
             $floor,
             $unit,
-            $startDate = new \DateTime($data['StartDate']),
-            $endDate = new \DateTime($data['EndDate']),
+            $startDate = new DateTime($data['StartDate']),
+            $endDate = new DateTime($data['EndDate']),
             $paymentFrequency,
             $monthlyRent = $data['MonthlyRent'],
             $deposit = $data['Deposit'],

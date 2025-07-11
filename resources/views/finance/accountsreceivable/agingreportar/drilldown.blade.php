@@ -2,11 +2,11 @@
 @section('title', 'AR Aging Drilldown')
 @section('content')
 
-<div class="container mt-4">
-    <h4>📄 Unpaid Invoices – {{ request('customer') }} ({{ strtoupper(request('bucket')) }} Days)</h4>
+    <div class="container mt-4">
+        <h4>📄 Unpaid Invoices – {{ request('customer') }} ({{ strtoupper(request('bucket')) }} Days)</h4>
 
-    <table class="table table-bordered table-hover mt-3">
-        <thead class="table-dark">
+        <table class="table table-bordered table-hover mt-3">
+            <thead class="table-dark">
             <tr>
                 <th>Invoice No</th>
                 <th>Date</th>
@@ -15,8 +15,8 @@
                 <th>Outstanding</th>
                 <th>Status</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             <tr>
                 <td>AR-INV-2025-004</td>
                 <td>2025-05-20</td>
@@ -33,7 +33,7 @@
                 <td>30,000.00</td>
                 <td><span class="badge bg-danger">Unpaid</span></td>
             </tr>
-        </tbody>
-    </table>
-</div>
+            </tbody>
+        </table>
+    </div>
 @endsection

@@ -4,14 +4,12 @@ use App\Http\Controllers\Inventory\BinTrackingController;
 use App\Http\Controllers\Inventory\ExpiryBatchTrackingController;
 use App\Http\Controllers\Inventory\InterBranchRequisitionApprovalController;
 use App\Http\Controllers\Inventory\InterBranchRequisitionController;
-use App\Http\Controllers\Inventory\InventoryDashboardController;
 use App\Http\Controllers\Inventory\InventoryHoldReviewController;
 use App\Http\Controllers\Inventory\InventoryTypeController;
 use App\Http\Controllers\Inventory\ItemCategoryController;
 use App\Http\Controllers\Inventory\ItemMasterListController;
 use App\Http\Controllers\Inventory\ItemSubCategoryController;
 use App\Http\Controllers\Inventory\ItemTypeController;
-use App\Http\Controllers\Inventory\MovementDashboardController;
 use App\Http\Controllers\Inventory\OpeningStockController;
 use App\Http\Controllers\Inventory\PriceManagementController;
 use App\Http\Controllers\Inventory\ReportsController;
@@ -26,9 +24,8 @@ use App\Http\Controllers\Inventory\TransactionReceiptsController;
 use App\Http\Controllers\Inventory\TransactionTransfersController;
 use App\Http\Controllers\Inventory\UOMController;
 use App\Http\Controllers\Inventory\UOMConversionController;
-
-
 use Illuminate\Support\Facades\Route;
+
 
 //use App\Http\Controllers\Inventory\ReceiptController;
 
@@ -97,10 +94,8 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/inventorytracking/create', [BinTrackingController::class, 'create'])->name('bintracking.create');
 
 
-
-
-    Route::resource('inventorydashboard', InventoryDashboardController::class);
-    Route::resource('movementdashboard', MovementDashboardController::class);
+    // Route::resource('inventorydashboard', InventoryDashboardController::class);
+    // Route::resource('movementdashboard', MovementDashboardController::class);
 
     //Route::resource('stocktake', StockTakeController::class);
     Route::get('/stocktake/index', [StockTakeController::class, 'index'])->name('stocktake.index');
@@ -165,7 +160,7 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/transactionsapproval', [TransactionApprovalController::class, 'index'])->name('transactionsapproval.index');
     Route::post('/transactionsapproval/approve/{Id}', [TransactionApprovalController::class, 'approve'])->name('transactionsapproval.approve');
     Route::post('/transactionsapproval/reject/{Id}', [TransactionApprovalController::class, 'reject'])->name('transactionsapproval.reject');
-
+    Route::get('/transactionsapproval/{Id}', [TransactionApprovalController::class, 'show'])->name('transactionsapproval.show');
 
     //Route::resource('transactionsadjustment', TransactionAdjustmentController::class);
     Route::get('/transactionsadjustment', [TransactionAdjustmentController::class, 'index'])->name('transactionsadjustment.index');
@@ -189,7 +184,6 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/inventoryholdreview/{Id}/edit', [InventoryHoldReviewController::class, 'edit'])->name('inventoryholdreview.edit');
     Route::put('/inventoryholdreview/{id}', [InventoryHoldReviewController::class, 'update'])->name('inventoryholdreview.update');
     Route::delete('/inventoryholdreview/{id}', [InventoryHoldReviewController::class, 'destroy'])->name('inventoryholdreview.destroy');
-    
 
 
     //Route::resource('interbranchrequisitionapproval', InterBranchRequisitionApprovalController::class);

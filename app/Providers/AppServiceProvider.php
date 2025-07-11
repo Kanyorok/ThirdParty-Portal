@@ -71,10 +71,10 @@ use App\Models\Procurement\RFQLine;
 use App\Models\Procurement\SchedulePlan;
 use App\Models\PropertyManagement\PropertyBlock;
 use App\Models\PropertyManagement\PropertyFloor;
-use App\Models\PropertyManagement\PropertyLeaseRenewal;
-use App\Models\PropertyManagement\PropertyNewTenant;
-use App\Models\PropertyManagement\PropertyLeaseSchedule;
 use App\Models\PropertyManagement\PropertyInvoice;
+use App\Models\PropertyManagement\PropertyLeaseRenewal;
+use App\Models\PropertyManagement\PropertyLeaseSchedule;
+use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Models\PropertyManagement\PropertyReceipt;
 use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyTenantClearance;
@@ -90,6 +90,7 @@ use App\Policies\DMS\RepositoryPolicy;
 use App\Policies\Inventory\InterBranchRequisitionPolicy;
 use App\Policies\Inventory\InventoryTypePolicy;
 use App\Policies\Inventory\ItemCategoryPolicy;
+use App\Policies\Inventory\ItemMasterListPolicy;
 use App\Policies\Inventory\ItemTypePolicy;
 use App\Policies\Inventory\PriceManagementPolicy;
 use App\Policies\Inventory\StockAdjustmentPolicy;
@@ -98,7 +99,6 @@ use App\Policies\Inventory\StorePolicy;
 use App\Policies\Inventory\TransactionReceiptPolicy;
 use App\Policies\Inventory\TransactionTransferPolicy;
 use App\Policies\Inventory\UnitOfMeasurePolicy;
-use App\Policies\ItemMasterListPolicy;
 use App\Policies\Procurement\DepartmentNeedsPolicy;
 use App\Policies\Procurement\OrderPolicy;
 use App\Policies\Procurement\PlanManualInputPolicy;
@@ -111,14 +111,14 @@ use App\Policies\Procurement\SchedulePlanPolicy;
 use App\Policies\ProductDevelopmentPolicy;
 use App\Policies\PropertyManagement\PropertyCategoryPolicy;
 use App\Policies\PropertyManagement\PropertyFloorPolicy;
+use App\Policies\PropertyManagement\PropertyInvoicePolicy;
+use App\Policies\PropertyManagement\PropertyLeaseRenewalPolicy;
+use App\Policies\PropertyManagement\PropertyLeaseSchedulePolicy;
 use App\Policies\PropertyManagement\PropertyNewTenantPolicy;
+use App\Policies\PropertyManagement\PropertyReceiptPolicy;
 use App\Policies\PropertyManagement\PropertyRegistryPolicy;
 use App\Policies\PropertyManagement\PropertyStructuralPolicy;
 use App\Policies\PropertyManagement\PropertyTenantClearancePolicy;
-use App\Policies\PropertyManagement\PropertyLeaseSchedulePolicy;
-use App\Policies\PropertyManagement\PropertyLeaseRenewalPolicy;
-use App\Policies\PropertyManagement\PropertyInvoicePolicy;
-use App\Policies\PropertyManagement\PropertyReceiptPolicy;
 use App\Policies\PropertyManagement\PropertyTypePolicy;
 use App\Policies\PropertyManagement\PropertyUnitPolicy;
 use App\Policies\RolePolicy;
@@ -226,7 +226,7 @@ class AppServiceProvider extends ServiceProvider
             StockAdjustment::getPrimaryKey() => StockAdjustment::class,
             InventoryHoldReview::getPrimaryKey() => InventoryHoldReview::class,
             ModelRole::getPrimaryKey() => ModelRole::class,
-          
+
             ///////// Budget and Analytics /////////
             BudgetActivityMaster::getPrimaryKey() => BudgetActivityMaster::class,
             BudgetLinesGLAccount::getPrimaryKey() => BudgetLinesGLAccount::class,

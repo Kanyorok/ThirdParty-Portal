@@ -2,11 +2,11 @@
 
 namespace App\Models\PropertyManagement;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Models\Core\CodeDetail;
 use App\Traits\Model\UserActorTrait;
-use App\Models\PropertyManagement\PropertyNewLease;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+
 class PropertyLeaseSchedule extends Model
 {
     use SoftDeletes, UserActorTrait;

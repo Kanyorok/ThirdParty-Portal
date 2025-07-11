@@ -10,6 +10,7 @@ use App\Models\Core\CodeDetail;
 use App\Models\PropertyManagement\PropertyLeaseTermination;
 use App\Models\PropertyManagement\PropertyTenantClearance;
 use App\Services\Property\TenantAndLease\PropertyTenantClearanceService;
+use Carbon\Carbon;
 
 class PropertyTenantClearanceController extends Controller
 {
@@ -74,7 +75,7 @@ class PropertyTenantClearanceController extends Controller
         $this->authorize(PermissionEnum::PropertyCategoryUpdate, PropertyTenantClearance::class);
         $clearancetenant = PropertyTenantClearance::with('lease')->get()->find($Id);
         $codedetails = CodeDetail::where('CodeID', 'DepositRefunded')->get();
-        return view('property.tenantmanagement.tenantclearance.edit', compact('clearancetenant','codedetails'));
+        return view('property.tenantmanagement.tenantclearance.edit', compact('clearancetenant', 'codedetails'));
     }
 
     public function update(PropertyTenantClearanceRequest $request, $Id)

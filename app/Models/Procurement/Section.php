@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\procurement;
+namespace App\Models\Procurement;
 
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;

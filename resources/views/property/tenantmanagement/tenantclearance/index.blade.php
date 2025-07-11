@@ -1,12 +1,13 @@
+@php use Carbon\Carbon; @endphp
 @extends('layouts.app')
 @section('title', 'Tenant Exit')
 @section('styles')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 @endsection
 @section('content')
-<div class="container mt-4">
-<a href="{{ route('tenantclearance.create') }}" class="btn btn-primary mb-3">New Clearance</a>
-  <h4 class="fw-bold mb-3">Tenant Exit & Clearance Records</h4>
+    <div class="container mt-4">
+        <a href="{{ route('tenantclearance.create') }}" class="btn btn-primary mb-3">New Clearance</a>
+        <h4 class="fw-bold mb-3">Tenant Exit & Clearance Records</h4>
 
     @if($clearancetenants->count())
   <table class="table table-bordered table-striped align-middle" id="tenantclearance">
@@ -63,17 +64,17 @@
     @endif
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
-<script>
-    $(document).ready(function () {
-        $('#tenantclearance').DataTable({
-            pageLength: 10,
-            ordering: true,
-            searching: true,
-            lengthChange: true
+    <script>
+        $(document).ready(function () {
+            $('#tenantclearance').DataTable({
+                pageLength: 10,
+                ordering: true,
+                searching: true,
+                lengthChange: true
+            });
         });
-    });
-</script>
+    </script>
 @endsection

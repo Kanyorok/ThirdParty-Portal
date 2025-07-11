@@ -8,25 +8,22 @@ use App\Models\Budget\Budget;
 use App\Models\Budget\BudgetGLMaster;
 use App\Models\Budget\BudgetGLMasterAllocations;
 use App\Models\Budget\BudgetGLsAttachments;
-use App\Models\Budget\BudgetLine;
-use App\Models\Budget\BudgetPeriods;
-use App\Models\Budget\BudgetScenarioPlanning;
-use App\Models\Budget\BudgetTopDown;
-use App\Models\Budget\BudgetTopDownData;
 use App\Models\Core\Branch;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class BudgetTopDownAllocationController extends Controller
 {
     //
     public function index()
     {
-        $budgets=Budget::all();//Test network drive
-        $branches=Branch::all();
+        $budgets = Budget::all();//Test network drive
+        $branches = Branch::all();
 
         //Read data for GL master
         // $glsMaster=BudgetGLMaster::select(
@@ -37,10 +34,10 @@ class BudgetTopDownAllocationController extends Controller
         //     'GLSubAccountTypeID'
         // )->get();
 
-        return view('budgetandanalytics.budgetworkspace.topdown.index',compact(
+        return view('budgetandanalytics.budgetworkspace.topdown.index', compact(
             'budgets',
             'branches',
-            //'glsMaster',
+        //'glsMaster',
         ));
     }
 
@@ -140,7 +137,7 @@ class BudgetTopDownAllocationController extends Controller
         } else {
             $glsMaster = BudgetGLsAttachments::where('BudgetID', $budgetId)
                 ->whereNull('DeletedOn')
-                ->select('Id','AccountID', 'Description', 'GLAccountTypeID')
+                ->select('Id', 'AccountID', 'Description', 'GLAccountTypeID')
                 ->get();
             $isExisting = false;
             return view('budgetandanalytics.budgetworkspace.topdown.create', compact(
@@ -170,9 +167,9 @@ class BudgetTopDownAllocationController extends Controller
             $glsMaster = BudgetGLMasterAllocations::where('BudgetID', $budgetId)
                 ->where('BranchID', $branchId)
                 ->get();
-        }else{
+        } else {
             //Read data for GL masters with already prepopulated alloc
-            $glsMaster=BudgetGLMaster::select(
+            $glsMaster = BudgetGLMaster::select(
                 'BudgetGLID',
                 'AccountID_CBS',
                 'Description',
@@ -210,7 +207,7 @@ class BudgetTopDownAllocationController extends Controller
                 for ($i = 1; $i <= 12; $i++) {
                     $amountStr = isset($months[$i]) ? $months[$i] : '0';
                     $cleanAmount = str_replace(',', '', $amountStr ?: '0');
-                    $amount = (float) $cleanAmount;
+                    $amount = (float)$cleanAmount;
                     $monthData["Month{$i}"] = $amount;
                     $total += $amount;
                 }
@@ -240,9 +237,9 @@ class BudgetTopDownAllocationController extends Controller
             DB::commit();
             return redirect()->route('topdownallocation.index')
                 ->with('success', 'GL Budget Allocations saved successfully.');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
-            Log::error('Budget allocation failed: '.$e->getMessage());
+            Log::error('Budget allocation failed: ' . $e->getMessage());
             return redirect()->back()->with('error', 'An error occurred while saving budget allocations. Please try again.');
         }
     }
@@ -252,6 +249,7 @@ class BudgetTopDownAllocationController extends Controller
     {
         return redirect()->route('topdownallocation.index');
     }
+
     public function update(Request $request)
     {
         $validated = $request->validate([
@@ -274,7 +272,7 @@ class BudgetTopDownAllocationController extends Controller
 
                 for ($i = 1; $i <= 12; $i++) {
                     $amountRaw = $months[$i] ?? '0';
-                    $amount = (float) str_replace(',', '', $amountRaw);
+                    $amount = (float)str_replace(',', '', $amountRaw);
                     $monthData["Month{$i}"] = $amount;
                     $total += $amount;
                 }
@@ -325,7 +323,7 @@ class BudgetTopDownAllocationController extends Controller
 
             return redirect()->route('topdownallocation.index')
                 ->with('success', 'Budget allocations updated successfully.');
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             DB::rollBack();
             Log::error('Budget Allocation Update Failed: ' . $th->getMessage());
 

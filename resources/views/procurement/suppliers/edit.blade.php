@@ -26,7 +26,8 @@
 
         <div class="mb-3">
             <label for="is_prequalified" class="form-label">Prequalified</label>
-            <input type="text" class="form-control" id="IsPrequalified" readonly  value="{{ old('IsPrequalified', $supplier->IsPrequalified ? 'Prequalified' : 'Not Prequalifies') }}">
+            <input type="text" class="form-control" id="IsPrequalified" readonly
+                   value="{{ old('IsPrequalified', $supplier->IsPrequalified ? 'Prequalified' : 'Not Prequalifies') }}">
         </div>
 
         <button type="submit" class="btn btn-primary">Update Supplier</button>

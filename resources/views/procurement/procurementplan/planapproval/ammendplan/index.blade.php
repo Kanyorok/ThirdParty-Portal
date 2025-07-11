@@ -76,7 +76,7 @@
               <th>Adjust Qty</th>
             <th>Unit Cost</th>
             <th>Total</th>
-            <th class="d-none">Remarks</th>
+              <th class="d-none">Remarks</th>
             <th>Action</th>
           </tr>
         </thead>
@@ -99,7 +99,7 @@
             <td>
                 <span class="text-muted">{{ number_format($item->MergedQty * $item->EstimatedUnitCost) }}</span>
             </td>
-            <td class="d-none">
+              <td class="d-none">
                 <textarea name="remarks_{{ $item->LineItemID }}" class="form-control form-control-sm"
                           rows="1">{{ $item->ChangeRemarks }}</textarea>
             </td>

@@ -2,8 +2,8 @@
 
 namespace App\Models\Procurement;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Models\Inventory\UnitOfMeasure;
+use Illuminate\Database\Eloquent\Model;
 
 class RFQResponseItem extends Model
 {
@@ -21,6 +21,7 @@ class RFQResponseItem extends Model
     {
         return $this->belongsTo(RFQResponse::class);
     }
+
     public function uom()
     {
         return $this->belongsTo(UnitOfMeasure::class, 'UOM', 'Id');

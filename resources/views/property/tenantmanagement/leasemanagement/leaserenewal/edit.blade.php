@@ -1,3 +1,4 @@
+@php use Carbon\Carbon; @endphp
 @extends('layouts.app')
 @section('title', 'Lease Renewal')
 @section('content')

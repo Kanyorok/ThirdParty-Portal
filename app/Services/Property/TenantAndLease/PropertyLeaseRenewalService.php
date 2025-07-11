@@ -14,7 +14,7 @@ class PropertyLeaseRenewalService
     /**
      * Create a new lease renewal if one does not already exist for the given lease.
      *
-     * @throws \Exception if the lease renewal already exists or creation fails.
+     * @throws Exception if the lease renewal already exists or creation fails.
      */
     public static function create(
     int $leaseId,

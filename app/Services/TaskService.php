@@ -55,7 +55,7 @@ class TaskService
                      'ModifiedBy' => $actor->Id,
                     ])->save();
 
-        activity()->causedBy($actor)->performedOn($task)->event('create ')->log('created a task: ' . $task->TaskID);
+        activity()->causedBy($actor)->performedOn($task)->event('create')->log('created a task: ' . $task->TaskID);
 
         return new self($task);
     }

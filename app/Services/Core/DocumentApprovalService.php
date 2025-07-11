@@ -118,15 +118,15 @@ class DocumentApprovalService
         // Insert primary approval
         DB::table('t_Approvals')->updateOrInsert(
             [
-                'DocType'    => $docType,
+                'DocType' => $docType,
                 'DocumentId' => $documentId,
-                'UserId'     => $actor->Id,
+                'UserId' => $actor->Id,
             ],
             [
-                'Status'     => 'approved',
-                'CreatedBy'  => $actor->Id,
+                'Status' => 'approved',
+                'CreatedBy' => $actor->Id,
                 'ModifiedBy' => $actor->Id,
-                'CreatedOn'  => now(),
+                'CreatedOn' => now(),
                 'ModifiedOn' => now(),
             ]
         );
@@ -138,15 +138,15 @@ class DocumentApprovalService
             if ($systemUser) {
                 DB::table('t_Approvals')->updateOrInsert(
                     [
-                        'DocType'    => $docType,
+                        'DocType' => $docType,
                         'DocumentId' => $documentId,
-                        'UserId'     => $systemUser->Id,
+                        'UserId' => $systemUser->Id,
                     ],
                     [
-                        'Status'     => 'approved',
-                        'CreatedBy'  => $actor->Id, // Log who triggered it
+                        'Status' => 'approved',
+                        'CreatedBy' => $actor->Id, // Log who triggered it
                         'ModifiedBy' => $actor->Id,
-                        'CreatedOn'  => now(),
+                        'CreatedOn' => now(),
                         'ModifiedOn' => now(),
                     ]
                 );

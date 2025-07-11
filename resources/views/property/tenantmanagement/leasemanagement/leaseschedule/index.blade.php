@@ -1,3 +1,4 @@
+@php use Carbon\Carbon; @endphp
 @extends('layouts.app')
 @section('title', 'Scheduled Leases')
 @section('styles')
@@ -46,19 +47,19 @@
     @else
         <p>No lease renewals registered yet.</p>
         @endif
-</div>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+        </div>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
-<script>
-    $(document).ready(function () {
-        $('#LeaseSchedule').DataTable({
-            pageLength: 10,
-            ordering: true,
-            searching: true,
-            lengthChange: true
-        });
-    });
-</script>
+        <script>
+            $(document).ready(function () {
+                $('#LeaseSchedule').DataTable({
+                    pageLength: 10,
+                    ordering: true,
+                    searching: true,
+                    lengthChange: true
+                });
+            });
+        </script>
 
-@endsection
+        @endsection

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Finance;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 
 class JournalEntryController extends Controller
 {
@@ -13,8 +12,9 @@ class JournalEntryController extends Controller
         return view('finance.generalledger.journalentry.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('finance.generalledger.journalentry.create');
-    } 
+    }
 
 }

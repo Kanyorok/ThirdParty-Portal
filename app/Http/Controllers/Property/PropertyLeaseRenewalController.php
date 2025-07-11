@@ -9,6 +9,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Requests\Property\TenantAndLease\PropertyLeaseRenewalRequest;
+use App\Models\PropertyManagement\PropertyLeaseRenewal;
+use App\Models\PropertyManagement\PropertyNewLease;
 use App\Services\Property\TenantAndLease\PropertyLeaseRenewalService;
 use App\Models\PropertyManagement\PropertyNewLease;
 use App\Models\PropertyManagement\PropertyLeaseRenewal;
@@ -31,11 +33,13 @@ class PropertyLeaseRenewalController extends Controller
             ->get();
         return view('property.tenantmanagement.leasemanagement.leaserenewal.create', compact('newleases'));
     }
-     public function getPropertyByTenant($tenantId)
+
+    public function getPropertyByTenant($tenantId)
     {
         $newlease = PropertyNewLease::where('TenantId', $tenantId)->get();
         return response()->json($newlease);
     }
+
     public function getLeaseByProperty($propertyId)
     {
         $newlease = PropertyNewLease::where('PropertyId', $propertyId)->get();

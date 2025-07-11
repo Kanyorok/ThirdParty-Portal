@@ -2,11 +2,10 @@
 
 namespace App\Models\PropertyManagement;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Models\Core\CodeDetail;
-use App\Traits\Model\UserActorTrait;
-use App\Models\PropertyManagement\PropertyNewLease;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\Model\UserActorTrait;
 
 class PropertyLeaseRenewal extends Model
 {
@@ -34,7 +33,8 @@ class PropertyLeaseRenewal extends Model
         'ModifiedBy',
         'DeletedBy'
     ];
-     public static function getPrimaryKey(): string
+
+    public static function getPrimaryKey(): string
     {
         return 'ScheduleRenewalId';
     }

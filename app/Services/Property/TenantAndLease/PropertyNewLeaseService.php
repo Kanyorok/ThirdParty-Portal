@@ -22,6 +22,7 @@ class PropertyNewLeaseService
     public function __construct(PropertyNewLease $propertyNewLease)
     {
     }
+
     public static function create(
         PropertyNewTenant $Tenant,
         PropertyRegistry $PropertyID,
@@ -86,7 +87,7 @@ class PropertyNewLeaseService
             ->performedOn($newlease)
             ->event('create')
             ->log("Added New Lease {$newlease->Id}.");
-        
+
         return new self($newlease);
     }
 

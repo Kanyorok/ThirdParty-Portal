@@ -66,50 +66,50 @@
                     </div>
                 </div>
 
-                <!-- Financial and Date Inputs -->
-                <div class="row g-3 mb-3">
-                    <div class="col-md-4">
-                        <label class="form-label">Start Date</label>
-                        <input type="date" class="form-control" name="StartDate" value="2025-05-01" required>
+                    <!-- Financial and Date Inputs -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Start Date</label>
+                            <input type="date" class="form-control" name="StartDate" value="2025-05-01" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">End Date</label>
+                            <input type="date" class="form-control" name="EndDate" value="2026-04-30" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Base Rent (KES)</label>
+                            <input type="number" class="form-control" name="BaseRent" value="25000" required>
+                        </div>
                     </div>
-                    <div class="col-md-4">
-                        <label class="form-label">End Date</label>
-                        <input type="date" class="form-control" name="EndDate" value="2026-04-30" required>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Base Rent (KES)</label>
-                        <input type="number" class="form-control" name="BaseRent" value="25000" required>
-                    </div>
-                </div>
 
-                <div class="row g-3 mb-3">
-                    <div class="col-md-4">
-                        <label class="form-label">Service Charge (KES)</label>
-                        <input type="number" class="form-control" name="ServiceCharge" value="15000" required>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Service Charge (KES)</label>
+                            <input type="number" class="form-control" name="ServiceCharge" value="15000" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Parking Fee (KES)</label>
+                            <input type="number" class="form-control" name="ParkingFee" value="2000" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Other Charges (KES)</label>
+                            <input type="number" class="form-control" name="OtherCharges" value="0" required>
+                        </div>
                     </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Parking Fee (KES)</label>
-                        <input type="number" class="form-control" name="ParkingFee" value="2000" required>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Other Charges (KES)</label>
-                        <input type="number" class="form-control" name="OtherCharges" value="0" required>
-                    </div>
-                </div>
 
-                <!-- Submit Button -->
-                <div class="text-end">
-                    <button type="submit" class="btn btn-success">🧾 Generate Schedule</button>
+                    <!-- Submit Button -->
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-success">🧾 Generate Schedule</button>
+                    </div>
                 </div>
             </div>
-        </div>
-    </form>
-</div>
+        </form>
+    </div>
 
-<!-- Auto-fill script -->
-<script>
-    document.getElementById('lease-select').addEventListener('change', function () {
-        const selected = this.options[this.selectedIndex];
+    <!-- Auto-fill script -->
+    <script>
+        document.getElementById('lease-select').addEventListener('change', function () {
+            const selected = this.options[this.selectedIndex];
 
         document.getElementById('lease-display').value = selected.getAttribute('data-leasenumber') || '';
         document.getElementById('tenant-id').value = selected.getAttribute('data-tenant-id') || '';

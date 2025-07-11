@@ -19,10 +19,10 @@ class PropertyLeaseTerminationService
     public function __construct(PropertyLeaseTermination $propertyLeaseTermination)
     {
     }
-    
+
     public static function create(
         PropertyNewLease $LeaseID,
-        string $TerminationDate,
+        string     $TerminationDate,
         CodeDetail $TerminationReason,
         string $Remarks,
         User $user

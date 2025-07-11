@@ -49,7 +49,7 @@ class SurveyQuestionController extends Controller
             return $this->errored('unexpected error, try again later');
         }
 
-        return $this->succeeded('question add.', route: route('surveys.edit', $survey->SurveyID));
+        return $this->succeeded('Question added.', route: route('surveys.edit', $survey->SurveyID));
     }
 
     /**

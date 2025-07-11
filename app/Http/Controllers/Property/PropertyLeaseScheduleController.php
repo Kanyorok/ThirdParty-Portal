@@ -2,18 +2,20 @@
 
 namespace App\Http\Controllers\Property;
 
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\Controller;
 use App\Enums\Core\PermissionEnum;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\TenantAndLease\PropertyLeaseScheduleRequest;
-use App\Services\Property\TenantAndLease\PropertyLeaseScheduleService;
-use Illuminate\Http\Request;
 use App\Models\Core\CodeDetail;
 use App\Models\PropertyManagement\PropertyLeaseSchedule;
-use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Models\PropertyManagement\PropertyNewLease;
+use App\Models\PropertyManagement\PropertyNewTenant;
+use App\Services\Property\TenantAndLease\PropertyLeaseScheduleService;
+use Exception;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 
 class PropertyLeaseScheduleController extends Controller
@@ -49,6 +51,7 @@ class PropertyLeaseScheduleController extends Controller
         $newlease = PropertyNewLease::where('TenantId', $tenantId)->get();
         return response()->json($newlease);
     }
+
     public function getLeaseByProperty($propertyId)
     {
         $newlease = PropertyNewLease::where('PropertyId', $propertyId)->get();
@@ -84,12 +87,12 @@ public function store(PropertyLeaseScheduleRequest $request)
         Auth::user()
     );
 
-    return redirect()->route('schedulelease.index')->with('success', 'Lease schedule added!');
-    } catch (\Exception $e) {
-        // Redirect back with error message
-        return redirect()->back()->with('error', $e->getMessage());
+            return redirect()->route('schedulelease.index')->with('success', 'Lease schedule added!');
+        } catch (Exception $e) {
+            // Redirect back with error message
+            return redirect()->back()->with('error', $e->getMessage());
+        }
     }
-}
 
     public function edit($id)
     {
@@ -100,12 +103,14 @@ public function store(PropertyLeaseScheduleRequest $request)
         $newleases = PropertyNewLease::all();
         $codes = CodeDetail::where('CodeID', 'PaymentFrequency')->get();
 
-        return view('property.tenantmanagement.leasemanagement.leaseschedule.edit',compact('leaseschedules','newtenants','newleases','codes'));
+        return view('property.tenantmanagement.leasemanagement.leaseschedule.edit', compact('leaseschedules', 'newtenants', 'newleases', 'codes'));
     }
-     public function update(Request $request, $id){
+
+    public function update(Request $request, $id)
+    {
 
         $this->authorize(PermissionEnum::PropertyLeaseScheduleUpdate, PropertyLeaseSchedule::class);
-        $validated=$request->validate([
+        $validated = $request->validate([
             'LeaseId' => 'required|exists:t_LeaseCreation,Id',
             'PaymentFrequency' => 'required|string|max:50',
             'StartDate' => 'required|date',
@@ -131,18 +136,18 @@ public function store(PropertyLeaseScheduleRequest $request)
                 'OtherCharges' => $validated['OtherCharges'],
                 'ModifiedBy' => Auth::Id(),
             ]);
- 
-        DB::commit();
-        activity()
+
+            DB::commit();
+            activity()
                 ->performedOn($leaseschedules)
                 ->causedBy(Auth::user())
-                ->withProperties(['action'=>'update'])
+                ->withProperties(['action' => 'update'])
                 ->log('Updated Lease Schedule');
 
-                return redirect()->route('schedulelease.index')->with('success' , 'Lease schedule updated successfully');
-            }catch(\Throwable $th) {
-                DB::rollBack();
-                Log::error('Failed to Update Lease Schedule:' . $th->getMessage());
+            return redirect()->route('schedulelease.index')->with('success', 'Lease schedule updated successfully');
+        } catch (Throwable $th) {
+            DB::rollBack();
+            Log::error('Failed to Update Lease Schedule:' . $th->getMessage());
 
                 return back()->withErrors(['error'=>'Failed to update Lease Schedule'])->withInput();
             }
@@ -150,14 +155,14 @@ public function store(PropertyLeaseScheduleRequest $request)
     public function destroy($id)
     {
         //Check if user has permission to delete property categories
-        $this->authorize(PermissionEnum::PropertyLeaseScheduleDelete , PropertyLeaseSchedule::class);
+        $this->authorize(PermissionEnum::PropertyLeaseScheduleDelete, PropertyLeaseSchedule::class);
         try {
             $leaseschedules = PropertyLeaseSchedule::findOrFail($id);
             $leaseschedules->delete();
 
             return redirect()->route('schedulelease.index')
                 ->with('success', 'Lease Schedule Deleted Successfully!');
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             // Log the error for debugging
             Log::error('Error deleting Lease Schedule: ' . $th->getMessage());
             return redirect()->back()

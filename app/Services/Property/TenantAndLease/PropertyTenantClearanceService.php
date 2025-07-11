@@ -28,10 +28,11 @@ class PropertyTenantClearanceService
         bool $AllDuesPaid,
         bool $KeysReturned,
         CodeDetail $DepositRefunded,
-        string $AdditionalNotes,
+        string     $AdditionalNotes,
         TenantClearanceEnum $Status,
-        User $user
-    ): self {
+        User       $user
+    ): self
+    {
         $clearance = PropertyTenantClearance::create([
             'LeaseId' => $Lease->LeaseID,
             'ExitDate' => $ExitDate,
@@ -80,6 +81,8 @@ class PropertyTenantClearanceService
             ->event('update')
             ->log("Updated Lease Clearance for Lease ID {$LeaseId->Lease}.");
 
+        return $this;
+    }
         return $this;
     }
 }

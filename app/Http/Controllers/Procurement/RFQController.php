@@ -5,11 +5,9 @@ namespace App\Http\Controllers\Procurement;
 use App\Http\Controllers\Controller;
 use App\Models\Inventory\ItemCategories;
 use App\Models\Procurement\RFQ;
-use App\Models\Procurement\RFQLine;
 use App\Models\ThirdParies\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Models\Procurement\Requisitions;
 
 class RFQController extends Controller
 {
@@ -149,7 +147,7 @@ class RFQController extends Controller
     public function show($id)
     {
         // Get the RFQ and its associated RFQLines
-        $rfq = RFQ::with('rfqLines','rfqLines.uom')->findOrFail($id);
+        $rfq = RFQ::with('rfqLines', 'rfqLines.uom')->findOrFail($id);
 
         // Get unique itemCategoryIds from the RFQLines
         $itemCategoryIds = $rfq->rfqLines->pluck('ItemCategoryId')->unique();
