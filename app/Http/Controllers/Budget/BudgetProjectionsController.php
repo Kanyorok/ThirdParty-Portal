@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Budget\Budget;
 use App\Models\Budget\BudgetDriverProjections;
 use App\Models\Budget\BudgetDriverProjectionsData;
+use App\Models\Budget\BudgetLine;
 use App\Models\Budget\BudgetMonthlyProjectionAllocation;
 use App\Models\Budget\BudgetProduct;
 use App\Models\Budget\BudgetProductType;
@@ -56,10 +57,18 @@ class BudgetProjectionsController extends Controller
         $currencies = Currency::all();
         $products = BudgetProduct::all();
         // $periods = BudgetPeriods::all();
+        //Select the budget lines and their products driving them
+        $budgetLines = BudgetLine::whereHas('productTypes')->with('productTypes')->get();
 
         return view('budgetandanalytics.budgetworkspace.entry.create', compact(
-            'budgets', 'currencies', 'products', // 'periods'
+            'budgets', 'currencies', 'products','budgetLines' // 'periods'
         ));
+    }
+
+    public function getProductTypes($budgetLineId)
+    {
+        $budgetLine = BudgetLine::with('productTypes')->findOrFail($budgetLineId);
+        return response()->json($budgetLine->productTypes);
     }
 
     // Store budget product entry

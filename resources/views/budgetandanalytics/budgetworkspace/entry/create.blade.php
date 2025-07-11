@@ -51,7 +51,7 @@
                         @endforeach
                     </select>
                 </div> --}}
-        </div>
+            </div>
 
             {{-- <div class="mt-3">
                    <label for="period" class="form-label">Period</label>
@@ -64,30 +64,30 @@
                </div>         --}}
 
             <div class="table-responsive mt-3">
-            <table class="table table-bordered table-hover align-middle">
-                <thead class="table-light">
-                <tr>
-                    <th>Product</th>
-                    <th>No of Accounts</th>
-                    {{-- <th>Projected Value</th> --}}
-                </tr>
-                </thead>
-                <tbody id="BudgetProducts">
-                <tr>
-                    <td>
-                        <select class="form-select" name="Products[0][ProductID]" required></select>
-                    </td>
-                    <td>
-                        <input type="number" class="form-control" name="Products[0][Volume]" placeholder="e.g., 120"
-                               required/>
-                    </td>
-                    {{-- <td>
-                         <input type="number" step="0.01" class="form-control" name="Products[0][Value]" placeholder="e.g., 12000000" required />
-                    </td> --}}
-                </tr>
-                </tbody>
-            </table>
-        </div>
+                <table class="table table-bordered table-hover align-middle">
+                    <thead class="table-light">
+                    <tr>
+                        <th>Product</th>
+                        <th>No of Accounts</th>
+                        {{-- <th>Projected Value</th> --}}
+                    </tr>
+                    </thead>
+                    <tbody id="BudgetProducts">
+                    <tr>
+                        <td>
+                            <select class="form-select" name="Products[0][ProductID]" required></select>
+                        </td>
+                        <td>
+                            <input type="number" class="form-control" name="Products[0][Volume]" placeholder="e.g., 120"
+                                   required/>
+                        </td>
+                        {{-- <td>
+                             <input type="number" step="0.01" class="form-control" name="Products[0][Value]" placeholder="e.g., 12000000" required />
+                        </td> --}}
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
 
             <div class="d-flex gap-2">
                 <button type="button" id="addRow" class="btn btn-secondary">➕ Add Row</button>
