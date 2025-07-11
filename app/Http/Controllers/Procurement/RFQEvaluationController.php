@@ -9,6 +9,7 @@ use App\Models\Procurement\RFQCommitteeMember;
 use App\Models\Procurement\RFQCriteria;
 use App\Models\Procurement\RFQEvaluation;
 use App\Models\Procurement\RFQResponse;
+use App\Models\Procurement\RFQSupplierResponseEvaluation;
 use App\Models\Procurement\SupplierResponseEvaluation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,9 +19,14 @@ class RFQEvaluationController extends Controller
     public function index()
     {
         // Fetch RFQ evaluations from the database
-        $rfqEvaluations = RFQEvaluation::with(['rfq', 'evaluations'])->get();
-        // dd($rfqEvaluations);
-        // Return the view with the RFQ evaluations
+        $rfqEvaluations = RFQEvaluation::with([
+            'rfq',
+            'evaluations.rfqEvaluation',
+            'evaluations.rfqCriteria.section',
+            'evaluations.rfqCriteriaUnscoped.weightedSection',
+            'evaluations.supplier',
+        ])->get();
+
         return view('procurement.rfqevaluation.index', compact('rfqEvaluations'));
     }
 
@@ -48,26 +54,39 @@ class RFQEvaluationController extends Controller
             'Evaluations' => 'required|array',
         ]);
 
+        //dd($validated);
+
         DB::beginTransaction();
         try {
             // Create main RFQ Evaluation record
             $rfqEval = RFQEvaluation::create([
-                'CommitteeMemberName' => $request->CommitteeMember,
-                'UserCode' => $request->UserID,
-                'RFQId' => $request->RFQId,
-                'RFQComment' => $request->RFQComments,
-                'Confirmation' => $request->Confirmation,
+                'CommitteeMemberName' => $validated['CommitteeMember'],
+                'UserCode' => $validated['UserID'],
+                'RFQId' => $validated['RFQId'],
+                'RFQComment' => $validated['RFQComments'],
+                'Confirmation' => $validated['Confirmation'],
                 'CreatedBy' => auth()->id(),
                 'ModifiedBy' => auth()->id(),
             ]);
 
             foreach ($request->Evaluations as $supplierId => $criteriaSet) {
                 foreach ($criteriaSet as $criteriaId => $scoreData) {
-                    SupplierResponseEvaluation::create([
-                        'RFQEvaluationId' => $rfqEval->id,
-                        'SupplierId' => $supplierId,
-                        'CriteriaId' => $criteriaId,
-                        'Score' => $scoreData['Score'],
+                    if ($criteriaId === 'SupplierId' || !is_array($scoreData)) {
+                        continue;
+                    }
+
+                    $score = (int) $scoreData['Score'];
+
+                    // Enforce max score of 10 and min score of 1
+                    if ($score < 1 || $score > 10) {
+                        throw new \Exception("Score for Supplier ID $supplierId and Criteria ID $criteriaId must be between 1 and 10.");
+                    }
+
+                    RFQSupplierResponseEvaluation::create([
+                        'RFQEvaluationId' => $rfqEval->Id,
+                        'SupplierId' => (int)$supplierId,
+                        'CriteriaId' => (int)$criteriaId,
+                        'Score' => $score,
                         'Comments' => $scoreData['Comments'] ?? null,
                         'CreatedBy' => auth()->id(),
                         'ModifiedBy' => auth()->id(),
@@ -91,7 +110,7 @@ class RFQEvaluationController extends Controller
             ->get();
 
         // Fetch criteria by section
-        $criteria = RFQCriteria::with('criteria', 'section')
+        $criteria = RFQCriteria::with('criteria', 'section', 'weightedSection')
             ->where('RFQID', $rfqId)
             ->get()
             ->groupBy('SectionID');

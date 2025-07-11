@@ -56,5 +56,9 @@ class RFQCriteria extends Model
     {
         return $this->belongsTo(RFQ::class, 'RFQID', 'Id');
     }
+    public function weightedSection()
+    {
+        return $this->belongsTo(RFQSection::class, 'SectionID', 'id');
+    }
 
 }

@@ -78,7 +78,7 @@
         <!-- Action Buttons -->
         <div class="d-flex gap-2">
             <button type="submit" class="btn btn-primary">Submit</button>
-            <button type="submit" class="btn btn-secondary">Save</button>
+{{--            <button type="submit" class="btn btn-secondary">Save</button>--}}
             <a href="{{ route('evaluations.index') }}" class="btn btn-danger">Cancel</a>
         </div>
     </form>
@@ -174,7 +174,7 @@
                                             <thead class="table-light">
                                                 <tr>
                                                     <th>Evaluation Criteria</th>
-                                                    <th>Weight (%)</th>
+                                                    <th>Weight</th>
                                                     <th>Score (1-10)</th>
                                                     <th>Comments</th>
                                                 </tr>
@@ -183,11 +183,17 @@
 
                                 for (const sectionId in criteria) {
                                     const sectionGroup = criteria[sectionId];
-                                    const sectionName = sectionGroup[0]?.section?.SectionName || 'Unnamed Section';
+                                    const section = sectionGroup[0]?.section;
+                                    const sectionName = section?.SectionName || 'Unnamed Section';
+                                    const sectionWeight = sectionGroup[0]?.weighted_section?.Weight || 'N/A';
+
 
                                     formHtml += `<tr class="table-secondary">
-                                    <td colspan="4" class="fw-bold">${sectionName}</td>
-                                </tr>`;
+                                        <td colspan="4" class="fw-bold">
+                                            ${sectionName} <span class="text-muted">(Section Weight: ${sectionWeight}%)</span>
+                                        </td>
+                                    </tr>`;
+
 
                                     sectionGroup.forEach(criterion => {
                                         const critId = criterion.CriteriaID;
@@ -196,7 +202,7 @@
 
                                         formHtml += `<tr>
                                         <td>${name}</td>
-                                        <td>${maxScore}%</td>
+                                        <td>10</td>
                                         <td><input type="number" name="Evaluations[${response.SupplierId}][${critId}][Score]" class="form-control" min="1" max="10" required></td>
                                         <td><input type="text" name="Evaluations[${response.SupplierId}][${critId}][Comments]" class="form-control"></td>
                                     </tr>`;

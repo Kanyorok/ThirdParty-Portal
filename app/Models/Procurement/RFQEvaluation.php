@@ -43,9 +43,9 @@ class RFQEvaluation extends Model
         return $this->belongsTo(Supplier::class, 'SupplierId', 'Id');
     }
 
-     public function evaluations()
+    public function evaluations()
     {
-        return $this->belongsToMany(SupplierResponseEvaluation::class, 't_RFQEvaluation_Evaluation', 'RFQEvaluationId', 'EvaluationId')
-                    ->withTimestamps();
+        return $this->hasMany(RFQSupplierResponseEvaluation::class, 'RFQEvaluationId', 'Id');
     }
+
 }
