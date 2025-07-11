@@ -81,6 +81,7 @@ Route::namespace('Budget')->prefix('budget')->group(function () {
     Route::resource('yieldexpenserate', YieldRateController::class);
     //Route::resource('budgetprojections', BudgetProjectionsController::class);
     Route::resource('budgetprojections', BudgetProjectionsController::class);
+    Route::get('/budget-lines/{id}/product-types', [BudgetProjectionsController::class, 'getProductTypes'])->name('budget-lines.product-types');
     Route::resource('entrybyglline', BudgetGLLineEntryController::class);
     Route::get('/entrybyglline/glview/{budgetId}', [BudgetGLLineEntryController::class, 'glview'])->name('entrybyglline.glview');
     Route::resource('submitapproval', BudgetSubmitController::class);
