@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Budget;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Budget\Budget;
+use App\Models\Budget\BudgetActivity;
 use App\Models\Budget\BudgetGLMaster;
 use App\Models\Budget\BudgetGLMasterAllocations;
 use App\Models\Budget\BudgetGLsAttachments;
 use App\Models\Budget\BudgetLine;
+use App\Models\Budget\BudgetManualEntry;
 use Illuminate\Http\Request;
 use App\Models\Budget\BudgetPeriods;
 use App\Models\Budget\BudgetPeriodTypes;
@@ -406,10 +408,29 @@ class BudgetPeriodController extends Controller
 
         try{
             DB::beginTransaction();
+
+            //Delete Activities assoc
+            $activity=BudgetActivity::where('BudgetID',$id)->update(['DeletedBy' => Auth::id(), 'DeletedOn' => now()]);
+            $activity=BudgetActivity::where('BudgetID',$id)->delete();
+
+            //Delete Lines Assoc
+            $line=BudgetManualEntry::where('BudgetID',$id)->update(['DeletedBy' => Auth::id(), 'DeletedOn' => now()]);
+            $line=BudgetManualEntry::where('BudgetID',$id)->delete();
+
+            //Deleting the budget
             $budget=Budget::find($id);
+            $budgetLog=$budget;
             $budget->DeletedBy=Auth::id();
             $budget->delete();
             $budget->save();
+
+            //Log activity
+            activity()
+                ->performedOn($budgetLog)
+                ->causedBy(Auth::id())
+                ->event('delete')
+                ->withProperties(['action' => 'delete'])
+                ->log('Deleted a budget');
             DB::commit();
             return back()->with('success', 'Budget Deleted Successfully.');
         }catch(\Throwable $th){
