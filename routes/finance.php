@@ -137,4 +137,12 @@ Route::prefix('finance/integrations')->group(function () {
     Route::get('salary-journal-templates/create', [SalaryJournalTemplateController::class, 'create'])->name('salary-journal-templates.create');
     Route::post('salary-journal-templates/store', [SalaryJournalTemplateController::class, 'store'])->name('salary-journal-templates.store');
 });
+
+Route::prefix('finance/segmentconfiguration')->name('segment.')->group(function () {
+    Route::get('/', [SegmentController::class, 'index'])->name('index');
+    Route::get('/create', [SegmentController::class, 'create'])->name('create');
+    Route::post('/store', [SegmentController::class, 'store'])->name('store');
+    Route::get('/{id}/edit', [SegmentController::class, 'edit'])->name('edit');
+    Route::post('/{id}/update', [SegmentController::class, 'update'])->name('update');
+});
     });
