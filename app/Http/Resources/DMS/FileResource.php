@@ -10,6 +10,13 @@ use Illuminate\Support\Number;
 
 class FileResource extends JsonResource
 {
+    protected bool $minified = false;
+
+    public function setMinified(bool $minified = false): static
+    {
+        $this->minified = $minified;
+        return $this;
+    }
 
     /**
      * Transform the resource into an array.
@@ -18,10 +25,26 @@ class FileResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $users = (new DocumentService($this->resource))->users()->with('photo')->paginate(7, ['ImageId', 'UserID', 'Name']);
-        $tags = $this->resource->tags()->paginate(4, ['TagID', 'Name', 'Visibility']);
+        $extra = [];
+        if (!$this->minified) {
+            $service = new DocumentService($this->resource);
+            $users = $service->users()->with('photo')->paginate(7, ['ImageId', 'UserID', 'Name']);
+            $tags = $service->tags(auth()->user())->paginate(4, ['t_DMSTags.TagID', 't_DMSTags.Name', 't_DMSTags.Visibility']);
+            $extra = [
+                'users' => [
+                    'data' => new UserCollection($users),
+                    'total' => $users->total() - 7,
+                    'hasMorePages' => $users->hasMorePages(),
+                ],
+                'tags' => [
+                    'data' => new DMSTagsCollection($tags),
+                    'total' => $tags->total() - 4,
+                    'hasMorePages' => $tags->hasMorePages(),
+                ],
+            ];
+        }
 
-        return [
+        return array_merge([
             'id' => $this->DocumentId,
             'name' => $this->Name,
             'visibility' => [
@@ -39,25 +62,14 @@ class FileResource extends JsonResource
                 'string' => Number::fileSize($this->resource->current->Size, 2),
                 'bytes' => $this->resource->current->Size,
             ],
-
             'dated' => [
                 'datetime' => $this->ModifiedOn->format('d M Y H:i'),
                 'string' => $this->ModifiedOn->diffForHumans(),
-            ],
-            'users' => [
-                'data' => new UserCollection($users),
-                'total' => $users->total() - 7,
-                'hasMorePages' => $users->hasMorePages(),
-            ],
-            'tags' => [
-                'data' => new DMSTagsCollection($tags),
-                'total' => $tags->total() - 4,
-                'hasMorePages' => $tags->hasMorePages(),
             ],
             'links' => [
                 'detail' => route('files.show', [$this->resource->repository->RepositoryId, $this->DocumentId]),
                 'summary' => route('files.edit', [$this->resource->repository->RepositoryId, $this->DocumentId])
             ]
-        ];
+        ], $extra);
     }
 }

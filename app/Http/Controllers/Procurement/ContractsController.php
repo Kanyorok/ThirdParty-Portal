@@ -1,8 +1,8 @@
 <?php
+
 namespace App\Http\Controllers\procurement;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 
 class ContractsController extends Controller
 {
@@ -30,24 +30,24 @@ class ContractsController extends Controller
 
     public function approvalQueue()
     {
-    return view('procurement.contracts.contractcreation.approve_index');
+        return view('procurement.contracts.contractcreation.approve_index');
     }
 
     public function approve($id)
-{
-    // In a real case, you'd fetch the contract from DB
-    // For now we pass dummy data
-    $contract = [
-        'id' => $id,
-        'ref_no' => 'CONTRACT/PROC/2025/009',
-        'title' => 'Supply of Office Furniture',
-        'vendor' => 'OfficePro Suppliers',
-        'status' => 'Partially Approved',
-        'start_date' => '2025-07-01',
-        'end_date' => '2025-12-31'
-    ];
+    {
+        // In a real case, you'd fetch the contract from DB
+        // For now we pass dummy data
+        $contract = [
+            'id' => $id,
+            'ref_no' => 'CONTRACT/PROC/2025/009',
+            'title' => 'Supply of Office Furniture',
+            'vendor' => 'OfficePro Suppliers',
+            'status' => 'Partially Approved',
+            'start_date' => '2025-07-01',
+            'end_date' => '2025-12-31'
+        ];
 
-    return view('procurement.contracts.contractcreation.approve', compact('contract'));
-}
+        return view('procurement.contracts.contractcreation.approve', compact('contract'));
+    }
 
 }

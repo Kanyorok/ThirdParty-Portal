@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -19,7 +18,7 @@ return new class extends Migration
             $table->string('AccountID');
             $table->string('Type')->default('monthly');// monthly or quarterly
             $table->string('Description')->nullable();
-            $table->string('GLAccountTypeID',10);
+            $table->string('GLAccountTypeID', 10);
             $table->decimal('Month1', 15, 2)->default(0);
             $table->decimal('Month2', 15, 2)->default(0);
             $table->decimal('Month3', 15, 2)->default(0);

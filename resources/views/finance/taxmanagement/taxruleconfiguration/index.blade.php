@@ -2,18 +2,18 @@
 @section('title', 'Tax Rules Management')
 
 @section('content')
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4>📄 Tax Rules</h4>
-    
-        <a href="{{ route('taxruleconfig.create') }}" class="btn btn-primary">➕ Add Tax Rule</a>
-        
-    </div>
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4>📄 Tax Rules</h4>
 
-    <div class="card">
-        <div class="card-body table-responsive">
-            <table class="table table-bordered table-hover">
-                <thead class="table-light">
+            <a href="{{ route('taxruleconfig.create') }}" class="btn btn-primary">➕ Add Tax Rule</a>
+
+        </div>
+
+        <div class="card">
+            <div class="card-body table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-light">
                     <tr>
                         <th>#</th>
                         <th>Tax Type</th>
@@ -26,8 +26,8 @@
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
-                </thead>
-                <tbody>
+                    </thead>
+                    <tbody>
                     <tr>
                         <td>1</td>
                         <td>VAT</td>
@@ -74,9 +74,9 @@
                         </td>
                     </tr>
                     <!-- More rows as needed -->
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-</div>
 @endsection

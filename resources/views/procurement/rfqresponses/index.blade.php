@@ -1,3 +1,4 @@
+@php use Carbon\Carbon; @endphp
 @extends('layouts.app')
 @section('title', 'RFQ Responses')
 @section('content')
@@ -24,8 +25,8 @@
                 <tbody>
                 @foreach($rfqResponses as $response)
                     @php
-                        $deliveryDate = \Carbon\Carbon::parse($response->CreatedOn)->addDays((int) $response->DurationDays)->startOfDay();
-                        $today = \Carbon\Carbon::now()->startOfDay();
+                        $deliveryDate = Carbon::parse($response->CreatedOn)->addDays((int) $response->DurationDays)->startOfDay();
+                        $today = Carbon::now()->startOfDay();
                         $daysRemaining = $today->diffInDays($deliveryDate, false);
                     @endphp
                     <tr>
@@ -38,7 +39,8 @@
                                 <ul class="mb-0">
                                     @foreach($response->items as $item)
                                         <li>
-                                            {{ $item->ItemName }} — Price: {{ number_format($item->QuotedPrice, 2) }} — Total: {{ number_format($item->TotalPayable, 2) }}
+                                            {{ $item->ItemName }} — Price: {{ number_format($item->QuotedPrice, 2) }} —
+                                            Total: {{ number_format($item->TotalPayable, 2) }}
                                         </li>
                                     @endforeach
                                 </ul>
@@ -58,9 +60,14 @@
                         </td>
                         <td>{{ $deliveryDate->format('d/m/Y') }}</td>
                         <td>
-                            <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewModal{{ $response->Id }}">View</button>
-                            <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editModal{{ $response->Id }}">Edit</button>
-                            <form action="{{ route('rfqresponses.destroy', $response->Id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure?')">
+                            <button class="btn btn-sm btn-info" data-bs-toggle="modal"
+                                    data-bs-target="#viewModal{{ $response->Id }}">View
+                            </button>
+                            <button class="btn btn-sm btn-warning" data-bs-toggle="modal"
+                                    data-bs-target="#editModal{{ $response->Id }}">Edit
+                            </button>
+                            <form action="{{ route('rfqresponses.destroy', $response->Id) }}" method="POST"
+                                  class="d-inline" onsubmit="return confirm('Are you sure?')">
                                 @csrf
                                 @method('DELETE')
                                 <button class="btn btn-sm btn-danger">Delete</button>

@@ -9,10 +9,12 @@ use App\Models\PropertyManagement\PropertyBlock;
 use App\Models\PropertyManagement\PropertyFloor;
 use App\Models\PropertyManagement\PropertyRegistry;
 use App\Services\Property\PropertyRegistry\PropertyFloorService;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class PropertyFloorController extends Controller
 {
@@ -55,16 +57,16 @@ class PropertyFloorController extends Controller
         //dd($request->all());
 
         $validated = $request->validated();
-    try {
-        PropertyFloorService::create(
-            PropertyRegistry::findOrFail($validated['PropertyID']),
-            PropertyBlock::findOrFail($validated['BlockID']),
-            $validated['FloorLabel'],
-            $validated['FloorNotes'],
-            auth()->user()
-        );
-        return redirect()->route('addfloor.index')->with('success', 'Floor added!');
-        } catch (\Exception $e) {
+        try {
+            PropertyFloorService::create(
+                PropertyRegistry::findOrFail($validated['PropertyID']),
+                PropertyBlock::findOrFail($validated['BlockID']),
+                $validated['FloorLabel'],
+                $validated['FloorNotes'],
+                auth()->user()
+            );
+            return redirect()->route('addfloor.index')->with('success', 'Floor added!');
+        } catch (Exception $e) {
             return back()->withErrors('Failed: ' . $e->getMessage())->withInput();
         }
     }
@@ -113,7 +115,7 @@ class PropertyFloorController extends Controller
                 ->log('Updated Floor');
 
             return redirect()->route('addfloor.index')->with('success', 'Floor updated successfully');
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             DB::rollBack();
             return back()->withErrors(['error' => $th->getMessage()])->withInput();
         }
@@ -128,7 +130,7 @@ class PropertyFloorController extends Controller
 
             return redirect()->route('addfloor.index')
                 ->with('success', 'Property Floor Deleted Successfully!');
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             // Log the error for debugging
             Log::error('Error deleting property floor: ' . $th->getMessage());
             return redirect()->back()

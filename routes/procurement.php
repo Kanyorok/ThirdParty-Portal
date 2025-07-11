@@ -1,11 +1,13 @@
 <?php
 
+
 use App\Http\Controllers\Procurement\RFQCommitteeController;
 use App\Http\Controllers\Procurement\RFQCriteriaController;
 use App\Http\Controllers\Procurement\RFQSectionController;
 use App\Http\Controllers\Procurement\RFQSettingCriteriaController;
 use App\Http\Controllers\Procurement\RFQSettingSectionController;
 use Illuminate\Support\Facades\Route;
+
 
 use App\Http\Controllers\Procurement\ApprovalSetupController;
 use App\Http\Controllers\Procurement\AwardsController;
@@ -34,12 +36,10 @@ use App\Http\Controllers\Procurement\PlanFromNeedsController;
 use App\Http\Controllers\Procurement\PlanManualInputController;
 use App\Http\Controllers\Procurement\PlanvsActualController;
 use App\Http\Controllers\Procurement\PrequalificationApplicationsController;
-use App\Http\Controllers\Procurement\PrequalificationCriteriaController;
 use App\Http\Controllers\Procurement\PrequalificationCriteriaSetupController;
 use App\Http\Controllers\Procurement\PrequalificationEvalAprovalController;
 use App\Http\Controllers\Procurement\PrequalificationEvaluationController;
 use App\Http\Controllers\Procurement\PrequalificationPeriodController;
-use App\Http\Controllers\Procurement\PrequalificationRoundsController;
 use App\Http\Controllers\Procurement\PrequalifiedSuppliersController;
 use App\Http\Controllers\Procurement\ProcurementApprovalController;
 use App\Http\Controllers\Procurement\ProcurementModeController;
@@ -78,9 +78,7 @@ use App\Http\Controllers\Procurement\TenderResponseController;
 use App\Http\Controllers\Procurement\TenderSubmissionController;
 use App\Http\Controllers\Procurement\TenderTypeController;
 use App\Http\Controllers\Procurement\TimelineController;
-
-use App\Models\Procurement\Tender;
-
+use Illuminate\Support\Facades\Route;
 
 
 Route::namespace('Procurement')->prefix('procurement')->group(function () {
@@ -404,16 +402,13 @@ Route::put('preqcriteria/update/{id}', [PrequalificationCriteriaSetupController:
 Route::delete('preqcriteria/destroy/{id}', [PrequalificationCriteriaSetupController::class, 'destroy'])->name('preqcriteria.destroy');
 
 
-
-
-
-
-
 Route::resource('supplierslist', SupplierListingController::class);
-Route::resource('preqapplications', PrequalificationApplicationsController::class);
-Route::resource('preqevaluation', PrequalificationEvaluationController::class);
-Route::resource('preqevalapproval', PrequalificationEvalAprovalController::class);
-Route::resource('preqsuppliers', PrequalifiedSuppliersController::class);
+
+ Route::resource('preqapplications', PrequalificationApplicationsController::class);
+ Route::resource('preqevaluation', PrequalificationEvaluationController::class);
+ Route::resource('preqevalapproval', PrequalificationEvalAprovalController::class);
+ Route::resource('preqsuppliers', PrequalifiedSuppliersController::class);
+
 Route::resource('bidresponsiveness', TenderBidResponsivenessController::class);
 Route::get('bidresponsiveness/create/{tenderSupplier}', [TenderBidResponsivenessController::class, 'create'])->name('bidresponsiveness.create');
 

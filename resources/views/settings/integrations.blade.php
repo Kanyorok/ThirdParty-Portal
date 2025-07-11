@@ -77,7 +77,7 @@
                                                         class="text-danger">*</span> </label>
                                                 <input type="text" class="form-control config-srs-form"
                                                        id="SSRS_Username" disabled
-                                                       placeholder="Consumer Key" required autocomplete="off"
+                                                       placeholder="SSRS Username" required autocomplete="off"
                                                        name="SSRS_Username">
                                                 <span id="SSRS_Username_error" class="invalid-feedback d-none error"
                                                       role="alert"></span>
@@ -87,7 +87,7 @@
                                                         class="text-danger">*</span></label>
                                                 <input type="password" class="form-control config-srs-form"
                                                        id="SSRS_Password" disabled
-                                                       placeholder="Consumer Secret" required autocomplete="off"
+                                                       placeholder="SSRS Password" required autocomplete="off"
                                                        name="SSRS_Password">
                                                 <span id="SSRS_Password_error"
                                                       class="invalid-feedback d-none error"

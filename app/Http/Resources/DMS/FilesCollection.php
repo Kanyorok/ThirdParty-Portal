@@ -7,6 +7,8 @@ use Illuminate\Http\Resources\Json\ResourceCollection;
 
 class FilesCollection extends ResourceCollection
 {
+    protected bool $minified = false;
+
     /**
      * Transform the resource collection into an array.
      *
@@ -16,8 +18,14 @@ class FilesCollection extends ResourceCollection
     {
         return [
             'data' => $this->collection->transform(function ($document) {
-                return new FileResource($document);
+                return (new FileResource($document))->setMinified($this->minified);
             }),
         ];
+    }
+
+    public function setMinified(bool $minified = false): static
+    {
+        $this->minified = $minified;
+        return $this;
     }
 }

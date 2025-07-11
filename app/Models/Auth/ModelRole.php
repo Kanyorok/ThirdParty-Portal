@@ -2,11 +2,11 @@
 
 namespace App\Models\Auth;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Models\Core\Branch;
-use Spatie\Permission\Models\Role;
 use App\Traits\Model\UserActorTrait;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Permission\Models\Role;
 
 class ModelRole extends Model
 {
@@ -24,7 +24,7 @@ class ModelRole extends Model
     {
         return 'ModelRoleId';
     }
-    
+
     public function branch()
     {
         return $this->belongsTo(Branch::class, 'BranchId', 'Id');

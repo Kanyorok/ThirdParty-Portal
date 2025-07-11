@@ -2,13 +2,13 @@
 @section('title', 'Property Management')
 
 @section('content')
-<div class="container mt-5" style="max-width: 720px;">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="fw-bold">Tenant Details</h3>
-        <a href="{{ route('addtenant.index') }}" class="btn btn-outline-secondary btn-sm">← Back to List</a>
-    </div>
+    <div class="container mt-5" style="max-width: 720px;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="fw-bold">Tenant Details</h3>
+            <a href="{{ route('addtenant.index') }}" class="btn btn-outline-secondary btn-sm">← Back to List</a>
+        </div>
 
-    <form>
+        <form>
         <div class="card shadow-sm border-0">
             <div class="card-body p-4">
                 <div class="mb-3">
@@ -65,6 +65,6 @@
                 <a href="{{ route('addtenant.index') }}" class="btn btn-outline-secondary">Back</a>
             </div>
         </div>
-    </form>
-</div>
+        </form>
+    </div>
 @endsection

@@ -2,13 +2,13 @@
 @section('title', 'Tax GL Mappings')
 
 @section('content')
-<div class="container mt-4">
-    <h4 class="mb-4">📄 Tax GL Account Mappings</h4>
+    <div class="container mt-4">
+        <h4 class="mb-4">📄 Tax GL Account Mappings</h4>
 
-    <a href="{{ route('taxglmapping.create') }}" class="btn btn-primary mb-3">➕ Add New Mapping</a>
+        <a href="{{ route('taxglmapping.create') }}" class="btn btn-primary mb-3">➕ Add New Mapping</a>
 
-    <table class="table table-bordered table-striped">
-        <thead>
+        <table class="table table-bordered table-striped">
+            <thead>
             <tr>
                 <th>#</th>
                 <th>Tax Rule</th>
@@ -16,8 +16,8 @@
                 <th>GL Account</th>
                 <th>Description</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             <tr>
                 <td>1</td>
                 <td>VAT 16%</td>
@@ -32,7 +32,7 @@
                 <td>3100 - VAT Receivable</td>
                 <td>For AR sales</td>
             </tr>
-        </tbody>
-    </table>
-</div>
+            </tbody>
+        </table>
+    </div>
 @endsection

@@ -23,6 +23,7 @@ use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 use Spatie\Activitylog\Models\Activity;
 use Yajra\DataTables\DataTables;
@@ -187,18 +188,12 @@ class ClientController extends Controller
         };
         $introducer = $client->introducer->first();
 
-        if (
-            !Activity::query()->where('event', 'view')->where('subject_type', Client::getPrimaryKey())
-            ->where('subject_id', $client->ClientID)->whereBetween('created_at', [Carbon::now()->subMinutes(10), Carbon::now()->endOfDay()])
-            ->where('causer_type', User::getPrimaryKey())->where('causer_id', $request->user()->Id)->exists()
-        ) {
-            activity()->causedBy($request->user())->performedOn($client)->event('view')->log('viewed client details.');
+        $lock = Cache::lock('view-client-' . $client->ClientID, 100);
+        if ($lock->get()) {
+            activity()->causedBy($request->user())->performedOn($client)->event('view')->log('viewed client ' . $client->ClientID . ' details.');
         }
 
-        return view(
-            'crm.clients.show',
-            compact('client', 'schedule', 'call', 'type', 'introducer', 'meeting')
-        )
+        return view('crm.clients.show', compact('client', 'schedule', 'call', 'type', 'introducer', 'meeting'))
             ->with('TicketCategories', StaticListsService::getList(StaticListsService::TicketCategories))
             ->with('MarketingListMember', $client->marketingLists()->where('Type', MarketingListEnum::Static->value)->select(['slug', 'Label'])->whereNull('t_MarketingListParties.DeletedOn')->get());
     }
