@@ -18,7 +18,7 @@ class PropertyTenantClearance extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'Tenant',
+        'LeaseId',
         'ExitDate',
         'FinalInspection',
         'AllDuesPaid',
@@ -40,9 +40,9 @@ class PropertyTenantClearance extends Model
     'Status' => TenantClearanceEnum::class,
     ];
 
-    public function tenant()
+    public function lease()
     {
-        return $this->belongsTo(PropertyNewTenant::class, 'Tenant', 'Id');
+        return $this->belongsTo(PropertyNewLease::class, 'LeaseId', 'Id');
     }
 
     public function code()

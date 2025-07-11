@@ -19,7 +19,6 @@
         <th>Dues Cleared</th>
           <th>Keys Returned</th>
         <th>Deposit Status</th>
-          <th>Additional Notes</th>
         <th>Status</th>
         <th>Action</th>
       </tr>
@@ -28,7 +27,7 @@
     @foreach($clearancetenants as $clearancetenant)
       <tr>
           <td>{{ $loop->iteration ?? '-' }}</td>
-          <td>{{ $clearancetenant->tenant->TenantName ?? '-' }}</td>
+          <td>{{ $clearancetenant->lease->tenant->TenantName  ?? '-' }}</td>
           <td>{{ $clearancetenant->ExitDate ? \Carbon\Carbon::parse($clearancetenant->ExitDate)->format('d/m/Y') : '-' }}</td>
           <td>@if($clearancetenant->FinalInspection)
                   <span class="badge bg-success">Yes</span>
@@ -46,7 +45,6 @@
                   <span class="badge bg-danger">No</span>
               @endif</td>
           <td>{{ $clearancetenant->code->Description ?? '-' }}</td>
-          <td>{{ $clearancetenant->AdditionalNotes ?? '-' }}</td>
           <td>
               <span class="badge bg-{{ $clearancetenant->Status->badgeColor() }}">
                   {{ $clearancetenant->Status->label() }}
@@ -55,11 +53,6 @@
         <td>
             <a href="{{ route('tenantclearance.show', $clearancetenant->Id) }}" class="btn btn-sm btn-info">👁 View</a>
             <a href="{{ route('tenantclearance.edit', $clearancetenant->Id) }}" class="btn btn-sm btn-warning">Edit</a>
-            <form action="{{ route('tenantclearance.destroy', $clearancetenant->Id) }}" method="POST" class="d-inline">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this property?');">Delete</button>
-            </form>
         </td>
       </tr>
     @endforeach

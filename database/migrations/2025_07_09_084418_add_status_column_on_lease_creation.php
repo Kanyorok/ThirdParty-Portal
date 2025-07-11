@@ -35,19 +35,21 @@ return new class extends Migration
 
         // t_RenewLease - drop foreign keys & add new columns
         Schema::table('t_RenewLease', static function (Blueprint $table) {
-            // Drop foreign key constraints
             $table->dropForeign(['TenantId']);
             $table->dropForeign(['PropertyId']);
-
-            // Drop the columns
             $table->dropColumn(['TenantId', 'PropertyId']);
-
-            // Add new columns
             $table->float('ServiceCharge')->nullable();
             $table->float('ParkingFee')->nullable();
             $table->float('OtherCharges')->nullable();
             $table->boolean('IsActive')->nullable()->default(1);
         });
+
+            Schema::table('t_TenantClearance', static function (Blueprint $table) {
+            $table->dropForeign(['Tenant']);
+            $table->dropColumn('Tenant');
+            $table->foreignId('LeaseId')->constrained('t_LeaseCreation', 'Id');
+        });
+
     }
 
     /**
@@ -67,8 +69,8 @@ return new class extends Migration
             $table->dropColumn('IsActive');
 
             // Re-add foreign keys (assuming foreign tables exist)
-            $table->foreign('TenantId')->references('Id')->on('t_NewTenants')->onDelete('cascade');
-            $table->foreign('PropertyId')->references('Id')->on('t_Properties')->onDelete('cascade');
+            $table->foreign('TenantId')->references('Id')->on('t_TenantMaintenance')->onDelete('cascade');
+            $table->foreign('PropertyId')->references('Id')->on('t_PropertyRegistry')->onDelete('cascade');
         });
 
         // t_RenewLease - rollback
@@ -78,8 +80,15 @@ return new class extends Migration
             $table->dropColumn(['ServiceCharge', 'ParkingFee', 'OtherCharges', 'IsActive']);
 
             // Re-add foreign keys
-            $table->foreign('TenantId')->references('Id')->on('t_NewTenants')->onDelete('cascade');
-            $table->foreign('PropertyId')->references('Id')->on('t_Properties')->onDelete('cascade');
+            $table->foreign('TenantId')->references('Id')->on('t_TenantMaintenance')->onDelete('cascade');
+            $table->foreign('PropertyId')->references('Id')->on('t_PropertyRegistry')->onDelete('cascade');
+        });
+
+        //T_Clearance - Rollback
+        Schema::table('t_TenantClearance', static function (Blueprint $table) {
+            $table->dropForeign(['LeaseId']);
+            $table->dropColumn('LeaseId');
+            $table->foreignId('Tenant')->constrained('t_TenantMaintenance', 'Id');
         });
     }
 };

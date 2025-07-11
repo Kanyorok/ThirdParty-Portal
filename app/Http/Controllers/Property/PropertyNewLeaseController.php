@@ -98,7 +98,7 @@ class PropertyNewLeaseController extends Controller
     {
         $newlease = PropertyNewLease::where('isActive', true)->findOrFail($Id);
         $properties = PropertyRegistry::with('getBlockByProperty.floor.units')->get();
-        $newtenants = PropertyTenantClearance::with('tenant')->where('Status', TenantClearanceEnum::Cleared->value)->get();
+        $newtenants = PropertyNewLease::with('tenant')->get();
         $codes = CodeDetail::where('CodeID', 'PaymentFrequency')->get();
         return view('property.tenantmanagement.leasemanagement.leasemaintenance.edit', compact(
             'newlease', 'newtenants', 'properties', 'codes'

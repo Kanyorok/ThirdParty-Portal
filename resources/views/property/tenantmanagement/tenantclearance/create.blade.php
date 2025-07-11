@@ -22,10 +22,12 @@
       <div class="row g-3 mb-3">
         <div class="col-md-6">
           <label class="form-label">Tenant / Lease</label>
-            <select name="Tenant" class="form-select" required>
+            <select name="LeaseId" class="form-select" required>
                 <option>--Select the tenant</option>
                 @foreach ($newtenants as $newtenant)
-                    <option value="{{ $newtenant->Id }}">{{ $newtenant->TenantName }}</option>
+                    <option value="{{ $newtenant->LeaseID }}">
+                      Name:{{ $newtenant->lease->tenant->TenantName }} &nbsp;&nbsp; LeaseNo: {{$newtenant->lease->LeaseNumber}}
+                    </option>
                 @endforeach
             </select>
         </div>

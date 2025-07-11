@@ -14,7 +14,7 @@
             <div class="card-body p-4">
                 <div class="mb-3">
                     <label class="form-label">Tenant</label>
-                    <input type="text" class="form-control" value="{{ $clearancetenant->tenant->TenantName ?? '-' }}" readonly>
+                    <input type="text" class="form-control" value="{{ $clearancetenant->lease->tenant->TenantName ?? '-' }}" readonly>
                 </div>
 
                 <div class="mb-3">

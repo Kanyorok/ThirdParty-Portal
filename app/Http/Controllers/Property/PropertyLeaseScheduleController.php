@@ -59,7 +59,8 @@ class PropertyLeaseScheduleController extends Controller
     {
         $this->authorize(PermissionEnum::PropertyLeaseScheduleView, PropertyLeaseSchedule::class);
         $leaseschedule = PropertyLeaseSchedule::where('isActive', true)->find($id);
-        return view('property.tenantmanagement.leasemanagement.leaseschedule.show', compact('leaseschedule'));
+        $paymentFrequencies = CodeDetail::where('CodeID', 'PaymentFrequency')->get();
+        return view('property.tenantmanagement.leasemanagement.leaseschedule.show', compact('leaseschedule','paymentFrequencies'));
     }
 
 public function store(PropertyLeaseScheduleRequest $request)

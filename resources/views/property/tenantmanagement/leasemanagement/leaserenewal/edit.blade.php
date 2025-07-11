@@ -69,6 +69,18 @@
                 <input type="number" class="form-control" name="NewMonthlyRent"
                     value="{{ old('NewMonthlyRent', $leaserenewal->NewMonthlyRent) }}">
             </div>
+            <div class="col-md-3">
+                <label class="form-label">Service Charge</label>
+                <input type="number" class="form-control" name="ServiceCharge" value="{{ old('ServiceCharge', $leaserenewal->ServiceCharge) }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Parking Fee</label>
+                <input type="number" class="form-control" name="ParkingFee" value="{{ old('ParkingFee', $leaserenewal->ParkingFee) }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Other Charges</label>
+                <input type="number" class="form-control" name="OtherCharges" value="{{ old('OtherCharges', $leaserenewal->OtherCharges) }}">
+            </div>
         </div>
 
         <div class="mb-3">
