@@ -27,6 +27,6 @@ enum PrequalificationPeriodEnum: string
             self::Closed => 'danger',
         };
     }
-    
+
 }
 

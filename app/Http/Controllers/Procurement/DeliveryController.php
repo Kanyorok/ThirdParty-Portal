@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 
 class DeliveryController extends Controller
 {
@@ -13,7 +12,8 @@ class DeliveryController extends Controller
         return view('procurement.deliverynotes.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('procurement.deliverynotes.create');
-    } 
+    }
 }

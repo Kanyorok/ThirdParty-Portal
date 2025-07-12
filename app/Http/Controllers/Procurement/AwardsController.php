@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 
 class AwardsController extends Controller
 {
@@ -13,7 +12,8 @@ class AwardsController extends Controller
         return view('procurement.awards.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('procurement.awards.create');
     }
 

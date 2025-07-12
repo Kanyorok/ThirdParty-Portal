@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Core\CategoryMaster;
 use Carbon\Carbon;
+use Illuminate\Database\Seeder;
 
 class CategoryMasterSeeder extends Seeder
 {
@@ -32,7 +32,7 @@ class CategoryMasterSeeder extends Seeder
             'ModifiedOn' => Carbon::now(),
         ]);
 
-            CategoryMaster::create([
+        CategoryMaster::create([
             'Name' => 'Residential',
             'Description' => 'Residential category',
             'Type' => 'PropertyCategory',

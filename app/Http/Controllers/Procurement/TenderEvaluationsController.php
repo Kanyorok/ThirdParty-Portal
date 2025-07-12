@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\procurement;
+namespace App\Http\Controllers\Procurement;
 
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
@@ -9,13 +9,12 @@ use App\Models\Procurement\Section;
 use App\Models\Procurement\Tender;
 use App\Models\Procurement\TenderCriteria;
 use App\Models\Procurement\TenderSection;
-use Carbon\Carbon;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-
-use function PHPUnit\Framework\isEmpty;
+use Throwable;
 
 class TenderEvaluationsController extends Controller
 {
@@ -38,7 +37,7 @@ class TenderEvaluationsController extends Controller
 
         $data = [];
         foreach ($tenderswithsections as $key => $value) {
-            array_push($data, [
+            $data[] = [
                 'id' => $value->Id,
                 'TenderNo' => $value->TenderNo,
                 'Title' => $value->Title,
@@ -46,7 +45,7 @@ class TenderEvaluationsController extends Controller
                 'criteriaNumber' => TenderCriteria::where('TenderID', $value->Id)
                     ->where('IsActive', true)
                     ->count(),
-            ]);
+            ];
         }
         //return$data;
         return view('procurement.tendering.tendersetup.evaluationcriteriasetup.tenderevaluations', compact(
@@ -134,7 +133,7 @@ class TenderEvaluationsController extends Controller
                     return back()->with('error', 'Section with ID ' . $sectionId . ' does not exist.');
                 }
                 // Create or update the tender section
-                TenderSection::create([
+                $tenderSection = TenderSection::create([
                     'TenderID' => $request->tender_id, // Assuming tender_id is passed in the request
                     'SectionID' => $sectionId,
                     'Weight' => $weights[$index],
@@ -143,43 +142,20 @@ class TenderEvaluationsController extends Controller
                     'CreatedBy' => auth()->id(),
                     'ModifiedBy' => auth()->id(),
                 ]);
-                //Store the criteria
-                // $criterias=Criteria::all();
-                // foreach($criterias as $c){
-                //     TenderCriteria::updateOrCreate(
-                //         [
-                //             'TenderID' => $request->tender_id,
-                //             'CriteriaID' => $c->id,
-                //         ],
-                //         [
-                //             'SectionID' => $sectionId,
-                //             'MaxScore' => 10, // Set weight if selected, otherwise 0
-                //             'IsActive' => true,
-                //             'CreatedBy' => Auth::id(),
-                //             'ModifiedBy' => Auth::id(),
-                //             'ModifiedOn' => now(),
-                //         ]
-                //     );
-                // }
 
+                activity()
+                    ->performedOn($tenderSection)
+                    ->causedBy(auth()->id())
+                    ->log('Created or updated tender sections for tender: ' . $tenderTitle);
             }
             DB::commit();
-            // Log the action
-            activity()
-                ->performedOn(new Tender())
-                ->causedBy(auth()->id())
-                ->log('Created or updated tender sections for tender: ' . $tenderTitle);
-            // Return a success response
+
             return back()->with('success', 'Tender sections created successfully.');
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             DB::rollBack();
-            return $th->getMessage();
-            // Log the error
-            activity()
-                ->performedOn(new Tender())
-                ->causedBy(auth()->id())
-                ->log('Failed to create tender sections: ' . $th->getMessage());
-            // Return an error response
+            Log::error('Failed to create tender sections');
+            Log::error($th);
+
             return back()->with('error', 'Failed to create tender sections: ');
         }
     }
@@ -272,9 +248,9 @@ class TenderEvaluationsController extends Controller
                 ->log('Saved tender criteria for tender ID: ' . $tenderId);
 
             return redirect()->back()->with('success', 'Tender criteria saved successfully.');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
-            return $e->getMessage();
+
             Log::error('Error saving tender criteria', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
@@ -348,9 +324,9 @@ class TenderEvaluationsController extends Controller
 
             DB::commit();
             return redirect()->route('evaluationdashboard.index')->with('success', 'Scores submitted successfully!');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
-            return $e->getMessage();
+
             Log::error('Failed to save scores: ' . $e->getMessage(), [
                 'request_data' => $request->all(),
                 'user_id' => Auth::id(),

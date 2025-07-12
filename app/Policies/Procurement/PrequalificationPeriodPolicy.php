@@ -4,7 +4,6 @@ namespace App\Policies\Procurement;
 
 use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
-use App\Models\Procurement\PrequalificationPeriod;
 
 class PrequalificationPeriodPolicy
 {
@@ -25,10 +24,12 @@ class PrequalificationPeriodPolicy
     {
         return $user->can(PermissionEnum::PrequalificationPeriodRead->value);
     }
+
     public function update(User $user): bool
     {
         return $user->can(PermissionEnum::PrequalificationPeriodWrite->value);
     }
+
     public function delete(User $user): bool
     {
         return $user->can(PermissionEnum::PrequalificationPeriodDelete->value);

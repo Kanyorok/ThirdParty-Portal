@@ -1,15 +1,16 @@
 <?php
- 
+
 namespace App\Http\Controllers\Budget;
- 
+
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Budget\BudgetDriverProjections;
 use App\Models\Budget\BudgetMonthlyProjectionAllocation;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
- 
+
 class BudgetMonthlyProjectionController extends Controller
 {
     public function index(Request $request)
@@ -24,39 +25,39 @@ class BudgetMonthlyProjectionController extends Controller
         }
         return view('budgetandanalytics.budgetworkspace.monthly.index', compact('monthlyAllocations', 'projectionID'));
     }
- 
+
     public function create(Request $request)
     {
         $this->authorize(PermissionEnum::BudgetSetupCreate, BudgetMonthlyProjectionAllocation::class);
-        $projectionID=$request->query('id');
-        return view('budgetandanalytics.budgetworkspace.monthly.create',compact('projectionID'));
+        $projectionID = $request->query('id');
+        return view('budgetandanalytics.budgetworkspace.monthly.create', compact('projectionID'));
     }
- 
+
     public function store(Request $request)
     {
         $this->authorize(PermissionEnum::BudgetSetupCreate, BudgetMonthlyProjectionAllocation::class);
- 
+
         // $validated = $request->validate([
         //     'BudgetID' => 'required|exists:t_Budgets,Id',
         //     'BudgetProjectionID' => 'required',
         // ]);
- 
+
         DB::beginTransaction();
-        try {  
+        try {
 
             $projecionId = $request->projectionID;
             //fetch BudgetId
-            $budgetId=BudgetDriverProjections::where('Id', $projecionId)->value('BudgetID');
-            
- 
-            $monthlyAllocation=$request->MonthlyAllocations;
+            $budgetId = BudgetDriverProjections::where('Id', $projecionId)->value('BudgetID');
+
+
+            $monthlyAllocation = $request->MonthlyAllocations;
             if (!empty($monthlyAllocation)) {
                 foreach ($monthlyAllocation as $key => $value) {
                     //Store each monthly allocation
                     $allocation = BudgetMonthlyProjectionAllocation::create([
                         'BudgetID' => $budgetId,
                         'BudgetProjectionID' => $projecionId,
-                        'Month' => $key+1,
+                        'Month' => $key + 1,
                         'Allocation' => $value,
                         'CreatedBy' => Auth::id(),
                         'ModifiedBy' => Auth::id(),
@@ -65,17 +66,17 @@ class BudgetMonthlyProjectionController extends Controller
             }
             DB::commit();
             return redirect()->route('budgetprojections.index')->with('success', 'Monthly projection allocation created successfully.');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
- 
+
             activity()
                 ->performedOn(new BudgetMonthlyProjectionAllocation())
                 ->causedBy(Auth::user())
                 ->withProperties(['action' => 'create'])
                 ->log('Failed to create monthly projection allocation: ' . $e->getMessage());
- 
+
             return redirect()->back()->withErrors(['error' => 'Failed to create monthly projection allocation: ' . $e->getMessage()]);
+        }
     }
-}
- 
+
 }

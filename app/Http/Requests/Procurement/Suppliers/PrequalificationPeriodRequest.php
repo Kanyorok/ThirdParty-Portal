@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Procurement\Suppliers;
 
 use App\Enums\Procurement\PrequalificationPeriodEnum;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Enum;
 
@@ -19,17 +20,17 @@ class PrequalificationPeriodRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         return [
-        'Title' => 'required|string',
-        'Description' => 'nullable|string',
-        'StartDate' => 'required|date_format:d/m/Y',
-        'EndDate' => 'required|date_format:d/m/Y|after_or_equal:StartDate',
-        'MaxVendors' => 'required|integer|min:1',
-        'Status' => ['required', new Enum(PrequalificationPeriodEnum::class)], 
+            'Title' => 'required|string',
+            'Description' => 'nullable|string',
+            'StartDate' => 'required|date_format:d/m/Y',
+            'EndDate' => 'required|date_format:d/m/Y|after_or_equal:StartDate',
+            'MaxVendors' => 'required|integer|min:1',
+            'Status' => ['required', new Enum(PrequalificationPeriodEnum::class)],
         ];
     }
 }

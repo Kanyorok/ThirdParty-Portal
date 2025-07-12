@@ -6,7 +6,7 @@
 @endsection
 @section('content')
     <div class="row">
-        <div class="col-sm-4 col-12"><h4 class="h3">@yield('title')</h4></div>
+        <div class="col-sm-4 col-12"></div>
         <div class="col-sm-2 col-12">
             <div class="mb-2">
                 <button type="button"

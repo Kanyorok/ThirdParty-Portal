@@ -2,44 +2,45 @@
 @section('title', 'Edit Evaluation Structure')
 @section('content')
 
-<div class="card">
-    <div class="card-header bg-warning text-white">Edit Evaluation Sections & Criteria</div>
-    <div class="card-body">
+    <div class="card">
+        <div class="card-header bg-warning text-white">Edit Evaluation Sections & Criteria</div>
+        <div class="card-body">
 
-        <form id="setupForm" method="post" action="{{ route('preqcriteria.update', $round->Id) }}">
-            @csrf
-            @method('PUT')
+            <form id="setupForm" method="post" action="{{ route('preqcriteria.update', $round->Id) }}">
+                @csrf
+                @method('PUT')
 
-            <input type="hidden" name="round_id" value="{{ $round->Id }}">
+                <input type="hidden" name="round_id" value="{{ $round->Id }}">
 
-            <div class="mb-3">
-                <label class="form-label">Prequalification Round</label>
-                <input type="text" class="form-control" value="{{ $round->Title }}" disabled>
-            </div>
+                <div class="mb-3">
+                    <label class="form-label">Prequalification Round</label>
+                    <input type="text" class="form-control" value="{{ $round->Title }}" disabled>
+                </div>
 
-            <table class="table table-bordered">
-                <thead class="table-light">
+                <table class="table table-bordered">
+                    <thead class="table-light">
                     <tr>
                         <th>Select</th>
                         <th>Evaluation Section</th>
                         <th>Section Weight%</th>
                         <th>Criteria List</th>
                     </tr>
-                </thead>
-                <tbody>
+                    </thead>
+                    <tbody>
                     @foreach ($sections as $section)
                         @php
                             $selected = $selectedSections->firstWhere('SectionId', $section->id);
                         @endphp
                         <tr>
                             <td>
-                                <input type="checkbox" name="sections[]" value="{{ $section->id }}" class="form-check-input"
+                                <input type="checkbox" name="sections[]" value="{{ $section->id }}"
+                                       class="form-check-input"
                                     {{ $selected ? 'checked' : '' }}>
                             </td>
                             <td>{{ $section->SectionName }}</td>
                             <td>
                                 <input type="number" name="weights[{{ $section->id }}]" class="form-control"
-                                    value="{{ $selected ? $selected->Weight : '' }}">
+                                       value="{{ $selected ? $selected->Weight : '' }}">
                             </td>
                             <td>
                                 @if ($section->criteria->count() > 0)
@@ -57,36 +58,36 @@
                             </td>
                         </tr>
                     @endforeach
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
 
-            <div class="text-end">
-                <button type="submit" class="btn btn-primary">Update Sections</button>
-            </div>
-        </form>
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary">Update Sections</button>
+                </div>
+            </form>
 
+        </div>
     </div>
-</div>
 
-@section('scripts')
-<script>
-document.getElementById('setupForm').addEventListener('submit', function (e) {
-    let totalWeight = 0;
-    const checkboxes = document.querySelectorAll('input[name="sections[]"]:checked');
+    @section('scripts')
+        <script>
+            document.getElementById('setupForm').addEventListener('submit', function (e) {
+                let totalWeight = 0;
+                const checkboxes = document.querySelectorAll('input[name="sections[]"]:checked');
 
-    checkboxes.forEach(function (checkbox) {
-        const sectionId = checkbox.value;
-        const weightInput = document.querySelector(`input[name="weights[${sectionId}]"]`);
-        const weight = parseFloat(weightInput.value) || 0;
-        totalWeight += weight;
-    });
+                checkboxes.forEach(function (checkbox) {
+                    const sectionId = checkbox.value;
+                    const weightInput = document.querySelector(`input[name="weights[${sectionId}]"]`);
+                    const weight = parseFloat(weightInput.value) || 0;
+                    totalWeight += weight;
+                });
 
-    if (totalWeight !== 100) {
-        e.preventDefault();
-        alert('The total weight of selected sections must equal 100%. Currently it adds up to ' + totalWeight + '%.');
-    }
-});
-</script>
-@endsection
+                if (totalWeight !== 100) {
+                    e.preventDefault();
+                    alert('The total weight of selected sections must equal 100%. Currently it adds up to ' + totalWeight + '%.');
+                }
+            });
+        </script>
+    @endsection
 
 @endsection

@@ -38,7 +38,7 @@ class ProcurementSchedulePlanController extends Controller
     {
         try {
             $Lines = PlanLineItem::with(['item', 'schedulePlan.periods', 'departmentNeed']) // include relationship
-                ->where('PlanID', $planId)
+            ->where('PlanID', $planId)
                 ->get();
 
             $mappedLines = $Lines->map(function ($lineItem) {
