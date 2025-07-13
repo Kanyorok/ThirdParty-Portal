@@ -12,7 +12,6 @@
 @endsection
 
 @section('content')
- 
     <div class="row">
         <div class="col-12">
             <div class="card">
@@ -118,8 +117,9 @@
                 }
             });
 
-            // View Role
-            $(document).on('click', '.view-role', function () {
+            // View Role (on clicking user count)
+            $(document).on('click', '.view-role-users', function (e) {
+                e.preventDefault();
                 const roleId = $(this).data('role_id');
                 $('#viewRoleModal').modal('show');
                 $('#roleDetailsContent').html('<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</div>');

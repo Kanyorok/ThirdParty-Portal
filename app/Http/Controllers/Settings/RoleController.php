@@ -24,19 +24,12 @@ class RoleController extends Controller
         $this->authorizeResource(Role::class);
     }
 
-    /**
-     * Display a listing of the resource.
-     * @throws Exception
-     */
     public function index(Request $request): JsonResponse|View
     {
         if ($request->ajax()) {
             return DataTables::of(Role::query()->select('*')->withCount('users'))->addIndexColumn()
                 ->addColumn('action', function (Role $role) {
-                    return '<button type="button" class="btn btn-info btn-sm view-role" data-role_id="' . $role->id . '" title="View">
-                                <i class="fas fa-eye"></i>
-                            </button>&nbsp;
-                            <button type="button" data-click_url="' . route('roles.edit', [$role->id]) . '" data-summary_title="Role ' . $role->name . '" class="btn btn-primary btn-sm click-summary-data" title="Edit">
+                    return '<button type="button" data-click_url="' . route('roles.edit', [$role->id]) . '" data-summary_title="Role ' . $role->name . '" class="btn btn-primary btn-sm click-summary-data" title="Edit">
                                 <i class="fas fa-edit"></i>
                             </button>&nbsp;
                             <button type="button" data-info="' . route('roles.destroy', [$role->id]) . '~' . $role->name . '" class="btn btn-danger btn-sm trash-role" title="Delete">
@@ -44,16 +37,17 @@ class RoleController extends Controller
                             </button>';
                 })
                 ->editColumn('created_at', function (Role $role) {
-                    return $role->created_at->format('d M Y, H:i');
+                    return $role->created_at?->format('d M Y, H:i') ?? '-';
                 })
                 ->editColumn('users_count', function (Role $role) {
-                    return Number::abbreviate($role->users_count, ($role->users_count > 999) ? 1 : 0);
+                    $count = Number::abbreviate($role->users_count, ($role->users_count > 999) ? 1 : 0);
+                    return '<a href="#" class="view-role-users" data-role_id="' . $role->id . '" title="View Users">' . $count . '</a>';
                 })
                 ->addColumn('creator', function (Role $role) {
                     if (is_null($role->CreatedBy)) {
                         return '?';
                     }
-                    $user = User::withTrashed()->where('Id', $role->CreatedBy)->first();
+                    $user = User::withTrashed()->find($role->CreatedBy);
                     return $user ? $user->UserID . '-' . $user->Name : '?';
                 })
                 ->setRowClass('mouse_pointer user-select-none dbl-click-summary-data')
@@ -61,16 +55,13 @@ class RoleController extends Controller
                     'dbl_click_url' => fn(Role $role) => route('roles.edit', [$role->id]),
                     'summary_title' => fn(Role $role) => 'Role ' . $role->name,
                 ])
-                ->rawColumns(['action'])
+                ->rawColumns(['action', 'users_count'])
                 ->make();
         }
 
         return view('settings.roles.index');
     }
 
-    /**
-     * Show role details in a partial view (AJAX).
-     */
     public function showAjax($id): View
     {
         $role = Role::with('users')->find($id);
@@ -81,15 +72,12 @@ class RoleController extends Controller
 
         return view('settings.roles.partials.show', compact('role'));
     }
+
     public function create(): View
     {
         return view('settings.roles.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     * @throws ValidationException
-     */
     public function store(RoleRequest $request): JsonResponse
     {
         $permissions = $request->getPermissions();
@@ -120,19 +108,12 @@ class RoleController extends Controller
         return $this->succeeded('Role created successfully');
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(Role $role): View
     {
         $permissions = $role->permissions()->pluck('name')->toArray();
         return view('settings.roles.edit', compact('role', 'permissions'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     * @throws ValidationException
-     */
     public function update(RoleRequest $request, Role $role): JsonResponse
     {
         $permissions = $request->getPermissions();
@@ -161,9 +142,6 @@ class RoleController extends Controller
         return $this->succeeded('Role updated successfully');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Request $request, Role $role): JsonResponse
     {
         if ($role->users()->count() > 0) {
