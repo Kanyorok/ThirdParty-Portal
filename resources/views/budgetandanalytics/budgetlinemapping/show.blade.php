@@ -19,8 +19,8 @@
             <thead class="table-light">
                 <tr>
                     <th>#</th>
-                    <th>Product Type Name</th>
-                    <th>Code</th>
+                    <th>Product Name</th>
+{{--                    <th>Code</th>--}}
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -28,14 +28,14 @@
                 @foreach($products as $product)
                     <tr>
                         <td>{{ $loop->iteration }}</td>
-                        <td style="max-width:200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $product->products->Name }}</td>
-                        <td style="max-width:200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $product->products->ProductCode }}</td>
+                        <td style="max-width:200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $product->product->Description }}</td>
+{{--                        <td style="max-width:200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $product->products->ProductCode }}</td>--}}
                         <td>
                                <button type="button"
                                         class="btn btn-sm btn-danger custom-delete-btn"
                                         data-bs-toggle="modal"
                                         data-bs-target="#customDeleteConfirmModal"
-                                        data-name="{{ $product->products->Name }}"    {{-- Pass item name --}}
+                                        data-name="{{ $product->product->Description }}"    {{-- Pass item name --}}
                                         data-route="{{route('budgetlinemapping.destroyProduct', $product->Id)}}">  {{--Pass delete route --}}
                                    Delete
                                  </button>

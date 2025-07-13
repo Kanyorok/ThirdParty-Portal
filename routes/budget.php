@@ -81,6 +81,8 @@ Route::namespace('Budget')->prefix('budget')->group(function () {
     Route::resource('yieldexpenserate', YieldRateController::class);
     //Route::resource('budgetprojections', BudgetProjectionsController::class);
     Route::resource('budgetprojections', BudgetProjectionsController::class);
+    Route::post('/storeProjections', [BudgetProjectionsController::class,'storeProjections'])->name('budgetprojections.storeProjections');
+    Route::post('/deleteProjection', [BudgetProjectionsController::class,'deleteProjection'])->name('budgetprojections.deleteProjection');
     Route::get('/budget-lines/{id}/product-types', [BudgetProjectionsController::class, 'getProductTypes'])->name('budget-lines.product-types');
     Route::resource('entrybyglline', BudgetGLLineEntryController::class);
     Route::get('/entrybyglline/glview/{budgetId}', [BudgetGLLineEntryController::class, 'glview'])->name('entrybyglline.glview');
@@ -155,6 +157,8 @@ Route::namespace('Budget')->prefix('budget')->group(function () {
        'index' => 'budgetline-reports.index',
        'show' => 'budgetline-reports.show'
    ]);
+
+    Route::delete('/budget/deleteProjection/{id}', [BudgetProjectionsController::class,'deleteProjection'])->name('budgetprojections.deleteProjection');
     Route::delete('budget/delete-gl-attachment/{id}', [BudgetPeriodController::class, 'delGLAttachment'])->name('budget.delete-gl-attachment');
     Route::delete('budget/delete-budget/{id}', [BudgetPeriodController::class, 'delBudget'])->name('budget.delete-budget');
 });

@@ -8,6 +8,8 @@ use App\Models\Budget\BudgetGLAccountSubType;
 use App\Models\Budget\BudgetLine;
 use App\Models\Budget\BudgetManualEntry;
 use App\Models\Budget\BudgetManualEntryAllocations;
+use App\Models\Budget\BudgetProduct;
+use App\Models\Budget\BudgetProjection;
 use App\Models\Core\CodeDetail;
 use Illuminate\Http\Request;
 
@@ -102,6 +104,32 @@ class BudgetConsolidationController extends Controller
                         }
                     }
                 }
+                ////////////////////////////////// Get data from Budget Projections //////////////////////////////////////////////
+                //Get all projection data
+                return$projections=BudgetProjection::where('BudgetID', $budgetId)->get();
+                //Loop through the projections
+                foreach ($projections as $projection) {
+                    return$product=BudgetProduct::find($projection->ProductID);
+                    //Get the product Gltype
+                    //Check allocation
+                    //Store data for the GL first in the data array and in the respective GL section
+                    //Now get the Budgetline for that product
+                    //Get its GL type
+                    //Gte the Product rate value
+                    //Check for allocations and compute the allocation to be inserted into the data array
+                    //Insert the data set 2 fro the budgetline into the data arrray
+                }
+                //Get the product Gltype
+                //Check allocation
+                //Store data for the GL first in the data array and in the respective GL section
+                //Now get the Budgetline for that product
+                //Get its GL type
+                //Gte the Product rate value
+                //Check for allocations and compute the allocation to be inserted into the data array
+                //Insert the data set 2 fro the budgetline into the data arrray
+
+                //
+
             }
         }
 
