@@ -20,13 +20,13 @@ use App\Models\Inventory\TransactionReceipt;
 use App\Models\Inventory\TransactionTransfer;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\InventoryHoldReview;
- 
+
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\PlanLineItems;
 use App\Models\Procurement\BidSubmission;
 use App\Models\Procurement\TenderInvitation;
 use App\Models\Procurement\VendorClarifications;
- 
+
 enum PermissionEnum: string
 {
     use UsefulEnumTrait;
@@ -158,6 +158,13 @@ enum PermissionEnum: string
     case RequisitionDelete = 'requisition-delete';
     case RequisitionApproval = 'requisition-approval';
 
+    case RequisitionAMTLevel1 = 'requisition-AMTLevel1';
+    case RequisitionAMTLevel2 = 'requisition-AMTLevel2';
+    case RequisitionAMTLevel3 = 'requisition-AMTLevel3';
+    case RequisitionAMTLevel4 = 'requisition-AMTLevel4';
+    case RequisitionAMTLevel5 = 'requisition-AMTLevel5';
+
+
     //RequisitionItems
     case RequisitionItemsRead = 'requisitionItem-read';
     case RequisitionItemsWrite = 'requisitionItem-create';
@@ -178,6 +185,12 @@ enum PermissionEnum: string
     case PurchaseOrderUpdate = 'purchaseOrder-update';
     case PurchaseOrderDelete = 'purchaseOrder-delete';
     case PurchaseOrderApproval = 'purchaseOrder-approval';
+
+    case PurchaseOrderAMTLevel1 = 'purchaseOrder-AMTLevel1';
+    case PurchaseOrderAMTLevel2 = 'purchaseOrder-AMTLevel2';
+    case PurchaseOrderAMTLevel3 = 'purchaseOrder-AMTLevel3';
+    case PurchaseOrderAMTLevel4 = 'purchaseOrder-AMTLevel4';
+    case PurchaseOrderAMTLevel5 = 'purchaseOrder-AMTLevel5';
 
     //ProcurementPlan Department Needs
     case DepartmentNeedsRead = 'departmentneeds-read';
@@ -412,14 +425,14 @@ enum PermissionEnum: string
     case PropertyInvoiceUpdate = 'propertyinvoice-update';
     case PropertyInvoiceDelete = 'propertyinvoice-delete';
     case PropertyInvoiceView = 'propertyinvoice-view';
-    
+
     //Property Receipt
     case PropertyReceiptCreate = 'propertyreceipt-create';
     case PropertyReceiptUpdate = 'propertyreceipt-update';
     case PropertyReceiptDelete = 'propertyreceipt-delete';
     case PropertyReceiptView = 'propertyreceipt-view';
 
- 
+
     /*
      *
      * ========================================  Human Resource management  ========================================
@@ -472,12 +485,12 @@ enum PermissionEnum: string
             [self::Roles],
 
             [self::DepartmentNeedsRead, self::DepartmentNeedsWrite, self::DepartmentNeedsUpdate, self::DepartmentNeedsDelete, self::DepartmentNeedsApproval,],
-            [self::ProcurementMethodRead, self::ProcurementMethodWrite,], 
- 
+            [self::ProcurementMethodRead, self::ProcurementMethodWrite,],
+
             [self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete, self::Departments],
             [self::PrequalificationPeriodRead, self::PrequalificationPeriodWrite, self::PrequalificationPeriodUpdate, self::PrequalificationPeriodDelete],
-            [self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval, self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval],
-            [self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval],
+            [self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval, self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval,self::RequisitionAMTLevel1 , self::RequisitionAMTLevel2 , self::RequisitionAMTLevel3 , self::RequisitionAMTLevel4 , self::RequisitionAMTLevel5],
+            [self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval,  self::PurchaseOrderAMTLevel1 , self::PurchaseOrderAMTLevel2 , self::PurchaseOrderAMTLevel3 , self::PurchaseOrderAMTLevel4 , self::PurchaseOrderAMTLevel5 ],
 
             //Tenders
             [self::TenderRead, self::TenderWrite, self::TenderUpdate, self::TenderDelete, self::TenderApproval],
@@ -524,7 +537,7 @@ enum PermissionEnum: string
             [self::PropertyLeaseRenewalCreate,self::PropertyLeaseRenewalUpdate,self::PropertyLeaseRenewalDelete,self::PropertyLeaseRenewalView],
             [self::PropertyInvoiceCreate,self::PropertyInvoiceUpdate,self::PropertyInvoiceDelete,self::PropertyInvoiceView],
             [self::PropertyReceiptCreate,self::PropertyReceiptUpdate,self::PropertyReceiptDelete,self::PropertyReceiptView],
-            
+
 
         ]);
     }
@@ -533,7 +546,11 @@ enum PermissionEnum: string
     {
         return collect([self::MarketingPlannerApproval, /* self::MarketingListApproval,*/ self::TicketApproval, self::CampaignApproval, self::SurveyApproval, self::Ceo, self::MarketingManager,
             self::PurchaseOrderApproval, self::RequisitionApproval,self::RequisitionItemsApproval,self::DepartmentNeedsApproval, self::TenderApproval,
-            self::PurchaseOrderApproval, self::RequisitionApproval,self::RequisitionItemsApproval]);
+            self::PurchaseOrderApproval, self::RequisitionApproval,self::RequisitionItemsApproval, self::RequisitionItemsApproval,
+            self::PurchaseOrderAMTLevel1 , self::PurchaseOrderAMTLevel2 , self::PurchaseOrderAMTLevel3 , self::PurchaseOrderAMTLevel4 , self::PurchaseOrderAMTLevel5,
+            self::RequisitionAMTLevel1 , self::RequisitionAMTLevel2 , self::RequisitionAMTLevel3 , self::RequisitionAMTLevel4 , self::RequisitionAMTLevel5
+
+    ]);
 
     }
 
@@ -580,6 +597,8 @@ enum PermissionEnum: string
             self::PlanMaintenanceRead, self::PlanMaintenanceWrite, self::PlanMaintenanceUpdate, self::PlanMaintenanceDelete,
             self::PlanManualInputRead, self::PlanManualInputWrite, self::PlanManualInputUpdate, self::PlanManualInputDelete,
             self::PlanEditRead, self::PlanEditWrite, self::PlanEditUpdate, self::PlanEditDelete,
+            self::RequisitionAMTLevel1, self::RequisitionAMTLevel2, self::RequisitionAMTLevel3, self::RequisitionAMTLevel4, self::RequisitionAMTLevel5,
+            self::PurchaseOrderAMTLevel1, self::PurchaseOrderAMTLevel2, self::PurchaseOrderAMTLevel3, self::PurchaseOrderAMTLevel4, self::PurchaseOrderAMTLevel5
             => ModulesEnum::Procurement,
 
             //Human Resource Management
@@ -663,11 +682,11 @@ enum PermissionEnum: string
             self::PlanManualInputRead, self::PlanManualInputWrite, self::PlanManualInputUpdate, self::PlanManualInputDelete, => 'Plan Manual Input',
             self::PlanEditRead, self::PlanEditWrite, self::PlanEditUpdate, self::PlanEditDelete, =>'Plan amendmend',
             //Requisition
-            self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval, self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval =>'Requisitions',
- 
+            self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval, self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete =>'Requisitions',
+
             //Vendor
             self::PrequalificationPeriodRead, self::PrequalificationPeriodWrite, self::PrequalificationPeriodUpdate, self::PrequalificationPeriodDelete, => 'Prequalification Periods',
- 
+
             //PurchaseOrder
             self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval => 'Purchase Order',
 
@@ -706,10 +725,10 @@ enum PermissionEnum: string
             self::PropertyNewLeaseCreate,self::PropertyNewLeaseUpdate,self::PropertyNewLeaseDelete,self::PropertyNewLeaseView => 'Property New Lease',
             self::PropertyLeaseTerminationCreate,self::PropertyLeaseTerminationUpdate,self::PropertyLeaseTerminationDelete,self::PropertyLeaseTerminationView => 'Lease Termination',
             self::PropertyLeaseScheduleCreate,self::PropertyLeaseScheduleUpdate,self::PropertyLeaseScheduleDelete,self::PropertyLeaseScheduleView => 'Property Lease Schedule',
-            self::PropertyLeaseRenewalCreate,self::PropertyLeaseRenewalUpdate,self::PropertyLeaseRenewalDelete,self::PropertyLeaseRenewalView => 'Property Lease Renewal', 
+            self::PropertyLeaseRenewalCreate,self::PropertyLeaseRenewalUpdate,self::PropertyLeaseRenewalDelete,self::PropertyLeaseRenewalView => 'Property Lease Renewal',
             self::PropertyInvoiceCreate,self::PropertyInvoiceUpdate,self::PropertyInvoiceDelete,self::PropertyInvoiceView => 'Property Invoice',
-            self::PropertyReceiptCreate,self::PropertyReceiptUpdate,self::PropertyReceiptDelete,self::PropertyReceiptView => 'Property Receipt',           
+            self::PropertyReceiptCreate,self::PropertyReceiptUpdate,self::PropertyReceiptDelete,self::PropertyReceiptView => 'Property Receipt',
             default => throw new \LogicException("Unhandled PermissionEnum case: {$this->value}"),
-        };  
+        };
     }
 }

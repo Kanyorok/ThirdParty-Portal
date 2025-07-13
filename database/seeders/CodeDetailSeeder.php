@@ -342,7 +342,7 @@ class CodeDetailSeeder extends Seeder
                 'ModifiedOn' => $date,
                 'ModifiedBy' => $user->Id,
             ],
-            
+
         ]);
         DB::table('t_CodeDetails')->insert([
             [
@@ -369,7 +369,7 @@ class CodeDetailSeeder extends Seeder
                 'ModifiedOn' => $date,
                 'ModifiedBy' => $user->Id,
             ],
-            
+
         ]);
         DB::table('t_CodeDetails')->insert([
             [
@@ -388,7 +388,7 @@ class CodeDetailSeeder extends Seeder
                 'ModifiedOn' => $date,
                 'ModifiedBy' => $user->Id,
             ],
-            
+
         ]);
          DB::table('t_CodeDetails')->insert([
             [
@@ -448,7 +448,7 @@ class CodeDetailSeeder extends Seeder
                 'ModifiedOn' => $date,
                 'ModifiedBy' => $user->Id,
             ],
-            
+
         ]);
 
         DB::table('t_CodeDetails')->insert([
@@ -528,6 +528,95 @@ class CodeDetailSeeder extends Seeder
                 'CreatedBy' => $user->Id,
                 'ModifiedOn' => $date,
                 'ModifiedBy' => $user->Id,
+            ],
+        ]);
+
+
+        DB::table('t_CodeDetails')->insert([
+            // Document Status Codes
+            [
+
+                'CodeID' => 'DocStatus',
+                'Value' => null,
+                'Description' => 'Draft',
+                'DisplayOrder' => null,
+                'IsActive' => 1,
+                'CreatedBy' => $user->Id,
+                'CreatedOn' => $date,
+                'ModifiedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'DeletedBy' => null,
+                'DeletedOn' => null,
+            ],
+            [
+
+                'CodeID' => 'DocStatus',
+                'Value' => null,
+                'Description' => 'Submitted for Approval',
+                'DisplayOrder' => null,
+                'IsActive' => 1,
+                'CreatedBy' => $user->Id,
+                'CreatedOn' => $date,
+                'ModifiedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'DeletedBy' => null,
+                'DeletedOn' => null,
+            ],
+            [
+
+                'CodeID' => 'DocStatus',
+                'Value' => null,
+                'Description' => 'Approved',
+                'DisplayOrder' => null,
+                'IsActive' => 1,
+                'CreatedBy' => $user->Id,
+                'CreatedOn' => $date,
+                'ModifiedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'DeletedBy' => null,
+                'DeletedOn' => null,
+            ],
+            [
+
+                'CodeID' => 'DocStatus',
+                'Value' => null,
+                'Description' => 'Rejected',
+                'DisplayOrder' => null,
+                'IsActive' => 1,
+                'CreatedBy' => $user->Id,
+                'CreatedOn' => $date,
+                'ModifiedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'DeletedBy' => null,
+                'DeletedOn' => null,
+            ],
+            [
+
+                'CodeID' => 'DocStatus',
+                'Value' => null,
+                'Description' => 'Reject Return',
+                'DisplayOrder' => null,
+                'IsActive' => 1,
+                'CreatedBy' => $user->Id,
+                'CreatedOn' => $date,
+                'ModifiedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'DeletedBy' => null,
+                'DeletedOn' => null,
+            ],
+            [
+
+                'CodeID' => 'DocStatus',
+                'Value' => null,
+                'Description' => 'Cancelled',
+                'DisplayOrder' => null,
+                'IsActive' => 1,
+                'CreatedBy' => $user->Id,
+                'CreatedOn' => $date,
+                'ModifiedBy' => $user->Id,
+                'ModifiedOn' => $date,
+                'DeletedBy' => null,
+                'DeletedOn' => null,
             ],
         ]);
     }
