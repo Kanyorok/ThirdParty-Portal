@@ -37,7 +37,7 @@ class EmployeeSeeder extends Seeder
         $user = EmployeeService::create(department: $department, branch: $branch, actor: $actor,
             JobTitle: 'ICT ADMIN', FirstName: 'Default', Surname: 'User',
             Email: "admin@test.co.ke", Phone: '254700100100', JoinDate: now(), Gender: GenderEnum::Other)
-            ->createUser($actor)->setRole($role, $actor)->user->refresh();
+            ->createUser($actor)->setRole($role, $branch, $actor)->user->refresh();
 
         $user->update([
             'UserID' => 'CSADM',

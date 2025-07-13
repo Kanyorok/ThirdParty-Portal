@@ -314,12 +314,14 @@
     </div>
 @endsection
 @section('scripts')
-    <script src="{{ asset('assets/libs/rangePlugin.js') }}"></script>
     <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
     <script src='{{ asset('assets/libs/moment/moment-with-locales.js') }}'></script>
+    <script src='{{ asset('assets/libs/flatpickr/flatpickr.min.js') }}'></script>
 
-    <script>let usersTable = null, rolesTable = null, teamsTable = null, branchesTable = null;
+    <script>
+        let usersTable = null, rolesTable = null, teamsTable = null, branchesTable = null;
         const $Modal = $('#boardActionsModal');
+
         $(function () {
             $.fn.dataTable.ext.errMode = 'none';
 
@@ -330,28 +332,12 @@
                 await saveForm($(this), $('#boardBulkNotificationBtn'), false, true, true);
             });
 
+            // Select2 init
             $('#BoardMeetingLocation').select2({
                 allowClear: true,
                 tags: true,
                 placeholder: "Select Meeting Location",
                 dropdownParent: $Modal,
-            });
-
-            $(document).on('click', '#triggerBoardMeetingBtn', function () {
-                $(".modal-item").addClass('d-none');
-                $('#createBoardMeetingModal').removeClass('d-none');
-                $('.modal-title').html('<b>Schedule</b> a board meeting');
-                $Modal.children().first().addClass('modal-lg');
-                $Modal.modal('show');
-            });
-
-            $('form#createBoardMeetingForm').submit(async function (e) {
-                e.preventDefault();
-                let response = await saveForm($(this), $('#createBoardMeetingBtn'), false, true, true);
-                if (response) {
-                    $Modal.modal('hide');
-                    fetchMeetingTable();
-                }
             });
 
             $('#BoardMeetingUsers').select2({
@@ -376,15 +362,50 @@
                 }
             });
 
-            flatpickr("#BoardMeetingStart", {
-                minDate: moment().add(10, 'm').format('YYYY-MM-DD hh:mm'),
-                mode: 'range',
-                dateFormat: "Y-m-d H:i",
-                allowInput: true,
+            // Flatpickr datetime update
+            const nowPlus10 = moment().add(10, 'm').format('YYYY-MM-DD HH:mm');
+
+            const startPicker = flatpickr("#BoardMeetingStart", {
                 enableTime: true,
-                "plugins": [new rangePlugin({input: "#BoardMeetingEnd"})]
+                dateFormat: "Y-m-d H:i",
+                minDate: nowPlus10,
+                onChange: function (selectedDates) {
+                    if (selectedDates.length > 0) {
+                        endPicker.set('minDate', selectedDates[0]);
+                    }
+                }
             });
 
+            const endPicker = flatpickr("#BoardMeetingEnd", {
+                enableTime: true,
+                dateFormat: "Y-m-d H:i",
+                minDate: nowPlus10,
+            });
+
+            $(document).on('click', '#triggerBoardMeetingBtn', function () {
+                $(".modal-item").addClass('d-none');
+                $('#createBoardMeetingModal').removeClass('d-none');
+                $('.modal-title').html('<b>Schedule</b> a board meeting');
+                $Modal.children().first().addClass('modal-lg');
+                $Modal.modal('show');
+            });
+
+            $('form#createBoardMeetingForm').submit(async function (e) {
+                e.preventDefault();
+                const start = startPicker.selectedDates[0];
+                const end = endPicker.selectedDates[0];
+
+                if (!start || !end || end <= start) {
+                    alert("End time must be after start time.");
+                    return;
+                }
+
+                let response = await saveForm($(this), $('#createBoardMeetingBtn'), false, true, true);
+                if (response) {
+                    $Modal.modal('hide');
+                    fetchMeetingTable();
+                }
+            });
         });
 
         function fetchMeetingTable() {
@@ -393,7 +414,6 @@
                     processing: true,
                     serverSide: true,
                     responsive: true,
-                    // "order": [[3, 'asc']],
                     ajax: {
                         url: '{{ route('board-meetings.index') }}',
                         error: function (jqXHR) {
@@ -406,7 +426,8 @@
                         {data: 'StartOn', name: 'StartOn'},
                         {data: 'EndOn', name: 'EndOn'},
                         {data: 'StatusID', name: 'StatusID'},
-                    ], "oLanguage": {
+                    ],
+                    "oLanguage": {
                         "sEmptyTable": "no meetings under this filter"
                     }
                 }).on('error', function () {
@@ -423,7 +444,6 @@
                     processing: true,
                     serverSide: true,
                     responsive: true,
-                    // "order": [[3, 'asc']],
                     ajax: {
                         url: '{{ route('committee.index') }}',
                         error: function (jqXHR) {
@@ -434,12 +454,12 @@
                         {data: "CommitteeID", name: 'CommitteeID'},
                         {data: 'Name', name: 'Name'},
                         {data: 'Notes', name: 'Notes'},
-                    ], "oLanguage": {
+                    ],
+                    "oLanguage": {
                         "sEmptyTable": "no committees under this filter"
                     }
                 }).on('error', function () {
                     nWarning("an issue occurred while loading committees.");
-                    // console.log(er);
                 });
             } else {
                 $('#committeesTable').DataTable().ajax.reload();
@@ -452,7 +472,6 @@
                     processing: true,
                     serverSide: true,
                     responsive: true,
-                    // "order": [[3, 'asc']],
                     ajax: {
                         url: '{{ route('board.index') }}',
                         error: function (jqXHR) {
@@ -464,18 +483,16 @@
                         {data: 'Name', name: 'Name'},
                         {data: 'Role', name: 'Role'},
                         {data: 'committees', name: 'committees.Description'},
-                    ], "oLanguage": {
+                    ],
+                    "oLanguage": {
                         "sEmptyTable": "no board members under this filter"
                     }
                 }).on('error', function () {
                     nWarning("an issue occurred while loading board members.");
-                    // console.log(er);
                 });
             } else {
                 $('#boardMembersTable').DataTable().ajax.reload();
             }
         }
-
-
     </script>
 @endsection

@@ -1,19 +1,23 @@
 <?php
-use Illuminate\Support\Facades\Route;
+
 use App\Http\Controllers\Procurement\ApprovalSetupController;
 use App\Http\Controllers\Procurement\AwardsController;
 use App\Http\Controllers\Procurement\BidEvaluationController;
 use App\Http\Controllers\Procurement\BidScoreConsolidationController;
 use App\Http\Controllers\Procurement\CalenderBasedController;
 use App\Http\Controllers\Procurement\ConsolidatedDashboardController;
+use App\Http\Controllers\Procurement\ContractsController;
+use App\Http\Controllers\Procurement\ContractsLifecycleController;
 use App\Http\Controllers\Procurement\CriteriaController;
 use App\Http\Controllers\Procurement\DelayedItemsController;
+use App\Http\Controllers\Procurement\DeliveryController;
 use App\Http\Controllers\Procurement\DepartmentNeedApprovalController;
 use App\Http\Controllers\Procurement\DepartmentNeedsController;
 use App\Http\Controllers\Procurement\EngagedAuditorController;
 use App\Http\Controllers\Procurement\EvaluationCriteriaController;
 use App\Http\Controllers\Procurement\EvaluatorDashboardController;
 use App\Http\Controllers\Procurement\GoodsReceiptController;
+use App\Http\Controllers\Procurement\InspectionController;
 use App\Http\Controllers\Procurement\MapToBudgetController;
 use App\Http\Controllers\Procurement\ModeTimelineController;
 use App\Http\Controllers\Procurement\PlanApprovalInboxController;
@@ -23,12 +27,10 @@ use App\Http\Controllers\Procurement\PlanFromNeedsController;
 use App\Http\Controllers\Procurement\PlanManualInputController;
 use App\Http\Controllers\Procurement\PlanvsActualController;
 use App\Http\Controllers\Procurement\PrequalificationApplicationsController;
-use App\Http\Controllers\Procurement\PrequalificationCriteriaController;
 use App\Http\Controllers\Procurement\PrequalificationCriteriaSetupController;
 use App\Http\Controllers\Procurement\PrequalificationEvalAprovalController;
 use App\Http\Controllers\Procurement\PrequalificationEvaluationController;
 use App\Http\Controllers\Procurement\PrequalificationPeriodController;
-use App\Http\Controllers\Procurement\PrequalificationRoundsController;
 use App\Http\Controllers\Procurement\PrequalifiedSuppliersController;
 use App\Http\Controllers\Procurement\ProcurementApprovalController;
 use App\Http\Controllers\Procurement\ProcurementModeController;
@@ -67,6 +69,7 @@ use App\Http\Controllers\Procurement\TenderResponseController;
 use App\Http\Controllers\Procurement\TenderSubmissionController;
 use App\Http\Controllers\Procurement\TenderTypeController;
 use App\Http\Controllers\Procurement\TimelineController;
+use Illuminate\Support\Facades\Route;
 
 
 Route::namespace('Procurement')->prefix('procurement')->group(function () {
@@ -86,6 +89,8 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
 
     Route::post('requisition/approve/{id}', [RequisitionsController::class, 'approve'])->name('requisition.approve');
     Route::get('requisition/approval/{id}', [RequisitionsController::class, 'approval'])->name('requisition.approval');
+    Route::get('procurementplan/details/{id}', [RequisitionsController::class, 'getPlanDetails'])
+        ->name('procurement.plan.details');
     Route::prefix('admin')->group(function () {
         Route::put('/approval-settings/{id}', [ApprovalSetupController::class, 'update'])->name('approval-setup.update');
         Route::post('/approval-settings', [ApprovalSetupController::class, 'store'])->name('approval-settings.store');
@@ -365,7 +370,6 @@ Route::prefix('planning')->name('planning.')->group(function () {
 
 });
 
- 
 
 //Route::resource('preqrounds', PrequalificationRoundsController::class);
 Route::get('preqrounds', [PrequalificationPeriodController::class, 'index'])->name('preqrounds.index');
@@ -388,11 +392,6 @@ Route::put('preqcriteria/update/{id}', [PrequalificationCriteriaSetupController:
 Route::delete('preqcriteria/destroy/{id}', [PrequalificationCriteriaSetupController::class, 'destroy'])->name('preqcriteria.destroy');
 
 
-
-
-
-
-
 Route::resource('supplierslist', SupplierListingController::class);
  Route::resource('preqapplications', PrequalificationApplicationsController::class);
  Route::resource('preqevaluation', PrequalificationEvaluationController::class);
@@ -406,7 +405,32 @@ Route::get('/awards-rfq/view/{id}', [AwardsController::class, 'view_rfq'])->name
 
 Route::resource('procawards', AwardsController::class);
 
+// Contracts - Core CRUD
+Route::get('contracts', [ContractsController::class, 'index'])->name('contracts.index');
+Route::get('contracts/create', [ContractsController::class, 'create'])->name('contracts.create');
+Route::post('contracts', [ContractsController::class, 'store'])->name('contracts.store');
+Route::get('contracts/{id}/view', [ContractsController::class, 'view'])->name('contracts.view');
+Route::get('contracts/{id}/edit', [ContractsController::class, 'edit'])->name('contracts.edit');
+Route::put('contracts/{id}', [ContractsController::class, 'update'])->name('contracts.update');
+
+// Contracts - Approval Queue
+Route::get('contracts/approval-queue', [ContractsController::class, 'approvalQueue'])->name('contracts.approve_index');
+Route::get('contracts/{id}/approve', [ContractsController::class, 'approve'])->name('contracts.approve');
+Route::post('contracts/{id}/approve', [ContractsController::class, 'submitApproval'])->name('contracts.approve.submit');
+
+// Contracts - LPO Link
+Route::get('contracts/{id}/lpo', [ContractsController::class, 'linkLPO'])->name('contracts.lpo.link');
+
+// Contracts Lifecycle
+Route::get('contracts/lifecycle', [ContractsLifecycleController::class, 'index'])->name('contractcycle.index');
+Route::get('contracts/lifecycle/{id}/view', [ContractsLifecycleController::class, 'view'])->name('contractcycle.view');
+Route::get('contracts/lifecycle/{id}/amend', [ContractsLifecycleController::class, 'amend'])->name('contractcycle.amend');
+Route::post('contracts/lifecycle/{id}/amend', [ContractsLifecycleController::class, 'submitAmendment'])->name('contractcycle.amend.submit');
+Route::get('contracts/lifecycle/{id}/terminate', [ContractsLifecycleController::class, 'terminate'])->name('contractcycle.terminate');
+Route::post('contracts/lifecycle/{id}/terminate', [ContractsLifecycleController::class, 'submitTermination'])->name('contractcycle.terminate.submit');
+Route::get('contracts/lifecycle/{id}/execute', [ContractsLifecycleController::class, 'monitorExecution'])->name('contractcycle.execution');
 
 
-
+Route::resource('deliverynotes', DeliveryController::class);
+Route::resource('goodsinspection', InspectionController::class);
 

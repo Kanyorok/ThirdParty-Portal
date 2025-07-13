@@ -14,6 +14,7 @@ use App\Models\CRM\Meeting;
 use App\Models\CRM\MeetingRoom;
 use App\Models\CRM\Schedule;
 use App\Models\CRM\ScheduleUser;
+use App\Models\ThirdParies\Board;
 use App\Services\ScheduleService;
 use Carbon\Carbon;
 use Exception;
@@ -123,6 +124,7 @@ class ScheduleController extends Controller
         }
 
         $scheduleService = new ScheduleService($schedule);
+
         if ($schedule->ScheduledType === Call::getPrimaryKey()) {
             if ($schedule->Type === Client::getPrimaryKey()) {
                 $party = $scheduleService->clients()->first();
@@ -138,7 +140,6 @@ class ScheduleController extends Controller
                 return $this->errored('schedule party not found');
             }
 
-
             return view('crm.schedule.call')
                 ->with('schedule', $schedule)
                 ->with('call', $schedule->scheduled)
@@ -148,6 +149,8 @@ class ScheduleController extends Controller
 
         if ($schedule->ScheduledType === Meeting::getPrimaryKey()) {
             $parties_count = 0;
+            //dd($schedule->Type, $schedule->ScheduledType, $scheduleService->clients()->toSql(), $scheduleService->clients()->first());
+
             if ($schedule->Type === Client::getPrimaryKey()) {
                 $parties_count = $scheduleService->clientsCount();
                 if ($parties_count === 1) {
@@ -158,6 +161,7 @@ class ScheduleController extends Controller
                 } else {
                     $parties = $scheduleService->clients(['photo'], 10)->paginate(7, ['ClientID', 'Name', 'PhotoID']);
                 }
+
             } elseif ($schedule->Type === User::getPrimaryKey()) {
                 $parties_count = $schedule->users()->count();
                 if ($parties_count === 1) {
@@ -168,11 +172,24 @@ class ScheduleController extends Controller
                 } else {
                     $parties = $scheduleService->users()->limit(10)->paginate(7);
                 }
+
             } elseif ($schedule->Type === Lead::getPrimaryKey()) {
                 $parties = $scheduleService->leads()->first();
                 if (!$parties instanceof Lead) {
                     return $this->errored('appointment party not found');
                 }
+
+            } elseif ($schedule->Type === Board::getPrimaryKey()) {
+                $parties_count = $scheduleService->boardsCount();
+                if ($parties_count === 1) {
+                    $parties = $scheduleService->boards()->first();
+                    if (!$parties) {
+                        return $this->errored('appointment party not found');
+                    }
+                } else {
+                    $parties = $scheduleService->boards()->paginate(7);
+                }
+
             } else {
                 return $this->errored('schedule party not found');
             }
@@ -184,7 +201,6 @@ class ScheduleController extends Controller
                 ->with('parties', $parties)
                 ->with('parties_count', ($parties_count - 7));
         }
-
 
         return $this->errored('unknown schedule type');
     }

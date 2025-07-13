@@ -88,9 +88,9 @@ return new class extends Migration {
 
         Schema::create('t_DMSTaggingRules', static function (Blueprint $table) {
             $table->id('Id');
-            $table->foreignId('TagId')->nullable()->constrained('t_DMSTags', 'Id');
-            $table->char('Content')->comment('ContentEnum - body/title');
-            $table->char('Comparison')->comment('StringComparisonEnum - contains, equal');
+            $table->foreignId('TagId')->constrained('t_DMSTags', 'Id');
+            $table->char('Content', 2)->comment('ContentEnum - body/title');
+            $table->char('Comparison', 2)->comment('StringComparisonEnum - contains, equal ..');
             $table->string('Value');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
@@ -149,9 +149,9 @@ return new class extends Migration {
     {
         Schema::dropIfExists('t_DocumentRelations');
         Schema::dropIfExists('t_DocumentAttributes');
-        Schema::dropIfExists('t_DocumentTags');
         Schema::dropIfExists('t_DocumentTaggingRules');
         Schema::dropIfExists('t_DMSTaggingRules');
+        Schema::dropIfExists('t_DocumentTags');
         Schema::dropIfExists('t_DMSTags');
         Schema::dropIfExists('t_DocumentVersions');
         Schema::dropIfExists('t_Documents');

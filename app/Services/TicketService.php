@@ -35,20 +35,20 @@ use Yajra\DataTables\DataTables;
 
 class TicketService
 {
-    public const string ALL = 'all';
+    public const ALL = 'all';
 
     public function __construct(public Ticket $ticket)
     {
     }
 
-    public static function client(Client $client, CodeDetail $category, string $title, string $description, User $actor, string $Source, TicketPriorityEnum $priority, string $SourceID = '0', Carbon $start = null, Carbon $end = null, string $SourceTicketID = null): TicketService
+    public static function client(Client $client, CodeDetail $category, string $title, string $description, User $actor, string $Source, TicketPriorityEnum $priority, string $SourceID = '0', $start = null, $end = null, $SourceTicketID = null): TicketService
     {
         $service = self::_create($client->ClientID, Client::getPrimaryKey(), $category, $title, $description, $actor, $Source, $SourceID, $priority, $start, $end, $SourceTicketID);
         $service->sendMessage('New ticket (Ticket ID: #' . $service->ticket->TicketID . ') has been created for your issue, you will receive updates', $actor, $client);
         return $service;
     }
 
-    private static function _create(string $PartyID, string $Party, CodeDetail $category, string $title, string $description, User $actor, string $Source, string $SourceID, TicketPriorityEnum $priority, Carbon $start = null, Carbon $end = null, string $SourceTicketID = null): TicketService
+    private static function _create(string $PartyID, string $Party, CodeDetail $category, string $title, string $description, User $actor, string $Source, string $SourceID, TicketPriorityEnum $priority, $start = null, $end = null, $SourceTicketID = null): TicketService
     {
         $ticket = new Ticket();
         $ticket->fill([
@@ -86,7 +86,7 @@ class TicketService
         return $slug;
     }
 
-    public static function user(CodeDetail $category, string $title, string $description, User $actor, string $Source, TicketPriorityEnum $priority, string $SourceID = '0', Carbon $start = null, Carbon $end = null): TicketService
+    public static function user(CodeDetail $category, string $title, string $description, User $actor, string $Source, TicketPriorityEnum $priority, string $SourceID = '0', $start = null, $end = null): TicketService
     {
         //  $service->sendMessage('New ticket (Ticket ID: #' . $service->ticket->TicketID . ') has been created for your issue, you will receive updates', $actor, $lead);
         return self::_create($actor->Id, User::getPrimaryKey(), $category, $title, $description, $actor, $Source, $SourceID, $priority, $start, $end);
@@ -167,7 +167,7 @@ class TicketService
         return $this;
     }
 
-    public function sendMessage(string $message, User $actor, Model $model = null, int $loop = 0): void
+    public function sendMessage(string $message, User $actor, $model = null, int $loop = 0): void
     {
         if ($loop > 2) {//break;
             return;
@@ -192,7 +192,7 @@ class TicketService
         }
     }
 
-    public static function lead(Lead $lead, CodeDetail $category, string $title, string $description, User $actor, string $Source, TicketPriorityEnum $priority, string $SourceID = '0', Carbon $start = null, Carbon $end = null): TicketService
+    public static function lead(Lead $lead, CodeDetail $category, string $title, string $description, User $actor, string $Source, TicketPriorityEnum $priority, string $SourceID = '0', $start = null, $end = null): TicketService
     {
         $service = self::_create($lead->LeadID, Lead::getPrimaryKey(), $category, $title, $description, $actor, $Source, $SourceID, $priority, $start, $end);
         $service->sendMessage('New ticket (Ticket ID: #' . $service->ticket->TicketID . ') has been created for your issue, you will receive updates', $actor, $lead);
@@ -306,7 +306,7 @@ class TicketService
         return $this;
     }
 
-    public function update(CodeDetail $category, string $title, string $description, User $actor, Carbon $start = null, Carbon $end = null): TicketService
+    public function update(CodeDetail $category, string $title, string $description, User $actor, $start = null, $end = null): TicketService
     {
         $this->ticket->update([
             'Title' => $title,

@@ -17,9 +17,9 @@ class Board extends Model
 {
     use SoftDeletes, UserActorTrait;
 
-    const string CREATED_AT = 'CreatedOn';
-    const string UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    const CREATED_AT = 'CreatedOn';
+    const UPDATED_AT = 'ModifiedOn';
+    const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_BoardMembers';
     protected $primaryKey = 'Id';
@@ -66,4 +66,10 @@ class Board extends Model
         return $this->belongsToMany(Committee::class, 't_BoardCommittee', 'BoardId', 'CommitteeId', 'Id', 'Id')
             ->withTimestamps('CreatedOn', 'ModifiedOn')->withPivot(['CreatedBy', 'ModifiedBy'])->using(BoardCommittee::class);
     }
+
+    public static function getScheduleType(): string
+    {
+        return 'BoardID';
+    }
+
 }

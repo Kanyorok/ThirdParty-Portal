@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Budget;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Budget\BudgetLineCategories;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -22,12 +23,14 @@ class BudgetLineCategoriesController extends Controller
 
     public function create()
     {
+        $this->authorize(PermissionEnum::BudgetSetupCreate, BudgetLineCategories::class);
         // Logic to show form for creating a new budget line category
         return view('budgetandanalytics.settings.budgetlinecategories.create');
     }
 
     public function store(Request $request)
     {
+        $this->authorize(PermissionEnum::BudgetSetupCreate, BudgetLineCategories::class);
         $validated = $request->validate([
             'CategoryCode' => 'required|string|max:255',
             'CategoryName' => 'required|string|max:255',
@@ -43,7 +46,7 @@ class BudgetLineCategoriesController extends Controller
                 'CategoryName' => $validated['CategoryName'],
                 'Description' => $validated['Description'],
                 'IsActive' => $validated['IsActive'] ?? false, // Default to false if not provided
-                'CreatedBy' =>Auth::Id(),
+                'CreatedBy' => Auth::Id(),
                 'ModifiedBy' => Auth::Id(),
             ]);
             DB::commit();
@@ -53,7 +56,7 @@ class BudgetLineCategoriesController extends Controller
                 ->withProperties(['action' => 'create'])
                 ->log('Created budget line category: ' . $budgetLineCategory->CategoryName);
             return redirect()->route('budgetlinecategories.index')->with('success', 'Budget Line Category created successfully.');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             Log::error('Failed to create Budget Line Category: ' . $e->getMessage());
 
@@ -95,7 +98,7 @@ class BudgetLineCategoriesController extends Controller
                 ->withProperties(['action' => 'update'])
                 ->log('Updated budget line category: ' . $budgetLineCategory->CategoryName);
             return redirect()->route('budgetlinecategories.index')->with('success', 'Budget Line Category updated successfully.');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             Log::error('Failed to update Budget Line Category: ' . $e->getMessage());
             return redirect()->back()->withErrors(['error' => 'Failed to update Budget Line Category: ' . $e->getMessage()]);
@@ -108,15 +111,18 @@ class BudgetLineCategoriesController extends Controller
         DB::beginTransaction();
         try {
             $budgetLineCategory = BudgetLineCategories::findOrFail($id);
+            $budgetLineCategory->DeletedBy = Auth::id();
+            $budgetLineCategory->save();
             $budgetLineCategory->delete();
-            DB::commit();
+
             activity()
                 ->performedOn($budgetLineCategory)
                 ->causedBy(Auth::user())
                 ->withProperties(['action' => 'delete'])
                 ->log('Deleted budget line category: ' . $budgetLineCategory->CategoryName);
+            DB::commit();
             return redirect()->route('budgetlinecategories.index')->with('success', 'Budget Line Category deleted successfully.');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             Log::error('Failed to delete Budget Line Category: ' . $e->getMessage());
             return redirect()->back()->withErrors(['error' => 'Failed to delete Budget Line Category: ' . $e->getMessage()]);

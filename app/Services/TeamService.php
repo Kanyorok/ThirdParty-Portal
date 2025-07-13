@@ -7,7 +7,7 @@ use App\Models\Auth\User;
 
 class TeamService
 {
-    public const string MODULE = 'TEAMS';
+    public const MODULE = 'TEAMS';
     public function __construct(public Team $team)
     {
     }

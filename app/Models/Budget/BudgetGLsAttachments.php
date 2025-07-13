@@ -3,14 +3,13 @@
 namespace App\Models\Budget;
 
 use App\Models\Auth\User;
-use App\Models\Core\CodeDetail;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BudgetGLsAttachments extends Model
 {
-    use UserActorTrait,SoftDeletes;
+    use UserActorTrait, SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -20,6 +19,7 @@ class BudgetGLsAttachments extends Model
     {
         return 'BudgetGLsAttachmentsID';
     }
+
     protected $table = 't_BudgetGLsAttachments';
     protected $primaryKey = 'Id';
     protected $fillable = [
