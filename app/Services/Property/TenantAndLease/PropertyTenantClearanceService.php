@@ -83,6 +83,4 @@ class PropertyTenantClearanceService
 
         return $this;
     }
-        return $this;
-    }
 }
