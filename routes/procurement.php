@@ -78,7 +78,6 @@ use App\Http\Controllers\Procurement\TenderResponseController;
 use App\Http\Controllers\Procurement\TenderSubmissionController;
 use App\Http\Controllers\Procurement\TenderTypeController;
 use App\Http\Controllers\Procurement\TimelineController;
-use Illuminate\Support\Facades\Route;
 
 
 Route::namespace('Procurement')->prefix('procurement')->group(function () {
