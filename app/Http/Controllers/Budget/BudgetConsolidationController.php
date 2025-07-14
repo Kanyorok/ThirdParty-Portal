@@ -68,6 +68,7 @@ class BudgetConsolidationController extends Controller
 
                         //Store this into the data arrays using keys from gl type value
                         $data[$type->Description][$glAccountSubType][]=[
+                            'rate'=>0,
                             'budgetLineName'=>$budgetLineName,
                             'allocationValues'=>$allocationValues,
                             'allocationType'=>$activity->AllocationType,
@@ -100,6 +101,7 @@ class BudgetConsolidationController extends Controller
                             $fullAllocation=BudgetManualEntry::where('Id', $entry->Id)->pluck('Amount')->first() ?? 0;
                             //return $glAccountSubType;
                             $data[$type->Description][$glAccountSubType][]=[
+                                'rate'=>0,
                                 'budgetLineName'=>$budgetLineName,
                                 'allocationValues'=>$allocationValues,
                                 'allocationType'=>'monthly',
@@ -133,6 +135,7 @@ class BudgetConsolidationController extends Controller
                     }
                     //Store data for the GL first in the data array and in the respective GL section
                     $data[$GLType][$glAccountSubType][]=[
+                        'rate'=>0,
                         'budgetLineName'=>$product->Description,
                         'allocationValues'=>$allocationValues,
                         'allocationType'=>$allocationType,
@@ -163,15 +166,16 @@ class BudgetConsolidationController extends Controller
                     //Multiply with the rate value
                     if ($values) {
                         foreach ($values as $month => $amount) {
-                            $allocationValues[$month] = $amount * $rateValue;
+                            $allocationValues[$month] = ($amount * $rateValue)/100;
                         }
                     }
                     //Insert the data set 2 for the budgetline into the data array
                     $data[$budgetLineGLType][$glAccountSubType][]=[
+                        'rate'=>$rateValue,
                         'budgetLineName'=>$budgetLineName,
                         'allocationValues'=>$allocationValues,
                         'allocationType'=>$allocationType,
-                        'fullAllocation'=>$fullAllocation* $rateValue,
+                        'fullAllocation'=>($fullAllocation* $rateValue)/100,
                     ];
                 }
                 //Get the product Gltype
