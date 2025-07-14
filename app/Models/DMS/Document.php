@@ -20,9 +20,9 @@ class Document extends Model
 {
     use SoftDeletes, UserActorTrait, SpecialPermissionTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    const string CREATED_AT = 'CreatedOn';
+    const string UPDATED_AT = 'ModifiedOn';
+    const string DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Documents';
     protected $primaryKey = 'Id';
@@ -71,7 +71,6 @@ class Document extends Model
         return $this->belongsToMany(DMSTags::class, 't_DocumentTags', 'DocId', 'TagId', $this->primaryKey, 'Id')
             ->withPivot(['CreatedBy', 'ModifiedBy', 'DeletedBy'])->withTimestamps()->whereNull('t_DocumentTags.DeletedOn')
             ->using(DocumentTags::class);
-        //
     }
 
     public function relations(): MorphMany

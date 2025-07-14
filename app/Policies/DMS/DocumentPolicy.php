@@ -2,6 +2,7 @@
 
 namespace App\Policies\DMS;
 
+use App\Enums\Core\RoleEnum;
 use App\Models\Auth\User;
 use App\Models\DMS\Document;
 
@@ -20,7 +21,7 @@ class DocumentPolicy
      */
     public function view(User $user, Document $document): bool
     {
-        return true;
+        return Document::query()->user($user)->where('Id', $document->Id)->exists();
     }
 
     /**
@@ -36,7 +37,17 @@ class DocumentPolicy
      */
     public function update(User $user, Document $document): bool
     {
-        return true;
+        return Document::query()->userRole($user, [RoleEnum::Admin->value, RoleEnum::Share->value, RoleEnum::Write->value])->where('Id', $document->Id)->exists();
+    }
+
+    public function admin(User $user, Document $document): bool
+    {
+        return Document::query()->userRole($user, [RoleEnum::Admin->value])->where('Id', $document->Id)->exists();
+    }
+
+    public function share(User $user, Document $document): bool
+    {
+        return Document::query()->userRole($user, [RoleEnum::Admin->value, RoleEnum::Share->value])->where('Id', $document->Id)->exists();
     }
 
     /**

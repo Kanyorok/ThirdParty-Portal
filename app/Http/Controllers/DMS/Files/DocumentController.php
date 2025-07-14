@@ -22,12 +22,18 @@ use Throwable;
 
 class DocumentController extends Controller
 {
+    /* public function __construct()
+     {
+         $this->middleware('ajax')->except('show');
+         $this->authorizeResource(Document::class);
+     }*/
+
     /**
      * Display a listing of the resource.
      */
     public function index(Repository $repository): FilesCollection
     {
-        return new FilesCollection($repository->documents()->whereHas('current')->with(['current'])->latest('t_Documents.Id')->paginate(50));
+        return new FilesCollection($repository->documents()->user(auth()->user())->whereHas('current')->with(['current'])->latest('t_Documents.ModifiedOn')->paginate(50));
     }
 
     /**

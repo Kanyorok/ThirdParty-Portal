@@ -33,7 +33,7 @@ class RepositoryController extends Controller
     public function show(Request $request, Repository $repository): View|RepositoryCollection
     {
         if ($request->ajax()) {
-            return new RepositoryCollection($repository->repositories()->withCount('documents')->paginate(20));
+            return new RepositoryCollection($repository->repositories()->user($request->user())->withCount('documents')->paginate(20));
         }
         return view('dms.repo.show')
             ->with('repository', $repository)->with('service', new RepositoryService($repository));
