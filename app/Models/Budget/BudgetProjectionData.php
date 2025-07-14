@@ -10,7 +10,7 @@ class BudgetProjectionData extends Model
 {
     use UserActorTrait,SoftDeletes;
 
-    protected $table = 't_BudgetProjectionData';
+    protected $table = 't_BudgetProjectionsData';
     protected $primaryKey = 'Id';
 
     const CREATED_AT = 'CreatedOn';

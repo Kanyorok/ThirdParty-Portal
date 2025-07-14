@@ -18,6 +18,7 @@ return new class extends Migration
             $table->bigInteger('ProductID');
             $table->integer('NumberOfAccounts')->default(0);
             $table->string('AllocationType', 10)->default('monthly');
+            $table->decimal('FullAllocation', 15, 2)->default(0);
 
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');

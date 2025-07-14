@@ -29,37 +29,25 @@
             </tr>
             </thead>
             <tbody>
-            @foreach ($groupedProjections as $budgetId => $projection)
-                @php
-                    $item = $projection->first();
-                    $total_volume = $projection->flatMap->projections->sum('Volume');
-                    $total_value = $projection->flatMap->projections->sum('Value');
-                    $total_products = $projection->flatMap->projections->count();
-                @endphp
+            @foreach ($data as $item)
                 <tr>
                     <td>{{ $loop->iteration }}</td>
-                    <td>{{ $item->budget->Name  ?? $item->BudgetID }}</td>
-                    {{-- <td>Branch</td> --}}
-                    {{-- <td>{{ $projection->scenario->scenarioName }}</td> --}}
-                    {{-- <td>{{ $item->currency->Code ?? $item->BudgetID}}</td> --}}
-                    <td>{{ $projection->flatMap->projections->count() }}</td>
-                    {{-- <td>{{ $projection->period->fiscalYear }}</td> --}}
-                    <td>{{ isset($item->total_volume) ? number_format($item->total_volume) : '0' }}</td>
-                    {{-- <td>{{ isset($item->total_value) ? number_format($item->total_value, 2) : '0.00' }}</td> --}}
-                    {{-- <td><span class="badge bg-warning">Pending</span></td> --}}
+                    <td>{{ $item['Name'] }}</td>
+                    <td>{{ $item['Products'] }}</td>
+                    <td>{{ $item['Accounts'] }}</td>
                     <td>
-                        <a href="{{route('budgetprojections.show',$item->Id)}}"
-                           class="btn btn-sm btn-outline-info">👁</a>
-                        <form action="{{ route('budgetprojections.destroy', $item->Id) }}" method="POST"
-                              class="d-inline">
-                            @csrf @method('DELETE')
-                            <button class="btn btn-sm btn-outline-danger"
-                                    onclick="return confirm('Delete this entry?')">🗑
-                            </button>
-                        </form>
-                        <a href="{{route('budgetprojections.edit',$item->Id)}}"
-                           class="btn btn-sm btn-outline-info">🖉 </a>
-                        <a href="{{route('monthly.create', ['id'=>$item->Id])}}" class="btn btn-sm btn-outline-info">Monthly</a>
+
+                        <a href="{{route('budgetprojections.show',$item['Id'])}}"
+                           class="btn btn-sm btn-outline-info">View</a>
+
+                        <button type="button"
+                                class="btn btn-sm btn-danger custom-delete-btn"
+                                data-bs-toggle="modal"
+                                data-bs-target="#customDeleteConfirmModal"
+                                data-name="{{ $item['Name'] }} ALL Projections"    {{-- Pass item name --}}
+                                data-route="{{ route('budgetprojections.destroy', $item['Id']) }}"> {{-- Pass delete route --}}
+                            Delete
+                        </button>
                     </td>
                 </tr>
             @endforeach
@@ -67,4 +55,7 @@
         </table>
         </div>
     </div>
+
+
+    @include('components.modals.delete-confirm')
 @endsection
