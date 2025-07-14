@@ -15,26 +15,28 @@
 
         <h4 class="fw-bold mb-3">Tenant Exit & Clearance Checklist</h4>
 
-        <form action="{{ route('tenantclearance.store') }}" method="POST">
-            @csrf
-            <div class="card shadow">
-                <div class="card-header bg-light fw-bold"> Exit Process</div>
-                <div class="card-body">
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Tenant / Lease</label>
-                            <select name="Tenant" class="form-select" required>
-                                <option>--Select the tenant</option>
-                                @foreach ($newtenants as $newtenant)
-                                    <option value="{{ $newtenant->Id }}">{{ $newtenant->TenantName }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label" id="exit-date">Exit Date</label>
-                            <input type="date" class="form-control" id="exit-date" value="ExitDate" name="ExitDate">
-                        </div>
-                    </div>
+    <form action="{{ route('tenantclearance.store') }}" method="POST">
+        @csrf
+  <div class="card shadow">
+    <div class="card-header bg-light fw-bold"> Exit Process</div>
+    <div class="card-body">
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <label class="form-label">Tenant / Lease</label>
+            <select name="LeaseId" class="form-select" required>
+                <option>--Select the tenant</option>
+                @foreach ($newtenants as $newtenant)
+                    <option value="{{ $newtenant->LeaseID }}">
+                      Name:{{ $newtenant->lease->tenant->TenantName }} &nbsp;&nbsp; LeaseNo: {{$newtenant->lease->LeaseNumber}}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" id="exit-date">Exit Date</label>
+            <input type="date" class="form-control" id="exit-date" value="ExitDate" name="ExitDate">
+        </div>
+      </div>
 
                     <!-- Checklist Items -->
                     <div class="row g-3 mb-3">

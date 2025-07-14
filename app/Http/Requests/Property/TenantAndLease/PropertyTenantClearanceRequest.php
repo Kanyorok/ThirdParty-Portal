@@ -24,7 +24,7 @@ class PropertyTenantClearanceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'Tenant' => 'required|exists:t_TenantMaintenance,Id',
+            'LeaseId' => 'required|exists:t_LeaseCreation,Id',
             'ExitDate' => ['required', 'date_format:d/m/Y'],
             'FinalInspection' => 'required|boolean',
             'AllDuesPaid' => 'required|boolean',

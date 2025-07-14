@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Property Invoice Details')
+@section('title', 'Rent Invoice')
 @section('content')
     <div class="container mt-5" style="max-width: 700px;">
         <h3 class="mb-4">Property Invoice Details</h3>
@@ -28,7 +28,7 @@
                 </dl>
             </div>
             <div class="card-footer">
-                <a href="#" class="btn btn-primary">Edit</a>
+                <a href="{{ route('rentinvoice.edit', $invoice->Id) }}" class="btn btn-primary">Edit</a>
                 <a href="{{ route('rentinvoice.index') }}" class="btn btn-secondary">Back</a>
             </div>
         </div>
