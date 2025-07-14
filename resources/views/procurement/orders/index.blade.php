@@ -39,25 +39,25 @@
                             <tr>
                                 <td>{{  $loop->iteration }}</td>
                                 <td>{{ $item->OrderNo }}</td>
-                                <td>{{ Carbon::parse($item->OrderDate)->format('}}</td>
+                                <td>{{ Carbon::parse($item->OrderDate)->format('d/m/Y')}}</td>
                                 <td>{{
-echo e( $item->Ex}}</td>
-                                <td>{{
-echo e( $item->P}}</td>
-                                <td>{{
-echo e( $item->B}}</td>
-                                <td>{{
-echo e( number_format($item->UnitPr}}</td>
-                                <td>{{
-echo e( $item->ord}}</td>
-                                <td>{{
-echo e( $item->Cr}}</td>
-                                <td>{{
-echo e( Carbon::parse($item->CreatedOn)->}}</td>
-                                <td><a href="{{ ?><?php
-echo e( route('purchaseOrder.sh}}" class="btn btn-info btn-sm">View</a>
-                                    <a href="{{ ?><?php
-echo e( route('purchaseOrder.approv}}"
+                                        echo e( $item->Ex}}</td>
+                                                                        <td>{{
+                                        echo e( $item->P}}</td>
+                                                                        <td>{{
+                                        echo e( $item->B}}</td>
+                                                                        <td>{{
+                                        echo e( number_format($item->UnitPr}}</td>
+                                                                        <td>{{
+                                        echo e( $item->ord}}</td>
+                                                                        <td>{{
+                                        echo e( $item->Cr}}</td>
+                                                                        <td>{{
+                                        echo e( Carbon::parse($item->CreatedOn)->}}</td>
+                                                                        <td><a href="{{ ?><?php
+                                        echo e( route('purchaseOrder.sh}}" class="btn btn-info btn-sm">View</a>
+                                                                            <a href="{{ ?><?php
+                                        echo e( route('purchaseOrder.approv}}"
                                        class="btn btn-success btn-sm">Approve</a>
                                 </td>
                             </tr>

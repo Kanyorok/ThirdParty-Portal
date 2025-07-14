@@ -44,16 +44,17 @@ class PropertyInvoiceController extends Controller
 
         $Lease = PropertyNewLease::findOrFail($validated['Lease']);
         //dd('validation');
-        PropertyInvoiceService::create(
-            $Lease,
-            $validated['BillingMonth'],
-            $validated['InvoiceDate'],
-            $validated['RentAmount'],
-            $validated['ServicesCharge'],
-            $validated['OtherCharges'],
-            $validated['InvoiceNotes'],
-            Auth::user()
-        );
+         PropertyInvoiceService::create(
+        $validated['TenantId'],
+        $Lease,
+        $validated['BillingMonth'],
+        $validated['InvoiceDate'],
+        $validated['RentAmount'],
+        $validated['ServicesCharge'],
+        $validated['OtherCharges'],
+        $validated['InvoiceNotes'],
+        Auth::user()
+    );
 
         return redirect()->route('rentinvoice.index')->with('success', 'Invoice created successfully');
     }
@@ -80,6 +81,7 @@ class PropertyInvoiceController extends Controller
             $invoice = PropertyInvoice::findOrFail($id);
 
             $invoice->update([
+                'TenantId'=> $validated['TenantId'],
                 'Lease' => $validated['Lease'],
                 'BillingMonth' => $validated['BillingMonth'],
                 'InvoiceDate' => $validated['InvoiceDate'],

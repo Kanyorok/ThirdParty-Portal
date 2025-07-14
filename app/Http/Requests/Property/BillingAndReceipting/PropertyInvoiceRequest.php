@@ -22,6 +22,7 @@ class PropertyInvoiceRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'TenantId'=>'required|exists:t_LeaseCreation,Id',
             'Lease' => 'required|exists:t_LeaseCreation,Id',
             'BillingMonth' => 'required|string|max:50',
             'InvoiceDate' => 'required|date',

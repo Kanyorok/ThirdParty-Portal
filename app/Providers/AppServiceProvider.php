@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Auth\ModelRole;
 use App\Models\Auth\Team;
 use App\Models\Auth\User;
 use App\Models\BR\Account;
@@ -62,6 +63,7 @@ use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
 use App\Models\Procurement\DepartmentNeed;
 use App\Models\Procurement\Order;
+use App\Models\Procurement\PlanLineItem;
 use App\Models\Procurement\PrequalificationPeriod;
 use App\Models\Procurement\ProcurementMethod;
 use App\Models\Procurement\RequisitionLine;

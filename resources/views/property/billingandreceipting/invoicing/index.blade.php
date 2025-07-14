@@ -14,6 +14,7 @@
       <tr>
         <th>#</th>
           <th>Invoice Number</th>
+          <th>TenantId</th>
           <th>Lease</th>
           <th>Billing Period</th>
           <th>Invoice Date</th>
@@ -31,6 +32,7 @@
       <tr>
           <td>{{ $loop->iteration }}</td>
           <td>{{ $invoice->InvoiceNumber ?? '-' }}</td>
+          <td>{{ $invoice->lease->tenant->TenantName  ?? '-' }}</td>
           <td>{{ $invoice->lease->LeaseNumber  ?? '-' }}</td>
           <td>{{ $invoice->BillingMonth ?? '-' }}</td>
           <td>{{ $invoice->InvoiceDate ?? '-' }}</td>
@@ -41,7 +43,6 @@
         <td><span class="badge bg-success">Paid</span></td>
         <td>
             <a href="{{ route('rentinvoice.show', $invoice->Id) }}" class="btn btn-sm btn-outline-primary">👁 View</a>
-          <button class="btn btn-sm btn-outline-secondary">🧾 Receipt</button>
             <a href="{{ route('rentinvoice.edit', $invoice->Id) }}" class="btn btn-sm btn-warning">Edit</a>
             <form action="{{ route('rentinvoice.destroy', $invoice->Id  ) }}" method="POST" class="d-inline">
                 @csrf
