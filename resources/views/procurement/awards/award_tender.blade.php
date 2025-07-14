@@ -11,6 +11,7 @@
                 <h5 class="mb-3">📊 Final Scoring Summary</h5>
                 <table class="table table-bordered align-middle">
                     <thead class="table-light text-center">
+
                     <tr>
                         <th>Bidder</th>
                         <th>Technical Score</th>
@@ -19,6 +20,7 @@
                         <th>Responsive?</th>
                         <th>Select</th>
                     </tr>
+
                     </thead>
                     <tbody>
                     <tr>

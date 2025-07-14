@@ -10,10 +10,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class PropertyNewLease extends Model
 {
     use SoftDeletes, UserActorTrait;
+
     protected $table = 't_LeaseCreation';
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    public const DELETED_AT = 'DeletedOn';
     protected $primaryKey = 'Id';
 
     protected $fillable = [
@@ -40,34 +41,42 @@ class PropertyNewLease extends Model
     {
         return 'LeaseId';
     }
+
     public function getPropertyByTenant()
     {
         return $this->hasMany(PropertyNewLease::class, 'Id', 'Tenant');
     }
+
     public function getLeaseByProperty()
     {
         return $this->hasMany(PropertyNewLease::class, 'Id', 'PropertyID');
     }
+
     public function tenant()
     {
         return $this->belongsTo(PropertyNewTenant::class, 'Tenant', 'Id');
     }
+
     public function property()
     {
         return $this->belongsTo(PropertyRegistry::class, 'PropertyID', 'Id');
     }
+
     public function block()
     {
         return $this->belongsTo(PropertyBlock::class, 'BlockID', 'Id');
     }
+
     public function floor()
     {
         return $this->belongsTo(PropertyFloor::class, 'FloorID', 'Id');
     }
+
     public function unit()
     {
         return $this->belongsTo(PropertyUnit::class, 'Unit', 'Id');
     }
+
     public function code()
     {
         return $this->belongsTo(CodeDetail::class, 'PaymentFrequency', 'ID');

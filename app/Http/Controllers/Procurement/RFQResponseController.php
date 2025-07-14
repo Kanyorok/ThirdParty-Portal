@@ -6,17 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQLine;
 use App\Models\Procurement\RFQResponse;
+use App\Models\procurement\RFQResponseItem;
 use App\Models\ThirdParies\Supplier;
-use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Models\procurement\RFQResponseItem;
 
 class RFQResponseController extends Controller
 {
     public function index()
     {
-        $rfqResponses = RFQResponse::with(['rfq', 'items','items.uom'])->get();
+        $rfqResponses = RFQResponse::with(['rfq', 'items', 'items.uom'])->get();
         return view('procurement.rfqresponses.index', compact('rfqResponses'));
     }
     public function create()
@@ -40,7 +39,7 @@ class RFQResponseController extends Controller
             'RFQNumber' => 'required|string|max:255',
             'RequisitionItems' => 'required|array|min:1',
             'RequisitionItems.*.name' => 'required|string|max:255',
-            'RequisitionItems.*.uom' => 'nullable|string|max:50',
+            'RequisitionItems.*.uom_id' => 'required|integer|exists:t_UOM,Id',
             'RequisitionItems.*.quantity' => 'required|integer|min:1',
             'RequisitionItems.*.quotedprice' => 'required|numeric|min:0',
             'RequisitionItems.*.totalpayable' => 'required|numeric|min:0',
@@ -78,7 +77,7 @@ class RFQResponseController extends Controller
                 $rfqResponse->items()->create([
                     'RfqResponseId' => $rfqResponse->Id,
                     'ItemName' => $item['name'],
-                    'UOM' => $item['uom'] ?? null,
+                    'UOM' => $item['uom_id'],
                     'Quantity' => $item['quantity'],
                     'QuotedPrice' => $item['quotedprice'],
                     'TotalPayable' => $item['totalpayable'],

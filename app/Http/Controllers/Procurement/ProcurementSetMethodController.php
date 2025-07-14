@@ -4,14 +4,12 @@ namespace App\Http\Controllers\Procurement;
 
 use App\Enums\ProcurementPlanStatusEnum;
 use App\Http\Controllers\Controller;
+use App\Models\Core\CodeDetail;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
-use App\Models\Procurement\PlanLineItems;
-use App\Models\Procurement\ProcurementMode;
+use App\Models\Procurement\PlanLineItem;
 use App\Services\Procurement\ProcurementPlan\ProcurementMethodService;
 use Illuminate\Http\Request;
-use App\Models\Core\CodeDetail;
-use App\Models\Procurement\ProcurementMode;
-
+use Illuminate\Support\Facades\Auth;
 
 
 class ProcurementSetMethodController extends Controller
@@ -21,7 +19,7 @@ class ProcurementSetMethodController extends Controller
     {
         $approvedPlans = ConsolidatedProcurementPlan::where('Status', ProcurementPlanStatusEnum::Draft)->get();
         $procurementModes = CodeDetail::where('CodeID', 'ProcurementMethod')->get();
-        return view('procurement.procurementplan.planneditemsandactivities.assignprocurementmethod.index', compact('approvedPlans','procurementModes'));
+        return view('procurement.procurementplan.planneditemsandactivities.assignprocurementmethod.index', compact('approvedPlans', 'procurementModes'));
     }
 
     public function create()
@@ -31,23 +29,30 @@ class ProcurementSetMethodController extends Controller
 
     public function getPlanItems($planId)
     {
-        $Lines = PlanLineItems::with('item', 'procurementMode')
+        $Lines = PlanLineItem::with(['item', 'procurementMode', 'departmentNeed'])
             ->where('PlanID', $planId)
-            ->where('ProcurementMethod',0)
+            ->where('ProcurementMethod', 0)
             ->get()
             ->map(function ($lineItem) {
+                // Find matching DepartmentNeed based on business rules
+                $matchedNeed = $lineItem->departmentNeed()
+                    ->where('BranchID', $lineItem->BranchID)
+                    ->where('DepartmentID', $lineItem->DepartmentID)
+                    ->whereNull('DeletedOn')
+                    ->first();
+
                 return [
                     'LineItemID' => $lineItem->LineItemID,
                     'item_name' => optional($lineItem->item)->ItemName,
                     'MergedQty' => $lineItem->MergedQty,
                     'EstimatedUnitCost' => $lineItem->EstimatedUnitCost,
                     'ProcurementMethod' => optional($lineItem->procurementMode)->Name,
+                    'NeedID' => optional($matchedNeed)->NeedID,
                 ];
             });
 
         return response()->json($Lines);
     }
-
 
     public function store(Request $request, ProcurementMethodService $service)
     {
@@ -62,12 +67,12 @@ class ProcurementSetMethodController extends Controller
         $assignedMethods = $request->input('assigned_method');
         $justifications = $request->input('justification');
 
-        $plan = ConsolidatedProcurementPlan::findOrFail($planId);
-        $user = auth()->user();
+        $user = Auth::user();
+        $plan = ConsolidatedProcurementPlan::find($planId);
 
         foreach ($assignedMethods as $lineItemId => $method) {
             if ($method && $method !== '') {
-            $lineItem = PlanLineItems::find($lineItemId);
+                $lineItem = PlanLineItem::find($lineItemId);
 
                 if ($method && $lineItem) {
                     $lineItem->ProcurementMethod = $method;

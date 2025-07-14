@@ -26,8 +26,6 @@ class AwardsController extends Controller
 
     public function view_rfq($id)
     {
-
-
         return view('procurement.awards.award_rfq', compact('id'));
     }
 

@@ -1,3 +1,4 @@
+@php use Carbon\Carbon; @endphp
 @extends('layouts.app')
 @section('title', '')
 @section('styles')
@@ -48,6 +49,7 @@
                 <div class="table-responsive">
                     <table id="responsivenessTable" class="table table-bordered table-striped align-middle">
                         <thead class="table-light text-center">
+
                         <tr>
                             <th>#</th>
                             <th>Bidder Name</th>
@@ -60,48 +62,49 @@
                             <th>Remarks</th>
                             <th>Action</th>
                         </tr>
-                    </thead>
-                    <tbody>
-                    @forelse($bidResponses as $index => $bid)
-                        <tr>
-                            <td>{{ $index + 1 }}</td>
-                            <td>{{ $bid->supplier->SupplierName ?? '-' }}</td>
-                            <td>{{ $bid->tender->TenderNo ?? '-' }}</td>
-                            <td>{{ \Carbon\Carbon::parse($bid->CreatedOn)->format('d/m/Y') }}</td>
-                            <td>
-                                @if($bid->bidResponsiveness)
-                                    {{ $bid->bidResponsiveness->SubmittedTimely ? '✅' : '❌' }}
-                                @else
-                                    <span class="text-muted">N/A</span>
-                                @endif
-                            </td>
-                            <td>
-                                @if($bid->bidResponsiveness)
-                                    {{ $bid->bidResponsiveness->HasMandatoryDocuments ? '✅' : '❌' }}
-                                @else
-                                    <span class="text-muted">N/A</span>
-                                @endif
-                            </td>
-                            <td>
-                                @if($bid->bidResponsiveness)
-                                    {{ $bid->bidResponsiveness->IsEligible ? '✅' : '❌' }}
-                                @else
-                                    <span class="text-muted">N/A</span>
-                                @endif
-                            </td>
-                            <td>
-                                @if($bid->bidResponsiveness)
-                                    {!! $bid->bidResponsiveness->IsResponsive ? '<span class="badge bg-success">Responsive</span>' : '<span class="badge bg-danger">Non-Responsive</span>' !!}
-                                @else
-                                    <span class="badge bg-secondary">Not Reviewed</span>
-                                @endif
-                            </td>
-                            <td>
-                                {{ $bid->bidResponsiveness->Remarks ?? '—' }}
-                            </td>
-                            <td>
-                                <a href="{{ route('bidresponsiveness.create', $bid->id) }}" class="btn btn-sm btn-outline-secondary">Review</a>
+                        </thead>
+                        <tbody>
+                        @forelse($bidResponses as $index => $bid)
+                            <tr>
+                                <td>{{ $index + 1 }}</td>
+                                <td>{{ $bid->supplier->SupplierName ?? '-' }}</td>
+                                <td>{{ $bid->tender->TenderNo ?? '-' }}</td>
+                                <td>{{ Carbon::parse($bid->CreatedOn)->format('Y-m-d') }}</td>
 
+                                <td>
+                                    @if($bid->bidResponsiveness)
+                                        {{ $bid->bidResponsiveness->SubmittedTimely ? '✅' : '❌' }}
+                                    @else
+                                        <span class="text-muted">N/A</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($bid->bidResponsiveness)
+                                        {{ $bid->bidResponsiveness->HasMandatoryDocuments ? '✅' : '❌' }}
+                                    @else
+                                        <span class="text-muted">N/A</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($bid->bidResponsiveness)
+                                        {{ $bid->bidResponsiveness->IsEligible ? '✅' : '❌' }}
+                                    @else
+                                        <span class="text-muted">N/A</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($bid->bidResponsiveness)
+                                        {!! $bid->bidResponsiveness->IsResponsive ? '<span class="badge bg-success">Responsive</span>' : '<span class="badge bg-danger">Non-Responsive</span>' !!}
+                                    @else
+                                        <span class="badge bg-secondary">Not Reviewed</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    {{ $bid->bidResponsiveness->Remarks ?? '—' }}
+                                </td>
+                                <td>
+                                    <a href="{{ route('bidresponsiveness.create', $bid->id) }}"
+                                       class="btn btn-sm btn-outline-secondary">Review</a>
                                 </td>
 
                             </tr>
@@ -136,3 +139,4 @@
         });
     </script>
 @endsection
+

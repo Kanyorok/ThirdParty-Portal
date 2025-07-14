@@ -18,6 +18,7 @@ class SupplierResponseEvaluation extends Model
     const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
+        'RFQEvaluationId',
         'SupplierId',
         'TechnicalQuality',
         'TechnicalQualityComments',
@@ -31,9 +32,9 @@ class SupplierResponseEvaluation extends Model
         'ModifiedBy',
     ];
 
-     public function rfqEvaluations()
+    public function rfqEvaluation()
     {
-        return $this->belongsToMany(RFQEvaluation::class, 't_RFQEvaluation_Evaluation', 'EvaluationId', 'RFQEvaluationId')
-                    ->withTimestamps();
+        return $this->belongsTo(RFQEvaluation::class, 'RFQEvaluationId', 'Id');
     }
+
 }

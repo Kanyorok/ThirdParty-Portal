@@ -84,8 +84,8 @@
 <!-- JavaScript for fetching and populating modal -->
 <script>
     function openEditModal(NeedID) {
-        const fetchLineRouteTemplate = @json(route('procurementdepartmentalplan.view', ['NeedID' => 'REPLACE_ID']));
-        const fetchUrl = fetchLineRouteTemplate.replace('REPLACE_ID', NeedID);
+        const fetchLineRouteTemplate = "{{ route('procurementdepartmentalplan.view', ['NeedID' => '__NEED_ID__']) }}";
+        const fetchUrl = fetchLineRouteTemplate.replace('__NEED_ID__', NeedID);
         fetch(fetchUrl)
             .then(response => response.json())
             .then(data => {

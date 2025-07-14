@@ -1,22 +1,14 @@
-@php use App\Enums\Core\ExtensionsEnum; @endphp
-@php use App\Enums\Core\VisibilityEnum; @endphp
-@extends('layouts.app')
+@php use App\Enums\Core\ExtensionsEnum; use App\Enums\Core\VisibilityEnum; @endphp
+@extends('dms.layout')
 
 @section('title')
     Recent Files
 @endsection
-@section('breadcrumbs')
-    <li class="breadcrumb-item"><a href="#">DMS</a></li>
-@endsection
+
 @section('styles')
     <link rel="stylesheet" href="{{ asset('assets/libs/dropzone/dropzone.min.css') }}">
-    <style>
-        .icon-size {
-            height: 30px !important;
-            width: 30px !important;
-        }
-    </style>
 @endsection
+
 @section('content')
     <div class="row">
         <div class="col-12 file-manger-wrapper">
@@ -53,7 +45,6 @@
             </div>
         </div>
     </div>
-
     <div class="modal fade" id="dmsActionsModal" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
@@ -80,7 +71,7 @@
                                 </button>
                                 <button class="btn btn-danger float-end" id="trashFileBtn"
                                         type="submit"><i
-                                        class="fas fa-trash"></i> yes, document
+                                        class="fas fa-trash"></i> yes, delete
                                 </button>
                             </div>
                         </form>
@@ -117,7 +108,6 @@
                 $('#trashFileModal').removeClass('d-none');
                 $Modal.modal('show');
             });
-
             $('form#trashFileForm').submit(async function (e) {
                 e.preventDefault();
                 const response = await saveForm($(this), $('#trashFileBtn'), false, true, true);
@@ -128,7 +118,6 @@
             });
             fetchFiles();
         });
-
 
         async function fetchFiles() {
             const parent = $('#fileContents'), cmtMsg = $('#filesMessage');

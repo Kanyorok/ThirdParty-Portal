@@ -45,47 +45,46 @@
                 <hr class="my-0">
                 <div class="card-body">
                     <h5 class="h6 card-title">Contacts</h5>
-                    <div class="text center">
+
+                    <div class="text-start">
                         @php
                             $phone = (new ClientService($client))->phoneNo();
                         @endphp
+
                         @if(is_string($phone))
                             <div class="btn-group">
                                 <button type="button" data-bs-toggle="dropdown" aria-haspopup="true"
-                                        aria-expanded="false" class="btn btn-link dropdown-toggle">
+                                        aria-expanded="false"
+                                        class="btn btn-link dropdown-toggle text-break text-start">
                                     {{ $phone }}
                                 </button>
-                                <div class="dropdown-menu" style="">
+                                <div class="dropdown-menu">
                                     <a class="dropdown-item disabled text-decoration-line-through"
-                                       href="javascript:void(0)"><i class="fas fa-phone-alt"></i> Call</a>
+                                       href="javascript:void(0)">
+                                        <i class="fas fa-phone-alt"></i> Call
+                                    </a>
                                     <div class="dropdown-divider"></div>
                                     <a class="dropdown-item send-message-to-action" href="javascript:void(0)"
                                        data-info="{{ route('client-sms.store', [$client->ClientID]) }}~{{ $client->Name }}~{{ $phone }}">
-                                        <i class="fas fa-message"></i> Message</a>
+                                        <i class="fas fa-message"></i> Message
+                                    </a>
                                 </div>
                             </div>
                         @endif
 
-                        {{--
-                                                @if(!empty($client->Phone1))
-                                                    <a href="tel:{{ $client->Phone1 }}"
-                                                       class="btn btn-lg btn-link me-1 my-1">{{ $client->Phone1 }}</a>
-                                                @endif
-                                                @if(!empty($client->Phone2))
-                                                    <a href="tel:{{ $client->Phone2 }}"
-                                                       class="btn btn-lg btn-link me-1 my-1">{{ $client->Phone2 }}</a>
-                                                @endif
-                                                @if(!empty($client->Mobile))
-                                                    <a href="tel:{{ $client->Mobile }}"
-                                                       class="btn btn-lg btn-link me-1 my-1">{{ $client->Mobile }}</a>
-                                                @endif--}}
                         @if(!empty($client->Email))
-                            <a href="javascript:void(0)"
-                               data-info="{{ route('client-mail.store', [$client->ClientID]) }}~{{ $client->Name }}~{{ $client->Email }}"
-                               class="btn btn-lg btn-link me-1 my-1 send-mail-to-action">{{ $client->Email }}</a>
+                            <div class="d-block mt-2">
+                                <a href="javascript:void(0)"
+                                   data-info="{{ route('client-mail.store', [$client->ClientID]) }}~{{ $client->Name }}~{{ $client->Email }}"
+                                   class="btn btn-link text-break text-wrap send-mail-to-action text-start"
+                                   style="word-break: break-word;">
+                                    {{ $client->Email }}
+                                </a>
+                            </div>
                         @endif
                     </div>
                 </div>
+
                 <hr class="my-0">
                 <div class="card-body">
                     <h5 class="h6 card-title">Marketing Lists <a href="#" class="float-end click-summary-data"

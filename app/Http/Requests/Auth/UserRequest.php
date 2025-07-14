@@ -83,7 +83,7 @@ class UserRequest extends FormRequest
     /**
      * @throws ValidationException
      */
-    public function getUserEmail(User $user = null): string
+    public function getUserEmail($user = null): string
     {
         $Email = $this->validated('Email');
         $query = User::query()->where('Email', $Email);
@@ -101,7 +101,7 @@ class UserRequest extends FormRequest
     /**
      * @throws ValidationException
      */
-    public function getUserPhone(User $user = null): string
+    public function getUserPhone($user = null): string
     {
         $Phone = $this->validated('Phone');
         if (!is_string($Phone)) {
@@ -122,7 +122,7 @@ class UserRequest extends FormRequest
     /**
      * @throws ValidationException
      */
-    public function getUserID(User $user = null): string
+    public function getUserID($user = null): string
     {
         $UserID = Str::upper($this->validated('UserID'));
         $query = User::query()->where('UserID', $UserID);

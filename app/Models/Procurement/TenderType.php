@@ -17,7 +17,7 @@ class TenderType extends Model
 
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    const DELETED_AT = 'DeletedOn';
 
 
     protected $fillable = [
@@ -32,7 +32,7 @@ class TenderType extends Model
     //     'TenderType' => TenderTypeEnum::class,
     // ];
 
-    public static function generateTypeCode(string $tenderTypeValue = null)
+    public static function generateTypeCode($tenderTypeValue = null)
     {
         $prefix = match($tenderTypeValue) {
             TenderTypeEnum::Open->value => 'OPT-',

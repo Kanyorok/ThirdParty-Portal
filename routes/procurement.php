@@ -1,19 +1,32 @@
 <?php
+
+
+use App\Http\Controllers\Procurement\RFQCommitteeController;
+use App\Http\Controllers\Procurement\RFQCriteriaController;
+use App\Http\Controllers\Procurement\RFQSectionController;
+use App\Http\Controllers\Procurement\RFQSettingCriteriaController;
+use App\Http\Controllers\Procurement\RFQSettingSectionController;
 use Illuminate\Support\Facades\Route;
+
+
 use App\Http\Controllers\Procurement\ApprovalSetupController;
 use App\Http\Controllers\Procurement\AwardsController;
 use App\Http\Controllers\Procurement\BidEvaluationController;
 use App\Http\Controllers\Procurement\BidScoreConsolidationController;
 use App\Http\Controllers\Procurement\CalenderBasedController;
 use App\Http\Controllers\Procurement\ConsolidatedDashboardController;
+use App\Http\Controllers\Procurement\ContractsController;
+use App\Http\Controllers\Procurement\ContractsLifecycleController;
 use App\Http\Controllers\Procurement\CriteriaController;
 use App\Http\Controllers\Procurement\DelayedItemsController;
+use App\Http\Controllers\Procurement\DeliveryController;
 use App\Http\Controllers\Procurement\DepartmentNeedApprovalController;
 use App\Http\Controllers\Procurement\DepartmentNeedsController;
 use App\Http\Controllers\Procurement\EngagedAuditorController;
 use App\Http\Controllers\Procurement\EvaluationCriteriaController;
 use App\Http\Controllers\Procurement\EvaluatorDashboardController;
 use App\Http\Controllers\Procurement\GoodsReceiptController;
+use App\Http\Controllers\Procurement\InspectionController;
 use App\Http\Controllers\Procurement\MapToBudgetController;
 use App\Http\Controllers\Procurement\ModeTimelineController;
 use App\Http\Controllers\Procurement\PlanApprovalInboxController;
@@ -23,12 +36,10 @@ use App\Http\Controllers\Procurement\PlanFromNeedsController;
 use App\Http\Controllers\Procurement\PlanManualInputController;
 use App\Http\Controllers\Procurement\PlanvsActualController;
 use App\Http\Controllers\Procurement\PrequalificationApplicationsController;
-use App\Http\Controllers\Procurement\PrequalificationCriteriaController;
 use App\Http\Controllers\Procurement\PrequalificationCriteriaSetupController;
 use App\Http\Controllers\Procurement\PrequalificationEvalAprovalController;
 use App\Http\Controllers\Procurement\PrequalificationEvaluationController;
 use App\Http\Controllers\Procurement\PrequalificationPeriodController;
-use App\Http\Controllers\Procurement\PrequalificationRoundsController;
 use App\Http\Controllers\Procurement\PrequalifiedSuppliersController;
 use App\Http\Controllers\Procurement\ProcurementApprovalController;
 use App\Http\Controllers\Procurement\ProcurementModeController;
@@ -67,6 +78,7 @@ use App\Http\Controllers\Procurement\TenderResponseController;
 use App\Http\Controllers\Procurement\TenderSubmissionController;
 use App\Http\Controllers\Procurement\TenderTypeController;
 use App\Http\Controllers\Procurement\TimelineController;
+use Illuminate\Support\Facades\Route;
 
 
 Route::namespace('Procurement')->prefix('procurement')->group(function () {
@@ -86,6 +98,8 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
 
     Route::post('requisition/approve/{id}', [RequisitionsController::class, 'approve'])->name('requisition.approve');
     Route::get('requisition/approval/{id}', [RequisitionsController::class, 'approval'])->name('requisition.approval');
+    Route::get('procurementplan/details/{id}', [RequisitionsController::class, 'getPlanDetails'])
+        ->name('procurement.plan.details');
     Route::prefix('admin')->group(function () {
         Route::put('/approval-settings/{id}', [ApprovalSetupController::class, 'update'])->name('approval-setup.update');
         Route::post('/approval-settings', [ApprovalSetupController::class, 'store'])->name('approval-settings.store');
@@ -170,7 +184,7 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     // RFQ Evaluation routes
     Route::get('/rfq-evaluations', [RFQEvaluationController::class, 'index'])->name('evaluations.index');
     Route::get('/rfq-evaluations/create', [RFQEvaluationController::class, 'create'])->name('evaluations.create');
-    Route::post('/rfq-evaluations', [RFQEvaluationController::class, 'store'])->name('evaluations.store');
+    Route::post('/procurement/rfq-evaluations/store', [RFQEvaluationController::class, 'store'])->name('evaluations.store');
     Route::get('/rfq-suppliers/{rfqId}', [RFQResponseController::class, 'getSuppliers']);
 
     //GoodsReceipts
@@ -349,23 +363,23 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::get('/planning/assign-methods', [MapToBudgetController::class, 'index'])->name('planning.assign.methods');
     Route::post('/planning/assign-methods', [MapToBudgetController::class, 'store'])->name('planning.assign.methods.store');
 //Plan Approval
-Route::prefix('planning')->name('planning.')->group(function () {
-    Route::get('/approval', [ProcurementApprovalController::class, 'index'])->name('approval.index');
-    Route::get('/approval/plan-details', [ProcurementApprovalController::class, 'getPlanDetails'])->name('getPlanDetails');
-    Route::post('/approval/submit-decision', [ProcurementApprovalController::class, 'submitDecision'])->name('submitDecision');
-});
+    Route::prefix('planning')->name('planning.')->group(function () {
+        Route::get('/approval', [ProcurementApprovalController::class, 'index'])->name('approval.index');
+        Route::get('/approval/plan-details', [ProcurementApprovalController::class, 'getPlanDetails'])->name('getPlanDetails');
+        Route::post('/approval/submit-decision', [ProcurementApprovalController::class, 'submitDecision'])->name('submitDecision');
+    });
 
     Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('procurement-reports.export');
     Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
         'index' => 'procurement-reports.index',
         'show' => 'procurement-reports.show'
     ]);
-   // Route::get('/planning/get-plan-details', [ProcurementApprovalController::class, 'getPlanDetails'])
-   // ->name('planning.getPlanDetails');
+    // Route::get('/planning/get-plan-details', [ProcurementApprovalController::class, 'getPlanDetails'])
+    // ->name('planning.getPlanDetails');
 
 });
 
- 
+
 
 //Route::resource('preqrounds', PrequalificationRoundsController::class);
 Route::get('preqrounds', [PrequalificationPeriodController::class, 'index'])->name('preqrounds.index');
@@ -388,16 +402,13 @@ Route::put('preqcriteria/update/{id}', [PrequalificationCriteriaSetupController:
 Route::delete('preqcriteria/destroy/{id}', [PrequalificationCriteriaSetupController::class, 'destroy'])->name('preqcriteria.destroy');
 
 
-
-
-
-
-
 Route::resource('supplierslist', SupplierListingController::class);
+
  Route::resource('preqapplications', PrequalificationApplicationsController::class);
  Route::resource('preqevaluation', PrequalificationEvaluationController::class);
  Route::resource('preqevalapproval', PrequalificationEvalAprovalController::class);
  Route::resource('preqsuppliers', PrequalifiedSuppliersController::class);
+
 Route::resource('bidresponsiveness', TenderBidResponsivenessController::class);
 Route::get('bidresponsiveness/create/{tenderSupplier}', [TenderBidResponsivenessController::class, 'create'])->name('bidresponsiveness.create');
 
@@ -405,6 +416,65 @@ Route::get('/awards-tender/view/{id}', [AwardsController::class, 'view_tender'])
 Route::get('/awards-rfq/view/{id}', [AwardsController::class, 'view_rfq'])->name('awards.view');
 
 Route::resource('procawards', AwardsController::class);
+
+// Contracts - Core CRUD
+Route::get('contracts', [ContractsController::class, 'index'])->name('contracts.index');
+Route::get('contracts/create', [ContractsController::class, 'create'])->name('contracts.create');
+Route::post('contracts', [ContractsController::class, 'store'])->name('contracts.store');
+Route::get('contracts/{id}/view', [ContractsController::class, 'view'])->name('contracts.view');
+Route::get('contracts/{id}/edit', [ContractsController::class, 'edit'])->name('contracts.edit');
+Route::put('contracts/{id}', [ContractsController::class, 'update'])->name('contracts.update');
+
+// Contracts - Approval Queue
+Route::get('contracts/approval-queue', [ContractsController::class, 'approvalQueue'])->name('contracts.approve_index');
+Route::get('contracts/{id}/approve', [ContractsController::class, 'approve'])->name('contracts.approve');
+Route::post('contracts/{id}/approve', [ContractsController::class, 'submitApproval'])->name('contracts.approve.submit');
+
+// Contracts - LPO Link
+Route::get('contracts/{id}/lpo', [ContractsController::class, 'linkLPO'])->name('contracts.lpo.link');
+
+// Contracts Lifecycle
+Route::get('contracts/lifecycle', [ContractsLifecycleController::class, 'index'])->name('contractcycle.index');
+Route::get('contracts/lifecycle/{id}/view', [ContractsLifecycleController::class, 'view'])->name('contractcycle.view');
+Route::get('contracts/lifecycle/{id}/amend', [ContractsLifecycleController::class, 'amend'])->name('contractcycle.amend');
+Route::post('contracts/lifecycle/{id}/amend', [ContractsLifecycleController::class, 'submitAmendment'])->name('contractcycle.amend.submit');
+Route::get('contracts/lifecycle/{id}/terminate', [ContractsLifecycleController::class, 'terminate'])->name('contractcycle.terminate');
+Route::post('contracts/lifecycle/{id}/terminate', [ContractsLifecycleController::class, 'submitTermination'])->name('contractcycle.terminate.submit');
+Route::get('contracts/lifecycle/{id}/execute', [ContractsLifecycleController::class, 'monitorExecution'])->name('contractcycle.execution');
+
+
+Route::resource('deliverynotes', DeliveryController::class);
+Route::resource('goodsinspection', InspectionController::class);
+
+Route::post('/rfqcommittee', [RFQCommitteeController::class, 'store'])->name('rfqcommittee.store');
+
+//RFQ Criteria Setup
+Route::prefix('procurement/rfq')->group(function () {
+    Route::resource('sections', RFQSettingSectionController::class)->names('rfqsettingsections');
+    Route::resource('criterias', RFQSettingCriteriaController::class)->names('rfqsettingcriterias');
+
+    Route::get('/procurement/rfqcriteriasetup/evaluations', [RFQSectionController::class, 'evaluationSetup'])->name('rfqcriteriasetup.evaluations');
+
+});
+Route::post('/procurement/rfqcriteriasetup/evaluations/save', [RFQSectionController::class, 'saveEvaluation'])->name('rfqcriteriasetup.evaluations.save');
+Route::get('/sections/info', [RFQSettingSectionController::class,'index'])->name('rfqsettingsections.index');
+Route::get('/procurement/rfq/criterias/section/{id}', [RFQSettingCriteriaController::class, 'show'])->name('rfqsettingcriterias.show');
+Route::post('/', [RFQSettingSectionController::class, 'store'])->name('rfqsettingsections.store');
+Route::post('/', [RFQSettingCriteriaController::class, 'store'])->name('rfqsettingcriterias.store');
+
+
+Route::prefix('procurement/rfq')->group(function () {
+    Route::resource('procurement/rfq/criterias', RFQCriteriaController::class)->only(['store', 'show', 'destroy']);
+    Route::resource('procurement/rfq/sections', RFQSectionController::class);
+    Route::resource('procurement/rfq/criterias', RFQCriteriaController::class)->names('rfqcriterias');
+    Route::resource('procurement/rfq/sections', RFQSectionController::class)->names('rfqsections');
+});
+Route::get('procurement/rfq/criterias/setup/{rfqId}', [RFQCriteriaController::class, 'show'])->name('rfqcriterias.show');
+Route::post('procurement/rfq/criterias', [RFQCriteriaController::class, 'store'])->name('rfqcriterias.store');
+Route::get('/procurement/committee-references/{type}', [TenderCommitteeController::class, 'getReferences']);
+Route::get('procurement/tendercommittee/{id}/{type}', [TenderCommitteeController::class, 'show'])->name('tendercommittee.show');
+Route::get('/procurement/rfq-committee-member/{rfqId}', [RFQEvaluationController::class, 'getCommitteeMemberInfo']);
+
 
 
 

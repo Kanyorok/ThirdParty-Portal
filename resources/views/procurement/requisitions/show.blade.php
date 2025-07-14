@@ -10,9 +10,11 @@
 @endsection
 @section('content')
     <div class="mb-3">
-        <button class="btn btn-primary float-end ms-2 modal-create-item" type="button"><i class="fas fa-plus-circle"></i> Add
-            Items
-        </button>
+        @if(isset($requisitionInfo) && $requisitionInfo->StatusID != 26)
+            <button class="btn btn-primary float-end ms-2 modal-create-item" type="button">
+                <i class="fas fa-plus-circle"></i> Add Items
+            </button>
+        @endif
     </div>
     <div class="row">
         <div class="col-12">

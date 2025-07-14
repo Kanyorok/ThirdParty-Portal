@@ -6,7 +6,7 @@ use App\Enums\Core\ExtensionsEnum;
 use App\Enums\Core\VisibilityEnum;
 use App\Exceptions\ErroredException;
 use App\Models\Core\CategoryMaster;
-use App\Models\Core\SpecialPermission;
+use App\Traits\Model\SpecialPermissionTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -18,11 +18,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Document extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes, UserActorTrait, SpecialPermissionTrait;
 
-    const string CREATED_AT = 'CreatedOn';
-    const string UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    const CREATED_AT = 'CreatedOn';
+    const UPDATED_AT = 'ModifiedOn';
+    const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Documents';
     protected $primaryKey = 'Id';
@@ -58,7 +58,7 @@ class Document extends Model
 
     public function getRouteKeyName(): string
     {
-        return 'DocumentId';
+        return self::getPrimaryKey();
     }
 
     public function repository(): BelongsTo
@@ -69,13 +69,14 @@ class Document extends Model
     public function tags(): BelongsToMany
     {
         return $this->belongsToMany(DMSTags::class, 't_DocumentTags', 'DocId', 'TagId', $this->primaryKey, 'Id')
-            ->withPivot(['CreatedBy', 'ModifiedBy', 'DeletedBy'])->withTimestamps()->using(DocumentTags::class);
+            ->withPivot(['CreatedBy', 'ModifiedBy', 'DeletedBy'])->withTimestamps()->whereNull('t_DocumentTags.DeletedOn')
+            ->using(DocumentTags::class);
         //
     }
 
-    public function permissions(): MorphMany
+    public function relations(): MorphMany
     {
-        return $this->morphMany(SpecialPermission::class, 'model', "Model", "ModelID", 'Id');
+        return $this->morphMany(DocumentRelation::class, 'related', "Related", "RelatedID", 'Id');
     }
 
     public function current(): HasOne
@@ -91,5 +92,10 @@ class Document extends Model
     public function properties(): HasMany
     {
         return $this->hasMany(DocumentAttribute::class, 'DocumentId', 'Id');
+    }
+
+    public function getShareEmailSubject(): string
+    {
+        return 'Notification: #permission permission to ' . $this->Name;
     }
 }
