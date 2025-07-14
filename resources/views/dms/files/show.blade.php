@@ -22,7 +22,10 @@
             <div class="card">
                 <div class="card-body">
                     <ul class="list-group list-group-flush">
-                        <li class="list-group-item ">Name: <b class="float-end">{{ $file->Name }}</b></li>
+                        <li class="list-group-item ">Name: <span class="float-end"><b>{{ $file->Name }}</b>
+                            <a href="javascript:void(0)" class="float-end edit-file-name">
+                                    <i class="material-icons-two-tone"> edit</i></a>
+                            </span></li>
                         <li class="list-group-item">Type : <b class="float-end">{!! $file->ext()->getIcon() !!} &nbsp;
                                 {{$file->ext()->name}}</b></li>
                         <li class="list-group-item">Visibility : <span class="float-end"> <b>{!! $file->Visibility->icon() !!}
@@ -31,6 +34,9 @@
                                     <i class="material-icons-two-tone"> edit</i></a></span></li>
                         <li class="list-group-item">Versions : <b
                                 class="float-end">{{ number_format($file->versions_count) }}</b></li>
+                        <li class="list-group-item">Repository : <b
+                                class="float-end">{{ $file->repository->Name }}</b>
+                        </li>
                         <li class="list-group-item">Size : <b
                                 class="float-end">{{  \Illuminate\Support\Number::fileSize( $file->current->Size, 2) }}</b>
                         </li>
@@ -189,6 +195,31 @@
                             </div>
                         </form>
                     </div>
+                    <div class="onboarding-content with-gradient d-none modal-item" id="updateFileNameModal">
+                        <form action="{{ route('files.update',[$file->repository->RepositoryId,$file->DocumentId]) }}"
+                              method="post"
+                              id="updateFileNameForm"> @csrf
+                            @method('put')
+                            <div class="mb-3">
+                                <label class="form-label" for="Name">File Name</label>
+                                <input type="text" class="form-control" id="Name" placeholder="Name"
+                                       required name="Name" minlength="2"
+                                       value="{{  pathinfo($file->Name, PATHINFO_FILENAME) }}">
+                                <p id="Name_error" class="invalid-feedback d-none error" role="alert"></p>
+                            </div>
+                            <hr>
+                            <div class="mt-4">
+                                <button type="button" class="btn btn-secondary float-start"
+                                        data-bs-dismiss="modal">
+                                    cancel
+                                </button>
+                                <button class="btn btn-primary float-end" id="updateFileNameBtn" type="submit">
+                                    <i
+                                        class="fas fa-save"></i> rename
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                     <div class="onboarding-content with-gradient d-none modal-item" id="addFilePermissionModal">
                         <form action="{{ route('file-permissions.store',[$file->DocumentId]) }}" method="post"
                               id="addFilePermissionForm">
@@ -258,6 +289,18 @@
             fetchFilePermissionsTableTable()
             fetchFilePreview();
 
+            $(document).on('click', '.edit-file-name', function () {
+                $(".modal-item").addClass('d-none');
+                $('#updateFileNameModal').removeClass('d-none');
+                $('.modal-title').html('rename {{ $file->Name }}.');
+                $Modal.modal('show');
+            });
+            $('form#updateFileNameForm').submit(async function (e) {
+                e.preventDefault();
+                if (await saveForm($(this), $('#updateFileNameBtn'), true, true, true)) {
+                    $Modal.modal('hide');
+                }
+            });
 
             $('#share_party').select2({
                 placeholder: "Search a user or team (t:)", minimumInputLength: 2,
@@ -302,7 +345,6 @@
                 $('.modal-title').html('change {{ $file->Name }} visibility.');
                 $Modal.modal('show');
             });
-
             $('form#addFilePermissionForm').submit(async function (e) {
                 e.preventDefault();
                 if (await saveForm($(this), $('#addFilePermissionBtn'), false, true, true)) {
@@ -310,7 +352,6 @@
                     fetchFilePermissionsTableTable();
                 }
             });
-
             $('form#trashFilePermissionForm').submit(async function (e) {
                 e.preventDefault();
                 if (await saveForm($(this), $('#trashFilePermissionBtn'), false, true, true)) {
@@ -318,7 +359,6 @@
                     fetchFilePermissionsTableTable();
                 }
             });
-
             $('form#updateFileVisibilityForm').submit(async function (e) {
                 e.preventDefault();
                 const response = await saveForm($(this), $('#updateFileVisibilityBtn'), false, true, true, true);

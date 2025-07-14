@@ -84,9 +84,31 @@ class DocumentController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Document $document)
+    public function update(Request $request, Repository $repository, Document $document)
     {
-        //
+        if ($document->RepositoryId !== $repository->Id) {
+            return $this->errored('file not found');
+        }
+
+        $data = $request->validate([
+            'Name' => ['required', 'string', 'min:2', 'max:200'],
+        ]);
+        $actor = $request->user();
+        try {
+            return DB::transaction(function () use ($document, $repository, $data, $actor) {
+                activity()->causedBy($actor)->performedOn($document)->event('update')->log('rename document  ' . $document->Name . ' to ' . $data['Name'] . '.');
+
+                $document->forceFill([
+                    'Name' => $data['Name'] . '.' . pathinfo($document->Name, PATHINFO_EXTENSION),
+                    'ModifiedBy' => $actor->Id,
+                ])->save();
+
+                return $this->succeeded('document renamed successfully', route('files.show', [$repository->RepositoryId, $document->DocumentId]));
+            });
+        } catch (Throwable|Exception $e) {
+            Log::error('rename file failed : ' . $e);
+        }
+        return $this->errored('rename file failed, try again later');
     }
 
     /**
