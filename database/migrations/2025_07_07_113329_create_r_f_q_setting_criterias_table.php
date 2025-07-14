@@ -4,23 +4,20 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     /**
      * Run the migrations.
      */
     public function up(): void
     {
-        Schema::create('t_TenantMaintenance', function (Blueprint $table) {
-            $table->id('Id');
-            $table->foreignId('TenantType')->constrained('t_CodeDetails', 'Id');
-            $table->string('TenantName');
-            $table->string('IDRegistrationNo')->unique();
-            $table->string('PhoneNumber')->unique();
-            $table->string('EmailAddress')->unique();
-            $table->string('Nationality');
-            $table->string('PostalAddress');
-            $table->string('Remarks');
-            $table->boolean('IsActive')->default(1);
+        Schema::create('t_RFQSettingCriterias', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('SectionID')->constrained('t_RFQSettingSections', 'id')->onDelete('cascade');
+            $table->string('CriteriaName', 100);
+            $table->text('Description')->nullable();
+            $table->boolean('IsActive')->default(true);
+
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
@@ -35,6 +32,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('t_TenantMaintenance');
+        Schema::dropIfExists('t_RFQSettingCriterias');
     }
 };

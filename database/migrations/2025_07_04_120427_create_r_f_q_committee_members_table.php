@@ -11,16 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('t_TenantClearance', function (Blueprint $table) {
-            $table->id('Id');
-            $table->foreignId('Tenant')->constrained('t_TenantMaintenance', 'Id');
-            $table->date('ExitDate');
-            $table->boolean('FinalInspection');
-            $table->boolean('AllDuesPaid');
-            $table->boolean('KeysReturned');
-            $table->foreignId('DepositRefunded')->constrained('t_CodeDetails', 'Id');
-            $table->string('AdditionalNotes');
-            $table->string('Status')->max(1);
+        Schema::create('t_RFQCommitteeMembers', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('CommitteeID')->constrained('t_RFQCommittee', 'Id');
+            $table->foreignId('UserID')->constrained('t_Users', 'Id');
+            $table->foreignId('RFQID')->constrained('t_RFQ', 'Id');
+            $table->string('Role', 100)->nullable();
+            $table->unsignedTinyInteger('Response')->default(0);
+            $table->boolean('IsActive')->default(true);
+            $table->boolean('HasEvaluated')->default(false)->nullable();
+            $table->text('reason')->nullable();
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
@@ -35,6 +36,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('t_RFQSection');
+        Schema::dropIfExists('t_RFQCommitteeMembers');
     }
 };

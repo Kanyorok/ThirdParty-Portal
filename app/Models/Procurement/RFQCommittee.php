@@ -6,7 +6,7 @@ use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class TenderCommittee extends Model
+class RFQCommittee extends Model
 {
     use UserActorTrait, SoftDeletes;
 
@@ -14,12 +14,12 @@ class TenderCommittee extends Model
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
 
-    protected $table = 't_TenderCommittee';
+    protected $table = 't_RFQCommittee';
+
+    protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'TenderID',
-        'CommitteeType',
-        'ReferenceId',
+        'RFQID',
         'CommitteeName',
         'AppointmentDate',
         'IsActive',
@@ -32,9 +32,7 @@ class TenderCommittee extends Model
     ];
 
     protected $casts = [
-        'CommitteeType' => 'string',
-        'ReferenceId' => 'integer',
-        'TenderID' => 'integer',
+        'RFQID' => 'integer',
         'CommitteeName' => 'string',
         'AppointmentDate' => 'date',
         'IsActive' => 'boolean',
@@ -53,34 +51,22 @@ class TenderCommittee extends Model
         'DeletedOn'
     ];
 
-    protected $primaryKey = 'Id';
+    public function rfq()
+    {
+        return $this->belongsTo(RFQ::class, 'RFQID', 'Id');
+    }
+
+    public function members()
+    {
+        return $this->hasMany(RFQCommitteeMember::class, 'CommitteeID', 'Id');
+    }
 
     public static function getPrimaryKey(): string
     {
         return (new self())->getRouteKeyName();
     }
-
     public function getRouteKeyName(): string
     {
-        return 'TenderCommitteeID';
-    }
-
-    public function members()
-    {
-        return $this->hasMany(TenderCommitteeMember::class, 'CommitteeID', 'Id');
-    }
-
-    public function tender()
-    {
-        return $this->belongsTo(Tender::class, 'TenderID', 'Id');
-    }
-
-    public function reference()
-    {
-        return match ($this->CommitteeType) {
-            'tender' => $this->belongsTo(Tender::class, 'ReferenceId'),
-            'rfq' => $this->belongsTo(RFQ::class, 'ReferenceId'),
-            default => null,
-        };
+        return 'RFQCommitteeID';
     }
 }
