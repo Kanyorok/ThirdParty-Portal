@@ -109,4 +109,37 @@ class Schedule extends Model
     {
         return $this->morphTo(__FUNCTION__, "Source", "SourceID");
     }
+    /**
+ * Safely get the first associated client ID or throw an error.
+ */
+public function firstClientIdOrFail(): int
+{
+    $client = $this->scheduleClients()->first();
+
+    if (!$client) {
+        throw new \RuntimeException("No client found for ScheduleID {$this->ScheduleID}");
+    }
+
+    return $client->ClientID;
+}
+public function resolveParty(): array
+{
+    if ($this->scheduleClients()->exists()) {
+        return [
+            'party' => \App\Models\BR\Client::getPrimaryKey(),
+            'party_id' => $this->scheduleClients()->first()->ClientID,
+        ];
+    }
+
+    if ($this->scheduleLeads()->exists()) {
+        return [
+            'party' => \App\Models\CRM\Lead::getPrimaryKey(),
+            'party_id' => $this->scheduleLeads()->first()->LeadId,
+        ];
+    }
+
+    throw new \RuntimeException("No associated Client or Lead found for ScheduleID {$this->ScheduleID}");
+}
+
+
 }

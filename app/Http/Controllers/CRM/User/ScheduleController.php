@@ -116,94 +116,100 @@ class ScheduleController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function show($schedule_id): JsonResponse|View
-    {
-        $schedule = Schedule::query()->where('ScheduleID', $schedule_id)->withTrashed()->first();
-        if (!$schedule instanceof Schedule) {
-            return $this->errored('schedule not found');
-        }
+   public function show($schedule_id): JsonResponse|View
+{
+    $schedule = Schedule::query()->where('ScheduleID', $schedule_id)->withTrashed()->first();
+    if (!$schedule instanceof Schedule) {
+        return $this->errored('schedule not found');
+    }
 
-        $scheduleService = new ScheduleService($schedule);
+    $scheduleService = new ScheduleService($schedule);
 
-        if ($schedule->ScheduledType === Call::getPrimaryKey()) {
-            if ($schedule->Type === Client::getPrimaryKey()) {
-                $party = $scheduleService->clients()->first();
-                if (!$party instanceof Client) {
-                    return $this->errored('call party not found');
-                }
-            } elseif ($schedule->Type === Lead::getPrimaryKey()) {
-                $party = $scheduleService->leads()->first();
-                if (!$party instanceof Lead) {
-                    return $this->errored('call party not found');
-                }
-            } else {
-                return $this->errored('schedule party not found');
+    if ($schedule->ScheduledType === Call::getPrimaryKey()) {
+        if ($schedule->Type === Client::getPrimaryKey()) {
+            $party = $scheduleService->clients()->first();
+            if (!$party instanceof Client) {
+                return $this->errored('call party not found');
             }
-
-            return view('crm.schedule.call')
-                ->with('schedule', $schedule)
-                ->with('call', $schedule->scheduled)
-                ->with('service', $scheduleService)
-                ->with('party', $party);
+        } elseif ($schedule->Type === Lead::getPrimaryKey()) {
+            $party = $scheduleService->leads()->first();
+            if (!$party instanceof Lead) {
+                return $this->errored('call party not found');
+            }
+        } else {
+            return $this->errored('schedule party not found');
         }
 
-        if ($schedule->ScheduledType === Meeting::getPrimaryKey()) {
-            $parties_count = 0;
-            //dd($schedule->Type, $schedule->ScheduledType, $scheduleService->clients()->toSql(), $scheduleService->clients()->first());
+        $call = $schedule->scheduled;
 
-            if ($schedule->Type === Client::getPrimaryKey()) {
-                $parties_count = $scheduleService->clientsCount();
-                if ($parties_count === 1) {
-                    $parties = $scheduleService->clients()->first();
-                    if (!$parties instanceof Client) {
-                        return $this->errored('appointment party not found');
-                    }
-                } else {
-                    $parties = $scheduleService->clients(['photo'], 10)->paginate(7, ['ClientID', 'Name', 'PhotoID']);
-                }
+        if (!$call || !$call->StartOn || !$call->EndOn) {
+            \Log::warning("Incomplete call details for ScheduleID {$schedule->ScheduleID}");
+            $call = null; 
+        }
 
-            } elseif ($schedule->Type === User::getPrimaryKey()) {
-                $parties_count = $schedule->users()->count();
-                if ($parties_count === 1) {
-                    $parties = $scheduleService->users()->first();
-                    if (!$parties instanceof User) {
-                        return $this->errored('appointment party not found');
-                    }
-                } else {
-                    $parties = $scheduleService->users()->limit(10)->paginate(7);
-                }
+        return view('crm.schedule.call')
+            ->with('schedule', $schedule)
+            ->with('call', $call)
+            ->with('service', $scheduleService)
+            ->with('party', $party);
+    }
 
-            } elseif ($schedule->Type === Lead::getPrimaryKey()) {
-                $parties = $scheduleService->leads()->first();
-                if (!$parties instanceof Lead) {
+    if ($schedule->ScheduledType === Meeting::getPrimaryKey()) {
+        $parties_count = 0;
+
+        if ($schedule->Type === Client::getPrimaryKey()) {
+            $parties_count = $scheduleService->clientsCount();
+            if ($parties_count === 1) {
+                $parties = $scheduleService->clients()->first();
+                if (!$parties instanceof Client) {
                     return $this->errored('appointment party not found');
                 }
-
-            } elseif ($schedule->Type === Board::getPrimaryKey()) {
-                $parties_count = $scheduleService->boardsCount();
-                if ($parties_count === 1) {
-                    $parties = $scheduleService->boards()->first();
-                    if (!$parties) {
-                        return $this->errored('appointment party not found');
-                    }
-                } else {
-                    $parties = $scheduleService->boards()->paginate(7);
-                }
-
             } else {
-                return $this->errored('schedule party not found');
+                $parties = $scheduleService->clients(['photo'], 10)->paginate(7, ['ClientID', 'Name', 'PhotoID']);
             }
 
-            return view('crm.schedule.meeting')
-                ->with('schedule', $schedule)
-                ->with('meeting', $schedule->scheduled)
-                ->with('service', $scheduleService)
-                ->with('parties', $parties)
-                ->with('parties_count', ($parties_count - 7));
+        } elseif ($schedule->Type === User::getPrimaryKey()) {
+            $parties_count = $schedule->users()->count();
+            if ($parties_count === 1) {
+                $parties = $scheduleService->users()->first();
+                if (!$parties instanceof User) {
+                    return $this->errored('appointment party not found');
+                }
+            } else {
+                $parties = $scheduleService->users()->limit(10)->paginate(7);
+            }
+
+        } elseif ($schedule->Type === Lead::getPrimaryKey()) {
+            $parties = $scheduleService->leads()->first();
+            if (!$parties instanceof Lead) {
+                return $this->errored('appointment party not found');
+            }
+
+        } elseif ($schedule->Type === Board::getPrimaryKey()) {
+            $parties_count = $scheduleService->boardsCount();
+            if ($parties_count === 1) {
+                $parties = $scheduleService->boards()->first();
+                if (!$parties) {
+                    return $this->errored('appointment party not found');
+                }
+            } else {
+                $parties = $scheduleService->boards()->paginate(7);
+            }
+
+        } else {
+            return $this->errored('schedule party not found');
         }
 
-        return $this->errored('unknown schedule type');
+        return view('crm.schedule.meeting')
+            ->with('schedule', $schedule)
+            ->with('meeting', $schedule->scheduled)
+            ->with('service', $scheduleService)
+            ->with('parties', $parties)
+            ->with('parties_count', ($parties_count - 7));
     }
+
+    return $this->errored('unknown schedule type');
+}
 
 
     /**
