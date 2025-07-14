@@ -2,12 +2,9 @@
 
 namespace App\Models\Inventory;
 
+use App\Models\Auth\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Auth\User;
-use App\Models\Inventory\ItemMasterList;
-use App\Models\Inventory\TransactionReceipt;
-use App\Models\Inventory\TransactionTransferItem;
 
 class TransactionReceiptItem extends Model
 {
@@ -22,20 +19,20 @@ class TransactionReceiptItem extends Model
     protected $connection = 'sqlsrv';
     protected $primaryKey = 'Id';
 
-protected $fillable = [
-    'item',
-    'ReceivedQty',
-    'DamagedQty',
-    'DispatchedQty',   
-    'Discrepancy', 
-    'Remarks',
-    'Store',
-    'CreatedBy',
-    'CreatedOn',
-    'ModifiedBy',
-    'ModifiedOn',
-    'ReceiptId',
-];
+    protected $fillable = [
+        'item',
+        'ReceivedQty',
+        'DamagedQty',
+        'DispatchedQty',
+        'Discrepancy',
+        'Remarks',
+        'Store',
+        'CreatedBy',
+        'CreatedOn',
+        'ModifiedBy',
+        'ModifiedOn',
+        'ReceiptId',
+    ];
 
 
     public function receipt()

@@ -191,7 +191,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 399000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'Description' => '', 'Route' => 'procurement-reports.index', 'ParentID' => 300000],
             ['ModuleID' => 398300, 'Name' => 'Approval Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'approval-setup.index'],
 
-   ]);
+        ]);
 
         if ($fresh) {
             $data = $values;
@@ -219,7 +219,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 402200, 'Name' => 'Requisition Approval', 'Icon' => null, 'Description' => 'Requisition Approval', 'Route' => 'interbranchrequisitionapproval.index', 'ParentID' => 402000],
             //['ModuleID' => 403000, 'Name' => 'Inventory Dashboard', 'Icon' => null, 'Description' => 'Inventory Dashboard', 'Route' => null, 'ParentID' => 400000],
             //['ModuleID' => 403100, 'Name' => 'By Branch or Store List', 'Icon' => null, 'Description' => 'Inventory Dashboard By Branch or Store', 'Route' => 'inventorydashboard.index', 'ParentID' => 403000],
-           // ['ModuleID' => 403200, 'Name' => 'Movement Dashboard', 'Icon' => null, 'Description' => 'Movement Dashboard', 'Route' => 'movementdashboard.index', 'ParentID' => 403000],
+            // ['ModuleID' => 403200, 'Name' => 'Movement Dashboard', 'Icon' => null, 'Description' => 'Movement Dashboard', 'Route' => 'movementdashboard.index', 'ParentID' => 403000],
             ['ModuleID' => 404000, 'Name' => 'Transactions', 'Icon' => null, 'Description' => 'Inventory Transactions', 'Route' => null, 'ParentID' => 400000],
             ['ModuleID' => 404100, 'Name' => 'Stock Issue', 'Icon' => null, 'Description' => 'Stock Issue', 'Route' => 'stockissue.index', 'ParentID' => 404000],
             ['ModuleID' => 404200, 'Name' => 'Stock Receipts', 'Icon' => null, 'Description' => 'Transaction Receipts', 'Route' => 'transactionsreceipts.index', 'ParentID' => 404000],
@@ -436,7 +436,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 703000, 'Name' => 'Tags', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'file-tags.index'],
             ['ModuleID' => 704000, 'Name' => 'Bulk Upload', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'files.upload'],
 
-            ['ModuleID' => 799000, 'Name' => 'Reports', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'reports.index'],
+            ['ModuleID' => 799000, 'Name' => 'Reports', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'dms-reports.index'],
         ]);
 
         if ($fresh) {
@@ -645,7 +645,7 @@ class ModuleSeeder extends Seeder
 
 
             ['ModuleID' => 1199000, 'Name' => 'Financial Reports', 'Icon' => '<i class="fas fa-chart-pie"></i>', 'Description' => '', 'Route' => 'balancesheet.index', 'ParentID' => 1100000],
-]);
+        ]);
 
         if ($fresh) {
             $data = $values;

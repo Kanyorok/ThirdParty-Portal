@@ -6,37 +6,33 @@ use App\Http\Controllers\Finance\BalanceSheetController;
 use App\Http\Controllers\Finance\BankAccountSetupController;
 use App\Http\Controllers\Finance\BankReconciliationController;
 use App\Http\Controllers\Finance\CashBookController;
+use App\Http\Controllers\Finance\CashFlowStatementController;
 use App\Http\Controllers\Finance\CashManagementController;
+use App\Http\Controllers\Finance\ChartOfAccountsController;
 use App\Http\Controllers\Finance\ChequeManagementController;
+use App\Http\Controllers\Finance\COASegmentController;
 use App\Http\Controllers\Finance\ConsolidationReportsController;
 use App\Http\Controllers\Finance\CreditManagementController;
 use App\Http\Controllers\Finance\CreditNoteController;
 use App\Http\Controllers\Finance\CustomerMasterController;
 use App\Http\Controllers\Finance\CustomerStatementController;
+use App\Http\Controllers\Finance\GLDynamicController;
+use App\Http\Controllers\Finance\GLMappingController;
+use App\Http\Controllers\Finance\HierarchyViewerController;
 use App\Http\Controllers\Finance\IncomeStatementController;
+use App\Http\Controllers\Finance\InvoiceApprovalController;
 use App\Http\Controllers\Finance\InvoiceEntryController;
 use App\Http\Controllers\Finance\InvoiceGenerationController;
 use App\Http\Controllers\Finance\JournalBatchController;
+use App\Http\Controllers\Finance\JournalEntryController;
 use App\Http\Controllers\Finance\LedgerAccountsController;
+use App\Http\Controllers\Finance\LedgerReportController;
 use App\Http\Controllers\Finance\PaymentAndReceiptsController;
 use App\Http\Controllers\Finance\PaymentProcessingController;
 use App\Http\Controllers\Finance\PaymentVoucherController;
 use App\Http\Controllers\Finance\PeriodManagementController;
-use App\Http\Controllers\Finance\ReceiptsPostingController;
-use App\Http\Controllers\Finance\TransactionTypesController;
-use App\Http\Controllers\Finance\VendorMasterController;
-use App\Http\Controllers\Finance\CashFlowStatementController;
-
-// Newly added
-use App\Http\Controllers\Finance\COASegmentController;
-use App\Http\Controllers\Finance\ChartOfAccountsController;
-use App\Http\Controllers\Finance\GLDynamicController;
-use App\Http\Controllers\Finance\GLMappingController;
-use App\Http\Controllers\Finance\HierarchyViewerController;
-use App\Http\Controllers\Finance\InvoiceApprovalController;
-use App\Http\Controllers\Finance\JournalEntryController;
-use App\Http\Controllers\Finance\LedgerReportController;
 use App\Http\Controllers\Finance\POInvoiceSyncController;
+use App\Http\Controllers\Finance\ReceiptsPostingController;
 use App\Http\Controllers\Finance\ReconDashboardController;
 use App\Http\Controllers\Finance\ReconUploadController;
 use App\Http\Controllers\Finance\RecurrentJournalController;
@@ -48,9 +44,12 @@ use App\Http\Controllers\Finance\TaxJurisdictionController;
 use App\Http\Controllers\Finance\TaxReturnGeneratorController;
 use App\Http\Controllers\Finance\TaxRuleController;
 use App\Http\Controllers\Finance\TaxSummaryReportController;
+use App\Http\Controllers\Finance\TransactionTypesController;
 use App\Http\Controllers\Finance\TrialBalanceController;
-
+use App\Http\Controllers\Finance\VendorMasterController;
 use Illuminate\Support\Facades\Route;
+
+// Newly added
 
 Route::namespace('Finance')->prefix('finance')->group(function () {
     Route::resource('journalbatch', JournalBatchController::class);
@@ -111,7 +110,7 @@ Route::namespace('Finance')->prefix('finance')->group(function () {
     Route::resource('trialbalance', TrialBalanceController::class);
     Route::resource('ledgerreporting', LedgerReportController::class);
 
-        Route::get('agingreportar/drilldown', [AgingReportARController::class, 'drilldown'])->name('ar.aging.drilldown');
+    Route::get('agingreportar/drilldown', [AgingReportARController::class, 'drilldown'])->name('ar.aging.drilldown');
 
     // Existing Payment Processing Sub-Routes
     Route::prefix('accounts-payable/payment-processing')->group(function () {
@@ -120,21 +119,21 @@ Route::namespace('Finance')->prefix('finance')->group(function () {
         Route::get('/voucher/{voucherId}', [PaymentProcessingController::class, 'showVoucher'])->name('ap_payment.voucher');
 });
 
-Route::resource('taxruleconfig', TaxRuleController::class);
-Route::resource('efiling', TaxEfillingController::class);
-Route::resource('reconuploads', ReconUploadController::class);
-Route::resource('glpostingmap', GLMappingController::class);
+    Route::resource('taxruleconfig', TaxRuleController::class);
+    Route::resource('efiling', TaxEfillingController::class);
+    Route::resource('reconuploads', ReconUploadController::class);
+    Route::resource('glpostingmap', GLMappingController::class);
 
 
-Route::prefix('finance/integrations')->name('integration.')->group(function () {
-    Route::get('po-invoice-sync', [POInvoiceSyncController::class, 'index'])->name('po_invoice_sync.index');
-    Route::get('po-invoice-sync/create', [POInvoiceSyncController::class, 'create'])->name('po_invoice_sync.create');
-    Route::post('po-invoice-sync/store', [POInvoiceSyncController::class, 'store'])->name('po_invoice_sync.store');
-});
-
-Route::prefix('finance/integrations')->group(function () {
-    Route::get('salary-journal-templates', [SalaryJournalTemplateController::class, 'index'])->name('salary-journal-templates.index');
-    Route::get('salary-journal-templates/create', [SalaryJournalTemplateController::class, 'create'])->name('salary-journal-templates.create');
-    Route::post('salary-journal-templates/store', [SalaryJournalTemplateController::class, 'store'])->name('salary-journal-templates.store');
-});
+    Route::prefix('finance/integrations')->name('integration.')->group(function () {
+        Route::get('po-invoice-sync', [POInvoiceSyncController::class, 'index'])->name('po_invoice_sync.index');
+        Route::get('po-invoice-sync/create', [POInvoiceSyncController::class, 'create'])->name('po_invoice_sync.create');
+        Route::post('po-invoice-sync/store', [POInvoiceSyncController::class, 'store'])->name('po_invoice_sync.store');
     });
+
+    Route::prefix('finance/integrations')->group(function () {
+        Route::get('salary-journal-templates', [SalaryJournalTemplateController::class, 'index'])->name('salary-journal-templates.index');
+        Route::get('salary-journal-templates/create', [SalaryJournalTemplateController::class, 'create'])->name('salary-journal-templates.create');
+        Route::post('salary-journal-templates/store', [SalaryJournalTemplateController::class, 'store'])->name('salary-journal-templates.store');
+    });
+});

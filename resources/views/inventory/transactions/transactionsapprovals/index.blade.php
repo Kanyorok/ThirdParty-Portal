@@ -1,5 +1,5 @@
 @php
-    use App\Enums\Inventory\Transfers;
+    use App\Enums\Inventory\Transfers;use Carbon\Carbon;
 @endphp
 
 @extends('layouts.app')
@@ -102,7 +102,7 @@
                                 {{ $record->branch->Name ?? 'N/A' }}
                             @endif
                         </td>
-                        <td>{{ \Carbon\Carbon::parse($record->CreatedOn)->format('d/m/Y') }}</td>
+                        <td>{{ Carbon::parse($record->CreatedOn)->format('d/m/Y') }}</td>
                         <td>
                             @if($transactionType == 'Stock Transfer')
                                 {{ $record->transferredBy->Name ?? 'N/A'}}
@@ -135,13 +135,14 @@
                                 <button type="submit" class="btn btn-danger btn-sm">Reject</button>
                             </form>
                         </td>
-                         <td>
-                            <a href="{{ route('transactionsapproval.show', ['Id' => $record->Id, 'transaction_type' => $transactionType]) }}" class="btn btn-sm btn-primary">
+                        <td>
+                            <a href="{{ route('transactionsapproval.show', ['Id' => $record->Id, 'transaction_type' => $transactionType]) }}"
+                               class="btn btn-sm btn-primary">
                                 View
                             </a>
-                    </td>
+                        </td>
                     </tr>
-                   
+
                 @empty
                     <tr>
                         <td colspan="9" class="text-center">No pending {{ strtolower($transactionType) }}s found.</td>

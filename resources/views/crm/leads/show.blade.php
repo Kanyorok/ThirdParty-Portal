@@ -57,43 +57,44 @@
                 <div class="card-body mx-1 mb-0 mt-1">
                     @include('snippets.lead_summary', ['lead'=>$lead, 'show_summary'=>true])
                     <hr>
-<h5 class="h6 card-title">
-    Contacts
-    @if(!$won)
-        <a href="#" class="float-end trigger-update-lead-modal">
-            <i class="fas fa-edit"></i>
-        </a>
-    @endif
-</h5>
+                    <h5 class="h6 card-title">
+                        Contacts
+                        @if(!$won)
+                            <a href="#" class="float-end trigger-update-lead-modal">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        @endif
+                    </h5>
 
-<div class="text-start">
-    <div class="btn-group">
-        <button type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
-                class="btn btn-link dropdown-toggle text-break text-start">
-            {{ $lead->Phone }}
-        </button>
-        <div class="dropdown-menu">
-            <a class="dropdown-item disabled text-decoration-line-through" href="javascript:void(0)">
-                <i class="fas fa-phone-alt"></i> Call
-            </a>
-            <div class="dropdown-divider"></div>
-            <a class="dropdown-item send-message-to-action" href="javascript:void(0)"
-               data-info="{{ route('lead-sms.store', [$lead->LeadID]) }}~{{ $lead->Name }}~{{ $lead->Phone }}">
-                <i class="fas fa-message"></i> Message
-            </a>
-        </div>
-    </div>
+                    <div class="text-start">
+                        <div class="btn-group">
+                            <button type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                    class="btn btn-link dropdown-toggle text-break text-start">
+                                {{ $lead->Phone }}
+                            </button>
+                            <div class="dropdown-menu">
+                                <a class="dropdown-item disabled text-decoration-line-through"
+                                   href="javascript:void(0)">
+                                    <i class="fas fa-phone-alt"></i> Call
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item send-message-to-action" href="javascript:void(0)"
+                                   data-info="{{ route('lead-sms.store', [$lead->LeadID]) }}~{{ $lead->Name }}~{{ $lead->Phone }}">
+                                    <i class="fas fa-message"></i> Message
+                                </a>
+                            </div>
+                        </div>
 
-    @if(!empty($lead->Email))
-        <div class="d-block mt-2">
-            <a href="javascript:void(0)"
-               data-info="{{ route('lead-mail.store', [$lead->LeadID]) }}~{{ $lead->Name }}~{{ $lead->Email }}"
-               class="btn btn-link text-break send-mail-to-action w-100 text-start">
-                {{ $lead->Email }}
-            </a>
-        </div>
-    @endif
-</div>
+                        @if(!empty($lead->Email))
+                            <div class="d-block mt-2">
+                                <a href="javascript:void(0)"
+                                   data-info="{{ route('lead-mail.store', [$lead->LeadID]) }}~{{ $lead->Name }}~{{ $lead->Email }}"
+                                   class="btn btn-link text-break send-mail-to-action w-100 text-start">
+                                    {{ $lead->Email }}
+                                </a>
+                            </div>
+                        @endif
+                    </div>
 
                 </div>
                 <hr class="my-0">

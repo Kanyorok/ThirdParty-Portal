@@ -2,13 +2,13 @@
 @section('title', 'Bank Statement Uploads')
 
 @section('content')
-<div class="container mt-4">
-    <h4 class="mb-4">📄 Uploaded Bank Statements</h4>
+    <div class="container mt-4">
+        <h4 class="mb-4">📄 Uploaded Bank Statements</h4>
 
-    <a href="{{ route('reconuploads.create') }}" class="btn btn-primary mb-3">➕ Upload New Statement</a>
+        <a href="{{ route('reconuploads.create') }}" class="btn btn-primary mb-3">➕ Upload New Statement</a>
 
-    <table class="table table-bordered table-hover">
-        <thead class="table-light">
+        <table class="table table-bordered table-hover">
+            <thead class="table-light">
             <tr>
                 <th>#</th>
                 <th>Bank Account</th>
@@ -19,8 +19,8 @@
                 <th>Status</th>
                 <th>Actions</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             <!-- Static Data Rows -->
             <tr>
                 <td>1</td>
@@ -50,7 +50,7 @@
                     <a href="#" class="btn btn-sm btn-outline-secondary">📥 Download</a>
                 </td>
             </tr>
-        </tbody>
-    </table>
-</div>
+            </tbody>
+        </table>
+    </div>
 @endsection

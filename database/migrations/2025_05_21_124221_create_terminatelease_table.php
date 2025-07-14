@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->id('Id');
             $table->foreignId('LeaseID')->constrained('t_LeaseCreation', 'Id');
             $table->date('TerminationDate');
-            $table->foreignId('TerminationReason')->constrained('t_CodeDetails','ID');
+            $table->foreignId('TerminationReason')->constrained('t_CodeDetails', 'ID');
             $table->string('Remarks');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');

@@ -2,12 +2,12 @@
 
 namespace App\Models\Procurement;
 
-use App\Models\Inventory\UnitOfMeasure;
-use Illuminate\Database\Eloquent\Model;
 use App\Models\Inventory\ItemCategories;
+use App\Models\Inventory\UnitOfMeasure;
 use App\Models\ThirdParies\Supplier;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Model\UserActorTrait;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class RFQLine extends Model
 {
@@ -41,7 +41,7 @@ class RFQLine extends Model
 
     public function uom()
     {
-        return  $this->belongsTo(UnitOfMeasure::class, 'UOM','Id');
+        return $this->belongsTo(UnitOfMeasure::class, 'UOM', 'Id');
     }
 
     public function suppliers()

@@ -1,20 +1,22 @@
+@php use App\Enums\Inventory\Transfers; @endphp
+@php use Carbon\Carbon; @endphp
 @extends('layouts.app')
 
 @section('title', 'View Stock Transaction')
 
 @section('content')
-<div class="container">
-    <h4 class="mb-4">Transaction Details</h4>
+    <div class="container">
+        <h4 class="mb-4">Transaction Details</h4>
 
-    <a href="{{ route('transactionsapproval.index') }}" class="btn btn-secondary mb-3">← Back to Approvals</a>
+        <a href="{{ route('transactionsapproval.index') }}" class="btn btn-secondary mb-3">← Back to Approvals</a>
 
-    <div class="card">
-        <div class="card-header">
-            {{ $transactionType }} Details
-        </div>
-        <div class="card-body">
-            <table class="table table-bordered">
-                <tbody>
+        <div class="card">
+            <div class="card-header">
+                {{ $transactionType }} Details
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <tbody>
                     @if($transactionType === 'Stock Transfer')
                         <tr>
                             <th>Reference No</th>
@@ -34,13 +36,13 @@
                         </tr>
                         <tr>
                             <th>Date</th>
-                            <td>{{ \Carbon\Carbon::parse($record->CreatedOn)->format('d/m/Y H:i') }}</td>
+                            <td>{{ Carbon::parse($record->CreatedOn)->format('d/m/Y H:i') }}</td>
                         </tr>
                         <tr>
                             <th>Status</th>
                             <td>
                                 @php
-                                    $statusEnum = \App\Enums\Inventory\Transfers::tryFrom($record->Status);
+                                    $statusEnum = Transfers::tryFrom($record->Status);
                                 @endphp
                                 <span class="badge bg-{{ $statusEnum?->badgeColor() }}">
                                     {{ $statusEnum?->label() ?? $record->Status }}
@@ -63,7 +65,7 @@
                         </tr>
                         <tr>
                             <th>Date</th>
-                            <td>{{ \Carbon\Carbon::parse($record->CreatedOn)->format('d/m/Y H:i') }}</td>
+                            <td>{{ Carbon::parse($record->CreatedOn)->format('d/m/Y H:i') }}</td>
                         </tr>
                         <tr>
                             <th>Status</th>
@@ -74,14 +76,14 @@
                             <td>{{ $record->Remarks ?? 'None' }}</td>
                         </tr>
                     @endif
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
 
-            @if(isset($record->items) && count($record->items) > 0)
-                <h5 class="mt-4">Items</h5>
-                <div class="table-responsive">
-                    <table class="table table-sm table-bordered">
-                        <thead>
+                @if(isset($record->items) && count($record->items) > 0)
+                    <h5 class="mt-4">Items</h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead>
                             <tr>
                                 <th>#</th>
                                 <th>Item</th>
@@ -89,8 +91,8 @@
                                 <th>UOM</th>
                                 <th>Remarks</th>
                             </tr>
-                        </thead>
-                        <tbody>
+                            </thead>
+                            <tbody>
                             @foreach($record->items as $i => $item)
                                 <tr>
                                     <td>{{ $i + 1 }}</td>
@@ -108,13 +110,13 @@
                                     <td>{{ $item->Remarks ?? '-' }}</td>
                                 </tr>
                             @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            @else
-                <p class="mt-3 text-muted">No items listed for this transaction.</p>
-            @endif
+                            </tbody>
+                        </table>
+                    </div>
+                @else
+                    <p class="mt-3 text-muted">No items listed for this transaction.</p>
+                @endif
+            </div>
         </div>
     </div>
-</div>
 @endsection

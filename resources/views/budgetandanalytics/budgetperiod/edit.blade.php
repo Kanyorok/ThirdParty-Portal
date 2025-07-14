@@ -52,7 +52,8 @@
                             <option disabled>Select GL Accounts</option>
                         </select>
                         <div class="form-text">Hold Ctrl (Windows) or Cmd (Mac) to select multiple GLs.</div>
-                        <button type="button" class="btn btn-outline-primary mt-2 w-100 rounded-3" id="addGlButton" disabled>
+                        <button type="button" class="btn btn-outline-primary mt-2 w-100 rounded-3" id="addGlButton"
+                                disabled>
                             <i class="bi bi-plus-circle me-1"></i>Add Selected GLs
                         </button>
                     </div>
@@ -93,34 +94,43 @@
                 background-color: #f8f9fa;
                 transition: all 0.3s ease;
             }
+
             .card:hover {
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             }
+
             .form-select, .form-control {
                 border-color: #ced4da;
                 transition: border-color 0.2s ease;
             }
+
             .form-select:focus, .form-control:focus {
                 border-color: #0d6efd;
                 box-shadow: 0 0 5px rgba(13, 110, 253, 0.3);
             }
+
             .btn-outline-primary {
                 transition: all 0.2s ease;
             }
+
             .btn-outline-primary:hover {
                 background-color: #0d6efd;
                 color: white;
             }
+
             .btn-danger {
                 transition: all 0.2s ease;
             }
+
             .btn-danger:hover {
                 background-color: #dc3545;
                 border-color: #dc3545;
             }
+
             .table-hover tbody tr:hover {
                 background-color: #e9ecef;
             }
+
             .alert {
                 border-radius: 0.5rem;
             }

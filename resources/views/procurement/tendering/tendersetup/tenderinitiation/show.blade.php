@@ -52,7 +52,8 @@
                                 <td>{{ $item->category?->Name }}</td>
                                 <td>{{$item->QtyToTender}}</td>
                                 <td> KES {{ number_format($item->item->price?->ActualPrice ?? 0, 2) }}</td>
-                                <td>KES {{ number_format(($item->QtyToTender ?? 0) * ($item->item->price?->ActualPrice ?? 0), 2) }}</td>
+                                <td>
+                                    KES {{ number_format(($item->QtyToTender ?? 0) * ($item->item->price?->ActualPrice ?? 0), 2) }}</td>
 
                             </tr>
                         @endforeach

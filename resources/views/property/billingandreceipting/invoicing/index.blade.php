@@ -9,7 +9,7 @@
   <h4 class="fw-bold mb-3">📋 Rent Invoices</h4>
 
     @if($invoices->count())
-  <table class="table table-bordered table-striped align-middle" id="invoicesTable">
+        <table class="table table-bordered table-striped align-middle" id="invoicesTable">
     <thead class="table-light">
       <tr>
         <th>#</th>
@@ -46,9 +46,11 @@
             <form action="{{ route('rentinvoice.destroy', $invoice->Id  ) }}" method="POST" class="d-inline">
                 @csrf
                 @method('DELETE')
-                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this lease schedule?');">Delete</button>
+                <button type="submit" class="btn btn-sm btn-danger"
+                        onclick="return confirm('Are you sure you want to delete this lease schedule?');">Delete
+                </button>
             </form>
-          </td>
+        </td>
       </tr>
     @endforeach
     </tbody>
