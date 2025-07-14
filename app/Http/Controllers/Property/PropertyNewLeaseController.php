@@ -8,6 +8,7 @@ use App\Http\Requests\Property\TenantAndLease\PropertyNewLeaseRequest;
 use App\Models\Core\CodeDetail;
 use App\Models\PropertyManagement\PropertyBlock;
 use App\Models\PropertyManagement\PropertyFloor;
+use App\Models\PropertyManagement\PropertyLeaseSchedule;
 use App\Models\PropertyManagement\PropertyNewLease;
 use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Models\PropertyManagement\PropertyRegistry;
@@ -27,13 +28,13 @@ class PropertyNewLeaseController extends Controller
     //
     public function index()
     {
-        $newleases = PropertyNewLease::with('tenant', 'property')->get();
+        $newleases = PropertyNewLease::with('tenant', 'property')->where('isActive', true)->get();
         return view('property.tenantmanagement.leasemanagement.leasemaintenance.index', compact('newleases'));
     }
 
     public function create(){
         $properties = PropertyRegistry::with('getBlockByProperty.floor.units')->get();
-        $newtenants = PropertyNewTenant::where('IsActive', '1')->get();
+        $newtenants = PropertyNewTenant::where('IsActive', true)->get();
         $codes = CodeDetail::where('CodeID', 'PaymentFrequency')->get();
         return view('property.tenantmanagement.leasemanagement.leasemaintenance.create', compact('newtenants', 'properties', 'codes'));
     }
@@ -60,7 +61,7 @@ class PropertyNewLeaseController extends Controller
 
     public function show($Id)
     {
-        $newlease = PropertyNewLease::findOrFail($Id);
+        $newlease = PropertyNewLease::where('isActive', true)->findOrFail($Id);
         return view('property.tenantmanagement.leasemanagement.leasemaintenance.show', compact('newlease'));
     }
 
@@ -86,6 +87,9 @@ class PropertyNewLeaseController extends Controller
             $paymentFrequency,
             $monthlyRent = $data['MonthlyRent'],
             $deposit = $data['Deposit'],
+            $serviceCharge = $data['ServiceCharge'],
+            $parkingFee = $data['ParkingFee'],
+            $otherCharges = $data['OtherCharges'],
             $dueDay = $data['DueDay'],
             $specialTerms = $data['SpecialTerms'],
             $request->user()
@@ -95,9 +99,9 @@ class PropertyNewLeaseController extends Controller
 
     public function edit($Id)
     {
-        $newlease = PropertyNewLease::findOrFail($Id);
+        $newlease = PropertyNewLease::where('isActive', true)->findOrFail($Id);
         $properties = PropertyRegistry::with('getBlockByProperty.floor.units')->get();
-        $newtenants = PropertyTenantClearance::with('tenant')->where('Status', TenantClearanceEnum::Cleared->value)->get();
+        $newtenants = PropertyNewLease::with('tenant')->get();
         $codes = CodeDetail::where('CodeID', 'PaymentFrequency')->get();
         return view('property.tenantmanagement.leasemanagement.leasemaintenance.edit', compact(
             'newlease', 'newtenants', 'properties', 'codes'
@@ -108,35 +112,44 @@ class PropertyNewLeaseController extends Controller
     {
         $data = $request->validated();
 
-        $newlease = PropertyNewLease::findOrFail($Id);
+        $lease = PropertyNewLease::findOrFail($Id);
 
-        $newlease->update([
-            'PropertyID' => $data['PropertyID'],
-            'BlockID' => $data['BlockID'],
-            'FloorID' => $data['FloorID'],
-            'Unit' => $data['Unit'],
-            'StartDate' => $data['StartDate'],
-            'EndDate' => $data['EndDate'],
-            'PaymentFrequency' => $data['PaymentFrequency'],
-            'MonthlyRent' => $data['MonthlyRent'],
-            'Deposit' => $data['Deposit'],
-            'DueDay' => $data['DueDay'],
-            'SpecialTerms' => $data['SpecialTerms'],
-            'ModifiedBy' => $request->user()->Id,
-        ]);
+        $property = PropertyRegistry::findOrFail($data['PropertyID']);
+        $block = PropertyBlock::findOrFail($data['BlockID']);
+        $floor = PropertyFloor::findOrFail($data['FloorID']);
+        $unit = PropertyUnit::findOrFail($data['Unit']);
+        $frequency = CodeDetail::findOrFail($data['PaymentFrequency']);
+        $user = auth()->user();
 
-        activity()
-            ->causedBy($request->user()->Id)
-            ->performedOn($newlease)
-            ->event('update')
-            ->log("Updated Lease {$newlease->Id}.");
+        $this->service::update(
+            lease: $lease,
+            PropertyID: $property,
+            BlockID: $block,
+            FloorID: $floor,
+            Unit: $unit,
+            StartDate: new \DateTime($data['StartDate']),
+            EndDate: new \DateTime($data['EndDate']),
+            PaymentFrequency: $frequency,
+            MonthlyRent: (float) $data['MonthlyRent'],
+            Deposit: (float) $data['Deposit'],
+            ServiceCharge: (float) $data['ServiceCharge'],
+            ParkingFee: (float) $data['ParkingFee'],
+            OtherCharges: (float) $data['OtherCharges'],
+            DueDay: (int) $data['DueDay'],
+            SpecialTerms: $data['SpecialTerms'] ?? '',
+            user: $user
+        );
 
         return redirect()->route('addlease.index')->with('success', 'Lease updated successfully.');
     }
 
+
     public function destroy($Id)
     {
         $newlease = PropertyNewLease::findOrFail($Id);
+
+        PropertyLeaseSchedule::where('LeaseNumber', $newlease->Id)->delete();
+
         $newlease->delete();
 
         activity()
@@ -147,6 +160,8 @@ class PropertyNewLeaseController extends Controller
 
         return redirect()->route('addlease.index')->with('success', 'Lease deleted successfully.');
     }
+
+
 
 
 }
