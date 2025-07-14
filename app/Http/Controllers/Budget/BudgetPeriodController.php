@@ -11,6 +11,8 @@ use App\Models\Budget\BudgetGLMasterAllocations;
 use App\Models\Budget\BudgetGLsAttachments;
 use App\Models\Budget\BudgetLine;
 use App\Models\Budget\BudgetManualEntry;
+use App\Models\Budget\BudgetProjection;
+use App\Models\Budget\BudgetProjectionData;
 use Illuminate\Http\Request;
 use App\Models\Budget\BudgetPeriods;
 use App\Models\Budget\BudgetPeriodTypes;
@@ -416,6 +418,16 @@ class BudgetPeriodController extends Controller
             //Delete Lines Assoc
             $line=BudgetManualEntry::where('BudgetID',$id)->update(['DeletedBy' => Auth::id(), 'DeletedOn' => now()]);
             $line=BudgetManualEntry::where('BudgetID',$id)->delete();
+
+            //Deleting Projections
+            //Delete All Projections for that Budget
+            $budgetProjection=BudgetProjection::where('BudgetID', $id)->update(['DeletedBy'=>Auth::id()]);
+            $budgetProjectionData=$budgetProjection;
+            BudgetProjection::where('BudgetID', $id)->delete();
+            //Delete All allocation related to that Budget Id
+            BudgetProjectionData::where('BudgetID',$id)->update(['DeletedBy'=>Auth::id()]);
+            BudgetProjectionData::where('BudgetID',$id)->delete();
+
 
             //Deleting the budget
             $budget=Budget::find($id);

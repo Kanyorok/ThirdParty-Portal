@@ -319,7 +319,7 @@ class BudgetProjectionsController extends Controller
         $products = BudgetProduct::all();
 
         // Get monthly allocations only if it's a monthly allocation
-        $monthlyAllocations = [];
+        $monthlyAllocations = collect(); // Default as empty collection
         if ($projection->AllocationType === 'monthly') {
             $monthlyAllocations = BudgetProjectionData::where('BudgetProjectionID', $projection->Id)->get()->keyBy('Month');
         }

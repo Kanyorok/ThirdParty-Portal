@@ -4,12 +4,16 @@ namespace App\Http\Controllers\Budget;
 
 use App\Http\Controllers\Controller;
 use App\Models\Budget\Budget;
+use App\Models\Budget\BudgetDriverRates;
+use App\Models\Budget\BudgetGLAccount;
 use App\Models\Budget\BudgetGLAccountSubType;
 use App\Models\Budget\BudgetLine;
 use App\Models\Budget\BudgetManualEntry;
 use App\Models\Budget\BudgetManualEntryAllocations;
 use App\Models\Budget\BudgetProduct;
+use App\Models\Budget\BudgetProductType;
 use App\Models\Budget\BudgetProjection;
+use App\Models\Budget\BudgetProjectionData;
 use App\Models\Core\CodeDetail;
 use Illuminate\Http\Request;
 
@@ -106,18 +110,69 @@ class BudgetConsolidationController extends Controller
                 }
                 ////////////////////////////////// Get data from Budget Projections //////////////////////////////////////////////
                 //Get all projection data
-                return$projections=BudgetProjection::where('BudgetID', $budgetId)->get();
+                $projections=BudgetProjection::where('BudgetID', $budgetId)->get();
                 //Loop through the projections
                 foreach ($projections as $projection) {
-                    return$product=BudgetProduct::find($projection->ProductID);
                     //Get the product Gltype
+                    $product=BudgetProduct::find($projection->ProductID);
+                    $productGLAccountID=$product->GLAccountID;
+                    $glAccountSubType = BudgetGLAccountSubType::find($productGLAccountID)->GLAccountSubTypeName ?? 'N/A';
+                    $GLType=BudgetGLAccount::find($productGLAccountID)->GTType;
                     //Check allocation
+                    $allocationType=$projection->AllocationType;
+                    $fullAllocation=BudgetProjection::where('Id', $projection->Id)->pluck('FullAllocation')->first() ?? 0;
+                    //Fetch the allocations if monthly allocation type
+                    $allocationValues = [];
+                    $values=BudgetProjectionData::where('BudgetProjectionID', $projection->Id)->where('BudgetId', $budgetId)
+                        ->select('Month', 'Amount')
+                        ->get()
+                        ->pluck('Amount', 'Month')
+                        ->toArray();
+                    if ($values) {
+                        $allocationValues = $values;
+                    }
                     //Store data for the GL first in the data array and in the respective GL section
+                    $data[$GLType][$glAccountSubType][]=[
+                        'budgetLineName'=>$product->Description,
+                        'allocationValues'=>$allocationValues,
+                        'allocationType'=>$allocationType,
+                        'fullAllocation'=>$fullAllocation,
+                    ];
                     //Now get the Budgetline for that product
-                    //Get its GL type
-                    //Gte the Product rate value
+                    $budgetLineID=$projection->BudgetLineID;
+                    $budgetlineData=BudgetLine::find($budgetLineID);
+                    $BudgetLineSubGLID=$budgetlineData->GLAccountSubTypeID;
+                    $budgetLineGLData=BudgetGLAccountSubType::find($BudgetLineSubGLID);
+                    $budgetLineGLType=$budgetLineGLData->GLAccountTypeValue;
+                    $glAccountSubType = BudgetGLAccountSubType::find($productGLAccountID)->GLAccountSubTypeName ?? 'N/A';
+                    if($budgetLineGLType=='A'){$budgetLineGLType='ASSET';}elseif($budgetLineGLType=='L'){ $budgetLineGLType='LIABILITY';}elseif($budgetLineGLType=='E'){ $budgetLineGLType='EXPENSE';}else{ $budgetLineGLType='INCOME';}
+                    //$budgetLineGLType=CodeDetail::where('CodeID', 'GLAccountType')->where('Value', $budgetLineGLType)->pluck('Description')->first();
+                    $budgetLineGLName=$budgetLineGLData->Description;
+                    $budgetLineName=$budgetlineData->LineName;
+                    //Get the Product rate value
+                    $p_code=$product->ProductTypeID;
+                    $productTypeID=BudgetProductType::where('ProductCode', $p_code)->pluck('Id')->first();
+                    $rateValue=BudgetDriverRates::where('ProductTypeID', $productTypeID)->pluck('RateValue')->first();
                     //Check for allocations and compute the allocation to be inserted into the data array
-                    //Insert the data set 2 fro the budgetline into the data arrray
+                    $allocationValues = [];
+                    $values=BudgetProjectionData::where('BudgetProjectionID', $projection->Id)->where('BudgetId', $budgetId)
+                        ->select('Month', 'Amount')
+                        ->get()
+                        ->pluck('Amount', 'Month')
+                        ->toArray();
+                    //Multiply with the rate value
+                    if ($values) {
+                        foreach ($values as $month => $amount) {
+                            $allocationValues[$month] = $amount * $rateValue;
+                        }
+                    }
+                    //Insert the data set 2 for the budgetline into the data array
+                    $data[$budgetLineGLType][$glAccountSubType][]=[
+                        'budgetLineName'=>$budgetLineName,
+                        'allocationValues'=>$allocationValues,
+                        'allocationType'=>$allocationType,
+                        'fullAllocation'=>$fullAllocation* $rateValue,
+                    ];
                 }
                 //Get the product Gltype
                 //Check allocation
