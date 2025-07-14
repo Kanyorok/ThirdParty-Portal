@@ -1,14 +1,9 @@
 <?php
-
-
 use App\Http\Controllers\Procurement\RFQCommitteeController;
 use App\Http\Controllers\Procurement\RFQCriteriaController;
 use App\Http\Controllers\Procurement\RFQSectionController;
 use App\Http\Controllers\Procurement\RFQSettingCriteriaController;
 use App\Http\Controllers\Procurement\RFQSettingSectionController;
-use Illuminate\Support\Facades\Route;
-
-
 use App\Http\Controllers\Procurement\ApprovalSetupController;
 use App\Http\Controllers\Procurement\AwardsController;
 use App\Http\Controllers\Procurement\BidEvaluationController;
