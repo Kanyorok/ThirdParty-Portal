@@ -22,11 +22,11 @@ use Throwable;
 
 class DocumentController extends Controller
 {
-    /* public function __construct()
+    public function __construct()
      {
          $this->middleware('ajax')->except('show');
          $this->authorizeResource(Document::class);
-     }*/
+     }
 
     /**
      * Display a listing of the resource.

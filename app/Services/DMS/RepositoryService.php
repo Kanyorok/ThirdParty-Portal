@@ -13,6 +13,8 @@ use App\Models\Core\SpecialPermission;
 use App\Models\DMS\Repository;
 use App\Services\Core\PermissionsService;
 use Exception;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Ramsey\Uuid\Uuid;
@@ -28,24 +30,29 @@ class RepositoryService extends PermissionsService
     {
     }
 
-    public static function root(): Repository
+    public static function getUser(User $actor, array $parents = []): Collection
     {
-        return Repository::query()->where('RepositoryId', self::ROOT)->withTrashed()->firstOr(function () {
-
-            return self::_create(Name: 'Root', actor: SystemHelper::user(), Description: 'Root', RepoId: self::ROOT);
-        });
+        return self::getUserQuery($actor, $parents)->get();
     }
 
-    /**
-     * Internal Repository
-     */
-    public static function internal(): Repository
+    public static function getUserQuery(User $actor, array $parents = []): Builder
     {
-        return Repository::query()->where('RepositoryId', self::Internal)->withTrashed()->firstOr(function () {
-            $actor = SystemHelper::user();
-            return (new self(self::_create(Name: 'Internal', actor: $actor, repository: self::root(), Description: 'Internal Uploaded', RepoId: self::Internal)))
-                ->visibility(VisibilityEnum::Private, $actor)->repo;
-        });
+        $query = Repository::query();
+        if (!empty($parents)) {
+            $query->where(function (Builder $query) use ($parents) {
+                if (in_array(null, $parents, true)) {
+                    $query->whereNull('ParentId');
+                }
+                $parents = array_filter($parents, static function ($var) {
+                    return $var !== null;
+                });
+                if (!empty($parents)) {
+                    $query->orWhereIn('ParentId', $parents);
+                }
+            });
+        }
+
+        return $query->user($actor);
     }
 
     public static function module(ModulesEnum $module): Repository
@@ -55,6 +62,62 @@ class RepositoryService extends PermissionsService
             return (new self(self::_create(Name: $module->description(), actor: $actor, repository: self::internal(), Description: $module->description() . ' Uploaded files', RepoId: $module->value)))
                 ->visibility(VisibilityEnum::Private, $actor)->repo;
         });
+    }
+
+    /**
+     * @throws ErroredException
+     */
+    public function visibility(VisibilityEnum $visibility, User $actor): static
+    {
+        if ($this->isRoot()) {
+            throw new ErroredException('Cannot update root folder');
+        }
+        try {
+            return DB::transaction(function () use ($visibility, $actor) {
+                $this->repo->update([
+                    'Visibility' => $visibility->value,
+                    'ModifiedBy' => $actor->Id,
+                ]);
+
+                activity()->causedBy($actor)->performedOn($this->repo)->event('update')->log('Updated folder ' . $this->repo->Name . ' visibility : ' . $visibility->value);
+                return $this;
+            });
+        } catch (Exception|Throwable $e) {
+            Log::error('Error update repository visibility: ');
+            Log::error($e);
+            throw new ErroredException();
+        }
+    }
+
+    public function isRoot(): bool
+    {
+        return ($this->repo->RepositoryId === self::ROOT);
+    }
+
+    /**
+     * @throws ErroredException
+     */
+    public function update(string $Name, User $actor, string $Description): static
+    {
+        if ($this->isRoot()) {
+            throw new ErroredException('Cannot update root folder');
+        }
+        try {
+            return DB::transaction(function () use ($Name, $Description, $actor) {
+                $this->repo->update([
+                    'Name' => $Name,
+                    'Description' => $Description,
+                    'ModifiedBy' => $actor->Id,
+                ]);
+
+                activity()->causedBy($actor)->performedOn($this->repo)->event('update')->log('Updated folder name : ' . $this->repo->Name);
+                return $this;
+            });
+        } catch (Exception|Throwable $e) {
+            Log::error('Error update repository: ');
+            Log::error($e);
+            throw new ErroredException();
+        }
     }
 
     /**
@@ -104,43 +167,6 @@ class RepositoryService extends PermissionsService
             ->addPermission($actor, RoleEnum::Admin, $actor, false);
     }
 
-    /**
-     * @throws ErroredException
-     */
-    public function update(string $Name, User $actor, string $Description): static
-    {
-        if ($this->isRoot()) {
-            throw new ErroredException('Cannot update root folder');
-        }
-        try {
-            return DB::transaction(function () use ($Name, $Description, $actor) {
-                $this->repo->update([
-                    'Name' => $Name,
-                    'Description' => $Description,
-                    'ModifiedBy' => $actor->Id,
-                ]);
-
-                activity()->causedBy($actor)->performedOn($this->repo)->event('update')->log('Updated folder name : ' . $this->repo->Name);
-                return $this;
-            });
-        } catch (Exception|Throwable $e) {
-            Log::error('Error update repository: ');
-            Log::error($e);
-            throw new ErroredException();
-        }
-    }
-
-    public function parentRoot(): bool
-    {
-        return ($this->repo->ParentId === self::root()->Id);
-    }
-
-    public function isRoot(): bool
-    {
-        return ($this->repo->RepositoryId === self::ROOT);
-    }
-
-
     public function addPermission(User|Team $assignee, RoleEnum $role, User $actor, bool $notify = true): static
     {
         $this->_addPermissions($this->repo, $assignee, $role, $actor, $notify);
@@ -148,28 +174,28 @@ class RepositoryService extends PermissionsService
     }
 
     /**
-     * @throws ErroredException
+     * Internal Repository
      */
-    public function visibility(VisibilityEnum $visibility, User $actor): static
+    public static function internal(): Repository
     {
-        if ($this->isRoot()) {
-            throw new ErroredException('Cannot update root folder');
-        }
-        try {
-            return DB::transaction(function () use ($visibility, $actor) {
-                $this->repo->update([
-                    'Visibility' => $visibility->value,
-                    'ModifiedBy' => $actor->Id,
-                ]);
+        return Repository::query()->where('RepositoryId', self::Internal)->withTrashed()->firstOr(function () {
+            $actor = SystemHelper::user();
+            return (new self(self::_create(Name: 'Internal', actor: $actor, repository: self::root(), Description: 'Internal Uploaded', RepoId: self::Internal)))
+                ->visibility(VisibilityEnum::Private, $actor)->repo;
+        });
+    }
 
-                activity()->causedBy($actor)->performedOn($this->repo)->event('update')->log('Updated folder ' . $this->repo->Name . ' visibility : ' . $visibility->value);
-                return $this;
-            });
-        } catch (Exception|Throwable $e) {
-            Log::error('Error update repository visibility: ');
-            Log::error($e);
-            throw new ErroredException();
-        }
+    public static function root(): Repository
+    {
+        return Repository::query()->where('RepositoryId', self::ROOT)->withTrashed()->firstOr(function () {
+
+            return self::_create(Name: 'Root', actor: SystemHelper::user(), Description: 'Root', RepoId: self::ROOT);
+        });
+    }
+
+    public function parentRoot(): bool
+    {
+        return ($this->repo->ParentId === self::root()->Id);
     }
 
     /**

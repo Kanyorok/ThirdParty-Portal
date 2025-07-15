@@ -103,7 +103,7 @@ class DocumentService extends PermissionsService
         $checksum2 = hash_file('sha256', Storage::disk($disk->value)->path($path));
         $checksum = base64_encode($checksum1 . '|' . $checksum2);
 
-        return self::_create($repository, $actor, $disk, $file->getClientOriginalName(), $extension, $path, $file->getSize(), $checksum, '', properties: $properties, copyPermissions: $copyRepoPermissions = false);
+        return self::_create($repository, $actor, $disk, $file->getClientOriginalName(), $extension, $path, $file->getSize(), $checksum, '', properties: $properties, copyPermissions: $copyRepoPermissions);
     }
 
     /**

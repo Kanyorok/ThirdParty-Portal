@@ -60,7 +60,7 @@ trait SpecialPermissionTrait
         });
     }
 
-    public function getSharedName()
+    public function getSharedName(): string
     {
         return $this->Name;
     }
@@ -68,5 +68,5 @@ trait SpecialPermissionTrait
     /**
      * #permission -> role / permission name eg Read, Write ...
      */
-    abstract public function getShareEmailSubject(): string;
+    /*  abstract public function getShareEmailSubject(): string;*/
 }

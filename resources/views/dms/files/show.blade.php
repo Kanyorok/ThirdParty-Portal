@@ -15,6 +15,11 @@
 @endsection
 @section('styles')
     <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
+    <style>
+        .select2-container {
+            width: 100% !important;
+        }
+    </style>
 @endsection
 @section('content')
     <div class="row">

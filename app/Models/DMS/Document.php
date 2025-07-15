@@ -5,6 +5,7 @@ namespace App\Models\DMS;
 use App\Enums\Core\ExtensionsEnum;
 use App\Enums\Core\VisibilityEnum;
 use App\Exceptions\ErroredException;
+use App\Interfaces\SpecialPermissionContract;
 use App\Models\Core\CategoryMaster;
 use App\Traits\Model\SpecialPermissionTrait;
 use App\Traits\Model\UserActorTrait;
@@ -16,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Document extends Model
+class Document extends Model implements SpecialPermissionContract
 {
     use SoftDeletes, UserActorTrait, SpecialPermissionTrait;
 
