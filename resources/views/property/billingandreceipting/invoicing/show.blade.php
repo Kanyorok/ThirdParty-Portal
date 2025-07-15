@@ -5,30 +5,42 @@
         <h3 class="mb-4">Property Invoice Details</h3>
         <div class="card">
             <div class="card-body">
-                <dl class="row">
+                <form>
+                    <div class="mb-3">
+                        <label class="form-label">Invoice Number</label>
+                        <input type="text" class="form-control" value="{{ $invoice->InvoiceNumber ?? '-' }}" readonly>
+                    </div>
 
-                <dt class="col-sm-4">Invoice Number</dt>
-                    <dd class="col-sm-8">{{ $invoice->InvoiceNumber ?? '-' }}</dd>
+                    <div class="mb-3">
+                        <label class="form-label">Tenant</label>
+                        <input type="text" class="form-control" value="{{ $invoice->lease->tenant->TenantName ?? '-' }}" readonly>
+                    </div>
 
-                    <dt class="col-sm-4">Tenant ID</dt>
-                    <dd class="col-sm-8">{{ $invoice->lease->tenant->TenantName ?? '-' }}</dd>
+                    <div class="mb-3">
+                        <label class="form-label">Lease</label>
+                        <input type="text" class="form-control" value="{{ $invoice->lease->LeaseNumber ?? '-' }}" readonly>
+                    </div>
 
-                    <dt class="col-sm-4">Lease</dt>
-                    <dd class="col-sm-8">{{ $invoice->lease->LeaseNumber  ?? '-' }}</dd>
+                    <div class="mb-3">
+                        <label class="form-label">Billing Period</label>
+                        <input type="month" class="form-control" value="{{ $invoice->BillingMonth ?? '' }}" readonly>
+                    </div>
 
-                    <dt class="col-sm-4">Billing Period</dt>
-                    <dd class="col-sm-8">{{ $invoice->BillingMonth ?? '-' }}</dd>
+                    <div class="mb-3">
+                        <label class="form-label">Invoice Date</label>
+                        <input type="date" class="form-control" value="{{ $invoice->InvoiceDate ?? '' }}" readonly>
+                    </div>
 
-                    <dt class="col-sm-4">Invoice date</dt>
-                    <dd class="col-sm-8">{{ $invoice->InvoiceDate ?? '-' }}</dd>
+                    <div class="mb-3">
+                        <label class="form-label">Service Charge</label>
+                        <input type="number" class="form-control" value="{{ $invoice->ServicesCharge ?? 0 }}" readonly>
+                    </div>
 
-                    <dt class="col-sm-4">Service charge</dt>
-                    <dd class="col-sm-8">{{ $invoice->ServicesCharge ?? '-' }}</dd>
-
-                    <dt class="col-sm-4">Invoice Notes</dt>
-                    <dd class="col-sm-8">{{ $invoice->InvoiceNotes ?? '-' }}</dd>
-
-                </dl>
+                    <div class="mb-3">
+                        <label class="form-label">Invoice Notes</label>
+                        <textarea class="form-control" rows="3" readonly>{{ $invoice->InvoiceNotes ?? '-' }}</textarea>
+                    </div>
+                </form>
             </div>
             <div class="card-footer">
                 <a href="{{ route('rentinvoice.edit', $invoice->Id) }}" class="btn btn-primary">Edit</a>

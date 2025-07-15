@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models\PropertyManagement;
+use App\Enums\Property\PropertyInvoiceEnum;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -14,7 +15,6 @@ class PropertyInvoice extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'TenantId',
         'InvoiceNumber',
         'Lease',
         'BillingMonth',
@@ -23,6 +23,8 @@ class PropertyInvoice extends Model
         'ServicesCharge',
         'OtherCharges',
         'InvoiceNotes',
+        'ParkingFee',
+        'Status',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy'
@@ -32,6 +34,9 @@ class PropertyInvoice extends Model
     {
         return 'PropertyInvoiceId';
     }
+    protected $casts = [
+        'Status' => PropertyInvoiceEnum::class,
+    ];
 
     public function lease()
     {

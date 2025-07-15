@@ -23,7 +23,6 @@ class PropertyReceiptRequest extends FormRequest
     public function rules(): array
     {
         return [
-        return [
             'InvoiceID' => 'required',
             'TenantId'=>'required',
             'BillingMonth' => 'required|date',

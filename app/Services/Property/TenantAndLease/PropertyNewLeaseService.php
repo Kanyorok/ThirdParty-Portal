@@ -134,7 +134,7 @@ class PropertyNewLeaseService
         //Delete old schedule entries if needed (optional cleanup)
         PropertyLeaseSchedule::where('LeaseNumber', $lease->Id)->delete();
 
-        // ✅ Regenerate schedule
+        //Regenerate schedule
         PropertyLeaseScheduleService::create(
             leaseId: $lease->Id,
             paymentFrequencyId: $PaymentFrequency->ID,

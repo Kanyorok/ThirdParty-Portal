@@ -12,8 +12,6 @@ use App\Http\Requests\Property\TenantAndLease\PropertyLeaseRenewalRequest;
 use App\Models\PropertyManagement\PropertyLeaseRenewal;
 use App\Models\PropertyManagement\PropertyNewLease;
 use App\Services\Property\TenantAndLease\PropertyLeaseRenewalService;
-use App\Models\PropertyManagement\PropertyNewLease;
-use App\Models\PropertyManagement\PropertyLeaseRenewal;
 
 class PropertyLeaseRenewalController extends Controller
 
