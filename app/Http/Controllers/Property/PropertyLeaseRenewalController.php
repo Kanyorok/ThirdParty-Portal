@@ -2,18 +2,18 @@
 
 namespace App\Http\Controllers\Property;
 
-use App\Enums\Property\PropertyNewLeaseEnum;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
 use App\Enums\Core\PermissionEnum;
+use App\Enums\Property\PropertyNewLeaseEnum;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\TenantAndLease\PropertyLeaseRenewalRequest;
 use App\Models\PropertyManagement\PropertyLeaseRenewal;
 use App\Models\PropertyManagement\PropertyNewLease;
 use App\Services\Property\TenantAndLease\PropertyLeaseRenewalService;
-use App\Models\PropertyManagement\PropertyNewLease;
-use App\Models\PropertyManagement\PropertyLeaseRenewal;
+use Exception;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class PropertyLeaseRenewalController extends Controller
 
@@ -77,7 +77,7 @@ class PropertyLeaseRenewalController extends Controller
     );
 
     return redirect()->route('renewlease.index')->with('success', 'Lease renewal created successfully');
-    } catch (\Exception $e) {
+    } catch (Exception $e) {
         // Redirect back with error message
         return redirect()->back()->with('error', $e->getMessage());
     }
@@ -121,7 +121,7 @@ class PropertyLeaseRenewalController extends Controller
             return redirect()
                 ->route('renewlease.index')
                 ->with('success', 'Lease renewal updated successfully');
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             DB::rollBack();
             Log::error('Failed to Update Lease Renewal: ' . $th->getMessage());
 
@@ -144,7 +144,7 @@ class PropertyLeaseRenewalController extends Controller
 
             return redirect()->route('renewlease.index')
                 ->with('success', 'Lease Renewal soft-deleted successfully!');
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             Log::error('Error soft-deleting Lease Renewal: ' . $th->getMessage());
 
             return redirect()->back()
