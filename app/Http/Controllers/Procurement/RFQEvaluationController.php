@@ -27,7 +27,56 @@ class RFQEvaluationController extends Controller
             'evaluations.supplier',
         ])->get();
 
-        return view('procurement.rfqevaluation.index', compact('rfqEvaluations'));
+        $evaluationsRanked = [];
+
+        foreach ($rfqEvaluations as $evaluation) {
+            $grouped = $evaluation->evaluations->groupBy('SupplierId');
+
+            foreach ($grouped as $supplierId => $evalGroup) {
+                $sectionGroups = $evalGroup->groupBy(fn($e) => $e->rfqCriteria?->section?->SectionName ?? 'Uncategorized');
+                $grandWeightedTotal = 0;
+
+                foreach ($sectionGroups as $section => $criteriaList) {
+                    $first = $criteriaList->first();
+                    $sectionWeight = $first->rfqCriteria?->weightedSection?->Weight ?? 0;
+                    $maxScorePerCriteria = 10;
+                    $maxTotal = $criteriaList->count() * $maxScorePerCriteria;
+                    $actualTotal = $criteriaList->sum('Score');
+
+                    if ($maxTotal > 0) {
+                        $grandWeightedTotal += round(($actualTotal / $maxTotal) * $sectionWeight, 2);
+                    }
+                }
+
+                $evaluationsRanked[] = [
+                    'evaluation' => $evaluation,
+                    'supplier' => $evalGroup->first()->supplier,
+                    'supplierId' => $supplierId,
+                    'rfq' => $evaluation->rfq,
+                    'weightedTotal' => $grandWeightedTotal,
+                    'response' => \App\Models\Procurement\RFQResponse::where('SupplierId', $supplierId)
+                        ->where('RFQId', $evaluation->RFQId)
+                        ->first(),
+                ];
+            }
+        }
+
+        // Group by RFQId and rank within each group
+        $groupedByRFQ = collect($evaluationsRanked)->groupBy('rfq.id');
+
+        $finalRanked = [];
+        foreach ($groupedByRFQ as $rfqId => $evaluations) {
+            // Sort by weightedTotal in descending order within each RFQ
+            $sorted = $evaluations->sortByDesc('weightedTotal')->values();
+
+            // Assign rank within the current RFQ group
+            foreach ($sorted as $rank => $entry) {
+                $entry['rank'] = $rank + 1;
+                $finalRanked[] = $entry;
+            }
+        }
+
+        return view('procurement.rfqevaluation.index', ['rfqEvaluations' => $rfqEvaluations, 'evaluationsRanked' => $finalRanked]);
     }
 
     public function create()

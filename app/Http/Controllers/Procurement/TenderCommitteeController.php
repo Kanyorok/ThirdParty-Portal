@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Auth\User;
 use App\Models\HRM\Employee;
 use App\Models\Procurement\RFQCommittee;
+use App\Models\Procurement\RFQCommitteeMember;
 use App\Models\Procurement\Tender;
 use App\Models\Procurement\TenderCommittee;
 use App\Models\Procurement\TenderCommitteeMember;
@@ -159,13 +160,19 @@ class TenderCommitteeController extends Controller
         $title = null;
 
         if ($type === 'tender') {
-            $tender = Tender::findOrFail($id);
+            $tender = Tender::find($id);
+            if (!$tender) {
+                return redirect()->back()->with('error', 'Tender not found.');
+            }
             $title = $tender->Title;
             $committeeMembers = TenderCommitteeMember::where('TenderID', $id)->with('employee')->get();
         } elseif ($type === 'rfq') {
-            $rfq = RFQ::findOrFail($id);
+            $rfq = RFQ::find($id);
+            if (!$rfq) {
+                return redirect()->back()->with('error', 'RFQ not found.');
+            }
             $title = $rfq->RFQNumber;
-            $committeeMembers = \App\Models\Procurement\RFQCommitteeMember::where('RFQID', $id)->with('employee')->get();
+            $committeeMembers = RFQCommitteeMember::where('RFQID', $id)->with('employee')->get();
         }
 
         return view('procurement.tendering.bidopeningandevaluation.committeeappointment.TenderMembers', [
