@@ -6,7 +6,6 @@ use App\Enums\Property\TenantClearanceEnum;
 use App\Models\Auth\User;
 use App\Models\Core\CodeDetail;
 use App\Models\PropertyManagement\PropertyLeaseTermination;
-use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Models\PropertyManagement\PropertyTenantClearance;
 use DateTime;
 
@@ -81,8 +80,6 @@ class PropertyTenantClearanceService
             ->event('update')
             ->log("Updated Lease Clearance for Lease ID {$LeaseId->Lease}.");
 
-        return $this;
-    }
         return $this;
     }
 }
