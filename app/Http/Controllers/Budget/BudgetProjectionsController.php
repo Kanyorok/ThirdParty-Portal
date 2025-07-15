@@ -7,9 +7,14 @@ use App\Http\Controllers\Controller;
 use App\Models\Budget\Budget;
 use App\Models\Budget\BudgetDriverProjections;
 use App\Models\Budget\BudgetDriverProjectionsData;
+use App\Models\Budget\BudgetDriverRates;
+use App\Models\Budget\BudgetLine;
+use App\Models\Budget\BudgetLineProductTypes;
 use App\Models\Budget\BudgetMonthlyProjectionAllocation;
 use App\Models\Budget\BudgetProduct;
 use App\Models\Budget\BudgetProductType;
+use App\Models\Budget\BudgetProjection;
+use App\Models\Budget\BudgetProjectionData;
 use App\Models\Core\Currency;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -23,28 +28,21 @@ class BudgetProjectionsController extends Controller
     public function index()
     {
         $this->authorize(PermissionEnum::BudgetSetupView, BudgetDriverProjections::class);
-        //$projections = BudgetDriverProjections::with(['scenario', 'product', 'period'])->get();
-        $projections = BudgetDriverProjections::with(
-            'projections',
-            'budget:Id,Name',
-            'currency:Id,Code',
-        // 'period:Id,fiscalYear',
-        )->get();
-
-        $groupedProjections = $projections->groupBy('BudgetID');
-
-        // Compute totals for each main projection
-        foreach ($projections as $proj) {
-            $proj->total_volume = $proj->projections->sum(function ($item) {
-                return (float)$item->Volume;
-            });
-            $proj->total_value = $proj->projections->sum(function ($item) {
-                return (float)$item->Value;
-            });
+        //New Approach to do the Budget Projection Read
+        $budgetsIDS = BudgetProjection::distinct('BudgetID')->pluck('BudgetID')->toArray();
+        $data = [];
+        foreach ($budgetsIDS as $budgetID) {
+            $budget = Budget::withoutTrashed()->find($budgetID);
+            if (!$budget) continue;
+            $data[] = [
+                'Name' => $budget->Name,
+                'Products' => BudgetProjection::where('BudgetID', $budgetID)->count(),
+                'Accounts' => BudgetProjection::where('BudgetID', $budgetID)->sum('NumberOfAccounts'),
+                'Id' => $budget->Id,
+            ];
         }
-        // return $groupedProjections;
         return view('budgetandanalytics.budgetworkspace.entry.index', compact(
-            'groupedProjections'
+            'data'
         ));
     }
 
@@ -56,10 +54,20 @@ class BudgetProjectionsController extends Controller
         $currencies = Currency::all();
         $products = BudgetProduct::all();
         // $periods = BudgetPeriods::all();
+        //Select the budget lines and their products driving them
+        $budgetLines = BudgetLine::whereHas('productTypes')->with('productTypes')->get();
 
         return view('budgetandanalytics.budgetworkspace.entry.create', compact(
-            'budgets', 'currencies', 'products', // 'periods'
+            'budgets', 'currencies', 'products', 'budgetLines' // 'periods'
         ));
+    }
+
+    public function getProductTypes($budgetLineId)
+    {
+        $productIDS = BudgetLineProductTypes::where('BudgetLineID', $budgetLineId)->pluck('ProductTypeID')->toArray();
+        $product = BudgetProduct::whereIn('Id', $productIDS)->get();
+        //$budgetLine = BudgetLine::with('products')->findOrFail($budgetLineId);
+        return response()->json($product);
     }
 
     // Store budget product entry
@@ -105,13 +113,13 @@ class BudgetProjectionsController extends Controller
                 ]);
             }
 
-            DB::commit();
-
             activity()
                 ->performedOn(new BudgetDriverProjections())
                 ->causedBy(Auth::user())
                 ->withProperties(['action' => 'create'])
                 ->log('Created Driver Projections');
+
+            DB::commit();
 
             return redirect()->route('budgetprojections.index')
                 ->with('success', 'Driver Projections created successfully.');
@@ -125,36 +133,216 @@ class BudgetProjectionsController extends Controller
         }
     }
 
+    //Store projection with the 2nd model flow
+    public function storeProjections(Request $request)
+    {
+
+        $this->authorize(PermissionEnum::BudgetSetupCreate, BudgetProjection::class);
+        $validated = $request->validate([
+            'BudgetID' => 'required|exists:t_Budgets,Id',
+            'BudgetLineID' => 'required|exists:t_BudgetLines,Id',
+            'ProductTypeId' => 'required|exists:t_BudgetProductTypes,Id',
+            'NoOfAccounts' => 'required|integer|min:1',
+            'AllocationType' => 'required|in:full,monthly',
+            'FullAllocation' => 'nullable|numeric|min:0|required_if:AllocationType,full',
+            'monthly_allocations' => 'nullable|array|required_if:AllocationType,monthly',
+            'monthly_allocations.*' => 'nullable|numeric|min:0',
+        ]);
+        DB::beginTransaction();
+
+        try {
+            $projection = BudgetProjection::create([
+                'BudgetID' => $validated['BudgetID'],
+                'BudgetLineID' => $validated['BudgetLineID'],
+                'ProductID' => $validated['ProductTypeId'],
+                'NumberOfAccounts' => $validated['NoOfAccounts'],
+                'AllocationType' => $validated['AllocationType'],
+                'FullAllocation' => $validated['AllocationType'] === 'full'
+                    ? $validated['FullAllocation']
+                    : 0,
+                'CreatedBy' => Auth::id(),
+                'CreatedOn' => now(),
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
+            ]);
+
+            if ($validated['AllocationType'] === 'monthly') {
+                for ($month = 1; $month <= 12; $month++) {
+                    $amount = $validated['monthly_allocations'][$month] ?? 0.00;
+
+                    BudgetProjectionData::create([
+                        'BudgetProjectionID' => $projection->Id,
+                        'ProductID' => $validated['ProductTypeId'],
+                        'BudgetID' => $validated['BudgetID'],
+                        'Amount' => $amount,
+                        'Month' => $month,
+                        'CreatedBy' => Auth::id(),
+                        'CreatedOn' => now(),
+                        'ModifiedBy' => Auth::id(),
+                        'ModifiedOn' => now(),
+                    ]);
+                }
+            }
+
+            activity()
+                ->performedOn($projection)
+                ->causedBy(Auth::user())
+                ->withProperties(['action' => 'create'])
+                ->log('Created Budget Projections');
+
+            DB::commit();
+
+            return back()->with('success', 'Budget projection saved successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $e->getMessage();
+            return back()->with('error', 'An error occurred while saving the projection.');
+        }
+    }
+
+
+    public function update(Request $request, $id)
+    {
+        $this->authorize(PermissionEnum::BudgetSetupUpdate, BudgetProjection::class);
+
+        $validated = $request->validate([
+            'BudgetID' => 'required|exists:t_Budgets,Id',
+            'BudgetLineID' => 'required|exists:t_BudgetLines,Id',
+            'ProductTypeId' => 'required|exists:t_BudgetProductTypes,Id',
+            'NoOfAccounts' => 'required|integer|min:1',
+            'AllocationType' => 'required|in:full,monthly',
+            'FullAllocation' => 'nullable|numeric|min:0|required_if:AllocationType,full',
+            'monthly_allocations' => 'nullable|array|required_if:AllocationType,monthly',
+            'monthly_allocations.*' => 'nullable|numeric|min:0',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            $projection = BudgetProjection::findOrFail($id);
+
+            // Update projection fields
+            $projection->update([
+                'BudgetID' => $validated['BudgetID'],
+                'BudgetLineID' => $validated['BudgetLineID'],
+                'ProductID' => $validated['ProductTypeId'],
+                'NumberOfAccounts' => $validated['NoOfAccounts'],
+                'AllocationType' => $validated['AllocationType'],
+                'FullAllocation' => $validated['AllocationType'] === 'full'
+                    ? $validated['FullAllocation']
+                    : 0,
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
+            ]);
+
+            // Delete old allocations if they exist
+            BudgetProjectionData::where('BudgetProjectionID', $projection->Id)->delete();
+
+            // Re-insert if monthly
+            if ($validated['AllocationType'] === 'monthly') {
+                for ($month = 1; $month <= 12; $month++) {
+                    $amount = $validated['monthly_allocations'][$month] ?? 0.00;
+
+                    BudgetProjectionData::create([
+                        'BudgetProjectionID' => $projection->Id,
+                        'ProductID' => $validated['ProductTypeId'],
+                        'BudgetID' => $validated['BudgetID'],
+                        'Amount' => $amount,
+                        'Month' => $month,
+                        'CreatedBy' => Auth::id(),
+                        'CreatedOn' => now(),
+                        'ModifiedBy' => Auth::id(),
+                        'ModifiedOn' => now(),
+                    ]);
+                }
+            }
+
+            activity()
+                ->performedOn($projection)
+                ->causedBy(Auth::user())
+                ->withProperties(['action' => 'update'])
+                ->log('Updated Budget Projections');
+
+            DB::commit();
+            return redirect()->route('budgetprojections.index')->with('success', 'Budget projection updated successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'An error occurred while updating the projection: ' . $e->getMessage());
+        }
+    }
+
+
     public function show($id)
     {
         $this->authorize(PermissionEnum::BudgetSetupView, BudgetMonthlyProjectionAllocation::class);
+
+        $productsIDS = BudgetProjection::where('BudgetID', $id)->pluck('ProductID')->toArray();
+        $products = [];
+        foreach ($productsIDS as $productID) {
+            $budgetProjectionID = BudgetProjection::where('BudgetID', $id)->where('ProductID', $productID)->pluck('Id')->first();
+            $budgetProjection = BudgetProjection::find($budgetProjectionID);
+            BudgetProduct::find($productID);
+            //Getting PtoductType ID. This will be cleaned after we get actual data. SInce Id is being stores as string insteaf of foreignID
+            $p_code = BudgetProduct::find($productID)->ProductTypeID;
+            $productTypeID = BudgetProductType::where('ProductCode', $p_code)->pluck('Id')->first();
+
+            $products[] = [
+                'Name' => BudgetProduct::find($productID)->Description,
+                'Volume' => BudgetProjection::where('BudgetID', $id)->where('ProductID', $productID)->sum('NumberOfAccounts'),
+                'Id' => $budgetProjectionID,
+                'Rate' => BudgetDriverRates::where('ProductTypeID', $productTypeID)->pluck('RateValue')->first(),
+                'Value' => $budgetProjection->AllocationType === 'full' ? $budgetProjection->FullAllocation : $budgetProjection->total_allocation ?? 0.00,
+                'AllocationType' => $budgetProjection->AllocationType,
+                'allocations' => $budgetProjection->allocations, // 👈 this is what you were missing
+            ];
+        }
 
         $budget = BudgetDriverProjections::findOrFail($id);
 
         $rate = BudgetProduct::with(['rate'])
             ->get();
         // Fetch all allocations so the view can filter and display as needed
-        $monthlyAllocations = BudgetMonthlyProjectionAllocation::where('BudgetProjectionID', $id)
+        $monthlyAllocations = BudgetProjectionData::where('BudgetID', $id)
             ->get();
 
-        return view('budgetandanalytics.budgetworkspace.entry.show', compact('monthlyAllocations', 'budget'));
+        return view('budgetandanalytics.budgetworkspace.entry.show', compact('monthlyAllocations', 'budget', 'products'));
     }
 
     public function edit($id)
     {
-        $budget = BudgetDriverProjections::with(['projections', 'budget', 'currency'])->findOrFail($id);
-        $monthlyAllocations = BudgetMonthlyProjectionAllocation::where('BudgetProjectionID', $id)->get();
-        $currencies = Currency::all();
+        // Retrieve the projection to edit
+        $projection = BudgetProjection::findOrFail($id);
+
+        // Load all budgets and lines for dropdowns
+        $budgets = Budget::all();
+        $budgetLines = BudgetLine::whereHas('productTypes')->with('productTypes')->get();
         $products = BudgetProduct::all();
-        $productTypes = BudgetProductType::all();
-        $months = [
-            'Month 1', 'Month 2', 'Month 3', 'Month 4', 'Month 5', 'Month 6',
-            'Month 7', 'Month 8', 'Month 9', 'Month 10', 'Month 11', 'Month 12'
-        ];
-        return view('budgetandanalytics.budgetworkspace.entry.edit', compact('budget', 'monthlyAllocations', 'currencies', 'products', 'months', 'productTypes'));
+
+        // Get monthly allocations only if it's a monthly allocation
+        $monthlyAllocations = collect(); // Default as empty collection
+        if ($projection->AllocationType === 'monthly') {
+            $monthlyAllocations = BudgetProjectionData::where('BudgetProjectionID', $projection->Id)->get()->keyBy('Month');
+        }
+
+        // You may want to get ProductTypeId (depending on how your dependent dropdown is handled)
+        $productTypeId = null;
+        $product = BudgetProduct::find($projection->ProductID);
+        if ($product) {
+            $productTypeId = $product->ProductTypeID ?? null;
+        }
+
+        return view('budgetandanalytics.budgetworkspace.entry.edit', compact(
+            'projection',
+            'budgets',
+            'budgetLines',
+            'products',
+            'monthlyAllocations',
+            'productTypeId'
+        ));
     }
 
-    public function update(Request $request, $id)
+
+    public function updateOld(Request $request, $id)
     {
         $this->authorize(PermissionEnum::BudgetSetupUpdate, BudgetDriverProjections::class);
         $validated = $request->validate([
@@ -236,17 +424,57 @@ class BudgetProjectionsController extends Controller
         $this->authorize(PermissionEnum::BudgetSetupDelete, BudgetDriverProjections::class);
         DB::beginTransaction();
         try {
-            $budget = BudgetDriverProjections::findOrFail($id);
-            // Delete related projections and allocations
-            $budget->projections()->delete();
-            BudgetMonthlyProjectionAllocation::where('BudgetProjectionID', $id)->delete();
-            $budget->delete();
+            //Delete All Projections for that Budget
+            $budgetProjection = BudgetProjection::where('BudgetID', $id)->update(['DeletedBy' => Auth::id()]);
+            $budgetProjectionData = $budgetProjection;
+            BudgetProjection::where('BudgetID', $id)->delete();
+            //Delete All allocation related to that Budget Id
+            BudgetProjectionData::where('BudgetID', $id)->update(['DeletedBy' => Auth::id()]);
+            BudgetProjectionData::where('BudgetID', $id)->delete();
+
+            activity()
+                ->performedOn(new BudgetProjection())
+                ->causedBy(Auth::id())
+                ->withProperties(['action' => 'delete'])
+                ->log('Deleted Budget Projections');
+
             DB::commit();
-            return redirect()->route('budgetprojections.index')->with('success', 'Budget projection deleted successfully.');
+            return back()->with('success', 'Budget projections deleted successfully.');
+        } catch (Throwable $th) {
+            DB::rollBack();
+            return $th->getMessage();
+            Log::error('Failed to delete budget projection: ' . $th->getMessage());
+            return back()->withErrors('error', 'Failed to delete: ' . $th->getMessage());
+        }
+    }
+
+    public function deleteProjection($id)
+    {
+        $this->authorize(PermissionEnum::BudgetSetupDelete, BudgetDriverProjections::class);
+
+        try {
+            DB::beginTransaction();
+            $budgetProjection = BudgetProjection::find($id);
+            $budgetProjectionData = $budgetProjection;
+            //Delete allocations
+            BudgetProjectionData::where('BudgetProjectionID', $id)->update(['DeletedBy' => Auth::id()]);;
+            BudgetProjectionData::where('BudgetProjectionID', $id)->delete();
+            //Delete Projection
+            $budgetProjection->DeletedBy = Auth::id();
+            $budgetProjection->delete();
+
+            activity()
+                ->performedOn($budgetProjectionData)
+                ->causedBy(Auth::id())
+                ->withProperties(['action' => 'delete'])
+                ->log('Deleted Budget Projection');
+
+            DB::commit();
+            return back()->with('success', 'Budget projection deleted successfully.');
         } catch (Throwable $th) {
             DB::rollBack();
             Log::error('Failed to delete budget projection: ' . $th->getMessage());
-            return back()->withErrors(['Error' => 'Failed to delete: ' . $th->getMessage()]);
+            return back()->with('error', 'Failed to delete: ' . $th->getMessage());
         }
     }
 }

@@ -91,4 +91,16 @@ class BudgetLine extends Model
             'Id'                               // Local key on related model
         );
     }
+
+    public function products()
+    {
+        return $this->belongsToMany(
+            BudgetProduct::class,          // The related model
+            't_BudgetLineProductTypes',        // The pivot table
+            'BudgetLineId',                    // Foreign key on pivot pointing to this model
+            'ProductTypeId',                   // Foreign key on pivot pointing to related model
+            'Id',                              // Local key on this model
+            'Id'                               // Local key on related model
+        );
+    }
 }

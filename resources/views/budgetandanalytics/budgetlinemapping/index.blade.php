@@ -70,12 +70,14 @@
                             </td>
                             <td>
                                 <a href="{{ route('budgetlinemapping.edit', $item->Id) }}" class="btn btn-sm btn-info">✏️</a>
-                                <form method="POST" action="{{ route('budgetlinemapping.destroy',$item->Id) }}"
-                                      class="delete-form d-inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-danger delete-btn">🗑 Delete</button>
-                                </form>
+                                <button type="button"
+                                        class="btn btn-sm btn-danger custom-delete-btn"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#customDeleteConfirmModal"
+                                        data-name="{{ $item->LineName }}"
+                                        data-route="{{route('budgetlinemapping.destroy', $item->Id)}}">
+                                    🗑️
+                                </button>
                             </td>
                         </tr>
                     @endforeach
@@ -86,6 +88,7 @@
         </div>
     </div>
 
+    @include('components.modals.delete-confirm')
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>

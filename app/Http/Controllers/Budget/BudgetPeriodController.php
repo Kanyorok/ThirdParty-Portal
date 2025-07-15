@@ -5,17 +5,22 @@ namespace App\Http\Controllers\Budget;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Budget\Budget;
+use App\Models\Budget\BudgetActivity;
+use App\Models\Budget\BudgetGLMaster;
 use App\Models\Budget\BudgetGLMasterAllocations;
 use App\Models\Budget\BudgetGLsAttachments;
 use App\Models\Budget\BudgetLine;
+use App\Models\Budget\BudgetManualEntry;
+use App\Models\Budget\BudgetProjection;
+use App\Models\Budget\BudgetProjectionData;
+use Illuminate\Http\Request;
 use App\Models\Budget\BudgetPeriods;
 use App\Models\Budget\BudgetPeriodTypes;
+use App\Models\Budget\BudgetProductType;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Throwable;
 
 class BudgetPeriodController extends Controller
 {
@@ -143,7 +148,7 @@ class BudgetPeriodController extends Controller
 
             DB::commit();
             return redirect()->route('budgetperiod.index')->with('success', 'Budget created successfully.');
-        } catch (Throwable $th) {
+        } catch (\Throwable $th) {
             DB::rollBack();
             Log::error('Failed to create budget: ' . $th->getMessage());
 
@@ -172,8 +177,9 @@ class BudgetPeriodController extends Controller
                 ->get();
 
             return view('budgetandanalytics.budgetperiod.show', compact('budget', 'glAttachments', 'glAccountTypes'));
-        } catch (Throwable $th) {
+        } catch (\Throwable $th) {
             Log::error('Failed to load budget: ' . $th->getMessage());
+            return $th->getMessage();
             return redirect()->route('budgetperiod.index')->withErrors(['error' => 'Failed to load budget']);
         }
     }
@@ -247,13 +253,14 @@ class BudgetPeriodController extends Controller
                 ->log('Updated Budget Period');
 
             return redirect()->route('budgetperiod.index')->with('success', 'Budget updated successfully');
-        } catch (Throwable $th) {
+        } catch (\Throwable $th) {
             DB::rollBack();
             Log::error('Failed to update budget period: ' . $th->getMessage());
 
             return back()->withErrors(['error' => 'Failed to update budget'])->withInput();
         }
     }
+
 
 
     public function destroy(string $id)
@@ -271,7 +278,7 @@ class BudgetPeriodController extends Controller
                 ->log('Deleted Period Successfully:' . $id);
 
             return redirect()->route('budgetperiod.index')->with('Success', 'Period Deleted Successfully');
-        } catch (Throwable $th) {
+        } catch (\Throwable $th) {
             Log::error('---DELETE PERIOD ERROR---' . $th->getMessage());
             return redirect()->route('budgetperiod.index')->with('error', 'Failed to delete Period. Please try again.');
         }
@@ -283,28 +290,33 @@ class BudgetPeriodController extends Controller
         $this->authorize(PermissionEnum::BudgetSetupDelete, BudgetGLsAttachments::class);
 
         try {
-            $glAttachment = BudgetGLsAttachments::findOrFail($id);
+            DB::beginTransaction();
+            $glAttachment = BudgetGLsAttachments::find($id);
             $glAttachment->DeletedBy = Auth::Id();
-            $glAttachment->save();
             $glAttachment->delete();
 
             //Delete the associated BudgetGLMasterAllocations if they exist
             //
-            $findAlloc = BudgetGLMasterAllocations::find($id);
-            $findAlloc->DeletedBy = Auth::id();
-            $findAlloc->delete();
+            $findAlloc = BudgetGLMasterAllocations::where('GLAttachmentID', $id)->first();
+            if ($findAlloc) {
+                $findAlloc->DeletedBy = Auth::id();
+                $findAlloc->save(); // Save before deleting if you want DeletedBy recorded
+                $findAlloc->delete();
+            }
 
-            BudgetGLMasterAllocations::where('GLAttachmentID', $id)->delete();
+            //BudgetGLMasterAllocations::where('GLAttachmentID', $id)->delete();
 
             activity()
                 ->performedOn($glAttachment)
                 ->causedBy(Auth::user())
                 ->withProperties(['action' => 'delete'])
                 ->log('Deleted GL Attachment Successfully: ' . $id);
-
+            DB::commit();
             return back()->with('success', 'GL Attachment deleted successfully.');
             //return response()->json(['success' => true, 'message' => 'GL Attachment deleted successfully.']);
-        } catch (Throwable $th) {
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return $th->getMessage();
             Log::error('Failed to delete GL Attachment: ' . $th->getMessage());
             return response()->json(['success' => false, 'message' => 'Failed to delete GL Attachment.'], 500);
         }
@@ -343,6 +355,34 @@ class BudgetPeriodController extends Controller
                     'ModifiedBy' => Auth::id(),
                     'ModifiedOn' => now(),
                 ]);
+
+                //Check if the attachments have already been placed to the BudgetGLAllocation table
+                $check = BudgetGLMasterAllocations::where('BudgetID', $budgetID)->first();
+
+                $now = Carbon::now();
+                if ($check) {// Do some insert in the BudgetMasterAllocation
+                    //Get distinct values of all the branches id
+                    $branchIDS = BudgetGLMasterAllocations::where('BudgetID', $budgetID)->distinct()->pluck('BranchID')->toArray();
+                    //Insert the data based on the branches
+                    foreach ($branchIDS as $branchID) {
+                        BudgetGLMasterAllocations::create([
+                            'BudgetID' => $budgetID,
+                            'BranchID' => $branchID,
+                            'GLAttachmentID' => $action->Id,
+                            'AccountID' => $gl['AccountID'],
+                            'Description' => $gl['Description'] ?? null,
+                            'GLAccountTypeID' => $gl['GLAccountTypeID'],
+                            //'Total' => $total,
+                            'CreatedBy' => Auth::id(),
+                            'CreatedOn' => $now,
+                            'ModifiedBy' => Auth::id(),
+                            'ModifiedOn' => $now,
+                            'DeletedBy' => null,
+                            'DeletedOn' => null,
+                            //...$monthData,
+                        ]);
+                    }
+                }
             }
 
 
@@ -355,12 +395,62 @@ class BudgetPeriodController extends Controller
 
             DB::commit();
             return redirect()->route('budgetperiod.index')->with('success', 'GL Attached Successfully.');
-        } catch (Throwable $th) {
+        } catch (\Throwable $th) {
             DB::rollBack();
+            return $th->getMessage();
             Log::error('Failed to attach GLs: ' . $th->getMessage());
 
             return back()->withErrors(['error' => 'Failed to create Budget'])->withInput();
         }
     }
 
+    public function delBudget($id)
+    {
+
+        $this->authorize(PermissionEnum::BudgetSetupDelete, BudgetLine::class);
+
+        try {
+            DB::beginTransaction();
+
+            //Delete Activities assoc
+            $activity = BudgetActivity::where('BudgetID', $id)->update(['DeletedBy' => Auth::id(), 'DeletedOn' => now()]);
+            $activity = BudgetActivity::where('BudgetID', $id)->delete();
+
+            //Delete Lines Assoc
+            $line = BudgetManualEntry::where('BudgetID', $id)->update(['DeletedBy' => Auth::id(), 'DeletedOn' => now()]);
+            $line = BudgetManualEntry::where('BudgetID', $id)->delete();
+
+            //Deleting Projections
+            //Delete All Projections for that Budget
+            $budgetProjection = BudgetProjection::where('BudgetID', $id)->update(['DeletedBy' => Auth::id()]);
+            $budgetProjectionData = $budgetProjection;
+            BudgetProjection::where('BudgetID', $id)->delete();
+            //Delete All allocation related to that Budget Id
+            BudgetProjectionData::where('BudgetID', $id)->update(['DeletedBy' => Auth::id()]);
+            BudgetProjectionData::where('BudgetID', $id)->delete();
+
+
+            //Deleting the budget
+            $budget = Budget::find($id);
+            $budgetLog = $budget;
+            $budget->DeletedBy = Auth::id();
+            $budget->delete();
+            $budget->save();
+
+            //Log activity
+            activity()
+                ->performedOn($budgetLog)
+                ->causedBy(Auth::id())
+                ->event('delete')
+                ->withProperties(['action' => 'delete'])
+                ->log('Deleted a budget');
+            DB::commit();
+            return back()->with('success', 'Budget Deleted Successfully.');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+
+            Log::error('Failed to delete Budget: ' . $th->getMessage());
+            return back()->withErrors(['error' => 'Failed to delete Budget. Please try again.']);
+        }
+    }
 }

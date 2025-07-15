@@ -28,13 +28,12 @@
             estimate financial forecasts and contribute to the overall budgeting framework.
         </p>
 
-        <form action="{{ route('budgetprojections.store') }}" method="POST">
+        <form action="{{ route('budgetprojections.storeProjections') }}" method="POST">
             @csrf
-
             <div class="row mb-3">
-                <div class="col-md-12">
-                    <label for="scenario" class="form-label">Budget</label>
-                    <select class="form-select" name="BudgetID" required>
+                <div class="col-md-6">
+                    <label for="budget" class="form-label">Budget</label>
+                    <select id="budget" class="form-select" name="BudgetID" required>
                         <option disabled selected>-- Select Budget --</option>
                         @foreach($budgets as $budget)
                             <option value="{{ $budget->Id }}">{{ $budget->Name }}</option>
@@ -42,124 +41,150 @@
                     </select>
                 </div>
 
-                {{-- <div class="col-md-6">
-                    <label for="currency" class="form-label">Currency</label>
-                    <select class="form-select" name="CurrencyID" required>
-                        <option disabled selected>-- Select Currency --</option>
-                        @foreach($currencies as $currency)
-                            <option value="{{ $currency->Id }}">{{ $currency->Name }}</option>
+                <div class="col-md-6">
+                    <label for="budgetLine" class="form-label">Budget Line</label>
+                    <select id="budgetLine" class="form-select" name="BudgetLineID" required>
+                        <option disabled selected>-- Select Budget Line --</option>
+                        @foreach($budgetLines as $budgetline)
+                            <option value="{{ $budgetline->Id }}">{{ $budgetline->LineName }}</option>
                         @endforeach
                     </select>
-                </div> --}}
-        </div>
+                </div>
+            </div>
 
-            {{-- <div class="mt-3">
-                   <label for="period" class="form-label">Period</label>
-                   <select class="form-select" name="PeriodID" required>
-                       <option disabled selected>-- Select Period --</option>
-                           @foreach($periods as $period)
-                                <option value="{{ $period->Id }}">{{ $period->fiscalYear }}</option>
-                           @endforeach
-                   </select>
-               </div>         --}}
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="productType" class="form-label">Product</label>
+                    <select id="productType" class="form-select" name="ProductTypeId" required>
+                        <option disabled selected>-- Select Product --</option>
+                        {{-- Dynamically loaded --}}
+                    </select>
+                </div>
 
-            <div class="table-responsive mt-3">
-            <table class="table table-bordered table-hover align-middle">
-                <thead class="table-light">
-                <tr>
-                    <th>Product</th>
-                    <th>No of Accounts</th>
-                    {{-- <th>Projected Value</th> --}}
-                </tr>
-                </thead>
-                <tbody id="BudgetProducts">
-                <tr>
-                    <td>
-                        <select class="form-select" name="Products[0][ProductID]" required></select>
-                    </td>
-                    <td>
-                        <input type="number" class="form-control" name="Products[0][Volume]" placeholder="e.g., 120"
-                               required/>
-                    </td>
-                    {{-- <td>
-                         <input type="number" step="0.01" class="form-control" name="Products[0][Value]" placeholder="e.g., 12000000" required />
-                    </td> --}}
-                </tr>
-                </tbody>
-            </table>
-        </div>
+                <div class="col-md-6">
+                    <label for="NoOfAccounts" class="form-label">No of Accounts</label>
+                    <input type="number" class="form-control" id="NoOfAccounts" name="NoOfAccounts" min="1" required>
+                </div>
+            </div>
 
-            <div class="d-flex gap-2">
-                <button type="button" id="addRow" class="btn btn-secondary">➕ Add Row</button>
-                <button type="submit" class="btn btn-primary"
-                        onclick="this.disabled=true; this.innerText='Saving...'; this.form.submit();">💾 Save Entry
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                    <label class="form-label">Allocation Type</label>
+                    <select name="AllocationType" class="form-select" id="allocationType" required>
+                        <option disabled selected>-- Select allocation type --</option>
+                        <option value="full">Annual or Full Allocation</option>
+                        <option value="monthly">Monthly Allocation</option>
+                    </select>
+                    @error('AllocationType') <small class="text-danger">{{ $message }}</small> @enderror
+                </div>
+                <div id="fullAllocationSection" class="mb-3" style="display:none;">
+                    <h6>Full Allocation (KES)</h6>
+                    <input type="number" name="FullAllocation" min="0" class="form-control" placeholder="0.00">
+                    @error('FullAllocation') <small class="text-danger">{{ $message }}</small> @enderror
+                </div>
+            </div>
+
+            <!-- Monthly Allocation Fields -->
+            <div id="monthlyAllocationSection" class="mt-3 mb-2" style="display:none;">
+                <h6>Monthly Allocation(s)</h6>
+                <div class="row">
+                    @php
+                        $months = range(1, 12); // Generates [1, 2, ..., 12]
+                    @endphp
+
+                    @foreach($months as $key)
+                        <div class="col-md-3 mb-2">
+                            <label>Month {{ $key }}</label>
+                            <input type="number" min="0" name="monthly_allocations[{{ $key }}]"
+                                   class="form-control" placeholder="0.00">
+                        </div>
+                    @endforeach
+                </div>
+                @error('monthly_allocations') <small class="text-danger">{{ $message }}</small> @enderror
+                <div class="mt-3">
+                    <strong>Total Allocation:</strong> <span id="totalAllocation" class=" text-danger">0.00</span>
+                </div>
+            </div>
+
+
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-success"
+                        onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Saving...'; this.form.submit(); }">
+                    💾 Save Activity
                 </button>
             </div>
         </form>
     </div>
 
     <script>
-        const products = @json($products);
+        document.getElementById('budgetLine').addEventListener('change', function () {
+            const budgetLineId = this.value;
+            const productSelect = document.getElementById('productType');
 
-        document.addEventListener('DOMContentLoaded', function () {
-            let rowCount = 1;
+            productSelect.innerHTML = `<option disabled selected>Loading...</option>`;
 
-            function createOptions(list, valueKey, labelKey, selectedValue, selectedInOtherRows = []) {
-                return (
-                    '<option disabled value="">-- Select Product --</option>' +
-                    list.map(item => {
-                        const value = item[valueKey];
-                        const label = item[labelKey];
-                        // Disable if selected in another row and not the current value
-                        const disabled = selectedInOtherRows.includes(String(value)) && String(value) !== String(selectedValue) ? 'disabled' : '';
-                        const selected = String(value) === String(selectedValue) ? 'selected' : '';
-                        return `<option value="${value}" ${disabled} ${selected}>${label}</option>`;
-                    }).join('')
-                );
-            }
+            fetch(`{{ route('budget-lines.product-types', ':id') }}`.replace(':id', budgetLineId))
+                .then(response => response.json())
+                .then(data => {
+                    productSelect.innerHTML = '<option disabled selected>-- Select Product --</option>';
 
-            function getSelectedProductIds() {
-                return Array.from(document.querySelectorAll('select[name^="Products"][name$="[ProductID]"]'))
-                    .map(sel => sel.value)
-                    .filter(val => val !== '');
-            }
-
-            function updateAllProductDropdowns() {
-                const allDropdowns = document.querySelectorAll('select[name^="Products"][name$="[ProductID]"]');
-                const selected = getSelectedProductIds();
-                allDropdowns.forEach(sel => {
-                    const currentValue = sel.value;
-                    sel.innerHTML = createOptions(products, 'Id', 'Description', currentValue, selected);
-                    sel.value = currentValue; // Restore selection
+                    data.forEach(product => {
+                        const option = document.createElement('option');
+                        option.value = product.Id;
+                        option.text = product.Name ?? product.Description ?? 'Unnamed Product';
+                        productSelect.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    productSelect.innerHTML = '<option disabled selected>Failed to load products</option>';
+                    console.error(error);
                 });
-            }
+        });
+    </script>
 
-            document.getElementById('addRow').addEventListener('click', function () {
-                const newRow = document.createElement('tr');
-                newRow.innerHTML = `
-                <td>
-                    <select class="form-select" name="Products[${rowCount}][ProductID]" required></select>
-                </td>
-                <td>
-                    <input type="number" class="form-control" name="Products[${rowCount}][Volume]" placeholder="e.g., 120" required />
-                </td>
-                <td>
-                    <input type="number" step="0.01" class="form-control" name="Products[${rowCount}][Value]" placeholder="e.g., 12000000" required />
-                </td>
-            `;
-                document.getElementById('BudgetProducts').appendChild(newRow);
-                rowCount++;
-                updateAllProductDropdowns();
-            });
 
-            document.getElementById('BudgetProducts').addEventListener('change', function (e) {
-                if (e.target.matches('select[name^="Products"][name$="[ProductID]"]')) {
-                    updateAllProductDropdowns();
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const allocationType = document.getElementById('allocationType');
+            const fullSection = document.getElementById('fullAllocationSection');
+            const monthlySection = document.getElementById('monthlyAllocationSection');
+            const submitBtnContainer = document.getElementById('submitButtonContainer');
+            const totalAllocationEl = document.getElementById('totalAllocation');
+
+            allocationType?.addEventListener('change', function () {
+                const selected = this.value;
+                if (selected === 'full') {
+                    fullSection.style.display = 'block';
+                    monthlySection.style.display = 'none';
+                    submitBtnContainer.style.display = 'block';
+                } else if (selected === 'monthly') {
+                    fullSection.style.display = 'none';
+                    monthlySection.style.display = 'block';
+                    submitBtnContainer.style.display = 'block';
+                    calculateMonthlyTotal(); // Initial calculation in case fields are already filled
+                } else {
+                    fullSection.style.display = 'none';
+                    monthlySection.style.display = 'none';
+                    submitBtnContainer.style.display = 'none';
                 }
             });
 
-            // On page load, update all dropdowns (including the first)
-            updateAllProductDropdowns();
+            function calculateMonthlyTotal() {
+                let total = 0;
+                const inputs = document.querySelectorAll('input[name^="monthly_allocations"]');
+                inputs.forEach(input => {
+                    const val = parseFloat(input.value);
+                    if (!isNaN(val)) {
+                        total += val;
+                    }
+                });
+                totalAllocationEl.textContent = total.toFixed(2);
+            }
+
+            // Attach listener to all monthly inputs
+            document.querySelectorAll('input[name^="monthly_allocations"]').forEach(input => {
+                input.addEventListener('input', calculateMonthlyTotal);
+            });
         });
     </script>
 @endsection

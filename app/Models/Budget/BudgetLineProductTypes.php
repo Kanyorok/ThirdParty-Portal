@@ -32,4 +32,9 @@ class BudgetLineProductTypes extends Model
         return $this->belongsTo(BudgetProductType::class, 'ProductTypeId', 'Id');
     }
 
+    public function product()
+    {
+        return $this->belongsTo(BudgetProduct::class, 'ProductTypeId', 'Id');
+    }
+
 }
