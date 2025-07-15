@@ -103,7 +103,14 @@ class RFQEvaluationController extends Controller
             'Evaluations' => 'required|array',
         ]);
 
-        //dd($validated);
+        // Check for existing evaluation
+        $existingEvaluation = RFQEvaluation::where('RFQId', $validated['RFQId'])
+            ->where('UserCode', $validated['UserID'])
+            ->first();
+
+        if ($existingEvaluation) {
+            return back()->with('error', 'You have already submitted an evaluation for this RFQ. Please review or edit the existing evaluation.');
+        }
 
         DB::beginTransaction();
         try {
@@ -150,7 +157,6 @@ class RFQEvaluationController extends Controller
             return back()->with('error', 'Error saving evaluation: ' . $th->getMessage());
         }
     }
-
 
     public function getRFQResponses($rfqId)
     {

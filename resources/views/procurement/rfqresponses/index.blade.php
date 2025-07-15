@@ -3,7 +3,7 @@
 @section('title', 'RFQ Responses')
 @section('content')
     <div class="container">
-        <h3>RFQ Response List</h3>
+        <h3></h3>
 
         <div class="container mt-3">
             <a href="{{ route('rfqresponses.create') }}" class="btn btn-primary mb-2">Create RFQ Response</a>
