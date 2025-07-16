@@ -17,12 +17,20 @@ return new class extends Migration
             )
             ALTER TABLE t_RentReceipt DROP CONSTRAINT t_rentreceipt_paymentmethod_foreign
         ");
-        // Drop TenantId FK if exists
+        // Drop TenantId FK if exists (if ever existed)
         DB::statement("
             IF EXISTS (
                 SELECT 1 FROM sys.foreign_keys WHERE name = 't_rentreceipt_tenantid_foreign'
             )
             ALTER TABLE t_RentReceipt DROP CONSTRAINT t_rentreceipt_tenantid_foreign
+        ");
+
+        // === DROP FKs BEFORE DROPPING COLUMNS ON t_RentInvoice ===
+        DB::statement("
+            IF EXISTS (
+                SELECT 1 FROM sys.foreign_keys WHERE name = 't_rentinvoice_tenantid_foreign'
+            )
+            ALTER TABLE t_RentInvoice DROP CONSTRAINT t_rentinvoice_tenantid_foreign
         ");
 
         // === DROP columns on t_RentInvoice if they exist ===
@@ -82,9 +90,6 @@ return new class extends Migration
 
         // === RE-ADD FKs to t_RentReceipt ===
         Schema::table('t_RentReceipt', function (Blueprint $table) {
-            if (Schema::hasTable('t_Tenants') && Schema::hasColumn('t_RentReceipt', 'TenantId')) {
-                $table->foreign('TenantId')->references('Id')->on('t_Tenants');
-            }
             if (Schema::hasTable('t_CodeDetails') && Schema::hasColumn('t_RentReceipt', 'PaymentMethod')) {
                 $table->foreign('PaymentMethod')->references('ID')->on('t_CodeDetails');
             }
@@ -105,6 +110,12 @@ return new class extends Migration
                 SELECT 1 FROM sys.foreign_keys WHERE name = 't_rentreceipt_tenantid_foreign'
             )
             ALTER TABLE t_RentReceipt DROP CONSTRAINT t_rentreceipt_tenantid_foreign
+        ");
+        DB::statement("
+            IF EXISTS (
+                SELECT 1 FROM sys.foreign_keys WHERE name = 't_rentinvoice_tenantid_foreign'
+            )
+            ALTER TABLE t_RentInvoice DROP CONSTRAINT t_rentinvoice_tenantid_foreign
         ");
 
         // === Drop newly added columns from t_RentInvoice ===
@@ -160,9 +171,6 @@ return new class extends Migration
 
         // === Re-add FKs to t_RentReceipt ===
         Schema::table('t_RentReceipt', function (Blueprint $table) {
-            if (Schema::hasTable('t_Tenants') && Schema::hasColumn('t_RentReceipt', 'TenantId')) {
-                $table->foreign('TenantId')->references('Id')->on('t_Tenants');
-            }
             if (Schema::hasTable('t_CodeDetails') && Schema::hasColumn('t_RentReceipt', 'PaymentMethod')) {
                 $table->foreign('PaymentMethod')->references('ID')->on('t_CodeDetails');
             }
