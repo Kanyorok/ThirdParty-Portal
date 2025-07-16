@@ -36,7 +36,7 @@ class NewTicketRequest extends FormRequest
                                          'string',
                                         ],
                 'ticket_category'    => ['required'],
-                'ticket_user'        => ['required'],
+                'ticket_user'        => ['nullable'],
                 'ticket_watchers'    => [
                                          'nullable',
                                          'array',
@@ -47,7 +47,7 @@ class NewTicketRequest extends FormRequest
                                          Rule::enum(TicketSourceEnum::class),
                                         ],
                 'ticket_priority'    => [
-                                         'required',
+                                         'nullable',
                                          Rule::enum(TicketPriorityEnum::class),
                                         ],
                 'ticket_start'       => [

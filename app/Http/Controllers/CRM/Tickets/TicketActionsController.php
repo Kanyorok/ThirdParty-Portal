@@ -82,37 +82,39 @@ class TicketActionsController extends Controller
      * @throws ValidationException
      * @throws AuthorizationException
      */
-    public function priority(Request $request, Ticket $ticket): JsonResponse
-    {
-        $this->authorize('update', $ticket);
-        $request->validate(['ticket_priority' => ['required', Rule::enum(TicketPriorityEnum::class)]]);
+   public function priority(Request $request, Ticket $ticket): JsonResponse
+{
+    $this->authorize('update', $ticket);
 
-        try {
-            $priority = TicketPriorityEnum::fromValue($request->get('ticket_priority'));
-        } catch (ErrorException|ErroredException $e) {
-            throw  ValidationException::withMessages([
-                'ticket_priority' => $e->getMessage(),
-            ]);
-        }
+    $request->validate([
+        'ticket_priority' => ['required', Rule::enum(TicketPriorityEnum::class)],
+    ]);
 
-        if ($ticket->Status->value !== TicketStatusEnum::Active->value) {
-            return $this->errored('ticket is not active');
-        }
-
-
-        try {
-            DB::transaction(function () use ($priority, $ticket) {
-                $this->service($ticket)->priority($priority);
-            });
-        } catch (ErroredException $e) {
-            return $e->toJson();
-        } catch (Exception|Throwable $e) {
-            Log::error('Error update ticket priority ' . $e->getMessage());
-            return $this->errored('unexpected error, try again later');
-        }
-
-        return $this->succeeded('ticket priority changed', route('tickets.show', [$ticket->TicketID]));
+    try {
+        $priority = TicketPriorityEnum::from($request->get('ticket_priority'));
+    } catch (ValueError $e) {
+        throw ValidationException::withMessages([
+            'ticket_priority' => 'Invalid priority value.',
+        ]);
     }
+
+    if ($ticket->Status !== TicketStatusEnum::Active) {
+        return $this->errored('Ticket is not active');
+    }
+
+    try {
+        DB::transaction(function () use ($priority, $ticket) {
+            $this->service($ticket)->priority($priority);
+        });
+    } catch (ErroredException $e) {
+        return $e->toJson();
+    } catch (Exception|Throwable $e) {
+        Log::error('Error updating ticket priority: ' . $e->getMessage());
+        return $this->errored('Unexpected error, try again later');
+    }
+
+    return $this->succeeded('Ticket priority changed', route('tickets.show', [$ticket->TicketID]));
+}
 
 
     /**

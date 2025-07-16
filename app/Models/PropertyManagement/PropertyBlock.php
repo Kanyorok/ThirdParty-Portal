@@ -24,13 +24,12 @@ class PropertyBlock extends Model
         'ModifiedBy',
         'DeletedBy'
 
-        ];
+    ];
 
     public static function getPrimaryKey(): string
     {
         return 'PropertyBlockId';
     }
-
     public function property()
     {
         return $this->belongsTo(PropertyRegistry::class,'PropertyID','Id');

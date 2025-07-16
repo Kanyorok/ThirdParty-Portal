@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Auth;
 use App\Enums\LeadStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Auth\User;
+use App\Models\Budget\Budget;
+use App\Models\Budget\BudgetGLMaster;
 use App\Models\CRM\Lead;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
@@ -43,7 +45,17 @@ class DashboardController extends Controller
                  'tickets'   => ['active' => 0],
                 ];
 
-        return view('auth.dashboard', compact('data'));
+        //Fetch Number of open budgets, Total GLS
+        $openBudgets=Budget::where('Status','draft')->count();
+        $totalGLS=BudgetGLMaster::count();
+
+        //Fetch Number of documents and total file size
+
+        return view('auth.dashboard', compact(
+            'data',
+            'openBudgets',
+            'totalGLS'
+        ));
     }
 
     protected function months(): array
