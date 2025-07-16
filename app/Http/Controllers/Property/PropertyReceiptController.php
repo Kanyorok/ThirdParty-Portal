@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Property;
 
+
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\BillingAndReceipting\PropertyReceiptRequest;
@@ -11,6 +12,8 @@ use App\Services\Property\BillingAndReceipting\PropertyReceiptService;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+
 
 class PropertyReceiptController extends Controller
 {
@@ -48,7 +51,7 @@ class PropertyReceiptController extends Controller
           //dd('Validation');      
     $receipt = PropertyInvoice::findOrFail($InvoiceID);
        PropertyReceiptService::create(
-            $InvoiceID,
+            $receipt,       
             $BillingMonth,
             $InvoiceDate,
             $RentAmount,
