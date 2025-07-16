@@ -91,6 +91,7 @@ class PropertyInvoiceController extends Controller
                 'InvoiceDate' => $validated['InvoiceDate'],
                 'RentAmount' => $validated['RentAmount'],
                 'ServicesCharge' => $validated['ServicesCharge'],
+                'ParkingFee' => $validated['ParkingFee'],
                 'OtherCharges' => $validated['OtherCharges'],
                 'InvoiceNotes' => $validated['InvoiceNotes'],
                 'ModifiedBy' => Auth::Id(),
