@@ -93,12 +93,15 @@ class ProductDevelopmentController extends Controller
         ]);
 
         try {
-            $product = DB::transaction(static function () use ($data, $request) {
-                return ProductDevService::create($data['Name'], $data['TargetGroup'], $data['Notes'] ?? "", $request->user())->product;
-            });
-        } catch (Exception|Throwable $e) {
+    $product = DB::transaction(static function () use ($data, $request) {
+        return ProductDevService::create($data['Name'], $data['TargetGroup'], $data['Notes'] ?? "", $request->user())->product;
+    });
+        } catch (ErroredException $e) {
             Log::error('Error adding product dev: ' . $e->getMessage());
-            return $this->errored('unexpected error adding, try again latter');
+            return $this->errored($e->getMessage());
+        } catch (Exception|Throwable $e) {
+            Log::error('Unexpected error adding product dev: ' . $e->getMessage());
+            return $this->errored('An unexpected error occurred. Please try again later.');
         }
 
         return $this->succeeded('product development added', route('product-development.show', [$product->ProductID]));

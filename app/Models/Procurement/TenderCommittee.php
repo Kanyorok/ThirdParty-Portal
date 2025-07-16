@@ -18,6 +18,8 @@ class TenderCommittee extends Model
 
     protected $fillable = [
         'TenderID',
+        'CommitteeType',
+        'ReferenceId',
         'CommitteeName',
         'AppointmentDate',
         'IsActive',
@@ -30,6 +32,8 @@ class TenderCommittee extends Model
     ];
 
     protected $casts = [
+        'CommitteeType' => 'string',
+        'ReferenceId' => 'integer',
         'TenderID' => 'integer',
         'CommitteeName' => 'string',
         'AppointmentDate' => 'date',
@@ -69,5 +73,14 @@ class TenderCommittee extends Model
     public function tender()
     {
         return $this->belongsTo(Tender::class, 'TenderID', 'Id');
+    }
+
+    public function reference()
+    {
+        return match ($this->CommitteeType) {
+            'tender' => $this->belongsTo(Tender::class, 'ReferenceId'),
+            'rfq' => $this->belongsTo(RFQ::class, 'ReferenceId'),
+            default => null,
+        };
     }
 }

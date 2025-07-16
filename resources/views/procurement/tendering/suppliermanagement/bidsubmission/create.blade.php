@@ -17,7 +17,7 @@
             </div>
         @endif
 
-        <form action="{{ route('tendersubmission.store') }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('tendersubmission.index') }}" method="POST" enctype="multipart/form-data">
             @csrf
 
             <!-- Tender & Supplier Info -->

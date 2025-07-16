@@ -70,6 +70,48 @@
                 }
             }
         }
+
+  /* Hide event time completely */
+    
+  .fc-event-time {
+        display: none !important;
+    }
+
+    /* Allow event title to wrap */
+    .fc-event-title {
+        white-space: normal !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis;
+        display: block !important;
+        font-size: 0.85em;
+        line-height: 1.2em;
+        word-break: break-word;
+    }
+
+    /* Make the event box rectangular but retain default colors */
+    .fc-timegrid-event-harness .fc-timegrid-event {
+        padding: 6px 8px !important;
+        min-height: 50px !important;
+        display: flex !important;
+        align-items: flex-start !important;
+        justify-content: flex-start !important;
+        white-space: normal !important;
+        word-break: break-word;
+        overflow: hidden !important;
+        border-radius: 4px !important;
+        box-shadow: none !important;
+    }
+
+    /* Main content inside the event box */
+    .fc-timegrid-event .fc-event-main {
+        white-space: normal !important;
+        word-wrap: break-word;
+        width: 100%;
+        font-size: 0.85em;
+        line-height: 1.2em;
+    }
+
+
     </style>
 @endsection
 @section('content')

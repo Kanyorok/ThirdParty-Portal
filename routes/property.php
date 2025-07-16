@@ -142,10 +142,12 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::post('schedulelease', [PropertyLeaseScheduleController::class, 'store'])->name('schedulelease.store');
     Route::get('schedulelease/property/{Id}', [PropertyLeaseScheduleController::class, 'getPropertyByTenant'])->name('getpropertybytenant');
     Route::get('schedulelease/lease/{Id}', [PropertyLeaseScheduleController::class, 'getLeaseByProperty'])->name('getleasebyproperty');
-    Route::get('schedulelease/show/{id}', [PropertyLeaseScheduleController::class, 'show'])->name('schedulelease.show');
-    Route::get('schedulelease/edit/{Id}', [PropertyLeaseScheduleController::class, 'edit'])->name('schedulelease.edit');
-    Route::put('schedulelease/edit/{Id}', [PropertyLeaseScheduleController::class, 'update'])->name('schedulelease.update');
-    Route::delete('schedulelease/delete/{Id}', [PropertyLeaseScheduleController::class, 'destroy'])->name('schedulelease.destroy');
+    Route::get('schedulelease/show/{id}', [PropertyLeaseScheduleController::class,'show'])->name('schedulelease.show');
+    Route::get('schedulelease/edit/{Id}',[PropertyLeaseScheduleController::class,'edit'])->name('schedulelease.edit');
+    Route::put('schedulelease/edit/{Id}',[PropertyLeaseScheduleController::class,'update'])->name('schedulelease.update');
+    Route::delete('schedulelease/delete/{Id}', [PropertyLeaseScheduleController::class,'destroy'])->name('schedulelease.destroy');
+    Route::get('/schedulelease/print/{Id}', [PropertyLeaseScheduleController::class, 'print'])->name('schedulelease.print');
+
 
     //Route::resource('renewlease', PropertyLeaseRenewalController::class);
     Route::get('renewlease', [PropertyLeaseRenewalController::class,'index'])->name('renewlease.index');
@@ -167,15 +169,14 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::put('rentinvoice/edit/{id}',[PropertyInvoiceController::class,'update'])->name('rentinvoice.update');
     Route::delete('rentinvoice/delete/{id}', [PropertyInvoiceController::class,'destroy'])->name('rentinvoice.destroy');
 
-    //Route::resource('rentreceipt', PropertyMaintenanceRequestController::class);
-    Route::get('rentreceipt', [PropertyMaintenanceRequestController::class,'index'])->name('rentreceipt.index');
-    Route::get('rentreceipt/create', [PropertyMaintenanceRequestController::class,'create'])->name('rentreceipt.create');
-    Route::post('rentreceipt', [PropertyMaintenanceRequestController::class,'store'])->name('rentreceipt.store');
-    Route::get('rentreceipt/show/{Id}', [PropertyMaintenanceRequestController::class,'show'])->name('rentreceipt.show');
-    Route::get('rentreceipt/edit/{Id}',[PropertyMaintenanceRequestController::class,'edit'])->name('rentreceipt.edit');
-    Route::put('rentreceipt/edit/{Id}',[PropertyMaintenanceRequestController::class,'update'])->name('rentreceipt.update');
-    Route::delete('rentreceipt/delete/{Id}', [PropertyMaintenanceRequestController::class,'destroy'])->name('rentreceipt.destroy');
-    Route::get('rentreceipt/pdf/{Id}', [PropertyMaintenanceRequestController::class,'print'])->name('rentreceipt.pdf');
+    //Route::resource('rentreceipt', PropertyReceiptController::class);
+    Route::get('rentreceipt', [PropertyReceiptController::class,'index'])->name('rentreceipt.index');
+    Route::get('rentreceipt/create', [PropertyReceiptController::class,'create'])->name('rentreceipt.create');
+    Route::post('rentreceipt', [PropertyReceiptController::class,'store'])->name('rentreceipt.store');
+    Route::get('rentreceipt/show/{Id}', [PropertyReceiptController::class,'show'])->name('rentreceipt.show');
+    Route::get('rentreceipt/edit/{Id}',[PropertyReceiptController::class,'edit'])->name('rentreceipt.edit');
+    Route::put('rentreceipt/edit/{Id}',[PropertyReceiptController::class,'update'])->name('rentreceipt.update');
+    Route::delete('rentreceipt/delete/{Id}', [PropertyReceiptController::class,'destroy'])->name('rentreceipt.destroy');
 
 
 

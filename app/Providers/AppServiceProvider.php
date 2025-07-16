@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-use App\Models\Auth\ModelRole;
 use App\Models\Auth\Team;
 use App\Models\Auth\User;
 use App\Models\BR\Account;
@@ -40,6 +39,7 @@ use App\Models\Core\Task;
 use App\Models\CRM\Campaign;
 use App\Models\CRM\CampaignParty;
 use App\Models\CRM\Contact;
+use App\Models\HRM\Committee;
 use App\Models\CRM\Discussion;
 use App\Models\CRM\Lead;
 use App\Models\CRM\MarketingPlanner;
@@ -78,7 +78,6 @@ use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\DepartmentNeed;
 use App\Models\Procurement\DepartmentNeeds;
 use App\Models\Procurement\Order;
-use App\Models\Procurement\PlanLineItem;
 use App\Models\Procurement\PrequalificationPeriod;
 use App\Models\Procurement\ProcurementMethod;
 use App\Models\Procurement\RequisitionLine;
@@ -178,6 +177,7 @@ class AppServiceProvider extends ServiceProvider
             Client::getPrimaryKey() => Client::class,
             Email::getPrimaryKey() => Email::class,
             Competitor::getPrimaryKey() => Competitor::class,
+            Committee::getPrimaryKey() => Committee::class,
             Contact::getPrimaryKey() => Contact::class,
             DebtProduct::getPrimaryKey() => DebtProduct::class,
             Department::getPrimaryKey() => Department::class,

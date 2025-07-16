@@ -26,17 +26,28 @@ class PropertyLeaseScheduleController extends Controller
     //
     public function index()
     {
-        $leaseschedules = PropertyLeaseSchedule::with(['tenant', 'property'])->get();
+        $leaseschedules = PropertyLeaseSchedule::with(['lease'])->where('isActive', true)->get();
         return view('property.tenantmanagement.leasemanagement.leaseschedule.index', compact('leaseschedules'));
     }
 
     public function create()
     {
         $this->authorize(PermissionEnum::PropertyLeaseScheduleCreate, PropertyLeaseSchedule::class);
-        $newleases = PropertyNewLease::with('getPropertyByTenant', 'getLeaseByProperty')->get();
+
+        // Get all LeaseNumber values already scheduled
+        $scheduledLeaseIds = PropertyLeaseSchedule::pluck('LeaseNumber');
+
+        // Get leases that are not scheduled
+        $newleases = PropertyNewLease::with(['getPropertyByTenant', 'getLeaseByProperty'])
+            ->whereNotIn('Id', $scheduledLeaseIds)
+            ->where('isActive', true)
+            ->get();
+
         $codes = CodeDetail::where('CodeID', 'PaymentFrequency')->get();
+
         return view('property.tenantmanagement.leasemanagement.leaseschedule.create', compact('newleases', 'codes'));
     }
+
 
     public function getPropertyByTenant($tenantId)
     {
@@ -53,34 +64,31 @@ class PropertyLeaseScheduleController extends Controller
     public function show($id)
     {
         $this->authorize(PermissionEnum::PropertyLeaseScheduleView, PropertyLeaseSchedule::class);
-        $leaseschedule = PropertyLeaseSchedule::find($id);
-        return view('property.tenantmanagement.leasemanagement.leaseschedule.show', compact('leaseschedule'));
+        $leaseschedule = PropertyLeaseSchedule::where('isActive', true)->find($id);
+        $paymentFrequencies = CodeDetail::where('CodeID', 'PaymentFrequency')->get();
+        return view('property.tenantmanagement.leasemanagement.leaseschedule.show', compact('leaseschedule','paymentFrequencies'));
     }
 
-    public function store(PropertyLeaseScheduleRequest $request)
-    {
-        try {
-            $validated = $request->validated();
-            $leaseId = (int)$validated['LeaseId'];
-            $tenantId = (int)$validated['TenantId'];
-            $propertyId = (int)$validated['PropertyId'];
-            $paymentFrequencyId = (int)$validated['PaymentFrequency'];
+public function store(PropertyLeaseScheduleRequest $request)
+{
+    try {
+    $validated = $request->validated();
+    $leaseId = (int) $validated['LeaseId'];
+    $paymentFrequencyId = (int) $validated['PaymentFrequency'];
 
-            // Use the lease ID to get the full lease
-            $lease = PropertyNewLease::findOrFail($leaseId);
-            PropertyLeaseScheduleService::create(
-                $leaseId,                  // from DB
-                $tenantId,
-                $propertyId,
-                $paymentFrequencyId,
-                $validated['StartDate'],
-                $validated['EndDate'],
-                $validated['BaseRent'],
-                $validated['ServiceCharge'],
-                $validated['ParkingFee'],
-                $validated['OtherCharges'],
-                Auth::user()
-            );
+    // Use the lease ID to get the full lease
+    $lease = PropertyNewLease::findOrFail($leaseId);
+    PropertyLeaseScheduleService::create(
+        $leaseId,                  // from DB
+        $paymentFrequencyId,
+        $validated['StartDate'],
+        $validated['EndDate'],
+        $validated['BaseRent'],
+        $validated['ServiceCharge'],
+        $validated['ParkingFee'],
+        $validated['OtherCharges'],
+        Auth::user()
+    );
 
             return redirect()->route('schedulelease.index')->with('success', 'Lease schedule added!');
         } catch (Exception $e) {
@@ -92,8 +100,8 @@ class PropertyLeaseScheduleController extends Controller
     public function edit($id)
     {
         //Check if user has permission to edit tender categories
-        $this->authorize(PermissionEnum::PropertyLeaseScheduleUpdate, PropertyLeaseSchedule::class);
-        $leaseschedules = PropertyLeaseSchedule::findOrFail($id);
+         $this->authorize(PermissionEnum::PropertyLeaseScheduleUpdate, PropertyLeaseSchedule::class);
+        $leaseschedules = PropertyLeaseSchedule::where('isActive', true)->findOrFail($id);
         $newtenants = PropertyNewTenant::all();
         $newleases = PropertyNewLease::all();
         $codes = CodeDetail::where('CodeID', 'PaymentFrequency')->get();
@@ -107,8 +115,6 @@ class PropertyLeaseScheduleController extends Controller
         $this->authorize(PermissionEnum::PropertyLeaseScheduleUpdate, PropertyLeaseSchedule::class);
         $validated = $request->validate([
             'LeaseId' => 'required|exists:t_LeaseCreation,Id',
-            'TenantId' => 'required|exists:t_LeaseCreation,Id',
-            'PropertyId' => 'required|exists:t_LeaseCreation,Id',
             'PaymentFrequency' => 'required|string|max:50',
             'StartDate' => 'required|date',
             'EndDate' => 'required|date',
@@ -124,8 +130,6 @@ class PropertyLeaseScheduleController extends Controller
             $leaseschedules = PropertyLeaseSchedule::findOrFail($id);
 
             $leaseschedules->update([
-                'TenantId' => $validated['TenantId'],
-                'PropertyId' => $validated['PropertyId'],
                 'PaymentFrequency' => $validated['PaymentFrequency'],
                 'StartDate' => $validated['StartDate'],
                 'EndDate' => $validated['EndDate'],
@@ -148,10 +152,9 @@ class PropertyLeaseScheduleController extends Controller
             DB::rollBack();
             Log::error('Failed to Update Lease Schedule:' . $th->getMessage());
 
-            return back()->withErrors(['error' => 'Failed to update Lease Schedule'])->withInput();
-        }
-    }
-
+                return back()->withErrors(['error'=>'Failed to update Lease Schedule'])->withInput();
+            }
+       }
     public function destroy($id)
     {
         //Check if user has permission to delete property categories
@@ -170,6 +173,14 @@ class PropertyLeaseScheduleController extends Controller
                 ->withInput();
         }
     }
+    public function print($Id)
+    {
+        $leaseschedule = PropertyLeaseSchedule::with('lease.tenant', 'lease.property', 'paymentFrequency')
+                        ->findOrFail($Id);
+
+        return view('property.tenantmanagement.leasemanagement.leaseschedule.print', compact('leaseschedule'));
+    }
+   
 
 
 }

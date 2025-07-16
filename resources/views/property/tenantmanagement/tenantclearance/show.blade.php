@@ -10,14 +10,13 @@
             <a href="#" class="btn btn-outline-secondary btn-sm">← Back to List</a>
         </div>
 
-        <form>
-            <div class="card shadow-sm border-0">
-                <div class="card-body p-4">
-                    <div class="mb-3">
-                        <label class="form-label">Tenant</label>
-                        <input type="text" class="form-control"
-                               value="{{ $clearancetenant->tenant->TenantName ?? '-' }}" readonly>
-                    </div>
+    <form>
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <div class="mb-3">
+                    <label class="form-label">Tenant</label>
+                    <input type="text" class="form-control" value="{{ $clearancetenant->lease->tenant->TenantName ?? '-' }}" readonly>
+                </div>
 
                     <div class="mb-3">
                         <label class="form-label">Exit Date</label>
