@@ -39,23 +39,25 @@
                             <tr>
                                 <td>{{  $loop->iteration }}</td>
                                 <td>{{ $item->OrderNo }}</td>
-                                <td>{{ Carbon::parse($item->OrderDate)->format('Y-m-d') }}</td>
+                                <td>{{ Carbon::parse($item->OrderDate)->format('d/m/Y')}}</td>
                                 <td>{{
-echo e( $item->Ex)}}</td>
-                                <td>{{
-echo e( $item->P)}}</td>
-                                <td>{{
-echo e( $item->B)}}</td>
-                                <td>{{
-echo e( number_format($item->UnitPrice, 2))}}</td>
-                                <td>{{
-echo e( $item->OrderLines)}}</td>
-                                <td>{{
-echo e( $item->CreatedBy)}}</td>
-                                <td>{{
-echo e( Carbon::parse($item->CreatedOn)->format('Y-m-d')) }}</td>
-                                <td><a href="{{ echo e( route('purchaseOrder.show_source', $item->id)) }}" class="btn btn-info btn-sm">View</a>
-                                    <a href="{{ echo e( route('purchaseOrder.approve', $item->id)) }}"
+                                        echo e( $item->Ex}}</td>
+                                                                        <td>{{
+                                        echo e( $item->P}}</td>
+                                                                        <td>{{
+                                        echo e( $item->B}}</td>
+                                                                        <td>{{
+                                        echo e( number_format($item->UnitPr}}</td>
+                                                                        <td>{{
+                                        echo e( $item->ord}}</td>
+                                                                        <td>{{
+                                        echo e( $item->Cr}}</td>
+                                                                        <td>{{
+                                        echo e( Carbon::parse($item->CreatedOn)->}}</td>
+                                                                        <td><a href="{{ ?><?php
+                                        echo e( route('purchaseOrder.sh}}" class="btn btn-info btn-sm">View</a>
+                                                                            <a href="{{ ?><?php
+                                        echo e( route('purchaseOrder.approv}}"
                                        class="btn btn-success btn-sm">Approve</a>
                                 </td>
                             </tr>

@@ -344,6 +344,44 @@ enum PermissionEnum: string
     case TenantClearanceView = 'tenantclearance-view';
 
 
+    //Property New Lease
+    case PropertyNewLeaseCreate = 'propertynewlease-create';
+    case PropertyNewLeaseUpdate = 'propertynewlease-update';
+    case PropertyNewLeaseDelete = 'propertynewlease-delete';
+    case PropertyNewLeaseView = 'propertynewlease-view';
+
+    //Property lease schedule
+    case PropertyLeaseScheduleCreate = 'propertyleaseschedule-create';
+    case PropertyLeaseScheduleUpdate = 'propertyleaseschedule-update';
+    case PropertyLeaseScheduleDelete = 'propertyleaseschedule-delete';
+    case PropertyLeaseScheduleView = 'propertyleaseschedule-view';
+
+    //Property lease Renewal
+    case PropertyLeaseRenewalCreate = 'propertyleaserenewal-create';
+    case PropertyLeaseRenewalUpdate = 'propertyleaserenewal-update';
+    case PropertyLeaseRenewalDelete = 'propertyleaserenewal-delete';
+    case PropertyLeaseRenewalView = 'propertyleaserenewal-view';
+
+
+    //Property Lease Termination
+    case PropertyLeaseTerminationCreate = 'propertyleasetermination-create';
+    case PropertyLeaseTerminationUpdate = 'propertyleasetermination-update';
+    case PropertyLeaseTerminationDelete = 'propertyleasetermination-delete';
+    case PropertyLeaseTerminationView = 'propertyleasetermination-view';
+
+    //Property Invoice
+    case PropertyInvoiceCreate = 'propertyinvoice-create';
+    case PropertyInvoiceUpdate = 'propertyinvoice-update';
+    case PropertyInvoiceDelete = 'propertyinvoice-delete';
+    case PropertyInvoiceView = 'propertyinvoice-view';
+    
+    //Property Receipt
+    case PropertyReceiptCreate = 'propertyreceipt-create';
+    case PropertyReceiptUpdate = 'propertyreceipt-update';
+    case PropertyReceiptDelete = 'propertyreceipt-delete';
+    case PropertyReceiptView = 'propertyreceipt-view';
+
+
     /*
      *
      * ========================================  Human Resource management  ========================================

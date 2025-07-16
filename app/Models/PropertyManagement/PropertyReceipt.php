@@ -14,7 +14,6 @@ class PropertyReceipt extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'TenantId',
         'InvoiceID',
         'BillingMonth',
         'InvoiceDate',

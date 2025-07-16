@@ -2,6 +2,7 @@
 
 namespace App\Services\Property\BillingAndReceipting;
 
+use App\Enums\Property\PropertyInvoiceEnum;
 use App\Models\Auth\User;
 use App\Models\PropertyManagement\PropertyInvoice;
 use App\Models\PropertyManagement\PropertyNewLease;
@@ -17,14 +18,15 @@ class PropertyInvoiceService
     }
 
     public static function create(
-         $TenantId,
         PropertyNewLease $Lease,
         string $BillingMonth,
         string $InvoiceDate,
         float  $RentAmount,
         float  $ServicesCharge,
         float  $OtherCharges,
+        float  $ParkingFee,
         string $InvoiceNotes,
+        PropertyInvoiceEnum $Status,
         User   $user
     ): self
     {
@@ -35,7 +37,6 @@ class PropertyInvoiceService
         $InvoiceNumber = 'INV-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
 
         $invoice = PropertyInvoice::create([
-            'TenantId'=> $TenantId,
             'InvoiceNumber' => $InvoiceNumber,
             'Lease' => $Lease->Id,
             'BillingMonth' => $BillingMonth,
@@ -44,6 +45,8 @@ class PropertyInvoiceService
             'ServicesCharge' => $ServicesCharge,
             'OtherCharges' => $OtherCharges,
             'InvoiceNotes' => $InvoiceNotes,
+            'ParkingFee'    =>  $ParkingFee,
+            'Status' => PropertyInvoiceEnum::Pending->value,
             'CreatedBy' => $user->Id,
             'ModifiedBy' => $user->Id,
         ]);

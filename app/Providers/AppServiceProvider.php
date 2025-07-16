@@ -75,6 +75,18 @@ use App\Models\Inventory\Store;
 use App\Models\Inventory\TransactionReceipt;
 use App\Models\Inventory\TransactionTransfer;
 use App\Models\Inventory\UnitOfMeasure;
+use App\Models\Inventory\InventoryHoldReview;
+use App\Models\Inventory\InventoryType;
+use App\Models\Inventory\ItemCategories;
+use App\Models\Inventory\ItemMasterList;
+use App\Models\Inventory\ItemType;
+use App\Models\Inventory\PriceManagement;
+use App\Models\Inventory\StockAdjustment;
+use App\Models\Inventory\StockItem;
+use App\Models\Inventory\Store;
+use App\Models\Inventory\TransactionReceipt;
+use App\Models\Inventory\TransactionTransfer;
+use App\Models\Inventory\UnitOfMeasure;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\DepartmentNeed;
 use App\Models\Procurement\DepartmentNeeds;
@@ -91,13 +103,13 @@ use App\Models\PropertyManagement\PropertyBlock;
 use App\Models\PropertyManagement\PropertyFloor;
 use App\Models\PropertyManagement\PropertyInvoice;
 use App\Models\PropertyManagement\PropertyLeaseRenewal;
+use App\Models\PropertyManagement\PropertyUnit;
 use App\Models\PropertyManagement\PropertyLeaseSchedule;
 use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Models\PropertyManagement\PropertyReceipt;
 use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyTenantClearance;
 use App\Models\PropertyManagement\PropertyType;
-use App\Models\PropertyManagement\PropertyUnit;
 use App\Models\Settings\APICredential;
 use App\Models\ThirdParies\Board;
 use App\Models\ThirdParies\Competitor;
@@ -106,6 +118,7 @@ use App\Policies\DMS\DMSTagPolicy;
 use App\Policies\DMS\DocumentPolicy;
 use App\Policies\DMS\RepositoryPolicy;
 use App\Policies\Inventory\InterBranchRequisitionPolicy;
+use App\Policies\Inventory\InventoryHoldReviewPolicy;
 use App\Policies\Inventory\InventoryHoldReviewPolicy;
 use App\Policies\Inventory\InventoryTypePolicy;
 use App\Policies\Inventory\ItemCategoryPolicy;
@@ -294,6 +307,8 @@ class AppServiceProvider extends ServiceProvider
             PropertyLeaseSchedule::getPrimaryKey() => PropertyLeaseSchedule::class,
             PropertyLeaseRenewal::getPrimaryKey() => PropertyLeaseRenewal::class,
             PropertyInvoice::getPrimaryKey() => PropertyInvoice::class,
+
+
 
 
             PrequalificationPeriod::getPrimaryKey() => PrequalificationPeriod::class,

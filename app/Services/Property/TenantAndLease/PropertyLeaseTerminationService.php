@@ -60,7 +60,6 @@ class PropertyLeaseTerminationService
                     'ModifiedBy' => $user->Id,
                 ]);
 
-            // Log activity
             activity()
                 ->causedBy($user->Id)
                 ->performedOn($termination)
