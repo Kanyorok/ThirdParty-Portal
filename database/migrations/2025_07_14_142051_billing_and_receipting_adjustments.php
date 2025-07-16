@@ -9,46 +9,43 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Drop FK on t_RentInvoice.TenantId using known name or raw SQL
-        try {
-            DB::statement("ALTER TABLE t_RentInvoice DROP CONSTRAINT FK_t_RentInvoice_TenantId");
-        } catch (\Throwable $e) {
-            // Safe to ignore
-        }
+        // === DROP FKs BEFORE DROPPING COLUMNS ON t_RentReceipt ===
+        // Drop PaymentMethod FK if exists
+        DB::statement("
+            IF EXISTS (
+                SELECT 1 FROM sys.foreign_keys WHERE name = 't_rentreceipt_paymentmethod_foreign'
+            )
+            ALTER TABLE t_RentReceipt DROP CONSTRAINT t_rentreceipt_paymentmethod_foreign
+        ");
+        // Drop TenantId FK if exists
+        DB::statement("
+            IF EXISTS (
+                SELECT 1 FROM sys.foreign_keys WHERE name = 't_rentreceipt_tenantid_foreign'
+            )
+            ALTER TABLE t_RentReceipt DROP CONSTRAINT t_rentreceipt_tenantid_foreign
+        ");
 
-        // Drop columns from t_RentInvoice if they exist
-        Schema::table('t_RentInvoice', function (Blueprint $table) {
-            foreach (['TenantId', 'InvoiceDate', 'RentAmount', 'ServicesCharge', 'OtherCharges'] as $col) {
-                if (Schema::hasColumn('t_RentInvoice', $col)) {
+        // === DROP columns on t_RentInvoice if they exist ===
+        $invoiceColumnsToDrop = ['TenantId', 'InvoiceDate', 'RentAmount', 'ServicesCharge', 'OtherCharges'];
+        foreach ($invoiceColumnsToDrop as $col) {
+            if (Schema::hasColumn('t_RentInvoice', $col)) {
+                Schema::table('t_RentInvoice', function (Blueprint $table) use ($col) {
                     $table->dropColumn($col);
-                }
+                });
             }
-        });
-
-        // Drop FK on t_RentReceipt.TenantId using known name or raw SQL
-        try {
-            DB::statement("ALTER TABLE t_RentReceipt DROP CONSTRAINT FK_t_RentReceipt_TenantId");
-        } catch (\Throwable $e) {
-            // Safe to ignore
         }
 
-        // Drop FK on PaymentMethod if it exists
-        try {
-            DB::statement("ALTER TABLE t_RentReceipt DROP CONSTRAINT t_rentreceipt_paymentmethod_foreign");
-        } catch (\Throwable $e) {
-            // Safe to ignore
-        }
-
-        // Drop columns from t_RentReceipt
-        Schema::table('t_RentReceipt', function (Blueprint $table) {
-            foreach (['TenantId', 'PaymentMethod'] as $col) {
-                if (Schema::hasColumn('t_RentReceipt', $col)) {
+        // === DROP columns on t_RentReceipt if they exist ===
+        $receiptColumnsToDrop = ['TenantId', 'PaymentMethod', 'AmountPaid', 'Amount'];
+        foreach ($receiptColumnsToDrop as $col) {
+            if (Schema::hasColumn('t_RentReceipt', $col)) {
+                Schema::table('t_RentReceipt', function (Blueprint $table) use ($col) {
                     $table->dropColumn($col);
-                }
+                });
             }
-        });
+        }
 
-        // Re-add columns to t_RentInvoice
+        // === RE-ADD columns to t_RentInvoice ===
         Schema::table('t_RentInvoice', function (Blueprint $table) {
             if (!Schema::hasColumn('t_RentInvoice', 'InvoiceDate')) {
                 $table->date('InvoiceDate')->nullable();
@@ -70,42 +67,56 @@ return new class extends Migration
             }
         });
 
-        // Re-add PaymentMethod to t_RentReceipt
+        // === RE-ADD PaymentMethod and amounts to t_RentReceipt ===
         Schema::table('t_RentReceipt', function (Blueprint $table) {
             if (!Schema::hasColumn('t_RentReceipt', 'PaymentMethod')) {
                 $table->unsignedBigInteger('PaymentMethod')->nullable();
             }
+            if (!Schema::hasColumn('t_RentReceipt', 'AmountPaidSoFar')) {
+                $table->decimal('AmountPaidSoFar', 20, 2)->nullable();
+            }
+            if (!Schema::hasColumn('t_RentReceipt', 'AmountPaidNow')) {
+                $table->decimal('AmountPaidNow', 20, 2)->nullable();
+            }
         });
 
-        // Add FK on PaymentMethod if CodeID is a key
-        $uniqueCodeID = DB::selectOne("
-            SELECT COUNT(*) AS is_unique
-            FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
-            JOIN INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE ccu ON tc.CONSTRAINT_NAME = ccu.CONSTRAINT_NAME
-            WHERE tc.TABLE_NAME = 't_CodeDetails'
-              AND tc.CONSTRAINT_TYPE IN ('UNIQUE', 'PRIMARY KEY')
-              AND ccu.COLUMN_NAME = 'CodeID'
-        ");
-
-        if ($uniqueCodeID && $uniqueCodeID->is_unique > 0) {
-            Schema::table('t_RentReceipt', function (Blueprint $table) {
-                $table->foreign('PaymentMethod')->references('CodeID')->on('t_CodeDetails');
-            });
-        }
+        // === RE-ADD FKs to t_RentReceipt ===
+        Schema::table('t_RentReceipt', function (Blueprint $table) {
+            if (Schema::hasTable('t_Tenants') && Schema::hasColumn('t_RentReceipt', 'TenantId')) {
+                $table->foreign('TenantId')->references('Id')->on('t_Tenants');
+            }
+            if (Schema::hasTable('t_CodeDetails') && Schema::hasColumn('t_RentReceipt', 'PaymentMethod')) {
+                $table->foreign('PaymentMethod')->references('ID')->on('t_CodeDetails');
+            }
+        });
     }
 
     public function down(): void
     {
-        // Drop new columns from t_RentInvoice
-        Schema::table('t_RentInvoice', function (Blueprint $table) {
-            foreach (['ParkingFee', 'Status'] as $col) {
-                if (Schema::hasColumn('t_RentInvoice', $col)) {
-                    $table->dropColumn($col);
-                }
-            }
-        });
+        // === Drop FKs first to avoid issues on rollback ===
+        DB::statement("
+            IF EXISTS (
+                SELECT 1 FROM sys.foreign_keys WHERE name = 't_rentreceipt_paymentmethod_foreign'
+            )
+            ALTER TABLE t_RentReceipt DROP CONSTRAINT t_rentreceipt_paymentmethod_foreign
+        ");
+        DB::statement("
+            IF EXISTS (
+                SELECT 1 FROM sys.foreign_keys WHERE name = 't_rentreceipt_tenantid_foreign'
+            )
+            ALTER TABLE t_RentReceipt DROP CONSTRAINT t_rentreceipt_tenantid_foreign
+        ");
 
-        // Re-add columns to t_RentInvoice
+        // === Drop newly added columns from t_RentInvoice ===
+        foreach (['ParkingFee', 'Status'] as $col) {
+            if (Schema::hasColumn('t_RentInvoice', $col)) {
+                Schema::table('t_RentInvoice', function (Blueprint $table) use ($col) {
+                    $table->dropColumn($col);
+                });
+            }
+        }
+
+        // === Re-add original columns to t_RentInvoice ===
         Schema::table('t_RentInvoice', function (Blueprint $table) {
             if (!Schema::hasColumn('t_RentInvoice', 'TenantId')) {
                 $table->unsignedBigInteger('TenantId')->nullable();
@@ -124,17 +135,14 @@ return new class extends Migration
             }
         });
 
-        // Re-add FK on TenantId in t_RentInvoice
-        if (
-            Schema::hasTable('t_Tenants') &&
-            Schema::hasColumn('t_RentInvoice', 'TenantId')
-        ) {
-            Schema::table('t_RentInvoice', function (Blueprint $table) {
+        // === Re-add FK for TenantId on t_RentInvoice ===
+        Schema::table('t_RentInvoice', function (Blueprint $table) {
+            if (Schema::hasTable('t_Tenants') && Schema::hasColumn('t_RentInvoice', 'TenantId')) {
                 $table->foreign('TenantId')->references('Id')->on('t_Tenants');
-            });
-        }
+            }
+        });
 
-        // Re-add columns to t_RentReceipt
+        // === Re-add original columns to t_RentReceipt ===
         Schema::table('t_RentReceipt', function (Blueprint $table) {
             if (!Schema::hasColumn('t_RentReceipt', 'TenantId')) {
                 $table->unsignedBigInteger('TenantId')->nullable();
@@ -142,31 +150,22 @@ return new class extends Migration
             if (!Schema::hasColumn('t_RentReceipt', 'PaymentMethod')) {
                 $table->unsignedBigInteger('PaymentMethod')->nullable();
             }
+            if (!Schema::hasColumn('t_RentReceipt', 'AmountPaid')) {
+                $table->decimal('AmountPaid', 20, 2)->nullable();
+            }
+            if (!Schema::hasColumn('t_RentReceipt', 'Amount')) {
+                $table->decimal('Amount', 20, 2)->nullable();
+            }
         });
 
-        // Re-add FKs
-        if (
-            Schema::hasTable('t_Tenants') &&
-            Schema::hasColumn('t_RentReceipt', 'TenantId')
-        ) {
-            Schema::table('t_RentReceipt', function (Blueprint $table) {
+        // === Re-add FKs to t_RentReceipt ===
+        Schema::table('t_RentReceipt', function (Blueprint $table) {
+            if (Schema::hasTable('t_Tenants') && Schema::hasColumn('t_RentReceipt', 'TenantId')) {
                 $table->foreign('TenantId')->references('Id')->on('t_Tenants');
-            });
-        }
-
-        $uniqueCodeID = DB::selectOne("
-            SELECT COUNT(*) AS is_unique
-            FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
-            JOIN INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE ccu ON tc.CONSTRAINT_NAME = ccu.CONSTRAINT_NAME
-            WHERE tc.TABLE_NAME = 't_CodeDetails'
-              AND tc.CONSTRAINT_TYPE IN ('UNIQUE', 'PRIMARY KEY')
-              AND ccu.COLUMN_NAME = 'CodeID'
-        ");
-
-        if ($uniqueCodeID && $uniqueCodeID->is_unique > 0) {
-            Schema::table('t_RentReceipt', function (Blueprint $table) {
-                $table->foreign('PaymentMethod')->references('CodeID')->on('t_CodeDetails');
-            });
-        }
+            }
+            if (Schema::hasTable('t_CodeDetails') && Schema::hasColumn('t_RentReceipt', 'PaymentMethod')) {
+                $table->foreign('PaymentMethod')->references('ID')->on('t_CodeDetails');
+            }
+        });
     }
 };

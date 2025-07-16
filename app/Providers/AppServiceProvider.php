@@ -144,7 +144,6 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Permission\Models\Role;
-use App\Models\Auth\ModelRole;
 
 
 class AppServiceProvider extends ServiceProvider
