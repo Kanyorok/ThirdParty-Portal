@@ -10,7 +10,6 @@ use App\Models\Procurement\RFQCriteria;
 use App\Models\Procurement\RFQEvaluation;
 use App\Models\Procurement\RFQResponse;
 use App\Models\Procurement\RFQSupplierResponseEvaluation;
-use App\Models\Procurement\SupplierResponseEvaluation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -54,7 +53,7 @@ class RFQEvaluationController extends Controller
                     'supplierId' => $supplierId,
                     'rfq' => $evaluation->rfq,
                     'weightedTotal' => $grandWeightedTotal,
-                    'response' => \App\Models\Procurement\RFQResponse::where('SupplierId', $supplierId)
+                    'response' => RFQResponse::where('SupplierId', $supplierId)
                         ->where('RFQId', $evaluation->RFQId)
                         ->first(),
                 ];
@@ -109,7 +108,7 @@ class RFQEvaluationController extends Controller
             ->first();
 
         if ($existingEvaluation) {
-            return back()->with('error', 'You have already submitted an evaluation for this RFQ. Please review or edit the existing evaluation.');
+            return back()->with('error', 'You have already submitted an evaluation for this RFQ. Please review the existing evaluation.');
         }
 
         DB::beginTransaction();
