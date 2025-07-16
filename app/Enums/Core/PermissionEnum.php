@@ -353,6 +353,7 @@ enum PermissionEnum: string
     //Property lease schedule
     case PropertyLeaseScheduleCreate = 'propertyleaseschedule-create';
     case PropertyLeaseScheduleUpdate = 'propertyleaseschedule-update';
+
     case PropertyLeaseScheduleDelete = 'propertyleaseschedule-delete';
     case PropertyLeaseScheduleView = 'propertyleaseschedule-view';
 
