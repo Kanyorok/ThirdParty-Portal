@@ -95,7 +95,7 @@
                     @foreach($months as $key)
                         <div class="col-md-3 mb-2">
                             <label>Month {{ $key }}</label>
-                            <input type="number"  min="0" name="monthly_allocations[{{ $key }}]"
+                            <input type="number" min="0" name="monthly_allocations[{{ $key }}]"
                                    class="form-control" placeholder="0.00">
                         </div>
                     @endforeach

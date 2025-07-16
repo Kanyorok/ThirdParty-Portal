@@ -46,8 +46,8 @@ class DashboardController extends Controller
                 ];
 
         //Fetch Number of open budgets, Total GLS
-        $openBudgets=Budget::where('Status','draft')->count();
-        $totalGLS=BudgetGLMaster::count();
+        $openBudgets = Budget::where('Status', 'draft')->count();
+        $totalGLS = BudgetGLMaster::count();
 
         //Fetch Number of documents and total file size
 

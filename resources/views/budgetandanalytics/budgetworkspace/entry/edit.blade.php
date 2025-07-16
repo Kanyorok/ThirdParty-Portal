@@ -29,7 +29,8 @@
                     <select id="budget" class="form-select" name="BudgetID" required>
                         <option disabled>-- Select Budget --</option>
                         @foreach($budgets as $budget)
-                            <option value="{{ $budget->Id }}" {{ $projection->BudgetID == $budget->Id ? 'selected' : '' }}>{{ $budget->Name }}</option>
+                            <option
+                                value="{{ $budget->Id }}" {{ $projection->BudgetID == $budget->Id ? 'selected' : '' }}>{{ $budget->Name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -39,7 +40,8 @@
                     <select id="budgetLine" class="form-select" name="BudgetLineID" required>
                         <option disabled>-- Select Budget Line --</option>
                         @foreach($budgetLines as $budgetline)
-                            <option value="{{ $budgetline->Id }}" {{ $projection->BudgetLineID == $budgetline->Id ? 'selected' : '' }}>{{ $budgetline->LineName }}</option>
+                            <option
+                                value="{{ $budgetline->Id }}" {{ $projection->BudgetLineID == $budgetline->Id ? 'selected' : '' }}>{{ $budgetline->LineName }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -51,14 +53,16 @@
                     <select id="productType" class="form-select" name="ProductTypeId" required>
                         <option disabled>-- Select Product --</option>
                         @foreach($products as $product)
-                            <option value="{{ $product->Id }}" {{ $product->Id == $productTypeId ? 'selected' : '' }}>{{ $product->Name ?? $product->Description }}</option>
+                            <option
+                                value="{{ $product->Id }}" {{ $product->Id == $productTypeId ? 'selected' : '' }}>{{ $product->Name ?? $product->Description }}</option>
                         @endforeach
                     </select>
                 </div>
 
                 <div class="col-md-6">
                     <label for="NoOfAccounts" class="form-label">No of Accounts</label>
-                    <input type="number" class="form-control" id="NoOfAccounts" name="NoOfAccounts" min="1" value="{{ $projection->NumberOfAccounts }}" required>
+                    <input type="number" class="form-control" id="NoOfAccounts" name="NoOfAccounts" min="1"
+                           value="{{ $projection->NumberOfAccounts }}" required>
                 </div>
             </div>
 
@@ -67,18 +71,25 @@
                     <label class="form-label">Allocation Type</label>
                     <select name="AllocationType" class="form-select" id="allocationType" required>
                         <option disabled>-- Select allocation type --</option>
-                        <option value="full" {{ $projection->AllocationType === 'full' ? 'selected' : '' }}>Annual or Full Allocation</option>
-                        <option value="monthly" {{ $projection->AllocationType === 'monthly' ? 'selected' : '' }}>Monthly Allocation</option>
+                        <option value="full" {{ $projection->AllocationType === 'full' ? 'selected' : '' }}>Annual or
+                            Full Allocation
+                        </option>
+                        <option value="monthly" {{ $projection->AllocationType === 'monthly' ? 'selected' : '' }}>
+                            Monthly Allocation
+                        </option>
                     </select>
                 </div>
-                <div id="fullAllocationSection" class="mb-3" style="display: {{ $projection->AllocationType === 'full' ? 'block' : 'none' }};">
+                <div id="fullAllocationSection" class="mb-3"
+                     style="display: {{ $projection->AllocationType === 'full' ? 'block' : 'none' }};">
                     <h6>Full Allocation (KES)</h6>
-                    <input type="number" name="FullAllocation" min="0" class="form-control" placeholder="0.00" value="{{ $projection->FullAllocation }}">
+                    <input type="number" name="FullAllocation" min="0" class="form-control" placeholder="0.00"
+                           value="{{ $projection->FullAllocation }}">
                 </div>
             </div>
 
             <!-- Monthly Allocation Fields -->
-            <div id="monthlyAllocationSection" class="mt-3 mb-2" style="display: {{ $projection->AllocationType === 'monthly' ? 'block' : 'none' }};">
+            <div id="monthlyAllocationSection" class="mt-3 mb-2"
+                 style="display: {{ $projection->AllocationType === 'monthly' ? 'block' : 'none' }};">
                 <h6>Monthly Allocation(s)</h6>
                 <div class="row">
                     @foreach(range(1, 12) as $key)
@@ -99,7 +110,7 @@
 
             <div class="d-flex gap-2 mt-4" id="submitButtonContainer">
                 <button type="submit" class="btn btn-primary">
-                     Update Projection
+                    Update Projection
                 </button>
             </div>
         </form>

@@ -92,7 +92,8 @@ class BudgetLine extends Model
         );
     }
 
-    public function products(){
+    public function products()
+    {
         return $this->belongsToMany(
             BudgetProduct::class,          // The related model
             't_BudgetLineProductTypes',        // The pivot table

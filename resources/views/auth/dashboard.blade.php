@@ -29,17 +29,17 @@
                         <div class="flex-grow-1 ms-3">
                             <h6 class="mb-0">Open Budgets</h6>
                         </div>
-{{--                        <div class="flex-shrink-0 ms-3">--}}
-{{--                            <div class="dropdown"><a--}}
-{{--                                    class="avtar avtar-s btn-link-secondary dropdown-toggle arrow-none" href="#"--}}
-{{--                                    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i--}}
-{{--                                        class="ti ti-dots-vertical f-18"></i></a>--}}
-{{--                                <div class="dropdown-menu dropdown-menu-end"><a class="dropdown-item"--}}
-{{--                                                                                href="#">Today</a> <a--}}
-{{--                                        class="dropdown-item" href="#">Weekly</a> <a--}}
-{{--                                        class="dropdown-item" href="#">Monthly</a></div>--}}
-{{--                            </div>--}}
-{{--                        </div>--}}
+                        {{--                        <div class="flex-shrink-0 ms-3">--}}
+                        {{--                            <div class="dropdown"><a--}}
+                        {{--                                    class="avtar avtar-s btn-link-secondary dropdown-toggle arrow-none" href="#"--}}
+                        {{--                                    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i--}}
+                        {{--                                        class="ti ti-dots-vertical f-18"></i></a>--}}
+                        {{--                                <div class="dropdown-menu dropdown-menu-end"><a class="dropdown-item"--}}
+                        {{--                                                                                href="#">Today</a> <a--}}
+                        {{--                                        class="dropdown-item" href="#">Weekly</a> <a--}}
+                        {{--                                        class="dropdown-item" href="#">Monthly</a></div>--}}
+                        {{--                            </div>--}}
+                        {{--                        </div>--}}
                     </div>
                     <div class="bg-body p-3 mt-3 rounded">
                         <div class="mt-3 row align-items-center">
@@ -48,7 +48,7 @@
                             </div>
                             <div class="col-5">
                                 <h5 class="mb-1 text-end">{{$openBudgets}}</h5>
-{{--                                <p class="text-primary mb-0"><i class="ti ti-arrow-up-right"></i> 30.6%</p>--}}
+                                {{--                                <p class="text-primary mb-0"><i class="ti ti-arrow-up-right"></i> 30.6%</p>--}}
                             </div>
                         </div>
                     </div>
@@ -81,17 +81,17 @@
                         <div class="flex-grow-1 ms-3">
                             <h6 class="mb-0">Total GL</h6>
                         </div>
-{{--                        <div class="flex-shrink-0 ms-3">--}}
-{{--                            <div class="dropdown"><a--}}
-{{--                                    class="avtar avtar-s btn-link-secondary dropdown-toggle arrow-none" href="#"--}}
-{{--                                    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i--}}
-{{--                                        class="ti ti-dots-vertical f-18"></i></a>--}}
-{{--                                <div class="dropdown-menu dropdown-menu-end"><a class="dropdown-item"--}}
-{{--                                                                                href="#">Today</a> <a--}}
-{{--                                        class="dropdown-item" href="#">Weekly</a> <a--}}
-{{--                                        class="dropdown-item" href="#">Monthly</a></div>--}}
-{{--                            </div>--}}
-{{--                        </div>--}}
+                        {{--                        <div class="flex-shrink-0 ms-3">--}}
+                        {{--                            <div class="dropdown"><a--}}
+                        {{--                                    class="avtar avtar-s btn-link-secondary dropdown-toggle arrow-none" href="#"--}}
+                        {{--                                    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i--}}
+                        {{--                                        class="ti ti-dots-vertical f-18"></i></a>--}}
+                        {{--                                <div class="dropdown-menu dropdown-menu-end"><a class="dropdown-item"--}}
+                        {{--                                                                                href="#">Today</a> <a--}}
+                        {{--                                        class="dropdown-item" href="#">Weekly</a> <a--}}
+                        {{--                                        class="dropdown-item" href="#">Monthly</a></div>--}}
+                        {{--                            </div>--}}
+                        {{--                        </div>--}}
                     </div>
                     <div class="bg-body p-3 mt-3 rounded">
                         <div class="mt-3 row align-items-center">
@@ -100,7 +100,7 @@
                             </div>
                             <div class="col-5">
                                 <h5 class="mb-1 text-end">{{$totalGLS}}</h5>
-{{--                                <p class="text-warning mb-0"><i class="ti ti-arrow-up-right"></i> 30.6%</p>--}}
+                                {{--                                <p class="text-warning mb-0"><i class="ti ti-arrow-up-right"></i> 30.6%</p>--}}
                             </div>
                         </div>
                     </div>
@@ -113,28 +113,35 @@
                     <div class="d-flex align-items-center">
                         <div class="flex-shrink-0">
                             <div class="avtar avtar-s bg-light-success">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M17 21H7C5.895 21 5 20.105 5 19V5C5 3.895 5.895 3 7 3H12.414L17 7.586V19C17 20.105 16.105 21 15 21Z" stroke="#DC2626" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path opacity="0.4" d="M12 3V8H17" stroke="#DC2626" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path opacity="0.4" d="M8 11H14" stroke="#DC2626" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path opacity="0.4" d="M8 15H14" stroke="#DC2626" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                     xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                        d="M17 21H7C5.895 21 5 20.105 5 19V5C5 3.895 5.895 3 7 3H12.414L17 7.586V19C17 20.105 16.105 21 15 21Z"
+                                        stroke="#DC2626" stroke-width="1.5" stroke-miterlimit="10"
+                                        stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path opacity="0.4" d="M12 3V8H17" stroke="#DC2626" stroke-width="1.5"
+                                          stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path opacity="0.4" d="M8 11H14" stroke="#DC2626" stroke-width="1.5"
+                                          stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path opacity="0.4" d="M8 15H14" stroke="#DC2626" stroke-width="1.5"
+                                          stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
                             <h6 class="mb-0">Total Documents</h6>
                         </div>
-{{--                        <div class="flex-shrink-0 ms-3">--}}
-{{--                            <div class="dropdown"><a--}}
-{{--                                    class="avtar avtar-s btn-link-secondary dropdown-toggle arrow-none" href="#"--}}
-{{--                                    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i--}}
-{{--                                        class="ti ti-dots-vertical f-18"></i></a>--}}
-{{--                                <div class="dropdown-menu dropdown-menu-end"><a class="dropdown-item"--}}
-{{--                                                                                href="#">Today</a> <a--}}
-{{--                                        class="dropdown-item" href="#">Weekly</a> <a--}}
-{{--                                        class="dropdown-item" href="#">Monthly</a></div>--}}
-{{--                            </div>--}}
-{{--                        </div>--}}
+                        {{--                        <div class="flex-shrink-0 ms-3">--}}
+                        {{--                            <div class="dropdown"><a--}}
+                        {{--                                    class="avtar avtar-s btn-link-secondary dropdown-toggle arrow-none" href="#"--}}
+                        {{--                                    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i--}}
+                        {{--                                        class="ti ti-dots-vertical f-18"></i></a>--}}
+                        {{--                                <div class="dropdown-menu dropdown-menu-end"><a class="dropdown-item"--}}
+                        {{--                                                                                href="#">Today</a> <a--}}
+                        {{--                                        class="dropdown-item" href="#">Weekly</a> <a--}}
+                        {{--                                        class="dropdown-item" href="#">Monthly</a></div>--}}
+                        {{--                            </div>--}}
+                        {{--                        </div>--}}
                     </div>
                     <div class="bg-body p-3 mt-3 rounded">
                         <div class="mt-3 row align-items-center">
@@ -143,7 +150,7 @@
                             </div>
                             <div class="col-5">
                                 <h5 class="mb-1 text-end">0</h5>
-{{--                                <p class="text-success mb-0"><i class="ti ti-arrow-up-right"></i> Recent</p>--}}
+                                {{--                                <p class="text-success mb-0"><i class="ti ti-arrow-up-right"></i> Recent</p>--}}
                             </div>
                         </div>
                     </div>
@@ -155,26 +162,32 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center">
                         <div class="flex-shrink-0">
-                            <div class="avtar avtar-s bg-light-danger"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M18.5 15.5C18.5 17.433 16.433 19.5 14.5 19.5H7C5.067 19.5 3 17.433 3 15.5C3 13.567 5.067 11.5 7 11.5C7 9.567 8.567 8 10.5 8C12.433 8 14 9.567 14 11.5H14.5C16.433 11.5 18.5 13.567 18.5 15.5Z" stroke="#DC2626" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path opacity="0.4" d="M10 14.5H14V10.5" stroke="#DC2626" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <div class="avtar avtar-s bg-light-danger">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                     xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                        d="M18.5 15.5C18.5 17.433 16.433 19.5 14.5 19.5H7C5.067 19.5 3 17.433 3 15.5C3 13.567 5.067 11.5 7 11.5C7 9.567 8.567 8 10.5 8C12.433 8 14 9.567 14 11.5H14.5C16.433 11.5 18.5 13.567 18.5 15.5Z"
+                                        stroke="#DC2626" stroke-width="1.5" stroke-miterlimit="10"
+                                        stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path opacity="0.4" d="M10 14.5H14V10.5" stroke="#DC2626" stroke-width="1.5"
+                                          stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
                             <h6 class="mb-0">File size</h6>
                         </div>
-{{--                        <div class="flex-shrink-0 ms-3">--}}
-{{--                            <div class="dropdown"><a--}}
-{{--                                    class="avtar avtar-s btn-link-secondary dropdown-toggle arrow-none" href="#"--}}
-{{--                                    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i--}}
-{{--                                        class="ti ti-dots-vertical f-18"></i></a>--}}
-{{--                                <div class="dropdown-menu dropdown-menu-end"><a class="dropdown-item"--}}
-{{--                                                                                href="#">Today</a> <a--}}
-{{--                                        class="dropdown-item" href="#">Weekly</a> <a--}}
-{{--                                        class="dropdown-item" href="#">Monthly</a></div>--}}
-{{--                            </div>--}}
-{{--                        </div>--}}
+                        {{--                        <div class="flex-shrink-0 ms-3">--}}
+                        {{--                            <div class="dropdown"><a--}}
+                        {{--                                    class="avtar avtar-s btn-link-secondary dropdown-toggle arrow-none" href="#"--}}
+                        {{--                                    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i--}}
+                        {{--                                        class="ti ti-dots-vertical f-18"></i></a>--}}
+                        {{--                                <div class="dropdown-menu dropdown-menu-end"><a class="dropdown-item"--}}
+                        {{--                                                                                href="#">Today</a> <a--}}
+                        {{--                                        class="dropdown-item" href="#">Weekly</a> <a--}}
+                        {{--                                        class="dropdown-item" href="#">Monthly</a></div>--}}
+                        {{--                            </div>--}}
+                        {{--                        </div>--}}
                     </div>
                     <div class="bg-body p-3 mt-3 rounded">
                         <div class="mt-3 row align-items-center">
@@ -183,7 +196,7 @@
                             </div>
                             <div class="col-5">
                                 <h5 class="mb-1 text-end">0.00 GB</h5>
-{{--                                <p class="text-danger mb-0"><i class="ti ti-arrow-up-right"></i> 30.6%</p>--}}
+                                {{--                                <p class="text-danger mb-0"><i class="ti ti-arrow-up-right"></i> 30.6%</p>--}}
                             </div>
                         </div>
                     </div>
