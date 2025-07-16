@@ -3,6 +3,7 @@
 namespace App\Services\Property\BillingAndReceipting;
 
 use App\Models\Auth\User;
+use App\Models\PropertyManagement\PropertyInvoice;
 use App\Models\PropertyManagement\PropertyReceipt;
 use Exception;
 
@@ -10,8 +11,7 @@ class PropertyReceiptService
 {
 
     public static function create(
-        string $TenantId,
-        string $InvoiceID,
+        PropertyInvoice $InvoiceID,
         string $BillingMonth,
         string $InvoiceDate,
         int  $RentAmount,
@@ -36,7 +36,6 @@ class PropertyReceiptService
             throw new Exception('This Invoice is already Receipted.');
         }
         $receipt = PropertyReceipt::create([
-            'TenantId'=>$TenantId,
             'InvoiceID' => $InvoiceID,
             'BillingMonth' => $BillingMonth,
             'InvoiceDate' => $InvoiceDate,

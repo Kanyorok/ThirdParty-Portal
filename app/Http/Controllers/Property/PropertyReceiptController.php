@@ -10,6 +10,7 @@ use App\Models\PropertyManagement\PropertyReceipt;
 use App\Services\Property\BillingAndReceipting\PropertyReceiptService;
 use Exception;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class PropertyReceiptController extends Controller
 {
@@ -38,8 +39,7 @@ class PropertyReceiptController extends Controller
         $this->authorize(PermissionEnum::PropertyReceiptCreate, PropertyReceipt::class);
             try {
                 $validated = $request->validated();
-                $TenantId = (int) $validated['InvoiceID'];
-                $InvoiceID = (int) $validated['TenantId'];
+                $InvoiceID = (int) $validated['InvoiceID'];
                 $BillingMonth = (int) $validated['BillingMonth'];
                 $InvoiceDate = (int) $validated['InvoiceDate'];
                 $RentAmount = (int) $validated['RentAmount'];
@@ -48,7 +48,6 @@ class PropertyReceiptController extends Controller
           //dd('Validation');      
     $receipt = PropertyInvoice::findOrFail($InvoiceID);
        PropertyReceiptService::create(
-            $TenantId,
             $InvoiceID,
             $BillingMonth,
             $InvoiceDate,
