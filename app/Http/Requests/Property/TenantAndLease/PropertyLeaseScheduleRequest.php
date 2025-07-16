@@ -23,8 +23,6 @@ class PropertyLeaseScheduleRequest extends FormRequest
     {
         return [
             'LeaseId' => 'required|exists:t_LeaseCreation,Id',
-            'TenantId' => 'required|exists:t_LeaseCreation,Id',
-            'PropertyId' => 'required|exists:t_LeaseCreation,Id',
             'PaymentFrequency' => 'required|string|max:50',
             'StartDate' => 'required|date',
             'EndDate' => 'required|date',

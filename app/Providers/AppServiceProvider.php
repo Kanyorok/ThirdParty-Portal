@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-use App\Models\Auth\ModelRole;
 use App\Models\Auth\Team;
 use App\Models\Auth\User;
 use App\Models\BR\Account;
@@ -40,6 +39,7 @@ use App\Models\Core\Task;
 use App\Models\CRM\Campaign;
 use App\Models\CRM\CampaignParty;
 use App\Models\CRM\Contact;
+use App\Models\HRM\Committee;
 use App\Models\CRM\Discussion;
 use App\Models\CRM\Lead;
 use App\Models\CRM\MarketingPlanner;
@@ -61,6 +61,7 @@ use App\Models\DMS\Image;
 use App\Models\DMS\Repository;
 use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
+use App\Models\Procurement\DepartmentNeed;
 use App\Models\Inventory\InterBranchRequisition;
 use App\Models\Inventory\InventoryHoldReview;
 use App\Models\Inventory\InventoryType;
@@ -76,10 +77,10 @@ use App\Models\Inventory\TransactionTransfer;
 use App\Models\Inventory\UnitOfMeasure;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\Order;
+use App\Models\Procurement\PlanLineItem;
 use App\Models\Procurement\PrequalificationPeriod;
 use App\Models\Procurement\ProcurementMethod;
 use App\Models\Procurement\RequisitionLine;
-
 use App\Models\Procurement\Requisitions;
 use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQLine;
@@ -142,6 +143,7 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Permission\Models\Role;
+use App\Models\Auth\ModelRole;
 
 
 class AppServiceProvider extends ServiceProvider
@@ -169,29 +171,23 @@ class AppServiceProvider extends ServiceProvider
 
             //CRM
             Account::getPrimaryKey() => Account::class,
-            APICredential::getPrimaryKey() => APICredential::class,
             Board::getPrimaryKey() => Board::class,
             Call::getPrimaryKey() => Call::class,
             Campaign::getPrimaryKey() => Campaign::class,
             CampaignParty::getPrimaryKey() => CampaignParty::class,
             Client::getPrimaryKey() => Client::class,
-            Branch::getPrimaryKey() => Branch::class,
             Email::getPrimaryKey() => Email::class,
-            Comment::getPrimaryKey() => Comment::class,
             Competitor::getPrimaryKey() => Competitor::class,
+            Committee::getPrimaryKey() => Committee::class,
             Contact::getPrimaryKey() => Contact::class,
             DebtProduct::getPrimaryKey() => DebtProduct::class,
             Department::getPrimaryKey() => Department::class,
             Discussion::getPrimaryKey() => Discussion::class,
-            Employee::getPrimaryKey() => Employee::class,
             Lead::getPrimaryKey() => Lead::class,
             MarketingPlanner::getPrimaryKey() => MarketingPlanner::class,
             Meeting::getPrimaryKey() => Meeting::class,
             Notes::getPrimaryKey() => Notes::class,
             ProductDevelopment::getPrimaryKey() => ProductDevelopment::class,
-            Report::getPrimaryKey() => Report::class,
-            RFQ::getPrimaryKey() => RFQ::class,
-            RFQLine::getPrimaryKey() => RFQLine::class,
             Review::getPrimaryKey() => Review::class,
             Schedule::getPrimaryKey() => Schedule::class,
             Social::getPrimaryKey() => Social::class,
@@ -211,10 +207,12 @@ class AppServiceProvider extends ServiceProvider
             Requisitions::getPrimaryKey() => Requisitions::class,
             RequisitionLine::getPrimaryKey() => RequisitionLine::class,
             Order::getPrimaryKey() => Order::class,
+            DepartmentNeed::getPrimaryKey() => DepartmentNeed::class,
             ProcurementMethod::getPrimaryKey() => ProcurementMethod::class,
             SchedulePlan::getPrimaryKey() => SchedulePlan::class,
             InterBranchRequisition::getPrimaryKey() => InterBranchRequisition::class,
             ConsolidatedProcurementPlan::getPrimaryKey() => ConsolidatedProcurementPlan::class,
+            PlanLineItem::getPrimaryKey() => PlanLineItem::class,
 
             //iINVENTORY
             ItemMasterList::getPrimaryKey() => ItemMasterList::class,
@@ -225,10 +223,6 @@ class AppServiceProvider extends ServiceProvider
             Store::getPrimaryKey() => Store::class,
             UnitOfMeasure::getPrimaryKey() => UnitOfMeasure::class,
             PriceManagement::getPrimaryKey() => PriceManagement::class,
-            SchedulePlan::getPrimaryKey() => SchedulePlan::class,
-            InterBranchRequisition::getPrimaryKey() => InterBranchRequisition::class,
-            ConsolidatedProcurementPlan::getPrimaryKey() => ConsolidatedProcurementPlan::class,
-            //PlanLineItems::getPrimaryKey() => PlanLineItems::class,
             TransactionReceipt::getPrimaryKey() => TransactionReceipt::class,
             TransactionTransfer::getPrimaryKey() => TransactionTransfer::class,
             StockAdjustment::getPrimaryKey() => StockAdjustment::class,
@@ -313,7 +307,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(RequisitionLine::class, RequisitionLinesPolicy::class);
         Gate::policy(ProductDevelopment::class, ProductDevelopmentPolicy::class);
         Gate::policy(Order::class, OrderPolicy::class);
-        Gate::policy(DepartmentNeeds::class, DepartmentNeedsPolicy::class);
+        Gate::policy(DepartmentNeed::class, DepartmentNeedsPolicy::class);
         Gate::policy(ProcurementMethod::class, ProcurementMethodPolicy::class);
         Gate::policy(ItemMasterList::class, ItemMasterListPolicy::class);
         Gate::policy(ItemCategories::class, ItemCategoryPolicy::class);
@@ -325,7 +319,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PriceManagement::class, PriceManagementPolicy::class);
         Gate::policy(ConsolidatedProcurementPlan::class, ProcurementPlanMaintainPolicy::class);
         Gate::policy(SchedulePlan::class, SchedulePlanPolicy::class);
-        Gate::policy(PlanLineItems::class, PlanManualInputPolicy::class);
+        Gate::policy(PlanLineItem::class, PlanManualInputPolicy::class);
         Gate::policy(InterBranchRequisition::class, InterBranchRequisitionPolicy::class);
         Gate::policy(TransactionReceipt::class, TransactionReceiptPolicy::class);
         Gate::policy(StockAdjustment::class, StockAdjustmentPolicy::class);

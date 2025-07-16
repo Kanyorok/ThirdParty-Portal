@@ -10,6 +10,7 @@ use App\Models\Communication\Email;
 use App\Models\Communication\SMS;
 use App\Models\Core\Activity;
 use App\Models\Core\Task;
+use App\Models\CRM\Schedule;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -63,6 +64,12 @@ class LoanActivityController extends Controller
                             ->where('t_Tasks.SourceID', $product->AccountID)
                             ->where('t_Tasks.Source', DebtProduct::getPrimaryKey())
                             ->select('t_Tasks.TaskID'));
+                })->orWhere(function (Builder $query) use ($product) {
+                    $query->where('ActivityType', Schedule::getPrimaryKey())
+                        ->whereIn('ActivityTypeID', Schedule::withTrashed()
+                            ->where('SourceID', $product->AccountID)
+                            ->where('Source', DebtProduct::getPrimaryKey())
+                            ->select('t_Schedule.ScheduleID'));
                 });
             })->orWhere(function (Builder $query) use ($product) {
                 $query->where('ActivityType', DebtProduct::getPrimaryKey())

@@ -108,49 +108,31 @@ class CRMEmailService
     /**
      * @throws Exception
      */
-    public static function dt(Builder|MorphMany $query, array $with = []): JsonResponse
-    {
-        $query->lock('WITH(NOLOCK)');
-        if (!empty($with)) {
-            $query->with($with);
-        }
-        return Datatables::of($query->select('*'))->addIndexColumn()
-            ->addColumn('action', function (Email $email) {
-                return '...';
-            })->editColumn('party', function (Email $email) use ($with) {
-                if (in_array('party', $with, true)) {
-                    return (new PartyService($email->party))->simplified(true, true);
-                }
-                return '';
-            })->editColumn('Type', function (Email $email) {
-                return $email->Type->name;
-            })->editColumn('ModifiedOn', function (Email $email) {
-                return $email->ModifiedOn?->format('M d, Y H:i');
-            })->editColumn('Status', function (Email $email) {
-                return $email->Status->badge();
-            })->editColumn('CreatedOn', function (Email $email) {
-                return $email->CreatedOn?->format('F d, Y h:i A');
-            })->editColumn('Dated', function (Email $email) {
-                if ($email->Dated instanceof Carbon) {
-                    return $email->Dated->format('F d, Y h:i A');
-                }
-                return $email->CreatedOn?->format('F d, Y h:i A');
-            })->setRowClass('mouse_pointer user-select-none click-email-details')->setRowData([
-                'click_url' => function (Email $email) {
-                    if (is_null($email->EmailConversationId)) {
-                        return route('emails.show', [$email->EmailID]);
-                    }
-                    return route('email-conversations.summary', [$email->EmailConversationId]);
-                },
-                'summary_title' => 'email summary',
-                /*  'click_url' => function (Email $email) {
-                      return route('emails.show', $email->EmailID);
-                  },
-                  'dbl_click_url' => function (Email $email) {
-                      return route('emails.summary', [$email->EmailID]);
-                  }, 'summary_title' => 'email summary'*/
-            ])->rawColumns(['action', 'party', 'Status'])->make();
+  public static function dt(Builder|MorphMany $query, array $with = []): JsonResponse
+{
+    $query->lock('WITH(NOLOCK)');
+    if (!empty($with)) {
+        $query->with($with);
     }
+
+    return Datatables::of($query->select('*'))
+        ->addIndexColumn()
+        ->addColumn('id', fn (Email $email) => $email->EmailID) // 👈 required for JS
+        ->addColumn('action', function (Email $email) {
+            return '<button class="btn btn-sm btn-primary view-email" data-id="' . $email->EmailID . '">
+                        <i class="fas fa-eye"></i> View
+                    </button>';
+        })
+        ->editColumn('Type', fn(Email $email) => $email->Type->name)
+        ->editColumn('CreatedOn', fn(Email $email) => $email->CreatedOn?->format('F d, Y h:i A'))
+        ->editColumn('Dated', function (Email $email) {
+            return $email->Dated instanceof Carbon
+                ? $email->Dated->format('F d, Y h:i A')
+                : $email->CreatedOn?->format('F d, Y h:i A');
+        })
+        ->rawColumns(['action'])
+        ->make();
+}
 
     public static function testConfig(string $host, int $port, EmailEncryptionEnum $encryption, string $username, #[SensitiveParameter] string $password): bool
     {

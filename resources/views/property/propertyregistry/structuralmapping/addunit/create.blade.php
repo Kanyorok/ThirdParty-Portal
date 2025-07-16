@@ -110,7 +110,7 @@
                 FloorSelect.innerHTML = '<option value="">-- Select a Floor --</option>';
 
                 if (BlockId) {
-                    const url = `{{ route('getfloorbyblock', ':Id') }}`.replace(':Id', BlockId);
+*                    const url = `{{ route('getfloorbyblock', ':Id') }}`.replace(':Id', BlockId);
 
                     fetch(url)
                         .then(response => response.json())

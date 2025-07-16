@@ -59,5 +59,12 @@ class DatabaseSeeder extends Seeder
         $this->call(BudgetDriverProjectionsSeeder::class);
         $this->call(BudgetDriverProjectionsDataSeeder::class);
         $this->call(CategoryMasterSeeder::class);
+        $this->call(PropertyTypeSeeder::class);
+        $this->call(PropertyRegistrySeeder::class);
+        $this->call(PropertyBlockSeeder::class);
+        $this->call(PropertyFloorSeeder::class);
+        $this->call(PropertyUnitSeeder::class);
+        $this->call(TenantRegistrySeeder::class);
+        $this->call(PropertyNewLeaseSeeder::class);
     }
 }
