@@ -69,10 +69,11 @@ use Illuminate\Support\Facades\Route;
 Route::namespace('Budget')->prefix('budget')->group(function () {
     Route::resource('budgetline', BudgetLinesController::class);
     Route::resource('budgetperiod', BudgetPeriodController::class);
-    Route::post('/budgetperiod/attachGL', [BudgetPeriodController::class, 'attachGL'])->name('budgetperiod.attachGL');
+    Route::post('/budgetperiod/attachGL', [BudgetPeriodController::class,'attachGL'])->name('budgetperiod.attachGL');;
     Route::resource('budgetproductmaster', BudgetProductMasterController::class);
     Route::resource('budgetproducttype', BudgetProductTypeController::class);
     Route::resource('budgetlinemapping', BudgetLineMappingController::class);
+    Route::delete('/delete-lineProduct/{id}', [BudgetLineMappingController::class,'destroyProduct'])->name('budgetlinemapping.destroyProduct');
     Route::resource('budgetglmapping', BudgetGLMappingController::class);
     Route::resource('budgetdrivers', BudgetDriversController::class);
     Route::resource('budgetlinecategories', BudgetLineCategoriesController::class);
@@ -80,6 +81,9 @@ Route::namespace('Budget')->prefix('budget')->group(function () {
     Route::resource('yieldexpenserate', YieldRateController::class);
     //Route::resource('budgetprojections', BudgetProjectionsController::class);
     Route::resource('budgetprojections', BudgetProjectionsController::class);
+    Route::post('/storeProjections', [BudgetProjectionsController::class,'storeProjections'])->name('budgetprojections.storeProjections');
+    Route::post('/deleteProjection', [BudgetProjectionsController::class,'deleteProjection'])->name('budgetprojections.deleteProjection');
+    Route::get('/budget-lines/{id}/product-types', [BudgetProjectionsController::class, 'getProductTypes'])->name('budget-lines.product-types');
     Route::resource('entrybyglline', BudgetGLLineEntryController::class);
     Route::get('/entrybyglline/glview/{budgetId}', [BudgetGLLineEntryController::class, 'glview'])->name('entrybyglline.glview');
     Route::resource('submitapproval', BudgetSubmitController::class);
@@ -101,7 +105,7 @@ Route::namespace('Budget')->prefix('budget')->group(function () {
     Route::resource('liquidityratio', LiquidityController::class);
 
     // API Routes to fetch data
-    Route::get('/api/budget-activities', [BudgetActivitiesController::class, 'fetchActivities'])->name('api.budget-activities');
+   Route::get('/api/budget-activities', [BudgetActivitiesController::class, 'fetchActivities'])->name('api.budget-activities');
 
     // Business Intelligence & Deep Analytics
     Route::resource('analyticsdashboard', BusinessAnalyticsDashboardController::class);
@@ -145,13 +149,16 @@ Route::namespace('Budget')->prefix('budget')->group(function () {
     Route::resource('planningmethods', BudgetPlanningMethodsController::class);
     Route::resource('periodtypes', BudgetPeriodTypesController::class);
 
-    Route::resource('budgetdriverssetup', BudgetDriversSetupController::class);
+    Route::resource('budgetdriverssetup',BudgetDriversSetupController::class);
     Route::get('budgetlinemapping/gl-subtypes/{typeId}', [BudgetLineMappingController::class, 'getGLAccountSubTypes']);
 
-    Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('budgetline-reports.export');
-    Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
-        'index' => 'budgetline-reports.index',
-        'show' => 'budgetline-reports.show'
-    ]);
+   Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('budgetline-reports.export');
+   Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
+       'index' => 'budgetline-reports.index',
+       'show' => 'budgetline-reports.show'
+   ]);
+
+    Route::delete('/budget/deleteProjection/{id}', [BudgetProjectionsController::class,'deleteProjection'])->name('budgetprojections.deleteProjection');
     Route::delete('budget/delete-gl-attachment/{id}', [BudgetPeriodController::class, 'delGLAttachment'])->name('budget.delete-gl-attachment');
+    Route::delete('budget/delete-budget/{id}', [BudgetPeriodController::class, 'delBudget'])->name('budget.delete-budget');
 });
