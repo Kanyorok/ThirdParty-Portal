@@ -40,7 +40,6 @@ Route::middleware('auth:sanctum', 'thirdparty.approved')->apiResource('third-par
 
 Route::middleware('auth:sanctum', 'thirdparty.approved')->apiResource('third-party-categories', ThirdPartyCategoryController::class);
 
-// New routes added below
 Route::prefix('v1')->group(function () {
     Route::prefix('website')->middleware(\App\Http\Middleware\WebsiteAuthMiddleware::class)->group(function () {
         Route::post('reviews', \App\Http\Controllers\API\Website\ReviewsController::class);
