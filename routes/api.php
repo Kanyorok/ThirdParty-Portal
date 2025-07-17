@@ -1,7 +1,45 @@
 <?php
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ThirdParty\ThirdPartyAuthController;
+use App\Http\Controllers\ThirdParty\ThirdPartyController;
+use App\Http\Controllers\ThirdParty\ThirdPartiesBankDetailsController;
+use App\Http\Controllers\ThirdParty\ThirdPartyCategoryController;
 
+Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+    return $request->user();
+});
+
+Route::prefix('third-party-auth')->group(function () {
+    Route::post('login', [ThirdPartyAuthController::class, 'login']);
+    Route::post('register', [ThirdPartyAuthController::class, 'register']);
+    Route::middleware('auth:sanctum')->post('logout', [ThirdPartyAuthController::class, 'logout']);
+});
+
+Route::middleware(['auth:sanctum', 'thirdparty.approved'])->prefix('third-party-profile')->group(function () {
+    Route::get('/', [ThirdPartyController::class, 'show']);
+    Route::put('/', [ThirdPartyController::class, 'update']);
+    Route::delete('/', [ThirdPartyController::class, 'destroy']);
+});
+
+Route::middleware(['auth:sanctum', 'thirdparty.approved'])->prefix('third-parties')->group(function () {
+    Route::get('/', [ThirdPartyController::class, 'index']);
+    Route::post('/', [ThirdPartyController::class, 'store']);
+    Route::get('{third_party}', [ThirdPartyController::class, 'show']);
+    Route::put('{third_party}', [ThirdPartyController::class, 'update']);
+    Route::delete('{third_party}', [ThirdPartyController::class, 'destroy']);
+    Route::get('suppliers', [ThirdPartyController::class, 'getSuppliers']);
+    Route::post('{third_party}/approve', [ThirdPartyController::class, 'approve']);
+    Route::post('{third_party}/reject', [ThirdPartyController::class, 'reject']);
+    Route::patch('{third_party}/status', [ThirdPartyController::class, 'updateStatus']);
+});
+
+Route::middleware('auth:sanctum', 'thirdparty.approved')->apiResource('third-parties-bank-details', ThirdPartiesBankDetailsController::class);
+
+Route::middleware('auth:sanctum', 'thirdparty.approved')->apiResource('third-party-categories', ThirdPartyCategoryController::class);
+
+// New routes added below
 Route::prefix('v1')->group(function () {
     Route::prefix('website')->middleware(\App\Http\Middleware\WebsiteAuthMiddleware::class)->group(function () {
         Route::post('reviews', \App\Http\Controllers\API\Website\ReviewsController::class);

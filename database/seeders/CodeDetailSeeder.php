@@ -5,6 +5,9 @@ namespace Database\Seeders;
 use App\Enums\CampaignStatusEnum;
 use App\Enums\LeadStatusEnum;
 use App\Enums\TicketStatusEnum;
+use App\Enums\ThirdPartyTypeEnum;
+use App\Enums\ThirdPartyStatusEnum;
+use App\Enums\ThirdPartyApprovalStatusEnum;
 use App\Helpers\SystemHelper;
 use App\Services\StaticListsService;
 use Illuminate\Database\Seeder;
@@ -43,6 +46,33 @@ class CodeDetailSeeder extends Seeder
                 'CodeID' => 'TicketStatus',
                 'Value' => $ticketStatusEnum->value,
                 'Description' => $ticketStatusEnum->name,
+                'DisplayOrder' => $index + 1,
+            ]);
+        }
+
+        foreach (ThirdPartyTypeEnum::cases() as $index => $thirdPartyTypeEnum) {
+            $entries->push([
+                'CodeID' => 'ThirdPartyType',
+                'Value' => $thirdPartyTypeEnum->value,
+                'Description' => $thirdPartyTypeEnum->name,
+                'DisplayOrder' => $index + 1,
+            ]);
+        }
+
+        foreach (ThirdPartyStatusEnum::cases() as $index => $thirdPartyStatusEnum) {
+            $entries->push([
+                'CodeID' => 'ThirdPartyStatus',
+                'Value' => $thirdPartyStatusEnum->value,
+                'Description' => $thirdPartyStatusEnum->name,
+                'DisplayOrder' => $index + 1,
+            ]);
+        }
+
+        foreach (ThirdPartyApprovalStatusEnum::cases() as $index => $approvalStatusEnum) {
+            $entries->push([
+                'CodeID' => 'ThirdPartyApprovalStatus',
+                'Value' => $approvalStatusEnum->value,
+                'Description' => $approvalStatusEnum->name,
                 'DisplayOrder' => $index + 1,
             ]);
         }

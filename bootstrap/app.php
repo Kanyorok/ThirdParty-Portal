@@ -1,9 +1,10 @@
 <?php
 
-use App\Http\Middleware\AjaxCheckMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use App\Http\Middleware\TransformApiRequest;
+use App\Http\Middleware\TransformApiResponse;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -14,8 +15,15 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
-            'ajax' => AjaxCheckMiddleware::class,
+            'ajax' => \App\Http\Middleware\AjaxCheckMiddleware::class
         ]);
+
+        // Transform keys of requests that are not GET to snake_case
+        // and keys of successful JSON responses to camelCase
+        // $middleware->appendToGroup('api', [
+        //     TransformApiRequest::class,
+        //     TransformApiResponse::class,
+        // ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

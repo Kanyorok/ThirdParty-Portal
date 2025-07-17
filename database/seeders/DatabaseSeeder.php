@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Enums\Core\ModulesEnum;
 use App\Models\Budget\BudgetActivityMaster;
 use App\Models\Budget\BudgetGLAccountSubType;
+use App\Models\ThirdParty;
 use Illuminate\Database\Seeder;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -66,5 +67,9 @@ class DatabaseSeeder extends Seeder
         $this->call(PropertyUnitSeeder::class);
         $this->call(TenantRegistrySeeder::class);
         $this->call(PropertyNewLeaseSeeder::class);
+        $this->call(ThirdPartySeeder::class);
+        $this->call(ThirdPartyUserSeeder::class);
+        $this->call(ThirdPartyCategorySeeder::class);
+        $this->call(ThirdPartiesBankDetailsSeeder::class);
     }
 }
