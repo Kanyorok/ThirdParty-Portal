@@ -6,6 +6,7 @@ use App\Http\Controllers\ThirdParty\ThirdPartyAuthController;
 use App\Http\Controllers\ThirdParty\ThirdPartyController;
 use App\Http\Controllers\ThirdParty\ThirdPartiesBankDetailsController;
 use App\Http\Controllers\ThirdParty\ThirdPartyCategoryController;
+use App\Http\Controllers\ThirdParty\ThirdPartyUserProfileController;
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
@@ -17,10 +18,10 @@ Route::prefix('third-party-auth')->group(function () {
     Route::middleware('auth:sanctum')->post('logout', [ThirdPartyAuthController::class, 'logout']);
 });
 
-Route::middleware(['auth:sanctum', 'thirdparty.approved'])->prefix('third-party-profile')->group(function () {
-    Route::get('/', [ThirdPartyController::class, 'show']);
-    Route::put('/', [ThirdPartyController::class, 'update']);
-    Route::delete('/', [ThirdPartyController::class, 'destroy']);
+Route::middleware(['auth:sanctum'])->prefix('third-party-profile')->group(function () {
+    Route::get('/', [ThirdPartyUserProfileController::class, 'show']);
+    Route::put('/', [ThirdPartyUserProfileController::class, 'update']);
+    Route::delete('/', [ThirdPartyUserProfileController::class, 'destroy']);
 });
 
 Route::middleware(['auth:sanctum', 'thirdparty.approved'])->prefix('third-parties')->group(function () {

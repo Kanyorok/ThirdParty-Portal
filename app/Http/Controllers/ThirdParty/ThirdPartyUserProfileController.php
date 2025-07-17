@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\API\ThirdParty;
+namespace App\Http\Controllers\ThirdParty;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ThirdParty\UpdateThirdPartyUserProfileRequest;
@@ -9,11 +9,10 @@ use App\Http\Resources\ThirdParty\ThirdPartyUserResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Http\Request;
 
 class ThirdPartyUserProfileController extends Controller
 {
-    public function show(Request $request): JsonResponse
+    public function show(): JsonResponse
     {
         $user = Auth::guard('sanctum')->user();
 
@@ -28,10 +27,11 @@ class ThirdPartyUserProfileController extends Controller
     public function update(UpdateThirdPartyUserProfileRequest $request): JsonResponse
     {
         $user = Auth::guard('sanctum')->user();
+
         $thirdParty = $user->thirdParty;
 
         if (!$thirdParty) {
-            return response()->json(['message' => 'Associated Third Party not found.'], 404);
+            return response()->json(['message' => __('auth.3rd_party_not_found')], 404);
         }
 
         $data = $request->validated();
@@ -43,7 +43,7 @@ class ThirdPartyUserProfileController extends Controller
                 'Phone' => $data['phone'] ?? $user->Phone,
                 'Gender' => $data['gender'] ?? $user->Gender,
                 'ImageId' => $data['imageId'] ?? $user->ImageId,
-                'ModifiedBy' => Auth::id() ?? 1, // Use authenticated user's ID, or default to 1
+                'ModifiedBy' => Auth::id(),
                 'ModifiedOn' => now(),
             ])->save();
 
@@ -56,7 +56,7 @@ class ThirdPartyUserProfileController extends Controller
                 'Country' => $data['country'] ?? $thirdParty->Country,
                 'PhysicalAddress' => $data['physicalAddress'] ?? $thirdParty->PhysicalAddress,
                 'Website' => $data['website'] ?? $thirdParty->Website,
-                'ModifiedBy' => Auth::id() ?? 1,
+                'ModifiedBy' => Auth::id(),
                 'ModifiedOn' => now(),
             ])->save();
         });
@@ -64,9 +64,24 @@ class ThirdPartyUserProfileController extends Controller
         $user->load('thirdParty');
 
         return response()->json([
-            'message' => 'Profile updated successfully.',
+            'message' => __('auth.profile_update_ok'),
             'user_profile' => new ThirdPartyUserResource($user),
             'third_party_entity' => new ThirdPartyResource($user->thirdParty),
         ]);
+    }
+
+    public function destroy(Request $request): JsonResponse
+    {
+        $user = Auth::guard('sanctum')->user();
+
+        $user->IsActive = false;
+        $user->DeletedBy = Auth::id();
+        $user->save();
+
+        $user->delete();
+
+        $request->user()->tokens()->delete();
+
+        return response()->json(['message' => __('auth.profile_delete_ok')], 204);
     }
 }
