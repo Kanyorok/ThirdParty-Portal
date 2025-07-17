@@ -15,11 +15,9 @@ class ThirdPartyUserProfileController extends Controller
 {
     /**
      * Display the authenticated ThirdPartyUser's profile and associated ThirdParty entity.
-     *
-     * @param Request $request
      * @return JsonResponse
      */
-    public function show(Request $request): JsonResponse
+    public function show(): JsonResponse
     {
         $user = Auth::guard('sanctum')->user();
 

@@ -88,6 +88,7 @@ Br ERP provides a comprehensive suite of features covering all critical business
 | POST    | `/api/third-party-auth/register`                         |
 | POST    | `/api/third-party-categories`                            |
 | DELETE  | `/api/third-party-categories/{third_party_category}`     |
+| GET     | `/api/third-party-profile`                                |
 | PUT     | `/api/third-party-profile`                                |
 | DELETE  | `/api/third-party-profile`                                |
 ---

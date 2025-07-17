@@ -20,4 +20,13 @@ return [
     'details_saved'             => 'Details Successfully Saved',
     'unauthenticated_acc'       => 'Unauthenticated',
     '3rd_party_not_found'       => 'Associated Third Party Not Found',
+    'cat_assigned'              => 'Category Assigned',
+    'invalid_category'          => 'Invalid Category',
+    'store_failed'              => 'Failed to add category. Please try again.',
+    'update_failed'             => 'Failed to update category. Please try again.',
+    'delete_failed'             => 'Failed to delete category. Please try again.',
+    'unauthorized_access'       => 'Unauthorized: You do not have permission to access these categories.',
+    'unauthorized_view'         => 'Unauthorized: You can only view your own categories.',
+    'unauthorized_update'       => 'Unauthorized: You can only update your own categories.',
+    'unauthorized_delete'       => 'Unauthorized: You can only delete your own categories.',
 ];

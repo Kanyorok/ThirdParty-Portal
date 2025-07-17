@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\ThirdPartiesBankDetails;
-use App\Models\ThirdParty;
+use App\Models\ThirdParty\ThirdPartiesBankDetails;
+use App\Models\ThirdParty\ThirdParties;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 use App\Enums\ThirdPartyTypeEnum;
@@ -14,10 +14,10 @@ class ThirdPartiesBankDetailsSeeder extends Seeder
 {
     public function run(): void
     {
-        $thirdParty = ThirdParty::first();
+        $thirdParty = ThirdParties::first();
 
         if (!$thirdParty) {
-            $thirdParty = ThirdParty::firstOrCreate(
+            $thirdParty = ThirdParties::firstOrCreate(
                 ['Email' => 'default.bank.thirdparty@example.com'],
                 [
                     'ThirdPartyName' => 'Default Bank Third Party',
@@ -42,7 +42,7 @@ class ThirdPartiesBankDetailsSeeder extends Seeder
                 'ThirdPartyID' => $thirdParty->Id,
                 'BankName' => 'National Bank',
                 'Branch' => 'Main Branch',
-                'Currency' => 'KES',
+                'CurrencyId' => 'KES',
                 'SwiftCode' => 'NBKKENA',
                 'CreatedBy' => 1,
                 'ModifiedBy' => 1,
@@ -57,7 +57,7 @@ class ThirdPartiesBankDetailsSeeder extends Seeder
                 'ThirdPartyID' => $thirdParty->Id,
                 'BankName' => 'Commercial Bank',
                 'Branch' => 'City Branch',
-                'Currency' => 'USD',
+                'CurrencyId' => 'USD',
                 'SwiftCode' => 'CBKKENA',
                 'CreatedBy' => 1,
                 'ModifiedBy' => 1,

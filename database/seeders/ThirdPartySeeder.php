@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\ThirdParty;
+use App\Models\ThirdParty\ThirdParties;
 use App\Enums\ThirdPartyTypeEnum;
 use App\Enums\ThirdPartyStatusEnum;
 use App\Enums\ThirdPartyApprovalStatusEnum;
@@ -13,7 +13,7 @@ class ThirdPartySeeder extends Seeder
 {
     public function run(): void
     {
-        ThirdParty::create([
+        ThirdParties::create([
             'ThirdPartyName' => 'ShakTech Ltd',
             'TradingName' => 'ShakTech',
             'BusinessType' => 'Private Company',

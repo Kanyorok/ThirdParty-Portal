@@ -10,7 +10,7 @@ class UpdateThirdPartyUserProfileRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->guard('sanctum')->check() && auth()->guard('sanctum')->user() instanceof \App\Models\ThirdPartyUser;
+        return auth()->guard('sanctum')->check() && auth()->guard('sanctum')->user() instanceof \App\Models\ThirdParty\ThirdPartyUser;
     }
 
     public function rules(): array

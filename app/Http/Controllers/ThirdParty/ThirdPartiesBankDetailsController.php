@@ -3,14 +3,17 @@
 namespace App\Http\Controllers\ThirdParty;
 
 use App\Http\Controllers\Controller;
-use App\Models\ThirdPartiesBankDetails;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use App\Models\ThirdParty\ThirdPartiesBankDetails;
 
 class ThirdPartiesBankDetailsController extends Controller
 {
-    public function index(): JsonResponse
+    /**
+     * Get bank details for the authenticated user
+     */
+    public function index(Request $request): JsonResponse
     {
         $bankDetails = ThirdPartiesBankDetails::all();
 

@@ -174,7 +174,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 307100, 'Name' => 'View Purchase Orders', 'Icon' => null, 'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.index'],
             ['ModuleID' => 307200, 'Name' => 'Create Purchase Orders', 'Icon' => null, 'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.create'],
             ['ModuleID' => 307300, 'Name' => 'Link RFQ to Purchase Order', 'Icon' => null, 'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.linkRFQ'],
-    //            ['ModuleID' => 307400, 'Name' => 'Purchase Order Approval', 'Icon' => null,'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.approval'],
+            //            ['ModuleID' => 307400, 'Name' => 'Purchase Order Approval', 'Icon' => null,'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.approval'],
 
             ['ModuleID' => 308000, 'Name' => 'Good Receipt', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 308100, 'Name' => 'View Good Receipt', 'Icon' => null, 'Description' => '', 'ParentID' => 308000, 'Route' => 'procurementreceipts.index'],
@@ -304,12 +304,12 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 1205000, 'Name' => 'Admin & Integration', 'Icon' => null, 'Description' => 'System Controls and CBS Integration', 'Route' => null, 'ParentID' => 1200000],
             ['ModuleID' => 1205100, 'Name' => 'CBS Data Sync', 'Icon' => null, 'Description' => 'CBS Product Auto Sync', 'Route' => 'cbssync.index', 'ParentID' => 1205000],
             ['ModuleID' => 1205200, 'Name' => 'Data Sync Logs', 'Icon' => null, 'Description' => 'CBS & System Sync Logs', 'Route' => 'datasynclogs.index', 'ParentID' => 1205000],
-             //Settings
-           // ['ModuleID' => 1206000, 'Name' => 'Settings', 'Icon' => null, 'Description' => 'Budget Settings', 'Route' => null, 'ParentID' => 1200000],
+            //Settings
+            // ['ModuleID' => 1206000, 'Name' => 'Settings', 'Icon' => null, 'Description' => 'Budget Settings', 'Route' => null, 'ParentID' => 1200000],
             //['ModuleID' => 1206040, 'Name' => 'Budget Line Categories', 'Icon' => null, 'Description' => 'Budget Lines Categories', 'Route' => 'budgetlinecategories.index', 'ParentID' => 1206000],
             //['ModuleID' => 1206050, 'Name' => 'Activity Master', 'Icon' => null, 'Description' => 'Budget Activity Master', 'Route' => 'activitymaster.index', 'ParentID' => 1206000],
             //['ModuleID' => 1206100, 'Name' => 'Rates', 'Icon' => null, 'Description' => 'Budget Rates', 'Route' => 'rates.index', 'ParentID' => 1206000],
-           // ['ModuleID' => 1206200, 'Name' => 'Perod Types', 'Icon' => null, 'Description' => 'Budget Period Types', 'Route' => 'periodtypes.index', 'ParentID' => 1206000],
+            // ['ModuleID' => 1206200, 'Name' => 'Perod Types', 'Icon' => null, 'Description' => 'Budget Period Types', 'Route' => 'periodtypes.index', 'ParentID' => 1206000],
             //['ModuleID' => 1206300, 'Name' => 'Planning Methods', 'Icon' => null, 'Description' => 'Budget Planning Methods', 'Route' => 'planningmethods.index', 'ParentID' => 1206000],
             //['ModuleID' => 1206400, 'Name' => 'Budget Drivers', 'Icon' => null, 'Description' => 'Budet Drivers', 'Route' => 'budgetdriverssetup.index', 'ParentID' => 1206000],
         ]);

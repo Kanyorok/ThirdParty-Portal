@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\ThirdParty;
 
 use App\Http\Controllers\Controller;
-use App\Models\ThirdPartyUser;
+use App\Models\ThirdParty\ThirdPartyUser;
 use App\Http\Requests\ThirdParty\RegisterThirdPartyUserRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;

@@ -7,14 +7,14 @@ use App\Http\Requests\ThirdParty\StoreThirdPartyRequest;
 use App\Http\Requests\ThirdParty\UpdateThirdPartyRequest;
 use App\Http\Requests\ThirdParty\UpdateThirdPartyStatusRequest;
 use App\Http\Resources\ThirdParty\ThirdPartyResource;
-use App\Models\ThirdParty;
+use App\Models\ThirdParty\ThirdParties;
 use Illuminate\Http\Request;
 
 class ThirdPartyController extends Controller
 {
     public function index(Request $request)
     {
-        $query = ThirdParty::query();
+        $query = ThirdParties::query();
 
         if ($request->has('type')) {
             $query->where('ThirdPartyType', $request->input('type'));
@@ -48,17 +48,17 @@ class ThirdPartyController extends Controller
             $data['ThirdPartyName'] = $data['SupplierName'];
         }
 
-        $thirdParty = ThirdParty::create($data);
+        $thirdParty = ThirdParties::create($data);
 
         return new ThirdPartyResource($thirdParty);
     }
 
-    public function show(ThirdParty $thirdParty)
+    public function show(ThirdParties $thirdParty)
     {
         return new ThirdPartyResource($thirdParty);
     }
 
-    public function update(UpdateThirdPartyRequest $request, ThirdParty $thirdParty)
+    public function update(UpdateThirdPartyRequest $request, ThirdParties $thirdParty)
     {
         $data = $request->validated();
         $data['ModifiedBy'] = auth()->id();
@@ -72,7 +72,7 @@ class ThirdPartyController extends Controller
         return new ThirdPartyResource($thirdParty);
     }
 
-    public function destroy(ThirdParty $thirdParty)
+    public function destroy(ThirdParties $thirdParty)
     {
         $thirdParty->DeletedBy = auth()->id();
         $thirdParty->save();
@@ -83,11 +83,11 @@ class ThirdPartyController extends Controller
 
     public function getSuppliers(Request $request)
     {
-        $suppliers = ThirdParty::suppliers()->paginate($request->input('per_page', 15));
+        $suppliers = ThirdParties::suppliers()->paginate($request->input('per_page', 15));
         return ThirdPartyResource::collection($suppliers);
     }
 
-    public function approve(ThirdParty $thirdParty)
+    public function approve(ThirdParties $thirdParty)
     {
         if ($thirdParty->ApprovalStatus === 'Approved') {
             return response()->json(['message' => __('auth.user_already_approved')], 409);
@@ -100,7 +100,7 @@ class ThirdPartyController extends Controller
         return new ThirdPartyResource($thirdParty);
     }
 
-    public function reject(ThirdParty $thirdParty)
+    public function reject(ThirdParties $thirdParty)
     {
         if ($thirdParty->ApprovalStatus === 'Rejected') {
             return response()->json(['message' => __('auth.user_already_rejected')], 409);
@@ -113,7 +113,7 @@ class ThirdPartyController extends Controller
         return new ThirdPartyResource($thirdParty);
     }
 
-    public function updateStatus(UpdateThirdPartyStatusRequest $request, ThirdParty $thirdParty)
+    public function updateStatus(UpdateThirdPartyStatusRequest $request, ThirdParties $thirdParty)
     {
         $thirdParty->Status = $request->validated('status');
         $thirdParty->ModifiedBy = auth()->id();

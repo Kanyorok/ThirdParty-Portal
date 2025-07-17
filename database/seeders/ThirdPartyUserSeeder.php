@@ -3,8 +3,8 @@
 namespace Database\Seeders;
 
 use App\Enums\Employee\GenderEnum;
-use App\Models\ThirdPartyUser;
-use App\Models\ThirdParty;
+use App\Models\ThirdParty\ThirdPartyUser;
+use App\Models\ThirdParty\ThirdParties;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -16,7 +16,7 @@ class ThirdPartyUserSeeder extends Seeder
 {
     public function run(): void
     {
-        $approvedThirdParty = ThirdParty::firstOrCreate(
+        $approvedThirdParty = ThirdParties::firstOrCreate(
             ['Email' => 'default.dcp@example.com'],
             [
                 'ThirdPartyName' => 'DCP',
@@ -34,7 +34,7 @@ class ThirdPartyUserSeeder extends Seeder
             ]
         );
 
-        $pendingThirdParty = ThirdParty::firstOrCreate(
+        $pendingThirdParty = ThirdParties::firstOrCreate(
             ['Email' => 'pending.thirdparty@example.com'],
             [
                 'ThirdPartyName' => 'Pending Corp',

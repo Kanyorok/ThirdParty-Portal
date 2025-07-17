@@ -13,8 +13,8 @@ return new class extends Migration
             $table->string('BankName')->nullable();
             $table->string('Branch')->nullable();
             $table->string('AccountNumber')->nullable();
-            $table->string('Currency', 10)->nullable();
-            $table->string('SwiftCode', 50)->nullable();
+            $table->string('CurrencyId')->nullable();
+            $table->string('SwiftCode')->nullable();
 
             $table->foreignId('CreatedBy')->nullable()->constrained('t_Users', 'Id');
             $table->timestamp('CreatedOn')->nullable();
