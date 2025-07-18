@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Property;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\TenantAndLease\PropertyLeaseScheduleRequest;
 use App\Models\Core\CodeDetail;
@@ -15,9 +16,6 @@ use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Services\Property\TenantAndLease\PropertyLeaseScheduleService;
 use Exception;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Throwable;
 
 

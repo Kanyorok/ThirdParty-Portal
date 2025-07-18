@@ -9,6 +9,9 @@
                     <dt class="col-sm-4">Property</dt>
                     <dd class="col-sm-8">{{ $assignment->Property ?? '-' }}</dd>
 
+                    <dt class="col-sm-4">Request Number</dt>
+                    <dd class="col-sm-8">{{ $assignment->request->RequestNumber ?? '-' }}</dd>  
+
                     <dt class="col-sm-4">Block</dt>
                     <dd class="col-sm-8">{{ $assignment->Block ?? '-' }}</dd>
 
@@ -18,17 +21,26 @@
                     <dt class="col-sm-4">Unit</dt>
                     <dd class="col-sm-8">{{ $assignment->Unit ?? '-' }}</dd>
 
-                    <dt class="col-sm-4">Issue Description</dt>
-                    <dd class="col-sm-8">{{ $assignment->IssueDescription ?? '-' }}</dd>
-
                     <dt class="col-sm-4">Assignment Date</dt>
                     <dd class="col-sm-8">{{ $assignment->AssignmentDate ?? '-' }}</dd>
 
-                    <dt class="col-sm-4">AssignmentType</dt>
-                    <dd class="col-sm-8">{{ $assignment->AssignmentType ?? '-' }}</dd>
+                    <dt class="col-sm-4">Assignment Type</dt>
+                    <dd class="col-sm-8">{{ $assignment->assignmentType->Description ?? '-' }}</dd>
+
+                    <dt class="col-sm-4">Internal Technician</dt>
+                    <dd class="col-sm-8">{{ $assignment->internalTechnician->JobTitle ?? '-' }}</dd>
+
+                    <dt class="col-sm-4">Prequalified Vendor</dt>
+                    <dd class="col-sm-8">{{ $assignment->prequalifiedVendor->SupplierName ?? '-' }}</dd> 
+
+                    <dt class="col-sm-4">Expected Start Date</dt>
+                    <dd class="col-sm-8">{{ $assignment->ExpectedStartDate ?? '-' }}</dd>
+
+                    <dt class="col-sm-4">Expected Completion</dt>
+                    <dd class="col-sm-8">{{ $assignment->ExpectedCompletion ?? '-' }}</dd>
 
                     <dt class="col-sm-4">Priority Level</dt>
-                    <dd class="col-sm-8">{{ $assignment->PriorityLevel ?? '-' }}</dd>
+                    <dd class="col-sm-8">{{ $assignment->priorityLevel->Description ?? '-' }}</dd>
 
                     <dt class="col-sm-4">Instructions / Notes</dt>
                     <dd class="col-sm-8">{{ $assignment->InstructionNotes ?? '-' }}</dd>

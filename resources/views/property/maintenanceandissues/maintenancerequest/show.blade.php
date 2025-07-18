@@ -11,6 +11,12 @@
     <form>
         <div class="card shadow-sm border-0">
 
+            <div class="card-body">
+                <h5 class="card-title">Maintenance Request Details</h5>
+                <div class="mb-3">
+                    <label class="form-label">Request Number</label>
+                    <input type="text" class="form-control" value="{{ $maintenancerequest->RequestNumber ?? '-' }}" readonly>
+                </div>
                 <div class="mb-3">
                     <label class="form-label">Property</label>
                     <input type="text" class="form-control" value="{{ $maintenancerequest->property->PropertyName ?? '-' }}" readonly>
@@ -54,7 +60,7 @@
                     </div>
                     
             <div class="card-footer bg-light d-flex justify-content-between">
-                <a href="{{ route('maintenancerequest.edit', $maintenancerequest->id) }}" class="btn btn-outline-primary"><i class="bi bi-pencil-square"></i> Edit</a>
+                <a href="{{ route('maintenancerequest.edit', $maintenancerequest->Id) }}" class="btn btn-outline-primary"><i class="bi bi-pencil-square"></i> Edit</a>
                 <a href="{{ route('maintenancerequest.index') }}" class="btn btn-outline-secondary">Back</a>
             </div>
         </div>

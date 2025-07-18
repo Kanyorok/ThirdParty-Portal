@@ -23,11 +23,14 @@ use App\Http\Controllers\Property\PropertyUnitController;
 use App\Http\Controllers\Property\RentDashboardController;
 use App\Http\Controllers\Property\ReportsController;
 use App\Http\Controllers\Property\TenantStatementController;
+use App\Http\Controllers\Property\PropertyReceiptController;
+
 use Illuminate\Support\Facades\Route;
 
 
 Route::namespace('Property')->prefix('property')->group(function () {
 
+     
     //category
     Route::get('propercategory', [PropertyCategoryController::class,'index'])->name('propertycategory.index');
     Route::get('propercategory/create', [PropertyCategoryController::class,'create'])->name('propertycategory.create');
@@ -190,14 +193,23 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::get('maintenancerequest', [PropertyMaintenanceRequestController::class,'index'])->name('maintenancerequest.index');
     Route::get('maintenancerequest/create', [PropertyMaintenanceRequestController::class,'create'])->name('maintenancerequest.create');
     Route::post('maintenancerequest', [PropertyMaintenanceRequestController::class,'store'])->name('maintenancerequest.store');
-    Route::get('maintenancerequest/show/{id}', [PropertyMaintenanceRequestController::class,'show'])->name('maintenancerequest.show');
-    Route::get('maintenancerequest/edit/{id}',[PropertyMaintenanceRequestController::class,'edit'])->name('maintenancerequest.edit');
-    Route::put('maintenancerequest/edit/{id}',[PropertyMaintenanceRequestController::class,'update'])->name('maintenancerequest.update');
-    Route::delete('maintenancerequest/delete/{id}', [PropertyMaintenanceRequestController::class,'destroy'])->name('maintenancerequest.destroy');
+    Route::get('maintenancerequest/show/{Id}', [PropertyMaintenanceRequestController::class,'show'])->name('maintenancerequest.show');
+    Route::get('maintenancerequest/edit/{Id}',[PropertyMaintenanceRequestController::class,'edit'])->name('maintenancerequest.edit');
+    Route::put('maintenancerequest/edit/{Id}',[PropertyMaintenanceRequestController::class,'update'])->name('maintenancerequest.update');
+    Route::delete('maintenancerequest/delete/{Id}', [PropertyMaintenanceRequestController::class,'destroy'])->name('maintenancerequest.destroy');
 
+    //Route::resource('assignrequest', PropertyMaintananceAssignController::class);
+    Route::get('assignrequest', [PropertyMaintananceAssignController::class,'index'])->name('assignrequest.index');
+    Route::get('assignrequest/create', [PropertyMaintananceAssignController::class,'create'])->name('assignrequest.create');
+    Route::post('assignrequest', [PropertyMaintananceAssignController::class,'store'])->name('assignrequest.store');
+    Route::get('assignrequest/show/{Id}', [PropertyMaintananceAssignController::class,'show'])->name('assignrequest.show');
+    Route::get('assignrequest/edit/{Id}',[PropertyMaintananceAssignController::class,'edit'])->name('assignrequest.edit');
+    Route::put('assignrequest/edit/{Id}',[PropertyMaintananceAssignController::class,'update'])->name('assignrequest.update');
+    Route::delete('assignrequest/delete/{Id}', [PropertyMaintananceAssignController::class,'destroy'])->name('assignrequest.destroy');
+
+    
     Route::resource('attachments', PropertyAttachmentsController::class);
     Route::resource('rentdashboard', RentDashboardController::class);
-    Route::resource('assignrequest', PropertyMaintananceAssignController::class);
     Route::resource('maintenancedashboard', PropertyMaintenanceDashboardController::class);
     Route::resource('workcompletion', PropertyMaintenanceWorkCompletionController::class);
     Route::resource('propertyreports', PropertyReportsController::class);

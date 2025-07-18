@@ -91,6 +91,8 @@ use App\Models\PropertyManagement\PropertyBlock;
 use App\Models\PropertyManagement\PropertyFloor;
 use App\Models\PropertyManagement\PropertyInvoice;
 use App\Models\PropertyManagement\PropertyLeaseRenewal;
+use App\Models\PropertyManagement\PropertyMaintenanceRequest;
+use App\Models\PropertyManagement\PropertyMaintenanceAssign;
 use App\Models\PropertyManagement\PropertyUnit;
 use App\Models\PropertyManagement\PropertyLeaseSchedule;
 use App\Models\PropertyManagement\PropertyNewTenant;
@@ -133,6 +135,8 @@ use App\Policies\PropertyManagement\PropertyFloorPolicy;
 use App\Policies\PropertyManagement\PropertyInvoicePolicy;
 use App\Policies\PropertyManagement\PropertyLeaseRenewalPolicy;
 use App\Policies\PropertyManagement\PropertyLeaseSchedulePolicy;
+use App\Policies\PropertyManagement\PropertyMaintenanceRequestPolicy;
+Use APP\policies\PropertyManagement\PropertyMaintenanceAssignPolicy;
 use App\Policies\PropertyManagement\PropertyNewTenantPolicy;
 use App\Policies\PropertyManagement\PropertyReceiptPolicy;
 use App\Policies\PropertyManagement\PropertyRegistryPolicy;
@@ -250,33 +254,16 @@ class AppServiceProvider extends ServiceProvider
             Budget::getPrimaryKey() => Budget::class,
             BudgetGLAccountSubType::getPrimaryKey() => BudgetGLAccountSubType::class,
             BudgetLineProductTypes::getPrimaryKey() => BudgetLineProductTypes::class,
-
-
-            BudgetActivityMaster::getPrimaryKey() => BudgetActivityMaster::class,
-            BudgetLinesGLAccount::getPrimaryKey() => BudgetLinesGLAccount::class,
-            BudgetGLAccount::getPrimaryKey() => BudgetGLAccount::class,
-            BudgetLine::getPrimaryKey() => BudgetLine::class,
-            BudgetPeriods::getPrimaryKey() => BudgetPeriods::class,
-            BudgetPeriodTypes::getPrimaryKey() => BudgetPeriodTypes::class,
-            BudgetScenarioPlanning::getPrimaryKey() => BudgetScenarioPlanning::class,
-            BudgetProduct::getPrimaryKey() => BudgetProduct::class,
-            BudgetProductType::getPrimaryKey() => BudgetProductType::class,
-            BudgetDriver::getPrimaryKey() => BudgetDriver::class,
-            BudgetDriverMaster::getPrimaryKey() => BudgetDriverMaster::class,
-            BudgetDriverProjections::getPrimaryKey() => BudgetDriverProjections::class,
-            BudgetTopDown::getPrimaryKey() => BudgetTopDown::class,
-            BudgetTopDownData::getPrimaryKey() => BudgetTopDownData::class,
-            BudgetActivity::getPrimaryKey() => BudgetActivity::class,
-            BudgetMonthlyAllocation::getPrimaryKey() => BudgetMonthlyAllocation::class,
-            Budget::getPrimaryKey() => Budget::class,
-            BudgetGLAccountSubType::getPrimaryKey() => BudgetGLAccountSubType::class,
-            BudgetLineProductTypes::getPrimaryKey() => BudgetLineProductTypes::class,
             BudgetMonthlyProjectionAllocation::getPrimaryKey() => BudgetMonthlyProjectionAllocation::class,
             BudgetManualEntryAllocations::getPrimaryKey() => BudgetManualEntryAllocations::class,
-            CategoryMaster::getPrimaryKey() => CategoryMaster::class,
+            
+            //Property Management
             PropertyType::getPrimaryKey() => PropertyType::class,
+            CategoryMaster::getPrimaryKey() => CategoryMaster::class,
             PropertyRegistry::getPrimaryKey() => PropertyRegistry::class,
             PropertyBlock::getPrimaryKey() => PropertyBlock::class,
+            PropertyMaintenanceRequest::getPrimaryKey() => PropertyMaintenanceRequest::class,
+            PropertyMaintenanceAssign::getPrimaryKey() => PropertyMaintenanceAssign::class,
 
             //DMS
             DMSTags::getPrimaryKey() => DMSTags::class,
@@ -340,6 +327,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PropertyLeaseRenewal::class, PropertyLeaseRenewalPolicy::class);
         Gate::policy(PropertyInvoice::class, PropertyInvoicePolicy::class);
         Gate::policy(PropertyReceipt::class, PropertyReceiptPolicy::class);
+        Gate::policy(PropertyMaintenanceRequest::class, PropertyMaintenanceRequestPolicy::class);
+        Gate::policy(PropertyMaintenanceAssign::class, PropertyMaintenanceAssignPolicy::class);
         Gate::policy(PrequalificationPeriod::class, PrequalificationPeriodPolicy::class);
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);

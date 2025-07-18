@@ -29,13 +29,22 @@ class PropertyMaintenanceService
         string   $Priority,
         string   $IssueDescription,
         User    $user
-    ): self
+    ):self {
+
+            $lastRequestNumber = PropertyMaintenanceRequest::withTrashed() // in case you're using soft deletes
+                ->selectRaw("MAX(CAST(SUBSTRING(RequestNumber, 7, LEN(RequestNumber)) AS INT)) as max_number")
+                ->value('max_number');
+
+            $nextNumber = $lastRequestNumber ? $lastRequestNumber + 1 : 1;
+            $RequestNumber = 'REQUEST-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+
     {
         $maintenancerequest = PropertyMaintenanceRequest::create([
-            'Property' => $Property,
-            'Block' => $Block,
-            'Floor' => $Floor,
-            'UnitCode' => $Unit,
+            'RequestNumber' => $RequestNumber,
+            'Property' => $Property->Id,
+            'Block' => $Block->Id,
+            'Floor' => $Floor->Id,
+            'Unit' => $Unit->Id,
             'ReportedBy' =>$ReportedBy,
             'IssueType'  => $IssueType,
             'Priority'    => $Priority,
@@ -47,4 +56,5 @@ class PropertyMaintenanceService
         activity()->causedBy($user->Id)->performedOn($maintenancerequest)->event('create')->log("Added Property Unit {$maintenancerequest->Id}.");
         return new self($maintenancerequest);
     }
+}
 }

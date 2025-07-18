@@ -1,160 +1,183 @@
 @extends('layouts.app')
-@section('title', 'Property Maintenance Request')
+@section('title', 'Edit Maintenance Request')
+
 @section('content')
-
-@if ($errors->any())
-    <div class="alert alert-danger">
-        <ul class="mb-0">
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
+<div class="container mt-5" style="max-width: 800px;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold">Edit Maintenance Request</h3>
+        <a href="{{ route('maintenancerequest.index') }}" class="btn btn-outline-secondary btn-sm">← Back to List</a>
     </div>
-@endif
 
-<h1>Edit Maintenance Request</h1>
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
-<form action="{{ route('maintenancerequest.update', $maintenancerequest->id) }}" method="POST">
-    @csrf
-    @method('PUT')
+    <form action="{{ route('maintenancerequest.update', $maintenancerequest->Id) }}" method="POST">
+        @csrf
+        @method('PUT')
 
-    <div class="card-body">
-        <div class="row g-3 mb-3">
-            {{-- Property --}}
-            <div class="mb-3">
-                <label class="form-label">Property</label>
-                <select name="Property" id="property-select" class="form-select @error('Property') is-invalid @enderror">
-                    <option value="">-- Select Property --</option>
-                    @foreach($properties as $property)
-                        <option value="{{ $property->Id }}" {{ $property->Id == old('Property', $maintenancerequest->Property) ? 'selected' : '' }}>
-                            {{ $property->PropertyName }}
-                        </option>
-                    @endforeach
-                </select>
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+
+                {{-- Request Number --}}
+                <div class="mb-3">
+                    <label class="form-label">Request Number</label>
+                    <input type="text" class="form-control" value="{{ $maintenancerequest->RequestNumber }}" disabled>
+                </div>
+
+                {{-- Property --}}
+                <div class="mb-3">
+                    <label class="form-label">Property</label>
+                    <select name="Property" id="property-select" class="form-select @error('Property') is-invalid @enderror">
+                        <option value="">-- Select Property --</option>
+                        @foreach($properties as $property)
+                            <option value="{{ $property->Id }}" {{ $property->Id == old('Property', $maintenancerequest->Property) ? 'selected' : '' }}>
+                                {{ $property->PropertyName }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('Property') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                </div>
+
+                {{-- Block --}}
+                <div class="mb-3">
+                    <label class="form-label">Block</label>
+                    <select name="Block" id="block-select" class="form-select @error('Block') is-invalid @enderror">
+                        <option value="{{ $maintenancerequest->Block }}" selected>{{ $maintenancerequest->block->BlockName ?? 'Current Block' }}</option>
+                    </select>
+                    @error('Block') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                </div>
+
+                {{-- Floor --}}
+                <div class="mb-3">
+                    <label class="form-label">Floor</label>
+                    <select name="Floor" id="floor-select" class="form-select @error('Floor') is-invalid @enderror">
+                        <option value="{{ $maintenancerequest->Floor }}" selected>{{ $maintenancerequest->floor->FloorLabel ?? 'Current Floor' }}</option>
+                    </select>
+                    @error('Floor') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                </div>
+
+                {{-- Unit --}}
+                <div class="mb-3">
+                    <label class="form-label">Unit</label>
+                    <select name="Unit" id="unit-select" class="form-select @error('Unit') is-invalid @enderror">
+                        <option value="{{ $maintenancerequest->Unit }}" selected>{{ $maintenancerequest->unit->UnitCode ?? 'Current Unit' }}</option>
+                    </select>
+                    @error('Unit') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                </div>
+
+                {{-- Reported By / Issue / Priority --}}
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Reported By</label>
+                        <input type="text" class="form-control" name="ReportedBy" placeholder="Optional"
+                            value="{{ old('ReportedBy', $maintenancerequest->ReportedBy) }}">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Issue Type</label>
+                        <input type="text" class="form-control" name="IssueType" placeholder="Optional"
+                            value="{{ old('IssueType', $maintenancerequest->IssueType) }}">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Priority</label>
+                        <input type="text" class="form-control" name="Priority" placeholder="Optional"
+                            value="{{ old('Priority', $maintenancerequest->Priority) }}">
+                    </div>
+                </div>
+
+                {{-- Issue Description --}}
+                <div class="mb-3">
+                    <label class="form-label">Issue Description</label>
+                    <textarea name="IssueDescription" class="form-control" rows="3" placeholder="Optional">{{ old('IssueDescription', $maintenancerequest->IssueDescription) }}</textarea>
+                </div>
+
             </div>
 
-            {{-- Block --}}
-            <div class="mb-3">
-                <label class="form-label">Block</label>
-                <select name="Block" id="block-select" class="form-select @error('Block') is-invalid @enderror">
-                    <option value="{{ $maintenancerequest->Block }}" selected>{{ $maintenancerequest->block->BlockName ?? 'Current Block' }}</option>
-                </select>
-            </div>
-
-            {{-- Floor --}}
-            <div class="mb-3">
-                <label class="form-label">Floor</label>
-                <select name="Floor" id="floor-select" class="form-select @error('Floor') is-invalid @enderror">
-                    <option value="{{ $maintenancerequest->Floor }}" selected>{{ $maintenancerequest->floor->FloorLabel ?? 'Current Floor' }}</option>
-                </select>
-            </div>
-
-            {{-- Unit --}}
-            <div class="mb-3">
-                <label class="form-label">Unit</label>
-                <select name="Unit" id="unit-select" class="form-select @error('Unit') is-invalid @enderror">
-                    <option value="{{ $maintenancerequest->Unit }}" selected>{{ $maintenancerequest->unit->UnitCode ?? 'Current Unit' }}</option>
-                </select>
-            </div>
-
-            {{-- Reported By --}}
-            <div class="mb-3 col-md-4">
-                <label class="form-label">Reported By</label>
-                <input type="text" class="form-control" name="ReportedBy" placeholder="Optional"
-                       value="{{ old('ReportedBy', $maintenancerequest->ReportedBy) }}">
-            </div>
-
-            {{-- Issue Type --}}
-            <div class="mb-3 col-md-4">
-                <label class="form-label">Issue Type</label>
-                <input type="text" class="form-control" name="IssueType" placeholder="Optional"
-                       value="{{ old('IssueType', $maintenancerequest->IssueType) }}">
-            </div>
-
-            {{-- Priority --}}
-            <div class="mb-3 col-md-4">
-                <label class="form-label">Priority</label>
-                <input type="text" class="form-control" name="Priority" placeholder="Optional"
-                       value="{{ old('Priority', $maintenancerequest->Priority) }}">
-            </div>
-
-            {{-- Issue Description --}}
-            <div class="mb-3 col-md-12">
-                <label class="form-label">Issue Description</label>
-                <input type="text" class="form-control" name="IssueDescription" placeholder="Optional"
-                       value="{{ old('IssueDescription', $maintenancerequest->IssueDescription) }}">
+            <div class="card-footer bg-light d-flex justify-content-between">
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-save"></i> Update Maintenance Request
+                </button>
+                <a href="{{ route('maintenancerequest.index') }}" class="btn btn-outline-secondary">Cancel</a>
             </div>
         </div>
-
-        <button type="submit" class="btn btn-success">Update Maintenance Request</button>
-        <a href="{{ route('maintenancerequest.index') }}" class="btn btn-secondary">Cancel</a>
-    </div>
-</form>
+    </form>
+</div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const PropertySelect = document.getElementById('property-select');
-        const BlockSelect = document.getElementById('block-select');
-        const FloorSelect = document.getElementById('floor-select');
-        const UnitSelect = document.getElementById('unit-select');
+    const routes = {
+        getBlocks: "{{ route('getblockbyproperty', ['PropertyId' => '__ID__']) }}",
+        getFloors: "{{ route('getfloorbyblock', ['BlockId' => '__ID__']) }}",
+        getUnits: "{{ route('getunitbyfloor', ['FloorId' => '__ID__']) }}"
+    };
 
-        PropertySelect.addEventListener('change', function () {
+    document.addEventListener('DOMContentLoaded', function () {
+        const propertySelect = document.getElementById('property-select');
+        const blockSelect = document.getElementById('block-select');
+        const floorSelect = document.getElementById('floor-select');
+        const unitSelect = document.getElementById('unit-select');
+
+        propertySelect.addEventListener('change', function () {
             const propertyId = this.value;
-            BlockSelect.innerHTML = '<option value="">-- Select a Block --</option>';
-            FloorSelect.innerHTML = '<option value="">-- Select a Floor --</option>';
-            UnitSelect.innerHTML = '<option value="">-- Select a Unit --</option>';
+            blockSelect.innerHTML = '<option value="">-- Select Block --</option>';
+            floorSelect.innerHTML = '<option value="">-- Select Floor --</option>';
+            unitSelect.innerHTML = '<option value="">-- Select Unit --</option>';
 
             if (propertyId) {
-                fetch(`{{ route('getblockbyproperty', ':id') }}`.replace(':id', propertyId))
-                    .then(response => response.json())
-                    .then(blocks => {
-                        blocks.forEach(block => {
+                fetch(routes.getBlocks.replace('__ID__', propertyId))
+                    .then(res => res.json())
+                    .then(data => {
+                        data.forEach(block => {
                             const option = document.createElement('option');
                             option.value = block.Id;
                             option.textContent = block.BlockName;
-                            BlockSelect.appendChild(option);
+                            blockSelect.appendChild(option);
                         });
                     });
             }
         });
 
-        BlockSelect.addEventListener('change', function () {
+        blockSelect.addEventListener('change', function () {
             const blockId = this.value;
-            FloorSelect.innerHTML = '<option value="">-- Select a Floor --</option>';
-            UnitSelect.innerHTML = '<option value="">-- Select a Unit --</option>';
+            floorSelect.innerHTML = '<option value="">-- Select Floor --</option>';
+            unitSelect.innerHTML = '<option value="">-- Select Unit --</option>';
 
             if (blockId) {
-                fetch(`{{ route('getfloorbyblock', ':id') }}`.replace(':id', blockId))
-                    .then(response => response.json())
-                    .then(floors => {
-                        floors.forEach(floor => {
+                fetch(routes.getFloors.replace('__ID__', blockId))
+                    .then(res => res.json())
+                    .then(data => {
+                        data.forEach(floor => {
                             const option = document.createElement('option');
                             option.value = floor.Id;
                             option.textContent = floor.FloorLabel;
-                            FloorSelect.appendChild(option);
+                            floorSelect.appendChild(option);
                         });
                     });
             }
         });
 
-        FloorSelect.addEventListener('change', function () {
+        floorSelect.addEventListener('change', function () {
             const floorId = this.value;
-            UnitSelect.innerHTML = '<option value="">-- Select a Unit --</option>';
+            unitSelect.innerHTML = '<option value="">-- Select Unit --</option>';
 
             if (floorId) {
-                fetch(`{{ route('getunitbyfloor', ':id') }}`.replace(':id', floorId))
-                    .then(response => response.json())
-                    .then(units => {
-                        units.forEach(unit => {
+                fetch(routes.getUnits.replace('__ID__', floorId))
+                    .then(res => res.json())
+                    .then(data => {
+                        data.forEach(unit => {
                             const option = document.createElement('option');
                             option.value = unit.Id;
                             option.textContent = unit.UnitCode;
-                            UnitSelect.appendChild(option);
+                            unitSelect.appendChild(option);
                         });
                     });
             }
         });
     });
 </script>
-
 @endsection

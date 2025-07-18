@@ -18,6 +18,7 @@ class PropertyMaintenanceRequest extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
+        'RequestNumber',
         'Property',
         'Block',
         'Floor',
@@ -34,7 +35,11 @@ class PropertyMaintenanceRequest extends Model
     {
         return 'PropertyMaintenanceRequestId';
     }
-     public function property()
+    public function requestId()
+    {
+        return $this->belongsTo(PropertyMaintenanceAssign::class, 'RequestNumber', 'Id');
+    }
+    public function property()
     {
         return $this->belongsTo(PropertyRegistry::class, 'Property', 'Id');
     }

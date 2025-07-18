@@ -13,14 +13,15 @@
     <thead class="table-light">
       <tr>
         <th>#</th>
+        <th>Request Number</th>
         <th>Property</th>
-          <th>Block</th>
-          <th>Floor</th>
+        <th>Block</th>
+        <th>Floor</th>
         <th>Unit</th>
         <th>Reported By</th>
-          <th>Issue Type</th>
+        <th>Issue Type</th>
         <th>Priority</th>
-          <th>Issue Description</th>
+        <th>Issue Description</th>
         <th>Action</th>
       </tr>
     </thead>
@@ -28,6 +29,7 @@
     @foreach($maintenancerequests as $maintenancerequest)
       <tr>
           <td>{{ $loop->iteration }}</td>
+          <td>{{ $maintenancerequest->RequestNumber ?? '-' }}</td>
           <td>{{ $maintenancerequest->property->PropertyName ?? '_' }}</td>
           <td>{{ $maintenancerequest->block->BlockName ?? '_' }}</td>
           <td>{{ $maintenancerequest->floor->FloorLabel ?? '_'}}</td>
@@ -38,9 +40,9 @@
           <td>{{ $maintenancerequest->IssueDescription ?? '_'}}</td>
           <td>
           <button class="btn btn-sm btn-outline-success">🛠 Assign</button>
-                         <a href="{{ route('maintenancerequest.show', $maintenancerequest->id) }}" class="btn btn-success btn-sm">View</a>
-                        <a href="{{ route('maintenancerequest.edit', $maintenancerequest->id) }}" class="btn btn-info btn-sm">Edit</a>
-                        <form action="{{ route('maintenancerequest.destroy', $maintenancerequest->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this lease?');">
+                         <a href="{{ route('maintenancerequest.show', $maintenancerequest->Id) }}" class="btn btn-success btn-sm">View</a>
+                        <a href="{{ route('maintenancerequest.edit', $maintenancerequest->Id) }}" class="btn btn-info btn-sm">Edit</a>
+                        <form action="{{ route('maintenancerequest.destroy', $maintenancerequest->Id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this lease?');">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="btn btn-danger btn-sm">Delete</button>

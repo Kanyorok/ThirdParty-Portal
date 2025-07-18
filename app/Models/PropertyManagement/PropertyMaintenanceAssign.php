@@ -2,6 +2,9 @@
 
 namespace App\Models\PropertyManagement;
 
+use App\Models\Core\CodeDetail;
+use App\Models\HRM\Employee;
+use App\Models\ThirdParies\Supplier;
 use Illuminate\Database\Eloquent\Model;
 
 class PropertyMaintenanceAssign extends Model
@@ -14,11 +17,11 @@ class PropertyMaintenanceAssign extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
+        'RequestNumber',
         'Property',
         'Block',
         'Floor',
         'Unit',
-        'IssueDescription',
         'AssignmentDate',
         'AssignmentType',
         'InternalTechnician',
@@ -32,4 +35,28 @@ class PropertyMaintenanceAssign extends Model
         'DeletedBy'
     ];
 
+    public static function getPrimaryKey(): string
+    {
+        return 'AssignRequestId';
+    }
+    public function request()
+    {
+        return $this->belongsTo(PropertyMaintenanceRequest::class, 'RequestNumber', 'Id');
+    }
+    public function assignmentType()
+    {
+        return $this->belongsTo(CodeDetail::class, 'AssignmentType', 'Id');
+    }
+    public function internalTechnician()
+    {
+        return $this->belongsTo(Employee::class, 'InternalTechnician', 'Id');
+    }
+    public function prequalifiedVendor()
+    {
+        return $this->belongsTo(Supplier::class, 'PrequalifiedVendor', 'Id');
+    }
+    public function priorityLevel()
+    {
+        return $this->belongsTo(CodeDetail::class, 'PriorityLevel', 'Id');
+    }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Property;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\PropertyManagement\PropertyMaintenanceRequest;
@@ -25,6 +26,7 @@ class PropertyMaintenanceRequestController extends Controller
     }
 
     public function create(){
+        $this->authorize(PermissionEnum::PropertyMaintenanceRequestUpdate, PropertyMaintenanceRequest::class);
         $units = PropertyUnit::all();
         $blocks = PropertyBlock::all();
         $floors = PropertyFloor::all();
@@ -32,6 +34,7 @@ class PropertyMaintenanceRequestController extends Controller
         return view('property.maintenanceandissues.maintenancerequest.create', compact('properties', 'floors', 'blocks', 'units'));
     }
         public function show($id){
+        $this->authorize(PermissionEnum::PropertyMaintenanceRequestView, PropertyMaintenanceRequest::class);
         $maintenancerequest = PropertyMaintenanceRequest::find($id);
         return view('property.maintenanceandissues.maintenancerequest.show',compact('maintenancerequest'));
     }
@@ -56,6 +59,7 @@ class PropertyMaintenanceRequestController extends Controller
 
     public function store(MaintenanceRequest $request)
     {
+        $this->authorize(PermissionEnum::PropertyMaintenanceRequestCreate, PropertyMaintenanceRequest::class);
         //dd($request->all());
         $validated = $request->validated();
      
@@ -82,7 +86,7 @@ class PropertyMaintenanceRequestController extends Controller
     }
      public function edit($id)
 {
-    // Optional: add authorization logic here if needed
+    $this->authorize(PermissionEnum::PropertyMaintenanceRequestUpdate, PropertyMaintenanceRequest::class);
     $maintenancerequest = PropertyMaintenanceRequest::findOrFail($id);
     $properties = PropertyRegistry::all();
 
@@ -91,11 +95,13 @@ class PropertyMaintenanceRequestController extends Controller
 
 public function update(Request $request, $id)
 {
+    $this->authorize(PermissionEnum::PropertyMaintenanceRequestUpdate, PropertyMaintenanceRequest::class);
+    // Validate the request data
    $validated = $request->validate([
-            'Property' => 'required|exists:t_PropertyRegistry,id',
-            'Block' => 'required|exists:t_PropertyBlock,id',
-            'Floor' => 'required|exists:t_PropertyFloor,id',
-            'Unit' => 'required|exists:t_PropertyUnit,id',
+            'Property' => 'required|exists:t_PropertyRegistry,Id',
+            'Block' => 'required|exists:t_PropertyBlock,Id',
+            'Floor' => 'required|exists:t_PropertyFloor,Id',
+            'Unit' => 'required|exists:t_PropertyUnit,Id',
             'ReportedBy' => 'required|string|max:50',
             'IssueType' => 'required|string|max:50',
             'Priority' => 'required|string|max:50',
@@ -136,10 +142,11 @@ public function update(Request $request, $id)
     }
 }
 
-public function destroy($id)
+public function destroy($Id)
 {
+    $this->authorize(PermissionEnum::PropertyMaintenanceRequestDelete, PropertyMaintenanceRequest::class);
     try {
-        $maintenancerequest = PropertyMaintenanceRequest::findOrFail($id);
+        $maintenancerequest = PropertyMaintenanceRequest::findOrFail($Id);
         $maintenancerequest->delete();
 
         return redirect()->route('maintenancerequest.index')

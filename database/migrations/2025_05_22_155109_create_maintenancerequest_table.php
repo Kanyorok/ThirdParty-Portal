@@ -11,11 +11,12 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('t_MaintenanceRequest', function (Blueprint $table) {
-            $table->id();
-            $table->string('Property');
-            $table->string('Block');
-            $table->string('Floor');
-            $table->string('Unit');
+            $table->id('Id');
+            $table->string('RequestNumber')->unique();
+            $table->string('Property')->constrained('t_PropertyRegistry', 'Id');
+            $table->string('Block')->constrained('t_PropertyBlocks', 'Id'); 
+            $table->string('Floor')->constrained('t_PropertyFloor', 'Id');
+            $table->string('Unit')->constrained('t_PropertyUnit', 'Id');
             $table->string('ReportedBy');
             $table->string('IssueType');
             $table->string('Priority');
