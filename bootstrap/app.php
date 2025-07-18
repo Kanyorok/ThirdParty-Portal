@@ -20,10 +20,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Transform keys of requests that are not GET to snake_case
         // and keys of successful JSON responses to camelCase
-        // $middleware->appendToGroup('api', [
-        //     TransformApiRequest::class,
-        //     TransformApiResponse::class,
-        // ]);
+        $middleware->appendToGroup('api', [
+            //     TransformApiRequest::class,
+            TransformApiResponse::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
