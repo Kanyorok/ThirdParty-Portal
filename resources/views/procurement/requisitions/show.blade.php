@@ -10,11 +10,11 @@
     </style>
 @endsection
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div></div>
-        <button class="btn btn-primary modal-create-item" type="button">
-            <i class="fas fa-plus-circle"></i> Add Items
-        </button>
+    <div class="mb-3">
+        
+            <button class="btn btn-primary float-end ms-2 modal-create-item" type="button">
+                <i class="fas fa-plus-circle"></i> Add Items
+            </button>
     </div>
     <div class="row">
         <div class="col-12">

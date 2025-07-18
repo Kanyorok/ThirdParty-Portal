@@ -11,6 +11,7 @@ use App\Models\Procurement\PlanLineItem;
 use App\Services\Procurement\ProcurementPlan\SchedulePlanService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use App\Models\Core\CodeDetail;
 use Throwable;
 
 class ProcurementSchedulePlanController extends Controller
@@ -25,7 +26,8 @@ class ProcurementSchedulePlanController extends Controller
     public function index()
     {
         $draftedplans = ConsolidatedProcurementPlan::where('Status', ProcurementPlanStatusEnum::Draft)->get();
-        return view('procurement.procurementplan.scheduleplan.index', compact('draftedplans'));
+        $procurementModes = CodeDetail::where('CodeID', 'ProcurementMethod')->get();
+        return view('procurement.procurementplan.scheduleplan.index', compact('draftedplans', 'procurementModes'));
     }
 
     public function create(Request $request)
@@ -55,6 +57,7 @@ class ProcurementSchedulePlanController extends Controller
                 return [
                     'LineItemID' => $lineItem->LineItemID,
                     'item_name' => $lineItem->item?->ItemName,
+                    'ProcurementMethod' => optional($lineItem->procurementMode)->Description,
                     'MergedQty' => $lineItem->MergedQty,
                     'ScheduleQTY' => $lineItem->schedulePlan?->ScheduleQTY,
                     'ScheduleType' => $displayType,
