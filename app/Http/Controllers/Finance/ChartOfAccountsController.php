@@ -108,6 +108,76 @@ class ChartOfAccountsController extends Controller
         }
     }
 
+    public function edit($id)
+    {
+        $this->authorize(PermissionEnum::FinanceCOAUpdate,FinanceGLAccounts::class);
+        $gl=FinanceGLAccounts::with('typeGroup:Id,Description','subAccount:Id,Description')->find($id);
+        if (!$gl) {
+            return redirect()->route('chartofaccounts.index')->with('error', 'GL Account not found.');
+        }
+        $accountTypes = CodeDetail::select('CodeID','Value','Description')->where('CodeID','GLAccountType')->get();
+        $typeGroups = FinanceGLTypeGroup::select('Id','Description')->get();
+        $subAccountTypes = FinanceGLSubAccountTypes::select('Id','Description','GLTypeGroupId')->get();
+        $allGLAccounts = FinanceGLAccounts::select('Id','GLCode', 'GLName','GLSubAccountTypeID')->get();
+
+        $typeID=$gl->GLAccountTypeID;
+        $subTypeID=$gl->GLTypeGroupID;
+
+        return view('finance.chartofaccounts.chartofaccounts.edit', compact(
+            'accountTypes', 'typeGroups', 'subAccountTypes', 'allGLAccounts','gl','typeID','subTypeID'
+        ));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $this->authorize(PermissionEnum::FinanceCOAUpdate,FinanceGLAccounts::class);
+        $validated = $request->validate([
+            'GLName'             => 'required|string|max:50',
+            'GLAccountTypeID'    => 'required',
+            'GLTypeGroupID'      => 'required|exists:t_FinanceGLTypeGroups,Id',
+            'GLSubAccountTypeID' => 'required|exists:t_FinanceGLSubAccountTypes,Id',
+            'Description'        => 'required|string|max:255',
+            'IsActive'           => 'required|boolean'
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            $gl = FinanceGLAccounts::findOrFail($id);
+            $branchID = ModelRole::where('model_id', Auth::id())->pluck('BranchID')->first();
+
+            $gl->update([
+                'GLName'             => $validated['GLName'],
+                'GLAccountTypeID'    => $validated['GLAccountTypeID'],
+                'GLTypeGroupID'      => $validated['GLTypeGroupID'],
+                'GLSubAccountTypeID' => $validated['GLSubAccountTypeID'],
+                //'BranchID'           => $branchID,
+                'Description'        => $validated['Description'],
+                'IsActive'           => $validated['IsActive'],
+                'ModifiedBy'         => Auth::id(),
+            ]);
+
+            activity()
+                ->performedOn($gl)
+                ->causedBy(Auth::user())
+                ->withProperties(['action' => 'update'])
+                ->log('Updated GL account: ' . $gl->GLName);
+
+            DB::commit();
+
+            return redirect()->route('chartofaccounts.index')->with('success', 'General Ledger Account updated successfully.');
+        } catch (QueryException $e) {
+            DB::rollBack();
+            Log::error('Update error: ' . $e->getMessage());
+            return back()->with('error', 'An error occurred while updating the GL account.');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            Log::error('Unexpected error: ' . $th->getMessage());
+            return back()->with('error', 'Failed to update the GL account: ' . $th->getMessage());
+        }
+    }
+
+
     public function hierarchy()
     {
         $accounts = DB::table('t_GLAccounts')->orderBy('GLCode')->get();
@@ -123,5 +193,34 @@ class ChartOfAccountsController extends Controller
         }
 
         return view('finance.chartofaccounts.chartofaccounts.show', compact('account'));
+    }
+
+    public function destroy($id)
+    {
+        $this->authorize(PermissionEnum::FinanceCOADelete,FinanceGLAccounts::class);
+        try {
+            DB::beginTransaction();
+            $gl=FinanceGLAccounts::find($id);
+            if (!$gl) {
+                return back()->with('error', 'GL Account not found.');
+            }
+            $gl->DeletedBy=Auth::Id();
+            $gl->DeletedOn=now();
+            $gl->IsActive=0;
+            $gl->save();
+            $gl->delete();
+
+            activity()
+                ->performedOn($gl)
+                ->causedBy(Auth::user())
+                ->withProperties(['action' => 'update'])
+                ->log('Updated GL account: ' . $gl->GLName);
+            DB::commit();
+            return back()->with('success', 'GL Account deleted successfully.');
+        }catch(\Throwable $th){
+            DB::rollBack();
+            Log::error ('Failed to delete GL Account:' .  $th->getMessage());
+            return back()->with('error','Failed to delete GL Account:' .  $th->getMessage());
+        }
     }
 }

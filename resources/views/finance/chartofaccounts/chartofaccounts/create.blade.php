@@ -31,6 +31,7 @@
 {{--                </p>--}}
                 <form method="POST" action="{{ route('chartofaccounts.store') }}">
                     @csrf
+                    @method('POST')
 
                     <div class="row mb-3">
 {{--                        <div class="col-md-4">--}}
@@ -55,7 +56,7 @@
                         <div class="col-md-4">
                             <label>GL Type</label>
                             <select name="GLAccountTypeID" id="accountType" class="form-select" required>
-                                <option disabled selected>-- Select GL Type --</option>
+                                <option disabled selected value="">-- Select GL Type --</option>
                                 @foreach($accountTypes as $type)
                                     <option value="{{ $type->Value }}">{{ $type->Description }}</option>
                                 @endforeach
@@ -65,13 +66,13 @@
                         <div class="col-md-4">
                             <label>GL Account Type</label>
                             <select name="GLTypeGroupID" id="typeGroup" class="form-select" required>
-                                <option disabled selected>-- GL Account Type --</option>
+                                <option disabled selected value="">-- GL Account Type --</option>
                             </select>
                         </div>
                         <div class="col-md-4">
                             <label>GL Sub Account Type</label>
                             <select name="GLSubAccountTypeID" id="subType" class="form-select" required>
-                                <option disabled selected>-- GL Sub Account Type --</option>
+                                <option disabled selected value="">-- GL Sub Account Type --</option>
                             </select>
                         </div>
                     </div>
@@ -96,7 +97,7 @@
 {{--                        </div>--}}
 {{--                    </div>--}}
                     <div class="d-flex justify-content-between align-items-centre mt-1">
-                        <a href="{{ route('chartofaccounts.index') }}" class="btn btn-secondary">Cancel</a>
+                        <a href="{{ route('chartofaccounts.index') }}" class="btn btn-secondary">Back</a>
                         <button class="btn btn-success" type="submit" onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Creating...'; this.form.submit();}">Create GL Account</button>
                     </div>
                 </form>

@@ -52,13 +52,13 @@
                                         @endif
                                     </td>
                                     <td>
-                                        <a href="#" class="btn btn-sm btn-warning">Edit</a>
+                                        <a href="{{route('chartofaccounts.edit',$item->Id)}}" class="btn btn-sm btn-warning">Edit</a>
                                         <button type="button"
                                                 class="btn btn-sm btn-danger custom-delete-btn"
                                                 data-bs-toggle="modal"
                                                 data-bs-target="#customDeleteConfirmModal"
                                                 data-name="{{ $item->GLName }}"    {{-- Pass item name --}}
-                                                data-route="{{ route('budget.delete-budget', $item->Id) }}"> {{-- Pass delete route --}}
+                                                data-route="{{ route('chartofaccounts.destroy', $item->Id) }}"> {{-- Pass delete route --}}
                                             Delete
                                         </button>
                                     </td>
