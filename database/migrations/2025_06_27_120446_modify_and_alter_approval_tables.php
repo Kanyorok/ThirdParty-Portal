@@ -93,6 +93,7 @@ return new class extends Migration {
             $table->foreignId('UserId')->nullable()->comment('assigned')->constrained('t_Users', 'Id');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
+            $table->dateTime('EscalatedOn')->nullable();
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
             $table->dateTime('ModifiedOn');
             $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
