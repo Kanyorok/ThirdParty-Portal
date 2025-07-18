@@ -2,7 +2,7 @@
 
 namespace App\Exports;
 
-use App\Models\Procurement\DepartmentNeeds;
+use App\Models\Procurement\DepartmentNeed;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Illuminate\Http\Request;
@@ -21,7 +21,7 @@ class NeedsExport implements FromQuery, WithHeadings, WithMapping
 
     public function query()
     {
-        $query = DepartmentNeeds::with(['item', 'branch', 'department']);
+        $query = DepartmentNeed::with(['item', 'branch', 'department']);
 
         if ($this->request->branch) {
             $query->where('BranchID', $this->request->branch);
@@ -46,7 +46,7 @@ class NeedsExport implements FromQuery, WithHeadings, WithMapping
             'Department',
             'Requested Qty',
             'Estimated Cost',
-            'Requested Date',
+            'Date Needed',
             'Status',
         ];
     }
