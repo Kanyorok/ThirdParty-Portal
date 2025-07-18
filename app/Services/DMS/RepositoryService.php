@@ -50,7 +50,7 @@ class RepositoryService extends PermissionsService
 
     public static function module(ModulesEnum $module): Repository
     {
-        return Repository::query()->where('RepositoryId', $module->value)->withTrashed()->firstOr(function () use ($module) {
+        return Repository::query()->where('RepositoryId', (string)$module->value)->withTrashed()->firstOr(function () use ($module) {
             $actor = SystemHelper::user();
             return (new self(self::_create(Name: $module->description(), actor: $actor, repository: self::internal(), Description: $module->description() . ' Uploaded files', RepoId: $module->value)))
                 ->visibility(VisibilityEnum::Private, $actor)->repo;
@@ -58,7 +58,7 @@ class RepositoryService extends PermissionsService
     }
 
     /**
-     * @throws ErroredException
+     * @throws ErroredException 
      */
     private static function _create(string $Name, User $actor, Repository $repository = null, string $Description = "", string $RepoId = null): Repository
     {

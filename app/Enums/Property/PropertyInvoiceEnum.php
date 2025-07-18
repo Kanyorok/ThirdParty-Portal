@@ -18,9 +18,9 @@ enum PropertyInvoiceEnum: string
     public function label(): string
     {
         return match ($this) {
-            self::FullyPaid => 'Paid',
-            self::Pending => 'Pending',
-            self::PartialPaid => 'PartialPaid',
+            self::FullyPaid => 'Fully Paid',
+            self::Pending => 'Pending Payment',
+            self::PartialPaid => 'Partially Paid',
         };
     }
 

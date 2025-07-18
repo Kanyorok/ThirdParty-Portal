@@ -68,6 +68,11 @@
                            value="{{ old('ServicesCharge', $invoices->ServicesCharge) }}">
                 </div>
                 <div class="col-md-4">
+                    <label class="form-label">Parking Fee</label>
+                    <input type="number" class="form-control" name="ParkingFee"
+                           value="{{ old('ParkingFee', $invoices->ParkingFee) }}">
+                </div>
+                <div class="col-md-4">
                     <label class="form-label">Other Charges</label>
                     <input type="number" class="form-control" name="OtherCharges"
                            value="{{ old('OtherCharges', $invoices->OtherCharges) }}">
