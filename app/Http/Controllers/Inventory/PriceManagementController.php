@@ -24,10 +24,13 @@ class PriceManagementController extends Controller
     public function index()
     {
         $prices = $this->priceService->list();
-        $items = ItemMasterList::all();
-        $uoms = UnitOfMeasure::all();
+       
+        $items = ItemMasterList::with('uom') // eager-load UOM relationship
+        ->whereNotIn('Id', function ($query) {
+            $query->select('ItemID')->from('t_Pricing');
+        })->get();
 
-        return view('inventory.pricemanagement.index', compact('prices', 'items', 'uoms'));
+        return view('inventory.pricemanagement.index', compact('prices', 'items'));
     }
 
     public function create()
@@ -59,7 +62,12 @@ class PriceManagementController extends Controller
     {
         $price = PriceManagement::findOrFail($id);
         $this->authorize('update', PriceManagement::class);
-        $this->priceService->update($price, $request->all());
+
+        // Prevent changes to protected fields
+        $data = $request->except(['ItemID', 'UOM', 'ItemCode']);
+
+        // Pass to service for validation + update
+        $this->priceService->update($price, $data);
 
         return redirect()->route('pricemanagement.index')->with('success', 'Price updated!');
     }
