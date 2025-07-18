@@ -20,8 +20,8 @@ use Throwable;
 
 class RepositoryService extends PermissionsService
 {
-    protected const string ROOT = 'root';
-    protected const string Internal = 'internal';
+    protected const ROOT = 'root';
+    protected const Internal = 'internal';
 
 
     public function __construct(public Repository $repo)
@@ -60,7 +60,7 @@ class RepositoryService extends PermissionsService
     /**
      * @throws ErroredException
      */
-    private static function _create(string $Name, User $actor, Repository $repository = null, string $Description = "", string $RepoId = null): Repository
+    private static function _create(string $Name, User $actor, $repository = null, string $Description = "", $RepoId = null): Repository
     {
         if (is_null($repository) && $RepoId !== self::ROOT) {
             throw new ErroredException('Please provide a repository to create a folder under');

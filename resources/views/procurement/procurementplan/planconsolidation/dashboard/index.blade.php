@@ -56,7 +56,7 @@
                 <th>Department</th>
                 <th>Qty</th>
                 <th>Est. Cost</th>
-                <th>Expected Delivery Date</th>
+                <th>Date Needed</th>
                 <th>Status</th>
                 <th>Action</th>
             </tr>
@@ -167,6 +167,7 @@
 
                                 needDetails.innerHTML = `
                             <ul class="list-group list-group-flush">
+                                <li class="list-group-item"><strong>Need ID:</strong> ${need.NeedID}</li>
                                 <li class="list-group-item"><strong>Item Name:</strong> ${need.ItemName}</li>
                                 <li class="list-group-item"><strong>Branch:</strong> ${need.BranchName}</li>
                                 <li class="list-group-item"><strong>Department:</strong> ${need.DepartmentName}</li>
