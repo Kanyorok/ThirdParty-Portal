@@ -25,13 +25,13 @@ class RegisterThirdPartyUserRequest extends FormRequest
     {
         return [
             'UserID' => ['required', 'string', 'max:100', 'min:3', 'unique:t_ThirdPartyUsers,UserID'],
-            'FirstName' => ['required', 'string', 'max:255'], // Assuming client sends PascalCase
-            'LastName' => ['required', 'string', 'max:255'],  // Assuming client sends PascalCase
+            'FirstName' => ['required', 'string', 'max:255'],
+            'LastName' => ['required', 'string', 'max:255'],
             'Email' => ['required', 'string', 'email', 'max:255', 'unique:t_ThirdPartyUsers,Email'],
-            'Phone' => ['required', 'string', 'max:20'],      // Assuming client sends PascalCase
-            'ThirdPartyID' => ['required', 'integer', 'exists:t_ThirdParties,Id'], // Assuming client sends PascalCase
+            'Phone' => ['required', 'string', 'max:20'],
+            'ThirdPartyId' => ['required', 'integer', 'exists:t_ThirdParties,Id'],
             'Password' => ['required', 'string', 'min:8', 'confirmed', Password::defaults()],
-            'Password_confirmation' => ['required', 'string'], // Ensure this matches the 'confirmed' rule's expectation
+            'Password_confirmation' => ['required', 'string'],
         ];
     }
 }
