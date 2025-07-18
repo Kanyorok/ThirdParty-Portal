@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers\Property;
 
-use App\Http\Controllers\Controller;
-use App\Http\Requests\Property\PropertyRegistry\PropertyBlockRequest;
-use App\Models\PropertyManagement\PropertyBlock;
-use App\Models\PropertyManagement\PropertyRegistry;
-use App\Services\Property\PropertyRegistry\PropertyBlockService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Property\PropertyRegistry\PropertyBlockRequest;
+use App\Services\Property\PropertyRegistry\PropertyBlockService;
+use App\Models\PropertyManagement\PropertyBlock;
+use App\Models\PropertyManagement\PropertyRegistry;
 
 
 class PropertyBlockController extends Controller

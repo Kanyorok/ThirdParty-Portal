@@ -147,11 +147,13 @@ class MarketingPlannerController extends Controller
      * Display the specified resource.
      * @throws AuthorizationException
      */
-    public function show(Request $request, MarketingPlanner $planner): View
+   public function show(Request $request, MarketingPlanner $planner): View
     {
         $this->authorize('view', $planner);
 
-        return view('crm.marketing.planner.show', compact('planner'))
+        $Branches = Branch::query()->get(['BranchID', 'Name']); // <-- Add this
+
+        return view('crm.marketing.planner.show', compact('planner', 'Branches'))
             ->with('canApprove', (new PlannerService($planner))->canApprove($request->user()));
     }
 

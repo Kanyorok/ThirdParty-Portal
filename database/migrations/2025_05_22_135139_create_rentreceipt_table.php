@@ -13,11 +13,11 @@ return new class extends Migration {
         Schema::create('t_RentReceipt', function (Blueprint $table) {
             $table->id('Id');
             $table->foreignId('InvoiceID')->constrained('t_RentInvoice', 'Id');
-            $table->foreignId('BillingMonth')->constrained('t_RentInvoice', 'Id');
-            $table->foreignId('InvoiceDate')->constrained('t_RentInvoice', 'Id');
-            $table->foreignId('RentAmount')->constrained('t_RentInvoice', 'Id');
-            $table->foreignId('ServicesCharge')->constrained('t_RentInvoice', 'Id');
-            $table->foreignId('OtherCharges')->constrained('t_RentInvoice', 'Id');
+            $table->string('BillingMonth');
+            $table->date('InvoiceDate');
+            $table->integer('RentAmount');
+            $table->integer('ServicesCharge');
+            $table->integer('OtherCharges');
             $table->integer('TotalDue');
             $table->integer('AmountPaid');
             $table->integer('Balance');

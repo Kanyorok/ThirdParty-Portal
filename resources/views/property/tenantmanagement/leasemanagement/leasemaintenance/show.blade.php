@@ -65,18 +65,28 @@
                                readonly>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Monthly Rent (KES)</label>
-                            <input type="text" class="form-control"
-                                   value="{{ number_format($newlease->MonthlyRent, 2) }}" readonly>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Deposit (KES)</label>
-                            <input type="text" class="form-control" value="{{ number_format($newlease->Deposit, 2) }}"
-                                   readonly>
-                        </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Monthly Rent (KES)</label>
+                        <input type="text" class="form-control" value="{{ number_format($newlease->MonthlyRent, 2) }}" readonly>
                     </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Deposit (KES)</label>
+                        <input type="text" class="form-control" value="{{ number_format($newlease->Deposit, 2) }}" readonly>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Service Charge (KES)</label>
+                        <input type="text" class="form-control" value="{{ number_format($newlease->ServiceCharge, 2) }}" readonly>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Parking Fee (KES)</label>
+                        <input type="text" class="form-control" value="{{ number_format($newlease->ParkingFee, 2) }}" readonly>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Other charges (KES)</label>
+                        <input type="text" class="form-control" value="{{ number_format($newlease->OtherCharges, 2) }}" readonly>
+                    </div>
+                </div>
 
                     <div class="mb-3">
                         <label class="form-label">Due Day</label>
