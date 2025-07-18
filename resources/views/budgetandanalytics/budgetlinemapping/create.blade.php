@@ -26,9 +26,9 @@
                 <div class="row">
                     <!-- 🧾 Budget Line Entry -->
                     <div class="mb-3">
-                        <label class="form-label">Budget Category</label>
+                        <label class="form-label">Budget Line Category</label>
                         <select class="form-select" name="BudgetLineCategoryID" required>
-                            <option selected disabled>-- Select Budget Category --</option>
+                            <option selected disabled>-- Select Budget Line Category --</option>
                             @foreach ($budgetCategories as $category)
                                 <option value="{{ $category->Id }}">{{ $category->CategoryName }}</option>
                             @endforeach
@@ -105,11 +105,11 @@
 
                     <!-- 🔗 Product Type Mapping -->
                     <div class="mb-3" id="productTypeSection" style="display: none;">
-                        <h6>🔗 Product Types (Multiple)</h6>
-                        <label class="form-label">Select Product Types</label>
+                        <h6>🔗 Products (Multiple)</h6>
+                        <label class="form-label">Select Product </label>
                         <select multiple class="form-select" name="ProductTypes[]">
                             @foreach ($productTypes as $type)
-                                <option value="{{ $type->Id }}">{{ $type->Name }}</option>
+                                <option value="{{ $type->Id }}">{{ $type->Description }}</option>
                             @endforeach
                         </select>
                         <div class="form-text">Hold Ctrl (Windows) or Cmd (Mac) to select multiple Product Types.</div>
@@ -167,7 +167,7 @@
             typeSelect.addEventListener('change', function () {
                 const typeId = this.value;
                 subTypeSelect.innerHTML = '<option selected disabled>Loading...</option>';
-                fetch(`/budgetlinemapping/gl-subtypes/${typeId}`)
+                fetch(`/budget/budgetlinemapping/gl-subtypes/${typeId}`)
                     .then(response => response.json())
                     .then(data => {
                         subTypeSelect.innerHTML = '<option selected disabled>-- Select Sub-Type --</option>';

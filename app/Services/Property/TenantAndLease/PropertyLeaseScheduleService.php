@@ -14,10 +14,8 @@ class PropertyLeaseScheduleService
      * @throws Exception if the lease schedule already exists or creation fails.
      */
     public static function create(
-        int   $leaseId,
-        int   $tenantId,
-        int   $propertyId,
-        int   $paymentFrequencyId,
+        int $leaseId,
+        int $paymentFrequencyId,
         string $startDate,
         string $endDate,
         float $baseRent,
@@ -37,9 +35,7 @@ class PropertyLeaseScheduleService
 
         // Attempt to create the schedule
         $leaseSchedule = PropertyLeaseSchedule::create([
-            'LeaseNumber' => $leaseId,
-            'TenantId' => $tenantId,
-            'PropertyId' => $propertyId,
+            'LeaseNumber'      => $leaseId,
             'PaymentFrequency' => $paymentFrequencyId,
             'StartDate' => $startDate,
             'EndDate' => $endDate,
