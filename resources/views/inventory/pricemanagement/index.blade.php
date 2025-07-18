@@ -156,13 +156,16 @@
                     <input class="form-control" type="file" name="file" accept=".csv,.xlsx,.xls" required>
                 </div>
                 <div class="alert alert-info small">
-                    Ensure your file has headers: <code>ItemCode, UOMCode, Price, EffectiveFrom, EffectiveTo,
+                    Ensure your file has headers: <code>ItemCode, UOMCode, EstimatedPrice, ActualPrice, EffectiveFrom, EffectiveTo,
                         Currency, IsDefault</code>
+                    <br>
+                    <a href="{{ asset('templates/price_upload_template.xlsx') }}" class="btn btn-sm btn-outline-primary mt-2">
+                        📥 Download Template
+                    </a>
                 </div>
                 <button type="submit" class="btn btn-success">Upload</button>
             </form>
         </div>
-
     </div>
 </div>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
