@@ -63,7 +63,7 @@
                           View
                       @endif
                   </a>
-                  @if($plan->Status->value === 'Dr')
+                  @if($plan->Status->value === 'Dr' && $itemsCount > 0)
                       <a href="{{ route('planning.editDraftItems', ['PlanID' => $plan->PlanID]) }}"
                          class="btn btn-sm btn-outline-success">Edit</a>
                   @endif

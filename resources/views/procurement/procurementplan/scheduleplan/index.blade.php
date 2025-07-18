@@ -40,6 +40,7 @@
                         <th>#</th>
                         <th>Need ID</th>
                         <th>Item</th>
+                        <th>Assigned Method</th>
                         <th>Total Qty</th>
                         <th>Scheduled Qty</th>
                         <th>Schedule Type</th>
@@ -99,6 +100,7 @@
                                             <td>${index + 1}</td>
                                             <td>${line.NeedID || 'N/A'}</td>
                                             <td>${line.item_name}</td>
+                                            <td><span class="badge bg-secondary">${line.ProcurementMethod || 'N/A'}</span></td>
                                             <td>${line.MergedQty}</td>
                                             <td>${line.ScheduleQTY ?? '-'}</td>
                                             <td>${line.ScheduleType ?? '-'}</td>
