@@ -8,6 +8,9 @@ use App\Services\Inventory\PriceManagementService;
 use App\Models\Inventory\PriceManagement;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\UnitOfMeasure;
+use App\Imports\PricingImport;
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Auth;
 
 class PriceManagementController extends Controller
 {
@@ -21,10 +24,13 @@ class PriceManagementController extends Controller
     public function index()
     {
         $prices = $this->priceService->list();
-        $items = ItemMasterList::all();
-        $uoms = UnitOfMeasure::all();
+       
+        $items = ItemMasterList::with('uom') // eager-load UOM relationship
+        ->whereNotIn('Id', function ($query) {
+            $query->select('ItemID')->from('t_Pricing');
+        })->get();
 
-        return view('inventory.pricemanagement.index', compact('prices', 'items', 'uoms'));
+        return view('inventory.pricemanagement.index', compact('prices', 'items'));
     }
 
     public function create()
@@ -56,7 +62,12 @@ class PriceManagementController extends Controller
     {
         $price = PriceManagement::findOrFail($id);
         $this->authorize('update', PriceManagement::class);
-        $this->priceService->update($price, $request->all());
+
+        // Prevent changes to protected fields
+        $data = $request->except(['ItemID', 'UOM', 'ItemCode']);
+
+        // Pass to service for validation + update
+        $this->priceService->update($price, $data);
 
         return redirect()->route('pricemanagement.index')->with('success', 'Price updated!');
     }
@@ -70,5 +81,15 @@ class PriceManagementController extends Controller
         return redirect()->route('pricemanagement.index')->with('success', 'Price deleted.');
     }
 
+    public function importPricing(Request $request)
+    {
+        $this->authorize('update', PriceManagement::class);
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,csv'
+        ]);
 
+        Excel::import(new PricingImport, $request->file('file'));
+
+        return back()->with('success', 'Pricing data imported successfully!');
+    }
 }

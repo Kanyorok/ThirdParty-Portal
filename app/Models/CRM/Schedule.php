@@ -23,6 +23,7 @@ class Schedule extends Model
 
     protected $table = 't_Schedule';
     protected $primaryKey = 'ScheduleID';
+
     protected $fillable = [
         'Title',
         'Notes',
@@ -38,6 +39,7 @@ class Schedule extends Model
         'ModifiedBy',
         'DeletedBy',
     ];
+
     protected $casts = [
         'StartOn' => 'datetime',
         'EndOn' => 'datetime',
@@ -49,9 +51,7 @@ class Schedule extends Model
         return 'ScheduleID';
     }
 
-
-    // (Call, Meeting, Task)
-
+    // Main polymorphic relation (e.g. Call, Meeting, Task)
     public function scheduled(): MorphTo
     {
         return $this->morphTo(__FUNCTION__, 'ScheduledType', 'ScheduledTypeID');
@@ -60,7 +60,8 @@ class Schedule extends Model
     public function clients(): BelongsToMany
     {
         return $this->belongsToMany(Client::class, 't_ScheduleClients', 'ScheduleId', 'ClientID', 'ScheduleID')
-            ->withPivot(['CreatedBy', 'ModifiedBy'])->withTimestamps('CreatedOn', 'ModifiedOn')
+            ->withPivot(['CreatedBy', 'ModifiedBy'])
+            ->withTimestamps('CreatedOn', 'ModifiedOn')
             ->using(ScheduleClient::class);
     }
 
@@ -69,22 +70,12 @@ class Schedule extends Model
         return $this->hasMany(ScheduleClient::class, 'ScheduleId', 'ScheduleID');
     }
 
-
     public function leads(): BelongsToMany
     {
         return $this->belongsToMany(Lead::class, 't_ScheduleLeads', 'ScheduleId', 'LeadId', 'ScheduleID')
-            ->withPivot(['CreatedBy', 'ModifiedBy'])->withTimestamps('CreatedOn', 'ModifiedOn')
+            ->withPivot(['CreatedBy', 'ModifiedBy'])
+            ->withTimestamps('CreatedOn', 'ModifiedOn')
             ->using(ScheduleClient::class);
-    }
-
-    /**
-     * Board Members
-     */
-    public function members(): BelongsToMany
-    {
-        return $this->belongsToMany(Board::class, 't_ScheduleBoard', 'ScheduleId', 'BoardMemberId', 'ScheduleID', 'Id')
-            ->withTimestamps('CreatedOn', 'ModifiedOn')->withPivot(['CreatedBy', 'ModifiedBy', 'ScheduleStatus', 'DecidedOn'])
-            ->using(ScheduleBoard::class);
     }
 
     public function scheduleLeads(): HasMany
@@ -92,11 +83,11 @@ class Schedule extends Model
         return $this->hasMany(ScheduleLead::class, 'ScheduleId', 'ScheduleID');
     }
 
-
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 't_ScheduleUsers', 'ScheduleId', 'UserID')
-            ->withPivot(['CreatedBy', 'ModifiedBy', 'ScheduleUserStatus', 'DecidedOn'])->withTimestamps('CreatedOn', 'ModifiedOn')
+            ->withPivot(['CreatedBy', 'ModifiedBy', 'ScheduleUserStatus', 'DecidedOn'])
+            ->withTimestamps('CreatedOn', 'ModifiedOn')
             ->using(ScheduleUser::class);
     }
 
@@ -105,8 +96,55 @@ class Schedule extends Model
         return $this->hasMany(ScheduleUser::class, 'ScheduleId', 'ScheduleID');
     }
 
+    /**
+     * Board Members
+     */
+    public function members(): BelongsToMany
+    {
+        return $this->belongsToMany(Board::class, 't_ScheduleBoard', 'ScheduleId', 'BoardMemberId', 'ScheduleID', 'Id')
+            ->withTimestamps('CreatedOn', 'ModifiedOn')
+            ->withPivot(['CreatedBy', 'ModifiedBy', 'ScheduleStatus', 'DecidedOn'])
+            ->using(ScheduleBoard::class);
+    }
+
     public function source(): MorphTo
     {
         return $this->morphTo(__FUNCTION__, "Source", "SourceID");
+    }
+
+    /**
+     * Safely get the first associated client ID or throw an error.
+     */
+    public function firstClientIdOrFail(): int
+    {
+        $client = $this->scheduleClients()->first();
+
+        if (!$client) {
+            throw new \RuntimeException("No client found for ScheduleID {$this->ScheduleID}");
+        }
+
+        return $client->ClientID;
+    }
+
+    /**
+     * Determine the associated party (Client or Lead).
+     */
+    public function resolveParty(): array
+    {
+        if ($this->scheduleClients()->exists()) {
+            return [
+                'party' => \App\Models\BR\Client::getPrimaryKey(),
+                'party_id' => $this->scheduleClients()->first()->ClientID,
+            ];
+        }
+
+        if ($this->scheduleLeads()->exists()) {
+            return [
+                'party' => \App\Models\CRM\Lead::getPrimaryKey(),
+                'party_id' => $this->scheduleLeads()->first()->LeadId,
+            ];
+        }
+
+        throw new \RuntimeException("No associated Client or Lead found for ScheduleID {$this->ScheduleID}");
     }
 }
