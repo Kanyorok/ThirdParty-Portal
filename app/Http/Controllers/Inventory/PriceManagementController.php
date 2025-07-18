@@ -8,6 +8,9 @@ use App\Services\Inventory\PriceManagementService;
 use App\Models\Inventory\PriceManagement;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\UnitOfMeasure;
+use App\Imports\PricingImport;
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Auth;
 
 class PriceManagementController extends Controller
 {
@@ -70,5 +73,15 @@ class PriceManagementController extends Controller
         return redirect()->route('pricemanagement.index')->with('success', 'Price deleted.');
     }
 
+    public function importPricing(Request $request)
+    {
+        $this->authorize('update', PriceManagement::class);
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,csv'
+        ]);
 
+        Excel::import(new PricingImport, $request->file('file'));
+
+        return back()->with('success', 'Pricing data imported successfully!');
+    }
 }

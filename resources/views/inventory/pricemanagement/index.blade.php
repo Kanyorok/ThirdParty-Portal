@@ -149,7 +149,7 @@
                     @csrf
                     <div class="mb-3">
                         <label class="form-label">Upload Excel or CSV File</label>
-                        <input class="form-control" type="file" name="priceFile" accept=".csv,.xlsx,.xls" required>
+                        <input class="form-control" type="file" name="file" accept=".csv,.xlsx,.xls" required>
                     </div>
                     <div class="alert alert-info small">
                         Ensure your file has headers: <code>ItemCode, UOMCode, Price, EffectiveFrom, EffectiveTo,
