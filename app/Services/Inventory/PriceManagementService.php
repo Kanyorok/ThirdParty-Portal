@@ -10,19 +10,25 @@ use Illuminate\Support\Facades\Validator;
 
 class PriceManagementService
 {
-    public function validate(array $data)
+    public function validate(array $data, bool $isUpdate = false)
     {
-        return Validator::make($data, [
-            'ItemID' => 'required|integer|exists:t_Items,Id',
-            'UOM' => 'required|integer|exists:t_UOM,Id',
-            'EstimatedPrice' => 'required|numeric',
-            'ActualPrice' => 'required|numeric',
-            'CurrencyCode' => 'required|string|max:10',
-            'EffectiveFrom' => 'required|date',
-            'EffectiveTo' => 'nullable|date|after:EffectiveFrom',
-            'IsDefault' => 'nullable|boolean',
-            'Source' => 'nullable|string|max:255',
-        ]);
+        $rules = [
+            'EstimatedPrice' => 'required|numeric|min:0',
+            'ActualPrice'    => 'required|numeric|min:0',
+            'CurrencyCode'   => 'required|string|max:10',
+            'EffectiveFrom'  => 'required|date',
+            'EffectiveTo'    => 'nullable|date|after_or_equal:EffectiveFrom',
+            'IsDefault'      => 'nullable|boolean',
+            'Source'         => 'nullable|string|max:255',
+        ];
+
+        if (!$isUpdate) {
+            // Only required on create
+            $rules['ItemID'] = 'required|exists:t_ItemMasterList,Id';
+            $rules['UOM'] = 'required|exists:t_UnitOfMeasure,Id';
+        }
+
+        return Validator::make($data, $rules);
     }
 
     public function create(array $data): PriceManagement
@@ -60,7 +66,7 @@ class PriceManagementService
 
     public function update(PriceManagement $pricing, array $data): PriceManagement
     {
-        $validator = $this->validate($data);
+        $validator = $this->validate($data, true);
         if ($validator->fails()) {
             abort(422, $validator->errors()->first());
         }
