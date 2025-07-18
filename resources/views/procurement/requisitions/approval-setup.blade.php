@@ -90,8 +90,8 @@
                             <select name="ApprovalType" id="ApprovalType" class="form-control" required>
                                 <option value="ANY">Any</option>
                                 <option value="ALL">All</option>
-                                <option value="MAJ">Majority</option>
-                                <option value="AMT">Amount Based</option>
+                                <!-- <option value="MAJ">Majority</option>
+                                <option value="AMT">Amount Based</option> -->
                             </select>
                         </div>
 

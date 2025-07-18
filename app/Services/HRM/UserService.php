@@ -97,50 +97,42 @@ class UserService
     /**
      * @throws Exception
      */
-  public static function dt(Builder|BelongsToMany $query, array $with = [], array $extra = []): JsonResponse
-{
-    if (!empty($with)) {
-        $query->with($with);
+    public static function dt(Builder|BelongsToMany $query, array $with = [], array $extra = []): JsonResponse
+    {
+        if (!empty($with)) {
+            $query->with($with);
+        }
+        return Datatables::of($query->where('t_Users.UserID', '!=', SystemHelper::ID)->lock('WITH(NOLOCK)')->select('*'))
+            ->addColumn('action', function (User $user) use ($extra) {
+                if (array_key_exists('action_team', $extra)) {
+                    return '<button type="button"  data-action="' . route('team-users.destroy', [$extra['action_team'], $user->UserID]) . '" data-name="' . $user->Name . '" class="btn btn-danger btn-sm modal-trash-team-users"><i class="fas fa-trash"></i></button>';
+                }
+                return '
+                    <a href="' . route('users.show', [$user->UserID]) . '" class="btn btn-info btn-sm me-1">
+                        <i class="fas fa-eye"></i> Details
+                    </a>';
+            })->editColumn('pivot', function (User $user) use ($extra) {
+                if (!in_array('pivot_date', $extra, true)) {
+                    return '';
+                }
+                try {
+                    return Carbon::parse($user->pivot->CreatedOn)->format('M d, Y h:i A');
+                } catch (Exception) {
+                }
+                return $user->pivot->CreatedOn;
+            })->editColumn('Name', function (User $user) {
+                $str = ($user->Linked) ? '(one account)' : '';
+                return $user->Name . $str;
+            })->editColumn('photo', function (User $user) use ($with) {
+                return (in_array('photo', $with, true)) ?
+                    $user->getImage('class="img-thumbnail" style="height: 70px;width: 70px; max-width: inherit;"')
+                    : '';
+            })->setRowClass('mouse_pointer user-select-none dbl-click-redirect-data')->setRowData([
+                'dbl_click_url' => function (User $user) {
+                    return route('users.show', [$user->UserID]);
+                },
+            ])->rawColumns(['action', 'photo'])->make();
     }
-
-    return Datatables::of($query->where('t_Users.UserID', '!=', SystemHelper::ID)->lock('WITH(NOLOCK)')->select('*'))
-        ->addColumn('action', function (User $user) use ($extra) {
-            if (array_key_exists('action_team', $extra)) {
-                return '<button type="button"  data-action="' . route('team-users.destroy', [$extra['action_team'], $user->UserID]) . '" data-name="' . $user->Name . '" class="btn btn-danger btn-sm modal-trash-team-users"><i class="fas fa-trash"></i></button>';
-            }
-            return '
-                <a href="' . route('users.show', [$user->UserID]) . '" class="btn btn-info btn-sm me-1">
-                    <i class="fas fa-eye"></i> Details
-                </a>';
-        })
-        ->editColumn('pivot', function (User $user) use ($extra) {
-            if (!in_array('pivot_date', $extra, true)) {
-                return '';
-            }
-            try {
-                return Carbon::parse($user->pivot->CreatedOn)->format('M d, Y h:i A');
-            } catch (Exception) {
-            }
-            return $user->pivot->CreatedOn;
-        })
-        ->editColumn('Name', function (User $user) {
-            $str = ($user->Linked) ? '(one account)' : '';
-            return $user->Name . $str;
-        })
-        ->editColumn('photo', function (User $user) use ($with) {
-            return (in_array('photo', $with, true)) ?
-                $user->getImage('class="img-thumbnail" style="height: 70px;width: 70px; max-width: inherit;"')
-                : '';
-        })
-        ->setRowClass('mouse_pointer user-select-none dbl-click-redirect-data')
-        ->setRowData([
-            'dbl_click_url' => function (User $user) {
-                return route('users.show', [$user->UserID]);
-            },
-        ])
-        ->rawColumns(['action', 'photo'])
-        ->make();
-}
 
     public function sendMessage(string $message, User $actor, bool $immediate = false, $bulkNotification = null): static
     {
