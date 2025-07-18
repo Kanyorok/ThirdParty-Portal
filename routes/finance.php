@@ -117,7 +117,7 @@ Route::namespace('Finance')->prefix('finance')->group(function () {
         Route::get('/', [PaymentProcessingController::class, 'index'])->name('ap_payment.index');
         Route::get('/create', [PaymentProcessingController::class, 'create'])->name('ap_payment.create');
         Route::get('/voucher/{voucherId}', [PaymentProcessingController::class, 'showVoucher'])->name('ap_payment.voucher');
-});
+    });
 
     Route::resource('taxruleconfig', TaxRuleController::class);
     Route::resource('efiling', TaxEfillingController::class);
@@ -136,4 +136,8 @@ Route::namespace('Finance')->prefix('finance')->group(function () {
         Route::get('salary-journal-templates/create', [SalaryJournalTemplateController::class, 'create'])->name('salary-journal-templates.create');
         Route::post('salary-journal-templates/store', [SalaryJournalTemplateController::class, 'store'])->name('salary-journal-templates.store');
     });
+
+    // AJAX routes for dependent selects
+    Route::get('/get-type-groups', [ChartOfAccountsController::class, 'getTypeGroups']);
+    Route::get('/get-sub-account-types', [ChartOfAccountsController::class, 'getSubAccountTypes']);
 });

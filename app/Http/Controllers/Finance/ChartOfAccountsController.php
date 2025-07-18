@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers\Finance;
 
+use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
+use App\Models\Auth\ModelRole;
 use App\Models\Core\CodeDetail;
 use App\Models\Finance\FinanceGLAccounts;
 use App\Models\Finance\FinanceGLSubAccountTypes;
 use App\Models\Finance\FinanceGLTypeGroup;
+use Couchbase\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -16,35 +19,47 @@ class ChartOfAccountsController extends Controller
 {
     public function index()
     {
-        $charts = FinanceGLAccounts::with('parent')->get();
+        $this->authorize(PermissionEnum::FinanceCOAView,FinanceGLAccounts::class);
+        $charts = FinanceGLAccounts::select('Id','GLSubAccountTypeID','GLTypeGroupID','GLCode', 'GLName','GLAccountTypeID','IsActive','Description')
+                    ->with('typeGroup:Id,Description','subAccount:Id,Description')->latest()->get();
 
         return view('finance.chartofaccounts.chartofaccounts.index', compact('charts'));
     }
 
     public function create()
     {
-        $accountTypes = CodeDetail::where('CodeID','GLAccountType')->get();
-        $typeGroups = FinanceGLTypeGroup::all();
-        $subAccountTypes = FinanceGLSubAccountTypes::all();
-        $allGLAccounts = FinanceGLAccounts::select('Id','GLCode', 'GLName')->get();
+        $accountTypes = CodeDetail::select('CodeID','Value','Description')->where('CodeID','GLAccountType')->get();
+        $typeGroups = FinanceGLTypeGroup::select('Id','Description')->get();
+        $subAccountTypes = FinanceGLSubAccountTypes::select('Id','Description','GLTypeGroupId')->get();
+        $allGLAccounts = FinanceGLAccounts::select('Id','GLCode', 'GLName','GLSubAccountTypeID')->get();
 
         return view('finance.chartofaccounts.chartofaccounts.create', compact(
             'accountTypes', 'typeGroups', 'subAccountTypes', 'allGLAccounts'
         ));
     }
 
+    public function getTypeGroups(Request $request)
+    {
+        $typeGroups = FinanceGLTypeGroup::where('GLAccountTypeID', $request->GLAccountTypeID)->get();
+        return response()->json($typeGroups);
+    }
+
+    public function getSubAccountTypes(Request $request)
+    {
+        $subTypes = FinanceGLSubAccountTypes::where('GLTypeGroupId', $request->GLTypeGroupID)->get();
+        return response()->json($subTypes);
+    }
+
 
     public function store(Request $request)
     {
-        // dd($request->all());
-         //return $request;
         $validated = $request->validate([
-            'GLCode'             => 'required|string',
+            //'GLCode'             => 'required|string',
             'GLName'             => 'required|string|max:50',
-            'GLAccountTypeID'    => 'required|exists:t_CodeDetails,CodeID',
+            'GLAccountTypeID'    => 'required',
             'GLTypeGroupID'      => 'required|exists:t_FinanceGLTypeGroups,Id',
             'GLSubAccountTypeID' => 'required|exists:t_FinanceGLSubAccountTypes,Id',
-            'ParentGLID'         => 'nullable|integer|exists:t_FinanceGLAccounts,Id',
+            //'ParentGLID'         => 'nullable|integer|exists:t_FinanceGLAccounts,Id',
             'Description'        => 'required|string|max:255',
             'IsActive'           => 'required|boolean'
         ]);
@@ -52,16 +67,17 @@ class ChartOfAccountsController extends Controller
         DB::beginTransaction();
 
         try{
-
+            $branchID=ModelRole::where('model_id',Auth::id())->pluck('BranchID')->first();
             $charts = FinanceGLAccounts::create([
-                'GLCode'             => $validated['GLCode'],
+                //'GLCode'             => $validated['GLCode'],
                 'GLName'             => $validated['GLName'],
                 'GLAccountTypeID'    => $validated['GLAccountTypeID'],
                 'GLTypeGroupID'      => $validated['GLTypeGroupID'],
                 'GLSubAccountTypeID' => $validated['GLSubAccountTypeID'],
-                'ParentGLID'         => $validated['ParentGLID'] ?? null,
+                'BranchID'=>$branchID,
+                //'ParentGLID'         => $validated['ParentGLID'] ?? null,
                 'Description'        => $validated['Description'],
-                'IsActive'           => $validated['IsActive'],
+                //'IsActive'           => $validated['IsActive'],
                 'CreatedBy'          =>Auth::Id(),
                 'ModifiedBy'         => Auth::Id(),
             ]);
@@ -76,35 +92,20 @@ class ChartOfAccountsController extends Controller
 
             DB::commit();
 
-            return redirect()->route('chartofaccounts.index')->with('Success', 'General Ledger Account created Successfully.');
-        }catch(\Throwable $th){
-
+            return redirect()->route('chartofaccounts.index')->with('success', 'General Ledger Account created Successfully.');
+        }catch(QueryException $e){
+            if ($e->getCode() == '23000') { // SQL duplicate error
+                Log::error('Duplicate GL Code: ' . $e->getMessage());
+                return back()->with('error', 'A General Ledger Account with this GL Code already exists.');
+            }
+        }
+        catch(\Throwable $th){
             DB::rollBack();
-            return $th->getMessage();
+            //return $th->getMessage();
             Log::error ('Failed to create General Ledger Account:' .  $th->getMessage());
 
-            return back()->withErrors(['error'=>'Failed to create General Ledger Account:' .  $th->getMessage()]);
+            return back()->with('error','Failed to create General Ledger Account:' .  $th->getMessage());
         }
-    }
-
-    public function getTypeGroups($accountTypeId)
-    {
-        $groups = DB::table('t_GLTypeGroups')
-            ->where('GLAccountTypeID', $accountTypeId)
-            ->select('Id', 'Description')
-            ->get();
-
-        return response()->json($groups);
-    }
-
-    public function getSubTypes($typeGroupId)
-    {
-        $subTypes = DB::table('t_GLSubAccountTypes')
-            ->where('GLTypeGroupID', $typeGroupId)
-            ->select('Id', 'Description')
-            ->get();
-
-        return response()->json($subTypes);
     }
 
     public function hierarchy()

@@ -44,4 +44,15 @@ class FinanceGLAccounts extends Model
         return $this->belongsTo(FinanceGLAccounts::class, 'ParentGLID');
     }
 
+    public function subAccount()
+    {
+        return $this->belongsTo(FinanceGLSubAccountTypes::class, 'GLSubAccountTypeID');
+
+    }
+
+    public function typeGroup()
+    {
+        return $this->belongsTo(FinanceGLTypeGroup::class, 'GLTypeGroupID');
+    }
+
 }
