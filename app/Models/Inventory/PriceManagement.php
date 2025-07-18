@@ -22,6 +22,7 @@ class PriceManagement extends Model
 
 
     protected $fillable = [
+        'ItemCode',
         'PriceID',
         'ItemID',
         'UOM',

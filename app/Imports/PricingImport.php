@@ -29,6 +29,18 @@ class PricingImport implements ToCollection
                 continue;
             }
 
+            $itemCode = trim($row[0]);
+
+            // 🔍 Get ItemMasterList by ItemCode
+            $item = ItemMasterList::where('ItemCode', $itemCode)->first();
+
+            if (!$item) {
+                Log::warning("ItemCode '{$itemCode}' not found — skipping row", $row->toArray());
+                continue;
+            }
+
+            $itemId = $item->Id;
+
             $isDefault = filter_var($row[7], FILTER_VALIDATE_BOOLEAN) ? 1 : 0;
 
             try {
@@ -44,14 +56,15 @@ class PricingImport implements ToCollection
                 continue;
             }
 
-            // Unique matching fields
+            // Matching criteria (ItemID + UOM)
             $match = [
-                'ItemID'        => $row[0],
+                'ItemID'        => $itemId,
                 'UOM'           => $row[1],
             ];
 
-            // Values to update or insert
+            // Fields to insert or update
             $values = [
+                'ItemCode'      => $itemCode,
                 'EffectiveFrom' => $effectiveFrom,
                 'EffectiveTo'   => $effectiveTo,
                 'EstimatedPrice'=> $row[2],
@@ -63,45 +76,44 @@ class PricingImport implements ToCollection
                 'ModifiedOn'    => now(),
             ];
 
-            // If inserting new, add creator metadata
             $existing = PriceManagement::where($match)->first();
             if (!$existing) {
                 $values['CreatedBy'] = $userId;
                 $values['CreatedOn'] = now();
             }
 
-            // Perform update or insert
             $pricing = PriceManagement::updateOrCreate($match, $values);
 
-            // Set PriceID if it's a newly inserted record
+            // Assign PriceID if not set
             if (!$pricing->PriceID) {
                 $pricing->PriceID = 'PR-' . str_pad($pricing->Id, 5, '0', STR_PAD_LEFT);
                 $pricing->save();
             }
 
-            $item = ItemMasterList::find($pricing->ItemID);
-
-            if ($item) {
-                // Only update ItemPrice if:
-                // - No price set
-                // - OR current pricing is default
-                // - OR this pricing is newer than existingg one
-                if (
-                    !$item->ItemPrice ||
-                    $pricing->IsDefault ||
-                    $item->ItemPrice != $pricing->Id
-                ) {
-                    $item->ItemPrice = $pricing->Id;
-                    $item->save();
-                }
+            // Update ItemMasterList.ItemPrice only if new, default, or changed
+            if (
+                !$item->ItemPrice ||
+                $pricing->IsDefault ||
+                $item->ItemPrice != $pricing->Id
+            ) {
+                $item->ItemPrice = $pricing->Id;
+                $item->save();
             }
+
+            // Log the actual action
+            $action = $existing ? 'updated' : 'created';
+
             activity()
                 ->performedOn($pricing)
                 ->causedBy(Auth::user())
-                ->event('create')
-                ->withProperties(['action' => 'create'])
-                ->log('Created or Updated Item Pricing from import');
+                ->event($action)
+                ->withProperties([
+                    'action' => $action,
+                    'item_code' => $itemCode,
+                    'item_id' => $itemId,
+                    'uom' => $pricing->UOM,
+                ])
+                ->log(ucfirst($action) . ' Item Pricing from import');
         }
     }
-
 }
