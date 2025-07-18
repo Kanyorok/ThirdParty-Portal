@@ -16,7 +16,7 @@
                 <th>Est. Cost</th>
                 <th>Submitted By</th>
                 <th>Submitted On</th>
-                <th>Required By</th>
+                <th>Date Needed</th>
                 <th>Actions</th>
             </tr>
             </thead>

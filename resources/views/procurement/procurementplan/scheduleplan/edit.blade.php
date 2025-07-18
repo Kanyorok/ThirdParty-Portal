@@ -28,7 +28,6 @@
                 $periods = $lineItem->schedulePlan && $lineItem->schedulePlan->periods
                 ? $lineItem->schedulePlan->periods->keyBy('SchedulePeriod')
                 : collect();
-                $months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
             @endphp
 
             <div class="mb-4 p-3 border rounded bg-light">
@@ -51,7 +50,7 @@
                         Quarterly
                     </option>
                     <option value="month"
-                        {{ $periods->keys()->first() && in_array(strtolower($periods->keys()->first()), $months) ? 'selected' : '' }}>
+                        {{ $periods->keys()->first() && str_starts_with($periods->keys()->first(), 'M') ? 'selected' : '' }}>
                         Monthly
                     </option>
                 </select>
@@ -85,23 +84,23 @@
             <div class="monthly-input m-{{ $lineItem->LineItemID }}" style="display: none; margin-bottom: 1.5rem;">
                 <label class="form-label d-block mb-2">Monthly Breakdown</label>
                 <div class="d-flex flex-wrap gap-2 mb-2">
-                    @foreach ($months as $month)
+                    @for ($m = 1; $m <= 12; $m++)
                         <div class="text-center" style="width: 70px;">
-                            <strong>{{ strtoupper($month) }}</strong>
+                            <strong>M{{ $m }}</strong>
                         </div>
-                    @endforeach
+                    @endfor
                 </div>
                 <div class="d-flex flex-wrap gap-2">
-                    @foreach ($months as $month)
+                    @for ($m = 1; $m <= 12; $m++)
                         <input
                             type="number"
-                            name="{{ $month }}_{{ $lineItem->LineItemID }}"
-                            value="{{ $periods[strtoupper($month)]->ScheduleQTY ?? 0 }}"
+                            name="periods[M{{ $m }}_{{ $lineItem->LineItemID }}]"
+                            value="{{ $periods['M' . $m]->ScheduleQTY ?? 0 }}"
                             class="form-control text-center"
                             style="width: 70px;"
                             min="0"
                             placeholder="0">
-                    @endforeach
+                    @endfor
                 </div>
             </div>
 

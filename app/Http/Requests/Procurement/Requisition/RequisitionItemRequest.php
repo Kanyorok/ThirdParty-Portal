@@ -20,7 +20,7 @@ class RequisitionItemRequest extends FormRequest
             'RequisitionID' => ['required', 'integer'],
             'Type' => ['required', 'string'],
             'Item' => ['required', 'integer'],
-            'Quantity' => ['required', 'numeric'],
+            'Quantity' => ['required', 'numeric', 'min:1'],
             'Urgency' => ['required', 'integer'],
             'UOM' => ['required', 'integer'],
             'EstimatedPrice' => ['nullable', 'numeric'],
