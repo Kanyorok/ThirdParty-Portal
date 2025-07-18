@@ -29,4 +29,6 @@ return [
     'unauthorized_view'         => 'Unauthorized: You can only view your own categories.',
     'unauthorized_update'       => 'Unauthorized: You can only update your own categories.',
     'unauthorized_delete'       => 'Unauthorized: You can only delete your own categories.',
+    'user_exists'               => 'User with this ID exists',
+    'not_authenticated'         => 'You are Not Logged On',
 ];

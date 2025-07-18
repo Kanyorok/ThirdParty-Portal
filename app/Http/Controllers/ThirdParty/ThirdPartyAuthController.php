@@ -8,7 +8,7 @@ use App\Http\Requests\ThirdParty\RegisterThirdPartyUserRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Str;
+use App\Http\Resources\ThirdParty\ThirdPartyUserResource;
 use Illuminate\Support\Facades\Auth;
 
 class ThirdPartyAuthController extends Controller
@@ -18,15 +18,16 @@ class ThirdPartyAuthController extends Controller
         $data = $request->validated();
 
         $userData = [
-            'UserID' => Str::uuid(),
-            'FirstName' => $data['firstName'],
-            'LastName' => $data['lastName'],
-            'Email' => $data['email'],
-            'Phone' => $data['phone'],
-            'Password' => Hash::make($data['password']),
-            'ThirdPartyId' => $data['thirdPartyId'],
+            'UserID' => $data['UserID'],
+            'FirstName' => $data['FirstName'],
+            'LastName' => $data['LastName'],
+            'Email' => $data['Email'],
+            'Phone' => $data['Phone'],
+            'Password' => Hash::make($data['Password']),
+            'ThirdPartyId' => $data['ThirdPartyId'],
             'CreatedBy' => Auth::id(),
             'ModifiedBy' =>  Auth::id(),
+            'ModifiedOn'    => now(),
         ];
 
         $user = ThirdPartyUser::create($userData);
@@ -34,7 +35,7 @@ class ThirdPartyAuthController extends Controller
         $token = $user->createToken('api')->plainTextToken;
 
         return response()->json([
-            'user' => $user,
+            'user' => new ThirdPartyUserResource($user),
             'token' => $token,
         ]);
     }
@@ -44,6 +45,7 @@ class ThirdPartyAuthController extends Controller
     {
         $user = ThirdPartyUser::where('Email', $request->email)->first();
 
+        // thirdpartyuser exists and pwd okay?
         if (! $user || ! Hash::check($request->password, $user->Password)) {
             throw ValidationException::withMessages(
                 [
@@ -51,7 +53,7 @@ class ThirdPartyAuthController extends Controller
                 ]
             );
         }
-
+        // thirdparty associated with this user approved?
         if (! $user->isApproved()) {
             return response()->json(
                 [
@@ -61,6 +63,9 @@ class ThirdPartyAuthController extends Controller
             );
         }
 
+        // new token for the authenticated third party user
+        $token = $user->createToken('api')->plainTextToken;
+
         return response()->json([
             'user' => $user,
             'token' => $user->createToken('api')->plainTextToken,
@@ -69,7 +74,12 @@ class ThirdPartyAuthController extends Controller
 
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
-        return response()->json(['message' => __('auth.logout_successful')]);
+        // user authenticated?
+        // if yes, delete the current access token
+        if (Auth::guard('sanctum')->check()) {
+            $request->user()->currentAccessToken()->delete();
+            return response()->json(['message' => __('auth.logout_successful')]);
+        }
+        return response()->json(['message' => __('auth.not_authenticated')], 401);
     }
 }
