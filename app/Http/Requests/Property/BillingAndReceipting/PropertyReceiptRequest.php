@@ -24,19 +24,19 @@ class PropertyReceiptRequest extends FormRequest
     {
         return [
             'InvoiceID' => 'required',
-            'BillingMonth' => 'required',
+            'BillingMonth' => 'required|date',
             'InvoiceDate' => 'required',
             'RentAmount' => 'required',
-            'ServicesCharge' => 'required',
-            'OtherCharges' => 'required',
-            'TotalDue' => 'required',
-            'AmountPaid' => 'required',
-            'Balance' => 'required',
-            'PaymentDate' => 'required',
-            'Amount' => 'required',
-            'PaymentMethod' => 'required',
-            'ReferenceNo' => 'required',
-            'Remarks' => 'required',
+            'ServicesCharge'=>'required',
+            'OtherCharges'=>'required',
+            'TotalDue' => 'required|numeric',
+            'AmountPaid' => 'required|numeric',
+            'Balance' => 'required|numeric',
+            'PaymentDate' => 'required|date',
+            'Amount' => 'required|numeric',
+            'PaymentMethod' => 'required|string|max:100',
+            'ReferenceNo' => 'required|string|max:100',
+            'Remarks' => 'required|string|max:100',
         ];
     }
 }

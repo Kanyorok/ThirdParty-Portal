@@ -6,6 +6,8 @@ use App\Enums\Core\PermissionEnum;
 use App\Enums\Marketing\PlannerStatus;
 use App\Models\Auth\User;
 use App\Models\CRM\MarketingPlanner;
+use App\Models\Auth\ModelRole;
+
 
 class MarketingPlannerPolicy
 {
@@ -63,12 +65,20 @@ class MarketingPlannerPolicy
 
 
     /**
-     * Determine whether the user can delete the model.
+     * Determine whether the user can approve the model.
      */
-    public function approve(User $user, MarketingPlanner $marketingPlanner): bool
-    {
-        return $user->can(PermissionEnum::MarketingPlannerApproval->value);
+  public function approve(User $user, MarketingPlanner $marketingPlanner): bool
+{
+    $branchId = session('LoginBranchId');
+
+    $hasPermission = $user->hasPermissionTo('marketingManager');
+
+    if (!$hasPermission) {
+        return false;
     }
+
+    return $user->can(PermissionEnum::MarketingPlannerApproval->value);
+}
 
 
     /**
