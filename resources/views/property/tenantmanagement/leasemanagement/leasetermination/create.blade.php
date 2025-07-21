@@ -58,14 +58,11 @@
                         </div>
                     </div>
 
-                    <!-- File Upload -->
+                    <!-- Document Upload -->
                     <div class="mb-3">
-                        <label class="form-label">Upload Clearance Document (optional)</label>
-                        <input type="file" name="ClearanceDocument"
-                               class="form-control @error('ClearanceDocument') is-invalid @enderror">
-                        @error('ClearanceDocument')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                        <label class="form-label">Upload Supporting Documents</label>
+                        <input type="file" name="Document" class="form-control" multiple>
+                        <small class="text-muted">e.g. Lease Document, Contract Termination Documents</small>
                     </div>
 
                     <!-- Submit Button -->

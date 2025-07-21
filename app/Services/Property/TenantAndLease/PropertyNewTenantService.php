@@ -47,8 +47,6 @@ class PropertyNewTenantService
             'ModifiedBy' => $user->Id,
         ]);
 
-        //$newtenant->documents(), $user
-
         if ($document) {
         $newtenant->newDocument(
             ModulesEnum::Property,
