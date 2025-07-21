@@ -119,6 +119,16 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'PaymentMethod', 'Description' => 'Bank', 'Value' => 'B'],
             ['CodeID' => 'PaymentMethod', 'Description' => 'Cash', 'Value' => 'C'],
 
+            // Property MaintenanceAndIssues
+            ['CodeID' => 'AssignmentType', 'Description' => 'Internal Technician'],
+            ['CodeID' => 'AssignmentType', 'Description' => 'Prequalified Vendor'],
+
+            // Priority Levels
+            ['CodeID' => 'PriorityLevel', 'Description' => 'Low'],
+            ['CodeID' => 'PriorityLevel', 'Description' => 'Medium'],
+            ['CodeID' => 'PriorityLevel', 'Description' => 'High'],
+            ['CodeID' => 'PriorityLevel', 'Description' => 'Critical'],
+
             // StaticListsService entries
             ['CodeID' => StaticListsService::MarketingModes, 'Description' => 'Outdoor Marketing', 'DisplayOrder' => 1],
             ['CodeID' => StaticListsService::MarketingModes, 'Description' => 'Trade Shows', 'DisplayOrder' => 2],

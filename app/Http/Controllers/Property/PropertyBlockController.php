@@ -43,72 +43,149 @@ class PropertyBlockController extends Controller
            return redirect()->route('addblock.index')->with('success','property block created successfully');
     }
 
-    public function edit($id)
-    {
-        //Check if user has permission to edit tender categories
-        //$this->authorize(PermissionEnum::PropertyCategoryUpdate, CategoryMaster::class);
-        $block = PropertyBlock::findOrFail($id);
-        $properties = PropertyRegistry::all();
+    @extends('layouts.app')
+@section('title', 'Edit Assignment Request')
 
-        return view('property.propertyregistry.structuralmapping.addblock.edit', compact('block', 'properties'));
-    }
+@section('content')
+<div class="container mt-4">
+    <h4 class="fw-bold mb-3">🛠️ Edit Technician / Vendor Assignment</h4>
 
-    public function update(Request $request, $id)
-    {
-        //$this->authorize(PermissionEnum::PropertyCategoryUpdate, CategoryMaster::class);
-        $validated = $request->validate([
-            'PropertyID' => 'required|exists:t_PropertyRegistry,Id',
-            'BlockName' => 'required|string|max:50',
-            'Description' => 'required|string|max:100',
+    <form action="{{ route('assignrequest.update', $assignrequest->Id) }}" method="POST">
+        @csrf
+        @method('PUT')
 
-        ]);
+        <div class="card shadow">
+            <div class="card-header bg-light fw-bold">🔧 Assignment Details</div>
+            <div class="card-body">
 
-        DB::beginTransaction();
+                <!-- Maintenance Request Display -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Maintenance Request Number</label>
+                        <input type="text" class="form-control" value="{{ $assignrequest->maintenancerequest->RequestNumber }}" disabled>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Assignment Date</label>
+                        <input type="date" class="form-control" name="AssignmentDate" value="{{ old('AssignmentDate', $assignrequest->AssignmentDate) }}" required>
+                    </div>
+                </div>
 
-        try {
-            $block = PropertyBlock::findOrFail($id);
+                <!-- Auto-filled Info -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Property</label>
+                        <input type="text" class="form-control" value="{{ $assignrequest->property->PropertyName ?? '' }}" readonly>
+                        <input type="hidden" name="Property" value="{{ old('Property', $assignrequest->Property) }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Block</label>
+                        <input type="text" class="form-control" value="{{ $assignrequest->block->BlockName ?? '' }}" readonly>
+                        <input type="hidden" name="Block" value="{{ old('Block', $assignrequest->Block) }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Floor</label>
+                        <input type="text" class="form-control" value="{{ $assignrequest->floor->FloorLabel ?? '' }}" readonly>
+                        <input type="hidden" name="Floor" value="{{ old('Floor', $assignrequest->Floor) }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Unit</label>
+                        <input type="text" class="form-control" value="{{ $assignrequest->unit->UnitCode ?? '' }}" readonly>
+                        <input type="hidden" name="Unit" value="{{ old('Unit', $assignrequest->Unit) }}">
+                    </div>
+                </div>
 
-            $block->update([
-                'PropertyID' => $validated['PropertyID'],
-                'BlockName' => $validated['BlockName'],
-                'Description' => $validated['Description'],
-                'CreatedBy' => Auth::Id(),
-                'ModifiedBy' => Auth::Id(),
-            ]);
+                <!-- Assignment Type -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Assign To</label>
+                        <select class="form-select" name="AssignmentType" id="assignmentTypeSelect" required>
+                            <option value="#">--Select a technician--</option>
+                            @foreach ($assignmentTypes as $assignmentType)
+                                <option value="{{ $assignmentType->ID }}" {{ $assignmentType->ID == old('AssignmentType', $assignrequest->AssignmentType) ? 'selected' : '' }}>{{ $assignmentType->Description }}</option>
+                            @endforeach
+                        </select>
+                    </div>
 
-            DB::commit();
-            activity()
-                ->performedOn($block)
-                ->causedBy(Auth::user())
-                ->withProperties(['action' => 'update'])
-                ->log('Updated Block');
+                    <div class="col-md-4">
+                        <label class="form-label">Internal Technician</label>
+                        <select class="form-select" name="InternalTechnician" id="internalTechnicianSelect">
+                            <option value="#">--Select a technician--</option>
+                            @foreach ($employees as $employee)
+                                <option value="{{ $employee->Id }}" {{ $employee->Id == old('InternalTechnician', $assignrequest->InternalTechnician) ? 'selected' : '' }}>{{ $employee->JobTitle }}</option>
+                            @endforeach
+                        </select>
+                    </div>
 
-            return redirect()->route('addblock.index')->with('success', 'Block updated successfully');
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            Log::error('Failed to Update property block:' . $th->getMessage());
+                    <div class="col-md-4">
+                        <label class="form-label">Prequalified Vendor</label>
+                        <select class="form-select" name="PrequalifiedVendor" id="vendorSelect">
+                            <option value="#">--Select a vendor--</option>
+                            @foreach ($suppliers as $supplier)
+                                <option value="{{ $supplier->Id }}" {{ $supplier->Id == old('PrequalifiedVendor', $assignrequest->PrequalifiedVendor) ? 'selected' : '' }}>{{ $supplier->SupplierName }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
 
-            return back()->withErrors(['error' => 'Failed to update property block'])->withInput();
+                <!-- Scheduling -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Expected Start Date</label>
+                        <input type="date" class="form-control" name="ExpectedStartDate" value="{{ old('ExpectedStartDate', $assignrequest->ExpectedStartDate) }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Expected Completion</label>
+                        <input type="date" class="form-control" name="ExpectedCompletion" value="{{ old('ExpectedCompletion', $assignrequest->ExpectedCompletion) }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Priority Level</label>
+                        <select class="form-select" name="PriorityLevel" required>
+                            <option value="#">--Select Priority Level--</option>
+                            @foreach ($priorityLevels as $priorityLevel)
+                                <option value="{{ $priorityLevel->ID }}" {{ $priorityLevel->ID == old('PriorityLevel', $assignrequest->PriorityLevel) ? 'selected' : '' }}>{{ $priorityLevel->Description }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Instructions -->
+                <div class="mb-3">
+                    <label class="form-label">Instructions / Notes</label>
+                    <textarea class="form-control" rows="2" name="InstructionNotes">{{ old('InstructionNotes', $assignrequest->InstructionNotes) }}</textarea>
+                </div>
+
+                <!-- Submit -->
+                <div class="text-end">
+                    <button type="submit" class="btn btn-success">💾 Update Assignment</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    const assignmentType = document.getElementById('assignmentTypeSelect');
+    const internalTechnician = document.getElementById('internalTechnicianSelect');
+    const vendor = document.getElementById('vendorSelect');
+
+    function toggleAssignmentFields() {
+        const selectedText = assignmentType.options[assignmentType.selectedIndex].text.trim();
+
+        if (selectedText === 'Internal Technician') {
+            internalTechnician.disabled = false;
+            vendor.disabled = true;
+            vendor.selectedIndex = 0;
+        } else if (selectedText === 'Prequalified Vendor') {
+            internalTechnician.disabled = true;
+            vendor.disabled = false;
+            internalTechnician.selectedIndex = 0;
+        } else {
+            internalTechnician.disabled = true;
+            vendor.disabled = true;
         }
     }
 
-    public function destroy($id)
-    {
-        //Check if user has permission to delete property categories
-        //$this->authorize(PermissionEnum::PropertyCategoryDelete, CategoryMaster::class);
-        try {
-            $block = PropertyBlock::findOrFail($id);
-            $block->delete();
-
-            return redirect()->route('addblock.index')
-                ->with('success', 'Property Block Deleted Successfully!');
-        } catch (\Throwable $th) {
-            // Log the error for debugging
-            Log::error('Error deleting property block: ' . $th->getMessage());
-            return redirect()->back()
-                ->withErrors(['error' => 'Failed to delete Property Block. Please try again.'])
-                ->withInput();
-        }
-    }
-
-}
+    document.addEventListener('DOMContentLoaded', toggleAssignmentFields);
+    assignmentType.addEventListener('change', toggleAssignmentFields);
+</script>
+@endsection

@@ -11,11 +11,11 @@
     <thead class="table-light">
       <tr>
         <th>#</th>
+        <th>Request Number</th>
           <th>Property</th>
           <th>Block</th>
           <th>Floor</th>
           <th>Unit</th>
-          <th>Issue Description</th>
           <th>Assignment Date</th>
           <th>Assignment Type</th>
           <th>Internal Technician</th>
@@ -34,26 +34,32 @@
       <!-- Assignment to Internal Staff -->
       <tr>
           <td>{{ $loop->iteration }}</td>
-          <td>{{ $assignment->Property }}</td>
-          <td>{{ $assignment->Block }}</td>
-          <td>{{ $assignment->Floor }}</td>
-          <td>{{ $assignment->Unit }}</td>
-          <td>{{ $assignment->IssueDescription }}</td>
+          <td>{{  $assignment->request->RequestNumber ?? 'N/A' }}</td>
+          <td>{{ $assignment->Property ?? 'N/A' }}</td>
+          <td>{{ $assignment->Block ?? 'N/A' }}</td>
+          <td>{{ $assignment->Floor ?? 'N/A' }}</td>
+          <td>{{ $assignment->Unit ?? 'N/A' }}</td>
           <td>{{ $assignment->AssignmentDate }}</td>
-          <td>{{ $assignment->AssignmentType }}</td>
-          <td>{{ $assignment->InternalTechnician }}</td>
-          <td>{{ $assignment->PrequalifiedVendor }}</td>
+          <td>{{ $assignment->assignmentType->Description }}</td>
+          <td>{{ $assignment->internalTechnician->JobTitle ?? 'N/A' }}</td>
+          <td>{{ $assignment->prequalifiedVendor->SupplierName ?? 'N/A' }}</td>
           <td>{{ $assignment->ExpectedStartDate }}</td>
           <td>{{ $assignment->ExpectedCompletion }}</td>
-          <td>{{ $assignment->PriorityLevel }}</td>
+          <td>{{ $assignment->priorityLevel->Description ?? 'N/A' }}</td>
           <td>{{ $assignment->InstructionNotes }}</td>
         <td><span class="badge bg-warning text-dark">In Progress</span></td>
         <td><span class="badge bg-danger">High</span></td>
         <td>
-            <a href="{{ route('assignrequest.show', $assignment->id) }}" class="btn btn-sm btn-outline-primary">👁
+            <a href="{{ route('assignrequest.show', $assignment->Id) }}" class="btn btn-sm btn-outline-primary">👁
                 View</a>
           <button class="btn btn-sm btn-outline-success">✔ Complete</button>
-        </td>
+        <a href="{{ route('assignrequest.edit', $assignment->Id) }}" class="btn btn-info btn-sm">Edit</a>
+          <form action="{{ route('assignrequest.destroy', $assignment->Id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this lease?');">
+              @csrf
+              @method('DELETE')
+              <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+          </form>
+      </td>
       </tr>
     </tbody>
       @endforeach
