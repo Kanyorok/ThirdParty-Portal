@@ -134,7 +134,7 @@
                                         <td>
                                             <input class="form-control form-control-sm text-end percent-change"
                                                    style="width: 100px; padding: 2px 5px;"
-                                                   value="{{ $item->PercentChange ?? '0.00%' }}"
+                                                   value="{{ $item->PercentageChange ?? '0.00%' }}"
                                                    readonly/>
                                         </td>
                                     </tr>
