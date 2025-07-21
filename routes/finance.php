@@ -16,6 +16,7 @@ use App\Http\Controllers\Finance\CreditManagementController;
 use App\Http\Controllers\Finance\CreditNoteController;
 use App\Http\Controllers\Finance\CustomerMasterController;
 use App\Http\Controllers\Finance\CustomerStatementController;
+use App\Http\Controllers\Finance\FinanceTaxTypeController;
 use App\Http\Controllers\Finance\GLDynamicController;
 use App\Http\Controllers\Finance\GLMappingController;
 use App\Http\Controllers\Finance\HierarchyViewerController;
@@ -101,6 +102,7 @@ Route::namespace('Finance')->prefix('finance')->group(function () {
     Route::resource('taxrule', TaxRuleController::class);
     Route::resource('taxsummaryreport', TaxSummaryReportController::class);
     Route::resource('trialbalance', TrialBalanceController::class);
+    Route::resource('taxtypes', FinanceTaxTypeController::class);
 
     Route::resource('hierachyviewer', HierarchyViewerController::class);
     Route::resource('segments', COASegmentController::class);

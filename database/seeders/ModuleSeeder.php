@@ -613,6 +613,7 @@ class ModuleSeeder extends Seeder
 
 
             ['ModuleID' => 1104000, 'Name' => 'Tax Management', 'Icon' => '<i class="fas fa-exchange-alt"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1100000],
+            ['ModuleID' => 1104050, 'Name' => 'Tax Types', 'Icon' => null, 'Description' => '', 'Route' => 'taxtypes.index', 'ParentID' => 1104000],
             ['ModuleID' => 1104100, 'Name' => 'Tax Rule Configuration', 'Icon' => null, 'Description' => '', 'Route' => 'taxruleconfig.index', 'ParentID' => 1104000],
             ['ModuleID' => 1104200, 'Name' => 'Jurisdiction Setup', 'Icon' => null, 'Description' => '', 'Route' => 'taxjurisdiction.index', 'ParentID' => 1104000],
             ['ModuleID' => 1104300, 'Name' => 'Tax Summary Report', 'Icon' => null, 'Description' => '', 'Route' => 'taxsummaryreport.index', 'ParentID' => 1104000],
