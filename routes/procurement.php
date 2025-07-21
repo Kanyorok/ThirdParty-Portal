@@ -460,7 +460,7 @@ Route::post('/procurement/rfqcriteriasetup/evaluations/save', [RFQSectionControl
 Route::get('/sections/info', [RFQSettingSectionController::class,'index'])->name('rfqsettingsections.index');
 Route::get('/procurement/rfq/criterias/section/{id}', [RFQSettingCriteriaController::class, 'show'])->name('rfqsettingcriterias.show');
 Route::post('/', [RFQSettingSectionController::class, 'store'])->name('rfqsettingsections.store');
-Route::post('/', [RFQSettingCriteriaController::class, 'store'])->name('rfqsettingcriterias.store');
+Route::post('/criteria', [RFQSettingCriteriaController::class, 'store'])->name('rfqsettingcriterias.store');
 Route::get('/sections/{id}', [RFQSettingSectionController::class, 'show'])->name('rfqsettingsections.show');
 
 
