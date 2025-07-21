@@ -61,10 +61,10 @@ public function documentUploadForm($claimId)
 {
     $claim = DB::table('t_BancassuranceClaims')->where('Id', $claimId)->first();
 
-$documentTypes = DB::table('t_CodeDetails')
-    ->where('CodeID', 'CLAIM_DOCUMENT_TYPE')
-    ->pluck('Description', 'Description')
-    ->toArray();
+    $documentTypes = DB::table('t_CodeDetails')
+        ->where('CodeID', 'CLAIM_DOCUMENT_TYPE')
+        ->pluck('Description', 'Description')
+        ->toArray();
 
     $documents = DB::table('t_BancassuranceClaimDocuments')
         ->where('ClaimID', $claimId)

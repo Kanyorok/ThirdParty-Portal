@@ -110,6 +110,7 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'TerminationReason', 'Description' => 'Non Payment'],
             ['CodeID' => 'TerminationReason', 'Description' => 'Other'],
 
+
             // Procurement Method
             ['CodeID' => 'ProcurementMethod', 'Description' => 'RFQ'],
             ['CodeID' => 'ProcurementMethod', 'Description' => 'Tender'],
