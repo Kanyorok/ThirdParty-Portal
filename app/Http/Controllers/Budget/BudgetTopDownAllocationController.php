@@ -47,34 +47,6 @@ class BudgetTopDownAllocationController extends Controller
             'BudgetID' => 'required|exists:t_Budgets,Id',
             'BranchID' => 'required|exists:t_Branches,Id',
         ]);
-
-        // //Check if its being edited
-        // $isBeingEdited = BudgetGLMasterAllocations::where('BudgetID', $validated['BudgetID'])
-        //     ->where('BranchID', $validated['BranchID'])
-        //     ->where('IsBeingEdited', true)
-        //     ->exists();
-        // if ($isBeingEdited) {//
-        //     //get user name who is editing
-        //     $editingUser = BudgetGLMasterAllocations::where('BudgetID', $validated['BudgetID'])
-        //         ->where('BranchID', $validated['BranchID'])
-        //         ->where('IsBeingEdited', true)
-        //         ->value('IsBeingEditedBy');
-        //     // Get the name of the user who is currently editing
-        //     $editingUserName = User::find($editingUser)->name ?? 'Unknown User';
-        //     // Redirect back with an error message
-        //     return redirect()->back()->with('error', "This budget allocation is currently being edited by $editingUserName. Please try again later.");
-        // }else//Set the edit true
-        // {
-        //     // Set the IsBeingEdited flag to true for the current user
-        //     BudgetGLMasterAllocations::where('BudgetID', $validated['BudgetID'])
-        //         ->where('BranchID', $validated['BranchID'])
-        //         ->update([
-        //             'IsBeingEdited' => true,
-        //             'IsBeingEditedBy' => Auth::id(),
-        //             'ModifiedOn' => Carbon::now(),
-        //         ]);
-        // }
-
         $budgets = Budget::all();
         $branches = Branch::all();
 
@@ -120,9 +92,14 @@ class BudgetTopDownAllocationController extends Controller
                     ]);
             }
 
-            $glsMaster = BudgetGLMasterAllocations::where('BudgetID', $budgetId)
-                ->where('BranchID', $branchId)
-                ->get();
+//            $glsMaster = BudgetGLMasterAllocations::where('BudgetID', $budgetId)
+//                ->where('BranchID', $branchId)
+//                ->get();
+
+            $glsMaster = collect(DB::select("EXEC GetBudgetWorkspace :budgetId, :branchId", [
+                'budgetId' => $budgetId,
+                'branchId' => $branchId
+            ]));
             $isExisting = true;
             return view('budgetandanalytics.budgetworkspace.topdown.exist', compact(
                 'budgets',

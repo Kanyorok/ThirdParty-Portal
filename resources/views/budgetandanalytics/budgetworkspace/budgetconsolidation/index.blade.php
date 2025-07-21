@@ -50,7 +50,8 @@
                             <thead class="table-light">
                                 <tr>
                                     <th class="text-start ps-3">{{ $subTypeName }}</th>
-                                    <th class="bg-warning-subtle">Prev. Year</th>
+{{--                                    <th class="bg-warning-subtle">Prev. Year</th>--}}
+                                    <th class="bg-warning-subtle">Rate</th>
                                     @foreach($months as $m)
                                         <th>Month {{ $m }}</th>
                                     @endforeach
@@ -75,7 +76,8 @@
                                 @endphp
                                 <tr>
                                     <td class="text-start ps-3">{{ $entry['budgetLineName'] }}</td>
-                                    <td class="bg-warning-subtle">{{ number_format($prev, 2) }}</td>
+{{--                                    <td class="bg-warning-subtle">{{ number_format($prev, 2) }}</td>--}}
+                                    <td class="bg-warning-subtle">{{ number_format($entry['rate'], 2) }}%</td>
                                     @foreach($months as $m)
                                         <td>
                                             @if ($entry['allocationType'] === 'monthly')

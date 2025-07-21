@@ -8,6 +8,7 @@ use App\Models\Budget\BudgetGLAccount;
 use App\Models\Budget\BudgetLine;
 use App\Models\Budget\BudgetLineCategories;
 use App\Models\Budget\BudgetLinesGLAccount;
+use App\Models\Budget\BudgetProduct;
 use App\Models\Budget\BudgetProductType;
 use App\Models\Core\CodeDetail;
 use Illuminate\Http\Request;
@@ -52,7 +53,8 @@ class BudgetLineMappingController extends Controller
         $budgetCategories=BudgetLineCategories::all();
 
         //Fetch Product type
-        $productTypes=BudgetProductType::select('Id','Name')->get();
+        //$productTypes=BudgetProductType::select('Id','Name')->get();
+        $productTypes=BudgetProduct::select('Id','Description')->get();
 
         //Fetch GL Account Types
         $glAccountTypes=CodeDetail::select('Id','CodeID','Value','Description')->where('CodeID','GLAccountType')->get();
@@ -158,7 +160,7 @@ class BudgetLineMappingController extends Controller
         $budgetLine = BudgetLine::findOrFail($id);
         $budgetCategories = BudgetLineCategories::all();
         $gls = BudgetGLAccount::select('Id', 'Description')->get();
-        $productTypes = BudgetProductType::select('Id', 'Name')->get();
+        $productTypes = BudgetProduct::select('Id', 'Description')->get();
         $departments = \App\Models\HRM\Department::all();
         $glAccountTypes = \App\Models\Core\CodeDetail::select('Id','CodeID','Value','Description')->where('CodeID','GLAccountType')->get();
         $glSubtype = \App\Models\Budget\BudgetGLAccountSubType::select('Id','GLAccountTypeValue','GLAccountSubTypeName')->get();
@@ -168,7 +170,7 @@ class BudgetLineMappingController extends Controller
             ->pluck('BudgetGLAccountID')
             ->toArray();
         // Get currently selected Product Types for this budget line
-        $selectedProductTypes = \App\Models\Budget\BudgetLineProductTypes::where('BudgetLineId', $budgetLine->Id)
+        $selectedProductTypes = BudgetLineProductTypes::where('BudgetLineId', $budgetLine->Id)
             ->pluck('ProductTypeId')
             ->toArray();
 
@@ -298,7 +300,7 @@ class BudgetLineMappingController extends Controller
         $budgetLine = BudgetLine::findOrFail($id);
         $budgetLineName=$budgetLine->LineName;
 
-        $products=BudgetLineProductTypes::where('BudgetLineId', $id)->with('products')
+        $products=BudgetLineProductTypes::where('BudgetLineId', $id)->with('product')
             ->get();
 
         // Eager load productTypes for the given budget line

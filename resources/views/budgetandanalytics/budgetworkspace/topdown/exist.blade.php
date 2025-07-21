@@ -128,13 +128,13 @@
                                         <td>
                                             <input class="form-control form-control-sm text-end"
                                                    style="width: 120px; padding: 2px 5px;"
-                                                   value="{{ $item->ActualsDec2024 ?? 4000000 }}"
+                                                   value="{{ $item->Actuals ?? 4000000 }}"
                                                    readonly/>
                                         </td>
                                         <td>
                                             <input class="form-control form-control-sm text-end percent-change"
                                                    style="width: 100px; padding: 2px 5px;"
-                                                   value="{{ $item->PercentChange ?? '0.00%' }}"
+                                                   value="{{ $item->PercentageChange ?? '0.00%' }}"
                                                    readonly/>
                                         </td>
                                     </tr>
@@ -423,7 +423,4 @@
         }
     </style>
 
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 @endsection
