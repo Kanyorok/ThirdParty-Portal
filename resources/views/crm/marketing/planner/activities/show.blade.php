@@ -6,7 +6,7 @@
     <ul class="list-group list-group-flush">
         <li class="list-group-item">Name: <span class="float-end">{{ $activity->Name }}</span></li>
         <li class="list-group-item">Location: <span class="float-end">{{ $activity->Location }}</span></li>
-        <li class="list-group-item">Branch: <span class="float-end">{{ $activity->branch?->BranchName }}</span></li>
+        <!--<li class="list-group-item">Branch: <span class="float-end">{{ $activity->branch?->BranchName }}</span></li>-->
         <li class="list-group-item">Start: <span
                 class="float-end">{{ $activity->StartOn?->format('M d, Y H:i') }}</span></li>
         <li class="list-group-item">End: <span class="float-end">{{ $activity->EndOn?->format('M d, Y H:i') }}</span>

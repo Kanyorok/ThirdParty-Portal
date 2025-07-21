@@ -1,6 +1,6 @@
 <?php
 
-
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Procurement\ApprovalSetupController;
 use App\Http\Controllers\Procurement\AwardsController;
 use App\Http\Controllers\Procurement\BidEvaluationController;
@@ -57,6 +57,7 @@ use App\Http\Controllers\Procurement\RFQSettingCriteriaController;
 use App\Http\Controllers\Procurement\RFQSettingSectionController;
 use App\Http\Controllers\Procurement\SasraAuditorController;
 use App\Http\Controllers\Procurement\SectionController;
+use App\Http\Controllers\Procurement\RFQSettingController;
 use App\Http\Controllers\Procurement\SubmitForApprovalController;
 use App\Http\Controllers\Procurement\SupplierController;
 use App\Http\Controllers\Procurement\SupplierListingController;
@@ -75,7 +76,7 @@ use App\Http\Controllers\Procurement\TenderResponseController;
 use App\Http\Controllers\Procurement\TenderSubmissionController;
 use App\Http\Controllers\Procurement\TenderTypeController;
 use App\Http\Controllers\Procurement\TimelineController;
-use Illuminate\Support\Facades\Route;
+
 
 Route::namespace('Procurement')->prefix('procurement')->group(function () {
 
@@ -458,8 +459,9 @@ Route::prefix('procurement/rfq')->group(function () {
 Route::post('/procurement/rfqcriteriasetup/evaluations/save', [RFQSectionController::class, 'saveEvaluation'])->name('rfqcriteriasetup.evaluations.save');
 Route::get('/sections/info', [RFQSettingSectionController::class,'index'])->name('rfqsettingsections.index');
 Route::get('/procurement/rfq/criterias/section/{id}', [RFQSettingCriteriaController::class, 'show'])->name('rfqsettingcriterias.show');
-Route::post('/', [RFQSettingSectionController::class, 'store'])->name('rfqsettingsections.store');
-Route::post('/', [RFQSettingCriteriaController::class, 'store'])->name('rfqsettingcriterias.store');
+Route::post('/sectionsetting', [RFQSettingSectionController::class, 'store'])->name('rfqsettingsections.store');
+Route::post('/criteria', [RFQSettingCriteriaController::class, 'store'])->name('rfqsettingcriterias.store');
+Route::get('/sections/{id}', [RFQSettingSectionController::class, 'show'])->name('rfqsettingsections.show');
 
 
 Route::prefix('procurement/rfq')->group(function () {
@@ -474,7 +476,45 @@ Route::get('/procurement/committee-references/{type}', [TenderCommitteeControlle
 Route::get('procurement/tendercommittee/{id}/{type}', [TenderCommitteeController::class, 'show'])->name('tendercommittee.show');
 Route::get('/procurement/rfq-committee-member/{rfqId}', [RFQEvaluationController::class, 'getCommitteeMemberInfo']);
 
-
+//// RFQ Criteria Setup
+//Route::prefix('procurement/rfq')->group(function () {
+//    // Routes for RFQSettingSectionController
+//    Route::get('/sections/info', [RFQSettingSectionController::class, 'index'])->name('rfqsettingsections.index');
+//    Route::post('/sections', [RFQSettingSectionController::class, 'store'])->name('rfqsettingsections.store');
+//    Route::get('/sections/{id}/edit', [RFQSettingSectionController::class, 'edit'])->name('rfqsettingsections.edit');
+//    Route::put('/sections/{id}', [RFQSettingSectionController::class, 'update'])->name('rfqsettingsections.update');
+//    Route::delete('/sections/{id}', [RFQSettingSectionController::class, 'destroy'])->name('rfqsettingsections.destroy');
+//
+//    // Routes for RFQSettingCriteriaController
+//    Route::get('/criterias/section/{id}', [RFQSettingCriteriaController::class, 'show'])->name('rfqsettingcriterias.show');
+//    Route::post('/procurement/criterias', [RFQSettingCriteriaController::class, 'store'])->name('rfqsettingcriterias.store');
+//    Route::get('/criterias/{id}/edit', [RFQSettingCriteriaController::class, 'edit'])->name('rfqsettingcriterias.edit');
+//    Route::put('/procurement/criterias/{id}', [RFQSettingCriteriaController::class, 'update'])->name('rfqsettingcriterias.update');
+//    Route::delete('/criterias/{id}', [RFQSettingCriteriaController::class, 'destroy'])->name('rfqsettingcriterias.destroy');
+//
+//    // Routes for RFQSectionController
+//    Route::get('/rfqcriteriasetup/evaluations', [RFQSectionController::class, 'evaluationSetup'])->name('rfqcriteriasetup.evaluations');
+//    Route::post('/rfqcriteriasetup/evaluations/save', [RFQSectionController::class, 'saveEvaluation'])->name('rfqcriteriasetup.evaluations.save');
+//    Route::get('/sections/{id}/edit', [RFQSectionController::class, 'edit'])->name('rfqsections.edit');
+//    Route::put('/sections/{id}', [RFQSectionController::class, 'update'])->name('rfqsections.update');
+//    Route::delete('/sections/{id}', [RFQSectionController::class, 'destroy'])->name('rfqsections.destroy');
+//});
+//
+//Route::prefix('procurement/rfq')->group(function () {
+//    // Routes for RFQCriteriaController
+//    Route::get('/criterias/setup/{rfqId}', [RFQCriteriaController::class, 'show'])->name('rfqcriterias.show');
+//    Route::post('/criterias', [RFQCriteriaController::class, 'store'])->name('rfqcriterias.store');
+//    Route::get('/criterias/{id}/edit', [RFQCriteriaController::class, 'edit'])->name('rfqcriterias.edit');
+//    Route::put('/criterias/{id}', [RFQCriteriaController::class, 'update'])->name('rfqcriterias.update');
+//    Route::delete('/criterias/{id}', [RFQCriteriaController::class, 'destroy'])->name('rfqcriterias.destroy');
+//
+//    // Routes for RFQSectionController (already defined above, no duplicates needed)
+//});
+//
+//// Additional procurement routes
+//Route::get('/procurement/committee-references/{type}', [TenderCommitteeController::class, 'getReferences']);
+//Route::get('/procurement/tendercommittee/{id}/{type}', [TenderCommitteeController::class, 'show'])->name('tendercommittee.show');
+//Route::get('/procurement/rfq-committee-member/{rfqId}', [RFQEvaluationController::class, 'getCommitteeMemberInfo']);
 
 
 

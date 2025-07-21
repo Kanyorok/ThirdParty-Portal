@@ -21,7 +21,10 @@ class AuthenticatedSessionController extends Controller
     public function create(): View
     {
         // Fetch all branches
-        $branches = DB::table('t_Branches')->select('Id', 'Name')->get();
+        $branches = DB::table('t_Branches')
+            ->where('DeletedOn', Null)
+            ->orderBy('Name')
+            ->get(['Id', 'Name']);
 
         return view('auth.login', compact('branches'));
     }

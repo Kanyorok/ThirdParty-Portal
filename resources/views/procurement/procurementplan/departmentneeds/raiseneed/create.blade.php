@@ -20,11 +20,12 @@
                     <option disabled selected>Select an item</option>
                     @foreach ($items as $item)
                         <option value="{{ $item->Id }}"
-                                data-category="{{ $item->category ? $item->category->Name : '' }}"
-                                data-uom="{{ $item->uom->Name ?? 'N/A' }}"
-                            {{ old('ItemID') == $item->Id ? 'selected' : '' }}>
-                            {{ $item->ItemName }}
-                        </option>
+    data-category="{{ $item->category ? $item->category->Name : '' }}"
+    data-uom="{{ $item->uom->Name ?? 'N/A' }}"
+    data-estimatedprice="{{ $item->price->EstimatedPrice ?? 'N/A' }}"
+    {{ old('ItemID') == $item->Id ? 'selected' : '' }}>
+    {{ $item->ItemName }}
+</option>
                     @endforeach
                 </select>
                 @error('ItemID')
@@ -56,15 +57,15 @@
         </div>
 
         <div class="mb-3">
-            <label for="EstimatedUnitCost" class="form-label">Estimated Unit Cost</label>
-            <input type="number" step="0.01" name="EstimatedUnitCost" id="EstimatedUnitCost"
-                   value="{{ old('EstimatedUnitCost') }}"
-                   class="form-control @error('EstimatedUnitCost') is-invalid @enderror" placeholder="e.g. 100.50"
-                   required>
-            @error('EstimatedUnitCost')
-            <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
-        </div>
+    <label for="EstimatedUnitCost" class="form-label">Estimated Unit Cost</label>
+    <input type="number" step="0.01" name="EstimatedUnitCost" id="EstimatedUnitCost"
+           value="{{ old('EstimatedUnitCost') }}"
+           class="form-control @error('EstimatedUnitCost') is-invalid @enderror"
+           placeholder="e.g. 100.50" readonly>
+    @error('EstimatedUnitCost')
+    <div class="invalid-feedback">{{ $message }}</div>
+    @enderror
+</div>
 
         <div class="mb-3">
             <label for="Justification" class="form-label">Justification</label>
@@ -106,19 +107,17 @@
             const itemDropdown = document.getElementById('itemDropdown');
             const categoryField = document.getElementById('categoryField');
             const uomField = document.getElementById('uomField');
+            const estimatedUnitCostField = document.getElementById('EstimatedUnitCost');
 
-            function fillCategoryAndUOM() {
+            itemDropdown.addEventListener('change', function () {
                 const selectedOption = itemDropdown.options[itemDropdown.selectedIndex];
-                categoryField.value = selectedOption.getAttribute('data-category') || '';
-                uomField.value = selectedOption.getAttribute('data-uom') || '';
-            }
+                categoryField.value = selectedOption.dataset.category || '';
+                uomField.value = selectedOption.dataset.uom || '';
+                estimatedUnitCostField.value = selectedOption.dataset.estimatedprice || '';
+            });
 
-            // Initial fill if old input exists
-            if (itemDropdown.value) {
-                fillCategoryAndUOM();
-            }
-
-            itemDropdown.addEventListener('change', fillCategoryAndUOM);
+            // Trigger change event on page load to set initial values
+            itemDropdown.dispatchEvent(new Event('change'));
         });
     </script>
 @endsection
