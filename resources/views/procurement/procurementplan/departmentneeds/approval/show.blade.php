@@ -40,7 +40,7 @@
             </div>
 
             <div class="col-md-6">
-                <label class="form-label fw-semibold">Required By</label>
+                <label class="form-label fw-semibold">Date Needed</label>
                 <div class="form-control-plaintext border rounded bg-light px-3 py-2">
                     {{ Carbon::parse($need->RequestedDate)->format('d/m/Y') }}
                 </div>

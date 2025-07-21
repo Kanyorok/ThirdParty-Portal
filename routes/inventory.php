@@ -209,7 +209,7 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/pricemanagement/{Id}/edit', [PriceManagementController::class, 'edit'])->name('pricemanagement.edit');
     Route::put('/pricemanagement/{Id}', [PriceManagementController::class, 'update'])->name('pricemanagement.update');
     Route::delete('/pricemanagement/{Id}', [PriceManagementController::class, 'destroy'])->name('pricemanagement.destroy');
-    Route::post('/pricemanagement/upload', [PriceManagementController::class, 'upload'])->name('pricemanagement.upload');
+    Route::post('/pricemanagement/upload', [PriceManagementController::class, 'importPricing'])->name('pricemanagement.upload');
 
     //Route::resource('itemtype', ItemTypeController::class);
     Route::get('/itemtype', [ItemTypeController::class, 'index'])->name('itemtype.index');

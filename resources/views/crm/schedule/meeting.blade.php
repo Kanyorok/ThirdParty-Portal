@@ -140,7 +140,7 @@
 
     @include('snippets.behind_scenes', ['model' => $schedule])
 
-    <p class="mb-0">Actions</p>
+    <p class="mb-0">Action</p>
     <hr class="mt-0">
     <div class="row">
         <div class="col-md-6 col-12">

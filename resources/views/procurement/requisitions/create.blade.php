@@ -3,13 +3,13 @@
 @section('title', 'Requisitions')
 
 @section('styles')
-    <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-    <style>
-        .select2-container {
-            width: 100% !important;
-        }
-    </style>
+<link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<style>
+    .select2-container {
+        width: 100% !important;
+    }
+</style>
 @endsection
 
 @section('content')
@@ -43,7 +43,7 @@
                         </tr>
                         </thead>
                         <tbody>
-                        @forelse($details as $item)
+                            @forelse($details as $item)
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
                                 <td>{{ $item->RequisitionNo }}</td>
@@ -57,15 +57,14 @@
                                 <td>{{ $item->Status }}</td>
                                 <td>
                                     <a href="{{ route('requisition.show', [$item->Id]) }}" class="btn btn-info btn-sm">View</a>
-                                    <a href="{{ route('requisition.approval', [$item->Id]) }}"
-                                       class="btn btn-success btn-sm">Approve</a>
+                                    <a href="{{ route('requisition.approval', [$item->Id]) }}" class="btn btn-success btn-sm">Approve</a>
                                 </td>
                             </tr>
-                        @empty
+                            @empty
                             <tr>
                                 <td colspan="11" class="text-center">No requisition items found.</td>
                             </tr>
-                        @endforelse
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
@@ -87,37 +86,44 @@
                         <form action="{{ route('requisition.store') }}" method="post" id="createRequisitionForm">
                             @csrf
 
-                            <!-- Procurement Plan -->
-                            <div class="mb-3">
-                                <label class="form-label" for="ProcurementPlan">Procurement Plan</label>
-                                <select class="form-control" name="ProcurementPlan" id="ProcurementPlan">
-                                    <option selected value="">Select Procurement Plan</option>
-                                    @foreach ($procurementPlans as $procurementPlan)
-                                        <option
-                                            value="{{ $procurementPlan->PlanID }}">{{ $procurementPlan->ReferenceNumber }}</option>
-                                    @endforeach
-                                </select>
-                                <p id="ProcurementPlan_error" class="invalid-feedback d-none error col-12"
-                                   role="alert"></p>
-                            </div>
+                        <!-- Procurement Plan -->
+                        <div class="mb-3">
+                            <label class="form-label" for="ProcurementPlan">Procurement Plan</label>
+                            <select class="form-control" name="ProcurementPlan" id="ProcurementPlan">
+                                <option selected value="">Select Procurement Plan</option>
+                                @foreach ($procurementPlans as $procurementPlan)
+                                <option value="{{ $procurementPlan->PlanID }}">{{ $procurementPlan->ReferenceNumber }}</option>
+                                @endforeach
+                            </select>
+                            <p id="ProcurementPlan_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                        </div>
 
-                            <!-- Branch -->
-                            <div class="mb-3">
-                                <label class="form-label" for="Branch">Branch <span class="text-danger">*</span></label>
-                                <select class="form-control" name="Branch" id="Branch" required>
-                                    <option selected disabled>Select Branch</option>
-                                </select>
-                                <p id="Branch_error" class="invalid-feedback d-none error col-12" role="alert"></p>
-                            </div>
+                        <!-- Branch -->
+                        <div class="mb-3">
+                            <label class="form-label" for="Branch">Branch <span class="text-danger">*</span></label>
+                            <select class="form-control" name="Branch" id="Branch" required>
+                                @if(isset($branchId))
+                                <option value="{{ $branchId }}" selected>{{ session('LoginBranchName') }}</option>
+                                @else
+                                <option selected disabled>Select Branch</option>
+                                @endif
+                            </select>
+                            <p id="Branch_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                        </div>
 
-                            <!-- Department -->
-                            <div class="mb-3">
-                                <label class="form-label" for="Department">Department <span class="text-danger">*</span></label>
-                                <select class="form-control" name="Department" id="Department" required>
-                                    <option selected disabled>Select Department</option>
-                                </select>
-                                <p id="Department_error" class="invalid-feedback d-none error col-12" role="alert"></p>
-                            </div>
+                        <!-- Department -->
+                        <div class="mb-3">
+                            <label class="form-label" for="Department">Department <span class="text-danger">*</span></label>
+                            <select class="form-control" name="Department" id="Department" required>
+                                
+                                @if(isset($departmentId))
+                                <option value="{{ $departmentId }}" selected>Department #{{ $departmentName ?? 'Department #' . $departmentId }}</option>
+                                @else
+                                <option selected disabled>Select Department</option>
+                                @endif
+                            </select>
+                            <p id="Department_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                        </div>
 
                             <!-- Remarks -->
                             <div class="mb-3">
@@ -154,37 +160,37 @@
     <script>
         const $Modal = $('#RequisitionItemModal');
 
-        $(function () {
-            @if(!$details->isEmpty())
-            $('#requisitionTable').DataTable({
-                pageLength: 10,
-                ordering: true,
-                searching: true,
-                lengthChange: true,
-                language: {
-                    emptyTable: "No data available"
-                }
-            });
-            @endif
+    $(function() {
+        @if(!$details->isEmpty())
+        $('#requisitionTable').DataTable({
+            pageLength: 10,
+            ordering: true,
+            searching: true,
+            lengthChange: true,
+            language: {
+                emptyTable: "No data available"
+            }
+        });
+        @endif
 
-            $(document).on('click', '.modal-create-item', function () {
-                $(".modal-title").html('Add Requisition');
-                $(".modal-item").addClass('d-none');
-                $('#createRequisition').removeClass('d-none');
-                $Modal.modal('show');
-            });
+        $(document).on('click', '.modal-create-item', function() {
+            $(".modal-title").html('Add Requisition');
+            $(".modal-item").addClass('d-none');
+            $('#createRequisition').removeClass('d-none');
+            $Modal.modal('show');
+        });
 
-            $('form#createRequisitionForm').submit(async function (e) {
-                e.preventDefault();
-                if (await saveForm($(this), $('#createRequisitionBtn'), true, true, true)) {
-                    $Modal.modal('hide');
-                }
-            });
+        $('form#createRequisitionForm').submit(async function(e) {
+            e.preventDefault();
+            if (await saveForm($(this), $('#createRequisitionBtn'), true, true, true)) {
+                $Modal.modal('hide');
+            }
+        });
 
-            // Fetch Branch and Department based on Procurement Plan
-            document.getElementById('ProcurementPlan').addEventListener('change', function () {
-                let planId = this.value;
-                if (!planId) return;
+        // Fetch Branch and Department based on Procurement Plan
+        document.getElementById('ProcurementPlan').addEventListener('change', function() {
+            let planId = this.value;
+            if (!planId) return;
 
                 fetch("{{ route('procurement.plan.details', '__ID__') }}".replace('__ID__', planId))
                     .then(response => response.json())

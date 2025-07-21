@@ -31,7 +31,6 @@ class ProcurementSetMethodController extends Controller
     {
         $Lines = PlanLineItem::with(['item', 'procurementMode', 'departmentNeed'])
             ->where('PlanID', $planId)
-            ->where('ProcurementMethod', 0)
             ->get()
             ->map(function ($lineItem) {
                 // Find matching DepartmentNeed based on business rules
@@ -46,7 +45,7 @@ class ProcurementSetMethodController extends Controller
                     'item_name' => optional($lineItem->item)->ItemName,
                     'MergedQty' => $lineItem->MergedQty,
                     'EstimatedUnitCost' => $lineItem->EstimatedUnitCost,
-                    'ProcurementMethod' => optional($lineItem->procurementMode)->Name,
+                    'ProcurementMethod' => optional($lineItem->procurementMode)->Description,
                     'NeedID' => optional($matchedNeed)->NeedID,
                 ];
             });
