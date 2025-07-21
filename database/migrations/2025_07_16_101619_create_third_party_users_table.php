@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('Gender')->nullable();
             $table->boolean('IsActive')->default(true);
             $table->timestamp('EmailVerifiedOn')->nullable();
-            $table->foreignId('ThirdPartyId')->constrained('t_ThirdParties', 'Id');
+            $table->foreignId('ThirdPartyId')->nullable()->constrained('t_ThirdParties', 'Id');
             $table->string('Password');
             $table->rememberToken();
             $table->foreignId('CreatedBy')->nullable()->constrained('t_Users', 'Id');

@@ -1,6 +1,8 @@
 <?php
 
-namespace App\Http\Requests\ThirdParty;
+namespace App\Http\Requests\ThirdPartyAuth;
+
+use Illuminate\Validation\Rules\Password;
 
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -20,7 +22,7 @@ class LoginThirdPartyRequest extends FormRequest
          */
         return [
             'email' => 'required|email',
-            'password' => 'required|string|min:6',
+            'password' => ['required', 'string', Password::min(8)],
         ];
     }
 

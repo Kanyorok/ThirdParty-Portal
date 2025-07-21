@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\ThirdParty;
+namespace App\Http\Requests\ThirdPartyAuth;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -31,6 +31,20 @@ class StoreThirdPartyRequest extends FormRequest
             'ApprovalStatus' => ['nullable', 'string', Rule::in(['Pending', 'Approved', 'Rejected'])],
             'Status' => ['nullable', Rule::enum(ThirdPartyStatusEnum::class)],
             'ThirdPartyType' => ['required', Rule::enum(ThirdPartyTypeEnum::class)],
+            // TODO: Add certications uplod for thirdparties
         ];
+    }
+
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            if ($this->has('Email') && !filter_var($this->input('Email'), FILTER_VALIDATE_EMAIL)) {
+                $validator->errors()->add('Email', __('auth.invalid_email_format'));
+            }
+            $user = $this->user('sanctum');
+            if ($user && $user->thirdParty) {
+                $validator->errors()->add('ThirdParty', __('auth.thirdparty_exists'));
+            }
+        });
     }
 }

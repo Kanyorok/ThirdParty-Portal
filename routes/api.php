@@ -8,14 +8,18 @@ use App\Http\Controllers\ThirdParty\ThirdPartiesBankDetailsController;
 use App\Http\Controllers\ThirdParty\ThirdPartyCategoryController;
 use App\Http\Controllers\ThirdParty\ThirdPartyUserProfileController;
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+Route::middleware('auth:sanctum')->get('/thirdpartyuser', function (Request $request) {
     return $request->user();
-});
+})->name('thirdpartyuser.profile');
 
 Route::prefix('third-party-auth')->group(function () {
     Route::post('login', [ThirdPartyAuthController::class, 'login']);
     Route::post('register', [ThirdPartyAuthController::class, 'register']);
-    Route::middleware('auth:sanctum')->post('logout', [ThirdPartyAuthController::class, 'logout']);
+    Route::get('/email/verify/{id}/{hash}', [ThirdPartyAuthController::class, 'verifyEmail'])->name('verification.verify');
+    Route::post('/email/resend-verification', [ThirdPartyAuthController::class, 'resendVerification'])->name('verification.resend')->middleware('throttle:6,1');
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('logout', [ThirdPartyAuthController::class, 'logout'])->name('logout');
+    });
 });
 
 Route::middleware(['auth:sanctum'])->prefix('third-party-profile')->group(function () {

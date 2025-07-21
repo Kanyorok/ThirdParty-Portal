@@ -72,4 +72,9 @@ class ThirdParties extends Model
     {
         return $query->where('ThirdPartyType', ThirdPartyTypeEnum::Supplier);
     }
+
+    public function bankDetails(): HasMany
+    {
+        return $this->hasMany(ThirdPartiesBankDetails::class, 'ThirdPartyId', 'Id');
+    }
 }

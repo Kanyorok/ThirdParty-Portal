@@ -3,41 +3,42 @@
 namespace App\Http\Controllers\ThirdParty;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use App\Models\ThirdParty\ThirdPartiesBankDetails;
+use App\Http\Requests\ThirdPartyBankDetail\StoreBankDetailsRequest;
+use App\Http\Requests\ThirdPartyBankDetail\UpdateBankDetailsRequest;
+use App\Models\ThirdParty\ThirdParties;
 
 class ThirdPartiesBankDetailsController extends Controller
 {
-    /**
-     * Get bank details for the authenticated user
-     */
-    public function index(Request $request): JsonResponse
+    public function index(): JsonResponse
     {
-        $bankDetails = ThirdPartiesBankDetails::all();
+        $user = Auth::user();
+
+        if ($user->isAdmin()) {
+            $bankDetails = ThirdPartiesBankDetails::all();
+        } elseif ($user->thirdParty) {
+            $bankDetails = ThirdPartiesBankDetails::where('ThirdPartyID', $user->thirdParty->Id)->get();
+        } else {
+            return response()->json([], 403);
+        }
 
         return response()->json($bankDetails);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreBankDetailsRequest $request): JsonResponse
     {
-        $request->validate([
-            'ThirdPartyID' => 'required|integer|exists:t_ThirdParties,Id',
-            'BankName' => 'required|string|max:255',
-            'Branch' => 'nullable|string|max:255',
-            'AccountNumber' => 'required|string|max:100|unique:t_ThirdPartiesBankDetails,AccountNumber',
-            'Currency' => 'nullable|string|max:10',
-            'SwiftCode' => 'nullable|string|max:50',
-        ]);
+        $thirdParty = ThirdParties::findOrFail($request->input('ThirdPartyId'));
+        $this->authorize('create', $thirdParty);
 
         $bankDetail = ThirdPartiesBankDetails::create([
-            'ThirdPartyID' => $request->ThirdPartyID,
-            'BankName' => $request->BankName,
-            'Branch' => $request->Branch,
-            'AccountNumber' => $request->AccountNumber,
-            'Currency' => $request->Currency,
-            'SwiftCode' => $request->SwiftCode,
+            'ThirdPartyID' => $thirdParty->Id,
+            'BankName' => $request->input('BankName'),
+            'Branch' => $request->input('Branch'),
+            'AccountNumber' => $request->input('AccountNumber'),
+            'CurrencyId' => $request->input('CurrencyId'),
+            'SwiftCode' => $request->input('SwiftCode'),
             'CreatedBy' => Auth::id(),
             'CreatedOn' => now(),
         ]);
@@ -47,26 +48,20 @@ class ThirdPartiesBankDetailsController extends Controller
 
     public function show(ThirdPartiesBankDetails $thirdPartiesBankDetail): JsonResponse
     {
+        $this->authorize('view', $thirdPartiesBankDetail);
+
         return response()->json($thirdPartiesBankDetail);
     }
 
-    public function update(Request $request, ThirdPartiesBankDetails $thirdPartiesBankDetail): JsonResponse
+    public function update(UpdateBankDetailsRequest $request, ThirdPartiesBankDetails $thirdPartiesBankDetail): JsonResponse
     {
-        $request->validate([
-            'ThirdPartyID' => 'sometimes|required|integer|exists:t_ThirdParties,Id',
-            'BankName' => 'sometimes|required|string|max:255',
-            'Branch' => 'nullable|string|max:255',
-            'AccountNumber' => 'sometimes|required|string|max:100|unique:t_ThirdPartiesBankDetails,AccountNumber,' . $thirdPartiesBankDetail->BankID . ',BankID',
-            'Currency' => 'nullable|string|max:10',
-            'SwiftCode' => 'nullable|string|max:50',
-        ]);
+        $this->authorize('update', $thirdPartiesBankDetail);
 
         $thirdPartiesBankDetail->update([
-            'ThirdPartyID' => $request->input('ThirdPartyID', $thirdPartiesBankDetail->ThirdPartyID),
             'BankName' => $request->input('BankName', $thirdPartiesBankDetail->BankName),
             'Branch' => $request->input('Branch', $thirdPartiesBankDetail->Branch),
             'AccountNumber' => $request->input('AccountNumber', $thirdPartiesBankDetail->AccountNumber),
-            'Currency' => $request->input('Currency', $thirdPartiesBankDetail->Currency),
+            'CurrencyId' => $request->input('CurrencyId', $thirdPartiesBankDetail->CurrencyId),
             'SwiftCode' => $request->input('SwiftCode', $thirdPartiesBankDetail->SwiftCode),
             'ModifiedBy' => Auth::id(),
             'ModifiedOn' => now(),
@@ -77,10 +72,13 @@ class ThirdPartiesBankDetailsController extends Controller
 
     public function destroy(ThirdPartiesBankDetails $thirdPartiesBankDetail): JsonResponse
     {
+        $this->authorize('delete', $thirdPartiesBankDetail);
+
         $thirdPartiesBankDetail->update([
             'DeletedBy' => Auth::id(),
             'DeletedOn' => now(),
         ]);
+
         $thirdPartiesBankDetail->delete();
 
         return response()->json(null, 204);

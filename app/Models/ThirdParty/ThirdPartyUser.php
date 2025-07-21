@@ -11,10 +11,13 @@ use Illuminate\Database\Eloquent\Builder;
 use App\Enums\Employee\GenderEnum;
 use App\Enums\ThirdPartyTypeEnum;
 use App\Enums\ThirdPartyApprovalStatusEnum;
+use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
+use Illuminate\Auth\MustVerifyEmail;
+use Illuminate\Support\Str;
 
-class ThirdPartyUser extends Authenticatable
+class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract
 {
-    use HasApiTokens, Notifiable, SoftDeletes;
+    use HasApiTokens, Notifiable, SoftDeletes, MustVerifyEmail;
 
     public static $snakeAttributes = false;
 
@@ -26,14 +29,13 @@ class ThirdPartyUser extends Authenticatable
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'UserID',
         'FirstName',
         'LastName',
         'Email',
         'Phone',
         'ImageId',
         'Gender',
-        'ThirdPartyId',
+        // 'ThirdPartyId',
         'IsActive',
         'CreatedBy',
         'ModifiedBy',
@@ -45,6 +47,7 @@ class ThirdPartyUser extends Authenticatable
     protected $hidden = [
         'Password',
         'remember_token',
+        'UserID',
     ];
 
     protected $casts = [
@@ -60,6 +63,19 @@ class ThirdPartyUser extends Authenticatable
         'ThirdPartyId' => 'integer',
         'ImageId' => 'integer',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+        static::creating(function ($model) {
+            if (empty($model->UserID)) {
+                do {
+                    $model->UserID = strtoupper(Str::random(6));
+                } while (static::where('UserID', $model->UserID)->exists());
+                $model->IsActive = false;
+            }
+        });
+    }
 
     public function getRouteKeyName(): string
     {
@@ -126,5 +142,10 @@ class ThirdPartyUser extends Authenticatable
     public function canBeDeleted(): bool
     {
         return !$this->isActive();
+    }
+
+    public function sendEmailVerificationNotification()
+    {
+        $this->notify(new \App\Notifications\VerifyEmail);
     }
 }

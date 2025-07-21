@@ -68,6 +68,6 @@ class ThirdPartiesBankDetails extends Model
      */
     public function currency(): BelongsTo
     {
-        return $this->belongsTo(Currency::class, 'CurrencyID', 'Id');
+        return $this->belongsTo(Currency::class, 'CurrencyId', 'Id');
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\ThirdParty;
+namespace App\Http\Requests\ThirdPartyAuth;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -10,7 +10,7 @@ class UpdateThirdPartyStatusRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return true; // TODO: Add policy for authorization 
     }
 
     public function rules(): array
