@@ -1,10 +1,10 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Maintenance Request')
 @section('content')
 <div class="container mt-4">
   <h4 class="fw-bold mb-3">🛠️ New Maintenance Request</h4>
 
-    <form action="{{ route('maintenancerequest.store') }}" method="POST">
+    <form action="{{ route('maintenancerequest.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
   <div class="card shadow">
     <div class="card-header bg-light fw-bold">📋 Report Maintenance Issue</div>
@@ -51,22 +51,20 @@
         </div>
         <div class="col-md-4">
           <label class="form-label">Issue Type</label>
-            <select class="form-select" name="IssueType">
-            <option>Plumbing</option>
-            <option>Electrical</option>
-            <option>Cleaning</option>
-            <option>Pest Control</option>
-            <option>Security</option>
-            <option>Other</option>
+            <select class="form-select" name="IssueType" required>
+            <option value="">-- Select Issue Type --</option>
+              @foreach ($issuetypes as $issuetype)
+                <option value="{{ $issuetype->ID }}">{{ $issuetype->Description }}</option>
+              @endforeach
           </select>
         </div>
         <div class="col-md-4">
           <label class="form-label">Priority</label>
             <select class="form-select" name="Priority">
-            <option>Low</option>
-            <option>Medium</option>
-            <option>High</option>
-            <option>Emergency</option>
+            <option value="">-- Select Priority Level --</option>
+              @foreach ($priorities as $priority)
+                <option value="{{ $priority->ID }}">{{ $priority->Description }}</option>
+              @endforeach
           </select>
         </div>
       </div>
@@ -77,11 +75,12 @@
                     name="IssueDescription"></textarea>
       </div>
 
-      <div class="mb-3">
-        <label class="form-label">Upload Image / Document (optional)</label>
-        <input type="file" class="form-control">
-      </div>
-        <button class="btn btn-success">💾 Submit Request</button>
+        <!-- Document Upload -->
+        <div class="mb-3">
+            <label class="form-label">Upload Relevant Documents</label>
+            <input type="file" name="Document" class="form-control" multiple>
+        </div>
+        <button class="btn btn-success">Submit Request</button>
     </form>
     </div>
   </div>

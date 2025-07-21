@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Core\CodeDetail;
 use App\Models\PropertyManagement\PropertyMaintenanceRequest;
 use App\Http\Requests\Property\MaintenanceAndIssues\MaintenanceRequest;
 use App\Services\Property\MaintenanceAndIssues\PropertyMaintenanceService;
@@ -15,23 +16,21 @@ use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyFloor;
 use App\Models\PropertyManagement\PropertyBlock;
 use App\Models\PropertyManagement\PropertyUnit;
-
 class PropertyMaintenanceRequestController extends Controller
 {
     //
     public function index()
     {
-        $maintenancerequests = PropertyMaintenanceRequest::all();
+        $maintenancerequests = PropertyMaintenanceRequest::where('issueType','priority');
         return view('property.maintenanceandissues.maintenancerequest.index', compact('maintenancerequests'));
     }
 
     public function create(){
         $this->authorize(PermissionEnum::PropertyMaintenanceRequestUpdate, PropertyMaintenanceRequest::class);
-        $units = PropertyUnit::all();
-        $blocks = PropertyBlock::all();
-        $floors = PropertyFloor::all();
         $properties = PropertyRegistry::all();
-        return view('property.maintenanceandissues.maintenancerequest.create', compact('properties', 'floors', 'blocks', 'units'));
+        $issuetypes = CodeDetail::where('CodeID', 'IssueType')->get();
+        $priorities = CodeDetail::where('CodeID', 'PriorityLevel')->get();
+        return view('property.maintenanceandissues.maintenancerequest.create', compact('properties','issuetypes','priorities'));
     }
         public function show($id){
         $this->authorize(PermissionEnum::PropertyMaintenanceRequestView, PropertyMaintenanceRequest::class);
@@ -41,7 +40,6 @@ class PropertyMaintenanceRequestController extends Controller
     public function getBlockByProperty($propertyId)
     {
         $blocks = PropertyBlock::where('PropertyID', $propertyId)->get();
-        //dd($blocks); // check if it's returning correctly
         return response()->json($blocks);
     }
 
@@ -67,7 +65,9 @@ class PropertyMaintenanceRequestController extends Controller
         $Block    = PropertyBlock::findOrFail($validated['Block']);
         $Floor    = PropertyFloor::findOrFail($validated['Floor']);
         $Unit     = PropertyUnit::findOrFail($validated['Unit']);
-        $user     = Auth::user();
+        $IssueType = CodeDetail::findOrFail($validated['IssueType']);
+        $Priority  = CodeDetail::findOrFail($validated['Priority']);
+        $document = $request->file('Document');
         
         $maintenancerequest = PropertyMaintenanceService::create(
                     $Property,
@@ -75,88 +75,89 @@ class PropertyMaintenanceRequestController extends Controller
                     $Floor,
                     $Unit,
                     $validated['ReportedBy']?? '--',
-                    $validated['IssueType']?? '--',
-                    $validated['Priority']?? '--',
+                    $IssueType,
+                    $Priority,
                     $validated['IssueDescription']?? '--',
-                    auth()->user()
+                    auth()->user(),
+                    $document
         );
         //dd('validation passed');
         return redirect()->route('maintenancerequest.index')->with('success', 'Maintenance request created successfully');
 
     }
-     public function edit($id)
-{
-    $this->authorize(PermissionEnum::PropertyMaintenanceRequestUpdate, PropertyMaintenanceRequest::class);
-    $maintenancerequest = PropertyMaintenanceRequest::findOrFail($id);
-    $properties = PropertyRegistry::all();
-
-    return view('property.maintenanceandissues.maintenancerequest.edit', compact('maintenancerequest', 'properties'));
-}
-
-public function update(Request $request, $id)
-{
-    $this->authorize(PermissionEnum::PropertyMaintenanceRequestUpdate, PropertyMaintenanceRequest::class);
-    // Validate the request data
-   $validated = $request->validate([
-            'Property' => 'required|exists:t_PropertyRegistry,Id',
-            'Block' => 'required|exists:t_PropertyBlock,Id',
-            'Floor' => 'required|exists:t_PropertyFloor,Id',
-            'Unit' => 'required|exists:t_PropertyUnit,Id',
-            'ReportedBy' => 'required|string|max:50',
-            'IssueType' => 'required|string|max:50',
-            'Priority' => 'required|string|max:50',
-            'IssueDescription' => 'required|string|max:255',
-        ]);
-    DB::beginTransaction();
-
-    try {
+    public function edit($id)
+    {
+        $this->authorize(PermissionEnum::PropertyMaintenanceRequestUpdate, PropertyMaintenanceRequest::class);
         $maintenancerequest = PropertyMaintenanceRequest::findOrFail($id);
+        $properties = PropertyRegistry::all();
 
-        $maintenancerequest->update([
-            'Property'         => $validated['Property'],
-            'Block'            => $validated['Block'],
-            'Floor'            => $validated['Floor'],
-            'Unit'             => $validated['Unit'],
-            'ReportedBy'       => $validated['ReportedBy'],
-            'IssueType'        => $validated['IssueType'],
-            'Priority'         => $validated['Priority'],
-            'IssueDescription' => $validated['IssueDescription'],
-            'ModifiedBy'       => Auth::id(),
-        ]);
-
-        DB::commit();
-
-        activity()
-            ->performedOn($maintenancerequest)
-            ->causedBy(Auth::user())
-            ->withProperties(['action' => 'update'])
-            ->log('Updated Maintenance Request');
-
-        return redirect()->route('maintenancerequest.index')
-                         ->with('success', 'Maintenance request updated successfully');
-    } catch (\Throwable $th) {
-        DB::rollBack();
-        Log::error('Failed to update maintenance request: ' . $th->getMessage());
-
-        return back()->withErrors(['error' => 'Failed to update maintenance request'])->withInput();
+        return view('property.maintenanceandissues.maintenancerequest.edit', compact('maintenancerequest', 'properties'));
     }
-}
 
-public function destroy($Id)
-{
-    $this->authorize(PermissionEnum::PropertyMaintenanceRequestDelete, PropertyMaintenanceRequest::class);
-    try {
-        $maintenancerequest = PropertyMaintenanceRequest::findOrFail($Id);
-        $maintenancerequest->delete();
+    public function update(Request $request, $id)
+    {
+        $this->authorize(PermissionEnum::PropertyMaintenanceRequestUpdate, PropertyMaintenanceRequest::class);
+        // Validate the request data
+    $validated = $request->validate([
+                'Property' => 'required|exists:t_PropertyRegistry,Id',
+                'Block' => 'required|exists:t_PropertyBlock,Id',
+                'Floor' => 'required|exists:t_PropertyFloor,Id',
+                'Unit' => 'required|exists:t_PropertyUnit,Id',
+                'ReportedBy' => 'required|string|max:50',
+                'IssueType' => 'required|string|max:50',
+                'Priority' => 'required|string|max:50',
+                'IssueDescription' => 'required|string|max:255',
+            ]);
+        DB::beginTransaction();
 
-        return redirect()->route('maintenancerequest.index')
-                         ->with('success', 'Maintenance request deleted successfully!');
-    } catch (\Throwable $th) {
-        Log::error('Error deleting maintenance request: ' . $th->getMessage());
+        try {
+            $maintenancerequest = PropertyMaintenanceRequest::findOrFail($id);
 
-        return redirect()->back()
-                         ->withErrors(['error' => 'Failed to delete maintenance request. Please try again.'])
-                         ->withInput();
+            $maintenancerequest->update([
+                'Property'         => $validated['Property'],
+                'Block'            => $validated['Block'],
+                'Floor'            => $validated['Floor'],
+                'Unit'             => $validated['Unit'],
+                'ReportedBy'       => $validated['ReportedBy'],
+                'IssueType'        => $validated['IssueType'],
+                'Priority'         => $validated['Priority'],
+                'IssueDescription' => $validated['IssueDescription'],
+                'ModifiedBy'       => Auth::id(),
+            ]);
+
+            DB::commit();
+
+            activity()
+                ->performedOn($maintenancerequest)
+                ->causedBy(Auth::user())
+                ->withProperties(['action' => 'update'])
+                ->log('Updated Maintenance Request');
+
+            return redirect()->route('maintenancerequest.index')
+                            ->with('success', 'Maintenance request updated successfully');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            Log::error('Failed to update maintenance request: ' . $th->getMessage());
+
+            return back()->withErrors(['error' => 'Failed to update maintenance request'])->withInput();
+        }
     }
-  }
+
+    public function destroy($Id)
+    {
+        $this->authorize(PermissionEnum::PropertyMaintenanceRequestDelete, PropertyMaintenanceRequest::class);
+        try {
+            $maintenancerequest = PropertyMaintenanceRequest::findOrFail($Id);
+            $maintenancerequest->delete();
+
+            return redirect()->route('maintenancerequest.index')
+                            ->with('success', 'Maintenance request deleted successfully!');
+        } catch (\Throwable $th) {
+            Log::error('Error deleting maintenance request: ' . $th->getMessage());
+
+            return redirect()->back()
+                            ->withErrors(['error' => 'Failed to delete maintenance request. Please try again.'])
+                            ->withInput();
+        }
+    }
 }

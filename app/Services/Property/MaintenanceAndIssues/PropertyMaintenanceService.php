@@ -2,12 +2,16 @@
 
 namespace App\Services\Property\MaintenanceAndIssues;
 
+use App\Enums\Core\ModulesEnum;
+use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
+use App\Models\Core\CodeDetail;
 use App\Models\PropertyManagement\PropertyBlock;
 use App\Models\PropertyManagement\PropertyFloor;
 use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyUnit;
 use App\Models\PropertyManagement\PropertyMaintenanceRequest;
+use Illuminate\Http\UploadedFile;
 
 
 class PropertyMaintenanceService
@@ -25,10 +29,11 @@ class PropertyMaintenanceService
         PropertyFloor $Floor,
         PropertyUnit  $Unit,
         string   $ReportedBy,
-        string   $IssueType,
-        string   $Priority,
+        CodeDetail   $IssueType,
+        CodeDetail   $Priority,
         string   $IssueDescription,
-        User    $user
+        User    $user,
+        UploadedFile $document = null
     ):self {
 
             $lastRequestNumber = PropertyMaintenanceRequest::withTrashed() // in case you're using soft deletes
@@ -46,12 +51,21 @@ class PropertyMaintenanceService
             'Floor' => $Floor->Id,
             'Unit' => $Unit->Id,
             'ReportedBy' =>$ReportedBy,
-            'IssueType'  => $IssueType,
-            'Priority'    => $Priority,
+            'IssueType'  => $IssueType->ID,
+            'Priority'    => $Priority->ID,
             'IssueDescription' => $IssueDescription,
             'CreatedBy' => $user->Id,
             'ModifiedBy' => $user->Id,
         ]);
+
+        if ($document) {
+        $maintenancerequest->newDocument(
+            ModulesEnum::Property,
+            $document,
+            [PermissionEnum::PropertyNewLeaseView->value],
+            $user
+            );
+        }
 
         activity()->causedBy($user->Id)->performedOn($maintenancerequest)->event('create')->log("Added Property Unit {$maintenancerequest->Id}.");
         return new self($maintenancerequest);

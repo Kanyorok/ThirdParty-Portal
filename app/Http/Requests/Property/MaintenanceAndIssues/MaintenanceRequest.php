@@ -27,9 +27,10 @@ class MaintenanceRequest extends FormRequest
             'Floor' => 'required|exists:t_PropertyFloor,Id',
             'Unit' => 'required|exists:t_PropertyUnit,Id',
             'ReportedBy' => 'required|string|max:50',
-            'IssueType' => 'required|string|max:50',
-            'Priority' => 'required|string|max:50',
+            'IssueType' => 'required|exists:t_CodeDetails,ID',
+            'Priority' => 'required|exists:t_CodeDetails,ID',
             'IssueDescription' => 'required|string|max:255',
+            'Document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
         ];
     }
 }

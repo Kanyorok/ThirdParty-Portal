@@ -3,6 +3,8 @@
 namespace App\Models\PropertyManagement;
 
 
+use App\Models\Core\CodeDetail;
+use App\Traits\Model\DocumentsTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -10,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class PropertyMaintenanceRequest extends Model
 {
     //
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes, UserActorTrait,DocumentsTrait;
     protected $table = 't_MaintenanceRequest';
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
@@ -54,5 +56,13 @@ class PropertyMaintenanceRequest extends Model
     public function unit()
     {
         return $this->belongsTo(PropertyUnit::class, 'Unit', 'Id');
+    }
+    public function issueType()
+    {
+        return $this->belongsTo(CodeDetail::class, 'IssueType', 'ID');
+    }
+    public function priority()
+    {
+        return $this->belongsTo(CodeDetail::class, 'Priority', 'ID');
     }
 }
