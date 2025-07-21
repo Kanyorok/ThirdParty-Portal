@@ -5,11 +5,11 @@ namespace App\Http\Controllers\Inventory;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\InventoryHoldReviewRequest;
 use App\Models\Inventory\InventoryHold;
-use App\Services\Inventory\InventoryHoldReviewService;
-use Illuminate\Http\Request;
 use App\Models\Inventory\InventoryHoldReview;
-use App\Models\Auth\User;
-use Illuminate\Support\Facades\Auth;
+use App\Services\Inventory\InventoryHoldReviewService;
+use Exception;
+use Illuminate\Http\Request;
+use Throwable;
 
 class InventoryHoldReviewController extends Controller
 {
@@ -22,7 +22,7 @@ class InventoryHoldReviewController extends Controller
 
     public function index()
     {
-        
+
         $holds = InventoryHoldReview::with([
             'item.uom',
             'fromBranch',
@@ -35,10 +35,10 @@ class InventoryHoldReviewController extends Controller
         $holds->each(function ($hold) {
             $hold->Condition = $hold->conditionDetail?->Description ?? null;
             $hold->Defect = $hold->defectDetail?->Description ?? null;
-           
+
         });
-                return view('inventory.inventoryholdreview.index', compact('holds'));
-            }
+        return view('inventory.inventoryholdreview.index', compact('holds'));
+    }
 
     public function create()
     {
@@ -65,49 +65,50 @@ class InventoryHoldReviewController extends Controller
 
         return redirect()->back()->with('success', 'Inventory item reviewed successfully.');
     }
-   public function show($id)
-{
-    $this->authorize('view', InventoryHoldReview::class);
-    $holds = InventoryHoldReview::with([
-        'item.uom',
-        'fromBranch',
-        'store',
-        'creator',
-        'conditionDetail',
-        'defectDetail',
-        'inventoryHold'
-    ])->where('Id', $id)->whereNull('DeletedOn')->firstOrFail();
 
-    // Set readable attributes
-    $holds->Condition = $holds->conditionDetail?->Description ?? null;
-    $holds->Defect = $holds->defectDetail?->Description ?? null;
+    public function show($id)
+    {
+        $this->authorize('view', InventoryHoldReview::class);
+        $holds = InventoryHoldReview::with([
+            'item.uom',
+            'fromBranch',
+            'store',
+            'creator',
+            'conditionDetail',
+            'defectDetail',
+            'inventoryHold'
+        ])->where('Id', $id)->whereNull('DeletedOn')->firstOrFail();
 
-    return view('inventory.inventoryholdreview.show', compact('holds'));
-}
+        // Set readable attributes
+        $holds->Condition = $holds->conditionDetail?->Description ?? null;
+        $holds->Defect = $holds->defectDetail?->Description ?? null;
 
-   public function resolve(Request $request, $id)
-{
-    $this->authorize('update', InventoryHoldReview::class);
-    $action = $request->input('Action');
-
-    $extras = [
-        'Condition' => $request->input('Condition'),
-        'Notes'     => $request->input('Notes'),
-    ];
-
-    try {
-        match ($action) {
-            'dispose' => $this->service->dispose($id, $extras),
-            'return'  => $this->service->returnToSender($id),
-            default   => throw new \Exception('Unknown action')
-        };
-
-        return redirect()->route('inventoryholdreview.index')
-                         ->with('success', "Item marked as {$action} successfully.");
-    } catch (\Throwable $th) {
-        return redirect()->back()->with('error', $th->getMessage());
+        return view('inventory.inventoryholdreview.show', compact('holds'));
     }
-}
+
+    public function resolve(Request $request, $id)
+    {
+        $this->authorize('update', InventoryHoldReview::class);
+        $action = $request->input('Action');
+
+        $extras = [
+            'Condition' => $request->input('Condition'),
+            'Notes' => $request->input('Notes'),
+        ];
+
+        try {
+            match ($action) {
+                'dispose' => $this->service->dispose($id, $extras),
+                'return' => $this->service->returnToSender($id),
+                default => throw new Exception('Unknown action')
+            };
+
+            return redirect()->route('inventoryholdreview.index')
+                ->with('success', "Item marked as {$action} successfully.");
+        } catch (Throwable $th) {
+            return redirect()->back()->with('error', $th->getMessage());
+        }
+    }
 
 
     public function destroy($id)
@@ -124,14 +125,14 @@ class InventoryHoldReviewController extends Controller
         $hold = InventoryHold::with(['item', 'branch', 'store'])->findOrFail($id);
 
         return response()->json([
-            'ItemID'       => $hold->ItemID,
-            'Quantity'     => $hold->Quantity,
+            'ItemID' => $hold->ItemID,
+            'Quantity' => $hold->Quantity,
             'FromBranchID' => $hold->BranchID,
-            'ItemName'     => $hold->item->ItemName ?? null,
-            'FromBranch'   => $hold->branch->Name ?? null,
-            'Store'        => $hold->store->StoreName ?? null,
-            'Defect'       => $hold->Reason,
-            
+            'ItemName' => $hold->item->ItemName ?? null,
+            'FromBranch' => $hold->branch->Name ?? null,
+            'Store' => $hold->store->StoreName ?? null,
+            'Defect' => $hold->Reason,
+
         ]);
     }
 }

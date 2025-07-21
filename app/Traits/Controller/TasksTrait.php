@@ -88,13 +88,18 @@ trait TasksTrait
         });
     }
 
+
     public function cancel(Task $task, User $actor): array
     {
         $task->forceFill([
-                          'DeletedOn' => now(),
-                          'DeletedBy' => $actor->Id,
-                         ])->save(['timestamps' => false]);
+            'DeletedOn' => now(),
+            'DeletedBy' => $actor->Id,
+        ])->save(['timestamps' => false]);
 
-        return ActivityService::task($task, $actor->UserID . ' canceled task', $actor);
+        $label = 'Task (' . \Str::limit($task->Notes, 30) . ')';
+        return ActivityService::task($task, $actor->UserID . ' Canceled ' . $label, $actor, $task->DeletedOn);
     }
+
+
+
 }

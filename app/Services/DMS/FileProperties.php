@@ -7,18 +7,21 @@ use App\Enums\Core\ExtensionsEnum;
 use App\Helpers\SystemHelper;
 use Carbon\Carbon;
 use Exception;
-use getID3;
 use Illuminate\Support\Collection;
+
+// Add getID3 import for media file analysis
+use getID3;
 use Illuminate\Support\Str;
-use Log;
+use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpPresentation\IOFactory as PptFactory;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpWord\IOFactory as WordFactory;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class FileProperties
 {
-    public const string TIME_FORMAT = 'H:i:s';
-    public const string DATE_TIME_FORMAT = 'Y-m-d H:i:s T';
+    public const TIME_FORMAT = 'H:i:s';
+    public const DATE_TIME_FORMAT = 'Y-m-d H:i:s T';
 
     protected Collection $properties;
 
@@ -214,7 +217,7 @@ class FileProperties
             if (empty($reader)) {
                 return;
             }
-            $document = \PhpOffice\PhpWord\IOFactory::load($this->file->getRealPath(), $reader);
+            $document = WordFactory::load($this->file->getRealPath(), $reader);
             $properties = $document->getDocInfo();
 
             if ($creator = $properties->getCreator()) {

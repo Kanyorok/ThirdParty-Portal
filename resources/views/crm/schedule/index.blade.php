@@ -74,7 +74,7 @@
 @endsection
 @section('content')
     <div class="row">
-        <div class="col-6 mb-1"><h2>@yield('title')</h2></div>
+        <div class="col-6 mb-1"></div>
         <div class="col-6 mb-1">
             <div class="float-end">
                 {{--<button type="button" class="btn btn-outline-primary modal-create-call-schedule"><i class="fas fa-calendar-plus"></i>&nbsp; add scheduled call</button>
@@ -276,7 +276,6 @@
         const _type = $('#scheduleType'), windowLocation = window.location.toString();
         let start = null, end = null, client = null;
         $(function () {
-
             window.calendar = new FullCalendar.Calendar(document.getElementById('fullcalendar'), {
                 initialView: 'timeGridWeek',
                 themeSystem: 'bootstrap5',
@@ -287,7 +286,6 @@
                 businessHours: [
                     {
                         daysOfWeek: [1, 2, 3, 4, 5],
-
                         startTime: '08:00',
                         endTime: '18:00',
                     },
@@ -342,13 +340,11 @@
                         eventInfo.revert();
                         return;
                     }
-
                     if (ended.diff(start, 'hours') > 8) {
                         nWarning('Schedule cannot be more than 6 hours');
                         eventInfo.revert();
                         return;
                     }
-
                     $.ajax({
                         url: windowLocation.replace('#', '') + "/" + eventInfo.event._def.publicId,
                         type: 'PUT',
@@ -369,7 +365,6 @@
                             eventInfo.revert();
                         }
                     });
-
                 },
                 eventClick: function (eventInfo) {
                     let event = eventInfo.event;
@@ -426,23 +421,43 @@
                 dropdownParent: $Modal,
             });
 
+            const now = moment().add(10, 'm').format('YYYY-MM-DD HH:mm');
 
             flatpickr("#StaffMeetingStart", {
-                minDate: moment().add(10, 'm').format('YYYY-MM-DD hh:mm'),
-                mode: 'range',
-                dateFormat: "Y-m-d H:i",
-                allowInput: true,
                 enableTime: true,
-                "plugins": [new rangePlugin({input: "#StaffMeetingEnd"})]
+                altInput: true,
+                minuteIncrement: 1,
+                minDate: now,
+                defaultDate: now,
+                altFormat: "Y-m-d H:i",
+                dateFormat: "Y-m-d H:i",
+                onChange: function (selectedDates) {
+                    if (selectedDates.length) {
+                        let startTime = moment(selectedDates[0]);
+                        let endTime = startTime.clone().add(30, 'minutes');
+                        $("#StaffMeetingEnd").val(endTime.format('YYYY-MM-DD HH:mm'));
+                        if (end) {
+                            end.setDate(endTime.toDate());
+                        }
+                    }
+                }
             });
 
+            end = flatpickr("#StaffMeetingEnd", {
+                enableTime: true,
+                altInput: true,
+                minuteIncrement: 1,
+                minDate: now,
+                altFormat: "Y-m-d H:i",
+                dateFormat: "Y-m-d H:i"
+            });
 
             /* $(document).on('click', '.modal-create-call-schedule', function () {
-                 showCreateModal(moment().format('YYYY-MM-DD hh:mm'), moment().add(30,'m').format('YYYY-MM-DD hh:mm'),'call');
+                 showCreateModal(moment().format('YYYY-MM-DD HH:mm'), moment().add(30,'m').format('YYYY-MM-DD HH:mm'),'call');
              });
 
              $(document).on('click', '.modal-create-meeting-schedule', function () {
-                 showCreateModal(moment().format('YYYY-MM-DD hh:mm'), moment().add(30,'m').format('YYYY-MM-DD hh:mm'), 'meeting');
+                 showCreateModal(moment().format('YYYY-MM-DD HH:mm'), moment().add(30,'m').format('YYYY-MM-DD HH:mm'), 'meeting');
              });
 
              $('#client').on('change', function() {
@@ -465,7 +480,7 @@
                          }
                      }
                  }
-             });*/
+             }); */
 
             $('form#deleteScheduleForm').submit(async function (e) {
                 e.preventDefault();
@@ -474,9 +489,9 @@
                     $Modal.modal('hide');
                     window.bsOffcanvas.hide();
                     if (window.calendar !== null) {
-                        let event = window.calendar.getEventById(data.event.id)
+                        let event = window.calendar.getEventById(data.event.id);
                         if (event !== null) {
-                            event.remove();//note update  triggers update event.
+                            event.remove();
                             window.calendar.addEvent(data.event);
                         }
                     }
@@ -484,139 +499,101 @@
             });
         });
 
-        function validateDates(startId, endId, isStart) {
-            clearInvalid(startId);
-            clearInvalid(endId);
-
-            let start_time = moment($("#" + startId).val(), "YYYY-MM-DD HH:mm");
-
-            if (!start_time.isValid()) {
-                setInvalid(startId, 'Invalid date here');
-                return false;
-            }
-            let end_time = moment($("#" + endId).val(), "YYYY-MM-DD HH:mm");
-            if (isStart) {
-                end_time = start_time.clone().add(30, 'm');
-                end.setDate(new Date(end_time.format('YYYY-MM-DD HH:mm')));
-            }
-
-
-            if (!end_time.isValid()) {
-                setInvalid(endId, 'Invalid date here');
-                return false;
-            }
-            if (moment().subtract(2, 'm').isAfter(start_time)) {
-                setInvalid(startId, 'cannot schedule date after now');
-                return false;
-            }
-
-            if (start_time.isSame(end_time) || end_time.isBefore(start_time)) {
-                setInvalid(endId, 'End time should be after start.');
-                return false;
-            }
-
-            if (Math.abs(start_time.diff(end_time, 'minutes')) < 1) {
-                setInvalid(endId, 'Duration should be atleast a minute.');
-                return false;
-            }
-            return true;
-        }
-
         /*function showCreateModal(start_time, end_time, type) {
-            if (start !== null){
-                start.destroy();
-            }
-            if (end !== null){
-                end.destroy();
-            }
-            if (client !== null){
-                client.select2('destroy');
-            }
+       if (start !== null){
+           start.destroy();
+       }
+       if (end !== null){
+           end.destroy();
+       }
+       if (client !== null){
+           client.select2('destroy');
+       }
 
-            _type.val(type);
-            if(type === 'meeting'){
-                $(".modal-title").html('Schedule a meeting.');
-                $('#schedule_location').val('').parent('div').removeClass('d-none');
-                $('#schedule_title').val('').parent('div').removeClass('d-none');
-                $('#branches').val('').parent('div').removeClass('d-none');
-                //$('#schedule_title').removeAttr("readonly").val('');
-                client = $('#client').val([]).attr('multiple',"multiple").change().select2({
-                    placeholder: "Choose a client...", minimumInputLength: 2,
-                    dropdownParent: $Modal,
-                    ajax: {
-                        url: '{ {route('clients.select2')}}',
-                        dataType: 'json',
-                        delay: 250,
-                        data: function (params) {
-                            return {q: $.trim(params.term)};
-                        },
-                        processResults: function (data) {
-                            return {
-                                results: $.map(data, function (item) {
-                                    return {text: item.Name + ' - ' + item.ClientID, id: item.ClientID}
-                                })
-                            };
-                        },
-                        cache: true
-                    }
-                });
-            } else if (type === 'call') {
-                $(".modal-title").html('Schedule a call.');
-                $('#schedule_location').val('').parent('div').addClass('d-none');
-                $('#schedule_title').val('').parent('div').addClass('d-none');
-                $('#branches').val('').parent('div').addClass('d-none');
-                //$('#schedule_title').attr("readonly","readonly").val('');
-                client = $('#client').val([]).removeAttr("multiple").change().select2({
-                    placeholder: "Choose a client...", minimumInputLength: 2,
-                    dropdownParent: $Modal,
-                    ajax: {
-                        url: '{ {route('clients.select2')}}',
-                        dataType: 'json',
-                        delay: 250,
-                        data: function (params) {
-                            return {q: $.trim(params.term)};
-                        },
-                        processResults: function (data) {
-                            return {
-                                results: $.map(data, function (item) {
-                                    return {text: item.Name + ' - ' + item.ClientID, id: item.ClientID}
-                                })
-                            };
-                        },
-                        cache: true
-                    }
-                });
-            } else {
-                nWarning('Unknown type of schedule.');
-                return;
-            }
+       _type.val(type);
+       if(type === 'meeting'){
+           $(".modal-title").html('Schedule a meeting.');
+           $('#schedule_location').val('').parent('div').removeClass('d-none');
+           $('#schedule_title').val('').parent('div').removeClass('d-none');
+           $('#branches').val('').parent('div').removeClass('d-none');
+           //$('#schedule_title').removeAttr("readonly").val('');
+           client = $('#client').val([]).attr('multiple',"multiple").change().select2({
+               placeholder: "Choose a client...", minimumInputLength: 2,
+               dropdownParent: $Modal,
+               ajax: {
+                   url: '{ {route('clients.select2')}}',
+                   dataType: 'json',
+                   delay: 250,
+                   data: function (params) {
+                       return {q: $.trim(params.term)};
+                   },
+                   processResults: function (data) {
+                       return {
+                           results: $.map(data, function (item) {
+                               return {text: item.Name + ' - ' + item.ClientID, id: item.ClientID}
+                           })
+                       };
+                   },
+                   cache: true
+               }
+           });
+       } else if (type === 'call') {
+           $(".modal-title").html('Schedule a call.');
+           $('#schedule_location').val('').parent('div').addClass('d-none');
+           $('#schedule_title').val('').parent('div').addClass('d-none');
+           $('#branches').val('').parent('div').addClass('d-none');
+           //$('#schedule_title').attr("readonly","readonly").val('');
+           client = $('#client').val([]).removeAttr("multiple").change().select2({
+               placeholder: "Choose a client...", minimumInputLength: 2,
+               dropdownParent: $Modal,
+               ajax: {
+                   url: '{ {route('clients.select2')}}',
+                   dataType: 'json',
+                   delay: 250,
+                   data: function (params) {
+                       return {q: $.trim(params.term)};
+                   },
+                   processResults: function (data) {
+                       return {
+                           results: $.map(data, function (item) {
+                               return {text: item.Name + ' - ' + item.ClientID, id: item.ClientID}
+                           })
+                       };
+                   },
+                   cache: true
+               }
+           });
+       } else {
+           nWarning('Unknown type of schedule.');
+           return;
+       }
 
-            $("#schedule_start").val(start_time);
-            start = flatpickr("#schedule_start", {
-                enableTime: true,
-                altInput: true,
-                minDate: moment().format('YYYY-MM-DD hh:mm'),
-                defaultDate: start_time,
-                minuteIncrement: 1,
-                altFormat: "F j, Y H:i",
-                dateFormat: "Y-m-d H:i",
-            });
+       $("#schedule_start").val(start_time);
+       start = flatpickr("#schedule_start", {
+           enableTime: true,
+           altInput: true,
+           minDate: moment().format('YYYY-MM-DD hh:mm'),
+           defaultDate: start_time,
+           minuteIncrement: 1,
+           altFormat: "F j, Y H:i",
+           dateFormat: "Y-m-d H:i",
+       });
 
-            $("#schedule_end").val(end_time);
-            end = flatpickr("#schedule_end", {
-                enableTime: true,
-                altInput: true,
-                minuteIncrement: 1,
-                minDate: moment().add(2,'m').format('YYYY-MM-DD hh:mm'),
-                defaultDate: end_time,
-                altFormat: "F j, Y H:i",
-                dateFormat: "Y-m-d H:i",
-            });
+       $("#schedule_end").val(end_time);
+       end = flatpickr("#schedule_end", {
+           enableTime: true,
+           altInput: true,
+           minuteIncrement: 1,
+           minDate: moment().add(2,'m').format('YYYY-MM-DD hh:mm'),
+           defaultDate: end_time,
+           altFormat: "F j, Y H:i",
+           dateFormat: "Y-m-d H:i",
+       });
 
-            $(".modal-item").addClass('d-none');
-            $('#createScheduleModal').removeClass('d-none');
-            $Modal.modal('show');
-        }*/
+       $(".modal-item").addClass('d-none');
+       $('#createScheduleModal').removeClass('d-none');
+       $Modal.modal('show');
+   }*/
 
     </script>
 @endsection

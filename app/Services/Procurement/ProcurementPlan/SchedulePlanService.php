@@ -5,7 +5,7 @@ namespace App\Services\Procurement\ProcurementPlan;
 use App\Enums\Procurement\SchedulePlanEnum;
 use App\Models\Auth\User;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
-use App\Models\Procurement\PlanLineItems;
+use App\Models\Procurement\PlanLineItem;
 use App\Models\Procurement\SchedulePlan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Validator;
 
 class SchedulePlanService
 {
-    public function create(array $data, User $actor, ConsolidatedProcurementPlan $plan, PlanLineItems $lineItem): SchedulePlan
+    public function create(array $data, User $actor, ConsolidatedProcurementPlan $plan, PlanLineItem $lineItem): SchedulePlan
     {
         Validator::make($data, [
             'ScheduleQTY' => 'required|integer|min:0',

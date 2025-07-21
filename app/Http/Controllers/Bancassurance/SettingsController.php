@@ -116,5 +116,14 @@ public function edit($id)
 
     return view('bancassurance.settings.edit', compact('record', 'codeTypes'));
 }
+public function create()
+{
+    $codeTypes = DB::table('t_CodeDetails')
+        ->select('CodeID')
+        ->distinct()
+        ->pluck('CodeID')
+        ->toArray();
 
+    return view('bancassurance.settings.create', compact('codeTypes'));
+}
 }

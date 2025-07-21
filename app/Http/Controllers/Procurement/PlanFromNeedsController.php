@@ -11,8 +11,8 @@ use App\Models\HRM\Department;
 use App\Models\Inventory\ItemCategories;
 use App\Models\Procurement\BudgetMaster;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
-use App\Models\Procurement\DepartmentNeeds;
-use App\Models\Procurement\PlanLineItems;
+use App\Models\Procurement\DepartmentNeed;
+use App\Models\Procurement\PlanLineItem;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,7 +22,7 @@ class PlanFromNeedsController extends Controller
     // Load main view with filters and initial needs
     public function create(Request $request)
     {
-        $this->authorize('create', PlanLineItems::class);
+        $this->authorize('create', PlanLineItem::class);
         $approvedNeeds = $this->getFilteredNeeds($request);
 
         $plans = ConsolidatedProcurementPlan::where('Status', ProcurementPlanStatusEnum::Draft)->select('PlanID', 'Title', 'FiscalYear')->get();
@@ -47,7 +47,7 @@ class PlanFromNeedsController extends Controller
     // Utility to apply filters
     private function getFilteredNeeds(Request $request)
     {
-        $query = DepartmentNeeds::with(['item', 'branch', 'department'])->where('Status', DepartmentNeedsEnum::Approved)->where('IsUsed', false);
+        $query = DepartmentNeed::with(['item', 'branch', 'department'])->where('Status', DepartmentNeedsEnum::Approved)->where('IsUsed', false);
 
         if ($request->filled('branch_filter')) {
             $query->where('BranchID', $request->branch_filter);
@@ -69,10 +69,10 @@ class PlanFromNeedsController extends Controller
     // Store selected needs
     public function store(PlanFromNeedsRequest $request)
     {
-        $this->authorize('store', PlanLineItems::class);
+        $this->authorize('store', PlanLineItem::class);
         $user = $request->user();
 
-        $selectedNeeds = DepartmentNeeds::whereIn('Id', $request->selected_needs)->with('item')->get();
+        $selectedNeeds = DepartmentNeed::whereIn('Id', $request->selected_needs)->with('item')->get();
 
         $noFilters = !$request->filled('branch_filter') && !$request->filled('department_filter') && !$request->filled('category_id');
 
@@ -93,7 +93,7 @@ class PlanFromNeedsController extends Controller
             }
 
             // Create the plan line item
-            PlanLineItems::create([
+            PlanLineItem::create([
                 'PlanID' => $request->plan_id,
                 'ItemID' => $need->ItemID,
                 'BranchID' => $branchId,

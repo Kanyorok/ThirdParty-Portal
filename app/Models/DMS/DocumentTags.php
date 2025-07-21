@@ -11,9 +11,9 @@ class DocumentTags extends Pivot
 {
     use SoftDeletes, UserActorTrait;
 
-    const string CREATED_AT = 'CreatedOn';
-    const string UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    const CREATED_AT = 'CreatedOn';
+    const UPDATED_AT = 'ModifiedOn';
+    const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_DocumentTags';
     protected $primaryKey = 'Id';
@@ -22,6 +22,7 @@ class DocumentTags extends Pivot
         'DocId', 'TagId',
         'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
+
 
     public static function getPrimaryKey(): string
     {

@@ -3,9 +3,7 @@
 namespace App\Policies\Inventory;
 
 use App\Enums\Core\PermissionEnum;
-use App\Models\Inventory\InventoryHoldReview;
 use App\Models\Auth\User;
-use Illuminate\Auth\Access\Response;
 
 class InventoryHoldReviewPolicy
 {
@@ -57,5 +55,5 @@ class InventoryHoldReviewPolicy
         return $user->can(PermissionEnum::InventoryHoldReviewUpdate->value);
     }
 
-   
+
 }

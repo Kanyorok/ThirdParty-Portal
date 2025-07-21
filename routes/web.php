@@ -46,6 +46,9 @@ Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function (
         Route::resource('roles', 'RoleController')->except(['show']);
 
         Route::namespace('Users')->group(function () {
+            Route::post('user_roles/branch', 'UserRoleController@storeBranch')->name('user_roles.store_branch');
+            Route::delete('settings/users/branch-role/{modelRole}', 'UserRoleController@destroy')
+                ->name('user_roles.delete_branch');
             Route::prefix('users/{user}')->group(function () {
                 Route::resource('user_roles', 'UserRoleController')->only(['index', 'store']);
                 Route::get('activities', 'UserActivitiesController')->name('user.activities');

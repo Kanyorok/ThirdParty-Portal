@@ -8,26 +8,26 @@ use Illuminate\Support\Facades\DB;
 
 class GLMappingController extends Controller
 {
-public function index()
-{
-    $mappings = DB::table('t_GLPostingMap as m')
-        ->leftJoin('t_TransactionTypes as t', 'm.TransactionTypeID', '=', 't.Id')
-        ->select(
-            'm.*',
-            't.Code as TransactionCode',
-            't.Description as TransactionDescription'
-        )
-        ->orderBy('m.Module')
-        ->get();
+    public function index()
+    {
+        $mappings = DB::table('t_GLPostingMap as m')
+            ->leftJoin('t_TransactionTypes as t', 'm.TransactionTypeID', '=', 't.Id')
+            ->select(
+                'm.*',
+                't.Code as TransactionCode',
+                't.Description as TransactionDescription'
+            )
+            ->orderBy('m.Module')
+            ->get();
 
-    return view('finance.integration.glmapping.index', compact('mappings'));
-}
+        return view('finance.integration.glmapping.index', compact('mappings'));
+    }
 
-public function create()
-{
-    $transactionTypes = DB::table('t_TransactionTypes')->where('IsActive', 1)->get();
-    return view('finance.integration.glmapping.create', compact('transactionTypes'));
-}
+    public function create()
+    {
+        $transactionTypes = DB::table('t_TransactionTypes')->where('IsActive', 1)->get();
+        return view('finance.integration.glmapping.create', compact('transactionTypes'));
+    }
 
     public function store(Request $request)
     {

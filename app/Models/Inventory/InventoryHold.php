@@ -1,14 +1,13 @@
 <?php
+
 namespace App\Models\Inventory;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Auth\User;
 use App\Models\Core\Branch;
-use App\Models\Inventory\Store;
-use App\Models\Inventory\ItemMasterList;
 use App\Models\Core\CodeDetail;
 use App\Traits\Model\UserActorTrait;
-use App\Models\Auth\User;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class InventoryHold extends Model
 {
@@ -24,20 +23,22 @@ class InventoryHold extends Model
 
 
     protected $fillable = [
-        'InventoryHoldID','ItemID', 'BranchID', 'Store', 'Quantity', 'Reason', 'Source', 'SourceID',
+        'InventoryHoldID', 'ItemID', 'BranchID', 'Store', 'Quantity', 'Reason', 'Source', 'SourceID',
         'Status', 'Remarks', 'CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn', 'DeletedBy'
     ];
+
     public function defect()
-{
-    return $this->belongsTo(CodeDetail::class, 'Reason', 'ID')
-        ->where('CodeID', 'Adjustment Reason');
-}
+    {
+        return $this->belongsTo(CodeDetail::class, 'Reason', 'ID')
+            ->where('CodeID', 'Adjustment Reason');
+    }
 
     public function item()
     {
         return $this->belongsTo(ItemMasterList::class, 'ItemID');
     }
-     public function creator()
+
+    public function creator()
     {
         return $this->belongsTo(User::class, 'CreatedBy', 'Id');
     }
@@ -66,26 +67,26 @@ class InventoryHold extends Model
     {
         return $this->belongsTo(CodeDetail::class, 'Source');
     }
-     public static function getPrimaryKey(): string
+
+    public static function getPrimaryKey(): string
     {
         return 'Id';
     }
-   protected static function booted()
-{
-    static::created(function ($hold) {
-        if (!$hold->InventoryHoldID) {
-            $year = now()->format('Y');
-            $hold->newQueryWithoutScopes()
-                ->where('Id', $hold->Id)
-                ->update([
-                    'InventoryHoldID' => 'HLD-' . $year . '-' . str_pad($hold->Id, 4, '0', STR_PAD_LEFT)
-                ]);
-            $hold->InventoryHoldID = 'HLD-' . $year . '-' . str_pad($hold->Id, 4, '0', STR_PAD_LEFT);
-        }
-    });
-}
+
+    protected static function booted()
+    {
+        static::created(function ($hold) {
+            if (!$hold->InventoryHoldID) {
+                $year = now()->format('Y');
+                $hold->newQueryWithoutScopes()
+                    ->where('Id', $hold->Id)
+                    ->update([
+                        'InventoryHoldID' => 'HLD-' . $year . '-' . str_pad($hold->Id, 4, '0', STR_PAD_LEFT)
+                    ]);
+                $hold->InventoryHoldID = 'HLD-' . $year . '-' . str_pad($hold->Id, 4, '0', STR_PAD_LEFT);
+            }
+        });
+    }
 
 
-    
-    
 }

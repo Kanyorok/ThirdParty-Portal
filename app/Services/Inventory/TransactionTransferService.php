@@ -2,20 +2,22 @@
 
 namespace App\Services\Inventory;
 
-use App\Models\Inventory\TransactionTransfer;
-use App\Models\Inventory\TransactionTransferItem;
-use App\Models\Inventory\InterBranchRequisition;
-use App\Models\Core\Workflow;
-use App\Models\Core\PendingWorkflow;
-use App\Models\Inventory\StockItem;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Log;
 use App\Enums\Inventory\Transfers;
 use App\Models\Core\Branch;
-use App\Models\Inventory\InventoryHold;
 use App\Models\Core\CodeDetail;
+use App\Models\Core\PendingWorkflow;
+use App\Models\Core\Workflow;
+use App\Models\Inventory\InterBranchRequisition;
+use App\Models\Inventory\InventoryHold;
+use App\Models\Inventory\StockItem;
+use App\Models\Inventory\TransactionTransfer;
+use App\Models\Inventory\TransactionTransferItem;
+use App\Models\Procurement\Requisitions;
+use Exception;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class TransactionTransferService
 {
@@ -23,7 +25,7 @@ class TransactionTransferService
     {
         $hqBranch = Branch::where('IsHQ', 1)->first();
         if (!$hqBranch) {
-            throw new \Exception('No HQ branch defined. Please set a branch as HQ.');
+            throw new Exception('No HQ branch defined. Please set a branch as HQ.');
         }
         return $hqBranch->Id;
     }
@@ -33,7 +35,7 @@ class TransactionTransferService
         $data['Status'] = Transfers::Pending;
 
         if ($data['RequisitionType'] === 'procurement') {
-            $requisition = \App\Models\Procurement\Requisitions::findOrFail($data['RequisitionId']);
+            $requisition = Requisitions::findOrFail($data['RequisitionId']);
             $fromBranch = $this->getHQBranchId();
             $toBranch = $requisition->BranchID;
         } else {
@@ -43,7 +45,7 @@ class TransactionTransferService
         }
 
         if (empty($data['TransferDate'])) {
-            throw new \Exception('TransferDate is required.');
+            throw new Exception('TransferDate is required.');
         }
 
         $transfer = new TransactionTransfer([
@@ -110,20 +112,20 @@ class TransactionTransferService
                 ->first();
 
             if (!$stock || $stock->CurrentQty < $dispatchedQty) {
-                throw new \Exception("Insufficient stock for ItemID {$itemId} in Branch {$fromBranch}.");
+                throw new Exception("Insufficient stock for ItemID {$itemId} in Branch {$fromBranch}.");
             }
 
             $created = TransactionTransferItem::create([
-                'TransferId'    => $transfer->Id,
-                'Item'          => $itemId,
-                'ApprovedQty'   => $itemData['approved_qty'],
-                'UOM'           => $itemData['uom'],
+                'TransferId' => $transfer->Id,
+                'Item' => $itemId,
+                'ApprovedQty' => $itemData['approved_qty'],
+                'UOM' => $itemData['uom'],
                 'DispatchedQty' => $dispatchedQty,
-                'Remarks'       => $itemData['remarks'] ?? null,
-                'CreatedBy'     => Auth::id(),
-                'ModifiedBy'    => Auth::id(),
-                'CreatedOn'     => now(),
-                'ModifiedOn'    => now(),
+                'Remarks' => $itemData['remarks'] ?? null,
+                'CreatedBy' => Auth::id(),
+                'ModifiedBy' => Auth::id(),
+                'CreatedOn' => now(),
+                'ModifiedOn' => now(),
             ]);
 
             activity()->performedOn($created)->causedBy(Auth::user())
@@ -156,29 +158,29 @@ class TransactionTransferService
                 }
 
                 InventoryHold::create([
-                    'ItemID'     => $item->Item,
-                    'BranchID'   => $transfer->ToBranch,
-                    'Quantity'   => $item->DispatchedQty,
-                    'Reason'     => CodeDetail::where('CodeID', 'AdjustmentReason')->where('Description', 'In Transit')->value('ID'),
-                    'Source'     => CodeDetail::where('CodeID', 'Source')->where('Description', 'Transaction Transfer')->value('ID'),
-                    'SourceID'   => $transfer->Id,
-                    'Status'     => Transfers::InTransit->value,
-                    'Remarks'    => $item->Remarks,
-                    'CreatedBy'  => Auth::id(),
-                    'CreatedOn'  => now(),
+                    'ItemID' => $item->Item,
+                    'BranchID' => $transfer->ToBranch,
+                    'Quantity' => $item->DispatchedQty,
+                    'Reason' => CodeDetail::where('CodeID', 'AdjustmentReason')->where('Description', 'In Transit')->value('ID'),
+                    'Source' => CodeDetail::where('CodeID', 'Source')->where('Description', 'Transaction Transfer')->value('ID'),
+                    'SourceID' => $transfer->Id,
+                    'Status' => Transfers::InTransit->value,
+                    'Remarks' => $item->Remarks,
+                    'CreatedBy' => Auth::id(),
+                    'CreatedOn' => now(),
                     'ModifiedBy' => Auth::id(),
                     'ModifiedOn' => now(),
                 ]);
             }
 
             Workflow::create([
-                'Source'     => 'TransactionTransfer',
-                'SourceID'   => $transfer->Id,
-                'Stage'      => Transfers::InTransit->label(),
-                'Status'     => Transfers::InTransit->value,
-                'Notes'      => 'Transaction Transfer Approved: stock deducted from origin branch',
-                'CreatedBy'  => Auth::id(),
-                'CreatedOn'  => now(),
+                'Source' => 'TransactionTransfer',
+                'SourceID' => $transfer->Id,
+                'Stage' => Transfers::InTransit->label(),
+                'Status' => Transfers::InTransit->value,
+                'Notes' => 'Transaction Transfer Approved: stock deducted from origin branch',
+                'CreatedBy' => Auth::id(),
+                'CreatedOn' => now(),
                 'ModifiedBy' => Auth::id(),
                 'ModifiedOn' => now(),
             ]);
@@ -192,7 +194,7 @@ class TransactionTransferService
                 ->log('Approved Transaction Transfer: stock deducted only from FromBranch');
 
             DB::commit();
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             DB::rollBack();
             Log::error('Transfer approval failed: ' . $th->getMessage(), [
                 'transfer_id' => $id,
