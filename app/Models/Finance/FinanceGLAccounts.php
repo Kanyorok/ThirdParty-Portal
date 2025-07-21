@@ -30,8 +30,18 @@ class FinanceGLAccounts extends Model
         'BranchID',
         'Description',
         'IsActive',
+
         'CreatedBy',
+        'CreatedOn',
         'ModifiedBy',
+        'ModifiedOn',
+        'DeletedBy',
+    ];
+
+    protected $cast = [
+        'CreatedOn' => 'datetime',
+        'ModifiedOn' => 'datetime',
+        'DeletedOn' => 'datetime',
     ];
 
     public static function getPrimaryKey(): string

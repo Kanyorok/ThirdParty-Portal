@@ -19,8 +19,18 @@ class FinanceGLTypeGroup extends Model
         'TypeGroupCode',
         'GLAccountTypeId',
         'Description',
+
         'CreatedBy',
+        'CreatedOn',
         'ModifiedBy',
+        'ModifiedOn',
+        'DeletedBy',
+    ];
+
+    protected $cast = [
+        'CreatedOn' => 'datetime',
+        'ModifiedOn' => 'datetime',
+        'DeletedOn' => 'datetime',
     ];
 
     public static function getPrimaryKey(): string

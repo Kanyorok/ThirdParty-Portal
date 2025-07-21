@@ -140,4 +140,10 @@ Route::namespace('Finance')->prefix('finance')->group(function () {
     // AJAX routes for dependent selects
     Route::get('/get-type-groups', [ChartOfAccountsController::class, 'getTypeGroups']);
     Route::get('/get-sub-account-types', [ChartOfAccountsController::class, 'getSubAccountTypes']);
+
+    //Added Individual Routes
+    Route::post('/segment-order/save', [COASegmentController::class, 'segmentOrder'])->name('segment-order.save');
+    Route::post('/gl/save', [COASegmentController::class, 'segmentOrder'])->name('segment-order.save');
+    Route::post('/glDigits/save', [COASegmentController::class, 'editGlDigit'])->name('glDigits.save');
+
 });
