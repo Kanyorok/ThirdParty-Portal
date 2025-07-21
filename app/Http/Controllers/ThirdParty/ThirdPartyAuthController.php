@@ -24,10 +24,8 @@ class ThirdPartyAuthController extends Controller
     }
 
     public function register(
-        
-        $request): JsonResponse
-    {
-        $data = $request->validated();
+        RegisterThirdPartyUserRequest $request
+    ): JsonResponse {
         try {
             $userData = $this->registrationService->registerUser($request->validated());
             $token = $userData->createToken('auth-token', ['*'], now()->addDays(config('sanctum.expiration', 7)))->plainTextToken;
@@ -41,10 +39,11 @@ class ThirdPartyAuthController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'message' => __('auth.registration_failed_general'),
-                'error' => config('app.debug') ? $e->getMessage() : null,
+                'error' => config('app.debug') ? $e->getMessage() : null, // Good use of config('app.debug')
             ], 500);
         }
     }
+
 
     public function login(Request $request)
     {
