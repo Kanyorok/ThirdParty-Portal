@@ -43,7 +43,6 @@ class PriceManagementService
         $pricing->CreatedOn = Carbon::now();
         $pricing->ModifiedBy = Auth::id();
         $pricing->ModifiedOn = Carbon::now();
-        $pricing->save();
 
         $pricing->PriceID = 'PR-' . str_pad($pricing->Id, 5, '0', STR_PAD_LEFT);
         $pricing->save();
