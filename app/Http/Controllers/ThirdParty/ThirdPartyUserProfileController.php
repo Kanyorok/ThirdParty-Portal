@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Hash;
 
 class ThirdPartyUserProfileController extends Controller
 {
@@ -182,6 +183,40 @@ class ThirdPartyUserProfileController extends Controller
             'message' => __('auth.profile_update_ok'),
             'user_profile' => new ThirdPartyUserResource($user),
         ]);
+    }
+
+    public function changePassword(Request $request): JsonResponse
+    {
+        $user = Auth::guard('sanctum')->user();
+
+        try {
+            $request->validate([
+                'current_password' => ['required', 'string'],
+                'new_password' => ['required', 'string', 'min:8', 'confirmed'],
+            ]);
+
+            if (!Hash::check($request->current_password, $user->Password)) {
+                throw ValidationException::withMessages([
+                    'current_password' => [__('auth.password_mismatch')],
+                ]);
+            }
+
+            $user->fill([
+                'Password' => Hash::make($request->new_password),
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
+            ])->save();
+
+            return response()->json(['message' => __('auth.password_changed_ok')], 200);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => __('auth.validation_failed'),
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Password change failed: ' . $e->getMessage(), ['user_id' => Auth::id(), 'exception' => $e]);
+            return response()->json(['message' => __('auth.password_change_failed')], 500);
+        }
     }
 
     public function destroy(Request $request): JsonResponse

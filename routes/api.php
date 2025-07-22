@@ -27,6 +27,8 @@ Route::middleware(['auth:sanctum'])->prefix('third-party-profile')->group(functi
     Route::put('/', [ThirdPartyUserProfileController::class, 'update']);
     Route::patch('/', [ThirdPartyUserProfileController::class, 'partialUpdate']);
     Route::delete('/', [ThirdPartyUserProfileController::class, 'destroy']);
+
+    Route::put('/password', [ThirdPartyUserProfileController::class, 'changePassword']);
 });
 
 Route::middleware(['auth:sanctum', 'thirdparty.approved'])->prefix('third-parties')->group(function () {
