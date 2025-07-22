@@ -75,11 +75,12 @@ use App\Models\Inventory\TransactionReceipt;
 use App\Models\Inventory\TransactionTransfer;
 use App\Models\Inventory\UnitOfMeasure;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
+use App\Models\Procurement\DepartmentNeed;
 use App\Models\Procurement\Order;
+use App\Models\Procurement\PlanLineItem;
 use App\Models\Procurement\PrequalificationPeriod;
 use App\Models\Procurement\ProcurementMethod;
 use App\Models\Procurement\RequisitionLine;
-
 use App\Models\Procurement\Requisitions;
 use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQLine;
@@ -211,10 +212,12 @@ class AppServiceProvider extends ServiceProvider
             Requisitions::getPrimaryKey() => Requisitions::class,
             RequisitionLine::getPrimaryKey() => RequisitionLine::class,
             Order::getPrimaryKey() => Order::class,
+            DepartmentNeed::getPrimaryKey() => DepartmentNeed::class,
             ProcurementMethod::getPrimaryKey() => ProcurementMethod::class,
             SchedulePlan::getPrimaryKey() => SchedulePlan::class,
             InterBranchRequisition::getPrimaryKey() => InterBranchRequisition::class,
             ConsolidatedProcurementPlan::getPrimaryKey() => ConsolidatedProcurementPlan::class,
+            PlanLineItem::getPrimaryKey() => PlanLineItem::class,
 
             //iINVENTORY
             ItemMasterList::getPrimaryKey() => ItemMasterList::class,
@@ -313,7 +316,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(RequisitionLine::class, RequisitionLinesPolicy::class);
         Gate::policy(ProductDevelopment::class, ProductDevelopmentPolicy::class);
         Gate::policy(Order::class, OrderPolicy::class);
-        Gate::policy(DepartmentNeeds::class, DepartmentNeedsPolicy::class);
+        Gate::policy(DepartmentNeed::class, DepartmentNeedsPolicy::class);
         Gate::policy(ProcurementMethod::class, ProcurementMethodPolicy::class);
         Gate::policy(ItemMasterList::class, ItemMasterListPolicy::class);
         Gate::policy(ItemCategories::class, ItemCategoryPolicy::class);
@@ -325,7 +328,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PriceManagement::class, PriceManagementPolicy::class);
         Gate::policy(ConsolidatedProcurementPlan::class, ProcurementPlanMaintainPolicy::class);
         Gate::policy(SchedulePlan::class, SchedulePlanPolicy::class);
-        Gate::policy(PlanLineItems::class, PlanManualInputPolicy::class);
+        Gate::policy(PlanLineItem::class, PlanManualInputPolicy::class);
         Gate::policy(InterBranchRequisition::class, InterBranchRequisitionPolicy::class);
         Gate::policy(TransactionReceipt::class, TransactionReceiptPolicy::class);
         Gate::policy(StockAdjustment::class, StockAdjustmentPolicy::class);
