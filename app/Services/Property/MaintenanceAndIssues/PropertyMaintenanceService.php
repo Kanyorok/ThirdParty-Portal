@@ -31,14 +31,18 @@ class PropertyMaintenanceService
         User    $user
     ):self {
 
-            $lastRequestNumber = PropertyMaintenanceRequest::withTrashed() // in case you're using soft deletes
-                ->selectRaw("MAX(CAST(SUBSTRING(RequestNumber, 7, LEN(RequestNumber)) AS INT)) as max_number")
-                ->value('max_number');
+          $lastRequestNumber = PropertyMaintenanceRequest::withTrashed()
+        ->selectRaw("
+            MAX(CAST(SUBSTRING(RequestNumber, CHARINDEX('-', RequestNumber) + 1, LEN(RequestNumber)) AS INT)) as max_number
+        ")
+        ->value('max_number');
 
-            $nextNumber = $lastRequestNumber ? $lastRequestNumber + 1 : 1;
-            $RequestNumber = 'REQUEST-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+    $nextNumber = $lastRequestNumber ? $lastRequestNumber + 1 : 1;
 
-    {
+    $RequestNumber = 'REQUEST-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+
+    // Continue with the rest of your logic or return as needed
+ {
         $maintenancerequest = PropertyMaintenanceRequest::create([
             'RequestNumber' => $RequestNumber,
             'Property' => $Property->Id,

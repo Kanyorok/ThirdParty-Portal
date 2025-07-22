@@ -39,7 +39,7 @@
           <td>{{ $maintenancerequest->Priority ?? '_'}}</td>
           <td>{{ $maintenancerequest->IssueDescription ?? '_'}}</td>
           <td>
-          <button class="btn btn-sm btn-outline-success">🛠 Assign</button>
+                         <a href="{{ route('assignrequest.index', $maintenancerequest->Id) }}" class="btn btn-success btn-sm">Assign</a>
                          <a href="{{ route('maintenancerequest.show', $maintenancerequest->Id) }}" class="btn btn-success btn-sm">View</a>
                         <a href="{{ route('maintenancerequest.edit', $maintenancerequest->Id) }}" class="btn btn-info btn-sm">Edit</a>
                         <form action="{{ route('maintenancerequest.destroy', $maintenancerequest->Id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this lease?');">

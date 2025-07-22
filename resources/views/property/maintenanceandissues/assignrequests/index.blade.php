@@ -52,7 +52,7 @@
         <td>
             <a href="{{ route('assignrequest.show', $assignment->Id) }}" class="btn btn-sm btn-outline-primary">👁
                 View</a>
-          <button class="btn btn-sm btn-outline-success">✔ Complete</button>
+        <a href="{{ route('workcompletion.index', $assignment->Id) }}" class="btn btn-info btn-sm">Completion</a>
         <a href="{{ route('assignrequest.edit', $assignment->Id) }}" class="btn btn-info btn-sm">Edit</a>
           <form action="{{ route('assignrequest.destroy', $assignment->Id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this lease?');">
               @csrf

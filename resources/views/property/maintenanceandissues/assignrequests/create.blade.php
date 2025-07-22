@@ -66,9 +66,9 @@
                   <div class="col-md-4">
                       <label class="form-label">Assign To</label>
                       <select class="form-select" name="AssignmentType" id="assignmentTypeSelect" required>
-                          <option value="#">--Select a technician--</option>
+                          <option value="">--Select a technician--</option>
                           @foreach ($assignmentTypes as $assignmentType)
-                              <option value="{{ $assignmentType->ID }}">{{ $assignmentType->Description }}</option>
+                              <option value="{{ $assignmentType->Id}}">{{ $assignmentType->Description }}</option>
                           @endforeach
                       </select>
                   </div>
@@ -76,7 +76,7 @@
                   <div class="col-md-4">
                       <label class="form-label">Internal Technician</label>
                       <select class="form-select" name="InternalTechnician" id="internalTechnicianSelect">
-                          <option value="#">--Select a technician--</option>
+                          <option value="">--Select a technician--</option>
                           @foreach ($employees as $employee)
                               <option value="{{ $employee->Id }}">{{ $employee->JobTitle }}</option>
                           @endforeach
@@ -86,7 +86,7 @@
                   <div class="col-md-4">
                       <label class="form-label">Prequalified Vendor</label>
                       <select class="form-select" name="PrequalifiedVendor" id="vendorSelect">
-                          <option value="#">--Select a vendor--</option>
+                          <option value="">--Select a vendor--</option>
                           @foreach ($suppliers as $supplier)
                               <option value="{{ $supplier->Id }}">{{ $supplier->SupplierName }}</option>
                           @endforeach
@@ -107,9 +107,9 @@
                     <div class="col-md-4">
                         <label class="form-label">Priority Level</label>
                         <select class="form-select" name="PriorityLevel" id="priorityLevelSelect" required>
-                            <option value="#">--Select Priority Level--</option>
+                            <option value="">--Select Priority Level--</option>
                             @foreach ($priorityLevels as $priorityLevel)
-                                <option value="{{ $priorityLevel->ID }}">{{ $priorityLevel->Description }}</option>
+                                <option value="{{ $priorityLevel->Id }}">{{ $priorityLevel->Description }}</option>
                             @endforeach
                         </select>
                 </div>

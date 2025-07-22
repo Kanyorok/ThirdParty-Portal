@@ -48,34 +48,42 @@ class PropertyMaintananceAssignController extends Controller
         //dd($request->all());
 
         $validated = $request->validated();
+$assignmentType = CodeDetail::findOrFail($validated['AssignmentType']);
+$internalTechnician = isset($validated['InternalTechnician']) 
+    ? Employee::findOrFail($validated['InternalTechnician']) 
+    : null;
+
+$prequalifiedVendor = isset($validated['PrequalifiedVendor']) 
+    ? Supplier::findOrFail($validated['PrequalifiedVendor']) 
+    : null;
+
+$priorityLevel = CodeDetail::findOrFail($validated['PriorityLevel']);
+$requestNumber = PropertyMaintenanceRequest::findOrFail($validated['RequestNumber']);
+$assignmentDate = new \DateTime($validated['AssignmentDate']);
+$expectedStartDate = new \DateTime($validated['ExpectedStartDate']);
+$expectedCompletion = new \DateTime($validated['ExpectedCompletion']);
+
 
       // dd('validation');
 
-        $assignment = PropertyMaintenanceAssign::create([
-            'RequestNumber' => $validated['RequestNumber'],
-            'Property' => $validated['Property'],
-            'Block' => $validated['Block'],
-            'Floor' => $validated['Floor'],
-            'Unit' => $validated['Unit'],
-            'AssignmentDate' => $validated['AssignmentDate'],
-            'AssignmentType' => $validated['AssignmentType'],
-            'InternalTechnician' => $validated['InternalTechnician'] ?? null,
-            'PrequalifiedVendor' => $validated['PrequalifiedVendor'] ?? null,
-            'ExpectedStartDate' => $validated['ExpectedStartDate'],
-            'ExpectedCompletion' => $validated['ExpectedCompletion'],
-            'PriorityLevel' => $validated['PriorityLevel'],
-            'InstructionNotes' => $validated['InstructionNotes'],
-            'CreatedBy' => auth()->user()->Id,
-            'ModifiedBy' => auth()->user()->Id,
-        ]);
+        $assignment = PropertyMaintenanceAssignService::create(
+            $requestNumber,
+            $validated['Property'],
+            $validated['Block'],
+            $validated['Floor'],
+            $validated['Unit'],
+            $assignmentDate,
+            $assignmentType->Id,
+            $internalTechnician ?? null,
+            $prequalifiedVendor ?? null,
+            $expectedStartDate,
+            $expectedCompletion,
+            $priorityLevel,
+            $validated['InstructionNotes'],
+            auth()->user(),
+        );
+    return redirect()->route('assignrequest.index')->with('success', 'Assignment created successfully');
 
-        activity()
-            ->causedBy(auth()->user())
-            ->performedOn($assignment)
-            ->event('create')
-            ->log("Created Property Assignment #{$assignment->Id}.");
-
-        return redirect()->route('assignrequest.index')->with('success', 'Assignment created successfully');
     }
     public function edit($Id)
     {

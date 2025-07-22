@@ -2,6 +2,7 @@
 
 namespace App\Models\PropertyManagement;
 
+use App\Models\Core\CodeDetail;
 use Illuminate\Database\Eloquent\Model;
 
 class PropertyMaintenanceWorkCompletion extends Model
@@ -14,11 +15,11 @@ class PropertyMaintenanceWorkCompletion extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
+        'RequestNumber',
         'Property',
         'Block',
         'Floor',
         'Unit',
-        'IssueDescription',
         'CompletionDate',
         'WorkDoneSummary',
         'PartsUsed',
@@ -28,5 +29,16 @@ class PropertyMaintenanceWorkCompletion extends Model
         'ModifiedBy',
         'DeletedBy'
     ];
-
+    public static function getPrimaryKey(): string
+    {
+        return 'WorkCompletionId';
+    }
+    public function request()
+    {
+        return $this->belongsTo(PropertyMaintenanceAssign::class, 'RequestNumber', 'Id');
+    }
+        public function finalstatus()
+    {
+        return $this->belongsTo(CodeDetail::class, 'FinalStatus', 'ID');
+    }
 }
