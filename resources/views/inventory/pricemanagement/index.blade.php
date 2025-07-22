@@ -46,8 +46,8 @@
                         @foreach($items ?? [] as $item)
                         <option
                             value="{{ $item->Id }}"
-                            data-uom="{{ $item->uom->Id }}"
-                            data-uom-code="{{ $item->uom->Code }}">
+                            data-uom="{{ $item->uom?->Id ?? '' }}"
+                            data-uom-code="{{ $item->uom?->Code ?? '' }}">
                             {{ $item->ItemName }}
                         </option>
                         @endforeach
@@ -171,19 +171,19 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script>
-     $(document).ready(function () {
-            @if(!$prices->isEmpty())
-            $('#pricingTable').DataTable({
-                pageLength: 10,
-                ordering: true,
-                searching: true,
-                lengthChange: true,
-                language: {
-                    emptyTable: ""
-                }
-            });
-            @endif
+    $(document).ready(function() {
+        @if(!$prices -> isEmpty())
+        $('#pricingTable').DataTable({
+            pageLength: 10,
+            ordering: true,
+            searching: true,
+            lengthChange: true,
+            language: {
+                emptyTable: ""
+            }
         });
+        @endif
+    });
 
     document.addEventListener('DOMContentLoaded', function() {
         const itemSelect = document.getElementById('itemSelect');
