@@ -31,11 +31,11 @@
           <td>{{ $maintenancerequest->priority->Description ?? '_'}}</td>
           <td>
           <a href="{{ route('maintenancerequest.show', $maintenancerequest->Id) }}" class="btn btn-success btn-sm">View</a>
-          <a href="{{ route('maintenancerequest.edit', $maintenancerequest->Id) }}" class="btn btn-info btn-sm">Edit</a>
-          <form action="{{ route('maintenancerequest.destroy', $maintenancerequest->Id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this lease?');">
+          <a href="{{ route('maintenancerequest.edit', $maintenancerequest->Id) }}" class="btn btn-sm btn-warning">Edit</a>
+          <form action="{{ route('maintenancerequest.destroy', $maintenancerequest->Id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this lease?');">
             @csrf
               @method('DELETE')
-                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                 </form>
             </td>
         </td>

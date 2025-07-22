@@ -21,7 +21,7 @@ class PropertyMaintenanceRequestController extends Controller
     //
     public function index()
     {
-        $maintenancerequests = PropertyMaintenanceRequest::where('issueType','priority');
+        $maintenancerequests = PropertyMaintenanceRequest::all();
         return view('property.maintenanceandissues.maintenancerequest.index', compact('maintenancerequests'));
     }
 
@@ -32,9 +32,9 @@ class PropertyMaintenanceRequestController extends Controller
         $priorities = CodeDetail::where('CodeID', 'PriorityLevel')->get();
         return view('property.maintenanceandissues.maintenancerequest.create', compact('properties','issuetypes','priorities'));
     }
-        public function show($id){
+        public function show($Id){
         $this->authorize(PermissionEnum::PropertyMaintenanceRequestView, PropertyMaintenanceRequest::class);
-        $maintenancerequest = PropertyMaintenanceRequest::find($id);
+        $maintenancerequest = PropertyMaintenanceRequest::with('issueType','priority')->get()->find($Id);
         return view('property.maintenanceandissues.maintenancerequest.show',compact('maintenancerequest'));
     }
     public function getBlockByProperty($propertyId)
@@ -85,45 +85,46 @@ class PropertyMaintenanceRequestController extends Controller
         return redirect()->route('maintenancerequest.index')->with('success', 'Maintenance request created successfully');
 
     }
-    public function edit($id)
+    public function edit($Id)
     {
         $this->authorize(PermissionEnum::PropertyMaintenanceRequestUpdate, PropertyMaintenanceRequest::class);
-        $maintenancerequest = PropertyMaintenanceRequest::findOrFail($id);
+        $maintenancerequest = PropertyMaintenanceRequest::findOrFail($Id);
         $properties = PropertyRegistry::all();
-
-        return view('property.maintenanceandissues.maintenancerequest.edit', compact('maintenancerequest', 'properties'));
+        $issuetypes = CodeDetail::where('CodeID', 'IssueType')->get();
+        $priorities = CodeDetail::where('CodeID', 'PriorityLevel')->get();
+        return view('property.maintenanceandissues.maintenancerequest.edit', compact('maintenancerequest', 'properties','issuetypes','priorities'));
     }
 
-    public function update(Request $request, $id)
+    public function update(MaintenanceRequest $request, $Id)
     {
         $this->authorize(PermissionEnum::PropertyMaintenanceRequestUpdate, PropertyMaintenanceRequest::class);
         // Validate the request data
-    $validated = $request->validate([
-                'Property' => 'required|exists:t_PropertyRegistry,Id',
-                'Block' => 'required|exists:t_PropertyBlock,Id',
-                'Floor' => 'required|exists:t_PropertyFloor,Id',
-                'Unit' => 'required|exists:t_PropertyUnit,Id',
-                'ReportedBy' => 'required|string|max:50',
-                'IssueType' => 'required|string|max:50',
-                'Priority' => 'required|string|max:50',
-                'IssueDescription' => 'required|string|max:255',
-            ]);
+        $validated = $request->validated();
         DB::beginTransaction();
 
         try {
-            $maintenancerequest = PropertyMaintenanceRequest::findOrFail($id);
 
-            $maintenancerequest->update([
-                'Property'         => $validated['Property'],
-                'Block'            => $validated['Block'],
-                'Floor'            => $validated['Floor'],
-                'Unit'             => $validated['Unit'],
-                'ReportedBy'       => $validated['ReportedBy'],
-                'IssueType'        => $validated['IssueType'],
-                'Priority'         => $validated['Priority'],
-                'IssueDescription' => $validated['IssueDescription'],
-                'ModifiedBy'       => Auth::id(),
-            ]);
+            $maintenancerequest = PropertyMaintenanceRequest::findOrFail($Id);
+            $Property = PropertyRegistry::findOrFail($validated['Property']);
+            $Block    = PropertyBlock::findOrFail($validated['Block']);
+            $Floor    = PropertyFloor::findOrFail($validated['Floor']);
+            $Unit     = PropertyUnit::findOrFail($validated['Unit']);
+            $IssueType = CodeDetail::findOrFail($validated['IssueType']);
+            $Priority  = CodeDetail::findOrFail($validated['Priority']);
+            $document = $request->file('Document');
+            $maintenance = PropertyMaintenanceService::update(
+                $maintenancerequest,
+                $Property,
+                $Block,
+                $Floor,
+                $Unit,
+                $validated['ReportedBy'],
+                $IssueType,
+                $Priority,
+                $validated['IssueDescription'],
+                auth()->user(),
+                $document
+            );
 
             DB::commit();
 

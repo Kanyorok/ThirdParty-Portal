@@ -35,40 +35,81 @@ class PropertyMaintenanceService
         User    $user,
         UploadedFile $document = null
     ):self {
+                $lastRequestNumber = PropertyMaintenanceRequest::withTrashed() // in case you're using soft deletes
+                    ->selectRaw("MAX(CAST(SUBSTRING(RequestNumber, 7, LEN(RequestNumber)) AS INT)) as max_number")
+                    ->value('max_number');
 
-            $lastRequestNumber = PropertyMaintenanceRequest::withTrashed() // in case you're using soft deletes
-                ->selectRaw("MAX(CAST(SUBSTRING(RequestNumber, 7, LEN(RequestNumber)) AS INT)) as max_number")
-                ->value('max_number');
+                $nextNumber = $lastRequestNumber ? $lastRequestNumber + 1 : 1;
+                $RequestNumber = 'REQUEST-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
 
-            $nextNumber = $lastRequestNumber ? $lastRequestNumber + 1 : 1;
-            $RequestNumber = 'REQUEST-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+        {
+            $maintenancerequest = PropertyMaintenanceRequest::create([
+                'RequestNumber' => $RequestNumber,
+                'Property' => $Property->Id,
+                'Block' => $Block->Id,
+                'Floor' => $Floor->Id,
+                'Unit' => $Unit->Id,
+                'ReportedBy' =>$ReportedBy,
+                'IssueType'  => $IssueType->ID,
+                'Priority'    => $Priority->ID,
+                'IssueDescription' => $IssueDescription,
+                'CreatedBy' => $user->Id,
+                'ModifiedBy' => $user->Id,
+            ]);
 
-    {
-        $maintenancerequest = PropertyMaintenanceRequest::create([
-            'RequestNumber' => $RequestNumber,
+            if ($document) {
+            $maintenancerequest->newDocument(
+                ModulesEnum::Property,
+                $document,
+                [PermissionEnum::PropertyNewLeaseView->value],
+                $user
+                );
+            }
+
+            activity()->causedBy($user->Id)->performedOn($maintenancerequest)->event('create')->log("Added Property Unit {$maintenancerequest->Id}.");
+            return new self($maintenancerequest);
+        }
+    }
+    public static function update(
+        PropertyMaintenanceRequest $maintenancerequest,
+        PropertyRegistry $Property,
+        PropertyBlock $Block,
+        PropertyFloor $Floor,
+        PropertyUnit $Unit,
+        string $ReportedBy,
+        CodeDetail $IssueType,
+        CodeDetail $Priority,
+        string $IssueDescription,
+        User $user,
+        UploadedFile $document = null
+    ): self {
+        $maintenancerequest->update([
             'Property' => $Property->Id,
             'Block' => $Block->Id,
             'Floor' => $Floor->Id,
             'Unit' => $Unit->Id,
-            'ReportedBy' =>$ReportedBy,
-            'IssueType'  => $IssueType->ID,
-            'Priority'    => $Priority->ID,
+            'ReportedBy' => $ReportedBy,
+            'IssueType' => $IssueType->ID,
+            'Priority' => $Priority->ID,
             'IssueDescription' => $IssueDescription,
-            'CreatedBy' => $user->Id,
             'ModifiedBy' => $user->Id,
         ]);
 
         if ($document) {
-        $maintenancerequest->newDocument(
-            ModulesEnum::Property,
-            $document,
-            [PermissionEnum::PropertyNewLeaseView->value],
-            $user
+            $maintenancerequest->newDocument(
+                ModulesEnum::Property,
+                $document,
+                [PermissionEnum::PropertyNewLeaseView->value],
+                $user
             );
         }
 
-        activity()->causedBy($user->Id)->performedOn($maintenancerequest)->event('create')->log("Added Property Unit {$maintenancerequest->Id}.");
+        activity()
+            ->causedBy($user->Id)
+            ->performedOn($maintenancerequest)
+            ->event('update')
+            ->log("Updated Property Unit {$maintenancerequest->Id}.");
+
         return new self($maintenancerequest);
     }
-}
 }
