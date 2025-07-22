@@ -51,4 +51,5 @@ return [
     'verification_link_sent'    => 'Verification Link Sent',
     'email_verified'            => 'Email Successfully Verified',
     'unauthenticated'           => 'Unauthenticated',
+    'invalid_fields'            => 'Provide Valid Fields for Update',
 ];
