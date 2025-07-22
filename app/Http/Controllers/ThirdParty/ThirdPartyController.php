@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\ThirdParty;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\ThirdParty\StoreThirdPartyRequest;
 use App\Http\Requests\ThirdParty\UpdateThirdPartyRequest;
 use App\Http\Requests\ThirdParty\UpdateThirdPartyStatusRequest;
+use App\Http\Requests\ThirdPartyAuth\StoreThirdPartyRequest as ThirdPartyAuthStoreThirdPartyRequest;
 use App\Http\Resources\ThirdParty\ThirdPartyResource;
 use App\Models\ThirdParty\ThirdParties;
 use Illuminate\Http\Request;
@@ -39,7 +39,7 @@ class ThirdPartyController extends Controller
         return ThirdPartyResource::collection($thirdParties);
     }
 
-    public function store(StoreThirdPartyRequest $request)
+    public function store(ThirdPartyAuthStoreThirdPartyRequest $request)
     {
         $data = $request->validated();
         $data['CreatedBy'] = auth()->id();

@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use App\Http\Resources\ThirdParty\ThirdPartyUserResource;
 use App\Services\RegistrationService;
-use Illuminate\Database\Eloquent\Casts\Json;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
@@ -31,19 +30,18 @@ class ThirdPartyAuthController extends Controller
             $token = $userData->createToken('auth-token', ['*'], now()->addDays(config('sanctum.expiration', 7)))->plainTextToken;
 
             return response()->json([
-                'message' => 'Registration successful! Please check your email for verification.',
+                'message' => __('auth.registration_successful'),
                 'user' => new ThirdPartyUserResource($userData),
                 'token' => $token,
                 'token_type' => 'Bearer',
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => __('auth.registration_failed_general'),
-                'error' => config('app.debug') ? $e->getMessage() : null, // Good use of config('app.debug')
+                'message' => __('auth.registration_failed'),
+                'error' => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }
     }
-
 
     public function login(Request $request)
     {

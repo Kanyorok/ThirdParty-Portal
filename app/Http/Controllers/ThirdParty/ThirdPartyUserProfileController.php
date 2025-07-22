@@ -4,6 +4,7 @@ namespace App\Http\Controllers\ThirdParty;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ThirdParty\UpdateThirdPartyUserProfileRequest;
+use App\Http\Requests\ThirdPartyAuth\UpdateThirdPartyUserProfileRequest as ThirdPartyAuthUpdateThirdPartyUserProfileRequest;
 use App\Http\Resources\ThirdParty\ThirdPartyUserResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -35,7 +36,7 @@ class ThirdPartyUserProfileController extends Controller
      * @param UpdateThirdPartyUserProfileRequest $request
      * @return JsonResponse
      */
-    public function update(UpdateThirdPartyUserProfileRequest $request): JsonResponse
+    public function update(ThirdPartyAuthUpdateThirdPartyUserProfileRequest $request): JsonResponse
     {
         $user = Auth::guard('sanctum')->user();
         $thirdParty = $user->thirdParty;
