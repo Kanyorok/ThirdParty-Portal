@@ -659,6 +659,8 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 9800300, 'Name' => 'Branches', 'Icon' => '<i class="fas fa-code-branch"></i>', 'Description' => '', 'ParentID' => 9800000, 'Route' => 'branches.index'],
             ['ModuleID' => 98004000, 'Name' => 'Code Details', 'Icon' => null, 'Description' => '', 'ParentID' => 9800000, 'Route' => 'settings.lists'],
             ['ModuleID' => 98005000, 'Name' => 'Integrations', 'Icon' => null, 'Description' => '', 'ParentID' => 9800000, 'Route' => 'settings.integrations'],
+            ['ModuleID' => 98006000, 'Name' => 'GlobalWorkFlow', 'Icon' => null, 'Description' => '', 'ParentID' => 9800000, 'Route' => null],
+            ['ModuleID' => 98006100, 'Name' => 'Raise Needs', 'Icon' => null, 'Description' => '', 'ParentID' => 980, 'Route' => 'procurementdepartmentalplan.index'],
         ]);
         if ($fresh) {
             $data = $values;

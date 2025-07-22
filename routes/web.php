@@ -21,6 +21,7 @@ Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function (
     Route::namespace('Settings')->prefix('settings')->group(function () {
         Route::get('lists', 'SettingsController@lists')->name('settings.lists');
         Route::get('users-roles', 'SettingsController@users')->name('settings.users');
+        Route::get('approval-stages', 'ApprovalStagesController@index')->name('settings.approval_stages');
 
         Route::get('integrations', 'SettingsController@integrations')->name('settings.integrations');
         Route::post('integrations', 'IntegrationController');
@@ -43,8 +44,8 @@ Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function (
 
         Route::resource('branches', 'CrmBranchController')->parameters(['branches' => 'crm_branch'])->except(['edit', 'create', 'show']);
 
-Route::resource('roles', 'RoleController'); // remove ->except(['show'])
-Route::get('roles/{id}/ajax', 'RoleController@showAjax')->name('roles.showAjax');
+        Route::resource('roles', 'RoleController'); // remove ->except(['show'])
+        Route::get('roles/{id}/ajax', 'RoleController@showAjax')->name('roles.showAjax');
 
 
         Route::namespace('Users')->group(function () {
