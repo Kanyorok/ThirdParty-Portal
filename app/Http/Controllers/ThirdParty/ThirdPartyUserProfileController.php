@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\ThirdParty;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\ThirdParty\UpdateThirdPartyUserProfileRequest;
 use App\Http\Requests\ThirdPartyAuth\UpdateThirdPartyUserProfileRequest as ThirdPartyAuthUpdateThirdPartyUserProfileRequest;
 use App\Http\Resources\ThirdParty\ThirdPartyUserResource;
 use Illuminate\Http\JsonResponse;
@@ -85,26 +84,26 @@ class ThirdPartyUserProfileController extends Controller
 
         try {
             $rules = [
-                'firstName' => ['string', 'max:50', 'regex:/^[a-zA-Z\s\'-]+$/'],
-                'lastName' => ['string', 'max:50', 'regex:/^[a-zA-Z\s\'-]+$/'],
-                'phone' => ['string', 'min:10', 'max:15', 'regex:/^\+?[\d\s\-\(\)]+$/'],
-                'email' => ['string', 'email', 'max:254', 'unique:t_ThirdPartyUsers,email,' . $user->id],
-                'gender' => ['nullable', 'string', 'max:20'],
-                'imageId' => ['nullable', 'integer'],
-                'tradingName' => ['string', 'max:255'],
-                'businessType' => ['string', 'max:255'],
-                'registrationNumber' => ['string', 'max:255'],
-                'taxPin' => ['string', 'max:255'],
-                'vatNumber' => ['string', 'max:255'],
-                'country' => ['string', 'max:255'],
-                'physicalAddress' => ['string', 'max:255'],
-                'website' => ['nullable', 'string', 'url', 'max:255'],
+                'firstName' => ['sometimes', 'string', 'max:50', 'regex:/^[a-zA-Z\s\'-]+$/'],
+                'lastName' => ['sometimes', 'string', 'max:50', 'regex:/^[a-zA-Z\s\'-]+$/'],
+                'phone' => ['sometimes', 'string', 'min:10', 'max:15', 'regex:/^\+?[\d\s\-\(\)]+$/'],
+                'email' => ['sometimes', 'string', 'email', 'max:254', 'unique:t_ThirdPartyUsers,email,' . $user->id . ',id'],
+                'gender' => ['sometimes', 'nullable', 'string', 'max:20'],
+                'imageId' => ['sometimes', 'nullable', 'integer'],
+                'tradingName' => ['sometimes', 'string', 'max:255'],
+                'businessType' => ['sometimes', 'string', 'max:255'],
+                'registrationNumber' => ['sometimes', 'string', 'max:255'],
+                'taxPin' => ['sometimes', 'string', 'max:255'],
+                'vatNumber' => ['sometimes', 'string', 'max:255'],
+                'country' => ['sometimes', 'string', 'max:255'],
+                'physicalAddress' => ['sometimes', 'string', 'max:255'],
+                'website' => ['sometimes', 'nullable', 'string', 'url', 'max:255'],
             ];
 
             $validatedData = $request->validate($rules);
 
             if (empty($validatedData)) {
-                return response()->json(['message' => __('aut.invalid_fields')], 400);
+                return response()->json(['message' => __('auth.invalid_fields')], 400);
             }
 
             DB::transaction(function () use ($user, $thirdParty, $validatedData) {
