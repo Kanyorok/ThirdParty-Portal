@@ -24,8 +24,8 @@ class PriceManagementService
 
         if (!$isUpdate) {
             // Only required on create
-            $rules['ItemID'] = 'required|exists:t_ItemMasterList,Id';
-            $rules['UOM'] = 'required|exists:t_UnitOfMeasure,Id';
+            $rules['ItemID'] = 'required|exists:t_Items,Id';
+            $rules['UOM'] = 'required|exists:t_UOM,Id';
         }
 
         return Validator::make($data, $rules);
