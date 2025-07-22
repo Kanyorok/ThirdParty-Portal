@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
         $this->call(TeamSeeder::class);
         $this->call(BranchSeeder::class);
         $this->call(CodeDetailSeeder::class);
-        $this->call(LocalitySeeder::class);
+        // $this->call(LocalitySeeder::class);
         $this->call(SysFilterSeeder::class);
         $this->call(SysFilterSeeder::class);
         $this->call(CurrencySeeder::class);
@@ -60,7 +60,7 @@ class DatabaseSeeder extends Seeder
         $this->call(BudgetDriverProjectionsDataSeeder::class);
         $this->call(CategoryMasterSeeder::class);
         $this->call(PropertyTypeSeeder::class);
-        $this->call(PropertyRegistrySeeder::class);
+        // $this->call(PropertyRegistrySeeder::class);
         $this->call(PropertyBlockSeeder::class);
         $this->call(PropertyFloorSeeder::class);
         $this->call(PropertyUnitSeeder::class);
