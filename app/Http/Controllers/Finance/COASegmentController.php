@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Finance;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Core\CodeDetail;
+use App\Models\Finance\FinanceGLTypeGroup;
 use App\Models\Finance\SegmentOrder;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -18,13 +19,15 @@ class COASegmentController extends Controller
     public function index()
     {
         $this->authorize(PermissionEnum::FinanceCOAView, SegmentOrder::class);
-        $accountTypes = CodeDetail::select('CodeID','Value','Description')->where('CodeID','GLAccountType')->get();
+        $accountTypes = CodeDetail::select('CodeID','Value','Description','DisplayOrder')->where('CodeID','GLAccountType')->get();
         $segments = SegmentOrder::select('Id', 'SegmentType')->get();
         $glDigits=SegmentOrder::where('SegmentType','GLDigits')->pluck('Description')->first();
+        $glTypeGroups=FinanceGLTypeGroup::select('Id','Description','GLAccountTypeId')->get();
         return view('finance.chartofaccounts.segmentconfiguration.index', compact(
             'segments',
             'glDigits',
             'accountTypes',
+            'glTypeGroups',
         ));
     }
 
@@ -103,4 +106,32 @@ class COASegmentController extends Controller
             return back()->with('error', 'Something went wrong. Please try again.');
         }
     }
+
+    public function saveGLTypeSegment(Request $request){
+        $this->authorize(PermissionEnum::FinanceCOAUpdate, SegmentOrder::class);
+        $values=$request->segment_values;
+
+            //Update the Code details where I will store the segment value
+            try {
+                DB::beginTransaction();
+                foreach ($values as $key=>$value) {
+                    if (!is_null($value)) {
+                        $update=CodeDetail::where('CodeID','GLAccountType')->where('Value',$key)->update(['DisplayOrder'=>$value]);
+                    }else{
+                        $update=CodeDetail::where('CodeID','GLAccountType')->where('Value',$key)->update(['DisplayOrder'=>0]);
+                    }
+                }
+                activity()
+                    ->causedBy(Auth::id())
+                    ->performedOn(new CodeDetail())
+                    ->withProperties(['CodeID'=>'GLAccountType'])
+                    ->log('GL Account Type updated segment value');
+                DB::commit();
+                return back()->with('success', 'GL Type Segment updated successfully.');
+            }catch(\Throwable $th){
+                DB::rollBack();
+                Log::error('Failed to update GL Type Segment Value:' . $th->getMessage());
+                return back()->with('error', 'Something went wrong. Please try again.');
+            }
+        }
 }
