@@ -2,7 +2,6 @@
 @section('title', 'UOM Conversion Mappings')
 @section('content')
 <div class="container mt-4">
-  <h4 class="fw-bold mb-3">📋 UOM Conversion Mappings</h4>
   <a href="{{ route('uomconversion.create') }}" class="btn btn-success">➕ Add New Stock Take</a>
   <table class="table table-bordered table-striped align-middle">
     <thead class="table-light">
