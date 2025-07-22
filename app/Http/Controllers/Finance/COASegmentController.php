@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Finance;
 
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
+use App\Models\Core\CodeDetail;
 use App\Models\Finance\SegmentOrder;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -17,9 +18,14 @@ class COASegmentController extends Controller
     public function index()
     {
         $this->authorize(PermissionEnum::FinanceCOAView, SegmentOrder::class);
+        $accountTypes = CodeDetail::select('CodeID','Value','Description')->where('CodeID','GLAccountType')->get();
         $segments = SegmentOrder::select('Id', 'SegmentType')->get();
         $glDigits=SegmentOrder::where('SegmentType','GLDigits')->pluck('Description')->first();
-        return view('finance.chartofaccounts.segmentconfiguration.index', compact('segments','glDigits'));
+        return view('finance.chartofaccounts.segmentconfiguration.index', compact(
+            'segments',
+            'glDigits',
+            'accountTypes',
+        ));
     }
 
     public function create()

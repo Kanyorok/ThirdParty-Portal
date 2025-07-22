@@ -1,149 +1,190 @@
 @extends('layouts.app')
 @section('title', 'Segment Configuration')
 @section('content')
+
     <div class="container mt-2">
 
         <!-- Modal Trigger Buttons -->
-        <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#segmentOrderModal">
-            Display Order
-        </button>
-        <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#glDigitsModal">
-            GL Digits
-        </button>
-
-        <!-- Add Segment Type -->
-        <div class="card mb-4">
-            <div class="card-header">Add Segment Type</div>
-            <div class="card-body">
-                <form method="POST" action="#">
-                    <div class="mb-3">
-                        <label class="form-label">Segment Code</label>
-                        <input type="text" name="SegmentCode" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Segment Name</label>
-                        <input type="text" name="SegmentName" class="form-control" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Add Segment</button>
-                </form>
-            </div>
-        </div>
+        <nav class="space-y-2 mb-2">
+            <button type="button" class="w-full btn btn-primary flex items-center transition-transform transform hover:scale-105" data-bs-toggle="modal" data-bs-target="#segmentOrderModal">
+                <i class="fas fa-sort mr-2"></i> Display Order
+            </button>
+            <button type="button" class="w-full btn btn-primary flex items-center transition-transform transform hover:scale-105" data-bs-toggle="modal" data-bs-target="#glDigitsModal">
+                <i class="fas fa-calculator mr-2"></i> GL Digits
+            </button>
+        </nav>
 
         <!-- Segment Values -->
         <div class="card">
-            <div class="card-header">Segment Values</div>
+            <h4 class="card-header"><i class="fas fa-layer-group me-1"></i> Segment Values Viewer</h4>
             <div class="card-body">
-                <form method="POST" action="#">
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Select Segment</label>
-                            <select name="SegmentID" class="form-select">
-                                <option value="1">BRANCH - Branch</option>
-                                <option value="2">DEPT - Department</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Segment Value Code</label>
-                            <input type="text" name="SegmentValueCode" class="form-control">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Segment Value Name</label>
-                            <input type="text" name="SegmentValueName" class="form-control">
-                        </div>
-                    </div>
-                    <button type="submit" class="btn btn-success">Add Segment Value</button>
-                </form>
 
-                <!-- Segment Value List -->
-                <hr>
-                <h6 class="mt-4">Existing Segment Values</h6>
-                <table class="table table-bordered">
-                    <thead>
-                    <tr>
-                        <th>Segment</th>
-                        <th>Code</th>
-                        <th>Name</th>
-                        <th>Status</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr>
-                        <td>BRANCH</td>
-                        <td>001</td>
-                        <td>HQ</td>
-                        <td><span class="badge bg-success">Active</span></td>
-                    </tr>
-                    <tr>
-                        <td>DEPT</td>
-                        <td>100</td>
-                        <td>Finance</td>
-                        <td><span class="badge bg-success">Active</span></td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+                <div class="space-x-2 mb-2">
+                    <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#glTypeModal" title="Add GL Type">
+                        GL Type
+                    </button>
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#glAccountTypeModal" title="Add GL Account Type">
+                        GL Account Type
+                    </button>
+                    <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#glSubTypeModal" title="Add GL Account Sub-Type">
+                        GL Account Sub-Type
+                    </button>
+                </div>
 
-    <!-- Modal for Segment Order -->
-    <div class="modal fade" id="segmentOrderModal" tabindex="-1" aria-labelledby="segmentOrderModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <form method="POST" action="{{ route('segment-order.save') }}">
-                @csrf
-                @method('post')
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Segment Order</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <ul id="segmentList" class="list-group">
-                            @foreach($segments as $segment)
-                                <li class="list-group-item d-flex align-items-center justify-content-between border rounded mb-2 shadow-sm p-3 bg-light"
-                                    data-segment="{{ $segment->SegmentType }}">
-                                    <span class="fw-bold">{{ $segment->SegmentType }}</span>
-                                    <i class="fas fa-grip-vertical fs-4 text-muted drag-handle"></i>
-                                </li>
-                            @endforeach
-                        </ul>
-                        <input type="hidden" name="segment_order" id="segmentOrderInput">
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button class="btn btn-success" type="button" onclick="submitSegmentOrder(this)">
-                            Save Order
-                        </button>
+                <div class="container mt-4">
 
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="accordion" id="staticAccountTree">
+
+                                {{-- Assets --}}
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="headingAssets">
+                                        <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                                                data-bs-target="#collapseAssets" aria-expanded="true"
+                                                aria-controls="collapseAssets">
+                                            <span>Assets <span class="badge bg-primary ms-2">1000</span></span>
+                                        </button>
+                                    </h2>
+                                    <div id="collapseAssets" class="accordion-collapse collapse show"
+                                         aria-labelledby="headingAssets" data-bs-parent="#staticAccountTree">
+                                        <div class="accordion-body ps-4">
+
+                                            {{-- Fixed Assets --}}
+                                            <div class="accordion mb-3" id="assetsSubAccordion">
+                                                <div class="accordion-item">
+                                                    <h2 class="accordion-header" id="headingFixedAssets">
+                                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                                                data-bs-target="#collapseFixedAssets" aria-expanded="false"
+                                                                aria-controls="collapseFixedAssets">
+                                                            <span>Fixed Assets <span class="badge bg-secondary ms-2">1100</span></span>
+                                                        </button>
+                                                    </h2>
+                                                    <div id="collapseFixedAssets" class="accordion-collapse collapse"
+                                                         aria-labelledby="headingFixedAssets" data-bs-parent="#assetsSubAccordion">
+                                                        <div class="accordion-body ps-4">
+                                                            <ul class="list-group list-group-flush">
+                                                                <li class="list-group-item"><strong>1110</strong> – Equipment</li>
+                                                                <li class="list-group-item"><strong>1120</strong> – Furniture</li>
+                                                                <li class="list-group-item"><strong>1130</strong> – Buildings</li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {{-- Other Asset Category --}}
+                                                <div class="accordion-item">
+                                                    <h2 class="accordion-header" id="headingCashAssets">
+                                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                                                data-bs-target="#collapseCashAssets" aria-expanded="false"
+                                                                aria-controls="collapseCashAssets">
+                                                            <span>Current Assets <span class="badge bg-secondary ms-2">1200</span></span>
+                                                        </button>
+                                                    </h2>
+                                                    <div id="collapseCashAssets" class="accordion-collapse collapse"
+                                                         aria-labelledby="headingCashAssets" data-bs-parent="#assetsSubAccordion">
+                                                        <div class="accordion-body ps-4">
+                                                            <ul class="list-group list-group-flush">
+                                                                <li class="list-group-item"><strong>1210</strong> – Cash at Bank</li>
+                                                                <li class="list-group-item"><strong>1220</strong> – Accounts Receivable</li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Liabilities --}}
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="headingLiabilities">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                                data-bs-target="#collapseLiabilities" aria-expanded="false"
+                                                aria-controls="collapseLiabilities">
+                                            <span>Liabilities <span class="badge bg-warning ms-2">2000</span></span>
+                                        </button>
+                                    </h2>
+                                    <div id="collapseLiabilities" class="accordion-collapse collapse"
+                                         aria-labelledby="headingLiabilities" data-bs-parent="#staticAccountTree">
+                                        <div class="accordion-body ps-4">
+                                            <ul class="list-group list-group-flush">
+                                                <li class="list-group-item"><strong>2100</strong> – Accounts Payable</li>
+                                                <li class="list-group-item"><strong>2200</strong> – Accrued Expenses</li>
+                                                <li class="list-group-item"><strong>2300</strong> – Short-Term Loans</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Income --}}
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="headingIncome">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                                data-bs-target="#collapseIncome" aria-expanded="false"
+                                                aria-controls="collapseIncome">
+                                            <span>Income <span class="badge bg-success ms-2">3000</span></span>
+                                        </button>
+                                    </h2>
+                                    <div id="collapseIncome" class="accordion-collapse collapse"
+                                         aria-labelledby="headingIncome" data-bs-parent="#staticAccountTree">
+                                        <div class="accordion-body ps-4">
+                                            <ul class="list-group list-group-flush">
+                                                <li class="list-group-item"><strong>3100</strong> – Product Sales</li>
+                                                <li class="list-group-item"><strong>3200</strong> – Service Revenue</li>
+                                                <li class="list-group-item"><strong>3300</strong> – Interest Income</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Expenses --}}
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="headingExpenses">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                                data-bs-target="#collapseExpenses" aria-expanded="false"
+                                                aria-controls="collapseExpenses">
+                                            <span>Expenses <span class="badge bg-danger ms-2">4000</span></span>
+                                        </button>
+                                    </h2>
+                                    <div id="collapseExpenses" class="accordion-collapse collapse"
+                                         aria-labelledby="headingExpenses" data-bs-parent="#staticAccountTree">
+                                        <div class="accordion-body ps-4">
+                                            <ul class="list-group list-group-flush">
+                                                <li class="list-group-item"><strong>4100</strong> – Salaries & Wages</li>
+                                                <li class="list-group-item"><strong>4200</strong> – Rent Expense</li>
+                                                <li class="list-group-item"><strong>4300</strong> – Utilities</li>
+                                                <li class="list-group-item"><strong>4400</strong> – Office Supplies</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div> <!-- End Accordion -->
+                        </div>
                     </div>
                 </div>
-            </form>
+
+            </div>
         </div>
     </div>
 
     <!-- Modal for GL Digits -->
-    <div class="modal fade" id="glDigitsModal" tabindex="-1" aria-labelledby="glDigitsModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <form method="POST" action="{{ route('glDigits.save') }}">
-                @csrf
-                @method('post')
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">GL Digits</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <label class="form-label">GL Digits</label>
-                        <input type="number" min="1" name="glDigits" value="{{ $glDigits }}" class="form-control" required>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button class="btn btn-success" type="submit" onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Saving...'; this.form.submit();}">Save</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
+    @include('finance.chartofaccounts.segmentconfiguration.modals.glDigits')
+
+    <!-- Modal for Segment Order -->
+    @include('finance.chartofaccounts.segmentconfiguration.modals.segmentOrder')
+
+    <!-- Modal for Gltype -->
+    @include('finance.chartofaccounts.segmentconfiguration.modals.glType')
+
+    <!-- Modal for GLAccountType -->
+{{--    @include('finance.chartofaccounts.segmentconfiguration.modals.glAccountType')--}}
+
+    <!-- Modal for GLSubType -->
+{{--    @include('finance.chartofaccounts.segmentconfiguration.modals.glSubType')--}}
+
 @endsection
 
 @section('scripts')

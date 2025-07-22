@@ -145,5 +145,6 @@ Route::namespace('Finance')->prefix('finance')->group(function () {
     Route::post('/segment-order/save', [COASegmentController::class, 'segmentOrder'])->name('segment-order.save');
     Route::post('/gl/save', [COASegmentController::class, 'segmentOrder'])->name('segment-order.save');
     Route::post('/glDigits/save', [COASegmentController::class, 'editGlDigit'])->name('glDigits.save');
+    Route::post('/glTypeSegmentValue/save', [COASegmentController::class, 'editGlDigit'])->name('glTypeSegmentValue.save');
 
 });
