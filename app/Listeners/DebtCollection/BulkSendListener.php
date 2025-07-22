@@ -39,11 +39,11 @@ class BulkSendListener implements ShouldQueue
         switch ($event->bulkNotification->Module) {
             case LoanService::MODULE:
                 $this->_loans($event);
-                $view = 'debt-collection.notifications.document';
+                $view = 'crm.debt-collection.notifications.document';
                 break;
             case BoardNotificationController::MODULE:
                 $this->_board($event);
-                $view = 'board.notifications.document';
+                $view = 'crm.board.notifications.document';
                 break;
             case UserService::MODULE:
                 $this->_users($event);
@@ -69,7 +69,7 @@ class BulkSendListener implements ShouldQueue
                 Content: PDF::loadView($view, ['title' => "Bulk Notification: " . Str::upper($event->bulkNotification->Label), 'notifications' => $event->bulkNotification])->setPaper('a4', 'landscape')->output(),
                 MimeType: ExtensionsEnum::Pdf->getMimeType(),
                 Name: Str::upper($event->bulkNotification->Label) . '.pdf',
-                actor: $event->bulkNotification->creator
+                actor: $event->bulkNotification->creator 
             )->send(true);
         }
     }

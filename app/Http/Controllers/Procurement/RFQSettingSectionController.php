@@ -7,6 +7,7 @@ use App\Models\Procurement\RFQSettingSection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class RFQSettingSectionController extends Controller
 {
@@ -107,6 +108,19 @@ class RFQSettingSectionController extends Controller
         $section->delete();
 
         return redirect()->back()->with('success', 'Section deleted successfully.');
+    }
+    public function show(string $id)
+    {
+        Log::info('Show method called with ID: ' . $id);
+
+
+        $sectionId = (int)$id;
+
+        $section = RFQSettingSection::where('id', $sectionId)
+            ->whereNull('DeletedOn')
+            ->firstOrFail();
+
+        return view('procurement.rfqs.settings.section-show', compact('section'));
     }
 }
 
