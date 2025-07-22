@@ -56,7 +56,7 @@ class ThirdPartyUserSeeder extends Seeder
         ThirdPartyUser::firstOrCreate(
             ['Email' => 'john.kim@example.com'],
             [
-                'UserID' => Str::uuid(),
+                'UserID' => strtoupper(Str::random(6)),
                 'FirstName' => 'John',
                 'LastName' => 'Kim',
                 'Phone' => '0712345678',
@@ -96,7 +96,7 @@ class ThirdPartyUserSeeder extends Seeder
         ThirdPartyUser::firstOrCreate(
             ['Email' => 'pending.user@example.com'],
             [
-                'UserID' => Str::uuid(),
+                'UserID' => strtoupper(Str::random(6)),
                 'FirstName' => 'Pending',
                 'LastName' => 'User',
                 'Phone' => '0777777777',
