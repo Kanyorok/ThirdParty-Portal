@@ -40,7 +40,7 @@ class ChartOfAccountsController extends Controller
 
     public function getTypeGroups(Request $request)
     {
-        $typeGroups = FinanceGLTypeGroup::where('GLAccountTypeID', $request->GLAccountTypeID)->get();
+        $typeGroups = FinanceGLTypeGroup::select('Id','Description','SegmentValue')->where('GLAccountTypeID', $request->GLAccountTypeID)->get();
         return response()->json($typeGroups);
     }
 

@@ -32,7 +32,7 @@
 
                             <div class="col-md-12 mb-3">
                                 <label>Segment Value</label>
-                                <input type="text" name="value" class="form-control">
+                                <input type="number" name="value" min="0" class="form-control" placeholder="Enter new value">
                             </div>
 
 {{--                            <div class="col-md-4">--}}

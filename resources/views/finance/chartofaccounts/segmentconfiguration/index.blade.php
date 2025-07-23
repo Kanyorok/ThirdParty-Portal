@@ -381,9 +381,10 @@
                 fetch(`/finance/get-type-groups?GLAccountTypeID=${typeID}`)
                     .then(res => res.json())
                     .then(data => {
+                        console.log("First:",data)
                         typeGroup.innerHTML = '<option disabled selected>-- GL Account Type --</option>';
                         data.forEach(item => {
-                            typeGroup.innerHTML += `<option value="${item.Id}">${item.Description}</option>`;
+                            typeGroup.innerHTML += `<option value="${item.Id}">${item.Description} (${item.SegmentValue==null?'Not Set':item.SegmentValue})</option>`;
                         });
                     })
                     .catch(err => {
