@@ -1,7 +1,7 @@
 <!-- Modal for GlType -->
 <div class="modal fade" id="glAccountTypeModal" tabindex="-1" aria-labelledby="glAccountTypeModalLabel" aria-hidden="true">
     <div class="modal-dialog">
-        <form method="POST" action="{{ route('glTypeSegmentValue.save') }}">
+        <form method="POST" action="{{ route('glAccountTypeSegmentValue.save') }}">
             @csrf
             @method('post')
             <div class="modal-content">

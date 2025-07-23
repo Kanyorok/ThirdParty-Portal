@@ -330,7 +330,7 @@
                     .then(data => {
                         typeGroup1.innerHTML = '<option disabled selected>-- GL Account Type --</option>';
                         data.forEach(item => {
-                            typeGroup1.innerHTML += `<option value="${item.Id}">${item.Description}</option>`;
+                            typeGroup1.innerHTML += `<option value="${item.Id}">${item.Description}  (${item.SegmentValue==null?'Not Set':item.SegmentValue})</option>`;
                         });
                     })
                     .catch(err => {
@@ -350,7 +350,7 @@
                     .then(data => {
                         subType1.innerHTML = '<option disabled selected>-- GL Sub Account Type --</option>';
                         data.forEach(item => {
-                            subType1.innerHTML += `<option value="${item.Id}">${item.Description}</option>`;
+                            subType1.innerHTML += `<option value="${item.Id}">${item.Description}  (${item.SegmentValue==null?'Not Set':item.SegmentValue})</option>`;
                         });
                     })
                     .catch(err => {

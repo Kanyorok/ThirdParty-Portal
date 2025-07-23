@@ -134,4 +134,48 @@ class COASegmentController extends Controller
                 return back()->with('error', 'Something went wrong. Please try again.');
             }
         }
+
+        public function saveGLAccountTypeSegment(Request $request){
+            $this->authorize(PermissionEnum::FinanceCOAUpdate, SegmentOrder::class);
+            $validated=$request->validate(['value'=>'required|integer|min:1']);
+
+            try {
+                DB::beginTransaction();
+                $update=FinanceGLTypeGroup::where('Id',$request->GLTypeGroupID)->update(['SegmentValue'=>$validated['value']]);
+                activity()
+                    ->causedBy(Auth::id())
+                    ->performedOn(new FinanceGLTypeGroup())
+                    ->withProperties(['action' => 'update'])
+                    ->log('GL Type Group updated segment value');
+                DB::commit();
+                return back()->with('success', 'GL Account Type Segment updated successfully.');
+            }catch(\Throwable $th){
+                DB::rollBack();
+                Log::error('Failed to update GL Type Segment Value:' . $th->getMessage());
+                return back()->with('error', 'Something went wrong. Please try again.');
+            }
+        }
+
+    public function saveSubGLAccountTypeSegment(Request $request)
+    {
+        $this->authorize(PermissionEnum::FinanceCOAUpdate, SegmentOrder::class);
+        $validated=$request->validate(['value'=>'required|integer|min:1']);
+
+        try {
+            DB::beginTransaction();
+            $update=FinanceGLTypeGroup::where('Id',$request->GLTypeGroupID)->update(['SegmentValue'=>$validated['value']]);
+            activity()
+                ->causedBy(Auth::id())
+                ->performedOn(new FinanceGLTypeGroup())
+                ->withProperties(['action' => 'update'])
+                ->log('GL Type Group updated segment value');
+            DB::commit();
+            return back()->with('success', 'GL Account Type Segment updated successfully.');
+        }catch(\Throwable $th){
+            DB::rollBack();
+            Log::error('Failed to update GL Type Segment Value:' . $th->getMessage());
+            return back()->with('error', 'Something went wrong. Please try again.');
+        }
+    }
+
 }
