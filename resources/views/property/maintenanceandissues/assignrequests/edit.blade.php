@@ -43,7 +43,7 @@
                 <div class="mb-3">
                     <label class="form-label">Assignment Date <span class="text-danger">*</span></label>
                     <input type="date" name="AssignmentDate" class="form-control"
-                        value="{{ old('AssignmentDate', \Carbon\Carbon::parse($assignment->AssignmentDate)->format('Y-m-d')) }}">
+                        value="{{ old('AssignmentDate', Carbon::parse($assignment->AssignmentDate)->format('Y-m-d')) }}">
                     @error('AssignmentDate') <small class="text-danger">{{ $message }}</small> @enderror
                 </div>
 
@@ -94,7 +94,7 @@
                 <div class="mb-3">
                     <label class="form-label">Expected Start Date <span class="text-danger">*</span></label>
                     <input type="date" name="ExpectedStartDate" class="form-control"
-                        value="{{ old('ExpectedStartDate', \Carbon\Carbon::parse($assignment->ExpectedStartDate)->format('Y-m-d')) }}">
+                        value="{{ old('ExpectedStartDate', Carbon::parse($assignment->ExpectedStartDate)->format('Y-m-d')) }}">
                     @error('ExpectedStartDate') <small class="text-danger">{{ $message }}</small> @enderror
                 </div>
 
@@ -102,7 +102,7 @@
                 <div class="mb-3">
                     <label class="form-label">Expected Completion <span class="text-danger">*</span></label>
                     <input type="date" name="ExpectedCompletion" class="form-control"
-                        value="{{ old('ExpectedCompletion', \Carbon\Carbon::parse($assignment->ExpectedCompletion)->format('Y-m-d')) }}">
+                        value="{{ old('ExpectedCompletion', Carbon::parse($assignment->ExpectedCompletion)->format('Y-m-d')) }}">
                     @error('ExpectedCompletion') <small class="text-danger">{{ $message }}</small> @enderror
                 </div>
 

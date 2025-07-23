@@ -2,12 +2,12 @@
 @section('title', 'Maintenance Request')
 @section('content')
 <div class="container mt-4">
-  <h4 class="fw-bold mb-3">🛠️ New Maintenance Request</h4>
+  <h4 class="fw-bold mb-3">New Maintenance Request</h4>
 
     <form action="{{ route('maintenancerequest.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
   <div class="card shadow">
-    <div class="card-header bg-light fw-bold">📋 Report Maintenance Issue</div>
+    <div class="card-header bg-light fw-bold">Report Maintenance Issue</div>
     <div class="card-body">
       <!-- Property Drill-down -->
       <div class="row g-3 mb-3">
@@ -80,7 +80,7 @@
             <label class="form-label">Upload Relevant Documents</label>
             <input type="file" name="Document" class="form-control" multiple>
         </div>
-        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Submit Request</button>
+        <button type="submit" class="btn btn-success">Submit Request</button>
     </form>
     </div>
   </div>

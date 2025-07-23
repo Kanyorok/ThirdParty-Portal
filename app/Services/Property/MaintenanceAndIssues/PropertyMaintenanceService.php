@@ -64,7 +64,7 @@ class PropertyMaintenanceService
             $maintenancerequest->newDocument(
                 ModulesEnum::Property,
                 $document,
-                [PermissionEnum::PropertyNewLeaseView->value],
+                [PermissionEnum::PropertyMaintenanceRequestView->value],
                 $user
                 );
             }
@@ -102,7 +102,7 @@ class PropertyMaintenanceService
             $maintenancerequest->newDocument(
                 ModulesEnum::Property,
                 $document,
-                [PermissionEnum::PropertyNewLeaseView->value],
+                [PermissionEnum::PropertyMaintenanceRequestView->value],
                 $user
             );
         }
