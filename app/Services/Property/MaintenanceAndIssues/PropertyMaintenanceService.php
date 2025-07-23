@@ -41,8 +41,9 @@ class PropertyMaintenanceService
                 ->selectRaw("MAX(CAST(SUBSTRING(RequestNumber, 8, LEN(RequestNumber)) AS INT)) as max_number")
                 ->value('max_number');
 
-            $nextNumber = $lastRequestNumber ? $lastRequestNumber + 1 : 1;
-            $RequestNumber = 'REQUEST-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+    $nextNumber = $lastRequestNumber ? $lastRequestNumber + 1 : 1;
+
+    $RequestNumber = 'REQUEST-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
 
         {
             $maintenancerequest = PropertyMaintenanceRequest::create([

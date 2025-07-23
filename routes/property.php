@@ -209,10 +209,19 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::delete('assignrequest/delete/{Id}', [PropertyMaintananceAssignController::class,'destroy'])->name('assignrequest.destroy');
 
     
+    //Route::resource('workcompletion', PropertyMaintenanceWorkCompletionController::class);
+    Route::get('workcompletion', [PropertyMaintenanceWorkCompletionController::class,'index'])->name('workcompletion.index');
+    Route::get('workcompletion/create', [PropertyMaintenanceWorkCompletionController::class,'create'])->name('workcompletion.create');
+    Route::post('workcompletion', [PropertyMaintenanceWorkCompletionController::class,'store'])->name('workcompletion.store');
+    Route::get('workcompletion/show/{Id}', [PropertyMaintenanceWorkCompletionController::class,'show'])->name('workcompletion.show');
+    Route::get('workcompletion/edit/{Id}',[PropertyMaintenanceWorkCompletionController::class,'edit'])->name('workcompletion.edit');
+    Route::put('workcompletion/edit/{Id}',[PropertyMaintenanceWorkCompletionController::class,'update'])->name('workcompletion.update');
+    Route::delete('workcompletion/delete/{Id}', [PropertyMaintenanceWorkCompletionController::class,'destroy'])->name('workcompletion.destroy');
+
+
     Route::resource('attachments', PropertyAttachmentsController::class);
     Route::resource('rentdashboard', RentDashboardController::class);
     Route::resource('maintenancedashboard', PropertyMaintenanceDashboardController::class);
-    Route::resource('workcompletion', PropertyMaintenanceWorkCompletionController::class);
     Route::resource('propertyreports', PropertyReportsController::class);
     Route::resource('propertyanalytics', PropertyReportsVisualController::class);
 

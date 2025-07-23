@@ -131,6 +131,11 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'AssignmentType', 'Description' => 'Internal Technician', 'Value' => 'I'],
             ['CodeID' => 'AssignmentType', 'Description' => 'Prequalified Vendor', 'Value' => 'P'],
 
+            // Work Completion Status
+            ['CodeID' => 'FinalStatus', 'Description' => 'Completed'],
+            ['CodeID' => 'FinalStatus', 'Description' => 'Partially Completed'],
+            ['CodeID' => 'FinalStatus', 'Description' => 'Not Completed'],
+
             // Priority Levels
             ['CodeID' => 'PriorityLevel', 'Description' => 'Low'],
             ['CodeID' => 'PriorityLevel', 'Description' => 'Medium'],

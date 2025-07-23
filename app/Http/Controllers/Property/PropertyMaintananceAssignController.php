@@ -47,6 +47,21 @@ class PropertyMaintananceAssignController extends Controller
         $this->authorize(PermissionEnum::PropertyMaintenanceAssignCreate, PropertyMaintenanceAssign::class);
 
         $validated = $request->validated();
+$assignmentType = CodeDetail::findOrFail($validated['AssignmentType']);
+$internalTechnician = isset($validated['InternalTechnician']) 
+    ? Employee::findOrFail($validated['InternalTechnician']) 
+    : null;
+
+$prequalifiedVendor = isset($validated['PrequalifiedVendor']) 
+    ? Supplier::findOrFail($validated['PrequalifiedVendor']) 
+    : null;
+
+$priorityLevel = CodeDetail::findOrFail($validated['PriorityLevel']);
+$requestNumber = PropertyMaintenanceRequest::findOrFail($validated['RequestNumber']);
+$assignmentDate = new \DateTime($validated['AssignmentDate']);
+$expectedStartDate = new \DateTime($validated['ExpectedStartDate']);
+$expectedCompletion = new \DateTime($validated['ExpectedCompletion']);
+
 
         $RequestNumber = PropertyMaintenanceRequest::findOrFail($validated['RequestNumber']);
         $AssignmentType = CodeDetail::findOrFail($validated['AssignmentType']);

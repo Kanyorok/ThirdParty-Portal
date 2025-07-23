@@ -13,9 +13,8 @@
           <th>Property</th>
           <th>Block</th>
           <th>Floor</th>
-        <th>Unit</th>
-          <th>Issue Description</th>
-        <th>Completion Date</th>
+          <th>Unit</th>
+          <th>Completion Date</th>
           <th>Work Done Summary</th>
           <th>Parts Used</th>
           <th>Cost</th>
@@ -31,7 +30,6 @@
           <td>{{ $workCompletion->Block }}</td>
           <td>{{ $workCompletion->Floor }}</td>
           <td>{{ $workCompletion->Unit }}</td>
-          <td>{{ $workCompletion->IssueDescription }}</td>
           <td>{{ $workCompletion->CompletionDate }}</td>
           <td>{{ $workCompletion->WorkDoneSummary}}</td>
           <td>{{ $workCompletion->PartsUsed }}</td>
@@ -39,7 +37,13 @@
           <td>{{ $workCompletion->FinalStatus }}</td>
         <td>
           <button class="btn btn-sm btn-outline-primary">⬇ Download</button>
-        </td>
+          <a href="{{ route('workcompletion.edit', $workCompletion->Id) }}" class="btn btn-info btn-sm">Edit</a>
+          <form action="{{ route('workcompletion.destroy', $workCompletion->Id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this work completion?');">
+              @csrf
+              @method('DELETE')
+              <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+          </form>
+      </td>
       </tr>
     </tbody>
       @endforeach
