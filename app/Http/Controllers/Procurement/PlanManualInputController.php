@@ -9,7 +9,7 @@ use App\Models\Inventory\ItemCategories;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Procurement\BudgetMaster;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
-use App\Models\Procurement\PlanLineItems;
+use App\Models\Procurement\PlanLineItem;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -19,11 +19,11 @@ class PlanManualInputController extends Controller
     //
     public function index(Request $request)
     {
-        $this->authorize('viewAny', PlanLineItems::class);
+        $this->authorize('viewAny', PlanLineItem::class);
         $planId = $request->query('plan_id');//todo pass plan id from url
         $plans = ConsolidatedProcurementPlan::where('Status', ProcurementPlanStatusEnum::Draft)->get();
 
-        $lineItemsQuery = PlanLineItems::with(['item', 'item.category', 'item.uom']);
+        $lineItemsQuery = PlanLineItem::with(['item', 'item.category', 'item.uom']);
 
         if ($planId) {
             $lineItemsQuery->where('PlanID', $planId);
@@ -41,11 +41,11 @@ class PlanManualInputController extends Controller
 
     public function create(Request $request)
     {
-        $this->authorize('create', PlanLineItems::class);
+        $this->authorize('create', PlanLineItem::class);
         $selectedPlanId = $request->input('plan_id');
         $selectedPlanTitle = $request->input('title');
         $plans = ConsolidatedProcurementPlan::where('Status', ProcurementPlanStatusEnum::Draft)->get();
-        $items = ItemMasterList::with('category', 'uom')->get();
+        $items = ItemMasterList::with('category', 'uom', 'price')->get();
         $budgetLines = BudgetMaster::all();
 
         return view('procurement.procurementplan.planconsolidation.manualentry.create', compact('plans', 'items', 'budgetLines', 'selectedPlanId', 'selectedPlanTitle'));
@@ -53,7 +53,7 @@ class PlanManualInputController extends Controller
 
     public function store(PlanManualInputRequest $request)
     {
-        $this->authorize('store', PlanLineItems::class);
+        $this->authorize('store', PlanLineItem::class);
 
         $validated = $request->validated();
 
@@ -62,7 +62,7 @@ class PlanManualInputController extends Controller
         $item = $request->getItem();
         $category = $request->getCategory();//todo
 
-        $existingItem = PlanLineItems::where('PlanID', $validated['PlanID'])
+        $existingItem = PlanLineItem::where('PlanID', $validated['PlanID'])
             ->where('ItemID', $item->Id)
             ->first();
 
@@ -73,7 +73,7 @@ class PlanManualInputController extends Controller
                 ->withErrors(['ItemID' => 'This item has already been added to the selected plan.']);
         }
 
-        $planLineItem = new PlanLineItems();
+        $planLineItem = new PlanLineItem();
         $planLineItem->PlanID = $validated['PlanID'];
         $planLineItem->ItemID = $item->Id;
         $planLineItem->CategoryID = $category->Id;
@@ -109,7 +109,7 @@ class PlanManualInputController extends Controller
 
     public function edit($lineItemId)
     {
-        $lineItem = PlanLineItems::with(['item', 'item.category', 'item.uom'])->findOrFail($lineItemId);
+        $lineItem = PlanLineItem::with(['item', 'item.category', 'item.uom'])->findOrFail($lineItemId);
         $this->authorize('edit', $lineItem);
         $plans = ConsolidatedProcurementPlan::all();
         $items = ItemMasterList::all();
@@ -123,7 +123,7 @@ class PlanManualInputController extends Controller
     {
         $validated = $request->validated();
         $user = auth()->user();
-        $lineItem = PlanLineItems::findOrFail($lineItemId);
+        $lineItem = PlanLineItem::findOrFail($lineItemId);
 
         $this->authorize('update', $lineItem);
 
@@ -181,7 +181,7 @@ class PlanManualInputController extends Controller
     public function destroy(Request $request, $lineItemId)
     {
         $user = $request->user();
-        $lineItem = PlanLineItems::findOrFail($lineItemId);
+        $lineItem = PlanLineItem::findOrFail($lineItemId);
         $this->authorize('delete', $lineItem);
         $lineItem->delete();
         activity()->causedBy($user)->performedOn($lineItem)->event('deleted')->log('deleted plan line item ' . $lineItem->ItemID);

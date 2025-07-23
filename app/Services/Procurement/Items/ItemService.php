@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services\Procurement\Items;
 
 use Illuminate\Support\Facades\DB;
@@ -10,7 +11,7 @@ class ItemService
      */
     public function __construct()
     {
-//
+        //
     }
 
     public static function getItemByType($type, $requisitionId = null)
@@ -22,16 +23,18 @@ class ItemService
                 // Fetch from Consolidated Procurement Plan
                 return DB::table('t_ConsolidatedProcurementPlan as pi')
                     ->join('t_PlanLineItem as i', 'pi.PlanID', '=', 'i.PlanID')
+                    ->leftJoin('t_CodeDetails as cd', 'i.ProcurementMethod', '=', 'cd.Id')
                     ->join('t_Items as t', 'i.ItemID', '=', 't.Id')
                     ->join('t_ItemTypes as f', 't.ItemType', '=', 'f.Id')
                     ->where('pi.PlanID', $requisition->PlanRef)
                     ->where('t.ItemType', $type)
+                    ->where('cd.Description', 'RFQ') // 👈 Filter for RFQ only
                     ->select(
                         't.Id',
                         't.ItemName',
                         't.ItemCode',
                         'i.LineItemID',
-                        'i.OriginalQty' // <-- Add OriginalQty from PlanLineItem
+                        'i.OriginalQty' // From PlanLineItem
                     )
                     ->get();
             }
@@ -137,5 +140,4 @@ class ItemService
             ->wherenull('DeletedOn')
             ->get();
     }
-
 }

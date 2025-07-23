@@ -46,7 +46,6 @@
                 </tr>
                 </thead>
                 <tbody>
-                @php $months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']; @endphp
                 @foreach ($plan->lineItems as $lineItem)
                     <tr>
                         <input type="hidden" name="lineItemIds[]" value="{{ $lineItem->LineItemID }}">
@@ -58,7 +57,7 @@
                             <select name="mode_{{ $lineItem->LineItemID }}" class="form-control schedule-mode"
                                     data-id="{{ $lineItem->LineItemID }}">
                                 <option value="quarter" selected>Quarterly</option>
-                                <option value="month">Monthly</option>
+                                <option value="month" selected>Monthly</option>
                             </select>
                         </td>
 
@@ -66,7 +65,7 @@
                             {{-- Quarterly Inputs --}}
                             <div class="quarterly-input q-{{ $lineItem->LineItemID }}">
                                 @for ($q = 1; $q <= 4; $q++)
-                                    <input type="number" name="q{{ $q }}_{{ $lineItem->LineItemID }}"
+                                    <input type="number" name="periods[Q{{ $q }}_{{ $lineItem->LineItemID }}]"
                                            class="form-control d-inline-block m-1" style="width: 60px;" min="0"
                                            placeholder="Q{{ $q }}">
                                 @endfor
@@ -74,11 +73,11 @@
 
                             {{-- Monthly Inputs (hidden by default) --}}
                             <div class="monthly-input m-{{ $lineItem->LineItemID }}" style="display: none;">
-                                @foreach ($months as $month)
-                                    <input type="number" name="{{ $month }}_{{ $lineItem->LineItemID }}"
+                                @for ($m = 1; $m <= 12; $m++)
+                                    <input type="number" name="periods[M{{ $m }}_{{ $lineItem->LineItemID }}]"
                                            class="form-control d-inline-block m-1" style="width: 60px;" min="0"
-                                           placeholder="{{ ucfirst($month) }}">
-                                @endforeach
+                                           placeholder="M{{ $m }}">
+                                @endfor
                             </div>
                         </td>
                     </tr>
@@ -116,7 +115,6 @@
         <script>
             document.querySelector('form').addEventListener('submit', function (e) {
                 let isValid = true;
-                const months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
 
                 document.querySelectorAll('.merged-qty').forEach(input => {
                     const itemId = input.dataset.id;
@@ -130,11 +128,11 @@
                             const val = parseInt(document.querySelector(`input[name="q${q}_${itemId}"]`).value) || 0;
                             total += val;
                         }
-                    } else {
-                        months.forEach(month => {
-                            const val = parseInt(document.querySelector(`input[name="${month}_${itemId}"]`).value) || 0;
+                    } else if (mode === 'month') {
+                        for (let m = 1; m <= 12; m++) {
+                            const val = parseInt(document.querySelector(`input[name="m${m}_${itemId}"]`).value) || 0;
                             total += val;
-                        });
+                        }
                     }
 
                     if (total > maxQty) {
@@ -147,6 +145,7 @@
             });
         </script>
     @endpush
+
 
 
 @endsection

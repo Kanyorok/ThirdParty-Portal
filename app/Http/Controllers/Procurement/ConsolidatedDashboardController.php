@@ -53,6 +53,7 @@ class ConsolidatedDashboardController extends Controller
             ->map(function ($need) {
                 $this->authorize('view', $need);
                 return [
+                    'NeedID' => $need->NeedID,
                     'ItemName' => $need->item->ItemName ?? 'N/A',
                     'BranchName' => $need->branch->Name ?? 'N/A',
                     'DepartmentName' => $need->department->Name ?? 'N/A',
