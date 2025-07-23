@@ -13,17 +13,14 @@ return new class extends Migration {
         Schema::create('t_AssignRequest', function (Blueprint $table) {
             $table->id('Id');
             $table->foreignId('RequestNumber')->constrained('t_MaintenanceRequest', 'Id');
-            $table->string('Property');
-            $table->string('Block');
-            $table->string('Floor');
-            $table->string('Unit');
             $table->date('AssignmentDate');
-            $table->foreignId('AssignmentType')->constrained('t_CodeDetails', 'Id');
+            $table->foreignId('AssignmentType')->constrained('t_CodeDetails', 'ID');
             $table->foreignId('InternalTechnician')->nullable()->constrained('t_Employees', 'Id');
             $table->foreignId('PrequalifiedVendor')->nullable()->constrained('t_Suppliers', 'Id');
             $table->date('ExpectedStartDate');
             $table->date('ExpectedCompletion');
-            $table->foreignId('PriorityLevel')->constrained('t_CodeDetails', 'Id');
+            $table->string('Status',1);
+            $table->foreignId('PriorityLevel')->constrained('t_CodeDetails', 'ID');
             $table->string('InstructionNotes')->nullable();
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');

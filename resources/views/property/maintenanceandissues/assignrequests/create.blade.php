@@ -3,13 +3,13 @@
 
 @section('content')
 <div class="container mt-4">
-    <h4 class="fw-bold mb-3">🛠️ Assign Technician / Vendor</h4>
+    <h4 class="fw-bold mb-3">Assign Technician / Vendor</h4>
 
     <form action="{{ route('assignrequest.store') }}" method="POST">
         @csrf
 
         <div class="card shadow">
-            <div class="card-header bg-light fw-bold">🔧 Assignment Details</div>
+            <div class="card-header bg-light fw-bold">Assignment Details</div>
             <div class="card-body">
 
                 <!-- Maintenance Request Dropdown -->
@@ -98,11 +98,11 @@
                 <div class="row g-3 mb-3">
                     <div class="col-md-4">
                         <label class="form-label">Expected Start Date</label>
-                        <input type="date" class="form-control" name="ExpectedStartDate">
+                        <input type="date" class="form-control" name="ExpectedStartDate" required>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Expected Completion</label>
-                        <input type="date" class="form-control" name="ExpectedCompletion">
+                        <input type="date" class="form-control" name="ExpectedCompletion" required>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Priority Level</label>
@@ -122,7 +122,7 @@
 
                 <!-- Submit -->
                 <div class="text-end">
-                    <button type="submit" class="btn btn-success">🔧 Assign Task</button>
+                    <button type="submit" class="btn btn-success">Assign Task</button>
                 </div>
             </div>
         </div>

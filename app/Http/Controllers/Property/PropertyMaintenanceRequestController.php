@@ -81,7 +81,7 @@ class PropertyMaintenanceRequestController extends Controller
                     auth()->user(),
                     $document
         );
-        //dd('validation passed');
+
         return redirect()->route('maintenancerequest.index')->with('success', 'Maintenance request created successfully');
 
     }
