@@ -71,7 +71,7 @@
         <input type="file" name="Document" class="form-control" multiple>
         <small class="text-muted">e.g. ID copy, Certificate of Incorporation</small>
       </div>
-        <button class="btn btn-success">Save Tenant</button>
+        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Save Tenant</button>
     </form>
     </div>
   </div>

@@ -292,9 +292,6 @@ class AppServiceProvider extends ServiceProvider
             PropertyLeaseSchedule::getPrimaryKey() => PropertyLeaseSchedule::class,
             PropertyLeaseRenewal::getPrimaryKey() => PropertyLeaseRenewal::class,
             PropertyInvoice::getPrimaryKey() => PropertyInvoice::class,
-            PropertyType::getPrimaryKey() => PropertyType::class,
-            PropertyRegistry::getPrimaryKey() => PropertyRegistry::class,
-            PropertyBlock::getPrimaryKey() => PropertyBlock::class,
             PropertyLeaseTermination::getPrimaryKey() => PropertyLeaseTermination::class,
 
 

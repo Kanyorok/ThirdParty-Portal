@@ -122,7 +122,7 @@
 
                 <!-- Submit -->
                 <div class="text-end">
-                    <button type="submit" class="btn btn-success">🔧 Assign Task</button>
+                    <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">🔧 Assign Task</button>
                 </div>
             </div>
         </div>

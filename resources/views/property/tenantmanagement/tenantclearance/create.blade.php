@@ -93,7 +93,7 @@
                         <textarea class="form-control" rows="2" placeholder="Any final notes or clearance details..."
                         name="AdditionalNotes"></textarea>
                     </div>
-                    <button class="btn btn-danger"> Finalize Exit</button>
+                    <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();"> Finalize Exit</button>
         </form>
     </div>
     </div>

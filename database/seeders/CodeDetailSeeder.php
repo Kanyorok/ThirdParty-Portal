@@ -129,6 +129,12 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'PriorityLevel', 'Description' => 'High'],
             ['CodeID' => 'PriorityLevel', 'Description' => 'Critical'],
 
+            // Property DocumentType
+            ['CodeID' => 'DocumentType', 'Description' => 'Ownership'],
+            ['CodeID' => 'DocumentType', 'Description' => 'Architectural Plan'],
+            ['CodeID' => 'DocumentType', 'Description' => 'Insurance'],
+            ['CodeID' => 'DocumentType', 'Description' => 'Others'],
+
             //Property Payment Method
             ['CodeID' => 'PaymentMethod', 'Description' => 'Mpesa', 'Value' => 'M'],
             ['CodeID' => 'PaymentMethod', 'Description' => 'Bank', 'Value' => 'B'],

@@ -81,7 +81,7 @@
         <label class="form-label">Upload Image / Document (optional)</label>
         <input type="file" class="form-control">
       </div>
-        <button class="btn btn-success">💾 Submit Request</button>
+        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">💾 Submit Request</button>
     </form>
     </div>
   </div>

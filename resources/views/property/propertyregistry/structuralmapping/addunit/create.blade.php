@@ -71,7 +71,7 @@
             <input type="text" class="form-control" placeholder="Optional" name="Remarks">
         </div>
       </div>
-      <button class="btn btn-success">Save Unit</button>
+      <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Save Unit</button>
     </div>
   </div>
 </div>

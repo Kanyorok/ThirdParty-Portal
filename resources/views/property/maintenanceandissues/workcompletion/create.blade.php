@@ -99,7 +99,7 @@
         </div>
 
         <!-- Submit -->
-        <button class="btn btn-success" type="submit">✔ Mark as Completed</button>
+        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">✔ Mark as Completed</button>
       </div>
     </div>
   </form>
