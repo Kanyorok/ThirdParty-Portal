@@ -13,10 +13,10 @@ return new class extends Migration {
         Schema::create('t_MaintenanceRequest', function (Blueprint $table) {
             $table->id('Id');
             $table->string('RequestNumber')->unique();
-            $table->string('Property')->constrained('t_PropertyRegistry', 'Id');
-            $table->string('Block')->constrained('t_PropertyBlocks', 'Id'); 
-            $table->string('Floor')->constrained('t_PropertyFloor', 'Id');
-            $table->string('Unit')->constrained('t_PropertyUnit', 'Id');
+            $table->foreignId('Property')->constrained('t_PropertyRegistry', 'Id');
+            $table->foreignId('Block')->constrained('t_PropertyBlock', 'Id'); 
+            $table->foreignId('Floor')->constrained('t_PropertyFloor', 'Id');
+            $table->foreignId('Unit')->constrained('t_PropertyUnit', 'Id');
             $table->string('ReportedBy');
             $table->string('IssueType');
             $table->string('Priority');

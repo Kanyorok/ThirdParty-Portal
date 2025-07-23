@@ -77,9 +77,9 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'TenantType', 'Description' => 'Other', 'Value' => 'O'],
 
             // Deposit Refunded
-            ['CodeID' => 'DepositRefunded', 'Description' => 'Fully Refunded'],
-            ['CodeID' => 'DepositRefunded', 'Description' => 'Partially Refunded'],
-            ['CodeID' => 'DepositRefunded', 'Description' => 'Not Refunded'],
+            ['CodeID' => 'DepositRefunded', 'Description' => 'Fully Refunded', 'Value' => 'F'],
+            ['CodeID' => 'DepositRefunded', 'Description' => 'Partially Refunded', 'Value' => 'P'],
+            ['CodeID' => 'DepositRefunded', 'Description' => 'Not Refunded', 'Value' => 'N'],
 
             // Source
             ['CodeID' => 'Source', 'Description' => 'Transfer Receipts'],
@@ -100,23 +100,36 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'AdjustmentReason', 'Description' => 'In Transit'],
 
             // Payment Frequency
-            ['CodeID' => 'PaymentFrequency', 'Description' => 'Annually'],
-            ['CodeID' => 'PaymentFrequency', 'Description' => 'Bi-Annually'],
-            ['CodeID' => 'PaymentFrequency', 'Description' => 'Quarterly'],
-            ['CodeID' => 'PaymentFrequency', 'Description' => 'Monthly'],
+            ['CodeID' => 'PaymentFrequency', 'Description' => 'Annually', 'Value' => 'A'],
+            ['CodeID' => 'PaymentFrequency', 'Description' => 'Bi-Annually', 'Value' => 'B'],
+            ['CodeID' => 'PaymentFrequency', 'Description' => 'Quarterly', 'Value' => 'Q'],
+            ['CodeID' => 'PaymentFrequency', 'Description' => 'Monthly', 'Value' => 'M'],
 
             // Termination Reason
-            ['CodeID' => 'TerminationReason', 'Description' => 'Relocation'],
-            ['CodeID' => 'TerminationReason', 'Description' => 'Non Payment'],
-            ['CodeID' => 'TerminationReason', 'Description' => 'Other'],
+            ['CodeID' => 'TerminationReason', 'Description' => 'Relocation', 'Value' => 'R'],
+            ['CodeID' => 'TerminationReason', 'Description' => 'Non Payment', 'Value' => 'N'],
+            ['CodeID' => 'TerminationReason', 'Description' => 'Other', 'Value' => 'O'],
 
             // Procurement Method
             ['CodeID' => 'ProcurementMethod', 'Description' => 'RFQ'],
             ['CodeID' => 'ProcurementMethod', 'Description' => 'Tender'],
 
-            // Property MaintenanceAndIssues
-            ['CodeID' => 'AssignmentType', 'Description' => 'Internal Technician'],
-            ['CodeID' => 'AssignmentType', 'Description' => 'Prequalified Vendor'],
+            //Property Payment Method
+            ['CodeID' => 'PaymentMethod', 'Description' => 'Mpesa', 'Value' => 'M'],
+            ['CodeID' => 'PaymentMethod', 'Description' => 'Bank', 'Value' => 'B'],
+            ['CodeID' => 'PaymentMethod', 'Description' => 'Cash', 'Value' => 'C'],
+
+            //Property Issue Types
+            ['CodeID' => 'IssueType', 'Description' => 'Electrical', 'Value' => 'E'],
+            ['CodeID' => 'IssueType', 'Description' => 'Plumbing', 'Value' => 'P'],
+            ['CodeID' => 'IssueType', 'Description' => 'Cleaning', 'Value' => 'C'],
+            ['CodeID' => 'IssueType', 'Description' => 'Pest Control', 'Value' => 'M'],
+            ['CodeID' => 'IssueType', 'Description' => 'Security', 'Value' => 'S'],
+            ['CodeID' => 'IssueType', 'Description' => 'Other', 'Value' => 'O'],
+
+            // Property Assignment Types
+            ['CodeID' => 'AssignmentType', 'Description' => 'Internal Technician', 'Value' => 'I'],
+            ['CodeID' => 'AssignmentType', 'Description' => 'Prequalified Vendor', 'Value' => 'P'],
 
             // Work Completion Status
             ['CodeID' => 'FinalStatus', 'Description' => 'Completed'],
@@ -134,11 +147,6 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'DocumentType', 'Description' => 'Architectural Plan'],
             ['CodeID' => 'DocumentType', 'Description' => 'Insurance'],
             ['CodeID' => 'DocumentType', 'Description' => 'Others'],
-
-            //Property Payment Method
-            ['CodeID' => 'PaymentMethod', 'Description' => 'Mpesa', 'Value' => 'M'],
-            ['CodeID' => 'PaymentMethod', 'Description' => 'Bank', 'Value' => 'B'],
-            ['CodeID' => 'PaymentMethod', 'Description' => 'Cash', 'Value' => 'C'],
 
             // StaticListsService entries
             ['CodeID' => StaticListsService::MarketingModes, 'Description' => 'Outdoor Marketing', 'DisplayOrder' => 1],

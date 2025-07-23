@@ -38,14 +38,13 @@ class PropertyMaintananceAssignController extends Controller
     public function show($Id)
     {
         $this->authorize(PermissionEnum::PropertyMaintenanceAssignView, PropertyMaintenanceAssign::class);
-        $assignment = PropertyMaintenanceAssign::findOrFail($Id);
+        $assignment = PropertyMaintenanceAssign::with('request')->findOrFail($Id);
         return view('property.maintenanceandissues.assignrequests.show', compact('assignment'));
     }
 
     public function store(PropertyMaintenanceAssignRequest $request)
     {
         $this->authorize(PermissionEnum::PropertyMaintenanceAssignCreate, PropertyMaintenanceAssign::class);
-        //dd($request->all());
 
         $validated = $request->validated();
 $assignmentType = CodeDetail::findOrFail($validated['AssignmentType']);
@@ -64,97 +63,85 @@ $expectedStartDate = new \DateTime($validated['ExpectedStartDate']);
 $expectedCompletion = new \DateTime($validated['ExpectedCompletion']);
 
 
-      // dd('validation');
+        $RequestNumber = PropertyMaintenanceRequest::findOrFail($validated['RequestNumber']);
+        $AssignmentType = CodeDetail::findOrFail($validated['AssignmentType']);
+        $PriorityLevel = CodeDetail::findOrFail($validated['PriorityLevel']);
+        $PrequalifiedVendor = $validated['PrequalifiedVendor'] ?? null;
+        $PrequalifiedVendor = $PrequalifiedVendor ? Supplier::findOrFail($PrequalifiedVendor) : null;
+        $InternalTechnician = $validated['InternalTechnician'] ?? null;
+        $InternalTechnician = $InternalTechnician ? Employee::findOrFail($InternalTechnician) : null;
+
+        // Convert date strings to DateTime objects
+        $assignmentDate = new \DateTime($validated['AssignmentDate']);
+        $expectedStartDate = new \DateTime($validated['ExpectedStartDate']);
+        $expectedCompletion = new \DateTime($validated['ExpectedCompletion']);
 
         $assignment = PropertyMaintenanceAssignService::create(
-            $requestNumber,
-            $validated['Property'],
-            $validated['Block'],
-            $validated['Floor'],
-            $validated['Unit'],
+            $RequestNumber,
             $assignmentDate,
-            $assignmentType->Id,
-            $internalTechnician ?? null,
-            $prequalifiedVendor ?? null,
+            $AssignmentType,
+            $InternalTechnician,
+            $PrequalifiedVendor,
             $expectedStartDate,
             $expectedCompletion,
-            $priorityLevel,
+            $PriorityLevel,
             $validated['InstructionNotes'],
-            auth()->user(),
+            auth()->user()
         );
-    return redirect()->route('assignrequest.index')->with('success', 'Assignment created successfully');
 
+        return redirect()->route('assignrequest.index')->with('success', 'Assignment created successfully');
     }
     public function edit($Id)
     {
-        //Check if user has permission to edit tender categories
-        $this->authorize(PermissionEnum::PropertyMaintenanceAssignUpdate, PropertyMaintenanceAssign::class);
-        $maintenancerequests = PropertyMaintenanceRequest::all();
-        $assignment = PropertyMaintenanceAssign::findOrFail($Id);
-        $employees = Employee::all();
-        $suppliers = Supplier::all();
+        $this->authorize(PermissionEnum::PropertyMaintenanceAssignView, PropertyMaintenanceAssign::class);
+        $assignment = PropertyMaintenanceAssign::with('request')->findOrFail($Id);
         $assignmentTypes = CodeDetail::where('CodeID', 'AssignmentType')->get();
         $priorityLevels = CodeDetail::where('CodeID','PriorityLevel')->get();
-        return view('property.maintenanceandissues.assignrequests.edit', compact('maintenancerequests', 'employees', 'suppliers', 'assignmentTypes', 'priorityLevels', 'assignment'));
+        $technicians = Employee::all();
+        $vendors = Supplier::all();
+        return view('property.maintenanceandissues.assignrequests.edit', compact('assignment','assignmentTypes', 'priorityLevels', 'technicians', 'vendors'));
     }
 
-    public function update(Request $request, $Id)
+    public function update(PropertyMaintenanceAssignRequest $request, $Id)
     {
-        $this->authorize(PermissionEnum::PropertyMaintenanceAssignUpdate, PropertyMaintenanceAssign::class);
-        $validated = $request->validate([
-           'RequestNumber' => 'required|exists:t_MaintenanceRequest,Id',
-            'Property' => 'required|string|max:100',
-            'Block' => 'required|string|max:100',
-            'Floor' => 'required|string|max:100',
-            'Unit' => 'required|string|max:100',
-            'AssignmentDate' => 'required|date',
-            'AssignmentType' => 'required|exists:t_CodeDetails,Id',
-            'InternalTechnician' => 'nullable|exists:t_Employees,Id',
-            'PrequalifiedVendor' => 'nullable|exists:t_Suppliers,Id',
-            'ExpectedStartDate' => 'required|date',
-            'ExpectedCompletion' => 'required|date',
-            'PriorityLevel' => 'required|exists:t_CodeDetails,Id',
-            'InstructionNotes' => 'nullable|string|max:100',
-   ]);
+        $assignment = PropertyMaintenanceAssign::findOrFail($Id);
 
-        DB::beginTransaction();
+        $validated = $request->validated();
 
-        try {
-            $assignment = PropertyMaintenanceAssign::findOrFail($Id);
+        // Convert date strings to DateTime objects
+        $assignmentDate = new \DateTime($validated['AssignmentDate']);
+        $expectedStartDate = new \DateTime($validated['ExpectedStartDate']);
+        $expectedCompletion = new \DateTime($validated['ExpectedCompletion']);
 
-            $assignment->update([
-            'RequestNumber' => $validated['RequestNumber'],
-            'Property' => $validated['Property'],
-            'Block' => $validated['Block'],
-            'Floor' => $validated['Floor'],
-            'Unit' => $validated['Unit'],
-            'AssignmentDate' => $validated['AssignmentDate'],
-            'AssignmentType' => $validated['AssignmentType'],
-            'InternalTechnician' => $validated['InternalTechnician'] ?? null,
-            'PrequalifiedVendor' => $validated['PrequalifiedVendor'] ?? null,
-            'ExpectedStartDate' => $validated['ExpectedStartDate'],
-            'ExpectedCompletion' => $validated['ExpectedCompletion'],
-            'PriorityLevel' => $validated['PriorityLevel'],
-            'InstructionNotes' => $validated['InstructionNotes'],
-            'CreatedBy' => Auth::Id(),
-            'ModifiedBy' => Auth::Id(),
-            ]);
+        // Resolve full model instances from IDs
+        $assignmentType = CodeDetail::findOrFail($validated['AssignmentType']);
+        $priorityLevel = CodeDetail::findOrFail($validated['PriorityLevel']);
 
-            DB::commit();
-            activity()
-                ->performedOn($assignment)
-                ->causedBy(Auth::user())
-                ->withProperties(['action' => 'update'])
-                ->log('Updated Assignment');
+        $internalTechnician = $validated['InternalTechnician'] ?? null;
+        $internalTechnician = $internalTechnician ? Employee::findOrFail($internalTechnician) : null;
 
-            return redirect()->route('assignrequest.index')->with('success', 'Assignment updated successfully');
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            Log::error('Failed to Update property assignment:' . $th->getMessage());
+        $prequalifiedVendor = $validated['PrequalifiedVendor'] ?? null;
+        $prequalifiedVendor = $prequalifiedVendor ? Supplier::findOrFail($prequalifiedVendor) : null;
 
-            return back()->withErrors(['error' => 'Failed to update property assignment'])->withInput();
-        }
+        // Call the service to update
+        $service = new PropertyMaintenanceAssignService($assignment);
+
+        $service->update(
+            $assignmentDate,
+            $assignmentType,
+            $internalTechnician,
+            $prequalifiedVendor,
+            $expectedStartDate,
+            $expectedCompletion,
+            $priorityLevel,
+            $validated['InstructionNotes'] ?? '',
+            auth()->user()
+        );
+
+        return redirect()->route('assignrequest.index')->with('success', 'Assignment updated successfully.');
     }
+
+
 
     public function destroy($id)
     {

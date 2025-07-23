@@ -2,14 +2,17 @@
 
 namespace App\Models\PropertyManagement;
 
+use App\Enums\Core\PostingEnum;
 use App\Models\Core\CodeDetail;
 use App\Models\HRM\Employee;
 use App\Models\ThirdParies\Supplier;
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PropertyMaintenanceAssign extends Model
 {
-    //
+    use SoftDeletes, UserActorTrait;
     protected $table = 't_AssignRequest';
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
@@ -18,10 +21,6 @@ class PropertyMaintenanceAssign extends Model
 
     protected $fillable = [
         'RequestNumber',
-        'Property',
-        'Block',
-        'Floor',
-        'Unit',
         'AssignmentDate',
         'AssignmentType',
         'InternalTechnician',
@@ -30,6 +29,7 @@ class PropertyMaintenanceAssign extends Model
         'ExpectedCompletion',
         'PriorityLevel',
         'InstructionNotes',
+        'Status',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy'
@@ -39,6 +39,9 @@ class PropertyMaintenanceAssign extends Model
     {
         return 'AssignRequestId';
     }
+    protected $casts = [
+        'Status' => PostingEnum::class,
+    ];
     public function request()
     {
         return $this->belongsTo(PropertyMaintenanceRequest::class, 'RequestNumber', 'Id');

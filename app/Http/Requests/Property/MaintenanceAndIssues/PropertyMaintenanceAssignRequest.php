@@ -23,10 +23,6 @@ class PropertyMaintenanceAssignRequest extends FormRequest
     {
         return [
             'RequestNumber' => 'required|exists:t_MaintenanceRequest,Id',
-            'Property' => 'required|string|max:100',
-            'Block' => 'required|string|max:100',
-            'Floor' => 'required|string|max:100',
-            'Unit' => 'required|string|max:100',
             'AssignmentDate' => 'required|date',
             'AssignmentType' => 'required|exists:t_CodeDetails,Id',
             'InternalTechnician' => 'nullable|exists:t_Employees,Id',

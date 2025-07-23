@@ -91,11 +91,11 @@ use App\Models\PropertyManagement\PropertyBlock;
 use App\Models\PropertyManagement\PropertyFloor;
 use App\Models\PropertyManagement\PropertyInvoice;
 use App\Models\PropertyManagement\PropertyLeaseRenewal;
+use App\Models\PropertyManagement\PropertyLeaseTermination;
+use App\Models\PropertyManagement\PropertyNewLease;
 use App\Models\PropertyManagement\PropertyMaintenanceRequest;
 use App\Models\PropertyManagement\PropertyMaintenanceAssign;
 use App\Models\PropertyManagement\PropertyMaintenanceWorkCompletion;
-use App\Models\PropertyManagement\PropertyLeaseTermination;
-use App\Models\PropertyManagement\PropertyNewLease;
 use App\Models\PropertyManagement\PropertyUnit;
 use App\Models\PropertyManagement\PropertyLeaseSchedule;
 use App\Models\PropertyManagement\PropertyNewTenant;
@@ -138,11 +138,11 @@ use App\Policies\PropertyManagement\PropertyFloorPolicy;
 use App\Policies\PropertyManagement\PropertyInvoicePolicy;
 use App\Policies\PropertyManagement\PropertyLeaseRenewalPolicy;
 use App\Policies\PropertyManagement\PropertyLeaseSchedulePolicy;
+use App\Policies\PropertyManagement\PropertyLeaseTerminationPolicy;
+use App\Policies\PropertyManagement\PropertyNewLeasePolicy;
 use App\Policies\PropertyManagement\PropertyMaintenanceRequestPolicy;
 Use APP\policies\PropertyManagement\PropertyMaintenanceAssignPolicy;
 use App\Policies\PropertyManagement\PropertyMaintenanceWorkCompletionPolicy;
-use App\Policies\PropertyManagement\PropertyLeaseTerminationPolicy;
-use App\Policies\PropertyManagement\PropertyNewLeasePolicy;
 use App\Policies\PropertyManagement\PropertyNewTenantPolicy;
 use App\Policies\PropertyManagement\PropertyReceiptPolicy;
 use App\Policies\PropertyManagement\PropertyRegistryPolicy;
@@ -271,7 +271,6 @@ class AppServiceProvider extends ServiceProvider
             PropertyMaintenanceRequest::getPrimaryKey() => PropertyMaintenanceRequest::class,
             PropertyMaintenanceAssign::getPrimaryKey() => PropertyMaintenanceAssign::class,
             PropertyMaintenanceWorkCompletion::getPrimaryKey() => PropertyMaintenanceWorkCompletion::class,
-
 
             //DMS
             DMSTags::getPrimaryKey() => DMSTags::class,

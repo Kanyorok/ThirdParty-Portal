@@ -44,13 +44,13 @@
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label"> IssueType</label>
-                        <input type="text" class="form-control" value="{{ $maintenancerequest->IssueType ?? '-' }}" readonly>
+                        <input type="text" class="form-control" value="{{ $maintenancerequest->issueType->Description ?? '-' }}" readonly>
                     </div>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label"> Priority</label>
-                    <input type="text" class="form-control" value="{{ $maintenancerequest->Priority ?? '-' }}" readonly>
+                    <input type="text" class="form-control" value="{{ $maintenancerequest->priority->Description ?? '-' }}" readonly>
                 </div>
 
                 <div class="row">
