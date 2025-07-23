@@ -3,11 +3,13 @@
 namespace App\Models\PropertyManagement;
 use App\Enums\Property\PropertyInvoiceEnum;
 
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PropertyInvoice extends Model
 {
-    //
+    use SoftDeletes, UserActorTrait;
     protected $table = 't_RentInvoice';
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
@@ -41,5 +43,9 @@ class PropertyInvoice extends Model
     public function lease()
     {
         return $this->belongsTo(PropertyNewLease::class, 'Lease', 'Id');
+    }
+    public function receipts()
+    {
+        return $this->hasMany(PropertyReceipt::class, 'InvoiceID', 'Id');
     }
 }

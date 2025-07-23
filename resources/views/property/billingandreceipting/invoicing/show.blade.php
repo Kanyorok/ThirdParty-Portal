@@ -32,8 +32,23 @@
                     </div>
 
                     <div class="mb-3">
+                        <label class="form-label">Rent Amount</label>
+                        <input type="number" class="form-control" value="{{ $invoice->RentAmount ?? 0 }}" readonly>
+                    </div>
+
+                    <div class="mb-3">
                         <label class="form-label">Service Charge</label>
                         <input type="number" class="form-control" value="{{ $invoice->ServicesCharge ?? 0 }}" readonly>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Parking Fee</label>
+                        <input type="number" class="form-control" value="{{ $invoice->ParkingFee ?? 0 }}" readonly>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Other Charges</label>
+                        <input type="number" class="form-control" value="{{ $invoice->OtherCharges ?? 0 }}" readonly>
                     </div>
 
                     <div class="mb-3">

@@ -86,6 +86,9 @@ return new class extends Migration
             if (!Schema::hasColumn('t_RentReceipt', 'AmountPaidNow')) {
                 $table->decimal('AmountPaidNow', 20, 2)->nullable();
             }
+            if (!Schema::hasColumn('t_RentReceipt', 'ParkingFee')) {
+                $table->decimal('ParkingFee', 20, 2)->nullable();
+            }
         });
  
         // === RE-ADD FKs to t_RentReceipt ===
@@ -126,7 +129,16 @@ return new class extends Migration
                 });
             }
         }
- 
+
+        // === Drop newly added columns from t_RentReceipt ===
+        foreach (['AmountPaidSoFar', 'AmountPaidNow', 'ParkingFee'] as $col) {
+            if (Schema::hasColumn('t_RentReceipt', $col)) {
+                Schema::table('t_RentReceipt', function (Blueprint $table) use ($col) {
+                    $table->dropColumn($col);
+                });
+            }
+        }
+
         // === Re-add original columns to t_RentInvoice ===
         Schema::table('t_RentInvoice', function (Blueprint $table) {
             if (!Schema::hasColumn('t_RentInvoice', 'TenantId')) {
@@ -176,4 +188,5 @@ return new class extends Migration
             }
         });
     }
+
 };

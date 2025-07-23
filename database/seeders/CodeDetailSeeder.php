@@ -70,11 +70,11 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'GLAccountType', 'Description' => 'Expenses', 'Value' => 'E'],
 
             // Tenant Types
-            ['CodeID' => 'TenantType', 'Description' => 'Individual'],
-            ['CodeID' => 'TenantType', 'Description' => 'Corporate'],
-            ['CodeID' => 'TenantType', 'Description' => 'Government'],
-            ['CodeID' => 'TenantType', 'Description' => 'NGO'],
-            ['CodeID' => 'TenantType', 'Description' => 'Other'],
+            ['CodeID' => 'TenantType', 'Description' => 'Individual', 'Value' => 'I'],
+            ['CodeID' => 'TenantType', 'Description' => 'Corporate', 'Value' => 'C'],
+            ['CodeID' => 'TenantType', 'Description' => 'Government', 'Value' => 'G'],
+            ['CodeID' => 'TenantType', 'Description' => 'NGO', 'Value' => 'N'],
+            ['CodeID' => 'TenantType', 'Description' => 'Other', 'Value' => 'O'],
 
             // Deposit Refunded
             ['CodeID' => 'DepositRefunded', 'Description' => 'Fully Refunded'],
@@ -128,6 +128,11 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'PriorityLevel', 'Description' => 'Medium'],
             ['CodeID' => 'PriorityLevel', 'Description' => 'High'],
             ['CodeID' => 'PriorityLevel', 'Description' => 'Critical'],
+
+            //Property Payment Method
+            ['CodeID' => 'PaymentMethod', 'Description' => 'Mpesa', 'Value' => 'M'],
+            ['CodeID' => 'PaymentMethod', 'Description' => 'Bank', 'Value' => 'B'],
+            ['CodeID' => 'PaymentMethod', 'Description' => 'Cash', 'Value' => 'C'],
 
             // StaticListsService entries
             ['CodeID' => StaticListsService::MarketingModes, 'Description' => 'Outdoor Marketing', 'DisplayOrder' => 1],

@@ -36,7 +36,7 @@ class PropertyLeaseScheduleController extends Controller
         $scheduledLeaseIds = PropertyLeaseSchedule::pluck('LeaseNumber');
 
         // Get leases that are not scheduled
-        $newleases = PropertyNewLease::with(['getPropertyByTenant', 'getLeaseByProperty'])
+        $newleases = PropertyNewLease::with(['tenant', 'property'])
             ->whereNotIn('Id', $scheduledLeaseIds)
             ->where('isActive', true)
             ->get();

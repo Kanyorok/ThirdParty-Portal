@@ -174,6 +174,7 @@ Route::namespace('Property')->prefix('property')->group(function () {
 
     //Route::resource('rentreceipt', PropertyReceiptController::class);
     Route::get('rentreceipt', [PropertyReceiptController::class,'index'])->name('rentreceipt.index');
+    Route::get('/rentreceipt/amount-paid/{invoiceId}', [PropertyReceiptController::class, 'getAmountPaidSoFar'])->name('rentreceipt.amountPaid');
     Route::get('rentreceipt/create', [PropertyReceiptController::class,'create'])->name('rentreceipt.create');
     Route::post('rentreceipt', [PropertyReceiptController::class,'store'])->name('rentreceipt.store');
     Route::get('rentreceipt/show/{Id}', [PropertyReceiptController::class,'show'])->name('rentreceipt.show');
