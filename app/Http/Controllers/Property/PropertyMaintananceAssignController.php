@@ -87,9 +87,9 @@ class PropertyMaintananceAssignController extends Controller
         return view('property.maintenanceandissues.assignrequests.edit', compact('assignment','assignmentTypes', 'priorityLevels', 'technicians', 'vendors'));
     }
 
-    public function update(PropertyMaintenanceAssignRequest $request, $id)
+    public function update(PropertyMaintenanceAssignRequest $request, $Id)
     {
-        $assignment = PropertyMaintenanceAssign::findOrFail($id);
+        $assignment = PropertyMaintenanceAssign::findOrFail($Id);
 
         $validated = $request->validated();
 
@@ -99,13 +99,13 @@ class PropertyMaintananceAssignController extends Controller
         $expectedCompletion = new \DateTime($validated['ExpectedCompletion']);
 
         // Resolve full model instances from IDs
-        $assignmentType = CodeDetail::findOrFail($validated['AssignmentTypeId']);
+        $assignmentType = CodeDetail::findOrFail($validated['AssignmentType']);
         $priorityLevel = CodeDetail::findOrFail($validated['PriorityLevel']);
 
-        $internalTechnician = $validated['InternalTechnicianId'] ?? null;
+        $internalTechnician = $validated['InternalTechnician'] ?? null;
         $internalTechnician = $internalTechnician ? Employee::findOrFail($internalTechnician) : null;
 
-        $prequalifiedVendor = $validated['PrequalifiedVendorId'] ?? null;
+        $prequalifiedVendor = $validated['PrequalifiedVendor'] ?? null;
         $prequalifiedVendor = $prequalifiedVendor ? Supplier::findOrFail($prequalifiedVendor) : null;
 
         // Call the service to update

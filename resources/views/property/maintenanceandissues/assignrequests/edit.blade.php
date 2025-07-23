@@ -48,23 +48,22 @@
                 </div>
 
                 {{-- Assignment Type --}}
-                <div class="mb-3">
-                    <label class="form-label">Assign To <span class="text-danger">*</span></label>
-                    <select class="form-select" name="AssignmentTypeId" id="assignmentTypeSelect" required>
-                        <option value="">-- Select Assignment Type --</option>
-                        @foreach ($assignmentTypes as $assignmentType)
-                            <option value="{{ $assignmentType->ID }}"
-                                {{ (string) old('AssignmentType', $assignment->AssignmentType) === (string) $assignmentType->ID ? 'selected' : '' }}>
-                                {{ $assignmentType->Description }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
+                <select name="AssignmentType" id="assignmentTypeSelect" class="form-control" required>
+                    <option value="">-- Select Assignment Type --</option>
+                    @foreach($assignmentTypes as $type)
+                        <option value="{{ $type->ID }}" 
+                            {{ $assignment->AssignmentType == $type->ID ? 'selected' : '' }}>
+                            {{ $type->Description }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('AssignmentType') <small class="text-danger">{{ $message }}</small> @enderror
+
 
                 {{-- Internal Technician --}}
                 <div class="mb-3">
                     <label class="form-label">Internal Technician</label>
-                    <select class="form-select" name="InternalTechnicianId" id="internalTechnicianSelect">
+                    <select class="form-select" name="InternalTechnician" id="internalTechnicianSelect">
                         <option value="">-- Select Technician --</option>
                         @foreach ($technicians as $employee)
                             <option value="{{ $employee->Id }}"
@@ -73,22 +72,22 @@
                             </option>
                         @endforeach
                     </select>
-                    @error('InternalTechnicianId') <small class="text-danger">{{ $message }}</small> @enderror
+                    @error('InternalTechnician') <small class="text-danger">{{ $message }}</small> @enderror
                 </div>
 
                 {{-- Prequalified Vendor --}}
                 <div class="mb-3">
                     <label class="form-label">Prequalified Vendor</label>
-                    <select class="form-select" name="PrequalifiedVendorId" id="vendorSelect">
+                    <select class="form-select" name="PrequalifiedVendor" id="vendorSelect">
                         <option value="">-- Select Vendor --</option>
                         @foreach ($vendors as $supplier)
                             <option value="{{ $supplier->Id }}"
-                                {{ (string) old('PrequalifiedVendorId', $assignment->PrequalifiedVendor) === (string) $supplier->Id ? 'selected' : '' }}>
+                                {{ (string) old('PrequalifiedVendor', $assignment->PrequalifiedVendor) === (string) $supplier->Id ? 'selected' : '' }}>
                                 {{ $supplier->SupplierName }}
                             </option>
                         @endforeach
                     </select>
-                    @error('PrequalifiedVendorId') <small class="text-danger">{{ $message }}</small> @enderror
+                    @error('PrequalifiedVendor') <small class="text-danger">{{ $message }}</small> @enderror
                 </div>
 
                 {{-- Expected Start Date --}}
