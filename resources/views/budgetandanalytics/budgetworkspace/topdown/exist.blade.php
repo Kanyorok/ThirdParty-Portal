@@ -128,13 +128,13 @@
                                         <td>
                                             <input class="form-control form-control-sm text-end"
                                                    style="width: 120px; padding: 2px 5px;"
-                                                   value="{{ $item->Actuals ?? 4000000 }}"
+                                                   value="{{ number_format($item->Actuals) ?? 0.00 }}"
                                                    readonly/>
                                         </td>
                                         <td>
                                             <input class="form-control form-control-sm text-end percent-change"
                                                    style="width: 100px; padding: 2px 5px;"
-                                                   value="{{ $item->PercentageChange ?? '0.00%' }}"
+                                                   value="{{ number_format($item->PercentageChange).'%' ?? '0.00%' }}"
                                                    readonly/>
                                         </td>
                                     </tr>
@@ -168,10 +168,10 @@
                         <div class="border rounded p-2 bg-info text-white">
                             <span class="fw-bold">Variance:</span> <span id="variance" class="fw-bold">0</span>
                         </div>
-                        <div class="border rounded p-2 bg-warning">
-                            <span class="fw-bold">% Variance:</span> <span id="percent-variance"
-                                                                           class="fw-bold">0.00%</span>
-                        </div>
+{{--                        <div class="border rounded p-2 bg-warning">--}}
+{{--                            <span class="fw-bold">% Variance:</span> <span id="percent-variance"--}}
+{{--                                                                           class="fw-bold">0.00%</span>--}}
+{{--                        </div>--}}
                     </div>
                 </div>
             </div>
