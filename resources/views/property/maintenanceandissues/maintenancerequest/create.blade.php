@@ -80,7 +80,7 @@
             <label class="form-label">Upload Relevant Documents</label>
             <input type="file" name="Document" class="form-control" multiple>
         </div>
-        <button class="btn btn-success">Submit Request</button>
+        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Submit Request</button>
     </form>
     </div>
   </div>

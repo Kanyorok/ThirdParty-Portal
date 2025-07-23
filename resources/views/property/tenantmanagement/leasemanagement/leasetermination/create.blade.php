@@ -67,7 +67,7 @@
 
                     <!-- Submit Button -->
                     <div class="text-end">
-                        <button type="submit" class="btn btn-danger"> Terminate Lease</button>
+                        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();"> Terminate Lease</button>
                     </div>
 
                 </div>

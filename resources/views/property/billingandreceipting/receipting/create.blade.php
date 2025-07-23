@@ -134,7 +134,7 @@
           <textarea class="form-control" name="Remarks" rows="2" placeholder="e.g. Paid KES 5,000 - next part due 10th"></textarea>
         </div>
 
-        <button type="submit" class="btn btn-success">Record Payment</button>
+        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Record Payment</button>
 
       </div>
     </div>

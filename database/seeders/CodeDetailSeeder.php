@@ -142,6 +142,12 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'PriorityLevel', 'Description' => 'High'],
             ['CodeID' => 'PriorityLevel', 'Description' => 'Critical'],
 
+            // Property DocumentType
+            ['CodeID' => 'DocumentType', 'Description' => 'Ownership'],
+            ['CodeID' => 'DocumentType', 'Description' => 'Architectural Plan'],
+            ['CodeID' => 'DocumentType', 'Description' => 'Insurance'],
+            ['CodeID' => 'DocumentType', 'Description' => 'Others'],
+
             // StaticListsService entries
             ['CodeID' => StaticListsService::MarketingModes, 'Description' => 'Outdoor Marketing', 'DisplayOrder' => 1],
             ['CodeID' => StaticListsService::MarketingModes, 'Description' => 'Trade Shows', 'DisplayOrder' => 2],

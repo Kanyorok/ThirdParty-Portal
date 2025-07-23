@@ -130,7 +130,7 @@
                     <small class="text-muted">e.g. upload Lease Document</small>
                 </div>
 
-                <button type="submit" class="btn btn-success">Save Lease</button>
+                <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Save Lease</button>
 
             </div>
         </div>
