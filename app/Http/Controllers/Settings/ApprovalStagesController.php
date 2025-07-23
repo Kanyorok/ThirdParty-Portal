@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Database\Eloquent\Relations\Relation;
+use App\Models\Settings\ApprovalStages;
 use Illuminate\Http\Request;
+use App\Http\Requests\Settings\ApprovalSetupRequest;
 
 class ApprovalStagesController extends Controller
 {
@@ -12,18 +15,36 @@ class ApprovalStagesController extends Controller
      */
     public function index()
     {
-        // Logic to display approval stages
-        return view('settings.approvals.sections');
+        $morphMap = Relation::morphMap();
+
+        $approvalGroups = ApprovalStages::all();
+
+        $sourceOptions = array_flip($morphMap);
+
+        return view('settings.approvals.sections', compact('approvalGroups', 'sourceOptions'));
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(ApprovalSetupRequest $request)
     {
-        // Logic to store a new approval stage
-        // Validate and save the data
-    }
+        $validated = $request->validated();
 
-    // Other methods like edit, update, destroy can be added here as needed
+        try{
+            ApprovalStages::create([
+                'Name' => $validated['Name'],
+                'Description' => $validated['Description'],
+                'DocType' => $validated['DocType'],
+                'CreatedBy' => auth()->id(),
+                'ModifiedBy' => auth()->id(),
+                'ModifiedOn' => now(),
+                'CreatedOn' => now(),
+            ]);
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['error' => 'Failed to create approval stage: ' . $e->getMessage()]);
+        }
+
+        return redirect()->back()->with('success', 'Approval workflow created.');
+    }
 }

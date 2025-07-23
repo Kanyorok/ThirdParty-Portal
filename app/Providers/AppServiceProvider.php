@@ -144,6 +144,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Permission\Models\Role;
 use App\Models\Auth\ModelRole;
+use App\Models\Settings\ApprovalStages;
 
 
 class AppServiceProvider extends ServiceProvider
@@ -168,6 +169,7 @@ class AppServiceProvider extends ServiceProvider
             APICredential::getPrimaryKey() => APICredential::class,
             Comment::getPrimaryKey() => Comment::class,
             Report::getPrimaryKey() => Report::class,
+            ApprovalStages::getPrimaryKey() => ApprovalStages::class,
 
             //CRM
             Account::getPrimaryKey() => Account::class,
