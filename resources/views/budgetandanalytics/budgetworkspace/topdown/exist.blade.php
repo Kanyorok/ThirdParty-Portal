@@ -32,20 +32,20 @@
             <input type="hidden" name="BudgetID" value="{{ $budgetId }}">
             <input type="hidden" name="BranchID" value="{{ $branchId }}">
             <div class="row mb-3 g-2">
-                <div class="col-md-4">
-                    <label class="form-label fw-medium">Select Budget</label>
+                <div class="col-md-6">
+                    <label class="form-label fw-medium">Budget</label>
                     <select class="form-select form-select-sm" name="BudgetID" required disabled>
                         <option selected disabled>-- Select Budget --</option>
                         @foreach ($budgets as $item)
                             <option
-                                value="{{ $item->Id }}" {{ $budgetId == $item->Id ? 'selected' : '' }}>{{ $item->Name }}
-                                - {{ Carbon::parse($item->From)->format('Y-m-d') }}
-                                to {{ Carbon::parse($item->To)->format('Y-m-d') }}</option>
+                                value="{{ $item->Id }}" {{ $budgetId == $item->Id ? 'selected' : '' }}>{{ $item->Name }} :
+                                 {{ Carbon::parse($item->From)->format('Y-m-d') }}
+                                to  {{ Carbon::parse($item->To)->format('Y-m-d') }} </option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-4">
-                    <label class="form-label fw-medium">Select Branch</label>
+                <div class="col-md-6">
+                    <label class="form-label fw-medium"> Branch</label>
                     <select class="form-select form-select-sm" name="BranchID" required disabled>
                         <option selected disabled>-- Select Branch --</option>
                         @foreach ($branches as $item)
@@ -54,12 +54,12 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-4">
-                    <label class="form-label fw-medium">Select Format</label>
-                    <select class="form-select form-select-sm" id="format" name="format" disabled>
-                        <option value="m" selected>Monthly</option>
-                    </select>
-                </div>
+{{--                <div class="col-md-4">--}}
+{{--                    <label class="form-label fw-medium">Select Format</label>--}}
+{{--                    <select class="form-select form-select-sm" id="format" name="format" disabled>--}}
+{{--                        <option value="m" selected>Monthly</option>--}}
+{{--                    </select>--}}
+{{--                </div>--}}
             </div>
 
             <div id="monthly_form" class="table-responsive mb-3">
