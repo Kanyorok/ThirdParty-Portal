@@ -28,6 +28,10 @@ class FinanceGLAccounts extends Model
         'IsPostingAccount',
         'CBSAccountCode',
         'BranchID',
+        'GLAccountTypeValue',
+        'GLTypeGroupIDValue',
+        'GLSubAccountTypeIDValue',
+        'GLDigits',
         'Description',
         'IsActive',
 

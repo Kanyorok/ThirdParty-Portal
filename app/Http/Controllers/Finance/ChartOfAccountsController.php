@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Finance;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Auth\ModelRole;
+use App\Models\Core\Branch;
 use App\Models\Core\CodeDetail;
 use App\Models\Finance\FinanceGLAccounts;
 use App\Models\Finance\FinanceGLSubAccountTypes;
 use App\Models\Finance\FinanceGLTypeGroup;
+use App\Models\Finance\SegmentOrder;
 use Couchbase\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,10 +22,10 @@ class ChartOfAccountsController extends Controller
     public function index()
     {
         $this->authorize(PermissionEnum::FinanceCOAView,FinanceGLAccounts::class);
-        $charts = FinanceGLAccounts::select('Id','GLSubAccountTypeID','GLTypeGroupID','GLCode', 'GLName','GLAccountTypeID','IsActive','Description')
-                    ->with('typeGroup:Id,Description','subAccount:Id,Description')->latest()->get();
+        $charts = FinanceGLAccounts::with('typeGroup:Id,Description','subAccount:Id,Description')->latest()->get();
+        $glOrders=SegmentOrder::select('Id','SegmentType','Description')->get();
 
-        return view('finance.chartofaccounts.chartofaccounts.index', compact('charts'));
+        return view('finance.chartofaccounts.chartofaccounts.index', compact('charts','glOrders'));;
     }
 
     public function create()
@@ -68,13 +70,26 @@ class ChartOfAccountsController extends Controller
 
         try{
             $branchID=ModelRole::where('model_id',Auth::id())->pluck('BranchID')->first();
+            $branchIDCode=Branch::find($branchID)->BranchID;
+
+            //Get the type values TO  be used in creating an account code
+            $GLAccountTypeValue=CodeDetail::where('CodeID','GLAccountType')->where('Value',$validated['GLAccountTypeID'])->pluck('DisplayOrder')->first();
+            $GLTypeGroupIDValue=FinanceGLTypeGroup::where('Id',$validated['GLTypeGroupID'])->pluck('SegmentValue')->first();
+            $GLSubAccountTypeIDValue=FinanceGLSubAccountTypes::where('Id',$validated['GLSubAccountTypeID'])->pluck('SegmentValue')->first();
+            $GLDigits=SegmentOrder::where('SegmentType','GLDigits')->pluck('Description')->first();
+
+
             $charts = FinanceGLAccounts::create([
                 //'GLCode'             => $validated['GLCode'],
                 'GLName'             => $validated['GLName'],
                 'GLAccountTypeID'    => $validated['GLAccountTypeID'],
                 'GLTypeGroupID'      => $validated['GLTypeGroupID'],
                 'GLSubAccountTypeID' => $validated['GLSubAccountTypeID'],
-                'BranchID'=>$branchID,
+                'BranchID'=>$branchIDCode,
+                'GLAccountTypeValue'=>$GLAccountTypeValue,
+                'GLTypeGroupValue'=>$GLTypeGroupIDValue,
+                'GLSubAccountTypeValue'=>$GLSubAccountTypeIDValue,
+                'GLDigits'=>$GLDigits,
                 //'ParentGLID'         => $validated['ParentGLID'] ?? null,
                 'Description'        => $validated['Description'],
                 //'IsActive'           => $validated['IsActive'],
@@ -146,12 +161,22 @@ class ChartOfAccountsController extends Controller
             $gl = FinanceGLAccounts::findOrFail($id);
             $branchID = ModelRole::where('model_id', Auth::id())->pluck('BranchID')->first();
 
+            //Get the type values TO  be used in creating an account code
+            $GLAccountTypeValue=CodeDetail::where('CodeID','GLAccountType')->where('Value',$validated['GLAccountTypeID'])->pluck('DisplayOrder')->first();
+            $GLTypeGroupIDValue=FinanceGLTypeGroup::where('Id',$validated['GLTypeGroupID'])->pluck('SegmentValue')->first();
+            $GLSubAccountTypeIDValue=FinanceGLSubAccountTypes::where('Id',$validated['GLSubAccountTypeID'])->pluck('SegmentValue')->first();
+            $GLDigits=SegmentOrder::where('SegmentType','GLDigits')->pluck('Description')->first();
+
             $gl->update([
                 'GLName'             => $validated['GLName'],
                 'GLAccountTypeID'    => $validated['GLAccountTypeID'],
                 'GLTypeGroupID'      => $validated['GLTypeGroupID'],
                 'GLSubAccountTypeID' => $validated['GLSubAccountTypeID'],
                 //'BranchID'           => $branchID,
+                'GLAccountTypeValue'=>$GLAccountTypeValue,
+                'GLTypeGroupValue'=>$GLTypeGroupIDValue,
+                'GLSubAccountTypeValue'=>$GLSubAccountTypeIDValue,
+                'GLDigits'=>$GLDigits,
                 'Description'        => $validated['Description'],
                 'IsActive'           => $validated['IsActive'],
                 'ModifiedBy'         => Auth::id(),

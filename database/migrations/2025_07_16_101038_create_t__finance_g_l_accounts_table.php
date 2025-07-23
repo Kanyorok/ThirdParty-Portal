@@ -23,7 +23,7 @@ return new class extends Migration
             $table->boolean('IsControlAccount')->default(0);
             $table->boolean('IsPostingAccount')->default(1);
             $table->string('CBSAccountCode', 50)->nullable();
-            $table->bigInteger('BranchID')->nullable();
+            $table->string('BranchID')->nullable();
             $table->string('Description', 255)->nullable();
             $table->boolean('IsActive')->default(1);
 

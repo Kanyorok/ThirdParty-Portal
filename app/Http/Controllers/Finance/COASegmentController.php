@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Finance;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Core\CodeDetail;
+use App\Models\Finance\FinanceGLAccounts;
 use App\Models\Finance\FinanceGLSubAccountTypes;
 use App\Models\Finance\FinanceGLTypeGroup;
 use App\Models\Finance\SegmentOrder;
@@ -135,6 +136,8 @@ class COASegmentController extends Controller
         try {
             DB::beginTransaction();
             $update=SegmentOrder::where('SegmentType','GLDigits')->update(['Description'=>$validated['glDigits']]);
+            //Update the Major GL Table
+            FinanceGLAccounts::query()->update(['GLDigits' => $validated['glDigits']]);
             activity()
                 ->causedBy(Auth::id())
                 ->performedOn(new SegmentOrder())
@@ -159,8 +162,12 @@ class COASegmentController extends Controller
                 foreach ($values as $key=>$value) {
                     if (!is_null($value)) {
                         $update=CodeDetail::where('CodeID','GLAccountType')->where('Value',$key)->update(['DisplayOrder'=>$value]);
+                        //Update the Major GL Table
+                        FinanceGLAccounts::where('GLAccountTypeID',$key)->update(['GLAccountTypeValue'=>$value]);
                     }else{
                         $update=CodeDetail::where('CodeID','GLAccountType')->where('Value',$key)->update(['DisplayOrder'=>0]);
+                        //Update the Major GL Table
+                        FinanceGLAccounts::where('GLAccountTypeID',$key)->update(['GLAccountTypeValue'=>0]);
                     }
                 }
                 activity()
@@ -184,6 +191,8 @@ class COASegmentController extends Controller
             try {
                 DB::beginTransaction();
                 $update=FinanceGLTypeGroup::where('Id',$request->GLTypeGroupID)->update(['SegmentValue'=>$validated['value']]);
+                //Update the Major GL Table
+                FinanceGLAccounts::where('GLTypeGroupID',$request->GLTypeGroupID)->update(['GLTypeGroupIDValue'=>$validated['value']]);
                 activity()
                     ->causedBy(Auth::id())
                     ->performedOn(new FinanceGLTypeGroup())
@@ -206,6 +215,8 @@ class COASegmentController extends Controller
         try {
             DB::beginTransaction();
             $update=FinanceGLSubAccountTypes::where('Id',$request->GLSubAccountTypeID)->update(['SegmentValue'=>$validated['value']]);
+            //Update the Major GL Table
+            FinanceGLAccounts::where('GLSubAccountTypeID',$request->GLSubAccountTypeID)->update(['GLSubAccountTypeIDValue'=>$validated['value']]);
             activity()
                 ->causedBy(Auth::id())
                 ->performedOn(new FinanceGLTypeGroup())
