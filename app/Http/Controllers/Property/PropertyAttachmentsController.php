@@ -25,8 +25,8 @@ class PropertyAttachmentsController extends Controller
 
     public function create(){
         $properties = PropertyRegistry::all();
-        $documentTypes = CodeDetail::where('CodeID', 'DocumentType')->get();
-        return view('property.propertyregistry.propertyattachments.create', compact('properties', 'documentTypes'));
+        $documenttypes = CodeDetail::where('CodeID', 'DocumentType')->get();
+        return view('property.propertyregistry.propertyattachments.create', compact('properties', 'documenttypes'));
     }
 
     public function store(PropertyAttachmentsRequest $request)
@@ -35,18 +35,80 @@ class PropertyAttachmentsController extends Controller
         $validated = $request->validated();
         
         $PropertyID = PropertyRegistry::findOrFail($validated['PropertyID']);
-        $documentType = CodeDetail::findOrFail($validated['DocumentType']);
+        $DocumentType = CodeDetail::findOrFail($validated['DocumentType']);
         $user = Auth::user();
 
         $propertyattachment = PropertyAttachmentsService::create(
             $PropertyID,
             $validated['DocumentTitle'],
-            $documentType,
+             $DocumentType,
             $validated['Description'],
             auth()->user()
         );
         return redirect()->route('attachments.index')->with('success', 'Property attachment created successfully');
     }
 
+    public function edit($Id)
+    {
+    //$this->authorize(PermissionEnum::PropertyMaintenanceRequestUpdate, PropertyMaintenanceRequest::class);
+    $propertyattachments = PropertyAttachments::findOrFail($Id);
+    $properties = PropertyRegistry::all();
+
+    return view('property.propertyregistry.propertyattachments.edit', compact('propertyattachments', 'properties'));
+    }
+
+    public function update(PropertyAttachmentsRequest $request, $Id)
+    {
+    // $this->authorize(PermissionEnum::PropertyMaintenanceRequestUpdate, PropertyMaintenanceRequest::class);
+        $validated = $request->validated();
+
+    DB::beginTransaction();
+
+    try {
+        $propertyattachments = PropertyAttachments::findOrFail($Id);
+
+        $propertyattachments->update([
+            'PropertyID'         => $validated['PropertyID'],
+            'DocumentTitle'         => $validated['DocumentTitle'],
+            'DocumentType'         => $validated['DocumentType'],
+            'Description'         => $validated['Description'],
+            'ModifiedBy'       => Auth::id(),
+        ]);
+
+        DB::commit();
+
+        activity()
+            ->performedOn($propertyattachments)
+            ->causedBy(Auth::user())
+            ->withProperties(['action' => 'update'])
+            ->log('Updated Property Attachments');
+
+        return redirect()->route('attachments.index')
+                         ->with('success', 'Property attachments updated successfully');
+    } catch (\Throwable $th) {
+        DB::rollBack();
+        Log::error('Failed to update property attachments: ' . $th->getMessage());
+
+        return back()->withErrors(['error' => 'Failed to update property attachments'])->withInput();
+    }
+}
+
+public function destroy($Id)
+{
+   // $this->authorize(PermissionEnum::PropertyMaintenanceRequestDelete, PropertyMaintenanceRequest::class);
+    try {
+        $propertyattachments = PropertyAttachments::findOrFail($Id);
+        $propertyattachments->delete();
+
+        return redirect()->route('attachments.index')
+                         ->with('success', 'Property attachments deleted successfully!');
+    } catch (\Throwable $th) {
+        Log::error('Error deleting property attachments: ' . $th->getMessage());
+
+        return redirect()->back()
+                         ->withErrors(['error' => 'Failed to delete property attachments. Please try again.'])
+                         ->withInput();
+    }
+  }
 }
 

@@ -5,7 +5,7 @@ namespace App\Models\PropertyManagement;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\CodeDetails; // Add this import if CodeDetails is in App\Models
+use App\Models\Core\CodeDetail;
 
 class PropertyAttachments extends Model
 {
@@ -33,7 +33,7 @@ class PropertyAttachments extends Model
         return 'PropertyAttachmentId';
     }
 
-    public function propertyid()
+    public function property()
     {
         return $this->belongsTo(PropertyRegistry::class, 'PropertyID', 'Id');
     }

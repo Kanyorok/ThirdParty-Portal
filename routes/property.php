@@ -58,7 +58,14 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::get('propertyregistry/edit/{Id}', [PropertyRegistryController::class, 'edit'])->name('PropertyRegistry.edit');
     Route::put('propertyregistry/edit/{Id}', [PropertyRegistryController::class, 'update'])->name('PropertyRegistry.update');
 
-
+    //Route::resource('attachments', PropertyAttachmentsController::class);
+    Route::get('attachments', [PropertyAttachmentsController::class,'index'])->name('attachments.index');
+    Route::get('attachments/create', [PropertyAttachmentsController::class,'create'])->name('attachments.create');
+    Route::post('attachments', [PropertyAttachmentsController::class,'store'])->name('attachments.store');
+    Route::get('attachments/show/{Id}', [PropertyAttachmentsController::class,'show'])->name('attachments.show');
+    Route::get('attachments/edit/{Id}',[PropertyAttachmentsController::class,'edit'])->name('attachments.edit');
+    Route::put('attachments/edit/{Id}',[PropertyAttachmentsController::class,'update'])->name('attachments.update');
+    Route::delete('attachments/delete/{Id}', [PropertyAttachmentsController::class,'destroy'])->name('attachments.destroy');
 
     //Property Block
     //Route::resource('addblock', PropertyBlockController::class);
@@ -218,8 +225,6 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::put('workcompletion/edit/{Id}',[PropertyMaintenanceWorkCompletionController::class,'update'])->name('workcompletion.update');
     Route::delete('workcompletion/delete/{Id}', [PropertyMaintenanceWorkCompletionController::class,'destroy'])->name('workcompletion.destroy');
 
-
-    Route::resource('attachments', PropertyAttachmentsController::class);
     Route::resource('rentdashboard', RentDashboardController::class);
     Route::resource('maintenancedashboard', PropertyMaintenanceDashboardController::class);
     Route::resource('propertyreports', PropertyReportsController::class);

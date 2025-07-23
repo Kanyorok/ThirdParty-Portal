@@ -27,14 +27,15 @@
       <div class="row g-3 mb-3">
         <div class="col-md-6">
           <label class="form-label">Document Type</label>
-            <select class="form-select" name="DocumentType">
-            <option>Ownership</option>
-            <option>Architectural Plan</option>
-            <option>Utility Bill</option>
-            <option>Insurance</option>
-            <option>Other</option>
-          </select>
-        </div>
+        <select class="form-select" name="DocumentType">
+          <option value="">--Select a status--</option>
+              @foreach ($documenttypes as $documenttype)
+                <option value="{{ $documenttype->ID }}">
+                  {{ $documenttype->Description }}
+                </option>
+              @endforeach
+            </select>
+          </div>
         <div class="col-md-6">
           <label class="form-label">Upload File</label>
           <input type="file" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx">
