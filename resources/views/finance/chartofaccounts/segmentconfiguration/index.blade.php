@@ -48,205 +48,64 @@
                             <div class="accordion" id="staticAccountTree">
 
                                 {{-- Assets,Liabilities, Income, Expense --}}
-                                @foreach($accountTypes as $glType)
+                                @foreach($data as $glTypeDesc => $glType)
                                     @php
-                                        //Get the BG Color code for GLTYPE
-                                        $bgColor='';
-                                        if($glType->Value=='A'){
-                                            $bgColor='bg-primary';
-                                        }elseif($glType->Value=='L'){
-                                            $bgColor='bg-warning';
-                                        }elseif($glType->Value=='I'){
-                                            $bgColor='bg-success';
-                                        }elseif($glType->Value=='E'){
-                                            $bgColor='bg-danger';
-                                        }
+                                        $bgColor = match($glTypeDesc) {
+                                            'Assets' => 'bg-primary',
+                                            'Liabilities' => 'bg-warning',
+                                            'Income' => 'bg-success',
+                                            'Expenses' => 'bg-danger',
+                                            default => 'bg-secondary',
+                                        };
                                     @endphp
+
                                     <div class="accordion-item">
-                                        <h2 class="accordion-header" id="headingAssets">
+                                        <h2 class="accordion-header" id="heading{{Str::slug($glTypeDesc)}}">
                                             <button class="accordion-button" type="button" data-bs-toggle="collapse"
-                                                    data-bs-target="#collapseAssets" aria-expanded="false"
-                                                    aria-controls="collapseAssets">
-                                                <span>{{$glType->Description}} <span class="badge {{$bgColor}} ms-2">{{$glType->DisplayOrder}}</span></span>
+                                                    data-bs-target="#collapse{{Str::slug($glTypeDesc)}}" aria-expanded="false"
+                                                    aria-controls="collapse{{Str::slug($glTypeDesc)}}">
+                                                <span>{{ $glTypeDesc }} <span class="badge {{ $bgColor }} ms-2">{{ $glType['SegmentValue'] }}</span></span>
                                             </button>
                                         </h2>
-                                        <div id="collapseAssets" class="accordion-collapse collapse"
-                                             aria-labelledby="headingAssets" data-bs-parent="#staticAccountTree">
+                                        <div id="collapse{{Str::slug($glTypeDesc)}}" class="accordion-collapse collapse"
+                                             aria-labelledby="heading{{Str::slug($glTypeDesc)}}" data-bs-parent="#staticAccountTree">
                                             <div class="accordion-body ps-4">
 
-                                                {{-- GL Account Type --}}
-                                                <div class="accordion mb-3" id="assetsSubAccordion">
-                                                    <div class="accordion-item">
-                                                        <h2 class="accordion-header" id="headingFixedAssets">
-                                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                                                                    data-bs-target="#collapseFixedAssets" aria-expanded="false"
-                                                                    aria-controls="collapseFixedAssets">
-                                                                <span>Fixed Assets <span class="badge bg-secondary ms-2">1100</span></span>
-                                                            </button>
-                                                        </h2>
-                                                        <div id="collapseFixedAssets" class="accordion-collapse collapse"
-                                                             aria-labelledby="headingFixedAssets" data-bs-parent="#assetsSubAccordion">
-                                                            <div class="accordion-body ps-4">
-                                                                <ul class="list-group list-group-flush">
-                                                                    <li class="list-group-item"><strong>1110</strong> – Equipment</li>
-                                                                    <li class="list-group-item"><strong>1120</strong> – Furniture</li>
-                                                                    <li class="list-group-item"><strong>1130</strong> – Buildings</li>
-                                                                </ul>
+                                                <div class="accordion mb-3" id="{{Str::slug($glTypeDesc)}}SubAccordion">
+                                                    @foreach($glType['Children'] as $groupDesc => $group)
+                                                        <div class="accordion-item">
+                                                            <h2 class="accordion-header" id="heading{{Str::slug($groupDesc)}}">
+                                                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                                                        data-bs-target="#collapse{{Str::slug($groupDesc)}}" aria-expanded="false"
+                                                                        aria-controls="collapse{{Str::slug($groupDesc)}}">
+                                    <span>{{ $groupDesc }}
+                                        <span class="badge bg-secondary ms-2">
+                                            {{ $group['SegmentValue'] ?? '' }}
+                                        </span>
+                                    </span>
+                                                                </button>
+                                                            </h2>
+                                                            <div id="collapse{{Str::slug($groupDesc)}}" class="accordion-collapse collapse"
+                                                                 aria-labelledby="heading{{Str::slug($groupDesc)}}" data-bs-parent="#{{Str::slug($glTypeDesc)}}SubAccordion">
+                                                                <div class="accordion-body ps-4">
+                                                                    <ul class="list-group list-group-flush">
+                                                                        @foreach($group['Children'] as $child)
+                                                                            <li class="list-group-item">
+                                                                                <strong>{{ $child['SegmentValue'] ?? '' }}</strong> – {{ $child['Description'] }}
+                                                                            </li>
+                                                                        @endforeach
+                                                                    </ul>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                    </div>
-
-                                                    {{-- Other Asset Category --}}
-                                                    <div class="accordion-item">
-                                                        <h2 class="accordion-header" id="headingCashAssets">
-                                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                                                                    data-bs-target="#collapseCashAssets" aria-expanded="false"
-                                                                    aria-controls="collapseCashAssets">
-                                                                <span>Current Assets <span class="badge bg-secondary ms-2">1200</span></span>
-                                                            </button>
-                                                        </h2>
-                                                        <div id="collapseCashAssets" class="accordion-collapse collapse"
-                                                             aria-labelledby="headingCashAssets" data-bs-parent="#assetsSubAccordion">
-                                                            <div class="accordion-body ps-4">
-                                                                <ul class="list-group list-group-flush">
-                                                                    <li class="list-group-item"><strong>1210</strong> – Cash at Bank</li>
-                                                                    <li class="list-group-item"><strong>1220</strong> – Accounts Receivable</li>
-                                                                </ul>
-                                                            </div>
-                                                        </div>
-                                                    </div>
+                                                    @endforeach
                                                 </div>
 
                                             </div>
                                         </div>
                                     </div>
-
                                 @endforeach
 
-
-                                {{-- Assets --}}
-                                <div class="accordion-item">
-                                    <h2 class="accordion-header" id="headingAssets">
-                                        <button class="accordion-button" type="button" data-bs-toggle="collapse"
-                                                data-bs-target="#collapseAssets" aria-expanded="true"
-                                                aria-controls="collapseAssets">
-                                            <span>Assets <span class="badge bg-primary ms-2">1000</span></span>
-                                        </button>
-                                    </h2>
-                                    <div id="collapseAssets" class="accordion-collapse collapse show"
-                                         aria-labelledby="headingAssets" data-bs-parent="#staticAccountTree">
-                                        <div class="accordion-body ps-4">
-
-                                            {{-- Fixed Assets --}}
-                                            <div class="accordion mb-3" id="assetsSubAccordion">
-                                                <div class="accordion-item">
-                                                    <h2 class="accordion-header" id="headingFixedAssets">
-                                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                                                                data-bs-target="#collapseFixedAssets" aria-expanded="false"
-                                                                aria-controls="collapseFixedAssets">
-                                                            <span>Fixed Assets <span class="badge bg-secondary ms-2">1100</span></span>
-                                                        </button>
-                                                    </h2>
-                                                    <div id="collapseFixedAssets" class="accordion-collapse collapse"
-                                                         aria-labelledby="headingFixedAssets" data-bs-parent="#assetsSubAccordion">
-                                                        <div class="accordion-body ps-4">
-                                                            <ul class="list-group list-group-flush">
-                                                                <li class="list-group-item"><strong>1110</strong> – Equipment</li>
-                                                                <li class="list-group-item"><strong>1120</strong> – Furniture</li>
-                                                                <li class="list-group-item"><strong>1130</strong> – Buildings</li>
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                {{-- Other Asset Category --}}
-                                                <div class="accordion-item">
-                                                    <h2 class="accordion-header" id="headingCashAssets">
-                                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                                                                data-bs-target="#collapseCashAssets" aria-expanded="false"
-                                                                aria-controls="collapseCashAssets">
-                                                            <span>Current Assets <span class="badge bg-secondary ms-2">1200</span></span>
-                                                        </button>
-                                                    </h2>
-                                                    <div id="collapseCashAssets" class="accordion-collapse collapse"
-                                                         aria-labelledby="headingCashAssets" data-bs-parent="#assetsSubAccordion">
-                                                        <div class="accordion-body ps-4">
-                                                            <ul class="list-group list-group-flush">
-                                                                <li class="list-group-item"><strong>1210</strong> – Cash at Bank</li>
-                                                                <li class="list-group-item"><strong>1220</strong> – Accounts Receivable</li>
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {{-- Liabilities --}}
-                                <div class="accordion-item">
-                                    <h2 class="accordion-header" id="headingLiabilities">
-                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                                                data-bs-target="#collapseLiabilities" aria-expanded="false"
-                                                aria-controls="collapseLiabilities">
-                                            <span>Liabilities <span class="badge bg-warning ms-2">2000</span></span>
-                                        </button>
-                                    </h2>
-                                    <div id="collapseLiabilities" class="accordion-collapse collapse"
-                                         aria-labelledby="headingLiabilities" data-bs-parent="#staticAccountTree">
-                                        <div class="accordion-body ps-4">
-                                            <ul class="list-group list-group-flush">
-                                                <li class="list-group-item"><strong>2100</strong> – Accounts Payable</li>
-                                                <li class="list-group-item"><strong>2200</strong> – Accrued Expenses</li>
-                                                <li class="list-group-item"><strong>2300</strong> – Short-Term Loans</li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {{-- Income --}}
-                                <div class="accordion-item">
-                                    <h2 class="accordion-header" id="headingIncome">
-                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                                                data-bs-target="#collapseIncome" aria-expanded="false"
-                                                aria-controls="collapseIncome">
-                                            <span>Income <span class="badge bg-success ms-2">3000</span></span>
-                                        </button>
-                                    </h2>
-                                    <div id="collapseIncome" class="accordion-collapse collapse"
-                                         aria-labelledby="headingIncome" data-bs-parent="#staticAccountTree">
-                                        <div class="accordion-body ps-4">
-                                            <ul class="list-group list-group-flush">
-                                                <li class="list-group-item"><strong>3100</strong> – Product Sales</li>
-                                                <li class="list-group-item"><strong>3200</strong> – Service Revenue</li>
-                                                <li class="list-group-item"><strong>3300</strong> – Interest Income</li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {{-- Expenses --}}
-                                <div class="accordion-item">
-                                    <h2 class="accordion-header" id="headingExpenses">
-                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                                                data-bs-target="#collapseExpenses" aria-expanded="false"
-                                                aria-controls="collapseExpenses">
-                                            <span>Expenses <span class="badge bg-danger ms-2">4000</span></span>
-                                        </button>
-                                    </h2>
-                                    <div id="collapseExpenses" class="accordion-collapse collapse"
-                                         aria-labelledby="headingExpenses" data-bs-parent="#staticAccountTree">
-                                        <div class="accordion-body ps-4">
-                                            <ul class="list-group list-group-flush">
-                                                <li class="list-group-item"><strong>4100</strong> – Salaries & Wages</li>
-                                                <li class="list-group-item"><strong>4200</strong> – Rent Expense</li>
-                                                <li class="list-group-item"><strong>4300</strong> – Utilities</li>
-                                                <li class="list-group-item"><strong>4400</strong> – Office Supplies</li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
 
                             </div> <!-- End Accordion -->
                         </div>

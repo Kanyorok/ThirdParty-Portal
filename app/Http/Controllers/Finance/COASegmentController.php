@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Finance;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Core\CodeDetail;
+use App\Models\Finance\FinanceGLSubAccountTypes;
 use App\Models\Finance\FinanceGLTypeGroup;
 use App\Models\Finance\SegmentOrder;
 use Carbon\Carbon;
@@ -22,12 +23,53 @@ class COASegmentController extends Controller
         $accountTypes = CodeDetail::select('CodeID','Value','Description','DisplayOrder')->where('CodeID','GLAccountType')->get();
         $segments = SegmentOrder::select('Id', 'SegmentType')->get();
         $glDigits=SegmentOrder::where('SegmentType','GLDigits')->pluck('Description')->first();
-        $glTypeGroups=FinanceGLTypeGroup::select('Id','Description','GLAccountTypeId')->get();
+        $data=[];
+        $data = [];
+
+        foreach ($accountTypes as $accountType) {
+            // Ensure the account type node is initialized
+            if (!isset($data[$accountType->Description])) {
+                $data[$accountType->Description] = [
+                    'SegmentValue' => $accountType->DisplayOrder ?? null,
+                    'Children' => []
+                ];
+            }
+
+            $glTypeGroups = FinanceGLTypeGroup::select('Id','Description','GLAccountTypeId','SegmentValue')
+                ->where('GLAccountTypeId', $accountType->Value)
+                ->get();
+
+            foreach ($glTypeGroups as $glTypeGroup) {
+                // Ensure the type group node is initialized
+                if (!isset($data[$accountType->Description]['Children'][$glTypeGroup->Description])) {
+                    $data[$accountType->Description]['Children'][$glTypeGroup->Description] = [
+                        'SegmentValue' => $glTypeGroup->SegmentValue ?? null,
+                        'Children' => []
+                    ];
+                }
+
+                $glSubTypeGroups = FinanceGLSubAccountTypes::select('Id','Description','SegmentValue')
+                    ->where('GLTypeGroupId', $glTypeGroup->Id)
+                    ->get();
+
+                foreach ($glSubTypeGroups as $glSubTypeGroup) {
+                    $data[$accountType->Description]['Children'][$glTypeGroup->Description]['Children'][$glSubTypeGroup->Id] = [
+                        'Id' => $glSubTypeGroup->Id,
+                        'Description' => $glSubTypeGroup->Description,
+                        'SegmentValue' => $glSubTypeGroup->SegmentValue,
+                    ];
+                }
+            }
+        }
+
+
         return view('finance.chartofaccounts.segmentconfiguration.index', compact(
             'segments',
             'glDigits',
             'accountTypes',
             'glTypeGroups',
+            'glSubTypeGroups',
+            'data'
         ));
     }
 
@@ -146,9 +188,9 @@ class COASegmentController extends Controller
                     ->causedBy(Auth::id())
                     ->performedOn(new FinanceGLTypeGroup())
                     ->withProperties(['action' => 'update'])
-                    ->log('GL Type Group updated segment value');
+                    ->log('GL Sub Type Group updated segment value');
                 DB::commit();
-                return back()->with('success', 'GL Account Type Segment updated successfully.');
+                return back()->with('success', 'GL Account Sub Type Segment updated successfully.');
             }catch(\Throwable $th){
                 DB::rollBack();
                 Log::error('Failed to update GL Type Segment Value:' . $th->getMessage());
@@ -163,17 +205,17 @@ class COASegmentController extends Controller
 
         try {
             DB::beginTransaction();
-            $update=FinanceGLTypeGroup::where('Id',$request->GLTypeGroupID)->update(['SegmentValue'=>$validated['value']]);
+            $update=FinanceGLSubAccountTypes::where('Id',$request->GLSubAccountTypeID)->update(['SegmentValue'=>$validated['value']]);
             activity()
                 ->causedBy(Auth::id())
                 ->performedOn(new FinanceGLTypeGroup())
                 ->withProperties(['action' => 'update'])
                 ->log('GL Type Group updated segment value');
             DB::commit();
-            return back()->with('success', 'GL Account Type Segment updated successfully.');
+            return back()->with('success', 'GL Sub Account Type Segment updated successfully.');
         }catch(\Throwable $th){
             DB::rollBack();
-            Log::error('Failed to update GL Type Segment Value:' . $th->getMessage());
+            Log::error('Failed to update GL Sub Type Segment Value:' . $th->getMessage());
             return back()->with('error', 'Something went wrong. Please try again.');
         }
     }
