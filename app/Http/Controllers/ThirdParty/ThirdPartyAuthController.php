@@ -12,6 +12,7 @@ use App\Http\Resources\ThirdParty\ThirdPartyUserResource;
 use App\Services\RegistrationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Auth\Events\Verified;
 
 class ThirdPartyAuthController extends Controller
 {
@@ -22,9 +23,8 @@ class ThirdPartyAuthController extends Controller
         $this->registrationService = $registrationService;
     }
 
-    public function register(
-        RegisterThirdPartyUserRequest $request
-    ): JsonResponse {
+    public function register(RegisterThirdPartyUserRequest $request): JsonResponse
+    {
         try {
             $userData = $this->registrationService->registerUser($request->validated());
             $token = $userData->createToken('auth-token', ['*'], now()->addDays(config('sanctum.expiration', 7)))->plainTextToken;
@@ -43,35 +43,28 @@ class ThirdPartyAuthController extends Controller
         }
     }
 
-    public function login(Request $request)
+    public function login(Request $request): JsonResponse
     {
         try {
             $user = ThirdPartyUser::where('Email', $request->email)->first();
 
-            // thirdpartyuser exists and pwd okay?
             if (! $user || ! Hash::check($request->password, $user->Password)) {
-                throw ValidationException::withMessages(
-                    [
-                        'email' => __('auth.invalid_credentials')
-                    ]
-                );
-            }
-            // thirdparty associated with this user approved?
-            if (! $user->isApproved()) {
-                return response()->json(
-                    [
-                        'message' => __('auth.acc_not_approved')
-                    ],
-                    403
-                );
+                throw ValidationException::withMessages([
+                    'email' => __('auth.invalid_credentials')
+                ]);
             }
 
-            // new token for the authenticated third party user
+            if (! $user->isApproved()) {
+                return response()->json([
+                    'message' => __('auth.acc_not_approved')
+                ], 403);
+            }
+
             $token = $user->createToken('api')->plainTextToken;
 
             return response()->json([
-                'user' => $user,
-                'token' => $user->createToken('api')->plainTextToken,
+                'user' => new ThirdPartyUserResource($user),
+                'token' => $token,
             ]);
         } catch (ValidationException $e) {
             throw $e;
@@ -83,15 +76,14 @@ class ThirdPartyAuthController extends Controller
         }
     }
 
-    public function logout(Request $request)
+    public function logout(Request $request): JsonResponse
     {
         try {
-            // user authenticated?
-            // if yes, delete the current access token
             if (Auth::guard('sanctum')->check()) {
                 $request->user()->currentAccessToken()->delete();
                 return response()->json(['message' => __('auth.logout_successful')]);
             }
+
             return response()->json(['message' => __('auth.not_authenticated')], 401);
         } catch (\Exception $e) {
             return response()->json([
@@ -103,40 +95,44 @@ class ThirdPartyAuthController extends Controller
 
     public function verifyEmail(string $id, string $hash): JsonResponse
     {
-        $user = Auth::guard('sanctum')->id() ? Auth::user('sanctum') : ThirdPartyUser::find($id);
+        $user = $this->resolveThirdPartyUser($id);
 
-        if (!$user || $user->getKey() != $id || !hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
-            return response()->json(['message' => 'Invalid or expired verification link.'], 403);
+        if (! $user || ! hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
+            return response()->json(['message' => __('auth.invalid_verification_link')], 403);
         }
 
         if ($user->hasVerifiedEmail()) {
-            return response()->json(['message' => 'Email already verified.'], 200);
+            return response()->json(['message' => __('auth.email_already_verified')], 200);
         }
 
         if ($user->markEmailAsVerified()) {
-            event(new \Illuminate\Auth\Events\Verified($user));
-            //Activate user after verication
+            event(new Verified($user));
             $user->IsActive = true;
             $user->save();
         }
 
-        return response()->json(['message' => __('auth.email_verfied')], 200);
+        return response()->json(['message' => __('auth.email_verified')], 200);
     }
 
     public function resendVerification(): JsonResponse
     {
-        $user = Auth::user('sanctum');
+        $user = $this->resolveThirdPartyUser();
 
-        if (!$user) {
-            return response()->json(['message' => __('auth.unauthenticated.')], 401);
+        if (! $user) {
+            return response()->json(['message' => __('auth.unauthenticated')], 401);
         }
 
         if ($user->hasVerifiedEmail()) {
-            return response()->json(['message' => __('auth. email_verified')], 400);
+            return response()->json(['message' => __('auth.email_already_verified')], 400);
         }
 
         $user->sendEmailVerificationNotification();
 
         return response()->json(['message' => __('auth.verification_link_sent')], 200);
+    }
+
+    private function resolveThirdPartyUser(?string $id = null): ?ThirdPartyUser
+    {
+        return Auth::guard('sanctum')->user() ?? ($id ? ThirdPartyUser::find($id) : null);
     }
 }

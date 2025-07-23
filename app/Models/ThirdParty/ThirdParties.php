@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Enums\ThirdPartyTypeEnum;
+use App\Enums\BusinessTypeEnum;
 
 class ThirdParties extends Model
 {
@@ -33,7 +34,6 @@ class ThirdParties extends Model
         'Email',
         'Phone',
         'Website',
-        'ApprovalStatus',
         'Status',
         'ThirdPartyType',
         'CreatedBy',
@@ -47,6 +47,7 @@ class ThirdParties extends Model
         'DeletedOn' => 'datetime',
         'CreatedBy' => 'integer',
         'ThirdPartyType' => ThirdPartyTypeEnum::class,
+        'BusinessType' => BusinessTypeEnum::class,
         'Status' => ThirdPartyStatusEnum::class,
         'ApprovalStatus' => ThirdPartyApprovalStatusEnum::class,
     ];

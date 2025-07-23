@@ -126,7 +126,7 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract
 
     public function isApproved(): bool
     {
-        return $this->thirdParty?->ApprovalStatus === ThirdPartyApprovalStatusEnum::Approved;
+        return $this->IsActive && $this->thirdParty && $this->thirdParty?->ApprovalStatus === ThirdPartyApprovalStatusEnum::Approved;
     }
 
     public function isSupplier(): bool

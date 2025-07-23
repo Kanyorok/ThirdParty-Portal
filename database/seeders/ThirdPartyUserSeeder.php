@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 use App\Enums\ThirdPartyTypeEnum;
 use App\Enums\ThirdPartyApprovalStatusEnum;
 use App\Enums\ThirdPartyStatusEnum;
+use App\Enums\BusinessTypeEnum;
 
 class ThirdPartyUserSeeder extends Seeder
 {
@@ -21,7 +22,7 @@ class ThirdPartyUserSeeder extends Seeder
             [
                 'ThirdPartyName' => 'DCP',
                 'TradingName' => 'Sauti Ya Ground',
-                'BusinessType' => 'Service',
+                'BusinessType' => BusinessTypeEnum::SoleProprietorship,
                 'RegistrationNumber' => 'REG' . Str::random(5),
                 'Phone' => '1234567890',
                 'ThirdPartyType' => ThirdPartyTypeEnum::Supplier,
@@ -39,7 +40,7 @@ class ThirdPartyUserSeeder extends Seeder
             [
                 'ThirdPartyName' => 'Pending Corp',
                 'TradingName' => 'Pending Trading',
-                'BusinessType' => 'Consulting',
+                'BusinessType' => BusinessTypeEnum::Partnership,
                 'RegistrationNumber' => 'PEND' . Str::random(5),
                 'Phone' => '0987654321',
                 'ThirdPartyType' => ThirdPartyTypeEnum::Supplier,

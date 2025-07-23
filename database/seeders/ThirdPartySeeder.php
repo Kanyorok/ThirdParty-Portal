@@ -6,6 +6,7 @@ use App\Models\ThirdParty\ThirdParties;
 use App\Enums\ThirdPartyTypeEnum;
 use App\Enums\ThirdPartyStatusEnum;
 use App\Enums\ThirdPartyApprovalStatusEnum;
+use App\Enums\BusinessTypeEnum;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 
@@ -16,7 +17,7 @@ class ThirdPartySeeder extends Seeder
         ThirdParties::create([
             'ThirdPartyName' => 'ShakTech Ltd',
             'TradingName' => 'ShakTech',
-            'BusinessType' => 'Private Company',
+            'BusinessType' => BusinessTypeEnum::SoleProprietorship,
             'RegistrationNumber' => 'PVT-KEN-123456',
             'TaxPIN' => 'P012345678X',
             'VATNumber' => 'VAT0123456',

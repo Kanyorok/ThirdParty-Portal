@@ -14,15 +14,10 @@ class ThirdPartiesBankDetailsController extends Controller
 {
     public function index(): JsonResponse
     {
-        $user = Auth::user();
+        $thirdPartyId = request()->input('ThirdPartyId');
+        $this->authorize('viewAny', ThirdPartiesBankDetails::class);
 
-        if ($user->isAdmin()) {
-            $bankDetails = ThirdPartiesBankDetails::all();
-        } elseif ($user->thirdParty) {
-            $bankDetails = ThirdPartiesBankDetails::where('ThirdPartyID', $user->thirdParty->Id)->get();
-        } else {
-            return response()->json([], 403);
-        }
+        $bankDetails = ThirdPartiesBankDetails::where('ThirdPartyID', $thirdPartyId)->get();
 
         return response()->json($bankDetails);
     }

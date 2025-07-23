@@ -31,7 +31,7 @@ Route::middleware(['auth:sanctum'])->prefix('third-party-profile')->group(functi
     Route::put('/password', [ThirdPartyUserProfileController::class, 'changePassword']);
 });
 
-Route::middleware(['auth:sanctum', 'thirdparty.approved'])->prefix('third-parties')->group(function () {
+Route::middleware(['auth:sanctum'])->prefix('third-parties')->group(function () {
     Route::get('/', [ThirdPartyController::class, 'index']);
     Route::post('/', [ThirdPartyController::class, 'store']);
     Route::get('{third_party}', [ThirdPartyController::class, 'show']);
@@ -43,7 +43,7 @@ Route::middleware(['auth:sanctum', 'thirdparty.approved'])->prefix('third-partie
     Route::patch('{third_party}/status', [ThirdPartyController::class, 'updateStatus']);
 });
 
-Route::middleware('auth:sanctum', 'thirdparty.approved')->apiResource('third-parties-bank-details', ThirdPartiesBankDetailsController::class);
+Route::middleware('auth:sanctum')->apiResource('third-parties-bank-details', ThirdPartiesBankDetailsController::class);
 
 Route::middleware('auth:sanctum', 'thirdparty.approved')->apiResource('third-party-categories', ThirdPartyCategoryController::class);
 
