@@ -5,6 +5,7 @@ namespace App\Models\Settings;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Auth\User;
 
 class ApprovalStages extends Model
 {
@@ -25,5 +26,10 @@ class ApprovalStages extends Model
     public static function getPrimaryKey(): string
     {
         return 'ApprovalStageId';
+    }
+
+    public function createdByUser()
+    {
+        return $this->belongsTo(User::class, 'CreatedBy', 'Id');
     }
 }

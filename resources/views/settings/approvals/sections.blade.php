@@ -32,6 +32,9 @@
                             <td>{{ $group->Name }}</td>
                             <td>{{ $group->Description }}</td>
                             <td>
+                                <a href="{{ route('settings.approval_stages.show', $group->Id) }}" class="btn btn-sm btn-outline-success">
+                                    👁️ View
+                                </a>
                                 <button class="btn btn-sm btn-outline-primary btn-edit"
                                     data-id="{{ $group->Id }}"
                                     data-name="{{ $group->Name }}"

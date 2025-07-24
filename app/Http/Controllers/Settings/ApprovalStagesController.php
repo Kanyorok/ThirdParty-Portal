@@ -24,6 +24,14 @@ class ApprovalStagesController extends Controller
         return view('settings.approvals.sections', compact('approvalGroups', 'sourceOptions'));
     }
 
+    public function show($id)
+    {
+        $approval = ApprovalStages::findOrFail($id);
+        $sourceOptions = array_flip(Relation::morphMap());
+
+        return view('settings.approvals.show', compact('approval', 'sourceOptions'));
+    }
+
     /**
      * Store a newly created resource in storage.
      */
