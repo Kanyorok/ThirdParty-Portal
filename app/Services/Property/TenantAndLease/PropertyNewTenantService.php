@@ -2,9 +2,12 @@
 
 namespace App\Services\Property\TenantAndLease;
 
+use App\Enums\Core\ModulesEnum;
+use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
 use App\Models\Core\CodeDetail;
 use App\Models\PropertyManagement\PropertyNewTenant;
+use Illuminate\Http\UploadedFile;
 
 class PropertyNewTenantService
 {
@@ -26,7 +29,8 @@ class PropertyNewTenantService
         string $PostalAddress,
         string $Remarks,
         bool   $IsActive,
-        User   $user
+        User   $user,
+        UploadedFile $document = null
     ): self
     {
         $newtenant = PropertyNewTenant::create([
@@ -42,6 +46,15 @@ class PropertyNewTenantService
             'CreatedBy' => $user->Id,
             'ModifiedBy' => $user->Id,
         ]);
+
+        if ($document) {
+        $newtenant->newDocument(
+            ModulesEnum::Property,
+            $document,
+            [PermissionEnum::TenantMentenanceView->value],
+            $user
+            );
+        }
 
         activity()->causedBy($user->Id)
             ->performedOn($newtenant)
