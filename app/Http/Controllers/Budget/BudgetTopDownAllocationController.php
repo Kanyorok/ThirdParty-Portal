@@ -96,7 +96,7 @@ class BudgetTopDownAllocationController extends Controller
 //                ->where('BranchID', $branchId)
 //                ->get();
 
-            return$glsMaster = collect(DB::select("EXEC GetBudgetWorkspace :budgetId, :branchId", [
+            $glsMaster = collect(DB::select("EXEC GetBudgetWorkspace :budgetId, :branchId", [
                 'budgetId' => $budgetId,
                 'branchId' => $branchId
             ]));
