@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id('Id');
             $table->string('TypeGroupCode');
             $table->string('GLAccountTypeId');
-            $table->text('Description')->nullable();
+            $table->string('Description')->unique();
+            $table->string('SegmentValue')->nullable();
 
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');

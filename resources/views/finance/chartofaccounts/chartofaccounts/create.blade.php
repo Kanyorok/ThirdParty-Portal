@@ -19,11 +19,11 @@
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
-    <div class="container mt-4">
-        <div class="card p-4">
-            <div class="card-header bg-dark text-white">
-                Create General Ledger Account
-            </div>
+    <div class="container mt-2">
+        <div class="card p-2">
+{{--            <div class="card-header bg-dark text-white">--}}
+{{--                Create General Ledger Account--}}
+{{--            </div>--}}
 
             <div class="card-body mb-1">
 {{--                <p class="muted">--}}

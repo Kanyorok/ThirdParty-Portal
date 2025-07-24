@@ -2,19 +2,18 @@
 @section('title', 'Chart of Accounts')
 @section('content')
     <div class="container mt-4">
-        <div class="card p-4">
-            <div class="card-header bg-dark text-white">
-                Chart Of Accouts Table
-            </div>
+        <!-- Add New Account Button -->
+        <div class="mb-3">
+            <a href="{{ route('chartofaccounts.create') }}" class="btn btn-primary">➕ Add New Account</a>
+        </div>
+        <div class="card p-2">
+{{--            <div class="card-header bg-light text-black">--}}
+{{--                Chart Of Accouts Table--}}
+{{--            </div>--}}
             <div class="card-body mb-3">
                 <p class="text-muted">
                     The Chart of Accounts defines the structure of your financial ledger by categorizing all general ledger (GL) accounts used for tracking assets, liabilities, income, expenses, and equity. Each account plays a key role in accurate financial reporting and compliance.
                 </p>
-                <!-- Add New Account Button -->
-                <div class="mb-3">
-                    <a href="{{ route('chartofaccounts.create') }}" class="btn btn-primary">➕ Add New Account</a>
-                </div>
-
                 @if($charts->count())
                     <!-- Accounts Table -->
                     <div class="table-responsive">
@@ -38,7 +37,21 @@
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
                                     <td>{{ $item->GLName ?? '-'}}</td>
-                                    <td>{{ $item->GLCode ?? '-'}}</td>
+                                    <td>
+                                    @foreach($glOrders as $glOrder)
+                                            @if($glOrder->SegmentType == 'GLDigits')
+                                                @php
+                                                    $digits = $item->{$glOrder->SegmentType} ?? 0;
+                                                    $formattedId = strlen($item->Id) >= $digits
+                                                        ? $item->Id
+                                                        : str_pad($item->Id, $digits, '0', STR_PAD_LEFT);
+                                                @endphp
+                                                {{ $formattedId }} @if (!$loop->last) - @endif
+                                            @else
+                                            {{ $item->{$glOrder->SegmentType} ?? '-' }} @if (!$loop->last) - @endif
+                                          @endif
+                                    @endforeach
+                                    </td>
                                     <td>{{ $item->GLAccountTypeID ?? '-'}}</td>
                                     <td>{{ $item->typeGroup->Description ?? '-'}}</td>
                                     <td>{{ $item->subAccount->Description ?? '-'}}</td>

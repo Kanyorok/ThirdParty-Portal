@@ -2,11 +2,11 @@
 @section('title', 'Tax Rule Setup')
 
 @section('content')
-    <div class="container mt-4">
-        <div class="card p-4">
-            <div class="card-header bg-dark text-white">
-                ⚙️ Configure Tax Rule
-            </div>
+    <div class="container mt-2">
+        <div class="card p-2">
+{{--            <div class="card-header bg-dark text-white">--}}
+{{--                ⚙️ Configure Tax Rule--}}
+{{--            </div>--}}
             <div class="card-body">
                 <p class="text-muted">
                     Use this form to set up a new tax rule. Ensure all fields are filled out correctly to avoid issues with tax calculations.
@@ -21,7 +21,7 @@
                             <select name="TaxTypeId" class="form-select">
                             <option disabled selected value="">Select Tax Type</option>
                                 @foreach ($taxTypes as $item)
-                                    <option value="{{ $item->Id }}">{{ $item->TaxTypeName }}</option>                             
+                                    <option value="{{ $item->Id }}">{{ $item->TaxTypeName }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -73,7 +73,7 @@
                             <label for="EffectiveTo">Effective To</label>
                             <input type="date" id="EffectiveTo" name="EffectiveTo" class="form-control">
                         </div>
-                        
+
                         <div id="dateError" class="alert alert-danger d-none" role="alert">
                             Effective To date cannot be earlier than Effective From date.
                         </div>

@@ -23,7 +23,7 @@
                                 <tr>
                                     <td class="fw-semibold">{{ $segment->Description }}</td>
                                     <td>
-                                        <input type="text" name="segment_values[{{ $segment->Value }}]" min="0" class="form-control" placeholder="Enter segment value" required>
+                                        <input type="text" name="segment_values[{{ $segment->Value }}]" value="{{$segment->DisplayOrder}}" min="0" class="form-control" placeholder="Enter segment value">
                                     </td>
                                 </tr>
                             @endforeach

@@ -2,11 +2,11 @@
 @section('title', 'Tax Type Setup')
 @section('content')
 
-<div class="container mt-4">
-    <div class="card p-4">
-        <div class="card-header bg-dark text-white">
-            🏷️ Add Tax Type
-        </div>
+<div class="container mt-2">
+    <div class="card p-2">
+{{--        <div class="card-header bg-dark text-white">--}}
+{{--            🏷️ Add Tax Type--}}
+{{--        </div>--}}
 
         <div class="card-header mb-1">
             @if ($errors->any())
@@ -34,9 +34,9 @@
 
                 <div class="mb-3">
                     <label class="form-label">Tax Type Name</label>
-                    <input type="text" 
-                    name="TaxTypeName" 
-                    class="form-control @error('TaxTypeName') is-invalid @enderror" 
+                    <input type="text"
+                    name="TaxTypeName"
+                    class="form-control @error('TaxTypeName') is-invalid @enderror"
                     value="{{ old('TaxTypeName') }}"
                     placeholder="e.g., VAT, Income Tax" required>
                     @error('TaxTypeName')

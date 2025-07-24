@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id('Id');
             $table->string('SubAccountCode');
             $table->foreignId('GLTypeGroupId')->constrained('t_FinanceGLTypeGroups', 'Id');
-            $table->text('Description')->nullable();
+            $table->string('Description')->unique();
+            $table->string('SegmentValue')->nullable();
 
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');

@@ -147,7 +147,9 @@ Route::namespace('Finance')->prefix('finance')->group(function () {
     Route::post('/segment-order/save', [COASegmentController::class, 'segmentOrder'])->name('segment-order.save');
     Route::post('/gl/save', [COASegmentController::class, 'segmentOrder'])->name('segment-order.save');
     Route::post('/glDigits/save', [COASegmentController::class, 'editGlDigit'])->name('glDigits.save');
-    Route::post('/glTypeSegmentValue/save', [COASegmentController::class, 'editGlDigit'])->name('glTypeSegmentValue.save');
+    Route::post('/glTypeSegmentValue/save', [COASegmentController::class, 'saveGLTypeSegment'])->name('glTypeSegmentValue.save');
+    Route::post('/glAccountTypeSegmentValue/save', [COASegmentController::class, 'saveGLAccountTypeSegment'])->name('glAccountTypeSegmentValue.save');
+    Route::post('/glSubAccountTypeSegmentValue/save', [COASegmentController::class, 'saveSubGLAccountTypeSegment'])->name('glSubAccountTypeSegmentValue.save');
 
     // Route for getting Order
     Route::get('/finance/pos/{selectedVendor}', [InvoiceEntryController::class, 'getOrders'])->name('finance.orders');

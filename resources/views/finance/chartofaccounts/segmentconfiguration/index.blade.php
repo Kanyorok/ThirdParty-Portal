@@ -1,6 +1,16 @@
 @extends('layouts.app')
 @section('title', 'Segment Configuration')
 @section('content')
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <strong>There were some errors with your submission:</strong>
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
     <div class="container mt-2">
 
@@ -37,129 +47,65 @@
                         <div class="card-body">
                             <div class="accordion" id="staticAccountTree">
 
-                                {{-- Assets --}}
-                                <div class="accordion-item">
-                                    <h2 class="accordion-header" id="headingAssets">
-                                        <button class="accordion-button" type="button" data-bs-toggle="collapse"
-                                                data-bs-target="#collapseAssets" aria-expanded="true"
-                                                aria-controls="collapseAssets">
-                                            <span>Assets <span class="badge bg-primary ms-2">1000</span></span>
-                                        </button>
-                                    </h2>
-                                    <div id="collapseAssets" class="accordion-collapse collapse show"
-                                         aria-labelledby="headingAssets" data-bs-parent="#staticAccountTree">
-                                        <div class="accordion-body ps-4">
+                                {{-- Assets,Liabilities, Income, Expense --}}
+                                @foreach($data as $glTypeDesc => $glType)
+                                    @php
+                                        $bgColor = match($glTypeDesc) {
+                                            'Assets' => 'bg-primary',
+                                            'Liabilities' => 'bg-warning',
+                                            'Income' => 'bg-success',
+                                            'Expenses' => 'bg-danger',
+                                            default => 'bg-secondary',
+                                        };
+                                    @endphp
 
-                                            {{-- Fixed Assets --}}
-                                            <div class="accordion mb-3" id="assetsSubAccordion">
-                                                <div class="accordion-item">
-                                                    <h2 class="accordion-header" id="headingFixedAssets">
-                                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                                                                data-bs-target="#collapseFixedAssets" aria-expanded="false"
-                                                                aria-controls="collapseFixedAssets">
-                                                            <span>Fixed Assets <span class="badge bg-secondary ms-2">1100</span></span>
-                                                        </button>
-                                                    </h2>
-                                                    <div id="collapseFixedAssets" class="accordion-collapse collapse"
-                                                         aria-labelledby="headingFixedAssets" data-bs-parent="#assetsSubAccordion">
-                                                        <div class="accordion-body ps-4">
-                                                            <ul class="list-group list-group-flush">
-                                                                <li class="list-group-item"><strong>1110</strong> – Equipment</li>
-                                                                <li class="list-group-item"><strong>1120</strong> – Furniture</li>
-                                                                <li class="list-group-item"><strong>1130</strong> – Buildings</li>
-                                                            </ul>
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="heading{{Str::slug($glTypeDesc)}}">
+                                            <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                                                    data-bs-target="#collapse{{Str::slug($glTypeDesc)}}" aria-expanded="false"
+                                                    aria-controls="collapse{{Str::slug($glTypeDesc)}}">
+                                                <span>{{ $glTypeDesc }} <span class="badge {{ $bgColor }} ms-2">{{ $glType['SegmentValue'] }}</span></span>
+                                            </button>
+                                        </h2>
+                                        <div id="collapse{{Str::slug($glTypeDesc)}}" class="accordion-collapse collapse"
+                                             aria-labelledby="heading{{Str::slug($glTypeDesc)}}" data-bs-parent="#staticAccountTree">
+                                            <div class="accordion-body ps-4">
+
+                                                <div class="accordion mb-3" id="{{Str::slug($glTypeDesc)}}SubAccordion">
+                                                    @foreach($glType['Children'] as $groupDesc => $group)
+                                                        <div class="accordion-item">
+                                                            <h2 class="accordion-header" id="heading{{Str::slug($groupDesc)}}">
+                                                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                                                        data-bs-target="#collapse{{Str::slug($groupDesc)}}" aria-expanded="false"
+                                                                        aria-controls="collapse{{Str::slug($groupDesc)}}">
+                                    <span>{{ $groupDesc }}
+                                        <span class="badge bg-secondary ms-2">
+                                            {{ $group['SegmentValue'] ?? '' }}
+                                        </span>
+                                    </span>
+                                                                </button>
+                                                            </h2>
+                                                            <div id="collapse{{Str::slug($groupDesc)}}" class="accordion-collapse collapse"
+                                                                 aria-labelledby="heading{{Str::slug($groupDesc)}}" data-bs-parent="#{{Str::slug($glTypeDesc)}}SubAccordion">
+                                                                <div class="accordion-body ps-4">
+                                                                    <ul class="list-group list-group-flush">
+                                                                        @foreach($group['Children'] as $child)
+                                                                            <li class="list-group-item">
+                                                                                <strong>{{ $child['SegmentValue'] ?? '' }}</strong> – {{ $child['Description'] }}
+                                                                            </li>
+                                                                        @endforeach
+                                                                    </ul>
+                                                                </div>
+                                                            </div>
                                                         </div>
-                                                    </div>
+                                                    @endforeach
                                                 </div>
 
-                                                {{-- Other Asset Category --}}
-                                                <div class="accordion-item">
-                                                    <h2 class="accordion-header" id="headingCashAssets">
-                                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                                                                data-bs-target="#collapseCashAssets" aria-expanded="false"
-                                                                aria-controls="collapseCashAssets">
-                                                            <span>Current Assets <span class="badge bg-secondary ms-2">1200</span></span>
-                                                        </button>
-                                                    </h2>
-                                                    <div id="collapseCashAssets" class="accordion-collapse collapse"
-                                                         aria-labelledby="headingCashAssets" data-bs-parent="#assetsSubAccordion">
-                                                        <div class="accordion-body ps-4">
-                                                            <ul class="list-group list-group-flush">
-                                                                <li class="list-group-item"><strong>1210</strong> – Cash at Bank</li>
-                                                                <li class="list-group-item"><strong>1220</strong> – Accounts Receivable</li>
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                </div>
                                             </div>
-
                                         </div>
                                     </div>
-                                </div>
+                                @endforeach
 
-                                {{-- Liabilities --}}
-                                <div class="accordion-item">
-                                    <h2 class="accordion-header" id="headingLiabilities">
-                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                                                data-bs-target="#collapseLiabilities" aria-expanded="false"
-                                                aria-controls="collapseLiabilities">
-                                            <span>Liabilities <span class="badge bg-warning ms-2">2000</span></span>
-                                        </button>
-                                    </h2>
-                                    <div id="collapseLiabilities" class="accordion-collapse collapse"
-                                         aria-labelledby="headingLiabilities" data-bs-parent="#staticAccountTree">
-                                        <div class="accordion-body ps-4">
-                                            <ul class="list-group list-group-flush">
-                                                <li class="list-group-item"><strong>2100</strong> – Accounts Payable</li>
-                                                <li class="list-group-item"><strong>2200</strong> – Accrued Expenses</li>
-                                                <li class="list-group-item"><strong>2300</strong> – Short-Term Loans</li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {{-- Income --}}
-                                <div class="accordion-item">
-                                    <h2 class="accordion-header" id="headingIncome">
-                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                                                data-bs-target="#collapseIncome" aria-expanded="false"
-                                                aria-controls="collapseIncome">
-                                            <span>Income <span class="badge bg-success ms-2">3000</span></span>
-                                        </button>
-                                    </h2>
-                                    <div id="collapseIncome" class="accordion-collapse collapse"
-                                         aria-labelledby="headingIncome" data-bs-parent="#staticAccountTree">
-                                        <div class="accordion-body ps-4">
-                                            <ul class="list-group list-group-flush">
-                                                <li class="list-group-item"><strong>3100</strong> – Product Sales</li>
-                                                <li class="list-group-item"><strong>3200</strong> – Service Revenue</li>
-                                                <li class="list-group-item"><strong>3300</strong> – Interest Income</li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {{-- Expenses --}}
-                                <div class="accordion-item">
-                                    <h2 class="accordion-header" id="headingExpenses">
-                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                                                data-bs-target="#collapseExpenses" aria-expanded="false"
-                                                aria-controls="collapseExpenses">
-                                            <span>Expenses <span class="badge bg-danger ms-2">4000</span></span>
-                                        </button>
-                                    </h2>
-                                    <div id="collapseExpenses" class="accordion-collapse collapse"
-                                         aria-labelledby="headingExpenses" data-bs-parent="#staticAccountTree">
-                                        <div class="accordion-body ps-4">
-                                            <ul class="list-group list-group-flush">
-                                                <li class="list-group-item"><strong>4100</strong> – Salaries & Wages</li>
-                                                <li class="list-group-item"><strong>4200</strong> – Rent Expense</li>
-                                                <li class="list-group-item"><strong>4300</strong> – Utilities</li>
-                                                <li class="list-group-item"><strong>4400</strong> – Office Supplies</li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
 
                             </div> <!-- End Accordion -->
                         </div>
@@ -180,10 +126,10 @@
     @include('finance.chartofaccounts.segmentconfiguration.modals.glType')
 
     <!-- Modal for GLAccountType -->
-{{--    @include('finance.chartofaccounts.segmentconfiguration.modals.glAccountType')--}}
+    @include('finance.chartofaccounts.segmentconfiguration.modals.glAccountType')
 
     <!-- Modal for GLSubType -->
-{{--    @include('finance.chartofaccounts.segmentconfiguration.modals.glSubType')--}}
+    @include('finance.chartofaccounts.segmentconfiguration.modals.glSubType')
 
 @endsection
 
@@ -218,6 +164,94 @@
                 form.submit();
             }
         }
+    </script>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const accountType1 = document.getElementById('accountType1');
+            const typeGroup1 = document.getElementById('typeGroup1');
+            const subType1 = document.getElementById('subType1');
+
+            // Reset child selects initially
+            typeGroup1.innerHTML = '<option disabled selected>-- GL Account Type --</option>';
+            subType1.innerHTML = '<option disabled selected>-- GL Sub Account Type --</option>';
+
+            accountType1.addEventListener('change', function () {
+                const typeID = this.value;
+
+                // Reset children
+                typeGroup1.innerHTML = '<option disabled selected>Loading...</option>';
+                subType1.innerHTML = '<option disabled selected>-- GL Sub Account Type --</option>';
+
+                fetch(`/finance/get-type-groups?GLAccountTypeID=${typeID}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        typeGroup1.innerHTML = '<option disabled selected>-- GL Account Type --</option>';
+                        data.forEach(item => {
+                            typeGroup1.innerHTML += `<option value="${item.Id}">${item.Description}  (${item.SegmentValue==null?'Not Set':item.SegmentValue})</option>`;
+                        });
+                    })
+                    .catch(err => {
+                        console.error('Failed to load type groups', err);
+                        typeGroup1.innerHTML = '<option disabled selected>-- Error Loading --</option>';
+                    });
+            });
+
+            typeGroup1.addEventListener('change', function () {
+                const groupID = this.value;
+
+                // Reset subType
+                subType1.innerHTML = '<option disabled selected>Loading...</option>';
+
+                fetch(`/finance/get-sub-account-types?GLTypeGroupID=${groupID}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        subType1.innerHTML = '<option disabled selected>-- GL Sub Account Type --</option>';
+                        data.forEach(item => {
+                            subType1.innerHTML += `<option value="${item.Id}">${item.Description}  (${item.SegmentValue==null?'Not Set':item.SegmentValue})</option>`;
+                        });
+                    })
+                    .catch(err => {
+                        console.error('Failed to load sub account types', err);
+                        subType1.innerHTML = '<option disabled selected>-- Error Loading --</option>';
+                    });
+            });
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const accountType = document.getElementById('accountType');
+            const typeGroup = document.getElementById('typeGroup');
+            //const subType = document.getElementById('subType');
+
+            // Reset child selects initially
+            typeGroup.innerHTML = '<option disabled selected>-- GL Account Type --</option>';
+            //subType.innerHTML = '<option disabled selected>-- GL Sub Account Type --</option>';
+
+            accountType.addEventListener('change', function () {
+                const typeID = this.value;
+
+                // Reset children
+                typeGroup.innerHTML = '<option disabled selected>Loading...</option>';
+                // subType.innerHTML = '<option disabled selected>-- GL Sub Account Type --</option>';
+
+                fetch(`/finance/get-type-groups?GLAccountTypeID=${typeID}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        console.log("First:",data)
+                        typeGroup.innerHTML = '<option disabled selected>-- GL Account Type --</option>';
+                        data.forEach(item => {
+                            typeGroup.innerHTML += `<option value="${item.Id}">${item.Description} (${item.SegmentValue==null?'Not Set':item.SegmentValue})</option>`;
+                        });
+                    })
+                    .catch(err => {
+                        console.error('Failed to load type groups', err);
+                        typeGroup.innerHTML = '<option disabled selected>-- Error Loading --</option>';
+                    });
+            });
+        });
     </script>
 
 @endsection

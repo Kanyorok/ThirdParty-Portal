@@ -2,22 +2,21 @@
 @section('title', 'Tax Rules Management')
 
 @section('content')
-    <div class="container mt-4">
+    <div class="container mt-2">
+        <div class="mt-0">
+            <a href="{{ route('taxruleconfig.create') }}" class="btn btn-primary">➕ Add Tax Rule</a>
+        </div>
         <div class="card">
-            <div class="card-header bg-dark text-white">
-                📄 Tax Rules
-            </div>
+{{--            <div class="card-header bg-dark text-white">--}}
+{{--                📄 Tax Rules--}}
+{{--            </div>--}}
 
-            
+
             <div class="card-body table-responsive">
                 <p class="text-muted mt-0">
                     Manage tax rules for your organization.
                 </p>
 
-                <div class="text-end mt-0">
-                    <a href="{{ route('taxruleconfig.create') }}" class="btn btn-primary">➕ Add Tax Rule</a>
-                </div>
-                @if ($taxRule->count())
                 <div class="table-responsive mt-3">
                     <table class="table table-bordered table-striped">
                         <thead>
@@ -35,6 +34,7 @@
                             </tr>
                         </thead>
                         <tbody>
+                        @if ($taxRule->count())
                             @foreach($taxRule as $rule)
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
@@ -65,17 +65,20 @@
                                     </td>
                                 </tr>
                            @endforeach
+                            @else
+                                <tr>
+                                    <td colspan="10" class="text-center">
+                                        <div class="text-center">
+                                            No Tax Rules found
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endif
                         </tbody>
                     </table>
                 </div>
-                @else
-                    <div class="alert alert-info text-center">
-                        No Tax Rules found
-                    </div>
-                @endif
             </div>
         </div>
     </div>
 @include('components.modals.delete-confirm')
 @endsection
-                

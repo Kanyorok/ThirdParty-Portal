@@ -3,11 +3,16 @@
 @section('content')
 
 
-<div class="container mt-4">
-    <div class="card p-4">
-        <div class="card-header bg-dark text-white">
-            List of Tax Types
-        </div>
+<div class="container mt-2">
+
+    <div class="mb-3">
+        <a href="{{ route('taxtypes.create') }}" class="btn btn-primary">+ Add Tax Type</a>
+    </div>
+
+    <div class="card p-2">
+{{--        <div class="card-header bg-dark text-white">--}}
+{{--            List of Tax Types--}}
+{{--        </div>--}}
 
         <div class="card-body">
             @if ($errors->any())
@@ -23,19 +28,11 @@
             @if(session('error'))
                 <div class="alert alert-danger">{{ session('error') }}</div>
             @endif
-            @if(session('success'))
-                <div class="alert alert-success">{{ session('success') }}</div>
-            @endif
 
             <p class="text-muted mt-0">
                 Manage your tax types here. You can add, edit, or delete tax types as needed.
             </p>
-            
-            <div class="mb-3 text-end">
-                <a href="{{ route('taxtypes.create') }}" class="btn btn-primary">+ Add Tax Type</a>
-            </div>
-            
-            @if($taxTypes->count()) 
+
                 <div class="table-responsive">
                     <table class="table table-bordered table-striped">
                         <thead>
@@ -47,14 +44,16 @@
                         </tr>
                         </thead>
                         <tbody>
-                        @foreach($taxTypes as $item)
-                            <tr>
+
+                            @if($taxTypes->count())
+                                @foreach($taxTypes as $item)
+                                <tr>
                                 <td>{{ $loop->iteration }}</td>
                                 <td>{{ $item->TaxTypeName ?? '-' }}</td>
                                 <td>{{ $item->Description ?? '-' }}</td>
                                 <td style="white-space: nowrap; text-align: center;">
                                     {{-- Edit button --}}
-                                    <a href="{{ route('taxtypes.edit', $item->Id) }}" class="btn btn-sm btn-warning">Edit</a> 
+                                    <a href="{{ route('taxtypes.edit', $item->Id) }}" class="btn btn-sm btn-warning">Edit</a>
                                     {{-- Delete button with modal confirmation --}}
                                     <button type="button"
                                         class="btn btn-sm btn-danger custom-delete-btn"
@@ -66,15 +65,16 @@
                                     </button>
                                 </td>
                             </tr>
-                        @endforeach
+                                @endforeach
+                            @else
+                                <tr>
+                                    <td colspan="4" class="text-center">No tax types found.</td>
+                                </tr>
+                            @endif
                         </tbody>
                     </table>
                 </div>
-            @else
-                <div class="alert alert-info text-center">
-                    No tax types found. Please add a new tax type.
-                </div>
-            @endif
+
         </div>
     </div>
 </div>

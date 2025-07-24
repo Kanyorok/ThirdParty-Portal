@@ -14,7 +14,7 @@ class FinanceSegmentOrderSeeder extends Seeder
 
         DB::table('t_FinanceSegmentOrder')->insert([
             [
-                'SegmentType' => 'GLAccountTypeID',
+                'SegmentType' => 'GLAccountTypeValue',
                 'Description' => 'Store Value for GLType',
                 'CreatedBy' => 1,
                 'CreatedOn' => $now,
@@ -24,7 +24,7 @@ class FinanceSegmentOrderSeeder extends Seeder
                 'DeletedOn' => null,
             ],
             [
-                'SegmentType' => 'GLTypeGroupID',
+                'SegmentType' => 'GLTypeGroupIDValue',
                 'Description' => 'Store value for TypeGroup',
                 'CreatedBy' => 1,
                 'CreatedOn' => $now,
@@ -34,7 +34,7 @@ class FinanceSegmentOrderSeeder extends Seeder
                 'DeletedOn' => null,
             ],
             [
-                'SegmentType' => 'GLSubAccountTypeID',
+                'SegmentType' => 'GLSubAccountTypeIDValue',
                 'Description' => 'Store the SubAccount Value',
                 'CreatedBy' => 1,
                 'CreatedOn' => $now,
@@ -55,7 +55,7 @@ class FinanceSegmentOrderSeeder extends Seeder
             ],
             [
                 'SegmentType' => 'GLDigits',
-                'Description' => 'digit that will be appended as Auto Increment',
+                'Description' => '1',
                 'CreatedBy' => 1,
                 'CreatedOn' => $now,
                 'ModifiedBy' => 1,

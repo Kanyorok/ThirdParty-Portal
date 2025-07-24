@@ -1,21 +1,21 @@
 @extends('layouts.app')
 @section('title', 'Tax Jurisdictions')
 @section('content')
-    <div class="container mt-4">
-        <div class="card p-4">
-                <div class="card-header bg-dark text-white">
-                    🌍 Tax Jurisdictions
-                </div>
+    <div class="container mt-3">
+
+        <div class="mb-3">
+            <a href="{{ route('taxjurisdiction.create') }}" class="btn btn-primary">➕ Add Jurisdiction</a>
+        </div>
+        <div class="card p-2">
+{{--                <div class="card-header bg-dark text-white">--}}
+{{--                    🌍 Tax Jurisdictions--}}
+{{--                </div>--}}
 
                 <div class="card-body">
                     <p class="text-muted mt-0">
                         Manage tax jurisdictions for your organization.
                     </p>
-                    
-                    <div class="mb-3 text-end">
-                        <a href="{{ route('taxjurisdiction.create') }}" class="btn btn-primary">➕ Add Jurisdiction</a>
-                    </div>
-                    @if ($taxJurisdictions->count())
+
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped">
                             <thead>
@@ -29,6 +29,8 @@
                             </tr>
                             </thead>
                             <tbody>
+
+                            @if ($taxJurisdictions->count())
                             <tr>
                                 @foreach($taxJurisdictions as $item)
                                     <td>{{ $loop->iteration }}</td>
@@ -58,16 +60,21 @@
                                             Delete
                                         </button>
                                     </td>
+
+                                @endforeach
                             </tr>
-                            @endforeach
+                                @else
+                                    <tr>
+                                        <td colspan="6">
+                                            <div class = "text-center">
+                                                No Tax Jurisdictions found
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endif
                             </tbody>
                         </table>
                     </div>
-                  @else
-                    <div class = "alert alert-info text-centre">
-                        No Tax Jurisdictions found
-                    </div>
-                  @endif
             </div>
         </div>
     </div>
