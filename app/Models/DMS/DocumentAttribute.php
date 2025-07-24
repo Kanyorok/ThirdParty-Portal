@@ -3,7 +3,7 @@
 namespace App\Models\DMS;
 
 use App\Enums\Core\DataTypesEnum;
-use App\Services\DMS\FileProperties;
+use App\Services\DMS\Files\FileProperties;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -21,7 +21,7 @@ class DocumentAttribute extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'DocumentId', 'Name', 'Value', 'DataType',
+        'DocumentId', 'Name', 'Value', 'DataType', 'VersionId',
         'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
 
@@ -43,6 +43,10 @@ class DocumentAttribute extends Model
         };
     }
 
+    public function version(): BelongsTo
+    {
+        return $this->belongsTo(DocumentVersion::class, 'VersionId');
+    }
 
     public function document(): BelongsTo
     {

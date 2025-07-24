@@ -56,16 +56,20 @@ class DocumentController extends Controller
     public function show(Request $request, Repository $repository, Document $document): View
     {
         $actor = $request->user();
-        $document->load(['current', 'repository', 'creator', 'category', 'properties'])->withCount('versions');
+        $document->loadCount('versions')->load(['current', 'repository', 'creator', 'category', 'properties']);
 
         $lock = Cache::lock('view-document-' . $document->DocumentId, 100);
         if ($lock->get()) {
             activity()->causedBy($actor)->performedOn($document)->event('view')->log('viewed document  ' . $document->Name . '.');
         }
+        $service = new DocumentService($document);
+        $checkedOut = $service->isCheckedOut($actor);
+        $checkIn = ($checkedOut === 2);//check user.
 
-        return view('dms.files.show')->with('repoService', new RepositoryService($repository))
-            ->with('tags', (new DocumentService($document))->tags($actor)->get())
-            ->with('file', $document);
+        return view('dms.files.show', compact('checkIn'))->with('repoService', new RepositoryService($repository))
+            ->with('tags', $service->tags($actor)->get())
+            ->with('file', $document)
+            ->with('checkedOut', ($checkedOut !== 0));
     }
 
     /**

@@ -84,6 +84,11 @@ class Document extends Model implements SpecialPermissionContract
         return $this->hasOne(DocumentVersion::class, 'DocumentId', 'Id')->latest('t_DocumentVersions.Id');
     }
 
+    public function checkouts(): HasMany
+    {
+        return $this->hasMany(DocumentCheckOut::class, 'DocumentId', 'Id');
+    }
+
     public function versions(): HasMany
     {
         return $this->hasMany(DocumentVersion::class, 'DocumentId', 'Id');

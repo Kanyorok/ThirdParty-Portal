@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Enums\CampaignStatusEnum;
+use App\Enums\DMS\DocumentCheckOutStatusEnum;
 use App\Enums\LeadStatusEnum;
 use App\Enums\TicketStatusEnum;
 use App\Helpers\SystemHelper;
@@ -18,6 +19,14 @@ class CodeDetailSeeder extends Seeder
         $user = SystemHelper::user();
 
         $entries = collect();
+
+        DocumentCheckOutStatusEnum::getAll()->each(function ($item) use ($entries) {
+            $entries->push([
+                'CodeID' => 'DocumentCheckOutStatus',
+                'Value' => $item->value,
+                'Description' => $item->name,
+            ]);
+        });
 
         // ENUMS
         foreach (LeadStatusEnum::cases() as $index => $statusEnum) {
@@ -132,7 +141,7 @@ class CodeDetailSeeder extends Seeder
             $entries->push(array_merge($item, ['DisplayOrder' => $item['DisplayOrder'] ?? ($index + 1)]));
         }
 
-        // Ensure only non-existing records are inserted
+
         foreach ($entries as $entry) {
             $exists = DB::table('t_CodeDetails')->where('CodeID', $entry['CodeID'])->where('Description', $entry['Description'])->exists();
             if (!$exists) {
@@ -149,4 +158,6 @@ class CodeDetailSeeder extends Seeder
             }
         }
     }
+
+
 }
