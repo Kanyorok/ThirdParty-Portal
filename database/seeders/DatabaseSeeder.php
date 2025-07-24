@@ -65,6 +65,5 @@ class DatabaseSeeder extends Seeder
         $this->call(PropertyFloorSeeder::class);
         $this->call(PropertyUnitSeeder::class);
         $this->call(TenantRegistrySeeder::class);
-        $this->call(PropertyNewLeaseSeeder::class);
     }
 }

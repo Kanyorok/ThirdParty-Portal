@@ -123,9 +123,11 @@
                               name="SpecialTerms"></textarea>
                 </div>
 
+                      <!-- Document Upload -->
                 <div class="mb-3">
                     <label class="form-label">Upload Lease Document</label>
-                    <input type="file" class="form-control" name="LeaseDocument" accept=".pdf,.docx">
+                    <input type="file" name="Document" class="form-control" multiple>
+                    <small class="text-muted">e.g. upload Lease Document</small>
                 </div>
 
                 <button type="submit" class="btn btn-success">Save Lease</button>
