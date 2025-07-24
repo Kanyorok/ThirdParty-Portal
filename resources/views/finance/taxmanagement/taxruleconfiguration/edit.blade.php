@@ -2,11 +2,11 @@
 @section('title', 'Edit Tax Rule')
 
 @section('content')
-    <div class="container mt-4">
-        <div class="card p-4">
-            <div class="card-header bg-dark text-white">
-                ✏️ Edit Tax Rule
-            </div>
+    <div class="container mt-1">
+        <div class="card p-2">
+{{--            <div class="card-header bg-dark text-white">--}}
+{{--                ✏️ Edit Tax Rule--}}
+{{--            </div>--}}
             <div class="card-body">
                 <p class="text-muted">
                     Update the tax rule details below.

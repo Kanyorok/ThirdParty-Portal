@@ -87,8 +87,8 @@ class ChartOfAccountsController extends Controller
                 'GLSubAccountTypeID' => $validated['GLSubAccountTypeID'],
                 'BranchID'=>$branchIDCode,
                 'GLAccountTypeValue'=>$GLAccountTypeValue,
-                'GLTypeGroupValue'=>$GLTypeGroupIDValue,
-                'GLSubAccountTypeValue'=>$GLSubAccountTypeIDValue,
+                'GLTypeGroupIDValue'=>$GLTypeGroupIDValue,
+                'GLSubAccountTypeIDValue'=>$GLSubAccountTypeIDValue,
                 'GLDigits'=>$GLDigits,
                 //'ParentGLID'         => $validated['ParentGLID'] ?? null,
                 'Description'        => $validated['Description'],
@@ -159,7 +159,7 @@ class ChartOfAccountsController extends Controller
 
         try {
             $gl = FinanceGLAccounts::findOrFail($id);
-            $branchID = ModelRole::where('model_id', Auth::id())->pluck('BranchID')->first();
+            //$branchID = ModelRole::where('model_id', Auth::id())->pluck('BranchID')->first();
 
             //Get the type values TO  be used in creating an account code
             $GLAccountTypeValue=CodeDetail::where('CodeID','GLAccountType')->where('Value',$validated['GLAccountTypeID'])->pluck('DisplayOrder')->first();
@@ -167,15 +167,14 @@ class ChartOfAccountsController extends Controller
             $GLSubAccountTypeIDValue=FinanceGLSubAccountTypes::where('Id',$validated['GLSubAccountTypeID'])->pluck('SegmentValue')->first();
             $GLDigits=SegmentOrder::where('SegmentType','GLDigits')->pluck('Description')->first();
 
-            $gl->update([
+            $gl=FinanceGLAccounts::where('Id',$id)->update([
                 'GLName'             => $validated['GLName'],
                 'GLAccountTypeID'    => $validated['GLAccountTypeID'],
                 'GLTypeGroupID'      => $validated['GLTypeGroupID'],
                 'GLSubAccountTypeID' => $validated['GLSubAccountTypeID'],
-                //'BranchID'           => $branchID,
                 'GLAccountTypeValue'=>$GLAccountTypeValue,
-                'GLTypeGroupValue'=>$GLTypeGroupIDValue,
-                'GLSubAccountTypeValue'=>$GLSubAccountTypeIDValue,
+                'GLTypeGroupIDValue'=>$GLTypeGroupIDValue,
+                'GLSubAccountTypeIDValue'=>$GLSubAccountTypeIDValue,
                 'GLDigits'=>$GLDigits,
                 'Description'        => $validated['Description'],
                 'IsActive'           => $validated['IsActive'],
@@ -183,10 +182,10 @@ class ChartOfAccountsController extends Controller
             ]);
 
             activity()
-                ->performedOn($gl)
+                ->performedOn(new FinanceGLAccounts())
                 ->causedBy(Auth::user())
                 ->withProperties(['action' => 'update'])
-                ->log('Updated GL account: ' . $gl->GLName);
+                ->log('Updated GL account: ');
 
             DB::commit();
 

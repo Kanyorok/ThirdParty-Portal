@@ -30,6 +30,7 @@ class FinanceGLAccounts extends Model
         'BranchID',
         'GLAccountTypeValue',
         'GLTypeGroupIDValue',
+        'GLTypeGroupValue',
         'GLSubAccountTypeIDValue',
         'GLDigits',
         'Description',

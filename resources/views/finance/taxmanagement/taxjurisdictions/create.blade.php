@@ -2,10 +2,10 @@
 @section('title', 'Tax Jurisdiction Setup')
 @section('content')
     <div class="container mt-4">
-        <div class="card p-4">
-            <div class="card-header bg-dark text-white">
-                🌍 Add Tax Jurisdiction
-            </div>
+        <div class="card p-2">
+{{--            <div class="card-header bg-dark text-white">--}}
+{{--                🌍 Add Tax Jurisdiction--}}
+{{--            </div>--}}
 
             <div class="card-header mb-1">
                         @if ($errors->any())
@@ -33,9 +33,9 @@
 
                     <div class="mb-3">
                         <label class="form-label">Jurisdiction Name</label>
-                        <input type="text" 
-                        name="JurisdictionName" 
-                        value="{{old('JurisdictionName')}}" 
+                        <input type="text"
+                        name="JurisdictionName"
+                        value="{{old('JurisdictionName')}}"
                         class="form-control @error('JurisdictionName') is-invalid @enderror"
                         placeholder="e.g., Kenya, Uganda" required>
                         @error('JurisdictionName')
