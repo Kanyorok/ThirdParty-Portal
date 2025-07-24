@@ -3,6 +3,7 @@
 namespace App\Models\PropertyManagement;
 
 use App\Models\Core\CodeDetail;
+use App\Models\DMS\Document;
 use Illuminate\Database\Eloquent\Model;
 
 class PropertyMaintenanceWorkCompletion extends Model
@@ -16,10 +17,6 @@ class PropertyMaintenanceWorkCompletion extends Model
 
     protected $fillable = [
         'RequestNumber',
-        'Property',
-        'Block',
-        'Floor',
-        'Unit',
         'CompletionDate',
         'WorkDoneSummary',
         'PartsUsed',

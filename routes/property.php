@@ -219,6 +219,7 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::delete('workcompletion/delete/{Id}', [PropertyMaintenanceWorkCompletionController::class,'destroy'])->name('workcompletion.destroy');
 
 
+
     Route::resource('attachments', PropertyAttachmentsController::class);
     Route::resource('rentdashboard', RentDashboardController::class);
     Route::resource('maintenancedashboard', PropertyMaintenanceDashboardController::class);

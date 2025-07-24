@@ -2,11 +2,15 @@
 
 namespace App\Services\Property\MaintenanceAndIssues;
 
+use App\Enums\Core\ModulesEnum;
+use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
 use App\Models\Core\CodeDetail;
 use App\Models\PropertyManagement\PropertyMaintenanceAssign;
 use App\Models\PropertyManagement\PropertyMaintenanceWorkCompletion;
-use Date;
+use Illuminate\Http\UploadedFile;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use Illuminate\Support\Facades\Storage;
 
 class PropertyMaintenanceWorkCompletionService
 {
@@ -22,23 +26,16 @@ class PropertyMaintenanceWorkCompletionService
 
     public static function create(
         PropertyMaintenanceAssign $requestNumber,
-        string $property,
-        string $block,
-        string $floor,
-        string $unit,
         string $completionDate,
         string $workDoneSummary,
         string $partsUsed,
         int $cost,
         CodeDetail $finalstatus,
-        User $user
+        User $user,
+        UploadedFile $document = null
     ): self {
         $workCompletion = PropertyMaintenanceWorkCompletion::create([
             'RequestNumber' => $requestNumber->Id,
-            'Property' => $property,
-            'Block' => $block,
-            'Floor' => $floor,
-            'Unit' => $unit,
             'CompletionDate' => $completionDate,
             'WorkDoneSummary' => $workDoneSummary,
             'PartsUsed' => $partsUsed,
@@ -48,6 +45,15 @@ class PropertyMaintenanceWorkCompletionService
             'ModifiedBy' => $user->Id,
         ]);
 
+        if ($document) {
+            $workCompletion->newDocument(
+                ModulesEnum::Property,
+                $document,
+                [PermissionEnum::PropertyMaintenanceAssignView->value],
+                $user
+                );
+            }
+
         activity()
             ->causedBy($user)
             ->performedOn($workCompletion)
@@ -56,5 +62,48 @@ class PropertyMaintenanceWorkCompletionService
             ->log("Added Property Assignment {$workCompletion->Id}.");
 
         return new self($workCompletion);
+    }
+
+
+        public static function update(
+        PropertyMaintenanceWorkCompletion $requestNumber,
+        string $completionDate,
+        string $workDoneSummary,
+        string $partsUsed,
+        int $cost,
+        CodeDetail $finalstatus,
+        User $user,
+        UploadedFile $document = null
+        ): self {
+        $requestNumber->update([
+            'RequestNumber' => $requestNumber->RequestNumber,
+            'CompletionDate' => $completionDate,
+            'WorkDoneSummary' => $workDoneSummary,
+            'PartsUsed' => $partsUsed,
+            'Cost' => $cost,
+            'FinalStatus' => $finalstatus->ID,
+            'CreatedBy' => $user->Id,
+            'ModifiedBy' => $user->Id,
+        ]);
+
+
+        if ($document) {
+            $requestNumber->newDocument(
+                ModulesEnum::Property,
+                $document,
+                [PermissionEnum::PropertyMaintenanceWorkCompletionView->value],
+                $user
+                );
+        }
+
+        activity()
+            ->causedBy($user)
+            ->performedOn($requestNumber->withoutRelations())
+            ->event('update')
+            ->log("Updated Work Completion {$requestNumber->Id}");
+
+
+
+        return new self($requestNumber);
     }
 }

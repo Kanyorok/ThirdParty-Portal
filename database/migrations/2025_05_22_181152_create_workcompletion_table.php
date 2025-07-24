@@ -13,10 +13,6 @@ return new class extends Migration {
         Schema::create('t_WorkCompletion', function (Blueprint $table) {
             $table->id('Id');
             $table->foreignId('RequestNumber')->constrained('t_AssignRequest', 'Id');
-            $table->string('Property');
-            $table->string('Block');
-            $table->string('Floor');
-            $table->string('Unit');
             $table->date('CompletionDate');
             $table->string('WorkDoneSummary');
             $table->string('PartsUsed');
