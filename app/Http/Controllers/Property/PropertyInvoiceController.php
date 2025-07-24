@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Property;
 
 use App\Enums\Core\PermissionEnum;
+use App\Enums\Property\PropertyInvoiceEnum;
+use App\Enums\Property\PropertyNewLeaseEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\BillingAndReceipting\PropertyInvoiceRequest;
 use App\Models\PropertyManagement\PropertyInvoice;
@@ -24,9 +26,10 @@ class PropertyInvoiceController extends Controller
 
     public function create(){
         $this->authorize(PermissionEnum::PropertyInvoiceCreate, PropertyInvoice::class);
-        $newleases = PropertyNewLease::all();
-        $newtenants = PropertyNewLease::all();
-        return view('property.billingandreceipting.invoicing.create', compact('newleases', 'newtenants'));
+        $newleases = PropertyNewLease::where('IsActive', true)
+            ->where('Status', '!=', PropertyNewLeaseEnum::Terminate)
+            ->with('tenant')->get();
+        return view('property.billingandreceipting.invoicing.create', compact('newleases'));
     }
 
     public function show($id)
@@ -43,17 +46,20 @@ class PropertyInvoiceController extends Controller
         $validated = $request->validated();
 
         $Lease = PropertyNewLease::findOrFail($validated['Lease']);
-        //dd('validation');
+        $Status = PropertyInvoiceEnum::Pending;
+
         PropertyInvoiceService::create(
-            $Lease,
-            $validated['BillingMonth'],
-            $validated['InvoiceDate'],
-            $validated['RentAmount'],
-            $validated['ServicesCharge'],
-            $validated['OtherCharges'],
-            $validated['InvoiceNotes'],
-            Auth::user()
-        );
+        $Lease,
+        $validated['BillingMonth'],
+        $validated['InvoiceDate'],
+        $validated['RentAmount'],
+        $validated['ServicesCharge'],
+        $validated['OtherCharges'],
+        $validated['ParkingFee'],
+        $validated['InvoiceNotes'],
+        $Status,
+        Auth::user()
+    );
 
         return redirect()->route('rentinvoice.index')->with('success', 'Invoice created successfully');
     }
@@ -62,9 +68,9 @@ class PropertyInvoiceController extends Controller
     {
         $this->authorize(PermissionEnum::PropertyInvoiceUpdate, PropertyInvoice::class);
         $invoices = PropertyInvoice::findOrFail($id);
-        $newtenants = PropertyNewLease::all();
+        $leases = PropertyInvoice::all();
 
-        return view('property.billingandreceipting.invoicing.edit', compact('invoices', 'newtenants'));
+        return view('property.billingandreceipting.invoicing.edit', compact('invoices', 'leases'));
     }
 
     public function update(PropertyInvoiceRequest $request, $id)
@@ -80,11 +86,12 @@ class PropertyInvoiceController extends Controller
             $invoice = PropertyInvoice::findOrFail($id);
 
             $invoice->update([
-                'Lease' => $validated['Lease'],
+                $Lease,
                 'BillingMonth' => $validated['BillingMonth'],
                 'InvoiceDate' => $validated['InvoiceDate'],
                 'RentAmount' => $validated['RentAmount'],
                 'ServicesCharge' => $validated['ServicesCharge'],
+                'ParkingFee' => $validated['ParkingFee'],
                 'OtherCharges' => $validated['OtherCharges'],
                 'InvoiceNotes' => $validated['InvoiceNotes'],
                 'ModifiedBy' => Auth::Id(),

@@ -15,7 +15,7 @@
 
         <h4 class="fw-bold mb-3">Tenant Exit & Clearance Checklist</h4>
 
-    <form action="{{ route('tenantclearance.store') }}" method="POST">
+    <form action="{{ route('tenantclearance.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
   <div class="card shadow">
     <div class="card-header bg-light fw-bold"> Exit Process</div>
@@ -81,15 +81,17 @@
                         </select>
                     </div>
 
-                    <!-- Upload & Remarks -->
+                    <!-- Document Upload -->
                     <div class="mb-3">
-                        <label class="form-label">Upload Exit Document (optional)</label>
-                        <input type="file" class="form-control">
+                        <label class="form-label">Upload clearance Documents</label>
+                        <input type="file" name="Document" class="form-control" multiple>
+                        <small class="text-muted">e.g. Extra Clearance info</small>
                     </div>
+
                     <div class="mb-3">
                         <label class="form-label">Additional Notes</label>
                         <textarea class="form-control" rows="2" placeholder="Any final notes or clearance details..."
-                                  name="AdditionalNotes"></textarea>
+                        name="AdditionalNotes"></textarea>
                     </div>
                     <button class="btn btn-danger"> Finalize Exit</button>
         </form>

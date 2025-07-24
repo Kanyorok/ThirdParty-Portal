@@ -12,6 +12,7 @@ return new class extends Migration {
     {
         Schema::create('t_RentReceipt', function (Blueprint $table) {
             $table->id('Id');
+            $table->foreignId('TenantId')->constrained('t_RentInvoice', 'Id');
             $table->foreignId('InvoiceID')->constrained('t_RentInvoice', 'Id');
             $table->string('BillingMonth');
             $table->date('InvoiceDate');

@@ -65,6 +65,7 @@ class DatabaseSeeder extends Seeder
         $this->call(PropertyFloorSeeder::class);
         $this->call(PropertyUnitSeeder::class);
         $this->call(TenantRegistrySeeder::class);
+
         $this->call(PropertyNewLeaseSeeder::class);
         $this->call(FinanceGLTypeGroupSeeder::class);
         $this->call(FinanceGLSubAccountTypeSeeder::class);
@@ -73,5 +74,6 @@ class DatabaseSeeder extends Seeder
         $this->call(OrderLinesSeeder::class);
         $this->call(OrderSeeder::class);
         $this->call(GoodsReceiptsSeeder::class);
+
     }
 }
