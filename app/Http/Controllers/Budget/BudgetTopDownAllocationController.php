@@ -92,14 +92,14 @@ class BudgetTopDownAllocationController extends Controller
                     ]);
             }
 
-            $glsMaster = BudgetGLMasterAllocations::where('BudgetID', $budgetId)
-                ->where('BranchID', $branchId)
-                ->get();
+//            $glsMaster = BudgetGLMasterAllocations::where('BudgetID', $budgetId)
+//                ->where('BranchID', $branchId)
+//                ->get();
 
-//            $glsMaster = collect(DB::select("EXEC GetBudgetWorkspace :budgetId, :branchId", [
-//                'budgetId' => $budgetId,
-//                'branchId' => $branchId
-//            ]));
+            return$glsMaster = collect(DB::select("EXEC GetBudgetWorkspace :budgetId, :branchId", [
+                'budgetId' => $budgetId,
+                'branchId' => $branchId
+            ]));
 
             $isExisting = true;
             return view('budgetandanalytics.budgetworkspace.topdown.exist', compact(
