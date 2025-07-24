@@ -10,7 +10,7 @@
             <div class="card text-white bg-success">
                 <div class="card-body">
                     <h6 class="card-title">Collected</h6>
-                    <h4>KES 540,000</h4>
+                    <h4>KES {{ number_format($collected) }}</h4>
                 </div>
             </div>
         </div>
@@ -18,7 +18,7 @@
             <div class="card text-white bg-warning">
                 <div class="card-body">
                     <h6 class="card-title">Due Soon</h6>
-                    <h4>KES 210,000</h4>
+                    <h4>KES {{ number_format($dueSoon) }}</h4>
                 </div>
             </div>
         </div>
@@ -26,7 +26,7 @@
             <div class="card text-white bg-danger">
                 <div class="card-body">
                     <h6 class="card-title">Overdue</h6>
-                    <h4>KES 125,000</h4>
+                    <h4>KES {{ number_format($overdue) }}</h4>
                 </div>
             </div>
         </div>
@@ -34,37 +34,31 @@
             <div class="card text-white bg-secondary">
                 <div class="card-body">
                     <h6 class="card-title">Partial Payments</h6>
-                    <h4>KES 40,000</h4>
+                    <h4>KES {{ number_format($partial) }}</h4>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Filters -->
+    <!-- Filters (static options for now) -->
     <form class="row g-2 mb-3">
         <div class="col-md-3">
-            <select class="form-select" id="branchFilter">
+            <select class="form-select">
                 <option selected>All Branches</option>
-                <option>Westlands</option>
-                <option>CBD</option>
             </select>
         </div>
         <div class="col-md-3">
-            <select class="form-select" id="propertyFilter">
+            <select class="form-select">
                 <option selected>All Properties</option>
-                <option>Sunrise Apartments</option>
-                <option>Green Hills Estate</option>
             </select>
         </div>
         <div class="col-md-3">
-            <select class="form-select" id="tenantFilter">
+            <select class="form-select">
                 <option selected>All Tenants</option>
-                <option>Jane Mwangi</option>
-                <option>Michael Otieno</option>
             </select>
         </div>
         <div class="col-md-3">
-            <input type="month" class="form-control" id="monthFilter">
+            <input type="month" class="form-control">
         </div>
     </form>
 
@@ -79,28 +73,43 @@
                     <th>Due Date</th>
                     <th>Amount Due</th>
                     <th>Amount Paid</th>
-                    <th>Late Fee</th>
                     <th>Status</th>
                     <th>Action</th>
                 </tr>
             </thead>
             <tbody>
-                <!-- Sample Row -->
+                @foreach($invoices as $invoice)
+                @php
+                    $tenant = $invoice->lease->tenant->TenantName ?? 'N/A';
+                    $unit = $invoice->lease->unit->UnitCode ?? 'N/A';
+                    $due = $invoice->RentAmount + $invoice->ServicesCharge + $invoice->ParkingFee + $invoice->OtherCharges;
+                    $paid = $invoice->receipts->sum('AmountPaidNow');
+                    $balance = $due - $paid;
+                    $status = $paid == 0 ? 'Unpaid' : ($paid < $due ? 'Partial' : 'Paid');
+                @endphp
                 <tr>
-                    <td>1</td>
-                    <td>Jane Mwangi</td>
-                    <td>Block A - Unit 103</td>
-                    <td>2025-05-01</td>
-                    <td>KES 25,000</td>
-                    <td>KES 15,000</td>
-                    <td>KES 1,250</td>
-                    <td><span class="badge bg-warning">Partial</span></td>
+                    <td>{{ $loop->iteration }}</td>
+                    <td>{{ $tenant }}</td>
+                    <td>{{ $unit }}</td>
+                    <td>{{ \Carbon\Carbon::parse($invoice->InvoiceDate)->format('Y-m-d') }}</td>
+                    <td>KES {{ number_format($due) }}</td>
+                    <td>KES {{ number_format($paid) }}</td>
                     <td>
-                        <button class="btn btn-sm btn-outline-primary">View</button>
-                        <button class="btn btn-sm btn-outline-success">Post Payment</button>
+                        <span class="badge bg-{{ $status == 'Paid' ? 'success' : ($status == 'Partial' ? 'warning' : 'danger') }}">
+                            {{ $status }}
+                        </span>
+                    </td>
+                    <td>
+                        @foreach($invoice->receipts as $receipt)
+                            <a href="{{ route('rentreceipt.show', $receipt->Id) }}" class="btn btn-sm btn-info mb-1">View</a>
+                        @endforeach
+                        @if($invoice->receipts->isEmpty())
+                            <span class="text-muted">No Receipts</span>
+                        @endif
+
                     </td>
                 </tr>
-                <!-- More rows -->
+                @endforeach
             </tbody>
         </table>
     </div>
