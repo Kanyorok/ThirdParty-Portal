@@ -16,6 +16,7 @@ use App\Http\Controllers\Finance\CreditManagementController;
 use App\Http\Controllers\Finance\CreditNoteController;
 use App\Http\Controllers\Finance\CustomerMasterController;
 use App\Http\Controllers\Finance\CustomerStatementController;
+use App\Http\Controllers\Finance\FinanceTaxTypeController;
 use App\Http\Controllers\Finance\GLDynamicController;
 use App\Http\Controllers\Finance\GLMappingController;
 use App\Http\Controllers\Finance\HierarchyViewerController;
@@ -101,6 +102,7 @@ Route::namespace('Finance')->prefix('finance')->group(function () {
     Route::resource('taxrule', TaxRuleController::class);
     Route::resource('taxsummaryreport', TaxSummaryReportController::class);
     Route::resource('trialbalance', TrialBalanceController::class);
+    Route::resource('taxtypes', FinanceTaxTypeController::class);
 
     Route::resource('hierachyviewer', HierarchyViewerController::class);
     Route::resource('segments', COASegmentController::class);
@@ -117,7 +119,7 @@ Route::namespace('Finance')->prefix('finance')->group(function () {
         Route::get('/', [PaymentProcessingController::class, 'index'])->name('ap_payment.index');
         Route::get('/create', [PaymentProcessingController::class, 'create'])->name('ap_payment.create');
         Route::get('/voucher/{voucherId}', [PaymentProcessingController::class, 'showVoucher'])->name('ap_payment.voucher');
-});
+    });
 
     Route::resource('taxruleconfig', TaxRuleController::class);
     Route::resource('efiling', TaxEfillingController::class);
@@ -136,4 +138,22 @@ Route::namespace('Finance')->prefix('finance')->group(function () {
         Route::get('salary-journal-templates/create', [SalaryJournalTemplateController::class, 'create'])->name('salary-journal-templates.create');
         Route::post('salary-journal-templates/store', [SalaryJournalTemplateController::class, 'store'])->name('salary-journal-templates.store');
     });
+
+    // AJAX routes for dependent selects
+    Route::get('/get-type-groups', [ChartOfAccountsController::class, 'getTypeGroups']);
+    Route::get('/get-sub-account-types', [ChartOfAccountsController::class, 'getSubAccountTypes']);
+
+    //Added Individual Routes
+    Route::post('/segment-order/save', [COASegmentController::class, 'segmentOrder'])->name('segment-order.save');
+    Route::post('/gl/save', [COASegmentController::class, 'segmentOrder'])->name('segment-order.save');
+    Route::post('/glDigits/save', [COASegmentController::class, 'editGlDigit'])->name('glDigits.save');
+    Route::post('/glTypeSegmentValue/save', [COASegmentController::class, 'saveGLTypeSegment'])->name('glTypeSegmentValue.save');
+    Route::post('/glAccountTypeSegmentValue/save', [COASegmentController::class, 'saveGLAccountTypeSegment'])->name('glAccountTypeSegmentValue.save');
+    Route::post('/glSubAccountTypeSegmentValue/save', [COASegmentController::class, 'saveSubGLAccountTypeSegment'])->name('glSubAccountTypeSegmentValue.save');
+
+    // Route for getting Order
+    Route::get('/finance/pos/{selectedVendor}', [InvoiceEntryController::class, 'getOrders'])->name('finance.orders');
+    // Route for getting GRNS
+    Route::get('/finance/grns/{selectedPO}', [InvoiceEntryController::class, 'getGRNs'])->name('finance.grns');
+
 });

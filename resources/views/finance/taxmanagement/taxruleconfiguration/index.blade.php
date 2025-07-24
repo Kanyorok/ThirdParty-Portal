@@ -2,81 +2,83 @@
 @section('title', 'Tax Rules Management')
 
 @section('content')
-    <div class="container mt-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4>📄 Tax Rules</h4>
-
+    <div class="container mt-2">
+        <div class="mt-0">
             <a href="{{ route('taxruleconfig.create') }}" class="btn btn-primary">➕ Add Tax Rule</a>
-
         </div>
-
         <div class="card">
+{{--            <div class="card-header bg-dark text-white">--}}
+{{--                📄 Tax Rules--}}
+{{--            </div>--}}
+
+
             <div class="card-body table-responsive">
-                <table class="table table-bordered table-hover">
-                    <thead class="table-light">
-                    <tr>
-                        <th>#</th>
-                        <th>Tax Type</th>
-                        <th>Jurisdiction</th>
-                        <th>Rate (%)</th>
-                        <th>Applies To</th>
-                        <th>Threshold</th>
-                        <th>Effective From</th>
-                        <th>Effective To</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr>
-                        <td>1</td>
-                        <td>VAT</td>
-                        <td>Kenya</td>
-                        <td>16.00</td>
-                        <td>Sales</td>
-                        <td>10,000</td>
-                        <td>2025-01-01</td>
-                        <td>2025-12-31</td>
-                        <td><span class="badge bg-success">Active</span></td>
-                        <td>
-                            <a href="/finance/taxrules/1/edit" class="btn btn-sm btn-warning">✏️ Edit</a>
-                            <button class="btn btn-sm btn-danger">🗑 Deactivate</button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>2</td>
-                        <td>WHT</td>
-                        <td>Uganda</td>
-                        <td>6.00</td>
-                        <td>Purchases</td>
-                        <td>5,000</td>
-                        <td>2025-03-01</td>
-                        <td>2025-12-31</td>
-                        <td><span class="badge bg-secondary">Inactive</span></td>
-                        <td>
-                            <a href="/finance/taxrules/2/edit" class="btn btn-sm btn-warning">✏️ Edit</a>
-                            <button class="btn btn-sm btn-success">✅ Activate</button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>3</td>
-                        <td>GST</td>
-                        <td>Tanzania</td>
-                        <td>18.00</td>
-                        <td>Both</td>
-                        <td>15,000</td>
-                        <td>2025-05-01</td>
-                        <td>2025-12-31</td>
-                        <td><span class="badge bg-success">Active</span></td>
-                        <td>
-                            <a href="/finance/taxrules/3/edit" class="btn btn-sm btn-warning">✏️ Edit</a>
-                            <button class="btn btn-sm btn-danger">🗑 Deactivate</button>
-                        </td>
-                    </tr>
-                    <!-- More rows as needed -->
-                    </tbody>
-                </table>
+                <p class="text-muted mt-0">
+                    Manage tax rules for your organization.
+                </p>
+
+                <div class="table-responsive mt-3">
+                    <table class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Tax Type</th>
+                                <th>Jurisdiction</th>
+                                <th>Rate (%)</th>
+                                <th>Applies To</th>
+                                <th>Threshold</th>
+                                <th>Effective From</th>
+                                <th>Effective To</th>
+                                <th>Status</th>
+                                <th style="white-space: nowrap; text-align: center;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @if ($taxRule->count())
+                            @foreach($taxRule as $rule)
+                                <tr>
+                                    <td>{{ $loop->iteration }}</td>
+                                    <td>{{ $rule->taxType->TaxTypeName ?? '-' }}</td>
+                                    <td>{{ $rule->jurisdiction->JurisdictionName ?? '-' }}</td>
+                                    <td>{{ $rule->Rate }}</td>
+                                    <td>{{ $rule->AppliesTo }}</td>
+                                    <td>{{ $rule->ThresholdAmount }}</td>
+                                    <td>{{ $rule->EffectiveFrom }}</td>
+                                    <td>{{ $rule->EffectiveTo }}</td>
+                                    <td>
+                                        @if ($rule->Status)
+                                            <span class="badge bg-success">Active</span>
+                                        @else
+                                            <span class="badge bg-danger">Inactive</span>
+                                        @endif
+                                    </td>
+                                    <td style="white-space: nowrap; text-align: center;">
+                                        <a href="{{ route('taxruleconfig.edit', $rule->Id) }}" class="btn btn-sm btn-warning">Edit</a>
+                                        <button type="button"
+                                            class="btn btn-sm btn-danger custom-delete-btn"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#customDeleteConfirmModal"
+                                            data-name="{{$rule->taxType->TaxTypeName}}"    {{-- Pass item name --}}
+                                            data-route="{{ route('taxruleconfig.destroy', $rule->Id) }}"> {{-- Pass delete route --}}
+                                            Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                           @endforeach
+                            @else
+                                <tr>
+                                    <td colspan="10" class="text-center">
+                                        <div class="text-center">
+                                            No Tax Rules found
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endif
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
+@include('components.modals.delete-confirm')
 @endsection
