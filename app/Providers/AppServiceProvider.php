@@ -40,6 +40,9 @@ use App\Models\Core\Task;
 use App\Models\CRM\Campaign;
 use App\Models\CRM\CampaignParty;
 use App\Models\CRM\Contact;
+use App\Models\Finance\FinanceGLAccounts;
+use App\Models\Finance\FinanceGLSubAccountTypes;
+use App\Models\Finance\FinanceGLTypeGroup;
 use App\Models\HRM\Committee;
 use App\Models\CRM\Discussion;
 use App\Models\CRM\Lead;
@@ -155,6 +158,9 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Permission\Models\Role;
+use App\Models\Finance\FinanceInvoiceEntry;
+use App\Models\Finance\FinanceTaxType;
+use App\Models\Finance\TaxJurisdiction;
 
 
 class AppServiceProvider extends ServiceProvider
@@ -297,6 +303,14 @@ class AppServiceProvider extends ServiceProvider
 
 
             PrequalificationPeriod::getPrimaryKey() => PrequalificationPeriod::class,
+
+            //////////////  Finance  ////////////////
+            FinanceGLAccounts::getPrimaryKey()=>FinanceGLAccounts::class,
+            FinanceGLSubAccountTypes::getPrimaryKey()=>FinanceGLSubAccountTypes::class,
+            FinanceGLTypeGroup::getPrimaryKey()=>FinanceGLTypeGroup::class,
+            TaxJurisdiction::getPrimaryKey() => TaxJurisdiction::class,
+            FinanceTaxType::getPrimaryKey() => FinanceTaxType::class,
+            FinanceInvoiceEntry::getPrimaryKey() => FinanceInvoiceEntry::class,
         ]);
 
         Gate::policy(Role::class, RolePolicy::class);
@@ -382,5 +396,7 @@ class AppServiceProvider extends ServiceProvider
          Event::listen(NewCampaignEvent::class);
          Event::listen(CampaignSubmittedEvent::class);
          Event::listen(CampaignRunEvent::class);*/
+
+
     }
 }
