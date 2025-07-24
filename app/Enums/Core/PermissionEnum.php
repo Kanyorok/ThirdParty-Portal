@@ -433,6 +433,41 @@ enum PermissionEnum: string
     case BudgetSetupDelete = 'budgetSetup-delete';
 
 
+ /*
+ *
+ * ========================================  Finance  ========================================
+ */
+    //Chart Of Accounts
+    case FinanceCOAView = 'financeCOA-view';
+    case FinanceCOACreate = 'financeCOA-create';
+    case FinanceCOAUpdate = 'financeCOA-update';
+    case FinanceCOADelete = 'financeCOA-delete';
+
+    //General Ledger
+    case FinanceGeneralLedgerView = 'financeGeneralLedger-view';
+    case FinanceGeneralLedgerCreate = 'financeGeneralLedger-create';
+    case FinanceGeneralLedgerUpdate = 'financeGeneralLedger-update';
+    case FinanceGeneralLedgerDelete = 'financeGeneralLedger-delete';
+
+    //Accounts Payable
+    case FinanceAccountsPayableView = 'financeAccountsPayable-view';
+    case FinanceAccountsPayableCreate = 'financeAccountsPayable-create';
+    case FinanceAccountsPayableUpdate = 'financeAccountsPayable-update';
+    case FinanceAccountsPayableDelete = 'financeAccountsPayable-delete';
+
+    //Accounts Receivable
+    case FinanceAccountsReceivableView = 'financeAccountsReceivable-view';
+    case FinanceAccountsReceivableCreate = 'financeAccountsReceivable-create';
+    case FinanceAccountsReceivableUpdate = 'financeAccountsReceivable-update';
+    case FinanceAccountsReceivableDelete = 'financeAccountsReceivable-delete';
+
+    //Tax Setting
+    case FinanceTaxSettingView = 'financeTaxSetting-view';
+    case FinanceTaxSettingCreate = 'financeTaxSetting-create';
+    case FinanceTaxSettingUpdate = 'financeTaxSetting-update';
+    case FinanceTaxSettingDelete = 'financeTaxSetting-delete';
+
+
     public static function display(): Collection
     {
         return collect([
@@ -503,6 +538,14 @@ enum PermissionEnum: string
 
 
             //Property Management
+            ///////////////////////  Finance  /////////////////////////////////////
+            [self::FinanceCOAView, self::FinanceCOACreate, self::FinanceCOAUpdate, self::FinanceCOADelete],
+            [self::FinanceGeneralLedgerView, self::FinanceGeneralLedgerCreate, self::FinanceGeneralLedgerUpdate, self::FinanceGeneralLedgerDelete],
+            [self::FinanceAccountsPayableView, self::FinanceAccountsPayableCreate, self::FinanceAccountsPayableUpdate, self::FinanceAccountsPayableDelete],
+            [self::FinanceAccountsReceivableView, self::FinanceAccountsReceivableCreate, self::FinanceAccountsReceivableUpdate, self::FinanceAccountsReceivableDelete],
+            [self::FinanceTaxSettingView, self::FinanceTaxSettingCreate, self::FinanceTaxSettingUpdate, self::FinanceTaxSettingDelete],
+
+
             [self::PropertyCategoryView,self::PropertyCategoryCreate,self::PropertyCategoryUpdate,self::PropertyCategoryDelete],
             [self::PropertyTypeView,self::PropertyTypeCreate,self::PropertyTypeUpdate,self::PropertyTypeDelete],
             [self::PropertyRegistryView,self::PropertyRegistryCreate,self::PropertyRegistryUpdate,self::PropertyRegistryDelete],
@@ -616,6 +659,14 @@ enum PermissionEnum: string
                 self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate, self::BudgetSetupDelete
                 => ModulesEnum::BudgetLine,
 
+
+            ////////////////////   Finance   ////////////////////////////
+            self::FinanceCOAView, self::FinanceCOACreate, self::FinanceCOAUpdate, self::FinanceCOADelete,
+            self::FinanceGeneralLedgerView, self::FinanceGeneralLedgerCreate, self::FinanceGeneralLedgerUpdate, self::FinanceGeneralLedgerDelete,
+            self::FinanceAccountsPayableView, self::FinanceAccountsPayableCreate, self::FinanceAccountsPayableUpdate, self::FinanceAccountsPayableDelete,
+            self::FinanceAccountsReceivableView, self::FinanceAccountsReceivableCreate, self::FinanceAccountsReceivableUpdate, self::FinanceAccountsReceivableDelete,
+            self::FinanceTaxSettingView, self::FinanceTaxSettingCreate, self::FinanceTaxSettingUpdate, self::FinanceTaxSettingDelete,
+            => ModulesEnum::Finance,
         };
 
     }
@@ -706,6 +757,13 @@ enum PermissionEnum: string
             self::PropertyMaintenanceAssignCreate,self::PropertyMaintenanceAssignUpdate,self::PropertyMaintenanceAssignDelete,self::PropertyMaintenanceAssignView => 'Property Maintenance Assign',
             self::PropertyMaintenanceWorkCompletionCreate,self::PropertyMaintenanceWorkCompletionUpdate,self::PropertyMaintenanceWorkCompletionDelete,self::PropertyMaintenanceWorkCompletionView => 'Property Maintenance Work Completion',
             default => throw new LogicException("Unhandled PermissionEnum case: {$this->value}"),
+
+            ///////////////////////  Finance   /////////////////////////
+            self::FinanceCOAView, self::FinanceCOACreate, self::FinanceCOAUpdate, self::FinanceCOADelete => 'Chart of Accounts',
+            self::FinanceGeneralLedgerView, self::FinanceGeneralLedgerCreate, self::FinanceGeneralLedgerUpdate, self::FinanceGeneralLedgerDelete => 'General Ledger',
+            self::FinanceAccountsPayableView, self::FinanceAccountsPayableCreate, self::FinanceAccountsPayableUpdate, self::FinanceAccountsPayableDelete => 'Accounts Payable',
+            self::FinanceAccountsReceivableView, self::FinanceAccountsReceivableCreate, self::FinanceAccountsReceivableUpdate, self::FinanceAccountsReceivableDelete => 'Accounts Receivable',
+            self::FinanceTaxSettingView, self::FinanceTaxSettingCreate, self::FinanceTaxSettingUpdate, self::FinanceTaxSettingDelete => 'Tax Setting',
         };
     }
 }

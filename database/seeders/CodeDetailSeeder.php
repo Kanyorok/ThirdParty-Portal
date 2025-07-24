@@ -64,10 +64,10 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'SubmissionMode', 'Description' => 'Courier'],
 
             // GL Account Types
-            ['CodeID' => 'GLAccountType', 'Description' => 'Assets', 'Value' => 'A'],
-            ['CodeID' => 'GLAccountType', 'Description' => 'Liabilities', 'Value' => 'L'],
-            ['CodeID' => 'GLAccountType', 'Description' => 'Income', 'Value' => 'I'],
-            ['CodeID' => 'GLAccountType', 'Description' => 'Expenses', 'Value' => 'E'],
+            ['CodeID' => 'GLAccountType', 'Description' => 'Assets', 'Value' => 'A','DisplayOrder'=>0],
+            ['CodeID' => 'GLAccountType', 'Description' => 'Liabilities', 'Value' => 'L','DisplayOrder'=>0],
+            ['CodeID' => 'GLAccountType', 'Description' => 'Income', 'Value' => 'I','DisplayOrder'=>0],
+            ['CodeID' => 'GLAccountType', 'Description' => 'Expenses', 'Value' => 'E','DisplayOrder'=>0],
 
             // Tenant Types
             ['CodeID' => 'TenantType', 'Description' => 'Individual', 'Value' => 'I'],

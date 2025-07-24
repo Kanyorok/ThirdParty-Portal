@@ -35,21 +35,21 @@
                     </thead>
                     <tbody>
                         @forelse($details as $item)
-                        <tr>
-                            <td>{{ $loop->iteration }}</td>
-                            <td>{{ $item->OrderNo }}</td>
-                            <td>{{ \Carbon\Carbon::parse($item->OrderDate)->format('d-m-Y') }}</td>
-                            <td>{{ $item->ExtOrdNum }}</td>
-                            <td>{{ $item->Priority }}</td>
-                            <td>{{ $item->BranchID }}</td>
-                            <td>{{ number_format($item->UnitPrice, 2) }}</td>
-                            <td>{{ $item->ordercount }}</td>
-                            <td>{{ $item->CreatedBy }}</td>
-                            <td>{{ \Carbon\Carbon::parse($item->CreatedOn)->format('d-m-Y H:i') }}</td>
-                            <td> <a href="{{ route('purchaseOrder.show', $item->Id) }}" class="btn btn-info btn-sm">View</a>
-                                <a href="{{ route('purchaseOrder.approval', $item->Id) }}" class="btn btn-success btn-sm">Approve</a>
-                            </td>
-                        </tr>
+                          <tr>
+                              <td>{{ $loop->iteration }}</td>
+                              <td>{{ $item->OrderNo }}</td>
+                              <td>{{ \Carbon\Carbon::parse($item->OrderDate)->format('d-m-Y') }}</td>
+                              <td>{{ $item->ExtOrdNum }}</td>
+                              <td>{{ $item->Priority }}</td>
+                              <td>{{ $item->BranchID }}</td>
+                              <td>{{ number_format($item->UnitPrice, 2) }}</td>
+                              <td>{{ $item->ordercount }}</td>
+                              <td>{{ $item->CreatedBy }}</td>
+                              <td>{{ \Carbon\Carbon::parse($item->CreatedOn)->format('d-m-Y H:i') }}</td>
+                              <td> <a href="{{ route('purchaseOrder.show', $item->Id) }}" class="btn btn-info btn-sm">View</a>
+                                  <a href="{{ route('purchaseOrder.approval', $item->Id) }}" class="btn btn-success btn-sm">Approve</a>
+                              </td>
+                          </tr>
                         @empty
                         <tr>
                             <td colspan="15" class="text-center">No orders found.</td>
