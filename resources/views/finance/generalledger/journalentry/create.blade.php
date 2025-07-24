@@ -1,8 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Journal Entry')
 @section('content')
-    <div class="container mt-4">
-        <h4 class="mb-4">📝 New Journal Entry</h4>
+    <div class="container mt-1">
 
         <form method="POST" action="#">
             @csrf
