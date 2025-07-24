@@ -127,7 +127,7 @@
 
         // Create
         $('.modal-create-approval').on('click', function() {
-            $form.attr('action', "{{ route('approval-settings.store') }}");
+            $form.attr('action', "{{ route('settings.approval_stages.store') }}");
             $('#formMethod').val('POST');
             $('.modal-title').text('New Approval WorkFlow');
             $form[0].reset();

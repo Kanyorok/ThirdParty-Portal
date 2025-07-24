@@ -35,7 +35,7 @@ class ApprovalStagesController extends Controller
             ApprovalStages::create([
                 'Name' => $validated['Name'],
                 'Description' => $validated['Description'],
-                'DocType' => $validated['DocType'],
+                'Source' => $validated['DocType'],
                 'CreatedBy' => auth()->id(),
                 'ModifiedBy' => auth()->id(),
                 'ModifiedOn' => now(),

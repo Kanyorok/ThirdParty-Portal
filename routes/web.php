@@ -22,7 +22,7 @@ Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function (
         Route::get('lists', 'SettingsController@lists')->name('settings.lists');
         Route::get('users-roles', 'SettingsController@users')->name('settings.users');
         Route::get('approval-stages', 'ApprovalStagesController@index')->name('settings.approval_stages');
-
+        Route::post('approval-stages/create', 'ApprovalStagesController@store')->name('settings.approval_stages.store');
         Route::get('integrations', 'SettingsController@integrations')->name('settings.integrations');
         Route::post('integrations', 'IntegrationController');
         Route::namespace('Codes')->group(function () {
