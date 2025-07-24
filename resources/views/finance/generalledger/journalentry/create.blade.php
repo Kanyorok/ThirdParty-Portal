@@ -1,99 +1,189 @@
 @extends('layouts.app')
 @section('title', 'Journal Entry')
+
 @section('content')
-    <div class="container mt-1">
-
-        <form method="POST" action="#">
-            @csrf
-            <div class="row mb-3">
-                <div class="col-md-3">
-                    <label class="form-label">Journal Date</label>
-                    <input type="date" name="JournalDate" class="form-control" value="{{ date('Y-m-d') }}" required>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Reference Number</label>
-                    <input type="text" name="ReferenceNumber" class="form-control" placeholder="e.g., JV20240601"
-                           required>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Transaction Type</label>
-                    <select name="TransactionTypeID" class="form-select" required>
-                        <option value="">Select Type</option>
-                        <option value="JE">JE – Manual Journal Entry</option>
-                        <option value="REVJ">REVJ – Reversing Journal Entry</option>
-                        <option value="RECUR">RECUR – Recurring Journal Entry</option>
-                        <option value="ADJ">ADJ – GL Adjustment</option>
-                        <option value="FXGAIN">FXGAIN – Forex Gain/Loss Adjustment</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Description</label>
-                    <input type="text" name="Description" class="form-control" placeholder="e.g., Salary Payment - May">
-                </div>
+    <div class="container mt-4">
+        <div class="card shadow rounded-4">
+            <div class="card-header bg-light text-white">
+{{--                <h4 class="mb-0">📘 Journal Entry Form</h4>--}}
             </div>
+            <div class="card-body">
+                <form method="POST" action="#">
+                    @csrf
 
-            <hr>
-            <h5>Journal Lines</h5>
+                    {{-- Journal Header --}}
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <label class="form-label">Journal Date</label>
+                            <input type="date" name="JournalDate" class="form-control" value="{{ date('Y-m-d') }}" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Reference Number</label>
+                            <input type="text" name="ReferenceNumber" class="form-control" placeholder="Auto-generated or input">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Transaction Type</label>
+                            <select name="TransactionTypeID" class="form-select" required>
+                                <option value="">-- Select Type --</option>
+                                <option value="JE">JE – Manual Journal Entry</option>
+                                <option value="REVJ">REVJ – Reversing Journal Entry</option>
+                                <option value="RECUR">RECUR – Recurring Journal Entry</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Description</label>
+                            <input type="text" name="Description" class="form-control" placeholder="e.g., Loan disbursement">
+                        </div>
+                    </div>
 
-            <table class="table table-bordered">
-                <thead>
-                <tr>
-                    <th>GL Account</th>
-                    <th>Branch</th>
-                    <th>Department</th>
-                    <th>DR/CR</th>
-                    <th>Amount</th>
-                    <th>Narration</th>
-                </tr>
-                </thead>
-                <tbody>
-                @for ($i = 0; $i < 3; $i++)
-                    <tr>
-                        <td>
-                            <select name="GLAccount[]" class="form-select">
-                                <option value="">Select</option>
-                                <option value="1000">1000 - Cash & Bank</option>
-                                <option value="1100">1100 - Cash - HQ</option>
-                                <option value="2000">2000 - Accounts Payable</option>
-                                <option value="3000">3000 - Revenue</option>
-                                <option value="4000">4000 - Salary Expenses</option>
-                            </select>
-                        </td>
-                        <td>
-                            <select name="Branch[]" class="form-select">
-                                <option value="001">001 - HQ</option>
-                                <option value="002">002 - Nairobi</option>
-                                <option value="003">003 - Mombasa</option>
-                            </select>
-                        </td>
-                        <td>
-                            <select name="Department[]" class="form-select">
-                                <option value="100">100 - Finance</option>
-                                <option value="200">200 - HR</option>
-                                <option value="300">300 - Operations</option>
-                            </select>
-                        </td>
-                        <td>
-                            <select name="DRCR[]" class="form-select">
-                                <option value="DR">DR</option>
-                                <option value="CR">CR</option>
-                            </select>
-                        </td>
-                        <td><input type="number" name="Amount[]" class="form-control" step="0.01"></td>
-                        <td><input type="text" name="Narration[]" class="form-control"></td>
-                    </tr>
-                @endfor
-                </tbody>
-            </table>
+                    {{-- Journal Lines --}}
+                    <h5 class="border-bottom pb-2 mb-3 text-primary">🧾 Journal Lines</h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered align-middle">
+                            <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>GL Account</th>
+                                <th>Branch</th>
+                                <th>Department</th>
+                                <th>DR / CR</th>
+                                <th>Amount</th>
+                                <th>Narration</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                            </thead>
+                            <tbody id="journalBody">
+                            @for ($i = 0; $i < 3; $i++)
+                                <tr>
+                                    <td>{{ $i + 1 }}</td>
+                                    <td>
+                                        <select name="GLAccount[]" class="form-select" required>
+                                            <option value="">Select</option>
+                                            <option value="1000">1000 - Cash & Bank</option>
+                                            <option value="1100">1100 - Cash - HQ</option>
+                                            <option value="2000">2000 - Accounts Payable</option>
+                                            <option value="3000">3000 - Revenue</option>
+                                            <option value="4000">4000 - Salary Expenses</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select name="Branch[]" class="form-select" required>
+                                            <option value="001">001 - HQ</option>
+                                            <option value="002">002 - Nairobi</option>
+                                            <option value="003">003 - Mombasa</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select name="Department[]" class="form-select" required>
+                                            <option value="100">100 - Finance</option>
+                                            <option value="200">200 - HR</option>
+                                            <option value="300">300 - Operations</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select name="DRCR[]" class="form-select drcr-select" required>
+                                            <option value="DR">DR</option>
+                                            <option value="CR">CR</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="number" name="Amount[]" class="form-control amount-input" step="0.01" required>
+                                    </td>
+                                    <td>
+                                        <input type="text" name="Narration[]" class="form-control" placeholder="Line narration">
+                                    </td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-sm btn-outline-danger remove-line" title="Remove Line">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            @endfor
+                            </tbody>
+                        </table>
+                    </div>
 
-            <div class="alert alert-info">
-                <strong>Total Debit:</strong> 100,000.00 &nbsp;&nbsp;
-                <strong>Total Credit:</strong> 100,000.00 &nbsp;&nbsp;
-                <span class="badge bg-success">Balanced</span>
+                    <div class="mb-3">
+                        <button type="button" id="addRow" class="btn btn-outline-primary btn-sm">
+                            + Add Line
+                        </button>
+                    </div>
+
+                    {{-- Totals --}}
+                    <div class="alert alert-info rounded-3">
+                        <strong>Total Debit:</strong> <span id="totalDr">0.00</span> &nbsp;&nbsp;
+                        <strong>Total Credit:</strong> <span id="totalCr">0.00</span> &nbsp;&nbsp;
+                        <span id="balanceStatus" class="badge bg-warning text-dark">Unbalanced</span>
+                    </div>
+
+                    {{-- Submit --}}
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="/finance/general-ledger" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-success" id="postBtn" disabled>Post Journal</button>
+                    </div>
+                </form>
             </div>
-
-            <button type="submit" class="btn btn-success">Post Journal</button>
-            <a href="/finance/general-ledger" class="btn btn-secondary">Cancel</a>
-        </form>
+        </div>
     </div>
+@endsection
+
+@section('scripts')
+    <script>
+        const body = document.getElementById('journalBody');
+        const totalDr = document.getElementById('totalDr');
+        const totalCr = document.getElementById('totalCr');
+        const postBtn = document.getElementById('postBtn');
+        const balanceStatus = document.getElementById('balanceStatus');
+
+        function calculateTotals() {
+            let debit = 0, credit = 0, isValid = true;
+            const rows = body.querySelectorAll('tr');
+
+            rows.forEach(row => {
+                const gl = row.querySelector('select[name="GLAccount[]"]')?.value;
+                const drcr = row.querySelector('select[name="DRCR[]"]')?.value;
+                const amt = parseFloat(row.querySelector('input[name="Amount[]"]')?.value || 0);
+
+                if (!gl || !drcr || amt <= 0) isValid = false;
+
+                if (drcr === 'DR') debit += amt;
+                if (drcr === 'CR') credit += amt;
+            });
+
+            totalDr.textContent = debit.toFixed(2);
+            totalCr.textContent = credit.toFixed(2);
+
+            if (debit === credit && debit > 0 && isValid) {
+                balanceStatus.className = 'badge bg-success';
+                balanceStatus.textContent = 'Balanced';
+                postBtn.disabled = false;
+            } else {
+                balanceStatus.className = 'badge bg-danger';
+                balanceStatus.textContent = 'Unbalanced / Incomplete';
+                postBtn.disabled = true;
+            }
+        }
+
+        document.addEventListener('input', calculateTotals);
+        document.addEventListener('change', calculateTotals);
+
+        document.getElementById('addRow').addEventListener('click', () => {
+            const newRow = body.querySelector('tr').cloneNode(true);
+            newRow.querySelectorAll('input, select').forEach(el => {
+                if (el.tagName === 'INPUT') el.value = '';
+                if (el.tagName === 'SELECT') el.selectedIndex = 0;
+            });
+            body.appendChild(newRow);
+            calculateTotals();
+        });
+
+        body.addEventListener('click', function (e) {
+            if (e.target.closest('.remove-line') && body.rows.length > 1) {
+                e.target.closest('tr').remove();
+                calculateTotals();
+            }
+        });
+
+        calculateTotals();
+    </script>
 @endsection
