@@ -113,13 +113,13 @@
                                         <td>
                                             <input class="form-control form-control-sm text-end"
                                                    style="width: 120px; padding: 2px 5px;"
-                                                   value="{{ $item->ActualsDec2024 ?? 4000000 }}"
+                                                   value="{{ $item->ActualsDec2024 ?? 0.00 }}"
                                                    readonly/>
                                         </td>
                                         <td>
                                             <input class="form-control form-control-sm text-end percent-change"
                                                    style="width: 110px; padding: 2px 5px;"
-                                                   value="{{ $item->PercentChange ?? '108.75%' }}"
+                                                   value="{{ $item->PercentChange ?? '0.00%' }}"
                                                    readonly/>
                                         </td>
                                     </tr>
@@ -154,10 +154,10 @@
                         <div class="border rounded p-2 bg-info text-white">
                             <span class="fw-bold">Variance:</span> <span id="variance" class="fw-bold">0</span>
                         </div>
-                        <div class="border rounded p-2 bg-warning">
-                            <span class="fw-bold">% Variance:</span> <span id="percent-variance"
-                                                                           class="fw-bold">0.00%</span>
-                        </div>
+{{--                        <div class="border rounded p-2 bg-warning">--}}
+{{--                            <span class="fw-bold">% Variance:</span> <span id="percent-variance"--}}
+{{--                                                                           class="fw-bold">0.00%</span>--}}
+{{--                        </div>--}}
                     </div>
                 </div>
             </div>
@@ -219,7 +219,7 @@
                 document.getElementById('net-position').textContent = formatNumber(netPosition);
 
                 // Calculate Variance and Percentage Variance
-                const actuals = 4000000; // Hardcoded from Actuals Dec 2024
+                const actuals = 0; // Hardcoded from Actuals Dec 2024
                 const variance = actuals - netPosition; // Actual - Budget Total (Net Position)
                 const percentVariance = actuals !== 0 ? ((variance / actuals) * 100).toFixed(2) : 0;
                 document.getElementById('variance').textContent = formatNumber(variance);
