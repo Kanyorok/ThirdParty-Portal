@@ -151,7 +151,6 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Permission\Models\Role;
-use App\Models\Auth\ModelRole;
 use App\Models\Finance\FinanceInvoiceEntry;
 use App\Models\Finance\FinanceTaxType;
 use App\Models\Finance\TaxJurisdiction;
@@ -295,8 +294,8 @@ class AppServiceProvider extends ServiceProvider
             DocumentVersion::getPrimaryKey() => DocumentVersion::class,
             Image::getPrimaryKey() => Image::class,
             Repository::getPrimaryKey() => Repository::class,
-            
-            
+
+
             PropertyNewTenant::getPrimaryKey() => PropertyNewTenant::class,
             PropertyTenantClearance::getPrimaryKey() => PropertyTenantClearance::class,
             PropertyFloor::getPrimaryKey() => PropertyFloor::class,
