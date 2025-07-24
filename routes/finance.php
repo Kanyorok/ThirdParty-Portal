@@ -149,4 +149,9 @@ Route::namespace('Finance')->prefix('finance')->group(function () {
     Route::post('/glDigits/save', [COASegmentController::class, 'editGlDigit'])->name('glDigits.save');
     Route::post('/glTypeSegmentValue/save', [COASegmentController::class, 'editGlDigit'])->name('glTypeSegmentValue.save');
 
+    // Route for getting Order
+    Route::get('/finance/pos/{selectedVendor}', [InvoiceEntryController::class, 'getOrders'])->name('finance.orders');
+    // Route for getting GRNS
+    Route::get('/finance/grns/{selectedPO}', [InvoiceEntryController::class, 'getGRNs'])->name('finance.grns');
+
 });
