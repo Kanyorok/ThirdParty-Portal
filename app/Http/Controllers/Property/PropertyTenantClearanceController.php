@@ -54,6 +54,7 @@ class PropertyTenantClearanceController extends Controller
             ? CodeDetail::findOrFail($validatedData['DepositRefunded'])
             : null;
 
+        $document = $request->file('Document');
         $clearance = $this->service->create(
             $lease,
             \Carbon\Carbon::createFromFormat('d/m/Y', $validatedData['ExitDate']),
@@ -63,7 +64,8 @@ class PropertyTenantClearanceController extends Controller
             $depositRefunded,
             $validatedData['AdditionalNotes'],
             $statusEnum,
-            $request->user()
+            $request->user(),
+            $document
         );
 
         return redirect()->route('tenantclearance.index')->with('success', 'Tenant lease clearance created successfully');
@@ -85,6 +87,7 @@ class PropertyTenantClearanceController extends Controller
         $statusEnum = TenantClearanceEnum::from($validatedData['Status']);
         $depositRefunded = $validatedData['DepositRefunded'] ? CodeDetail::findOrFail($validatedData['DepositRefunded']) : null;
         $LeaseId = PropertyTenantClearance::where('Id', $Id)->firstOrFail();
+        $document = $request->file('Document');
         $this->service->update(
             $LeaseId,
             $exitdate = \Carbon\Carbon::createFromFormat('d/m/Y', $validatedData['ExitDate']),
@@ -94,7 +97,8 @@ class PropertyTenantClearanceController extends Controller
             $depositRefunded,
             $validatedData['AdditionalNotes'],
             $statusEnum,
-            $request->user()
+            $request->user(),
+            $document
         );
         return redirect()->route('tenantclearance.index')->with('success', 'Tenant Clearance updated successfully');
     }

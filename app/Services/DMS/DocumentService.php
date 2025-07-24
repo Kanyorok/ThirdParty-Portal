@@ -15,6 +15,7 @@ use App\Models\Auth\User;
 use App\Models\Core\CategoryMaster;
 use App\Models\Core\SpecialPermission;
 use App\Models\DMS\Document;
+use App\Models\DMS\DocumentRelation;
 use App\Models\DMS\Repository;
 use App\Services\Core\PermissionsService;
 use DateTime;
@@ -75,10 +76,10 @@ class DocumentService extends PermissionsService
         if (is_null(Relation::getMorphedModel($Related))) {
             throw new ErroredException('Invalid Related Entity');
         }
-
-        $this->document->relations()->create([
+        DocumentRelation::create([
             'Related' => $Related,
             'RelatedId' => $RelatedId,
+            'DocumentId' => $this->document->Id,
             'CreatedBy' => $actor->Id,
             'ModifiedBy' => $actor->Id,
         ]);

@@ -163,6 +163,13 @@
                     </div>
                 </div>
 
+                <!-- Document Upload -->
+                <div class="mb-3">
+                    <label class="form-label">Upload Lease Document</label>
+                    <input type="file" name="Document" class="form-control" multiple>
+                    <small class="text-muted">e.g. upload Lease Document</small>
+                </div>
+
                 <div class="card-footer bg-light d-flex justify-content-between">
                     <button type="submit" class="btn btn-success">
                         <i class="bi bi-save"></i> Update Lease
