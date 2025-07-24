@@ -4,6 +4,12 @@ namespace Database\Seeders;
 
 use App\Enums\CampaignStatusEnum;
 use App\Enums\LeadStatusEnum;
+use App\Enums\Property\PropertyInvoiceEnum;
+use App\Enums\Property\PropertyNewLeaseEnum;
+use App\Enums\Property\TenantClearanceEnum;
+use App\Enums\Procurement\DepartmentNeedsEnum;
+use App\Enums\Procurement\PrequalificationPeriodEnum;
+use App\Enums\Procurement\SchedulePlanEnum;
 use App\Enums\TicketStatusEnum;
 use App\Helpers\SystemHelper;
 use App\Services\StaticListsService;
@@ -43,6 +49,54 @@ class CodeDetailSeeder extends Seeder
                 'CodeID' => 'TicketStatus',
                 'Value' => $ticketStatusEnum->value,
                 'Description' => $ticketStatusEnum->name,
+                'DisplayOrder' => $index + 1,
+            ]);
+        }
+        foreach (PropertyInvoiceEnum::cases() as $index => $propertyinvoiceEnum) {
+            $entries->push([
+                'CodeID' => 'PropertyInvoiceStatus',
+                'Value' => $propertyinvoiceEnum->value,
+                'Description' => $propertyinvoiceEnum->name,
+                'DisplayOrder' => $index + 1,
+            ]);
+        }
+        foreach (PropertyNewLeaseEnum::cases() as $index => $propertynewleaseEnum) {
+            $entries->push([
+                'CodeID' => 'PropertyLeaseStatus',
+                'Value' => $propertynewleaseEnum->value,
+                'Description' => $propertynewleaseEnum->name,
+                'DisplayOrder' => $index + 1,
+            ]);
+        }
+        foreach (TenantClearanceEnum::cases() as $index => $tenantclearanceEnum) {
+            $entries->push([
+                'CodeID' => 'TenantClearanceStatus',
+                'Value' => $tenantclearanceEnum->value,
+                'Description' => $tenantclearanceEnum->name,
+                'DisplayOrder' => $index + 1,
+            ]);
+        }
+        foreach (DepartmentNeedsEnum::cases() as $index => $departmentneedsEnum) {
+            $entries->push([
+                'CodeID' => 'DepartmentNeedsStatus',
+                'Value' => $departmentneedsEnum->value,
+                'Description' => $departmentneedsEnum->name,
+                'DisplayOrder' => $index + 1,
+            ]);
+        }
+        foreach (SchedulePlanEnum::cases() as $index => $scheduleplanEnum) {
+            $entries->push([
+                'CodeID' => 'SchedulePlanStatus',
+                'Value' => $scheduleplanEnum->value,
+                'Description' => $scheduleplanEnum->name,
+                'DisplayOrder' => $index + 1,
+            ]);
+        }
+        foreach (PrequalificationPeriodEnum::cases() as $index => $prequalificationperiodEnum) {
+            $entries->push([
+                'CodeID' => 'PrequalificationPeriodStatus',
+                'Value' => $prequalificationperiodEnum->value,
+                'Description' => $prequalificationperiodEnum->name,
                 'DisplayOrder' => $index + 1,
             ]);
         }
@@ -132,21 +186,21 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'AssignmentType', 'Description' => 'Prequalified Vendor', 'Value' => 'P'],
 
             // Work Completion Status
-            ['CodeID' => 'FinalStatus', 'Description' => 'Completed'],
-            ['CodeID' => 'FinalStatus', 'Description' => 'Partially Completed'],
-            ['CodeID' => 'FinalStatus', 'Description' => 'Not Completed'],
+            ['CodeID' => 'FinalStatus', 'Description' => 'Completed', 'Value' => 'C'],
+            ['CodeID' => 'FinalStatus', 'Description' => 'Partially Completed', 'Value' => 'P'],
+            ['CodeID' => 'FinalStatus', 'Description' => 'Not Completed', 'Value' => 'N'],
 
             // Priority Levels
-            ['CodeID' => 'PriorityLevel', 'Description' => 'Low'],
-            ['CodeID' => 'PriorityLevel', 'Description' => 'Medium'],
-            ['CodeID' => 'PriorityLevel', 'Description' => 'High'],
-            ['CodeID' => 'PriorityLevel', 'Description' => 'Critical'],
+            ['CodeID' => 'PriorityLevel', 'Description' => 'Low', 'Value' => 'L'],
+            ['CodeID' => 'PriorityLevel', 'Description' => 'Medium', 'Value' => 'M'],
+            ['CodeID' => 'PriorityLevel', 'Description' => 'High', 'Value' => 'H'],
+            ['CodeID' => 'PriorityLevel', 'Description' => 'Critical', 'Value' => 'C'],
 
             // Property DocumentType
-            ['CodeID' => 'DocumentType', 'Description' => 'Ownership'],
-            ['CodeID' => 'DocumentType', 'Description' => 'Architectural Plan'],
-            ['CodeID' => 'DocumentType', 'Description' => 'Insurance'],
-            ['CodeID' => 'DocumentType', 'Description' => 'Others'],
+            ['CodeID' => 'DocumentType', 'Description' => 'Ownership','Value' => 'S'],
+            ['CodeID' => 'DocumentType', 'Description' => 'Architectural Plan', 'Value' => 'A'],
+            ['CodeID' => 'DocumentType', 'Description' => 'Insurance', 'Value' => 'I'],
+            ['CodeID' => 'DocumentType', 'Description' => 'Others', 'Value' => 'O'],
 
             // StaticListsService entries
             ['CodeID' => StaticListsService::MarketingModes, 'Description' => 'Outdoor Marketing', 'DisplayOrder' => 1],

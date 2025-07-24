@@ -68,7 +68,7 @@
                       <select class="form-select" name="AssignmentType" id="assignmentTypeSelect" required>
                           <option value="">--Select a technician--</option>
                           @foreach ($assignmentTypes as $assignmentType)
-                              <option value="{{ $assignmentType->Id}}">{{ $assignmentType->Description }}</option>
+                              <option value="{{ $assignmentType->ID}}">{{ $assignmentType->Description }}</option>
                           @endforeach
                       </select>
                   </div>
@@ -109,7 +109,7 @@
                         <select class="form-select" name="PriorityLevel" id="priorityLevelSelect" required>
                             <option value="">--Select Priority Level--</option>
                             @foreach ($priorityLevels as $priorityLevel)
-                                <option value="{{ $priorityLevel->Id }}">{{ $priorityLevel->Description }}</option>
+                                <option value="{{ $priorityLevel->ID }}">{{ $priorityLevel->Description }}</option>
                             @endforeach
                         </select>
                 </div>

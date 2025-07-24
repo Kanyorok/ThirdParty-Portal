@@ -31,7 +31,7 @@ class PropertyNewTenantRequest extends FormRequest
             'PostalAddress' => 'required|string|max:50',
             'Remarks' => 'required|string|max:255',
             'IsActive' => 'boolean',
-            'Document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'Document' => 'nullable|file|max:2048',
         ];
     }
 }

@@ -23,15 +23,12 @@ class PropertyMaintenanceWorkCompletionRequest extends FormRequest
     {
         return [
             'RequestNumber' => 'required|exists:t_AssignRequest,Id',
-            'Property' => 'required|string|max:50',
-            'Block' => 'required|string|max:50',
-            'Floor' => 'required|string|max:50',
-            'Unit' => 'required|string|max:50',
             'CompletionDate' => 'required|date',
-            'WorkDoneSummary' => 'required|string|max:255',
-            'PartsUsed' => 'required|string|max:255',
-            'Cost' => 'required|integer',
+            'WorkDoneSummary' => 'nullable|string|max:255',
+            'PartsUsed' => 'nullable|string|max:255',
+            'Cost' => 'nullable|integer',
             'FinalStatus' => 'required|exists:t_CodeDetails,ID',
+            'Document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
         ];
     }
 }

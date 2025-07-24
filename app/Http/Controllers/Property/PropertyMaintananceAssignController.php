@@ -2,14 +2,11 @@
 
 namespace App\Http\Controllers\Property;
 
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Requests\Property\MaintenanceAndIssues\PropertyMaintenanceAssignRequest;
 use App\Services\Property\MaintenanceAndIssues\PropertyMaintenanceAssignService;
-use Illuminate\Http\Request;
 use App\Models\PropertyManagement\PropertyMaintenanceAssign;
 use App\Models\PropertyManagement\PropertyMaintenanceRequest;
 use App\Models\HRM\Employee;
@@ -47,21 +44,6 @@ class PropertyMaintananceAssignController extends Controller
         $this->authorize(PermissionEnum::PropertyMaintenanceAssignCreate, PropertyMaintenanceAssign::class);
 
         $validated = $request->validated();
-$assignmentType = CodeDetail::findOrFail($validated['AssignmentType']);
-$internalTechnician = isset($validated['InternalTechnician']) 
-    ? Employee::findOrFail($validated['InternalTechnician']) 
-    : null;
-
-$prequalifiedVendor = isset($validated['PrequalifiedVendor']) 
-    ? Supplier::findOrFail($validated['PrequalifiedVendor']) 
-    : null;
-
-$priorityLevel = CodeDetail::findOrFail($validated['PriorityLevel']);
-$requestNumber = PropertyMaintenanceRequest::findOrFail($validated['RequestNumber']);
-$assignmentDate = new \DateTime($validated['AssignmentDate']);
-$expectedStartDate = new \DateTime($validated['ExpectedStartDate']);
-$expectedCompletion = new \DateTime($validated['ExpectedCompletion']);
-
 
         $RequestNumber = PropertyMaintenanceRequest::findOrFail($validated['RequestNumber']);
         $AssignmentType = CodeDetail::findOrFail($validated['AssignmentType']);

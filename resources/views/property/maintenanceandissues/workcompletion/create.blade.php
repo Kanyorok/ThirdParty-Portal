@@ -1,14 +1,14 @@
 @extends('layouts.app')
-@section('title', 'Complete Maintenance Request')
+@section('title', 'Complete Maintenance')
 
 @section('content')
 <div class="container mt-4">
-  <h4 class="fw-bold mb-3">✅ Complete Maintenance Request</h4>
+  <h4 class="fw-bold mb-3">Complete Maintenance Request</h4>
 
   <form action="{{ route('workcompletion.store') }}" method="POST" enctype="multipart/form-data">
     @csrf
     <div class="card shadow">
-      <div class="card-header bg-light fw-bold">🧰 Work Execution & Resolution</div>
+      <div class="card-header bg-light fw-bold">Work Execution & Resolution</div>
       <div class="card-body">
         
         <!-- Request Selection -->
@@ -20,10 +20,10 @@
               @foreach ($assignments as $assignment)
                 <option
                   value="{{ $assignment->Id }}"
-                  data-property="{{ $assignment->Property ?? '' }}"
-                  data-block="{{ $assignment->Block ?? '' }}"
-                  data-floor="{{ $assignment->Floor ?? '' }}"
-                  data-unit="{{ $assignment->Unit ?? '' }}">
+                  data-property="{{ $assignment->request->property->PropertyName ?? '' }}"
+                  data-block="{{ $assignment->request->block->BlockName ?? '' }}"
+                  data-floor="{{ $assignment->request->floor->FloorLabel ?? '' }}"
+                  data-unit="{{ $assignment->request->unit->UnitCode ?? '' }}">
                   {{ $assignment->request->RequestNumber }}
                 </option>
               @endforeach
@@ -91,15 +91,15 @@
             </select>
           </div>
         </div>
-
-        <!-- File Upload -->
+        
+        <!-- Document Upload -->
         <div class="mb-3">
-          <label class="form-label">Upload Resolution Evidence (Photos/Invoice)</label>
-          <input type="file" class="form-control" name="Attachments[]" multiple>
+            <label class="form-label">Upload Relevant Documents</label>
+            <input type="file" name="Document" class="form-control" multiple>
         </div>
 
         <!-- Submit -->
-        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">✔ Mark as Completed</button>
+        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Mark as Completed</button>
       </div>
     </div>
   </form>
