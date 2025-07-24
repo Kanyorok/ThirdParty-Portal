@@ -147,6 +147,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Permission\Models\Role;
 use App\Models\Auth\ModelRole;
+use App\Models\Finance\FinanceInvoiceEntry;
 use App\Models\Finance\FinanceTaxType;
 use App\Models\Finance\TaxJurisdiction;
 
@@ -307,6 +308,7 @@ class AppServiceProvider extends ServiceProvider
             FinanceGLTypeGroup::getPrimaryKey()=>FinanceGLTypeGroup::class,
             TaxJurisdiction::getPrimaryKey() => TaxJurisdiction::class,
             FinanceTaxType::getPrimaryKey() => FinanceTaxType::class,
+            FinanceInvoiceEntry::getPrimaryKey() => FinanceInvoiceEntry::class,
         ]);
 
         Gate::policy(Role::class, RolePolicy::class);
