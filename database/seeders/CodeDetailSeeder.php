@@ -67,17 +67,17 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'SubmissionMode', 'Description' => 'Courier'],
 
             // GL Account Types
-            ['CodeID' => 'GLAccountType', 'Description' => 'Assets', 'Value' => 'A'],
-            ['CodeID' => 'GLAccountType', 'Description' => 'Liabilities', 'Value' => 'L'],
-            ['CodeID' => 'GLAccountType', 'Description' => 'Income', 'Value' => 'I'],
-            ['CodeID' => 'GLAccountType', 'Description' => 'Expenses', 'Value' => 'E'],
+            ['CodeID' => 'GLAccountType', 'Description' => 'Assets', 'Value' => 'A','DisplayOrder'=>0],
+            ['CodeID' => 'GLAccountType', 'Description' => 'Liabilities', 'Value' => 'L','DisplayOrder'=>0],
+            ['CodeID' => 'GLAccountType', 'Description' => 'Income', 'Value' => 'I','DisplayOrder'=>0],
+            ['CodeID' => 'GLAccountType', 'Description' => 'Expenses', 'Value' => 'E','DisplayOrder'=>0],
 
             // Tenant Types
-            ['CodeID' => 'TenantType', 'Description' => 'Individual'],
-            ['CodeID' => 'TenantType', 'Description' => 'Corporate'],
-            ['CodeID' => 'TenantType', 'Description' => 'Government'],
-            ['CodeID' => 'TenantType', 'Description' => 'NGO'],
-            ['CodeID' => 'TenantType', 'Description' => 'Other'],
+            ['CodeID' => 'TenantType', 'Description' => 'Individual', 'Value' => 'I'],
+            ['CodeID' => 'TenantType', 'Description' => 'Corporate', 'Value' => 'C'],
+            ['CodeID' => 'TenantType', 'Description' => 'Government', 'Value' => 'G'],
+            ['CodeID' => 'TenantType', 'Description' => 'NGO', 'Value' => 'N'],
+            ['CodeID' => 'TenantType', 'Description' => 'Other', 'Value' => 'O'],
 
             // Deposit Refunded
             ['CodeID' => 'DepositRefunded', 'Description' => 'Fully Refunded'],
@@ -117,10 +117,11 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'ProcurementMethod', 'Description' => 'RFQ'],
             ['CodeID' => 'ProcurementMethod', 'Description' => 'Tender'],
 
-            // Approval WorkFlow Documents
-            ['CodeID' => 'ApprovalWorkFlowDocument', 'Value'=>'PR', 'Description' => 'Requisition'],
-            ['CodeID' => 'ApprovalWorkFlowDocument', 'Value'=>'PO', 'Description' => 'Purchase Order'],
-            
+            //Property Payment Method
+            ['CodeID' => 'PaymentMethod', 'Description' => 'Mpesa', 'Value' => 'M'],
+            ['CodeID' => 'PaymentMethod', 'Description' => 'Bank', 'Value' => 'B'],
+            ['CodeID' => 'PaymentMethod', 'Description' => 'Cash', 'Value' => 'C'],
+
             // StaticListsService entries
             ['CodeID' => StaticListsService::MarketingModes, 'Description' => 'Outdoor Marketing', 'DisplayOrder' => 1],
             ['CodeID' => StaticListsService::MarketingModes, 'Description' => 'Trade Shows', 'DisplayOrder' => 2],

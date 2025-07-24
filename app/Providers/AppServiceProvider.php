@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Auth\ModelRole;
 use App\Models\Auth\Team;
 use App\Models\Auth\User;
 use App\Models\BR\Account;
@@ -39,6 +40,9 @@ use App\Models\Core\Task;
 use App\Models\CRM\Campaign;
 use App\Models\CRM\CampaignParty;
 use App\Models\CRM\Contact;
+use App\Models\Finance\FinanceGLAccounts;
+use App\Models\Finance\FinanceGLSubAccountTypes;
+use App\Models\Finance\FinanceGLTypeGroup;
 use App\Models\HRM\Committee;
 use App\Models\CRM\Discussion;
 use App\Models\CRM\Lead;
@@ -89,6 +93,8 @@ use App\Models\PropertyManagement\PropertyBlock;
 use App\Models\PropertyManagement\PropertyFloor;
 use App\Models\PropertyManagement\PropertyInvoice;
 use App\Models\PropertyManagement\PropertyLeaseRenewal;
+use App\Models\PropertyManagement\PropertyLeaseTermination;
+use App\Models\PropertyManagement\PropertyNewLease;
 use App\Models\PropertyManagement\PropertyUnit;
 use App\Models\PropertyManagement\PropertyLeaseSchedule;
 use App\Models\PropertyManagement\PropertyNewTenant;
@@ -131,6 +137,8 @@ use App\Policies\PropertyManagement\PropertyFloorPolicy;
 use App\Policies\PropertyManagement\PropertyInvoicePolicy;
 use App\Policies\PropertyManagement\PropertyLeaseRenewalPolicy;
 use App\Policies\PropertyManagement\PropertyLeaseSchedulePolicy;
+use App\Policies\PropertyManagement\PropertyLeaseTerminationPolicy;
+use App\Policies\PropertyManagement\PropertyNewLeasePolicy;
 use App\Policies\PropertyManagement\PropertyNewTenantPolicy;
 use App\Policies\PropertyManagement\PropertyReceiptPolicy;
 use App\Policies\PropertyManagement\PropertyRegistryPolicy;
@@ -145,6 +153,9 @@ use Illuminate\Support\ServiceProvider;
 use Spatie\Permission\Models\Role;
 use App\Models\Auth\ModelRole;
 use App\Models\Settings\ApprovalStages;
+use App\Models\Finance\FinanceInvoiceEntry;
+use App\Models\Finance\FinanceTaxType;
+use App\Models\Finance\TaxJurisdiction;
 
 
 class AppServiceProvider extends ServiceProvider
@@ -275,9 +286,7 @@ class AppServiceProvider extends ServiceProvider
             BudgetMonthlyProjectionAllocation::getPrimaryKey() => BudgetMonthlyProjectionAllocation::class,
             BudgetManualEntryAllocations::getPrimaryKey() => BudgetManualEntryAllocations::class,
             CategoryMaster::getPrimaryKey() => CategoryMaster::class,
-            PropertyType::getPrimaryKey() => PropertyType::class,
-            PropertyRegistry::getPrimaryKey() => PropertyRegistry::class,
-            PropertyBlock::getPrimaryKey() => PropertyBlock::class,
+
 
             //DMS
             DMSTags::getPrimaryKey() => DMSTags::class,
@@ -288,16 +297,31 @@ class AppServiceProvider extends ServiceProvider
             DocumentVersion::getPrimaryKey() => DocumentVersion::class,
             Image::getPrimaryKey() => Image::class,
             Repository::getPrimaryKey() => Repository::class,
+            
+            
             PropertyNewTenant::getPrimaryKey() => PropertyNewTenant::class,
             PropertyTenantClearance::getPrimaryKey() => PropertyTenantClearance::class,
             PropertyFloor::getPrimaryKey() => PropertyFloor::class,
             PropertyUnit::getPrimaryKey() => PropertyUnit::class,
+            PropertyNewLease::getPrimaryKey() => PropertyNewLease::class,
             PropertyLeaseSchedule::getPrimaryKey() => PropertyLeaseSchedule::class,
             PropertyLeaseRenewal::getPrimaryKey() => PropertyLeaseRenewal::class,
             PropertyInvoice::getPrimaryKey() => PropertyInvoice::class,
+            PropertyType::getPrimaryKey() => PropertyType::class,
+            PropertyRegistry::getPrimaryKey() => PropertyRegistry::class,
+            PropertyBlock::getPrimaryKey() => PropertyBlock::class,
+            PropertyLeaseTermination::getPrimaryKey() => PropertyLeaseTermination::class,
 
 
             PrequalificationPeriod::getPrimaryKey() => PrequalificationPeriod::class,
+
+            //////////////  Finance  ////////////////
+            FinanceGLAccounts::getPrimaryKey()=>FinanceGLAccounts::class,
+            FinanceGLSubAccountTypes::getPrimaryKey()=>FinanceGLSubAccountTypes::class,
+            FinanceGLTypeGroup::getPrimaryKey()=>FinanceGLTypeGroup::class,
+            TaxJurisdiction::getPrimaryKey() => TaxJurisdiction::class,
+            FinanceTaxType::getPrimaryKey() => FinanceTaxType::class,
+            FinanceInvoiceEntry::getPrimaryKey() => FinanceInvoiceEntry::class,
         ]);
 
         Gate::policy(Role::class, RolePolicy::class);
@@ -340,6 +364,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PropertyInvoice::class, PropertyInvoicePolicy::class);
         Gate::policy(PropertyReceipt::class, PropertyReceiptPolicy::class);
         Gate::policy(PrequalificationPeriod::class, PrequalificationPeriodPolicy::class);
+        Gate::Policy(PropertyNewLease::class, PropertyNewLeasePolicy::class);
+        Gate::policy(PropertyLeaseTermination::class, PropertyLeaseTerminationPolicy::class);
+
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);
          Event::listen(SMSSendEvent::class, SMSSendListener::class);
@@ -377,5 +404,7 @@ class AppServiceProvider extends ServiceProvider
          Event::listen(NewCampaignEvent::class);
          Event::listen(CampaignSubmittedEvent::class);
          Event::listen(CampaignRunEvent::class);*/
+
+
     }
 }

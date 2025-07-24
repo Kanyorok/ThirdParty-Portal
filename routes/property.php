@@ -172,12 +172,14 @@ Route::namespace('Property')->prefix('property')->group(function () {
 
     //Route::resource('rentreceipt', PropertyReceiptController::class);
     Route::get('rentreceipt', [PropertyReceiptController::class,'index'])->name('rentreceipt.index');
+    Route::get('/rentreceipt/amount-paid/{invoiceId}', [PropertyReceiptController::class, 'getAmountPaidSoFar'])->name('rentreceipt.amountPaid');
     Route::get('rentreceipt/create', [PropertyReceiptController::class,'create'])->name('rentreceipt.create');
     Route::post('rentreceipt', [PropertyReceiptController::class,'store'])->name('rentreceipt.store');
     Route::get('rentreceipt/show/{Id}', [PropertyReceiptController::class,'show'])->name('rentreceipt.show');
     Route::get('rentreceipt/edit/{Id}',[PropertyReceiptController::class,'edit'])->name('rentreceipt.edit');
     Route::put('rentreceipt/edit/{Id}',[PropertyReceiptController::class,'update'])->name('rentreceipt.update');
     Route::delete('rentreceipt/delete/{Id}', [PropertyReceiptController::class,'destroy'])->name('rentreceipt.destroy');
+    Route::get('rentreceipt/pdf/{Id}', [PropertyReceiptController::class,'print'])->name('rentreceipt.pdf');
 
 
 
@@ -185,7 +187,7 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::get('tenantledger', [TenantStatementController::class,'index'])->name('tenantledger.index');
     // Route::get('tenantledger/create', [TenantStatementController::class,'create'])->name('tenantledger.create');
     // Route::get('tenantledger/store', [TenantStatementController::class,'store'])->name('tenantledger.store');   
-    // Route::get('tenantledger/pdf', [TenantStatementController::class,'create'])->name('tenantledger.pdf');
+     Route::get('tenantledger/pdf', [TenantStatementController::class,'exportpdf'])->name('tenantledger.pdf');
     
     
 
