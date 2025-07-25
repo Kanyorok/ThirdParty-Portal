@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use App\Models\Settings\ApprovalStages;
+use App\Models\Settings\ApprovalStage;
 use Illuminate\Http\Request;
 use App\Http\Requests\Settings\ApprovalSetupRequest;
 
@@ -17,7 +17,7 @@ class ApprovalStagesController extends Controller
     {
         $morphMap = Relation::morphMap();
 
-        $approvalGroups = ApprovalStages::all();
+        $approvalGroups = ApprovalStage::all();
 
         $sourceOptions = array_flip($morphMap);
 
@@ -26,7 +26,7 @@ class ApprovalStagesController extends Controller
 
     public function show($id)
     {
-        $approval = ApprovalStages::findOrFail($id);
+        $approval = ApprovalStage::findOrFail($id);
         $sourceOptions = array_flip(Relation::morphMap());
 
         return view('settings.approvals.show', compact('approval', 'sourceOptions'));
@@ -40,7 +40,7 @@ class ApprovalStagesController extends Controller
         $validated = $request->validated();
 
         try{
-            ApprovalStages::create([
+            ApprovalStage::create([
                 'Name' => $validated['Name'],
                 'Description' => $validated['Description'],
                 'Source' => $validated['DocType'],
