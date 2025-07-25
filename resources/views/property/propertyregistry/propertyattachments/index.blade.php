@@ -29,9 +29,8 @@
           <td>{{ $propertyattachment->documenttype->Description }}</td>
           <td>{{ $propertyattachment->Description}}</td>
           <td>
-          <a href="#" class="btn btn-sm btn-outline-primary">⬇ Download</a>
           <a href="{{ route('attachments.edit', $propertyattachment->Id) }}" class="btn btn-info btn-sm">Edit</a>
-          <form action="{{ route('attachments.destroy', $propertyattachment->Id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this property attachment?');">
+          <form class="d-inline" action="{{ route('attachments.destroy', $propertyattachment->Id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this property attachment?');">
               @csrf
               @method('DELETE')
               <button type="submit" class="btn btn-danger btn-sm">Delete</button>

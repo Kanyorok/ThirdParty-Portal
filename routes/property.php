@@ -225,9 +225,7 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::put('workcompletion/edit/{Id}',[PropertyMaintenanceWorkCompletionController::class,'update'])->name('workcompletion.update');
     Route::delete('workcompletion/delete/{Id}', [PropertyMaintenanceWorkCompletionController::class,'destroy'])->name('workcompletion.destroy');
 
-
-
-    Route::resource('attachments', PropertyAttachmentsController::class);
+    
     Route::resource('rentdashboard', RentDashboardController::class);
     Route::resource('maintenancedashboard', PropertyMaintenanceDashboardController::class);
     Route::resource('propertyreports', PropertyReportsController::class);
