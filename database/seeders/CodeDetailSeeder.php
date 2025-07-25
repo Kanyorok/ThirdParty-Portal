@@ -117,6 +117,10 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'ProcurementMethod', 'Description' => 'RFQ'],
             ['CodeID' => 'ProcurementMethod', 'Description' => 'Tender'],
 
+            // Approval WorkFlow Documents
+            ['CodeID' => 'ApprovalWorkFlowDocument', 'Value'=>'PR', 'Description' => 'Requisition'],
+            ['CodeID' => 'ApprovalWorkFlowDocument', 'Value'=>'PO', 'Description' => 'Purchase Order'],
+
             //Property Payment Method
             ['CodeID' => 'PaymentMethod', 'Description' => 'Mpesa', 'Value' => 'M'],
             ['CodeID' => 'PaymentMethod', 'Description' => 'Bank', 'Value' => 'B'],
