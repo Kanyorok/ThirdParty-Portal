@@ -4,11 +4,11 @@
 @section('content')
     <div class="container mt-4">
         <div class="card shadow rounded-4">
-            <div class="card-header bg-light text-white">
-{{--                <h4 class="mb-0">📘 Journal Entry Form</h4>--}}
+            <div class="card-header bg-light">
+                <h5 class="mb-0">📘 Journal Entry Form</h5>
             </div>
             <div class="card-body">
-                <form method="POST" action="#">
+                <form method="POST" action="#" id="journalForm">
                     @csrf
 
                     {{-- Journal Header --}}
@@ -19,27 +19,28 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Reference Number</label>
-                            <input type="text" name="ReferenceNumber" class="form-control" placeholder="Auto-generated or input">
+                            <input type="text" name="ReferenceNumber" class="form-control" placeholder="Optional or system-generated">
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Transaction Type</label>
                             <select name="TransactionTypeID" class="form-select" required>
-                                <option value="">-- Select Type --</option>
-                                <option value="JE">JE – Manual Journal Entry</option>
-                                <option value="REVJ">REVJ – Reversing Journal Entry</option>
-                                <option value="RECUR">RECUR – Recurring Journal Entry</option>
+                                <option value="">-- Select --</option>
+                                <option value="JE">JE – Manual</option>
+                                <option value="REVJ">REVJ – Reversing</option>
+                                <option value="RECUR">RECUR – Recurring</option>
                             </select>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Description</label>
-                            <input type="text" name="Description" class="form-control" placeholder="e.g., Loan disbursement">
+                            <input type="text" name="Description" class="form-control" placeholder="e.g., Loan Disbursement">
                         </div>
                     </div>
 
                     {{-- Journal Lines --}}
                     <h5 class="border-bottom pb-2 mb-3 text-primary">🧾 Journal Lines</h5>
+
                     <div class="table-responsive">
-                        <table class="table table-sm table-bordered align-middle">
+                        <table class="table table-bordered align-middle table-sm">
                             <thead class="table-light">
                             <tr>
                                 <th>#</th>
@@ -90,10 +91,10 @@
                                         <input type="number" name="Amount[]" class="form-control amount-input" step="0.01" required>
                                     </td>
                                     <td>
-                                        <input type="text" name="Narration[]" class="form-control" placeholder="Line narration">
+                                        <input type="text" name="Narration[]" class="form-control" placeholder="Narration">
                                     </td>
                                     <td class="text-center">
-                                        <button type="button" class="btn btn-sm btn-outline-danger remove-line" title="Remove Line">
+                                        <button type="button" class="btn btn-sm btn-outline-danger remove-line" title="Remove">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
                                     </td>
@@ -104,21 +105,17 @@
                     </div>
 
                     <div class="mb-3">
-                        <button type="button" id="addRow" class="btn btn-outline-primary btn-sm">
-                            + Add Line
-                        </button>
+                        <button type="button" id="addRow" class="btn btn-outline-primary btn-sm">+ Add Line</button>
                     </div>
 
-                    {{-- Totals --}}
                     <div class="alert alert-info rounded-3">
-                        <strong>Total Debit:</strong> <span id="totalDr">0.00</span> &nbsp;&nbsp;
-                        <strong>Total Credit:</strong> <span id="totalCr">0.00</span> &nbsp;&nbsp;
+                        <strong>Total Debit:</strong> <span id="totalDr">0.00</span> &nbsp;
+                        <strong>Total Credit:</strong> <span id="totalCr">0.00</span> &nbsp;
                         <span id="balanceStatus" class="badge bg-warning text-dark">Unbalanced</span>
                     </div>
 
-                    {{-- Submit --}}
                     <div class="d-flex justify-content-end gap-2">
-                        <a href="/finance/general-ledger" class="btn btn-secondary">Cancel</a>
+                        <a href="#" class="btn btn-secondary">Cancel</a>
                         <button type="submit" class="btn btn-success" id="postBtn" disabled>Post Journal</button>
                     </div>
                 </form>
@@ -136,30 +133,29 @@
         const balanceStatus = document.getElementById('balanceStatus');
 
         function calculateTotals() {
-            let debit = 0, credit = 0, isValid = true;
-            const rows = body.querySelectorAll('tr');
+            let debit = 0, credit = 0, valid = true;
 
-            rows.forEach(row => {
+            [...body.rows].forEach(row => {
                 const gl = row.querySelector('select[name="GLAccount[]"]')?.value;
                 const drcr = row.querySelector('select[name="DRCR[]"]')?.value;
                 const amt = parseFloat(row.querySelector('input[name="Amount[]"]')?.value || 0);
 
-                if (!gl || !drcr || amt <= 0) isValid = false;
+                if (!gl || !drcr || amt <= 0) valid = false;
 
                 if (drcr === 'DR') debit += amt;
-                if (drcr === 'CR') credit += amt;
+                else if (drcr === 'CR') credit += amt;
             });
 
             totalDr.textContent = debit.toFixed(2);
             totalCr.textContent = credit.toFixed(2);
 
-            if (debit === credit && debit > 0 && isValid) {
+            if (debit === credit && debit > 0 && valid) {
                 balanceStatus.className = 'badge bg-success';
                 balanceStatus.textContent = 'Balanced';
                 postBtn.disabled = false;
             } else {
                 balanceStatus.className = 'badge bg-danger';
-                balanceStatus.textContent = 'Unbalanced / Incomplete';
+                balanceStatus.textContent = 'Unbalanced / Invalid';
                 postBtn.disabled = true;
             }
         }
@@ -168,12 +164,15 @@
         document.addEventListener('change', calculateTotals);
 
         document.getElementById('addRow').addEventListener('click', () => {
-            const newRow = body.querySelector('tr').cloneNode(true);
-            newRow.querySelectorAll('input, select').forEach(el => {
+            const firstRow = body.querySelector('tr');
+            const clone = firstRow.cloneNode(true);
+
+            clone.querySelectorAll('input, select').forEach(el => {
                 if (el.tagName === 'INPUT') el.value = '';
                 if (el.tagName === 'SELECT') el.selectedIndex = 0;
             });
-            body.appendChild(newRow);
+
+            body.appendChild(clone);
             calculateTotals();
         });
 
@@ -184,6 +183,6 @@
             }
         });
 
-        calculateTotals();
+        calculateTotals(); // initial calc
     </script>
 @endsection
