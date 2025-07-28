@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Property;
 
+use App\Enums\Core\PermissionEnum;
 use App\Enums\Property\TenantClearanceEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\TenantAndLease\PropertyNewLeaseRequest;
@@ -33,6 +34,7 @@ class PropertyNewLeaseController extends Controller
     }
 
     public function create(){
+        $this->authorize(PermissionEnum::PropertyNewLeaseCreate, PropertyNewLease::class);
         $properties = PropertyRegistry::with('getBlockByProperty.floor.units')->get();
         $newtenants = PropertyNewTenant::where('IsActive', true)->get();
         $codes = CodeDetail::where('CodeID', 'PaymentFrequency')->get();
@@ -61,6 +63,7 @@ class PropertyNewLeaseController extends Controller
 
     public function show($Id)
     {
+        $this->authorize(PermissionEnum::PropertyNewLeaseView, PropertyNewLease::class);
         $newlease = PropertyNewLease::where('isActive', true)->findOrFail($Id);
         return view('property.tenantmanagement.leasemanagement.leasemaintenance.show', compact('newlease'));
     }
@@ -68,7 +71,7 @@ class PropertyNewLeaseController extends Controller
     public function store(PropertyNewLeaseRequest $request)
     {
 
-
+        $this->authorize(PermissionEnum::PropertyNewLeaseCreate, PropertyNewLease::class);
         $data = $request->validated();
         $tenant = PropertyNewTenant::findOrFail($data['Tenant']);
         $property = PropertyRegistry::findOrFail($data['PropertyID']);
@@ -76,6 +79,7 @@ class PropertyNewLeaseController extends Controller
         $floor = PropertyFloor::findOrFail($data['FloorID']);
         $unit = PropertyUnit::findOrFail($data['Unit']);
         $paymentFrequency = CodeDetail::findOrFail($data['PaymentFrequency']);
+        $document = $request->file('Document');
         $this->service::create(
             $tenant,
             $property,
@@ -91,14 +95,16 @@ class PropertyNewLeaseController extends Controller
             $parkingFee = $data['ParkingFee'],
             $otherCharges = $data['OtherCharges'],
             $dueDay = $data['DueDay'],
-            $specialTerms = $data['SpecialTerms'],
-            $request->user()
+            $specialTerms = $data['SpecialTerms'] ?? '',
+            $request->user(),
+            $document
         );
         return redirect()->route('addlease.index')->with('success', 'Lease created successfully');
     }
 
     public function edit($Id)
     {
+        $this->authorize(PermissionEnum::PropertyNewLeaseUpdate, PropertyNewLease::class);
         $newlease = PropertyNewLease::where('isActive', true)->findOrFail($Id);
         $properties = PropertyRegistry::with('getBlockByProperty.floor.units')->get();
         $newtenants = PropertyNewLease::with('tenant')->get();
@@ -110,6 +116,7 @@ class PropertyNewLeaseController extends Controller
 
     public function update(PropertyNewLeaseRequest $request, $Id)
     {
+        $this->authorize(PermissionEnum::PropertyNewLeaseUpdate, PropertyNewLease::class);
         $data = $request->validated();
 
         $lease = PropertyNewLease::findOrFail($Id);
@@ -120,6 +127,7 @@ class PropertyNewLeaseController extends Controller
         $unit = PropertyUnit::findOrFail($data['Unit']);
         $frequency = CodeDetail::findOrFail($data['PaymentFrequency']);
         $user = auth()->user();
+        $document = $request->file('Document');
 
         $this->service::update(
             lease: $lease,
@@ -137,7 +145,8 @@ class PropertyNewLeaseController extends Controller
             OtherCharges: (float) $data['OtherCharges'],
             DueDay: (int) $data['DueDay'],
             SpecialTerms: $data['SpecialTerms'] ?? '',
-            user: $user
+            user: $user,
+            document: $document
         );
 
         return redirect()->route('addlease.index')->with('success', 'Lease updated successfully.');
@@ -146,6 +155,7 @@ class PropertyNewLeaseController extends Controller
 
     public function destroy($Id)
     {
+        $this->authorize(PermissionEnum::PropertyNewLeaseDelete, PropertyNewLease::class);
         $newlease = PropertyNewLease::findOrFail($Id);
 
         PropertyLeaseSchedule::where('LeaseNumber', $newlease->Id)->delete();

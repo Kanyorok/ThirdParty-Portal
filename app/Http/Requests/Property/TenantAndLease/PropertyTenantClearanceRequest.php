@@ -32,6 +32,7 @@ class PropertyTenantClearanceRequest extends FormRequest
             'DepositRefunded' => 'required|exists:t_CodeDetails,Id',
             'AdditionalNotes' => 'nullable|string',
             'Status' => ['required', new Enum(TenantClearanceEnum::class)],
+            'Document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
         ];
     }
 }

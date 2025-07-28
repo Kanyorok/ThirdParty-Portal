@@ -1,99 +1,126 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Complete Maintenance')
+
 @section('content')
 <div class="container mt-4">
-  <h4 class="fw-bold mb-3">✅ Complete Maintenance Request</h4>
+  <h4 class="fw-bold mb-3">Complete Maintenance Request</h4>
 
-    <form action="{{ route('workcompletion.store') }}" method="POST">
-        @csrf
-  <div class="card shadow">
-    <div class="card-header bg-light fw-bold">🧰 Work Execution & Resolution</div>
-    <div class="card-body">
-      <!-- Request Details -->
-        <!-- Maintenance Request Reference -->
+  <form action="{{ route('workcompletion.store') }}" method="POST" enctype="multipart/form-data">
+    @csrf
+    <div class="card shadow">
+      <div class="card-header bg-light fw-bold">Work Execution & Resolution</div>
+      <div class="card-body">
+        
+        <!-- Request Selection -->
         <div class="row g-3 mb-3">
-            <div class="col-md-3">
-                <label class="form-label">Property</label>
-                <select name="Property" class="form-select" required>
-                    @foreach ($maintenancerequests as $maintenancerequest)
-                        <option value="{{ $maintenancerequest->id }}">{{ $maintenancerequest->Property }}</option>
-                    @endforeach
-                </select>
-            </div>
-        </div>
-      <div class="row g-3 mb-3">
-          <div class="col-md-3">
-              <label class="form-label">Block</label>
-              <select name="Block" class="form-select" required>
-                  @foreach ($maintenancerequests as $maintenancerequest)
-                      <option value="{{ $maintenancerequest->id }}">{{ $maintenancerequest->Block }}</option>
-                  @endforeach
-              </select>
-          </div>
-          <div class="col-md-3">
-              <label class="form-label">Floor</label>
-              <select name="Floor" class="form-select" required>
-                  @foreach ($maintenancerequests as $maintenancerequest)
-                      <option value="{{ $maintenancerequest->id }}">{{ $maintenancerequest->Floor }}</option>
-                  @endforeach
-              </select>
-          </div>
-          <div class="col-md-3">
-              <label class="form-label">Unit</label>
-              <select name="Unit" class="form-select" required>
-                  @foreach ($maintenancerequests as $maintenancerequest)
-                      <option value="{{ $maintenancerequest->id }}">{{ $maintenancerequest->Unit }}</option>
-                  @endforeach
-              </select>
-          </div>
-      </div>
-        <div class="col-md-8">
+          <div class="col-md-6">
             <label class="form-label">Select Maintenance Request</label>
-            <select name="IssueDescription" class="form-select" required>
-                @foreach ($maintenancerequests as $maintenancerequest)
-                    <option value="{{ $maintenancerequest->id }}">{{ $maintenancerequest->IssueDescription }}</option>
-                @endforeach
+            <select id="request-select" name="RequestNumber" class="form-select" required>
+              <option value="">-- Select Request --</option>
+              @foreach ($assignments as $assignment)
+                <option
+                  value="{{ $assignment->Id }}"
+                  data-property="{{ $assignment->request->property->PropertyName ?? '' }}"
+                  data-block="{{ $assignment->request->block->BlockName ?? '' }}"
+                  data-floor="{{ $assignment->request->floor->FloorLabel ?? '' }}"
+                  data-unit="{{ $assignment->request->unit->UnitCode ?? '' }}">
+                  {{ $assignment->request->RequestNumber }}
+                </option>
+              @endforeach
             </select>
+          </div>
         </div>
-        <div class="col-md-4">
-          <label class="form-label">Completion Date</label>
-            <input type="date" class="form-control" value="2025-05-04" name="CompletionDate">
-        </div>
-      </div>
 
-      <!-- Work Details -->
-      <div class="mb-3">
-        <label class="form-label">Work Done Summary</label>
-          <textarea class="form-control" rows="3" placeholder="e.g. Replaced leaking pipe and sealed joints."
-                    name="WorkDoneSummary"></textarea>
-      </div>
+        <!-- Auto-filled Property Info -->
+        <div class="row g-3 mb-3">
+          <div class="col-md-3">
+            <label class="form-label">Property</label>
+            <input type="text" id="property-display" class="form-control" readonly>
+            <input type="hidden" name="Property" id="property-id" value="{{ old('Property') }}">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Block</label>
+            <input type="text" id="block-display" class="form-control" readonly>
+            <input type="hidden" name="Block" id="block-id" value="{{ old('Block') }}">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Floor</label>
+            <input type="text" id="floor-display" class="form-control" readonly>
+            <input type="hidden" name="Floor" id="floor-id" value="{{ old('Floor') }}">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Unit</label>
+            <input type="text" id="unit-display" class="form-control" readonly>
+            <input type="hidden" name="Unit" id="unit-id" value="{{ old('Unit') }}">
+          </div>
+        </div>
 
-      <div class="row g-3 mb-3">
-        <div class="col-md-4">
-          <label class="form-label">Parts Used (Optional)</label>
-            <input type="text" class="form-control" placeholder="e.g. 3/4” Pipe, Valve" name="PartsUsed">
+        <!-- Completion Date -->
+        <div class="row g-3 mb-3">
+          <div class="col-md-4">
+            <label class="form-label">Completion Date</label>
+            <input type="date" class="form-control" name="CompletionDate" value="{{ old('CompletionDate', date('Y-m-d')) }}" required>
+          </div>
         </div>
-        <div class="col-md-4">
-          <label class="form-label">Cost (KES)</label>
-            <input type="number" class="form-control" placeholder="e.g. 1500" name="Cost">
-        </div>
-        <div class="col-md-4">
-          <label class="form-label">Final Status</label>
-            <select class="form-select" name="FinalStatus">
-            <option>Completed</option>
-            <option>Delayed – Awaiting Part</option>
-            <option>Not Fixed – Reassign</option>
-          </select>
-        </div>
-      </div>
 
-      <div class="mb-3">
-        <label class="form-label">Upload Resolution Evidence (Photos/Invoice)</label>
-        <input type="file" class="form-control" multiple>
+        <!-- Work Summary -->
+        <div class="mb-3">
+          <label class="form-label">Work Done Summary</label>
+          <textarea class="form-control" rows="3" name="WorkDoneSummary" placeholder="e.g. Replaced leaking pipe and sealed joints." required>{{ old('WorkDoneSummary') }}</textarea>
+        </div>
+
+        <!-- Cost and Status -->
+        <div class="row g-3 mb-3">
+          <div class="col-md-4">
+            <label class="form-label">Parts Used (Optional)</label>
+            <input type="text" class="form-control" name="PartsUsed" placeholder="e.g. 3/4” Pipe, Valve" value="{{ old('PartsUsed') }}">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Cost (KES)</label>
+            <input type="number" class="form-control" name="Cost" placeholder="e.g. 1500" value="{{ old('Cost') }}">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Final Status</label>
+            <select class="form-select" name="FinalStatus" required>
+              <option value="">--Select a status--</option>
+              @foreach ($finalstatus as $status)
+                <option value="{{ $status->ID }}">
+                  {{ $status->Description }}
+                </option>
+              @endforeach
+            </select>
+          </div>
+        </div>
+        
+        <!-- Document Upload -->
+        <div class="mb-3">
+            <label class="form-label">Upload Relevant Documents</label>
+            <input type="file" name="Document" class="form-control" multiple>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Mark as Completed</button>
       </div>
-        <button class="btn btn-success">✔ Mark as Completed</button>
-    </form>
+    </div>
+  </form>
 </div>
-</div>
-</div>
+
+<!-- Auto-fill logic -->
+<script>
+  document.getElementById('request-select').addEventListener('change', function () {
+    const selected = this.options[this.selectedIndex];
+
+    document.getElementById('property-display').value = selected.getAttribute('data-property') || '';
+    document.getElementById('property-id').value = selected.getAttribute('data-property') || '';
+
+    document.getElementById('block-display').value = selected.getAttribute('data-block') || '';
+    document.getElementById('block-id').value = selected.getAttribute('data-block') || '';
+
+    document.getElementById('floor-display').value = selected.getAttribute('data-floor') || '';
+    document.getElementById('floor-id').value = selected.getAttribute('data-floor') || '';
+
+    document.getElementById('unit-display').value = selected.getAttribute('data-unit') || '';
+    document.getElementById('unit-id').value = selected.getAttribute('data-unit') || '';
+  });
+</script>
 @endsection

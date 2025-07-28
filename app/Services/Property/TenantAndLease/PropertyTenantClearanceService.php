@@ -2,12 +2,15 @@
 
 namespace App\Services\Property\TenantAndLease;
 
+use App\Enums\Core\ModulesEnum;
+use App\Enums\Core\PermissionEnum;
 use App\Enums\Property\TenantClearanceEnum;
 use App\Models\Auth\User;
 use App\Models\Core\CodeDetail;
 use App\Models\PropertyManagement\PropertyLeaseTermination;
 use App\Models\PropertyManagement\PropertyTenantClearance;
 use DateTime;
+use Illuminate\Http\UploadedFile;
 
 class PropertyTenantClearanceService
 {
@@ -27,9 +30,10 @@ class PropertyTenantClearanceService
         bool $AllDuesPaid,
         bool $KeysReturned,
         CodeDetail $DepositRefunded,
-        string     $AdditionalNotes,
+        string $AdditionalNotes = null,
         TenantClearanceEnum $Status,
-        User       $user
+        User $user,
+        UploadedFile $document = null
     ): self
     {
         $clearance = PropertyTenantClearance::create([
@@ -44,6 +48,16 @@ class PropertyTenantClearanceService
             'CreatedBy' => $user->Id,
             'ModifiedBy' => $user->Id,
         ]);
+
+
+        if ($document) {
+        $clearance->newDocument(
+            ModulesEnum::Property,
+            $document,
+            [PermissionEnum::TenantClearanceView->value],
+            $user
+            );
+        }
 
         activity()->causedBy($user->Id)
             ->performedOn($clearance)
@@ -62,7 +76,8 @@ class PropertyTenantClearanceService
         CodeDetail $DepositRefunded,
         string $AdditionalNotes,
         TenantClearanceEnum $Status,
-        User $user
+        User $user,
+        UploadedFile $document = null
     ): self {
         $LeaseId->update([
             'ExitDate' => $ExitDate,
@@ -74,6 +89,15 @@ class PropertyTenantClearanceService
             'Status' => $Status->value,
             'ModifiedBy' => $user->Id,
         ]);
+
+        if ($document) {
+        $LeaseId->newDocument(
+            ModulesEnum::Property,
+            $document,
+            [PermissionEnum::TenantClearanceView->value],
+            $user
+            );
+        }
 
         activity()->causedBy($user->Id)
             ->performedOn($LeaseId)

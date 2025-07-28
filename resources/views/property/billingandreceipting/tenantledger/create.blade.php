@@ -1,4 +1,4 @@
-@extends('layouts.app')
+{{-- @extends('layouts.app')
 @section('title', 'Tenant Ledger Statement')
 @section('content')
 <div class="container mt-4">
@@ -79,4 +79,4 @@
     <button class="btn btn-outline-primary">⬇ Export to PDF</button>
   </div>
 </div>
-@endsection
+@endsection --}}

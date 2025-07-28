@@ -3,6 +3,8 @@
 namespace App\Services\Property\BillingAndReceipting;
 
 use App\Models\Auth\User;
+use App\Models\Core\CodeDetail;
+use App\Models\PropertyManagement\PropertyInvoice;
 use App\Models\PropertyManagement\PropertyReceipt;
 use Exception;
 
@@ -10,43 +12,39 @@ class PropertyReceiptService
 {
 
     public static function create(
-        string $InvoiceID,
+        PropertyInvoice $InvoiceID,
         string $BillingMonth,
         string $InvoiceDate,
-        int  $RentAmount,
-        int  $ServicesCharge,
-        int  $OtherCharges,
-        int  $TotalDue,
-        int  $AmountPaid,
-        int  $Balance,
+        float  $RentAmount,
+        float  $ServicesCharge,
+        float  $ParkingFee,
+        float  $OtherCharges,
+        float  $TotalDue,
+        float  $AmountPaidSoFar,
+        float  $Balance,
         string $PaymentDate,
-        int  $Amount,
-        string $PaymentMethod,
+        int  $AmountPaidNow,
+        CodeDetail $PaymentMethod,
         string $ReferenceNo,
         string $Remarks,
         User $user
     ): PropertyReceipt
     {
 
-        // Check if a schedule already exists for the lease
-        $exists = PropertyReceipt::where('InvoiceID', $InvoiceID)->exists();
-
-        if ($exists) {
-            throw new Exception('This Invoice is already Receipted.');
-        }
         $receipt = PropertyReceipt::create([
-            'InvoiceID' => $InvoiceID,
+            'InvoiceID' => $InvoiceID->Id,
             'BillingMonth' => $BillingMonth,
             'InvoiceDate' => $InvoiceDate,
             'RentAmount' => $RentAmount,
             'ServicesCharge' => $ServicesCharge,
+            'ParkingFee'    =>  $ParkingFee,
             'OtherCharges' => $OtherCharges,
             'TotalDue' => $TotalDue,
-            'AmountPaid' => $AmountPaid,
+            'AmountPaidSoFar' => $AmountPaidSoFar,
             'Balance' => $Balance,
             'PaymentDate' => $PaymentDate,
-            'Amount' => $Amount,
-            'PaymentMethod' => $PaymentMethod,
+            'AmountPaidNow' => $AmountPaidNow,
+            'PaymentMethod' => $PaymentMethod->ID,
             'ReferenceNo' => $ReferenceNo,
             'Remarks' => $Remarks,
             'CreatedBy' => $user->Id,

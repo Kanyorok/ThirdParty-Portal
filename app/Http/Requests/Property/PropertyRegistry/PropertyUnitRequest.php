@@ -29,7 +29,7 @@ class PropertyUnitRequest extends FormRequest
             'UnitSize' => 'required|integer',
             'IsRentable' => 'required|boolean',
             'CurrentStatus' => 'required|boolean',
-            'Remarks' => 'required|string|max:50',
+            'Remarks' => 'nullable|string|max:50',
         ];
     }
 }

@@ -26,7 +26,7 @@ class PropertyUnitService
         int           $UnitSize,
         bool          $IsRentable,
         bool          $CurrentStatus,
-        string        $Remarks,
+        string        $Remarks = null,
         User          $user
     ): self
     {
