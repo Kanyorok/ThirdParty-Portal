@@ -91,7 +91,7 @@ class PropertyNewTenantController extends Controller
             $data['EmailAddress'],
             $data['Nationality'],
             $data['PostalAddress'],
-            $data['Remarks'],
+            $data['Remarks'] ?? '',
             $data['IsActive'],
             $request->user()
         );

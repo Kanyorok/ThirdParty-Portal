@@ -76,7 +76,7 @@ class PropertyAttachmentsController extends Controller
             'PropertyID'         => $validated['PropertyID'],
             'DocumentTitle'         => $validated['DocumentTitle'],
             'DocumentType'         => $validated['DocumentType'],
-            'Description'         => $validated['Description'],
+            'Description'         => $validated['Description'] ?? '',
             'ModifiedBy'       => Auth::id(),
         ]);
 

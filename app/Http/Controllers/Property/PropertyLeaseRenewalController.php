@@ -112,7 +112,7 @@ class PropertyLeaseRenewalController extends Controller
                 $validated['ServiceCharge'] ?? 0,
                 $validated['ParkingFee'] ?? 0,
                 $validated['OtherCharges'] ?? 0,
-                $validated['Remarks'],
+                $validated['Remarks'] ?? '',
                 Auth::user()
             );
 

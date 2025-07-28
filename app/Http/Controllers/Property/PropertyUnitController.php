@@ -96,7 +96,7 @@ class PropertyUnitController extends Controller
             'UnitSize' => 'required|integer',
             'IsRentable' => 'required|boolean',
             'CurrentStatus' => 'required|boolean',
-            'Remarks' => 'required|string|max:50',
+            'Remarks' => 'nullable|string|max:50',
 
         ]);
 
@@ -113,7 +113,7 @@ class PropertyUnitController extends Controller
                 'UnitSize' => $validated['UnitSize'],
                 'IsRentable' => $validated['IsRentable'],
                 'CurrentStatus' => $validated['CurrentStatus'],
-                'Remarks' => $validated['Remarks'],
+                'Remarks' => $validated['Remarks'] ?? '',
                 'ModifiedBy' => Auth::Id(),
             ]);
 

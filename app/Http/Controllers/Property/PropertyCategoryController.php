@@ -56,7 +56,7 @@ class PropertyCategoryController extends Controller
         $this->authorize(PermissionEnum::PropertyCategoryUpdate, CategoryMaster::class);
         $validated = $request->validate([
             'Name' => 'required|string|max:50',
-            'Description' => 'required|string|max:100',
+            'Description' => 'nullable|string|max:100',
 
         ]);
 
@@ -67,7 +67,7 @@ class PropertyCategoryController extends Controller
 
             $category->update([
                 'Name' => $validated['Name'],
-                'Description' => $validated['Description'],
+                'Description' => $validated['Description'] ?? '',
                 'CreatedBy' => Auth::Id(),
                 'ModifiedBy' => Auth::Id(),
             ]);

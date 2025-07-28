@@ -95,7 +95,7 @@ class PropertyTenantClearanceController extends Controller
             $validatedData['AllDuesPaid'],
             $validatedData['KeysReturned'],
             $depositRefunded,
-            $validatedData['AdditionalNotes'],
+            $validatedData['AdditionalNotes'] ?? '',
             $statusEnum,
             $request->user(),
             $document

@@ -90,7 +90,7 @@ class PropertyFloorController extends Controller
             'PropertyID' => 'required|exists:t_PropertyRegistry,Id',
             'BlockID' => 'required|exists:t_PropertyBlock,Id',
             'FloorLabel' => 'required|string|max:50',
-            'FloorNotes' => 'required|string|max:100',
+            'FloorNotes' => 'nullable|string|max:100',
 
         ]);
 
@@ -103,7 +103,7 @@ class PropertyFloorController extends Controller
                 'PropertyID' => $validated['PropertyID'],
                 'BlockID' => $validated['BlockID'],
                 'FloorLabel' => $validated['FloorLabel'],
-                'FloorNotes' => $validated['FloorNotes'],
+                'FloorNotes' => $validated['FloorNotes'] ?? '',
                 'ModifiedBy' => Auth::Id(),
             ]);
 

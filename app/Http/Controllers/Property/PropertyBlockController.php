@@ -59,7 +59,7 @@ class PropertyBlockController extends Controller
         $validated = $request->validate([
             'PropertyID' => 'required|exists:t_PropertyRegistry,Id',
             'BlockName' => 'required|string|max:50',
-            'Description' => 'required|string|max:100',
+            'Description' => 'nullable|string|max:100',
 
         ]);
 
@@ -71,7 +71,7 @@ class PropertyBlockController extends Controller
             $block->update([
                 'PropertyID' => $validated['PropertyID'],
                 'BlockName' => $validated['BlockName'],
-                'Description' => $validated['Description'],
+                'Description' => $validated['Description'] ?? '',
                 'CreatedBy' => Auth::Id(),
                 'ModifiedBy' => Auth::Id(),
             ]);
