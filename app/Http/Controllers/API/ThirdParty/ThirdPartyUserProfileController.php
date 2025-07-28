@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\ThirdParty;
+namespace App\Http\Controllers\API\ThirdParty;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ThirdPartyAuth\UpdateThirdPartyUserProfileRequest as ThirdPartyAuthUpdateThirdPartyUserProfileRequest;

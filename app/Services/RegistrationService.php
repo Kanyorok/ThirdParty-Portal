@@ -2,28 +2,62 @@
 
 namespace App\Services;
 
+use App\Models\ThirdParty\ThirdParties;
 use App\Models\ThirdParty\ThirdPartyUser;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Auth\Events\Registered;
+use Illuminate\Support\Facades\DB;
+use App\Enums\ThirdPartyStatusEnum;
 
+/**
+ * Class RegistrationService
+ * Handles user registration and third-party details registration.
+ * 2-step process: personal info then third-party details.
+ * Considering bank details here; but for later
+ */
 class RegistrationService
 {
-    public function registerUser(array $data): ThirdPartyUser
+    public function registerUser(array $userData): ThirdPartyUser
     {
-        return DB::transaction(function () use ($data) {
-            $user = ThirdPartyUser::create([
-                'FirstName' => $data['FirstName'],
-                'LastName' => $data['LastName'],
-                'Email' => $data['Email'],
-                'Phone' => $data['Phone'],
-                'Password' => Hash::make($data['Password']),
-                'CreatedBy' => null,
+        return ThirdPartyUser::create([
+            'FirstName' => $userData['FirstName'],
+            'LastName' => $userData['LastName'],
+            'Email' => $userData['Email'],
+            'Phone' => $userData['Phone'],
+            'Password' => Hash::make($userData['Password']),
+            'IsActive' => false,
+        ]);
+    }
+
+    public function registerThirdPartyDetails(string $userId, array $thirdPartyData): ThirdParties
+    {
+        return DB::transaction(function () use ($userId, $thirdPartyData) {
+            $user = ThirdPartyUser::where('UserID', $userId)->firstOrFail();
+
+            if ($user->ThirdPartyId !== null) {
+                throw new \Exception('User is already associated with a third party.');
+            }
+
+            $thirdParty = ThirdParties::create([
+                'ThirdPartyName' => $thirdPartyData['ThirdPartyName'],
+                'TradingName' => $thirdPartyData['TradingName'] ?? null,
+                'BusinessType' => $thirdPartyData['BusinessType'],
+                'RegistrationNumber' => $thirdPartyData['RegistrationNumber'],
+                'TaxPIN' => $thirdPartyData['TaxPIN'] ?? null,
+                'VATNumber' => $thirdPartyData['VATNumber'] ?? null,
+                'Country' => $thirdPartyData['Country'],
+                'PhysicalAddress' => $thirdPartyData['PhysicalAddress'],
+                'Email' => $thirdPartyData['Email'],
+                'Phone' => $thirdPartyData['Phone'],
+                'Website' => $thirdPartyData['Website'] ?? null,
+                'ThirdPartyType' => $thirdPartyData['ThirdPartyType'],
+                'Status' => ThirdPartyStatusEnum::Inactive,
+                'CreatedBy' => $user->Id,
             ]);
 
-            event(new Registered($user));
+            $user->ThirdPartyId = $thirdParty->Id;
+            $user->save();
 
-            return $user;
+            return $thirdParty;
         });
     }
 }

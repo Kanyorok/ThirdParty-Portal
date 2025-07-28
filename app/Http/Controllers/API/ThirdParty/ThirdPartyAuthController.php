@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\ThirdParty;
+namespace App\Http\Controllers\API\ThirdParty;
 
 use App\Http\Controllers\Controller;
 use App\Models\ThirdParty\ThirdPartyUser;
 use App\Http\Requests\ThirdPartyAuth\RegisterThirdPartyUserRequest;
+use App\Http\Requests\ThirdPartyAuth\LoginThirdPartyRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -27,13 +28,11 @@ class ThirdPartyAuthController extends Controller
     {
         try {
             $userData = $this->registrationService->registerUser($request->validated());
-            $token = $userData->createToken('auth-token', ['*'], now()->addDays(config('sanctum.expiration', 7)))->plainTextToken;
 
             return response()->json([
-                'message' => __('auth.registration_successful'),
-                'user' => new ThirdPartyUserResource($userData),
-                'token' => $token,
-                'token_type' => 'Bearer',
+                'message' => __('auth.registration_personal_successful'),
+                'user_id' => $userData->UserID,
+                'redirect_url' => '/register/third-party-details?user_id=' . $userData->UserID,
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
@@ -43,7 +42,7 @@ class ThirdPartyAuthController extends Controller
         }
     }
 
-    public function login(Request $request): JsonResponse
+    public function login(LoginThirdPartyRequest $request): JsonResponse
     {
         try {
             $user = ThirdPartyUser::where('Email', $request->email)->first();
@@ -63,15 +62,16 @@ class ThirdPartyAuthController extends Controller
             $token = $user->createToken('api')->plainTextToken;
 
             return response()->json([
-                'user' => new ThirdPartyUserResource($user),
+                'user' => new ThirdPartyUserResource($user->load('thirdParty')),
                 'token' => $token,
+                'token_type' => 'Bearer',
             ]);
         } catch (ValidationException $e) {
             throw $e;
         } catch (\Exception $e) {
             return response()->json([
                 'message' => __('auth.login_failed'),
-                'error' => $e->getMessage(),
+                'error' => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }
     }
@@ -88,7 +88,7 @@ class ThirdPartyAuthController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'message' => __('auth.logout_failed'),
-                'error' => $e->getMessage(),
+                'error' => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }
     }
@@ -107,16 +107,14 @@ class ThirdPartyAuthController extends Controller
 
         if ($user->markEmailAsVerified()) {
             event(new Verified($user));
-            $user->IsActive = true;
-            $user->save();
         }
 
         return response()->json(['message' => __('auth.email_verified')], 200);
     }
 
-    public function resendVerification(): JsonResponse
+    public function resendVerification(Request $request): JsonResponse
     {
-        $user = $this->resolveThirdPartyUser();
+        $user = $this->resolveThirdPartyUser($request->user_id);
 
         if (! $user) {
             return response()->json(['message' => __('auth.unauthenticated')], 401);
@@ -133,6 +131,6 @@ class ThirdPartyAuthController extends Controller
 
     private function resolveThirdPartyUser(?string $id = null): ?ThirdPartyUser
     {
-        return Auth::guard('sanctum')->user() ?? ($id ? ThirdPartyUser::find($id) : null);
+        return Auth::guard('sanctum')->user() ?? ($id ? ThirdPartyUser::where('UserID', $id)->first() : null);
     }
 }

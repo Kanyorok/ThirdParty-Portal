@@ -17,6 +17,7 @@ Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function (
     require __DIR__ . '/legal.php';
     require __DIR__ . '/hrms.php';
     require __DIR__ . '/budget.php';
+    require __DIR__ . '/thirdparty.php';
 
     Route::namespace('Settings')->prefix('settings')->group(function () {
         Route::get('lists', 'SettingsController@lists')->name('settings.lists');
@@ -43,8 +44,8 @@ Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function (
 
         Route::resource('branches', 'CrmBranchController')->parameters(['branches' => 'crm_branch'])->except(['edit', 'create', 'show']);
 
-Route::resource('roles', 'RoleController'); // remove ->except(['show'])
-Route::get('roles/{id}/ajax', 'RoleController@showAjax')->name('roles.showAjax');
+        Route::resource('roles', 'RoleController'); // remove ->except(['show'])
+        Route::get('roles/{id}/ajax', 'RoleController@showAjax')->name('roles.showAjax');
 
 
         Route::namespace('Users')->group(function () {

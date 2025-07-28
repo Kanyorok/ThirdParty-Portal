@@ -9,4 +9,15 @@ enum BusinessTypeEnum: string
     case Corporation = 'Corporation';
     case LimitedLiabilityCompany = 'LLC';
     case NonProfitOrganization = 'NGO';
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::SoleProprietorship => 'Sole Proprietorship',
+            self::Partnership => 'Partnership',
+            self::Corporation => 'Corporation',
+            self::LimitedLiabilityCompany => 'Limited Liability Company',
+            self::NonProfitOrganization => 'Non-Profit Organization',
+        };
+    }
 }

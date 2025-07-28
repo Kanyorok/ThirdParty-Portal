@@ -6,6 +6,7 @@ use App\Enums\ThirdPartyApprovalStatusEnum;
 use App\Enums\ThirdPartyStatusEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Enums\ThirdPartyTypeEnum;
@@ -52,11 +53,19 @@ class ThirdParties extends Model
         'ApprovalStatus' => ThirdPartyApprovalStatusEnum::class,
     ];
 
-    public function users(): HasMany
+    protected static function boot()
     {
-        return $this->hasMany(ThirdPartyUser::class, 'ThirdPartyId');
+        parent::boot();
+        static::creating(function ($model) {
+            $model->ApprovalStatus = ThirdPartyApprovalStatusEnum::Pending;
+        });
     }
 
+    public function users(): HasOne
+    {
+        return $this->hasOne(ThirdPartyUser::class, 'ThirdPartyId');
+    }
+    // a third party can select multiple categories
     public function categories(): BelongsToMany
     {
         return $this->belongsToMany(ThirdPartyCategory::class, 't_ThirdPartiesCategories', 'ThirdPartyId', 'CategoryID')
@@ -73,7 +82,11 @@ class ThirdParties extends Model
     {
         return $query->where('ThirdPartyType', ThirdPartyTypeEnum::Supplier);
     }
-
+    public function getKRANoAttribute(): string
+    {
+        return $this->KraPin ?: $this->RegistrationNumber;
+    }
+    // TODO: deliberate on the number of bank details a third party can have
     public function bankDetails(): HasMany
     {
         return $this->hasMany(ThirdPartiesBankDetails::class, 'ThirdPartyId', 'Id');

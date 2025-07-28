@@ -14,6 +14,8 @@ class ThirdPartiesBankDetailsSeeder extends Seeder
 {
     public function run(): void
     {
+        // $this->call(CurrencySeeder::class);
+
         $thirdParty = ThirdParties::first();
 
         if (!$thirdParty) {
@@ -29,40 +31,29 @@ class ThirdPartiesBankDetailsSeeder extends Seeder
                     'ApprovalStatus' => ThirdPartyApprovalStatusEnum::Approved,
                     'Status' => ThirdPartyStatusEnum::Active,
                     'CreatedBy' => 1,
-                    'CreatedOn' => now(),
-                    'ModifiedBy' => 1,
-                    'ModifiedOn' => now(),
                 ]
             );
         }
 
         ThirdPartiesBankDetails::firstOrCreate(
-            ['AccountNumber' => '1234567890'],
+            ['AccountNumber' => '1234567890', 'ThirdPartyId' => $thirdParty->Id],
             [
-                'ThirdPartyID' => $thirdParty->Id,
                 'BankName' => 'National Bank',
                 'Branch' => 'Main Branch',
-                'CurrencyId' => 'KES',
+                'CurrencyId' => 1,
                 'SwiftCode' => 'NBKKENA',
                 'CreatedBy' => 1,
-                'ModifiedBy' => 1,
-                'CreatedOn' => now(),
-                'ModifiedOn' => now(),
             ]
         );
 
         ThirdPartiesBankDetails::firstOrCreate(
-            ['AccountNumber' => '0987654321'],
+            ['AccountNumber' => '0987654321', 'ThirdPartyId' => $thirdParty->Id],
             [
-                'ThirdPartyID' => $thirdParty->Id,
                 'BankName' => 'Commercial Bank',
                 'Branch' => 'City Branch',
-                'CurrencyId' => 'USD',
+                'CurrencyId' => 2,
                 'SwiftCode' => 'CBKKENA',
                 'CreatedBy' => 1,
-                'ModifiedBy' => 1,
-                'CreatedOn' => now(),
-                'ModifiedOn' => now(),
             ]
         );
     }

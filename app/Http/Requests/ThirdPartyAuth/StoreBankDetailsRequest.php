@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\ThirdPartyBankDetail;
+namespace App\Http\Requests\ThirdPartyAuth;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -12,12 +12,8 @@ class StoreBankDetailsRequest extends FormRequest
         $user = auth()->guard('sanctum')->user();
 
         if (!$user) {
-            return false;
+            return true;
         }
-
-        // if ($user->isAdmin()) {
-        //     return true;
-        // }
 
         $thirdPartyId = $this->input('ThirdPartyId');
 
@@ -34,6 +30,7 @@ class StoreBankDetailsRequest extends FormRequest
                 'required',
                 'string',
                 'max:100',
+                'regex:/^\d+$/',
                 Rule::unique('t_ThirdPartiesBankDetails', 'AccountNumber')->where(function ($query) {
                     return $query->where('ThirdPartyId', $this->input('ThirdPartyId'));
                 }),

@@ -16,11 +16,11 @@ return new class extends Migration
             $table->string('CurrencyId')->nullable();
             $table->string('SwiftCode')->nullable();
 
-            $table->foreignId('CreatedBy')->nullable()->constrained('t_Users', 'Id');
+            $table->foreignId('CreatedBy')->nullable()->constrained('t_ThirdPartyUsers', 'Id');
             $table->timestamp('CreatedOn')->nullable();
-            $table->foreignId('ModifiedBy')->nullable()->constrained('t_Users', 'Id');
+            $table->foreignId('ModifiedBy')->nullable()->constrained('t_ThirdPartyUsers', 'Id');
             $table->timestamp('ModifiedOn')->nullable();
-            $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
+            $table->foreignId('DeletedBy')->nullable()->constrained('t_ThirdPartyUsers', 'Id');
             $table->softDeletes('DeletedOn');
 
             $table->foreignId('ThirdPartyId')->constrained('t_ThirdParties', 'Id');

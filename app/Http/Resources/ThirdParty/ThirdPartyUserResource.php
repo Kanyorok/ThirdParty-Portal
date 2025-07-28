@@ -4,33 +4,29 @@ namespace App\Http\Resources\ThirdParty;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use App\Http\Resources\ThirdParty\ThirdPartyResource;
 
 class ThirdPartyUserResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
         return [
-            'Id' => $this->Id,
-            'UserId' => $this->UserID,
-            'FirstName' => $this->FirstName,
-            'LastName' => $this->LastName,
-            'FullName' => $this->FullName,
-            'Email' => $this->Email,
-            'Phone' => $this->Phone,
-            'ImageId' => $this->ImageId,
-            'Gender' => $this->Gender?->value,
-            'ThirdPartyId' => $this->ThirdPartyId,
-
-            'CreatedOn' => optional($this->CreatedOn)->format('Y-m-d H:i:s'),
-            'ModifiedOn' => optional($this->ModifiedOn)->format('Y-m-d H:i:s'),
-            'EmailVerifiedOn' => optional($this->EmailVerifiedOn)->format('Y-m-d H:i:s'),
-
-            'IsApproved' => $this->relationLoaded('thirdParty') ? $this->isApproved() : null,
-            'IsSupplier' => $this->relationLoaded('thirdParty') ? $this->isSupplier() : null,
-            'IsActive' => $this->relationLoaded('thirdParty') ? $this->isActive() : null,
-
-            'ThirdParty' => new ThirdPartyResource($this->whenLoaded('thirdParty')),
+            'id' => $this->Id,
+            'userId' => $this->UserID,
+            'firstName' => $this->FirstName,
+            'lastName' => $this->LastName,
+            'fullName' => $this->FullName,
+            'email' => $this->Email,
+            'phone' => $this->Phone,
+            'imageId' => $this->ImageId,
+            'gender' => $this->Gender?->value,
+            'thirdPartyId' => $this->ThirdPartyId,
+            'isActive' => (bool) $this->IsActive,
+            'isApproved' => $this->whenLoaded('thirdParty', fn() => $this->isApproved()),
+            'isSupplier' => $this->whenLoaded('thirdParty', fn() => $this->isSupplier()),
+            'emailVerifiedOn' => optional($this->EmailVerifiedOn)->format('Y-m-d H:i:s'),
+            'createdOn' => optional($this->CreatedOn)->format('Y-m-d H:i:s'),
+            'modifiedOn' => optional($this->ModifiedOn)->format('Y-m-d H:i:s'),
+            'thirdParty' => ThirdPartyResource::make($this->whenLoaded('thirdParty')),
         ];
     }
 }

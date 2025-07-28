@@ -52,4 +52,11 @@ return [
     'email_verified'            => 'Email Successfully Verified',
     'unauthenticated'           => 'Unauthenticated',
     'invalid_fields'            => 'Provide Valid Fields for Update',
+    'third_party_details_submitted' => 'Third party details submitted successfully.',
+    'third_party_submission_failed' => 'Failed to submit third party details. Please try again later.',
+    'third_party_already_approved' => 'Third party is already approved.',
+    'user_not_found'            => 'User Not Found',
+    'registration_number_already_exists' => 'Registration number already exists',
+    'tax_pin_exists' =>         'Tax Pin already registered',
+ 'email_exists'     => 'This Email address is in use',
 ];

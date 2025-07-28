@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Models\Core\Currency;
+use App\Models\ThirdParty\ThirdPartyUser;
 
 class ThirdPartiesBankDetails extends Model
 {
@@ -42,30 +43,16 @@ class ThirdPartiesBankDetails extends Model
         'CurrencyId' => 'integer',
     ];
 
-    /**
-     * Get the third party associated with the bank detail.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
     public function thirdParty(): BelongsTo
     {
         return $this->belongsTo(ThirdParties::class, 'ThirdPartyId', 'Id');
     }
 
-    /**
-     * Get the creator of the bank detail.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(ThirdParties::class, 'CreatedBy', 'Id');
+        return $this->belongsTo(ThirdPartyUser::class, 'CreatedBy', 'Id');
     }
-    /**
-     * Accepted currency for the bank detail?
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
+
     public function currency(): BelongsTo
     {
         return $this->belongsTo(Currency::class, 'CurrencyId', 'Id');

@@ -72,7 +72,7 @@ return [
         ],
         'thirdparties' => [
             'driver' => 'eloquent',
-            'model' => App\Models\ThirdPartyUser::class,
+            'model' => App\Models\ThirdParty\ThirdPartyUser::class,
         ],
 
         // 'users' => [
