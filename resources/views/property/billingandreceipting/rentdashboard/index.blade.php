@@ -2,7 +2,7 @@
 @section('title', 'Rent Collection Dashboard')
 @section('content')
 <div class="container mt-4">
-    <h4 class="mb-4">🏠 Rent Collection Dashboard</h4>
+    <h4 class="mb-4">Rent Collection Dashboard</h4>
 
     <!-- Summary Cards -->
     <div class="row mb-4">
@@ -40,27 +40,39 @@
         </div>
     </div>
 
-    <!-- Filters (static options for now) -->
-    <form class="row g-2 mb-3">
+    <!-- Filters -->
+    <form class="row g-2 mb-3" method="GET" action="{{ route('rentdashboard.index') }}">
         <div class="col-md-3">
-            <select class="form-select">
-                <option selected>All Branches</option>
+            <select name="property_id" class="form-select">
+                <option value="">All Properties</option>
+                @foreach($properties as $property)
+                    <option value="{{ $property->Id }}" {{ request('property_id') == $property->id ? 'selected' : '' }}>
+                        {{ $property->PropertyName }}
+                    </option>
+                @endforeach
             </select>
         </div>
+
         <div class="col-md-3">
-            <select class="form-select">
-                <option selected>All Properties</option>
+            <select name="tenant_id" class="form-select">
+                <option value="">All Tenants</option>
+                @foreach($tenants as $tenant)
+                    <option value="{{ $tenant->Id }}" {{ request('tenant_id') == $tenant->id ? 'selected' : '' }}>
+                        {{ $tenant->TenantName }}
+                    </option>
+                @endforeach
             </select>
         </div>
+
         <div class="col-md-3">
-            <select class="form-select">
-                <option selected>All Tenants</option>
-            </select>
+            <input type="month" name="billing_month" class="form-control" value="{{ request('billing_month') }}">
         </div>
+
         <div class="col-md-3">
-            <input type="month" class="form-control">
+            <button type="submit" class="btn btn-primary w-100">Filter</button>
         </div>
     </form>
+
 
     <!-- Data Grid -->
     <div class="table-responsive mb-4">
@@ -69,6 +81,7 @@
                 <tr>
                     <th>#</th>
                     <th>Tenant</th>
+                    <th>Property</th>
                     <th>Unit</th>
                     <th>Due Date</th>
                     <th>Amount Due</th>
@@ -81,6 +94,7 @@
                 @foreach($invoices as $invoice)
                 @php
                     $tenant = $invoice->lease->tenant->TenantName ?? 'N/A';
+                    $property = $invoice->lease->property->PropertyName ?? 'N/A';
                     $unit = $invoice->lease->unit->UnitCode ?? 'N/A';
                     $due = $invoice->RentAmount + $invoice->ServicesCharge + $invoice->ParkingFee + $invoice->OtherCharges;
                     $paid = $invoice->receipts->sum('AmountPaidNow');
@@ -90,6 +104,7 @@
                 <tr>
                     <td>{{ $loop->iteration }}</td>
                     <td>{{ $tenant }}</td>
+                    <td>{{ $property }}</td>
                     <td>{{ $unit }}</td>
                     <td>{{ \Carbon\Carbon::parse($invoice->InvoiceDate)->format('Y-m-d') }}</td>
                     <td>KES {{ number_format($due) }}</td>
@@ -113,17 +128,78 @@
             </tbody>
         </table>
     </div>
-
-    <!-- Chart Placeholder -->
+    <!-- Chart Container -->
     <div class="card">
         <div class="card-header">
-            <h6 class="mb-0">📈 Collection Trend</h6>
+            <h6 class="mb-0">Invoices vs Collections by Month</h6>
         </div>
         <div class="card-body">
-            <div style="height: 300px; background: #f0f0f0; display: flex; align-items: center; justify-content: center;">
-                <span>[Bar Chart Placeholder]</span>
-            </div>
+            <canvas id="collectionChart" height="100"></canvas>
         </div>
     </div>
+
 </div>
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('collectionChart').getContext('2d');
+
+    const labels = {!! json_encode($chartData->keys()) !!};
+    const invoicedData = {!! json_encode($chartData->pluck('invoiced')->values()) !!};
+    const collectedData = {!! json_encode($chartData->pluck('collected')->values()) !!};
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Invoiced',
+                    data: invoicedData,
+                    backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Collected',
+                    data: collectedData,
+                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            interaction: {
+                mode: 'index',
+                intersect: false
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Amount (KES)'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Month'
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
+                }
+            }
+        }
+    });
+</script>
+@endpush
+
 @endsection
