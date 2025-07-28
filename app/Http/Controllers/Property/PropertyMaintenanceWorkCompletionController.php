@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Property;
 
+use App\Enums\Core\PostingEnum;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use App\Enums\Core\PermissionEnum;
@@ -23,7 +24,7 @@ class PropertyMaintenanceWorkCompletionController extends Controller
 
     public function create(){
         $this->authorize(PermissionEnum::PropertyMaintenanceWorkCompletionCreate, PropertyMaintenanceWorkCompletion::class);
-        $assignments = PropertyMaintenanceAssign::with('request')->get();
+        $assignments = PropertyMaintenanceAssign::where('Status','!=',PostingEnum::Completed)->with('request')->get();
         $finalstatus = CodeDetail::where('CodeID', 'FinalStatus')->get();
         return view('property.maintenanceandissues.workcompletion.create', compact('assignments', 'finalstatus'));
     }
@@ -39,7 +40,7 @@ class PropertyMaintenanceWorkCompletionController extends Controller
         $document = $request->file('Document');
 
         $user = Auth::user();
-        //dd('validation passed');
+
         $workCompletion = PropertyMaintenanceWorkCompletionService::create(
             $requestNumber,
             $validated['CompletionDate'],

@@ -23,65 +23,90 @@
     {{--    </div> --}}
 
     <div class="container">
-        <h2 class="text-center my-4">@yield('title')</h2>
-
-        <!-- Top Buttons -->
-        <div class="d-flex justify-content-between mb-3">
-            <div>
-                <button class="btn btn-primary">New LPO</button>
-                <button class="btn btn-secondary">Open</button>
-                <button class="btn btn-info">Print</button>
-            </div>
-            <button class="btn btn-success">Place Order</button>
+        <div class="d-flex justify-content-end align-items-center my-3">
+            <a href="{{ route('purchaseOrder.index') }}" class="btn btn-secondary">
+                <i class="fa fa-arrow-left"></i> Back to Orders
+            </a>
         </div>
-        <form action="{{ route('purchaseOrder.store') }}" method="post" id="purchaseOrdersForm">
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <strong>There were some problems with your input:</strong>
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+        <form action="{{ route('purchaseOrder.store') }}" method="post" id="purchaseOrdersForm" novalidate>
             @csrf
-            <!-- Supplier & Details -->
+            <!-- RFQ Selection First -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <label>Reference Number (RFQ) <span class="text-danger">*</span></label>
+                    <select class="form-control refNo @error('refNo') is-invalid @enderror" name="refNo" id="refNo" required>
+                        <option selected disabled>Select RFQ</option>
+                        @foreach($rfqs as $rfq)
+                            <option value="{{ $rfq->RFQNumber }}" {{ old('refNo') == $rfq->RFQNumber ? 'selected' : '' }}>{{ $rfq->RFQNumber ?? '' }}</option>
+                        @endforeach
+                    </select>
+                    @error('refNo')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div class="col-md-4">
+                    <label>LPO Number <span class="text-danger">*</span></label>
+                    <input type="text" name="LPONo" class="form-control @error('LPONo') is-invalid @enderror" value="{{ old('LPONo', uniqid('LPO-')) }}" readonly required/>
+                    @error('LPONo')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div class="col-md-4">
+                    <label>Date <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control poDate @error('pODate') is-invalid @enderror" name="pODate" value="{{ old('pODate') }}" required/>
+                    @error('pODate')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
+
+            <!-- Supplier & Details (after RFQ) -->
             <div class="row mb-4">
                 <div class="col-md-6">
-                    <label>Supplier</label>
-                    <select class="form-control supplier" id="supplier" name="supplier">
+                    <label>Supplier <span class="text-danger">*</span></label>
+                    <select class="form-control supplier @error('supplier') is-invalid @enderror" id="supplier" name="supplier" required>
                         <option selected disabled>Select supplier</option>
-                        {{--                        <option value="01">Supplier 1</option>--}}
-                        {{--                        <option value="02">Supplier 2</option>--}}
-                        @foreach ($suppliers as $vendor)
-                            <option value="{{ $vendor->Id }}">{{ $vendor->Name }}</option>
-                        @endforeach
-
-                        <!-- Loop suppliers here -->
+                        {{-- Options will be populated by JS based on selected RFQ --}}
                     </select>
+                    @error('supplier')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
                 </div>
                 <div class="col-md-6">
                     <label>Address</label>
-                    <input type="text" class="form-control" name="address" placeholder="Supplier address"/>
+                    <input type="text" class="form-control" name="address" placeholder="Supplier address" readonly/>
                 </div>
             </div>
 
-            <!-- LPO Details -->
+            <!-- Other LPO Details -->
             <div class="row mb-4">
-                <div class="col-md-4">
-                    <label>LPO Number</label>
-                    <input type="text" name="LPONo" class="form-control" value="{{ uniqid('LPO-') }}" readonly/>
-                </div>
-                <div class="col-md-4">
-                    <label>Date</label>
-                    <input type="date" class="form-control poDate" name="pODate"/>
-                </div>
-                <div class="col-md-4">
-                    <label>Reference Number</label>
-                    <input type="text" class="form-control refNo" name="refNo" placeholder="RFQ Number"/>
-                </div>
                 <div class="col-md-4 mt-2">
-                    <label>Priority</label>
-                    <select class="form-control priority" name="priority">
-                        <option>High</option>
-                        <option>Medium</option>
-                        <option>Low</option>
+                    <label>Priority <span class="text-danger">*</span></label>
+                    <select class="form-control priority @error('priority') is-invalid @enderror" name="priority" required>
+                        <option value="High" {{ old('priority') == 'High' ? 'selected' : '' }}>High</option>
+                        <option value="Medium" {{ old('priority') == 'Medium' ? 'selected' : '' }}>Medium</option>
+                        <option value="Low" {{ old('priority') == 'Low' ? 'selected' : '' }}>Low</option>
                     </select>
+                    @error('priority')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
                 </div>
                 <div class="col-md-4 mt-2">
-                    <label>Payment Terms</label>
-                    <input type="text" name="terms" class="form-control terms" placeholder="e.g., Net 30, 50%"/>
+                    <label>Payment Terms <span class="text-danger">*</span></label>
+                    <input type="text" name="terms" class="form-control terms @error('terms') is-invalid @enderror" placeholder="e.g., Net 30, 50%" value="{{ old('terms') }}" required/>
+                    @error('terms')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
                 </div>
             </div>
 
@@ -98,13 +123,13 @@
                     <thead class="table-light">
                     <tr>
                         <th style="width: 3%; min-width: 30px;">#</th>
-                        <th style="width: 10%; min-width: 100px;">Item Type</th>
-                        <th style="width: 15%; min-width: 150px;">Item Name</th>
+                        <th style="width: 10%; min-width: 100px;">Item Type <span class="text-danger">*</span></th>
+                        <th style="width: 15%; min-width: 150px;">Item Name <span class="text-danger">*</span></th>
                         <th style="width: 20%; min-width: 200px;">Item Description</th>
-                        <th style="width: 5%; min-width: 80px;">Quantity</th>
-                        <th style="width: 10%; min-width: 100px;">Unit Price</th>
-                        <th style="width: 5%; min-width: 80px;">Tax</th>
-                        <th style="width: 5%; min-width: 80px;">Discount</th>
+                        <th style="width: 5%; min-width: 80px;">Quantity <span class="text-danger">*</span></th>
+                        <th style="width: 10%; min-width: 100px;">Unit Price <span class="text-danger">*</span></th>
+                        <th style="width: 5%; min-width: 80px;">Tax %</th>
+                        <th style="width: 5%; min-width: 80px;">Discount %</th>
                         <th style="width: 15%; min-width: 150px;">Line Total</th>
                     </tr>
                     </thead>
@@ -112,43 +137,37 @@
                     <tr>
                         <td class="line-no">1.</td>
                         <td class="text-start">
-                            <select class="form-select form-select-sm type" name="type[]" id="Type">
+                            <select class="form-select form-select-sm type" name="type[]" id="Type" required>
                                 <option disabled selected>Select Type</option>
                                 @foreach ($itemTypes as $type)
                                     <option value="{{ $type->Id }}">{{ $type->TypeName }}</option>
                                 @endforeach
-                                {{--                                <option value="Stock">Stock</option>--}}
-                                {{--                                <option value="Asset">Asset</option>--}}
-                                {{--                                <option value="Non-Stock">Non-Stock</option>--}}
                             </select>
                         </td>
                         <td class="text-start">
-                            <select class="form-select form-select-sm itemCode" name="itemCode[]" id="Item">
+                            <select class="form-select form-select-sm itemCode" name="itemCode[]" id="Item" required>
                                 <option disabled selected>Select Item Code</option>
-
-                                {{--                                                                <option value="1">Item1</option>--}}
-                                {{--                                                                <option value="2">Item2</option>--}}
                             </select>
                         </td>
-                        {{--                    <td><input type="text" class="form-control" name="itemCode[]"></td> --}}
                         <td class="text-start">
-                                <textarea class="form-control form-control-sm itemDescription" name="itemDescription[]"
-                                          id="Description" cols="30"
-                                          rows="5" readonly
-                                          style="display: flex; align-items: center; justify-content: center; text-align: center; padding: 0; resize: none;"></textarea>
-                            {{--                            <input type="text" class="form-control form-control-sm itemDescription" --}}
-                            {{--                                name="itemDescription[]" id="Description" readonly> --}}
+                            <textarea class="form-control form-control-sm itemDescription" name="itemDescription[]"
+                                      id="Description" cols="30"
+                                      rows="5" readonly
+                                      style="display: flex; align-items: center; justify-content: center; text-align: center; padding: 0; resize: none;"></textarea>
                         </td>
                         <td class="text-start"><input type="number" class="form-control form-control-sm qty quantity"
-                                                      name="quantity[]" id="Quantity" step="any"></td>
+                                                      name="quantity[]" id="Quantity" step="any" required></td>
                         <td class="text-start"><input type="number" class="form-control form-control-sm unit-price "
-                                                      name="unitPrice[]" id="Price" step="any"></td>
+                                                      name="unitPrice[]" id="Price" step="any" required></td>
                         <td class="text-start"><input type="number" class="form-control form-control-sm tax"
                                                       name="tax[]" id="Tax" step="any"></td>
                         <td class="text-start"><input type="number" class="form-control form-control-sm discount"
                                                       name="discount[]" id="Discount" step="any"></td>
                         <td class="text-start"><input type="number" class="form-control form-control-sm line-total"
-                                                      name="lineTotal[]" id="lineTotal" step="any"></td>
+                                                      name="lineTotal[]" id="lineTotal" step="any" readonly></td>
+                        <td class="text-center align-middle">
+                            <button type="button" class="btn btn-sm btn-danger remove-row" title="Remove Item"><i class="fa fa-trash"></i> Remove</button>
+                        </td>
                     </tr>
                     </tbody>
                 </table>
@@ -192,50 +211,48 @@
 @section('scripts')
 
     <script>
+        // Prepare RFQ responses for JS (for supplier filtering)
+        const rfqResponses = @json($rfqResponses);
+    </script>
+
+    <script>
         const itemTypeOptions = `{!! $itemTypes->map(function($type) {
         return "<option value='{$type->Id}'>{$type->TypeName}</option>";
     })->implode('') !!}`;
     </script>
 
     <script>
-        function fetchSuppliers() {
-            const supplierUrl = "{{ route('purchaseOrder.getSuppliers') }}"
 
-
-            // console.log(supplierUrl);
-
-            $.ajax({
-                url: supplierUrl,
-                type: 'GET',
-                dataType: 'json',
-                success: function (response) {
-                    console.log('AJAX Response:', response);
-
-
-                    if (!response || !response.data || response.data.length === 0) {
-                        console.warn('No suppliers found');
-                        $('#supplier').html('<option selected disabled>No suppliers available</option>');
-                        return;
-                    }
-
-                    let supplierSelect = $('#supplier');
-                    if (supplierSelect.children().length <= 1) {
-                        supplierSelect.empty().append('<option selected disabled>Select supplier</option>');
-
-                        $.each(response.data, function (key, item) {
-                            supplierSelect.append(
-                                `<option value="${item.id}">${item.name}</option>`
-                            );
-                        });
-                    }
-                },
-                error: function (xhr, status, error) {
-                    console.error('AJAX error: ', status, error);
-                    console.error('Raw response:', xhr.responseText); // This is key!
-                    $('#supplier').html('<option selected disabled>Error loading suppliers</option>');
+        // Filter suppliers when RFQ is selected
+        $(document).on('change', '#refNo', function () {
+            const selectedRFQ = $(this).val();
+            // Filter rfqResponses for this RFQ
+            const suppliers = rfqResponses.filter(r => r.RFQNumber === selectedRFQ);
+            // Remove duplicates by SupplierId or SupplierName
+            const uniqueSuppliers = [];
+            const seen = new Set();
+            suppliers.forEach(s => {
+                const key = s.SupplierName + (s.SupplierId || s.SupplierID || '');
+                if (!seen.has(key)) {
+                    uniqueSuppliers.push(s);
+                    seen.add(key);
                 }
             });
-        }
+            // Populate supplier dropdown
+            const $supplier = $('#supplier');
+            $supplier.empty().append('<option selected disabled>Select supplier</option>');
+            uniqueSuppliers.forEach(s => {
+                $supplier.append(`<option value="${s.SupplierId || s.Id || ''}" data-address="${s.Address || ''}">${s.SupplierName || s.Name || ''}</option>`);
+            });
+            // Clear address field
+            $('input[name="address"]').val('');
+        });
+
+        // Autopopulate address when supplier is selected (no AJAX needed)
+        $(document).on('change', '#supplier', function () {
+            let address = $(this).find('option:selected').data('address') || '';
+            $('input[name="address"]').val(address);
+        });
 
         // $(document).on('change','#supplier',function () {
         //     fetchSuppliers();
@@ -320,6 +337,20 @@
                 }
             });
 
+            // Validate tax and discount columns for percentage <= 100, highlight errors
+            $(document).on('change', '.tax, .discount', function () {
+                let $input = $(this);
+                let val = parseFloat($input.val()) || 0;
+                // Remove previous error
+                $input.removeClass('is-invalid');
+                $input.next('.invalid-feedback').remove();
+                if (val > 100) {
+                    $input.addClass('is-invalid');
+                    $input.val('');
+                    $input.after('<div class="invalid-feedback d-block">Percentage cannot exceed 100%</div>');
+                }
+            });
+
             // Handle quantity or price change and calculate line total
             $(document).on('change', '.quantity, .unit-price, .tax, .discount', function () {
                 let row = $(this).closest('tr');
@@ -327,6 +358,10 @@
                 let price = parseFloat(row.find('.unit-price').val()) || 0;
                 let tax = parseFloat(row.find('.tax').val()) || 0;
                 let discount = parseFloat(row.find('.discount').val()) || 0;
+
+                // Already validated above, but double-check for safety
+                if (tax > 100) tax = 100;
+                if (discount > 100) discount = 100;
 
                 let total = qty * price;
 
@@ -396,36 +431,53 @@
 
         document.getElementById('add-row').addEventListener('click', function () {
             rowCount++;
-
-
             const row = `
         <tr>
             <td class="line-no">${rowCount}.</td>
             <td class="text-start">
-                <select class="form-select form-select-sm type" name="type[]" id="Type">
+                <select class="form-select form-select-sm type" name="type[]" id="Type" required>
                     <option disabled selected>Select Type</option>
                     ${itemTypeOptions}
                 </select>
             </td>
             <td class="text-start">
-                <select class="form-select form-select-sm itemCode" name="itemCode[]" id="Item">
+                <select class="form-select form-select-sm itemCode" name="itemCode[]" id="Item" required>
                     <option disabled selected>Select Item Code</option>
                 </select>
             </td>
-
             <td>
                 <textarea class="form-control form-control-sm itemDescription" name="itemDescription[]"
-                                          id="Description" cols="30"
-                                          rows="5" readonly   style="display: flex; align-items: center; justify-content: center; text-align: center; padding: 0; resize: none;"></textarea>
+                          id="Description" cols="30"
+                          rows="5" readonly style="display: flex; align-items: center; justify-content: center; text-align: center; padding: 0; resize: none;"></textarea>
             </td>
-            <td><input type="number" class="form-control form-control-sm qty quantity" name="quantity[]" id="Quantity" ></td>
-            <td><input type="number" class="form-control form-control-sm unit-price" name="unitPrice[]" id="Price" ></td>
+            <td><input type="number" class="form-control form-control-sm qty quantity" name="quantity[]" id="Quantity" required></td>
+            <td><input type="number" class="form-control form-control-sm unit-price" name="unitPrice[]" id="Price" required></td>
             <td><input type="number" class="form-control form-control-sm tax" name="tax[]" id="Tax" ></td>
             <td><input type="number" class="form-control form-control-sm discount" name="discount[]" id="Discount" ></td>
             <td><input type="number" class="form-control form-control-sm line-total" name="lineTotal[]"  id="lineTotal" readonly></td>
+            <td class="text-center align-middle">
+                <button type="button" class="btn btn-sm btn-danger remove-row" title="Remove Item"><i class="fa fa-trash"></i> Remove</button>
+            </td>
         </tr>`;
             document.getElementById('po-items').insertAdjacentHTML('beforeend', row);
-            updateLineNumbers()
+            updateLineNumbers();
+        });
+
+        // Remove row handler
+        $(document).on('click', '.remove-row', function () {
+            // Only remove if more than one row remains
+            if ($('#po-items tr').length > 1) {
+                $(this).closest('tr').remove();
+                updateLineNumbers();
+                calculateSummaryTotals();
+            } else {
+                // Optionally, clear the row instead of removing if only one left
+                let row = $(this).closest('tr');
+                row.find('select, input, textarea').val('');
+                row.find('.itemDescription').val('');
+                row.find('.line-total').val('');
+                calculateSummaryTotals();
+            }
         });
     </script>
 

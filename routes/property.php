@@ -188,6 +188,7 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::get('rentreceipt/edit/{Id}',[PropertyReceiptController::class,'edit'])->name('rentreceipt.edit');
     Route::put('rentreceipt/edit/{Id}',[PropertyReceiptController::class,'update'])->name('rentreceipt.update');
     Route::delete('rentreceipt/delete/{Id}', [PropertyReceiptController::class,'destroy'])->name('rentreceipt.destroy');
+    Route::get('/rentreceipt/print/{Id}', [PropertyReceiptController::class, 'print'])->name('rentreceipt.pdf');
 
 
 
