@@ -12,6 +12,7 @@ use App\Http\Controllers\DMS\Files\DocumentRecentController;
 use App\Http\Controllers\DMS\Files\DocumentTagsController;
 use App\Http\Controllers\DMS\Files\DocumentUploadController;
 use App\Http\Controllers\DMS\Repo\RepositoryController;
+use App\Http\Controllers\DMS\Repo\RepositoryMoveController;
 use App\Http\Controllers\DMS\Repo\RepositoryPermissionController;
 use App\Http\Controllers\DMS\ReportsController;
 use App\Http\Controllers\DMS\SearchController;
@@ -38,7 +39,7 @@ Route::namespace('DMS')->prefix('dms')->group(function () {
     Route::prefix('repo/{repository}')->group(function () {
         Route::put('repo-visibility', [RepositoryPermissionController::class, 'visibility'])->name('repo.visibility');
         Route::resource('repo-permissions', RepositoryPermissionController::class)->only(['index', 'store', 'destroy']);
-
+        Route::resource('repo-move', RepositoryMoveController::class)->only(['index', 'store']);
         Route::resource('files', DocumentController::class)->parameters(['files' => 'document'])->except('create');
     });
     Route::resource('repo', RepositoryController::class)->parameters(['repo' => 'repository']);

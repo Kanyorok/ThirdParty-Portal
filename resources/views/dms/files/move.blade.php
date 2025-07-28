@@ -7,7 +7,7 @@
 </style>
 <div class="d-flex flex-column" style="height: 85%; overflow-y: auto;">
     <h2 class="text-center">{{ $file->Name }}</h2>
-    <h3>Current Repository : {{ $file->repository->Name }}</h3>
+    <h3>Current Repository : {{ $parent->Name }}</h3>
     <form action="{{ request()->url()  }}" method="post"
           id="changeRepositoryForm"> @csrf
         <div class="mb-3">
@@ -16,7 +16,7 @@
             <select name="MoveRepository" id="MoveRepository" class="form-control" required>
                 <option selected disabled>-- Select destination repo --</option>
                 @foreach($repositories as $repository)
-                    @if($repository->Id !== $file->repository->Id)
+                    @if($repository->Id !== $parent->Id)
                         <option value="{{ $repository->RepositoryId }}">{{ $repository->Name }}</option>
                     @endif
                 @endforeach
