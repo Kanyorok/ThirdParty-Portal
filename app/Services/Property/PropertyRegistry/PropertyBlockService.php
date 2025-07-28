@@ -18,7 +18,7 @@ class PropertyBlockService
     public static function create(
         PropertyRegistry $PropertyID,
         string $BlockName,
-        string $Description,
+        string $Description = null,
         User   $user
     ): self
     {

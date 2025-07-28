@@ -24,7 +24,7 @@ class PropertyBlockRequest extends FormRequest
         return [
             'PropertyID' => 'required|exists:t_PropertyRegistry,Id',
             'BlockName' => 'required|string|max:50',
-            'Description' => 'required|string|max:100',
+            'Description' => 'nullable|string|max:100',
         ];
     }
 }

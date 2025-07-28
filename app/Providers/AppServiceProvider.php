@@ -65,7 +65,6 @@ use App\Models\DMS\Image;
 use App\Models\DMS\Repository;
 use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
-use App\Models\Procurement\DepartmentNeed;
 use App\Models\Inventory\InterBranchRequisition;
 use App\Models\Inventory\InventoryHoldReview;
 use App\Models\Inventory\InventoryType;
@@ -80,6 +79,8 @@ use App\Models\Inventory\TransactionReceipt;
 use App\Models\Inventory\TransactionTransfer;
 use App\Models\Inventory\UnitOfMeasure;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
+use App\Models\Procurement\DepartmentNeed;
+use App\Models\Procurement\DepartmentNeeds;
 use App\Models\Procurement\Order;
 use App\Models\Procurement\PlanLineItem;
 use App\Models\Procurement\PrequalificationPeriod;
@@ -91,10 +92,14 @@ use App\Models\Procurement\RFQLine;
 use App\Models\Procurement\SchedulePlan;
 use App\Models\PropertyManagement\PropertyBlock;
 use App\Models\PropertyManagement\PropertyFloor;
+use App\Models\PropertyManagement\PropertyAttachments;
 use App\Models\PropertyManagement\PropertyInvoice;
 use App\Models\PropertyManagement\PropertyLeaseRenewal;
 use App\Models\PropertyManagement\PropertyLeaseTermination;
 use App\Models\PropertyManagement\PropertyNewLease;
+use App\Models\PropertyManagement\PropertyMaintenanceRequest;
+use App\Models\PropertyManagement\PropertyMaintenanceAssign;
+use App\Models\PropertyManagement\PropertyMaintenanceWorkCompletion;
 use App\Models\PropertyManagement\PropertyUnit;
 use App\Models\PropertyManagement\PropertyLeaseSchedule;
 use App\Models\PropertyManagement\PropertyNewTenant;
@@ -134,11 +139,15 @@ use App\Policies\Procurement\SchedulePlanPolicy;
 use App\Policies\ProductDevelopmentPolicy;
 use App\Policies\PropertyManagement\PropertyCategoryPolicy;
 use App\Policies\PropertyManagement\PropertyFloorPolicy;
+use App\Policies\PropertyManagement\PropertyAttachmentsPolicy;
 use App\Policies\PropertyManagement\PropertyInvoicePolicy;
 use App\Policies\PropertyManagement\PropertyLeaseRenewalPolicy;
 use App\Policies\PropertyManagement\PropertyLeaseSchedulePolicy;
 use App\Policies\PropertyManagement\PropertyLeaseTerminationPolicy;
 use App\Policies\PropertyManagement\PropertyNewLeasePolicy;
+use App\Policies\PropertyManagement\PropertyMaintenanceRequestPolicy;
+Use APP\policies\PropertyManagement\PropertyMaintenanceAssignPolicy;
+use App\Policies\PropertyManagement\PropertyMaintenanceWorkCompletionPolicy;
 use App\Policies\PropertyManagement\PropertyNewTenantPolicy;
 use App\Policies\PropertyManagement\PropertyReceiptPolicy;
 use App\Policies\PropertyManagement\PropertyRegistryPolicy;
@@ -261,31 +270,27 @@ class AppServiceProvider extends ServiceProvider
             Budget::getPrimaryKey() => Budget::class,
             BudgetGLAccountSubType::getPrimaryKey() => BudgetGLAccountSubType::class,
             BudgetLineProductTypes::getPrimaryKey() => BudgetLineProductTypes::class,
-
-
-            BudgetActivityMaster::getPrimaryKey() => BudgetActivityMaster::class,
-            BudgetLinesGLAccount::getPrimaryKey() => BudgetLinesGLAccount::class,
-            BudgetGLAccount::getPrimaryKey() => BudgetGLAccount::class,
-            BudgetLine::getPrimaryKey() => BudgetLine::class,
-            BudgetPeriods::getPrimaryKey() => BudgetPeriods::class,
-            BudgetPeriodTypes::getPrimaryKey() => BudgetPeriodTypes::class,
-            BudgetScenarioPlanning::getPrimaryKey() => BudgetScenarioPlanning::class,
-            BudgetProduct::getPrimaryKey() => BudgetProduct::class,
-            BudgetProductType::getPrimaryKey() => BudgetProductType::class,
-            BudgetDriver::getPrimaryKey() => BudgetDriver::class,
-            BudgetDriverMaster::getPrimaryKey() => BudgetDriverMaster::class,
-            BudgetDriverProjections::getPrimaryKey() => BudgetDriverProjections::class,
-            BudgetTopDown::getPrimaryKey() => BudgetTopDown::class,
-            BudgetTopDownData::getPrimaryKey() => BudgetTopDownData::class,
-            BudgetActivity::getPrimaryKey() => BudgetActivity::class,
-            BudgetMonthlyAllocation::getPrimaryKey() => BudgetMonthlyAllocation::class,
-            Budget::getPrimaryKey() => Budget::class,
-            BudgetGLAccountSubType::getPrimaryKey() => BudgetGLAccountSubType::class,
-            BudgetLineProductTypes::getPrimaryKey() => BudgetLineProductTypes::class,
             BudgetMonthlyProjectionAllocation::getPrimaryKey() => BudgetMonthlyProjectionAllocation::class,
             BudgetManualEntryAllocations::getPrimaryKey() => BudgetManualEntryAllocations::class,
+            
+            //Property Management
+            PropertyType::getPrimaryKey() => PropertyType::class,
             CategoryMaster::getPrimaryKey() => CategoryMaster::class,
-
+            PropertyRegistry::getPrimaryKey() => PropertyRegistry::class,
+            PropertyAttachments::getPrimaryKey() => PropertyAttachments::class,
+            PropertyBlock::getPrimaryKey() => PropertyBlock::class,
+            PropertyMaintenanceRequest::getPrimaryKey() => PropertyMaintenanceRequest::class,
+            PropertyMaintenanceAssign::getPrimaryKey() => PropertyMaintenanceAssign::class,
+            PropertyMaintenanceWorkCompletion::getPrimaryKey() => PropertyMaintenanceWorkCompletion::class,
+            PropertyNewTenant::getPrimaryKey() => PropertyNewTenant::class,
+            PropertyTenantClearance::getPrimaryKey() => PropertyTenantClearance::class,
+            PropertyFloor::getPrimaryKey() => PropertyFloor::class,
+            PropertyUnit::getPrimaryKey() => PropertyUnit::class,
+            PropertyNewLease::getPrimaryKey() => PropertyNewLease::class,
+            PropertyLeaseSchedule::getPrimaryKey() => PropertyLeaseSchedule::class,
+            PropertyLeaseRenewal::getPrimaryKey() => PropertyLeaseRenewal::class,
+            PropertyInvoice::getPrimaryKey() => PropertyInvoice::class,
+            PropertyLeaseTermination::getPrimaryKey() => PropertyLeaseTermination::class,
 
             //DMS
             DMSTags::getPrimaryKey() => DMSTags::class,
@@ -298,18 +303,9 @@ class AppServiceProvider extends ServiceProvider
             Repository::getPrimaryKey() => Repository::class,
             
             
-            PropertyNewTenant::getPrimaryKey() => PropertyNewTenant::class,
-            PropertyTenantClearance::getPrimaryKey() => PropertyTenantClearance::class,
-            PropertyFloor::getPrimaryKey() => PropertyFloor::class,
-            PropertyUnit::getPrimaryKey() => PropertyUnit::class,
-            PropertyNewLease::getPrimaryKey() => PropertyNewLease::class,
-            PropertyLeaseSchedule::getPrimaryKey() => PropertyLeaseSchedule::class,
-            PropertyLeaseRenewal::getPrimaryKey() => PropertyLeaseRenewal::class,
-            PropertyInvoice::getPrimaryKey() => PropertyInvoice::class,
-            PropertyType::getPrimaryKey() => PropertyType::class,
-            PropertyRegistry::getPrimaryKey() => PropertyRegistry::class,
-            PropertyBlock::getPrimaryKey() => PropertyBlock::class,
-            PropertyLeaseTermination::getPrimaryKey() => PropertyLeaseTermination::class,
+
+
+
 
 
             PrequalificationPeriod::getPrimaryKey() => PrequalificationPeriod::class,
@@ -354,6 +350,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PropertyType::class, PropertyTypePolicy::class);
         Gate::policy(PropertyRegistry::class, PropertyRegistryPolicy::class);
         Gate::policy(PropertyBlock::class, PropertyStructuralPolicy::class);
+        Gate::policy(PropertyAttachments::class, PropertyAttachmentsPolicy::class);       
         Gate::policy(PropertyNewTenant::class, PropertyNewTenantPolicy::class);
         Gate::policy(PropertyTenantClearance::class, PropertyTenantClearancePolicy::class);
         Gate::policy(PropertyFloor::class, PropertyFloorPolicy::class);
@@ -362,6 +359,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PropertyLeaseRenewal::class, PropertyLeaseRenewalPolicy::class);
         Gate::policy(PropertyInvoice::class, PropertyInvoicePolicy::class);
         Gate::policy(PropertyReceipt::class, PropertyReceiptPolicy::class);
+        Gate::policy(PropertyMaintenanceRequest::class, PropertyMaintenanceRequestPolicy::class);
+        Gate::policy(PropertyMaintenanceAssign::class, PropertyMaintenanceAssignPolicy::class);
+        Gate::policy(PropertyMaintenanceWorkCompletion::class, PropertyMaintenanceWorkCompletionPolicy::class);
         Gate::policy(PrequalificationPeriod::class, PrequalificationPeriodPolicy::class);
         Gate::Policy(PropertyNewLease::class, PropertyNewLeasePolicy::class);
         Gate::policy(PropertyLeaseTermination::class, PropertyLeaseTerminationPolicy::class);

@@ -52,7 +52,7 @@ class PropertyLeaseTerminationController extends Controller
             $LeaseID,
             $TerminationDate = $validatedData['TerminationDate'],
             $TerminationReason,
-            $Remarks = $validatedData['Remarks'],
+            $Remarks = $validatedData['Remarks'] ?? '',
             $request->user(),
             $document
         );

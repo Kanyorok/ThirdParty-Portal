@@ -41,7 +41,7 @@ class PropertyNewLeaseService
         float $ParkingFee,
         float $OtherCharges,
         int $DueDay,
-        string $SpecialTerms,
+        string $SpecialTerms = null,
         User $user,
         UploadedFile $document = null
     ): self {

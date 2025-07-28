@@ -18,6 +18,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Carbon\Carbon;
 
 class PurchaseOrderController extends Controller
 {
@@ -47,13 +48,25 @@ class PurchaseOrderController extends Controller
 
     public function getSupplierDetails($supplier): JsonResponse
     {
-        try{
+        try {
             $details = $this->supplierService->getSupplierDetails($supplier);
+            // Ensure the response has an Address key for the frontend
+            $address = '';
+            if ($details) {
+                // If $details is an array or object, try to get Address
+                if (is_array($details) && isset($details['Address'])) {
+                    $address = $details['Address'];
+                } elseif (is_object($details) && isset($details->Address)) {
+                    $address = $details->Address;
+                }
+            }
             return response()->json([
                 'success' => true,
-                'data' => $details,
-            ]);}
-        catch(\Exception $e){
+                'data' => [
+                    'Address' => $address,
+                ],
+            ]);
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch items.',
@@ -95,11 +108,11 @@ class PurchaseOrderController extends Controller
 
         try {
             $details = $this->orderService->fetchOrders();
-            // if ($details ) {
+            // Debug: log the details to storage/logs/laravel.log
+            \Log::info('PurchaseOrderController@index details:', ['details' => $details]);
+            // Optionally, uncomment the next line to dump to browser (remove after checking)
+            // dd($details);
             return view('procurement.orders.index', compact('details'));
-            // /}
-            // else{  return view('procurement.requisitions.create', ['details' => []]);
-            // }
         } catch (\Exception $e) {
             Log::error('Create page failed: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Failed to fetch items: ' . $e->getMessage());
@@ -112,30 +125,31 @@ class PurchaseOrderController extends Controller
      */
     public function create()
     {
-
         try {
-            $suppliers = $this->supplierService->getSuppliers();
             $itemTypes = $this->itemService->getTypes();
+            $rfqResponses = $this->rfqService->fetchRFQ(); // All RFQ responses with supplier info
 
-            if (!$suppliers || !$itemTypes) {
+            // Unique RFQs for dropdown
+            $uniqueRfqs = collect($rfqResponses)->unique('RFQNumber')->values();
 
-                return view('procurement.orders.create', [
-                    'suppliers' => $suppliers ?? [],
-                    'itemTypes' => $itemTypes ?? [],
-                ]);
+            // All suppliers (for fallback, not used in dropdown directly)
+            $suppliers = $this->supplierService->getSuppliers();
 
-            }
-            return view("procurement.orders.create", compact('suppliers', 'itemTypes'));
-
-//            \Log::info('Suppliers loaded in create():', $suppliers->toArray());
+            return view('procurement.orders.create', [
+                'itemTypes' => $itemTypes ?? [],
+                'rfqs' => $uniqueRfqs ?? [],
+                'rfqResponses' => $rfqResponses ?? [],
+                'suppliers' => $suppliers ?? [],
+            ]);
         } catch (\Exception $e) {
             Log::error('Data fetch failed: ' . $e->getMessage());
             return view('procurement.orders.create', [
                 'suppliers' => [],
                 'itemTypes' => [],
+                'rfqs' => [],
+                'rfqResponses' => [],
             ])->with('error', 'An error occurred: ' . $e->getMessage());
         }
-
     }
 
     /**
@@ -255,13 +269,8 @@ class PurchaseOrderController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Request $request, string $id)
     {
-//        $this->authorize('view', Order::query()->findOrFail($id));
-//        return view('procurement.orders.show');
-
-//        dd($id);
-
         try {
             $order = Order::findOrFail($id); // This will throw 404 if not found
             $this->authorize('view', $order); // Authorize the order object itself
@@ -269,6 +278,10 @@ class PurchaseOrderController extends Controller
             $orderInfo = $this->orderService->fetchOrderDetails($id);
             $lineInfo = $this->orderService->fetchOrderLineDetails($id);
 
+            if ($request->ajax()) {
+                // Return only the inner content for modal
+                return view('procurement.orders.partials.show_content', compact('orderInfo', 'lineInfo'))->render();
+            }
             return view('procurement.orders.show', compact('orderInfo', 'lineInfo'));
 
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
@@ -281,7 +294,6 @@ class PurchaseOrderController extends Controller
             Log::error("Failed to fetch order ID {$id}. Exception: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return redirect()->back()->with('error', 'Failed to fetch order.');
         }
-
     }
 
     public function relatedPO()
