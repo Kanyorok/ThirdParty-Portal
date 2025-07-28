@@ -1013,11 +1013,11 @@
             content += (repo.files.count >= 1) ? repo.files.string + ' file(s)' : 'empty';
             content += '</small></p></div>' +
                 ' <div class="dropdown"><a class="avtar avtar-xs btn-link-secondary dropdown-toggle arrow-none" href="javascript:void(0)" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="material-icons-two-tone f-18">more_vert</i></a><div class="dropdown-menu dropdown-menu-end">' +
-                '<a class="dropdown-item f-w-600" href="' + repo.links.route + '">Details</a> ' +
-                '<a class="dropdown-item click-summary-data" href="javascript:void(0)" data-summary_title="Move ' + repo.name + '" data-click_url="' + repo.links.move + '"> Move </a>' +
-                '<a class="dropdown-item repo-action-update" data-info="' + repo.id + '~' + repo.name + '~' + repo.description + '~' + repo.links.route + '" href="javascript:void(0)">Rename</a>' +
-                '<a class="dropdown-item click-summary-data" href="javascript:void(0)" data-summary_title="<i class=\'fas fa-folder-open\'></i> ' + repo.name + ' " data-click_url="' + repo.links.summary + '">Permissions</a> ' +
-                '<a class="dropdown-item repo-action-trash" href="javascript:void(0)" data-info="' + repo.id + '~' + repo.name + '~' + repo.links.route + '">Trash</a></div> </div></div> </div> </div> </div>';
+                '<a class="dropdown-item py-2 f-w-600" href="' + repo.links.route + '"><!-- <i class=\'fas fa-folder-open\'></i>&nbsp; -->Details</a> ' +
+                '<a class="dropdown-item py-2 click-summary-data" href="javascript:void(0)" data-summary_title="Move ' + repo.name + '" data-click_url="' + repo.links.move + '"><!-- <i class="fas fa-arrows-up-down-left-right"></i>&nbsp;-->Move </a>' +
+                '<a class="dropdown-item py-2 repo-action-update" data-info="' + repo.id + '~' + repo.name + '~' + repo.description + '~' + repo.links.route + '" href="javascript:void(0)"><!--<i class="fas fa-pen"></i>&nbsp; -->Rename</a>' +
+                '<a class="dropdown-item py-2 click-summary-data" href="javascript:void(0)" data-summary_title="<i class=\'fas fa-folder-open\'></i> ' + repo.name + ' " data-click_url="' + repo.links.summary + '"><!--<i class="fas fa-user-shield"></i>&nbsp; -->Share</a> ' +
+                '<a class="dropdown-item py-2 repo-action-trash" href="javascript:void(0)" data-info="' + repo.id + '~' + repo.name + '~' + repo.links.route + '"><!--<i class="fas fa-trash-alt"></i>&nbsp; -->Trash</a></div> </div></div> </div> </div> </div>';
             $('#repositoriesContents').append(content).fadeIn(500);
         }
 
