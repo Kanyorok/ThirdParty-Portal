@@ -4,7 +4,7 @@
 <div class="container mt-4">
     <h4 class="fw-bold mb-3">Add New Tenant</h4>
 
-    <form action="{{ route('addtenant.store') }}" method="POST">
+    <form action="{{ route('addtenant.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
   <div class="card shadow">
       <div class="card-header bg-light fw-bold">Tenant Registration</div>
@@ -68,10 +68,10 @@
       <!-- Document Upload -->
       <div class="mb-3">
         <label class="form-label">Upload Supporting Documents</label>
-        <input type="file" class="form-control" multiple>
+        <input type="file" name="Document" class="form-control" multiple>
         <small class="text-muted">e.g. ID copy, Certificate of Incorporation</small>
       </div>
-        <button class="btn btn-success">Save Tenant</button>
+        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Save Tenant</button>
     </form>
     </div>
   </div>

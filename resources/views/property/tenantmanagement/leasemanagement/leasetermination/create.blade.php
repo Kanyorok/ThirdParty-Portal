@@ -58,19 +58,16 @@
                         </div>
                     </div>
 
-                    <!-- File Upload -->
+                    <!-- Document Upload -->
                     <div class="mb-3">
-                        <label class="form-label">Upload Clearance Document (optional)</label>
-                        <input type="file" name="ClearanceDocument"
-                               class="form-control @error('ClearanceDocument') is-invalid @enderror">
-                        @error('ClearanceDocument')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                        <label class="form-label">Upload Supporting Documents</label>
+                        <input type="file" name="Document" class="form-control" multiple>
+                        <small class="text-muted">e.g. Lease Document, Contract Termination Documents</small>
                     </div>
 
                     <!-- Submit Button -->
                     <div class="text-end">
-                        <button type="submit" class="btn btn-danger"> Terminate Lease</button>
+                        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();"> Terminate Lease</button>
                     </div>
 
                 </div>

@@ -117,7 +117,7 @@
                 </div>
 
                 <!-- Submit -->
-                <button class="btn btn-success">🔁 Renew Lease</button>
+                <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">🔁 Renew Lease</button>
             </div>
         </div>
     </form>

@@ -2,10 +2,16 @@
 
 namespace App\Http\Controllers\Property;
 
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Property\PropertyRegistry\PropertyAttachmentsRequest;
+use App\Services\Property\PropertyRegistry\PropertyAttachmentsService;
 use Illuminate\Http\Request;
 use App\Models\PropertyManagement\PropertyAttachments;
 use App\Models\PropertyManagement\PropertyRegistry;
+use App\Models\Core\CodeDetail;
 
 class PropertyAttachmentsController extends Controller
 {
@@ -19,29 +25,28 @@ class PropertyAttachmentsController extends Controller
 
     public function create(){
         $properties = PropertyRegistry::all();
-        return view('property.propertyregistry.propertyattachments.create', compact('properties'));
+        $documentTypes = CodeDetail::where('CodeID', 'DocumentType')->get();
+        return view('property.propertyregistry.propertyattachments.create', compact('properties', 'documentTypes'));
     }
 
-    public function store(Request $request)
+    public function store(PropertyAttachmentsRequest $request)
     {
         //dd($request->all());
-        $request->validate([
-            'PropertyID' => 'required|string|max:20',
-            'DocumentTitle' => 'required|string|max:100',
-            'DocumentType' => 'required|string|max:50',
-            'Description' => 'required|string|max:255',
-        ]);
+        $validated = $request->validated();
+        
+        $PropertyID = PropertyRegistry::findOrFail($validated['PropertyID']);
+        $documentType = CodeDetail::findOrFail($validated['DocumentType']);
+        $user = Auth::user();
 
-        $propertyattachment = PropertyAttachments::create([
-            'PropertyID' => $request->PropertyID,
-            'DocumentTitle' => $request->DocumentTitle,
-            'DocumentType' => $request->DocumentType,
-            'Description' => $request->Description,
-            'CreatedBy' => auth()->user()->Id,
-            'ModifiedBy' => auth()->user()->Id,
-        ]);
-
+        $propertyattachment = PropertyAttachmentsService::create(
+            $PropertyID,
+            $validated['DocumentTitle'],
+            $documentType,
+            $validated['Description'],
+            auth()->user()
+        );
         return redirect()->route('attachments.index')->with('success', 'Property attachment created successfully');
     }
 
 }
+

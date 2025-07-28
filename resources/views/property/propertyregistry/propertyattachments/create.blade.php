@@ -14,7 +14,7 @@
           <label class="form-label">Select Property</label>
             <select name="PropertyID" class="form-select" required>
                 @foreach ($properties as $property)
-                    <option value="{{ $property->id }}">{{ $property->PropertyName }}</option>
+                    <option value="{{ $property->Id }}">{{ $property->PropertyName }}</option>
                 @endforeach
             </select>
         </div>
@@ -45,7 +45,7 @@
         <label class="form-label">Description / Notes</label>
           <textarea class="form-control" rows="2" placeholder="Optional notes..." name="Description"></textarea>
       </div>
-        <button class="btn btn-success">📎 Upload Document</button>
+        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">📎 Upload Document</button>
     </form>
     </div>
   </div>

@@ -248,18 +248,9 @@
                                 <div class="col-md-4 col-12 text-center">
                                     Timer <br><b id="callTimer"></b>
                                 </div>
-
                                 <div class="col-md-4 col-12 text-center">
-                                    Plan End <br>
-                                    <b>
-                                        @if($call->EndOn)
-                                            {{ $call->EndOn->diffInMinutes($call->StartOn, true) }} min
-                                        @else
-                                            N/A
-                                        @endif
-                                    </b>
+                                    Plan End <br> <b>{{ $call->EndOn->diffInMinutes($call->StartOn,true) }} min</b>
                                 </div>
-
                                 @if($schedule instanceof \App\Models\CRM\Schedule)
                                     <div class="col-12"><b>Notes</b> <br>{{ $schedule->Notes }}</div>
                                 @endif
