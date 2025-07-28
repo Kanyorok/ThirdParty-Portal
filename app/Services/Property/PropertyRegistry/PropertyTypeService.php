@@ -17,7 +17,7 @@ class PropertyTypeService
     public static function create(
         string $PropertyTypeName,
         CategoryMaster $PropertyCategoryId,
-        string $Description,
+        string $Description = null,
         User $user
     ):self{
         $propertytype = PropertyType::create([

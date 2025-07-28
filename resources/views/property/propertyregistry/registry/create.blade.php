@@ -19,15 +19,15 @@
     <div class="card-body">
       <div class="row g-3 mb-3">
         <div class="col-md-4">
-          <label class="form-label">Property Name</label>
+          <label class="form-label">Property Name <span class="text-danger">*</span></label>
           <input type="text" class="form-control" name="PropertyName">
         </div>
         <div class="col-md-4">
-          <label class="form-label">Property Code</label>
+          <label class="form-label">Property Code <span class="text-danger">*</span></label>
           <input type="text" class="form-control" name="PropertyCode">
         </div>
         <div class="col-md-4">
-            <label for="Category" class="form-label">Property Category</label>
+            <label for="Category" class="form-label">Property Category <span class="text-danger">*</span></label>
             <select name="Category" id="category-select" class="form-select" required>
                 <option value="">-- Select a category --</option>
                 @foreach ($lineentries as $category)
@@ -37,28 +37,28 @@
         </div>
       <div class="row g-3 mb-3">
         <div class="col-md-4">
-            <label for="PropertyType" class="form-label">Property Type</label>
+            <label for="PropertyType" class="form-label">Property Type <span class="text-danger">*</span></label>
             <select name="PropertyType" id="type-select" class="form-select" required>
                 <option value="">-- Select a Type --</option>
             </select>
         </div>
         <div class="col-md-4">
-          <label class="form-label">Owner</label>
-          <input type="text" class="form-control" name="Owner">
+          <label class="form-label">Owner <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" name="Owner" required>
         </div>
         <div class="col-md-4">
-          <label class="form-label">Acquisition Date</label>
-          <input type="date" class="form-control" name="AcquisitionDate">
+          <label class="form-label">Acquisition Date <span class="text-danger">*</span></label>
+          <input type="date" class="form-control" name="AcquisitionDate" required>
         </div>
       </div>
 
       <div class="row g-3 mb-3">
         <div class="col-md-4">
-          <label class="form-label">Country</label>
-          <input type="text" class="form-control" name="Country">
+          <label class="form-label">Country <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" name="Country" required>
         </div>
           <div class="col-md-4">
-            <label for="TownCity" class="form-label">Town/City</label>
+            <label for="TownCity" class="form-label">Town/City <span class="text-danger">*</span></label>
             <select name="TownCity" class="form-select" required>
                 <optgroup label="Cities and Towns">
                     @foreach ($localities as $locality)
@@ -68,8 +68,8 @@
             </select>
           </div>
         <div class="col-md-4">
-          <label class="form-label">Area / Locality</label>
-          <input type="text" class="form-control" name="AreaLocality">
+          <label class="form-label">Area / Locality <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" name="AreaLocality" required>
         </div>
       </div>
         <div class="col-md-6">

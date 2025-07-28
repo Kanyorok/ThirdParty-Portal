@@ -36,7 +36,7 @@
                 <!-- Property Hierarchy -->
                 <div class="row g-3 mb-3">
                     <div class="col-md-4">
-                        <label class="form-label">Select Property</label>
+                        <label class="form-label">Select Property<span class="text-danger">*</span></label>
                         <select name="PropertyID" id="property-select" class="form-select" required>
                             <option value="">-- Select Property --</option>
                             @foreach ($properties as $property)
@@ -46,21 +46,21 @@
           </div>
 
           <div class="col-md-4">
-              <label class="form-label">Select Block</label>
+              <label class="form-label">Select Block<span class="text-danger">*</span></label>
               <select name="BlockID" id="block-select" class="form-select" required>
                   <option value="">-- Select Block --</option>
               </select>
           </div>
 
           <div class="col-md-4">
-              <label class="form-label">Select Floor</label>
+              <label class="form-label">Select Floor<span class="text-danger">*</span></label>
               <select name="FloorID" id="floor-select" class="form-select" required>
                   <option value="">-- Select Floor --</option>
               </select>
           </div>
 
                     <div class="col-md-6 mt-3">
-                        <label class="form-label">Select Unit</label>
+                        <label class="form-label">Select Unit<span class="text-danger">*</span></label>
                         <select name="Unit" id="unit-select" class="form-select" required>
                             <option value="">-- Select Unit --</option>
             </select>
@@ -70,15 +70,15 @@
                 <!-- Lease Duration -->
                 <div class="row g-3 mb-3">
                     <div class="col-md-4">
-                        <label class="form-label">Start Date</label>
+                        <label class="form-label">Start Date<span class="text-danger">*</span></label>
                         <input type="date" class="form-control" name="StartDate" required>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">End Date</label>
+                        <label class="form-label">End Date<span class="text-danger">*</span></label>
                         <input type="date" class="form-control" name="EndDate" required>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">Payment Frequency</label>
+                        <label class="form-label">Payment Frequency<span class="text-danger">*</span></label>
                         <select class="form-select" name="PaymentFrequency" required>
                             <option value="">-- Select Frequency --</option>
                             @foreach ($codes as $code)
@@ -91,27 +91,27 @@
         <!-- Financials -->
         <div class="row g-3 mb-3">
           <div class="col-md-4">
-            <label class="form-label">Monthly Rent (KES)</label>
+            <label class="form-label">Monthly Rent (KES)<span class="text-danger">*</span></label>
             <input type="number" class="form-control" placeholder="e.g. 25000" name="MonthlyRent" required>
           </div>
           <div class="col-md-4">
-            <label class="form-label">Deposit (KES)</label>
+            <label class="form-label">Deposit (KES)<span class="text-danger">*</span></label>
             <input type="number" class="form-control" placeholder="e.g. 25000" name="Deposit" required>
           </div>
           <div class="col-md-4">
-            <label class="form-label">Serive Charge (KES)</label>
+            <label class="form-label">Serive Charge (KES)<span class="text-danger">*</span></label>
             <input type="number" class="form-control" placeholder="e.g. 5000" name="ServiceCharge" required>
           </div>
           <div class="col-md-4">
-            <label class="form-label">Parking Fee (KES)</label>
+            <label class="form-label">Parking Fee (KES)<span class="text-danger">*</span></label>
             <input type="number" class="form-control" placeholder="e.g. 1000" name="ParkingFee" required>
           </div>
           <div class="col-md-4">
-            <label class="form-label">Other charges (KES)</label>
+            <label class="form-label">Other charges (KES)<span class="text-danger">*</span></label>
             <input type="number" class="form-control" placeholder="e.g. 250" name="OtherCharges" required>
           </div>
           <div class="col-md-4">
-            <label class="form-label">Due Day</label>
+            <label class="form-label">Due Day<span class="text-danger">*</span></label>
             <input type="number" class="form-control" placeholder="e.g. 5" name="DueDay" required>
           </div>
         </div>

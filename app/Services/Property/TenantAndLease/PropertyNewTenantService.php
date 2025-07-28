@@ -27,7 +27,7 @@ class PropertyNewTenantService
         string $EmailAddress,
         string $Nationality,
         string $PostalAddress,
-        string $Remarks,
+        string $Remarks = null,
         bool   $IsActive,
         User   $user,
         UploadedFile $document = null

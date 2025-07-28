@@ -22,7 +22,7 @@
     <div class="card-body">
       <div class="row g-3 mb-3">
         <div class="col-md-6">
-          <label class="form-label">Tenant / Lease</label>
+          <label class="form-label">Tenant / Lease<span class="text-danger">*</span></label>
             <select name="LeaseId" class="form-select" required>
                 <option>--Select the tenant</option>
                 @foreach ($newtenants as $newtenant)
@@ -33,36 +33,36 @@
             </select>
         </div>
         <div class="col-md-6">
-          <label class="form-label" id="exit-date">Exit Date</label>
-            <input type="date" class="form-control" id="exit-date" value="ExitDate" name="ExitDate">
+          <label class="form-label" id="exit-date">Exit Date<span class="text-danger">*</span></label>
+            <input type="date" class="form-control" id="exit-date" value="ExitDate" name="ExitDate" required>
         </div>
       </div>
 
                     <!-- Checklist Items -->
                     <div class="row g-3 mb-3">
                         <div class="col-md-3">
-                            <label class="form-label">Final Inspection Done?</label>
+                            <label class="form-label">Final Inspection Done?<span class="text-danger">*</span></label>
                             <select class="form-select" name="FinalInspection">
                                 <option value="1">Yes</option>
                                 <option value="0">No</option>
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">All Dues Paid?</label>
+                            <label class="form-label">All Dues Paid?<span class="text-danger">*</span></label>
                             <select class="form-select" name="AllDuesPaid">
                                 <option value="1">Yes</option>
                                 <option value="0">No</option>
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Keys Returned?</label>
+                            <label class="form-label">Keys Returned?<span class="text-danger">*</span></label>
                             <select class="form-select" name="KeysReturned">
                                 <option value="1">Yes</option>
                                 <option value="0">No</option>
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Deposit Refunded?</label>
+                            <label class="form-label">Deposit Refunded?<span class="text-danger">*</span></label>
                             <select class="form-select" name="DepositRefunded" required>
                                 <option>--Select the tenant Type</option>
                                 @foreach ($codedetails as $codedetail)
@@ -72,7 +72,7 @@
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Status</label>
+                        <label class="form-label">Status<span class="text-danger">*</span></label>
                         <select class="form-select" name="Status" required>
                             <option value="">-- Select Status --</option>
                             @foreach (TenantClearanceEnum::cases() as $status)

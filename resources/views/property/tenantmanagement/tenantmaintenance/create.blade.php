@@ -12,7 +12,7 @@
       <!-- Tenant Type -->
       <div class="row g-3 mb-3">
         <div class="col-md-3">
-          <label class="form-label">Tenant Type</label>
+          <label class="form-label">Tenant Type<span class="text-danger">*</span></label>
             <select class="form-select" name="TenantType">
                 <option value="">-- Select Tenent Type --</option>
                 @foreach ($tenantTypes as $tenanttype)
@@ -21,11 +21,11 @@
           </select>
         </div>
         <div class="col-md-5">
-          <label class="form-label">Tenant Name</label>
+          <label class="form-label">Tenant Name<span class="text-danger">*</span></label>
             <input type="text" class="form-control" name="TenantName" placeholder="e.g. Moses K. or Acme Ltd.">
         </div>
         <div class="col-md-4">
-          <label class="form-label">ID/Registration No.</label>
+          <label class="form-label">ID/Registration No.<span class="text-danger">*</span></label>
             <input type="text" class="form-control" name="IDRegistrationNo" placeholder="e.g. ID12345678 / BRN0021">
         </div>
       </div>
@@ -33,15 +33,15 @@
       <!-- Contact Details -->
       <div class="row g-3 mb-3">
         <div class="col-md-4">
-          <label class="form-label">Phone Number</label>
+          <label class="form-label">Phone Number<span class="text-danger">*</span></label>
             <input type="text" class="form-control" name="PhoneNumber" placeholder="e.g. +254712345678">
         </div>
         <div class="col-md-4">
-          <label class="form-label">Email Address</label>
+          <label class="form-label">Email Address<span class="text-danger">*</span></label>
             <input type="email" class="form-control" name="EmailAddress" placeholder="e.g. tenant@email.com">
         </div>
         <div class="col-md-4">
-          <label class="form-label">Nationality</label>
+          <label class="form-label">Nationality<span class="text-danger">*</span></label>
             <input type="text" class="form-control" name="Nationality" placeholder="e.g. Kenyan">
         </div>
       </div>
@@ -49,7 +49,7 @@
       <!-- Address and Notes -->
       <div class="row g-3 mb-3">
         <div class="col-md-6">
-          <label class="form-label">Postal Address</label>
+          <label class="form-label">Postal Address<span class="text-danger">*</span></label>
             <input type="text" class="form-control" name="PostalAddress" placeholder="e.g. P.O. Box 1234 - Nairobi">
         </div>
         <div class="col-md-6">
@@ -57,7 +57,7 @@
             <input type="text" class="form-control" name="Remarks" placeholder="Optional">
         </div>
           <div>
-              <label class="form-label">Status</label>
+              <label class="form-label">Status<span class="text-danger">*</span></label>
               <select class="form-select" name="IsActive">
                   <option value="1">Active</option>
                   <option value="0">Inactive</option>

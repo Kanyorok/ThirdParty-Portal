@@ -15,7 +15,7 @@
                     <!-- Lease Selection -->
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label class="form-label">Select Lease</label>
+                            <label class="form-label">Select Lease<span class="text-danger">*</span></label>
                             <select name="LeaseID" class="form-select" required>
                                 <option value="">-- Select Lease --</option>
                                 @foreach ($newtenants as $newtenant)
@@ -28,7 +28,7 @@
 
                         <!-- Termination Date -->
                         <div class="col-md-6">
-                            <label class="form-label">Termination Date</label>
+                            <label class="form-label">Termination Date<span class="text-danger">*</span></label>
                             <input type="date" name="TerminationDate"
                                    class="form-control @error('TerminationDate') is-invalid @enderror"
                                    value="{{ old('TerminationDate', Carbon::now()->format('d/m/Y')) }}" required>
@@ -38,7 +38,7 @@
                     <!-- Termination Reason & Remarks -->
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label class="form-label">Reason for Termination</label>
+                            <label class="form-label">Reason for Termination<span class="text-danger">*</span></label>
                             <select name="TerminationReason" class="form-select" required>
                                 <option value="">-- Select Reason --</option>
                                 @foreach ($terminationReasons as $reason)
