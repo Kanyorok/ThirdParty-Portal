@@ -1,10 +1,10 @@
 <?php
-
+ 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
-
+ 
 return new class extends Migration
 {
     public function up(): void
@@ -42,7 +42,7 @@ return new class extends Migration
                 });
             }
         }
-
+ 
         // === DROP columns on t_RentReceipt if they exist ===
         $receiptColumnsToDrop = ['TenantId', 'PaymentMethod', 'AmountPaid', 'Amount'];
         foreach ($receiptColumnsToDrop as $col) {
@@ -52,7 +52,7 @@ return new class extends Migration
                 });
             }
         }
-
+ 
         // === RE-ADD columns to t_RentInvoice ===
         Schema::table('t_RentInvoice', function (Blueprint $table) {
             if (!Schema::hasColumn('t_RentInvoice', 'InvoiceDate')) {
@@ -74,7 +74,7 @@ return new class extends Migration
                 $table->string('Status', 1)->nullable();
             }
         });
-
+ 
         // === RE-ADD PaymentMethod and amounts to t_RentReceipt ===
         Schema::table('t_RentReceipt', function (Blueprint $table) {
             if (!Schema::hasColumn('t_RentReceipt', 'PaymentMethod')) {
@@ -90,7 +90,7 @@ return new class extends Migration
                 $table->decimal('ParkingFee', 20, 2)->nullable();
             }
         });
-
+ 
         // === RE-ADD FKs to t_RentReceipt ===
         Schema::table('t_RentReceipt', function (Blueprint $table) {
             if (Schema::hasTable('t_CodeDetails') && Schema::hasColumn('t_RentReceipt', 'PaymentMethod')) {
@@ -98,7 +98,7 @@ return new class extends Migration
             }
         });
     }
-
+ 
     public function down(): void
     {
         // === Drop FKs first to avoid issues on rollback ===
@@ -157,14 +157,14 @@ return new class extends Migration
                 $table->decimal('OtherCharges', 20, 2)->nullable();
             }
         });
-
+ 
         // === Re-add FK for TenantId on t_RentInvoice ===
         Schema::table('t_RentInvoice', function (Blueprint $table) {
             if (Schema::hasTable('t_Tenants') && Schema::hasColumn('t_RentInvoice', 'TenantId')) {
                 $table->foreign('TenantId')->references('Id')->on('t_Tenants');
             }
         });
-
+ 
         // === Re-add original columns to t_RentReceipt ===
         Schema::table('t_RentReceipt', function (Blueprint $table) {
             if (!Schema::hasColumn('t_RentReceipt', 'TenantId')) {
@@ -180,7 +180,7 @@ return new class extends Migration
                 $table->decimal('Amount', 20, 2)->nullable();
             }
         });
-
+ 
         // === Re-add FKs to t_RentReceipt ===
         Schema::table('t_RentReceipt', function (Blueprint $table) {
             if (Schema::hasTable('t_CodeDetails') && Schema::hasColumn('t_RentReceipt', 'PaymentMethod')) {
