@@ -22,15 +22,7 @@ class ThirdPartyController extends Controller
 
     public function __construct(RegistrationService $registrationService)
     {
-        // TODO: implement better dependency injection && permission handling
         $this->registrationService = $registrationService;
-        $this->middleware('auth:sanctum')->except(['store']);
-        $this->middleware('can:view,thirdParty')->only('show');
-        $this->middleware('can:update,thirdParty')->only('update');
-        $this->middleware('can:delete,thirdParty')->only('destroy');
-        $this->middleware('can:approve,thirdParty')->only('approve');
-        $this->middleware('can:reject,thirdParty')->only('reject');
-        $this->middleware('can:updateStatus,thirdParty')->only('updateStatus');
     }
 
     public function index(Request $request): \Illuminate\Http\Resources\Json\AnonymousResourceCollection
@@ -79,17 +71,28 @@ class ThirdPartyController extends Controller
 
             return response()->json([
                 'message' => __('auth.third_party_submission_failed'),
-                'error' => config('app.debug') ? $e->getMessage() : 'An unexpected error occurred.', // Generic message in production
+                'error' => config('app.debug') ? $e->getMessage() : 'An unexpected error occurred.',
             ], 500);
         }
     }
 
-    public function show(ThirdParties $thirdParty): ThirdPartyResource
+    public function show($id)
     {
+        $user = Auth::user();
+        if (!$user || !$user->thirdParty || (int)$id !== (int)$user->thirdParty->Id) {
+            return response()->json(['message' => 'Unauthorized access to third party profile.'], 403);
+        }
+
+        $thirdParty = ThirdParties::find($id);
+
+        if (!$thirdParty) {
+            return response()->json(['message' => 'Third party profile not found.'], 404);
+        }
+
         return new ThirdPartyResource($thirdParty);
     }
 
-    public function showMyThirdPartyDetails(Request $request): JsonResponse|ThirdPartyResource
+    public function showMyThirdPartyDetails(): JsonResponse|ThirdPartyResource
     {
         $user = Auth::user();
 

@@ -17,7 +17,7 @@ class ThirdPartyResource extends JsonResource
             'businessType' => $this->BusinessType?->value,
             'registrationNumber' => $this->RegistrationNumber,
             'taxPIN' => $this->TaxPIN,
-            'vATNumber' => $this->VATNumber,
+            'vatNumber' => $this->VATNumber,
             'country' => $this->Country,
             'physicalAddress' => $this->PhysicalAddress,
             'email' => $this->Email,
@@ -30,7 +30,6 @@ class ThirdPartyResource extends JsonResource
             'modifiedOn' => optional($this->ModifiedOn)->format('Y-m-d H:i:s'),
             'createdBy' => $this->CreatedBy,
             'isActive' => (bool) $this->IsActive,
-            // 'usersCount' => $this->whenLoaded('users', fn() => $this->users->count()),
         ];
     }
 }
