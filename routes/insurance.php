@@ -21,6 +21,7 @@ use App\Http\Controllers\Bancassurance\InsuranceProductRiderController;
 use App\Http\Controllers\Bancassurance\PricingRuleController;
 use App\Http\Controllers\Bancassurance\ProductLifecycleController;
 use App\Http\Controllers\Bancassurance\SettingsController;
+use App\Http\Controllers\Bancassurance\ClaimClosureController;
 
 
 Route::namespace('Insurance')->prefix('insurance')->group(function () {
@@ -209,11 +210,12 @@ Route::prefix('bancassurance/lifecycle')->name('bancassurance.lifecycle.')->grou
 });
 
 Route::prefix('bancassurance/settings')->name('bancassurance.settings.')->group(function () {
-    Route::get('/', [\App\Http\Controllers\Bancassurance\SettingsController::class, 'index'])->name('index');
-    Route::get('/create', [\App\Http\Controllers\Bancassurance\SettingsController::class, 'create'])->name('create'); // ✅ Add this line
-    Route::get('/edit/{id}', [\App\Http\Controllers\Bancassurance\SettingsController::class, 'edit'])->name('edit');
-    Route::post('/store', [\App\Http\Controllers\Bancassurance\SettingsController::class, 'store'])->name('store');
-    Route::put('/update/{id}', [\App\Http\Controllers\Bancassurance\SettingsController::class, 'update'])->name('update');
-    Route::delete('/delete/{id}', [\App\Http\Controllers\Bancassurance\SettingsController::class, 'destroy'])->name('destroy');
+    Route::get('/', [SettingsController::class, 'index'])->name('index');
+    Route::get('/create', [SettingsController::class, 'create'])->name('create'); // ✅ Add this line
+    Route::get('/edit/{id}', [SettingsController::class, 'edit'])->name('edit');
+    Route::post('/store', [SettingsController::class, 'store'])->name('store');
+    Route::put('/update/{id}', [SettingsController::class, 'update'])->name('update');
+    Route::delete('/delete/{id}', [SettingsController::class, 'destroy'])->name('destroy');
 });
+
 });
