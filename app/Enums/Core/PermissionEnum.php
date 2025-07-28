@@ -223,6 +223,9 @@ enum PermissionEnum: string
     case ProcurementMethodRead = 'procurementmethod-read';
     case ProcurementMethodWrite = 'procurementmethod-create';
 
+
+
+
     //ProcurementPlan Procurement Schedule
     //case SchedulePlanRead = 'scheduleplan-read';
     //case SchedulePlanWrite = 'scheduleplan-create';

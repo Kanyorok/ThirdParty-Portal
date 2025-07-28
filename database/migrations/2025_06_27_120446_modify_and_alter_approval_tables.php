@@ -29,6 +29,7 @@ return new class extends Migration {
             $table->id('Id');
             $table->string('Name', 100)->index();
             $table->string('Source', 100);
+            $table->string('FinalStage', 100);
             $table->longText('Description')->nullable();
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');

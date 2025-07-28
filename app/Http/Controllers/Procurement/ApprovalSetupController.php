@@ -10,7 +10,7 @@ class ApprovalSetupController extends Controller
 {
     public function index()
     {
-        $approvalGroups = DB::table('t_ApprovalGroups as g')
+        $approvalGroups = DB::table('t_WorkFlowTypes as g')
             ->leftJoin('t_Permissions as p', 'g.Permission', '=', 'p.id')
             ->select('g.*', 'p.name as permission_name')
             ->get();
