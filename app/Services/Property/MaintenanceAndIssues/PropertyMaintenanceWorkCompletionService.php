@@ -4,13 +4,12 @@ namespace App\Services\Property\MaintenanceAndIssues;
 
 use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
+use App\Enums\Core\PostingEnum;
 use App\Models\Auth\User;
 use App\Models\Core\CodeDetail;
 use App\Models\PropertyManagement\PropertyMaintenanceAssign;
 use App\Models\PropertyManagement\PropertyMaintenanceWorkCompletion;
 use Illuminate\Http\UploadedFile;
-use Symfony\Component\HttpFoundation\StreamedResponse;
-use Illuminate\Support\Facades\Storage;
 
 class PropertyMaintenanceWorkCompletionService
 {
@@ -44,6 +43,13 @@ class PropertyMaintenanceWorkCompletionService
             'CreatedBy' => $user->Id,
             'ModifiedBy' => $user->Id,
         ]);
+
+ 
+        if (strtolower($finalstatus->Description) === 'completed') {
+            $requestNumber->update([
+                'Status' => PostingEnum::Completed->value
+            ]);
+        }
 
         if ($document) {
             $workCompletion->newDocument(
@@ -85,6 +91,13 @@ class PropertyMaintenanceWorkCompletionService
             'CreatedBy' => $user->Id,
             'ModifiedBy' => $user->Id,
         ]);
+
+
+        if (strtolower($finalstatus->Description) === 'completed') {
+            $requestNumber->update([
+                'Status' => PostingEnum::Completed->value
+            ]);
+        }
 
 
         if ($document) {
