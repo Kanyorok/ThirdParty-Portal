@@ -19,6 +19,12 @@ use Throwable;
 
 class RepositoryController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('ajax')->except(['index', 'show']);
+        $this->authorizeResource(Repository::class);
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -45,6 +51,7 @@ class RepositoryController extends Controller
     public function store(RepositoryRequest $request): JsonResponse
     {
         $repository = $request->getParentRepo();
+        $this->authorize('update', $repository);
         try {
             return DB::transaction(function () use ($request, $repository) {
                 return $this->succeeded('repository created successfully', data: [
@@ -60,14 +67,6 @@ class RepositoryController extends Controller
             Log::error($e);
             return $this->errored('unexpected error, try again later');
         }
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
     }
 
     /**
@@ -108,7 +107,7 @@ class RepositoryController extends Controller
                     'data' => new RepositoryResource($repository)
                 ]);
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable $e) {
             Log::error('trash board member : ' . $e);
             return $this->errored('an unexpected error occurred');
         }

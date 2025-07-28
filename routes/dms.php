@@ -42,7 +42,7 @@ Route::namespace('DMS')->prefix('dms')->group(function () {
         Route::resource('repo-move', RepositoryMoveController::class)->only(['index', 'store']);
         Route::resource('files', DocumentController::class)->parameters(['files' => 'document'])->except('create');
     });
-    Route::resource('repo', RepositoryController::class)->parameters(['repo' => 'repository']);
+    Route::resource('repo', RepositoryController::class)->parameters(['repo' => 'repository'])->except('create');
 
     Route::prefix('file-tags/{d_m_s_tags}')->group(function () {
         Route::get('files', DocumentTagController::class)->name('file-tags.files');
