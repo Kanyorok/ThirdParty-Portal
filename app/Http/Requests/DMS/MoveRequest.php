@@ -20,18 +20,18 @@ class MoveRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'Repository' => 'required',
+            'MoveRepository' => 'required',
         ];
     }
 
     public function getRepository(User $actor): Repository
     {
-        $repo = RepositoryService::getUserQuery($actor, [$this->validated('Repository')])->first();
-        if (!$repo instanceof Repository) {
+        $repo = RepositoryService::getUserQuery($actor)->where('RepositoryId', $this->validated('MoveRepository'))->first();
+        if ($repo instanceof Repository) {
             return $repo;
         }
         throw ValidationException::withMessages([
-            'Repository' => __('dms.repository.not_found'),
+            'MoveRepository' => 'The specified repository does not exist or you do not have access to it.',
         ]);
     }
 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\DMS\Files\DocumentActivityController;
 use App\Http\Controllers\DMS\Files\DocumentCheckOutController;
 use App\Http\Controllers\DMS\Files\DocumentController;
 use App\Http\Controllers\DMS\Files\DocumentDownloadController;
+use App\Http\Controllers\DMS\Files\DocumentMoveController;
 use App\Http\Controllers\DMS\Files\DocumentPermissionController;
 use App\Http\Controllers\DMS\Files\DocumentRecentController;
 use App\Http\Controllers\DMS\Files\DocumentTagsController;
@@ -27,6 +28,7 @@ Route::namespace('DMS')->prefix('dms')->group(function () {
         Route::get('activities', DocumentActivityController::class)->name('file.activities');
         Route::get('preview', [DocumentActionsController::class, 'preview'])->name('file.preview');
         Route::put('file-visibility', [DocumentPermissionController::class, 'visibility'])->name('file.visibility');
+        Route::resource('file-move', DocumentMoveController::class)->only(['index', 'store']);
         Route::resource('file-download', DocumentDownloadController::class)->only(['index', 'store']);
         Route::resource('document-checkouts', DocumentCheckOutController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::resource('document-tags', DocumentTagsController::class)->only(['create', 'store']);

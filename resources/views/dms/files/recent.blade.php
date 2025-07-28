@@ -36,8 +36,7 @@
                  </ul>
              </div>--}}
 
-
-            <div class="table-responsive card bg-transparent border-0 shadow-none">
+            <div class="table-responsive card bg-transparent border-0 shadow-none" style="min-height: 30vh">
                 <table class="table table-borderless file-card">
                     <tbody id="fileContents" data-url="{{ request()->url() }}"></tbody>
                 </table>
@@ -108,6 +107,7 @@
                 $('#trashFileModal').removeClass('d-none');
                 $Modal.modal('show');
             });
+
             $('form#trashFileForm').submit(async function (e) {
                 e.preventDefault();
                 const response = await saveForm($(this), $('#trashFileBtn'), false, true, true);
@@ -167,7 +167,7 @@
                 '<td> <div class="d-flex flex-wrap gap-2">' + tagsContent + ' </div> </td>' +
                 '<td> <ul class="list-inline text-end"> <li class="list-inline-item mx-2"> ' + file.visibility.icon + ' </li>' +
                 '<li class="list-inline-item"><div class="dropdown"><a class="avtar avtar-xs btn-link-secondary dropdown-toggle arrow-none" href="#" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="material-icons-two-tone f-18">more_vert</i></a><div class="dropdown-menu dropdown-menu-end" style="">' +
-                '<a class="dropdown-item" href="' + file.links.detail + '">Details</a> ' +
+                '<a class="dropdown-item f-w-600" href="' + file.links.detail + '">Details</a> ' +
                 '<a class="dropdown-item click-summary-data" href="javascript:void(0)" data-summary_title=" ' + file.type.icon + ' ' + file.name + ' " data-click_url="' + file.links.summary + '"> share </a>' +
                 '<a class="dropdown-item file-action-trash" data-title=" ' + file.type.icon + ' ' + file.name + ' " data-url="' + file.links.detail + '" href="#">Delete</a></div></div></li> </ul> </td> </tr>';
             if (prepend) {

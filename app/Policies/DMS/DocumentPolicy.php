@@ -55,7 +55,7 @@ class DocumentPolicy
      */
     public function delete(User $user, Document $document): bool
     {
-        return Document::query()->userRole($user, [RoleEnum::Admin->value])->where('Id', $document->Id)->exists();
+        return $this->admin($user, $document);
     }
 
     /**

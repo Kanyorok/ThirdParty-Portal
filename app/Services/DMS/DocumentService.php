@@ -180,14 +180,12 @@ class DocumentService extends PermissionsService
      */
     protected function _newVersion(DisksEnum $disk, string $path, string $name, int $sizeInBytes, User $actor, Collection $properties = null, string $checksum = null): static
     {
-        $propertiesService = new FileProperties($this->document);
-
         $this->document->versions()->create([
             "Name" => $name,
             "Version" => $this->document->versions()->count() + 1,
             "Path" => $path,
             "Disk" => $disk->value,
-            "Checksum" => $checksum ?? $propertiesService->generateChecksum($disk, $path),
+            "Checksum" => $checksum ?? (new FileProperties($this->document))->generateChecksum($disk, $path),
             "Size" => $sizeInBytes,
             "Blob" => '',
             'CreatedBy' => $actor->Id,
@@ -196,7 +194,7 @@ class DocumentService extends PermissionsService
         $generate = true;
 
         if ($properties instanceof Collection) {
-            $propertiesService->setProperties($actor, $properties);
+            (new FileProperties($this->document))->setProperties($actor, $properties);
             $generate = false;
         }
 
