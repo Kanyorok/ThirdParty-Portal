@@ -60,7 +60,7 @@ class PropertyUnitController extends Controller
                 $validated['UnitSize'],
                 $validated['IsRentable'] ? 1 : 0,
                 $validated['CurrentStatus'] ? 1 : 0,
-                $validated['Remarks'],
+                $validated['Remarks'] ?? '',
                 auth()->user()
 
             );

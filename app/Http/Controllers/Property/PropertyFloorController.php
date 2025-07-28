@@ -62,9 +62,9 @@ class PropertyFloorController extends Controller
                 PropertyRegistry::findOrFail($validated['PropertyID']),
                 PropertyBlock::findOrFail($validated['BlockID']),
                 $validated['FloorLabel'],
-                $validated['FloorNotes'],
+                $validated['FloorNotes'] ?? '',
                 auth()->user()
-            );
+            ); 
             return redirect()->route('addfloor.index')->with('success', 'Floor added!');
         } catch (Exception $e) {
             return back()->withErrors('Failed: ' . $e->getMessage())->withInput();

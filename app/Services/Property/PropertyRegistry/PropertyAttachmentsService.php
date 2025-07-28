@@ -20,7 +20,7 @@ class PropertyAttachmentsService
         PropertyRegistry  $PropertyID,
         string         $DocumentTitle,
         CodeDetail      $DocumentType,
-        string        $Description,
+        string        $Description = null,
          User          $user,
     ): self
     {

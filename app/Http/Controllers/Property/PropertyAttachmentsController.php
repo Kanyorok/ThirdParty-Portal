@@ -45,7 +45,7 @@ class PropertyAttachmentsController extends Controller
             $PropertyID,
             $validated['DocumentTitle'],
              $DocumentType,
-            $validated['Description'],
+            $validated['Description'] ?? '',
             auth()->user()
         );
         return redirect()->route('attachments.index')->with('success', 'Property attachment created successfully');

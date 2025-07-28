@@ -25,7 +25,7 @@ class PropertyAttachmentsRequest extends FormRequest
             'PropertyID' => 'required|exists:t_PropertyRegistry,Id',
             'DocumentTitle' => 'required|string|max:100',
             'DocumentType' => 'required|exists:t_CodeDetails,ID',
-            'Description' => 'required|string|max:255',
+            'Description' => 'nullable|string|max:255',
         ];
     }
 }

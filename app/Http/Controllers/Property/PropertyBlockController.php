@@ -35,8 +35,8 @@ class PropertyBlockController extends Controller
 
         $propertyblock = PropertyBlockService::create(
             $propertyregistry,
-            $validated['BlockName'] ?? '--',
-            $validated['Description'] ?? '--',
+            $validated['BlockName'],
+            $validated['Description'] ?? '',
             auth()->user()
         );
 

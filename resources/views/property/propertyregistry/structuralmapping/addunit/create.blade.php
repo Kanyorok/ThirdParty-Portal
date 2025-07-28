@@ -20,7 +20,7 @@
     <div class="card-body">
       <div class="row g-3 mb-3">
             <div class="col-md-6">
-                <label class="form-label">Select Property</label>
+                <label class="form-label">Select Property<span class="text-danger">*</span></label>
                 <select name="PropertyID" id="property-select" class="form-select" required>
                   <option value="">-- Select Property --</option>
                     @foreach ($lineentries as $property)
@@ -31,36 +31,36 @@
         </div>
       <div class="row g-3 mb-3">
         <div class="col-md-6">
-          <label class="form-label">Select Block</label>
+          <label class="form-label">Select Block<span class="text-danger">*</span></label>
             <select name="BlockID" id="block-select" class="form-select" required>
                 <option value="">-- Select Block --</option>  
             </select>
         </div>
         <div class="col-md-4">
-          <label class="form-label">Select Floor</label>
+          <label class="form-label">Select Floor<span class="text-danger">*</span></label>
             <select name="FloorID" id="floor-select" class="form-select" required>
             <option value="">-- Select Floor --</option>
             </select>
         </div>
         <div class="col-md-4">
-          <label class="form-label">Unit Code / Label</label>
+          <label class="form-label">Unit Code <span class="text-danger">*</span></label>
             <input type="text" class="form-control" placeholder="e.g. Unit 101" name="UnitCode">
         </div>
         <div class="col-md-4">
-          <label class="form-label">Unit Size (sq. ft)</label>
+          <label class="form-label">Unit Size (sq. ft)<span class="text-danger">*</span></label>
             <input type="number" class="form-control" placeholder="e.g. 1200" name="UnitSize">
         </div>
       </div>
 
         <div class="form-check form-check-inline">
-          <label class="form-label">Is Rentable?</label>
+          <label class="form-label">Is Rentable?<span class="text-danger">*</span></label>
           <select class="form-select" name="IsRentable" required>
             <option value="1" {{ old('IsRentable') == '1' ? 'selected' : '' }}>Yes</option>
             <option value="0" {{ old('IsRentable') == '0' ? 'selected' : '' }}>No</option>
           </select>
         </div>
         <div class="col-md-4">
-          <label class="form-label">Current Status</label>
+          <label class="form-label">Current Status<span class="text-danger">*</span></label>
             <select class="form-select" name="CurrentStatus">
             <option value="1" {{ old('CurrentStatus') == '1' ? 'selected' : '' }}>Vacant</option>
             <option value="0" {{ old('CurrentStatus') == '0' ? 'selected' : '' }}>Occupied</option>
