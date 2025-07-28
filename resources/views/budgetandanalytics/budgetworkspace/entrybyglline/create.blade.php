@@ -21,7 +21,7 @@
                             <option selected disabled>-- Select Budget --</option>
                             @foreach ($budgets as $item)
                                 <option value="{{ $item->Id }}">{{ $item->Name }}
-                                    - {{ $item->From.' '.$item->To }}</option>
+                                    - ({{ $item->From.' |to| '.$item->To }})</option>
                             @endforeach
                         </select>
                     </div>
