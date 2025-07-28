@@ -24,8 +24,8 @@ class PriceManagementService
 
         if (!$isUpdate) {
             // Only required on create
-            $rules['ItemID'] = 'required|exists:t_ItemMasterList,Id';
-            $rules['UOM'] = 'required|exists:t_UnitOfMeasure,Id';
+            $rules['ItemID'] = 'required|exists:t_Items,Id';
+            $rules['UOM'] = 'required|exists:t_UOM,Id';
         }
 
         return Validator::make($data, $rules);
@@ -43,7 +43,6 @@ class PriceManagementService
         $pricing->CreatedOn = Carbon::now();
         $pricing->ModifiedBy = Auth::id();
         $pricing->ModifiedOn = Carbon::now();
-        $pricing->save();
 
         $pricing->PriceID = 'PR-' . str_pad($pricing->Id, 5, '0', STR_PAD_LEFT);
         $pricing->save();
