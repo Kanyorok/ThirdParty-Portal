@@ -1,7 +1,7 @@
 <?php
 
 
-namespace App\Http\Controllers\Insuarance;
+namespace App\Http\Controllers\Insurance;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
