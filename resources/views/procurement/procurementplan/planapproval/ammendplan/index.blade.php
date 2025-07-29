@@ -41,18 +41,15 @@
     <form method="GET" action="{{ route('planning.editDraftItems') }}" class="mb-3">
         <div class="row g-2 align-items-end">
             <div class="col-md-6">
-                <label for="PlanID" class="form-label">Select Draft Plan</label>
-                <select name="PlanID" id="PlanID" class="form-select" onchange="this.form.submit()">
-                    <option value="">-- Choose Draft Plan --</option>
-                    @foreach($availablePlans as $plan)
-                        <option value="{{ $plan->PlanID }}" {{ $PlanID == $plan->PlanID ? 'selected' : '' }}>
-                            {{ $plan->Title ?? 'Unnamed Plan' }}
-                        </option>
-                    @endforeach
+                <label for="PlanID" class="form-label">Selected Draft Plan</label>
+                <select name="PlanID" id="PlanID" class="form-select" readonly disabled>
+                    @if($PlanID && $selectedPlan = $availablePlans->firstWhere('PlanID', $PlanID))
+                        <option value="{{ $selectedPlan->PlanID }}" selected>{{ $selectedPlan->Title ?? 'Unnamed Plan' }}</option>
+                    @else
+                        <option value="">-- Choose Draft Plan --</option>
+                    @endif
                 </select>
-            </div>
-            <div class="col-md-3">
-                <button type="submit" class="btn btn-primary">🔍 Filter</button>
+                <input type="hidden" name="PlanID" value="{{ $PlanID }}">
             </div>
         </div>
     </form>

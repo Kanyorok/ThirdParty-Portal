@@ -2,6 +2,7 @@
 
 namespace App\Services\Property\BillingAndReceipting;
 
+use App\Enums\Property\PropertyInvoiceEnum;
 use App\Models\Auth\User;
 use App\Models\PropertyManagement\PropertyInvoice;
 use App\Models\PropertyManagement\PropertyNewLease;
@@ -23,7 +24,9 @@ class PropertyInvoiceService
         float  $RentAmount,
         float  $ServicesCharge,
         float  $OtherCharges,
+        float  $ParkingFee,
         string $InvoiceNotes,
+        PropertyInvoiceEnum $Status,
         User   $user
     ): self
     {
@@ -42,6 +45,8 @@ class PropertyInvoiceService
             'ServicesCharge' => $ServicesCharge,
             'OtherCharges' => $OtherCharges,
             'InvoiceNotes' => $InvoiceNotes,
+            'ParkingFee'    =>  $ParkingFee,
+            'Status' => PropertyInvoiceEnum::Pending->value,
             'CreatedBy' => $user->Id,
             'ModifiedBy' => $user->Id,
         ]);

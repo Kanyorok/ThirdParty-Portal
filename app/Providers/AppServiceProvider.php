@@ -40,6 +40,10 @@ use App\Models\Core\Task;
 use App\Models\CRM\Campaign;
 use App\Models\CRM\CampaignParty;
 use App\Models\CRM\Contact;
+use App\Models\Finance\FinanceGLAccounts;
+use App\Models\Finance\FinanceGLSubAccountTypes;
+use App\Models\Finance\FinanceGLTypeGroup;
+use App\Models\HRM\Committee;
 use App\Models\CRM\Discussion;
 use App\Models\CRM\Lead;
 use App\Models\CRM\MarketingPlanner;
@@ -61,6 +65,7 @@ use App\Models\DMS\Image;
 use App\Models\DMS\Repository;
 use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
+use App\Models\Procurement\DepartmentNeed;
 use App\Models\Inventory\InterBranchRequisition;
 use App\Models\Inventory\InventoryHoldReview;
 use App\Models\Inventory\InventoryType;
@@ -75,7 +80,6 @@ use App\Models\Inventory\TransactionReceipt;
 use App\Models\Inventory\TransactionTransfer;
 use App\Models\Inventory\UnitOfMeasure;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
-use App\Models\Procurement\DepartmentNeed;
 use App\Models\Procurement\Order;
 use App\Models\Procurement\PlanLineItem;
 use App\Models\Procurement\PrequalificationPeriod;
@@ -89,6 +93,8 @@ use App\Models\PropertyManagement\PropertyBlock;
 use App\Models\PropertyManagement\PropertyFloor;
 use App\Models\PropertyManagement\PropertyInvoice;
 use App\Models\PropertyManagement\PropertyLeaseRenewal;
+use App\Models\PropertyManagement\PropertyLeaseTermination;
+use App\Models\PropertyManagement\PropertyNewLease;
 use App\Models\PropertyManagement\PropertyUnit;
 use App\Models\PropertyManagement\PropertyLeaseSchedule;
 use App\Models\PropertyManagement\PropertyNewTenant;
@@ -131,6 +137,8 @@ use App\Policies\PropertyManagement\PropertyFloorPolicy;
 use App\Policies\PropertyManagement\PropertyInvoicePolicy;
 use App\Policies\PropertyManagement\PropertyLeaseRenewalPolicy;
 use App\Policies\PropertyManagement\PropertyLeaseSchedulePolicy;
+use App\Policies\PropertyManagement\PropertyLeaseTerminationPolicy;
+use App\Policies\PropertyManagement\PropertyNewLeasePolicy;
 use App\Policies\PropertyManagement\PropertyNewTenantPolicy;
 use App\Policies\PropertyManagement\PropertyReceiptPolicy;
 use App\Policies\PropertyManagement\PropertyRegistryPolicy;
@@ -143,6 +151,9 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Permission\Models\Role;
+use App\Models\Finance\FinanceInvoiceEntry;
+use App\Models\Finance\FinanceTaxType;
+use App\Models\Finance\TaxJurisdiction;
 
 
 class AppServiceProvider extends ServiceProvider
@@ -170,29 +181,23 @@ class AppServiceProvider extends ServiceProvider
 
             //CRM
             Account::getPrimaryKey() => Account::class,
-            APICredential::getPrimaryKey() => APICredential::class,
             Board::getPrimaryKey() => Board::class,
             Call::getPrimaryKey() => Call::class,
             Campaign::getPrimaryKey() => Campaign::class,
             CampaignParty::getPrimaryKey() => CampaignParty::class,
             Client::getPrimaryKey() => Client::class,
-            Branch::getPrimaryKey() => Branch::class,
             Email::getPrimaryKey() => Email::class,
-            Comment::getPrimaryKey() => Comment::class,
             Competitor::getPrimaryKey() => Competitor::class,
+            Committee::getPrimaryKey() => Committee::class,
             Contact::getPrimaryKey() => Contact::class,
             DebtProduct::getPrimaryKey() => DebtProduct::class,
             Department::getPrimaryKey() => Department::class,
             Discussion::getPrimaryKey() => Discussion::class,
-            Employee::getPrimaryKey() => Employee::class,
             Lead::getPrimaryKey() => Lead::class,
             MarketingPlanner::getPrimaryKey() => MarketingPlanner::class,
             Meeting::getPrimaryKey() => Meeting::class,
             Notes::getPrimaryKey() => Notes::class,
             ProductDevelopment::getPrimaryKey() => ProductDevelopment::class,
-            Report::getPrimaryKey() => Report::class,
-            RFQ::getPrimaryKey() => RFQ::class,
-            RFQLine::getPrimaryKey() => RFQLine::class,
             Review::getPrimaryKey() => Review::class,
             Schedule::getPrimaryKey() => Schedule::class,
             Social::getPrimaryKey() => Social::class,
@@ -228,10 +233,6 @@ class AppServiceProvider extends ServiceProvider
             Store::getPrimaryKey() => Store::class,
             UnitOfMeasure::getPrimaryKey() => UnitOfMeasure::class,
             PriceManagement::getPrimaryKey() => PriceManagement::class,
-            SchedulePlan::getPrimaryKey() => SchedulePlan::class,
-            InterBranchRequisition::getPrimaryKey() => InterBranchRequisition::class,
-            ConsolidatedProcurementPlan::getPrimaryKey() => ConsolidatedProcurementPlan::class,
-            //PlanLineItems::getPrimaryKey() => PlanLineItems::class,
             TransactionReceipt::getPrimaryKey() => TransactionReceipt::class,
             TransactionTransfer::getPrimaryKey() => TransactionTransfer::class,
             StockAdjustment::getPrimaryKey() => StockAdjustment::class,
@@ -282,9 +283,7 @@ class AppServiceProvider extends ServiceProvider
             BudgetMonthlyProjectionAllocation::getPrimaryKey() => BudgetMonthlyProjectionAllocation::class,
             BudgetManualEntryAllocations::getPrimaryKey() => BudgetManualEntryAllocations::class,
             CategoryMaster::getPrimaryKey() => CategoryMaster::class,
-            PropertyType::getPrimaryKey() => PropertyType::class,
-            PropertyRegistry::getPrimaryKey() => PropertyRegistry::class,
-            PropertyBlock::getPrimaryKey() => PropertyBlock::class,
+
 
             //DMS
             DMSTags::getPrimaryKey() => DMSTags::class,
@@ -295,16 +294,31 @@ class AppServiceProvider extends ServiceProvider
             DocumentVersion::getPrimaryKey() => DocumentVersion::class,
             Image::getPrimaryKey() => Image::class,
             Repository::getPrimaryKey() => Repository::class,
+
+
             PropertyNewTenant::getPrimaryKey() => PropertyNewTenant::class,
             PropertyTenantClearance::getPrimaryKey() => PropertyTenantClearance::class,
             PropertyFloor::getPrimaryKey() => PropertyFloor::class,
             PropertyUnit::getPrimaryKey() => PropertyUnit::class,
+            PropertyNewLease::getPrimaryKey() => PropertyNewLease::class,
             PropertyLeaseSchedule::getPrimaryKey() => PropertyLeaseSchedule::class,
             PropertyLeaseRenewal::getPrimaryKey() => PropertyLeaseRenewal::class,
             PropertyInvoice::getPrimaryKey() => PropertyInvoice::class,
+            PropertyType::getPrimaryKey() => PropertyType::class,
+            PropertyRegistry::getPrimaryKey() => PropertyRegistry::class,
+            PropertyBlock::getPrimaryKey() => PropertyBlock::class,
+            PropertyLeaseTermination::getPrimaryKey() => PropertyLeaseTermination::class,
 
 
             PrequalificationPeriod::getPrimaryKey() => PrequalificationPeriod::class,
+
+            //////////////  Finance  ////////////////
+            FinanceGLAccounts::getPrimaryKey()=>FinanceGLAccounts::class,
+            FinanceGLSubAccountTypes::getPrimaryKey()=>FinanceGLSubAccountTypes::class,
+            FinanceGLTypeGroup::getPrimaryKey()=>FinanceGLTypeGroup::class,
+            TaxJurisdiction::getPrimaryKey() => TaxJurisdiction::class,
+            FinanceTaxType::getPrimaryKey() => FinanceTaxType::class,
+            FinanceInvoiceEntry::getPrimaryKey() => FinanceInvoiceEntry::class,
         ]);
 
         Gate::policy(Role::class, RolePolicy::class);
@@ -347,6 +361,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PropertyInvoice::class, PropertyInvoicePolicy::class);
         Gate::policy(PropertyReceipt::class, PropertyReceiptPolicy::class);
         Gate::policy(PrequalificationPeriod::class, PrequalificationPeriodPolicy::class);
+        Gate::Policy(PropertyNewLease::class, PropertyNewLeasePolicy::class);
+        Gate::policy(PropertyLeaseTermination::class, PropertyLeaseTerminationPolicy::class);
+
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);
          Event::listen(SMSSendEvent::class, SMSSendListener::class);
@@ -384,5 +401,7 @@ class AppServiceProvider extends ServiceProvider
          Event::listen(NewCampaignEvent::class);
          Event::listen(CampaignSubmittedEvent::class);
          Event::listen(CampaignRunEvent::class);*/
+
+
     }
 }
