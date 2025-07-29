@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\bancassurance\BancassuranceReferralController;
-use App\Http\Controllers\bancassurance\CustomerController;
+use App\Http\Controllers\Insurance\CustomerController;
 use App\Http\Controllers\bancassurance\CustomerBeneficiaryController;
 use App\Http\Controllers\bancassurance\CustomerCommunicationController;
 use App\Http\Controllers\bancassurance\PolicyController;
