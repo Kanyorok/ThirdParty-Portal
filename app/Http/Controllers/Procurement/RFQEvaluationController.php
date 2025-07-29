@@ -187,10 +187,11 @@ class RFQEvaluationController extends Controller
         $member = RFQCommitteeMember::with('user.employee')
             ->where('RFQID', $rfq->Id)
             ->where('UserID', $employeeId)
+            ->where('Response', 1)
             ->first();
 
         if (!$member) {
-            return response()->json(['error' => 'User not part of committee']);
+            return response()->json(['error' => 'User not part of committee or has not accepted the appointment']);
         }
 
         return response()->json([
