@@ -19,20 +19,38 @@ public function store(Request $request)
     DB::table('t_BancassuranceCustomers')->insert([
         'FullName' => $request->FullName,
         'NationalID' => $request->NationalID,
-        'KRA_PIN' => $request->KRA_PIN,
+        'KRAPIN' => $request->KRAPIN,
         'DateOfBirth' => $request->DateOfBirth,
         'Gender' => $request->Gender,
         'MaritalStatus' => $request->MaritalStatus,
-        'Phone' => $request->Phone,
+        'PhoneNumber' => $request->PhoneNumber,
         'Email' => $request->Email,
         'Address' => $request->Address,
         'Occupation' => $request->Occupation,
         'CreatedBy' => auth()->id(),
-        'CreatedAt' => now(),
+        'ModifiedBy' => now(),
     ]);
 
     return redirect()->route('bancassurance.customers.index')->with('success', 'Customer profile saved.');
 }
+
+//  public function store(PropertyBlockRequest $request)
+//     {
+
+//         $validated = $request->validated();
+
+//         $propertyregistry = PropertyRegistry::findOrFail($validated['PropertyID']);
+
+//         $propertyblock = PropertyBlockService::create(
+//             $propertyregistry,
+//             $validated['BlockName'],
+//             $validated['Description'] ?? '',
+//             auth()->user()
+//         );
+
+//            return redirect()->route('addblock.index')->with('success','property block created successfully');
+//     }
+
 
 public function portfolio($customerId)
 {

@@ -22,10 +22,10 @@ class PropertyInvoiceService
         string $BillingMonth,
         string $InvoiceDate,
         float  $RentAmount,
-        float  $ServicesCharge,
-        float  $OtherCharges,
-        float  $ParkingFee,
-        string $InvoiceNotes,
+        float  $ServicesCharge = null,
+        float  $OtherCharges = null,
+        float  $ParkingFee = null,
+        string $InvoiceNotes = null,
         PropertyInvoiceEnum $Status,
         User   $user
     ): self

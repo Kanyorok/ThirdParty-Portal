@@ -19,7 +19,7 @@
             </div>
             <div class="col-md-3">
                 <label class="form-label">KRA PIN</label>
-                <input type="text" name="KRA_PIN" class="form-control">
+                <input type="text" name="KRAPIN" class="form-control">
             </div>
         </div>
 
