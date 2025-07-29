@@ -410,6 +410,16 @@ enum PermissionEnum: string
     case PropertyMaintenanceWorkCompletionView = 'propertymaintenanceworkcompletion-view';
 
 
+
+    /*
+     *
+     * ========================================  Insurance  ========================================
+     */
+
+    case BancassuranceReferralCreate = 'bancassurancereferralcreate';
+    case BancassuranceReferralUpdate = 'bancassurancereferralupdate';
+    case BancassuranceReferralDelete = 'bancassurancereferraldelete';
+    case BancassuranceReferralView = 'bancassurancereferralview';
     
 
     /*
@@ -537,7 +547,6 @@ enum PermissionEnum: string
             [self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate, self::BudgetSetupDelete],
 
 
-            //Property Management
             ///////////////////////  Finance  /////////////////////////////////////
             [self::FinanceCOAView, self::FinanceCOACreate, self::FinanceCOAUpdate, self::FinanceCOADelete],
             [self::FinanceGeneralLedgerView, self::FinanceGeneralLedgerCreate, self::FinanceGeneralLedgerUpdate, self::FinanceGeneralLedgerDelete],
@@ -545,7 +554,7 @@ enum PermissionEnum: string
             [self::FinanceAccountsReceivableView, self::FinanceAccountsReceivableCreate, self::FinanceAccountsReceivableUpdate, self::FinanceAccountsReceivableDelete],
             [self::FinanceTaxSettingView, self::FinanceTaxSettingCreate, self::FinanceTaxSettingUpdate, self::FinanceTaxSettingDelete],
 
-
+            //Property Management
             [self::PropertyCategoryView,self::PropertyCategoryCreate,self::PropertyCategoryUpdate,self::PropertyCategoryDelete],
             [self::PropertyTypeView,self::PropertyTypeCreate,self::PropertyTypeUpdate,self::PropertyTypeDelete],
             [self::PropertyRegistryView,self::PropertyRegistryCreate,self::PropertyRegistryUpdate,self::PropertyRegistryDelete],
@@ -562,6 +571,10 @@ enum PermissionEnum: string
             [self::PropertyMaintenanceRequestCreate,self::PropertyMaintenanceRequestUpdate,self::PropertyMaintenanceRequestDelete,self::PropertyMaintenanceRequestView],
             [self::PropertyMaintenanceAssignCreate,self::PropertyMaintenanceAssignUpdate,self::PropertyMaintenanceAssignDelete,self::PropertyMaintenanceAssignView],
             [self::PropertyMaintenanceWorkCompletionCreate,self::PropertyMaintenanceWorkCompletionUpdate,self::PropertyMaintenanceWorkCompletionDelete,self::PropertyMaintenanceWorkCompletionView],
+
+
+            //Insurance
+            [self::BancassuranceReferralCreate,self::BancassuranceReferralView,self::BancassuranceReferralUpdate,self::BancassuranceReferralDelete]
         ]);
     }
 
@@ -654,6 +667,12 @@ enum PermissionEnum: string
             self::PropertyMaintenanceWorkCompletionCreate,self::PropertyMaintenanceWorkCompletionUpdate,self::PropertyMaintenanceWorkCompletionDelete,self::PropertyMaintenanceWorkCompletionView
             => ModulesEnum::Property,
             default => throw new LogicException("Unhandled PermissionEnum case: {$this->value}"),
+
+            //Insurance
+            self::BancassuranceReferralCreate,self::BancassuranceReferralView,self::BancassuranceReferralUpdate,self::BancassuranceReferralDelete
+            =>ModulesEnum::Insurance,
+
+
 
             ///////////////^*********** Budget and Analytics ******************/////////////////
                 self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate, self::BudgetSetupDelete
@@ -757,6 +776,11 @@ enum PermissionEnum: string
             self::PropertyMaintenanceAssignCreate,self::PropertyMaintenanceAssignUpdate,self::PropertyMaintenanceAssignDelete,self::PropertyMaintenanceAssignView => 'Property Maintenance Assign',
             self::PropertyMaintenanceWorkCompletionCreate,self::PropertyMaintenanceWorkCompletionUpdate,self::PropertyMaintenanceWorkCompletionDelete,self::PropertyMaintenanceWorkCompletionView => 'Property Maintenance Work Completion',
             default => throw new LogicException("Unhandled PermissionEnum case: {$this->value}"),
+
+            //Insurance
+            self::BancassuranceReferralCreate,self::BancassuranceReferralView,self::BancassuranceReferralUpdate,self::BancassuranceReferralDelete => 'Referral',
+
+
 
             ///////////////////////  Finance   /////////////////////////
             self::FinanceCOAView, self::FinanceCOACreate, self::FinanceCOAUpdate, self::FinanceCOADelete => 'Chart of Accounts',

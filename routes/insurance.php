@@ -1,27 +1,27 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\bancassurance\BancassuranceReferralController;
-use App\Http\Controllers\bancassurance\CustomerController;
-use App\Http\Controllers\bancassurance\CustomerBeneficiaryController;
-use App\Http\Controllers\bancassurance\CustomerCommunicationController;
-use App\Http\Controllers\bancassurance\PolicyController;
-use App\Http\Controllers\bancassurance\UnderwritingController;
-use App\Http\Controllers\bancassurance\PremiumController;
-use App\Http\Controllers\bancassurance\ClaimController;
-use App\Http\Controllers\Bancassurance\ClaimPaymentController;
-use App\Http\Controllers\Bancassurance\CommissionRuleController;
-use App\Http\Controllers\Bancassurance\CommissionTierController;
-use App\Http\Controllers\Bancassurance\CommissionEarnedController;
-use App\Http\Controllers\Bancassurance\CommissionPayoutController;
-use App\Http\Controllers\Bancassurance\InsuranceProviderController;
-use App\Http\Controllers\Bancassurance\InsuranceProductController;
-use App\Http\Controllers\Bancassurance\InsuranceProviderProductController;
-use App\Http\Controllers\Bancassurance\InsuranceProductRiderController;
-use App\Http\Controllers\Bancassurance\PricingRuleController;
-use App\Http\Controllers\Bancassurance\ProductLifecycleController;
-use App\Http\Controllers\Bancassurance\SettingsController;
-use App\Http\Controllers\Bancassurance\ClaimClosureController;
+use App\Http\Controllers\Insuarance\BancassuranceReferralController;
+use App\Http\Controllers\Insuarance\CustomerController;
+use App\Http\Controllers\Insuarance\CustomerBeneficiaryController;
+use App\Http\Controllers\Insuarance\CustomerCommunicationController;
+use App\Http\Controllers\Insuarance\PolicyController;
+use App\Http\Controllers\Insuarance\UnderwritingController;
+use App\Http\Controllers\Insuarance\PremiumController;
+use App\Http\Controllers\Insuarance\ClaimController;
+use App\Http\Controllers\Insuarance\ClaimPaymentController;
+use App\Http\Controllers\Insuarance\CommissionRuleController;
+use App\Http\Controllers\Insuarance\CommissionTierController;
+use App\Http\Controllers\Insuarance\CommissionEarnedController;
+use App\Http\Controllers\Insuarance\CommissionPayoutController;
+use App\Http\Controllers\Insuarance\InsuranceProviderController;
+use App\Http\Controllers\Insuarance\InsuranceProductController;
+use App\Http\Controllers\Insuarance\InsuranceProviderProductController;
+use App\Http\Controllers\Insuarance\InsuranceProductRiderController;
+use App\Http\Controllers\Insuarance\PricingRuleController;
+use App\Http\Controllers\Insuarance\ProductLifecycleController;
+use App\Http\Controllers\Insuarance\SettingsController;
+use App\Http\Controllers\Insuarance\ClaimClosureController;
 
 
 Route::namespace('Insurance')->prefix('insurance')->group(function () {

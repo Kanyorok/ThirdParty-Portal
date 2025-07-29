@@ -65,6 +65,7 @@ use App\Models\DMS\Image;
 use App\Models\DMS\Repository;
 use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
+use App\Models\Insurance\BancAssuranceReferral;
 use App\Models\Inventory\InterBranchRequisition;
 use App\Models\Inventory\InventoryHoldReview;
 use App\Models\Inventory\InventoryType;
@@ -80,7 +81,6 @@ use App\Models\Inventory\TransactionTransfer;
 use App\Models\Inventory\UnitOfMeasure;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\DepartmentNeed;
-use App\Models\Procurement\DepartmentNeeds;
 use App\Models\Procurement\Order;
 use App\Models\Procurement\PlanLineItem;
 use App\Models\Procurement\PrequalificationPeriod;
@@ -114,6 +114,7 @@ use App\Policies\CrmBranchPolicy;
 use App\Policies\DMS\DMSTagPolicy;
 use App\Policies\DMS\DocumentPolicy;
 use App\Policies\DMS\RepositoryPolicy;
+use App\Policies\Insurance\BancAssuranceReferralPolicy;
 use App\Policies\Inventory\InterBranchRequisitionPolicy;
 use App\Policies\Inventory\InventoryHoldReviewPolicy;
 use App\Policies\Inventory\InventoryTypePolicy;
@@ -299,13 +300,16 @@ class AppServiceProvider extends ServiceProvider
             DocumentVersion::getPrimaryKey() => DocumentVersion::class,
             Image::getPrimaryKey() => Image::class,
             Repository::getPrimaryKey() => Repository::class,
+
+            //Insurance
+            BancAssuranceReferral::getPrimaryKey() => BancAssuranceReferral::class,
             
             
 
 
 
 
-
+            //Third Parties
             PrequalificationPeriod::getPrimaryKey() => PrequalificationPeriod::class,
 
             //////////////  Finance  ////////////////
@@ -363,6 +367,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PrequalificationPeriod::class, PrequalificationPeriodPolicy::class);
         Gate::Policy(PropertyNewLease::class, PropertyNewLeasePolicy::class);
         Gate::policy(PropertyLeaseTermination::class, PropertyLeaseTerminationPolicy::class);
+        Gate::policy(BancAssuranceReferral::class, BancAssuranceReferralPolicy::class);
 
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);

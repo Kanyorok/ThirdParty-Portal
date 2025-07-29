@@ -11,7 +11,28 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::create('t_BancassuranceReferrals', function (Blueprint $table) {
+            $table->id('Id');
+            $table->String('ClientName');
+            $table->String('ClientIDNumber');
+            $table->String('ClientPhone');
+            $table->String('ClientEmail');
+            $table->foreignId('BranchId')->constrained('t_Branches', 'Id');
+            $table->foreignId('RefferedBy')->constrained('t_Users', 'Id');
+            $table->date('ReferralDate');
+            $table->foreignId('InsuranceProdeuctId')->constrained('t_CodeDetails','ID');
+            $table->foreignId('PreferredInsurerId')->constrained('t_CodeDetails','ID');
+            $table->String('Remarks');
+            $table->String('Status');
+            $table->String('AssignedTo');
+            $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('CreatedOn');
+            $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('ModifiedOn');
+            $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
+            $table->softDeletes('DeletedOn');
 
+        });
     }
 
     /**
