@@ -8,8 +8,9 @@
                 <h6 class="mb-0 text-muted"><i class="fab fa-wpforms text-info"></i></h6>
             </div>
             <div class="card-body">
-                <form method="POST" action="#" id="journalForm">
+                <form method="POST" action="{{route('journalentry.store')}}" id="journalForm">
                     @csrf
+                    @method('POST')
 
                     {{-- Journal Header --}}
                     <div class="row mb-4">
@@ -17,19 +18,6 @@
                             <label class="form-label">Journal Date</label>
                             <input type="date" name="JournalDate" class="form-control" value="{{ date('Y-m-d') }}" required>
                         </div>
-{{--                        <div class="col-md-3">--}}
-{{--                            <label class="form-label">Reference Number</label>--}}
-{{--                            <input type="text" name="ReferenceNumber" class="form-control" placeholder="Optional or system-generated">--}}
-{{--                        </div>--}}
-{{--                        <div class="col-md-3">--}}
-{{--                            <label class="form-label">Transaction Type</label>--}}
-{{--                            <select name="TransactionTypeID" class="form-select" required>--}}
-{{--                                <option value="">-- Select --</option>--}}
-{{--                                <option value="JE">JE – Manual</option>--}}
-{{--                                <option value="REVJ">REVJ – Reversing</option>--}}
-{{--                                <option value="RECUR">RECUR – Recurring</option>--}}
-{{--                            </select>--}}
-{{--                        </div>--}}
                         <div class="col-md-6">
                             <label class="form-label">Description</label>
                             <input type="text" name="Description" class="form-control" placeholder="e.g., Loan Disbursement">
@@ -43,12 +31,12 @@
                         <table class="table table-bordered align-middle table-sm">
                             <thead class="table-light">
                             <tr>
-                                <th>#</th>
+                                <th>#</th> {{-- Reintroduced line number column --}}
                                 <th>GL Account</th>
                                 <th>Branch</th>
                                 <th>Department</th>
                                 <th>DR / CR</th>
-                                <th>Amount</th>
+                                <th style="width: 180px">Amount</th>
                                 <th>Narration</th>
                                 <th class="text-center">Action</th>
                             </tr>
@@ -56,29 +44,27 @@
                             <tbody id="journalBody">
                             @for ($i = 0; $i < 2; $i++)
                                 <tr>
-                                    <td>{{ $i + 1 }}</td>
+                                    <td class="line-number">{{ $i + 1 }}</td> {{-- Line number cell --}}
                                     <td>
-                                        <select name="GLAccount[]" class="form-select" required>
-                                            <option value="">Select</option>
-                                            <option value="1000">1000 - Cash & Bank</option>
-                                            <option value="1100">1100 - Cash - HQ</option>
-                                            <option value="2000">2000 - Accounts Payable</option>
-                                            <option value="3000">3000 - Revenue</option>
-                                            <option value="4000">4000 - Salary Expenses</option>
+                                        <select name="GLAccount[]" class="form-select form-control" required>
+                                            <option value="" selected disabled>Select GL</option>
+                                            @foreach($gls as $gl)
+                                                <option value="{{$gl->Id}}">{{$gl->GLName}}</option>
+                                            @endforeach
                                         </select>
                                     </td>
                                     <td>
                                         <select name="Branch[]" class="form-select" required>
-                                            <option value="001">001 - HQ</option>
-                                            <option value="002">002 - Nairobi</option>
-                                            <option value="003">003 - Mombasa</option>
+                                            @foreach($branches as $branch)
+                                                <option value="{{$branch->Id}}">{{$branch->Name}}</option>
+                                            @endforeach
                                         </select>
                                     </td>
                                     <td>
                                         <select name="Department[]" class="form-select" required>
-                                            <option value="100">100 - Finance</option>
-                                            <option value="200">200 - HR</option>
-                                            <option value="300">300 - Operations</option>
+                                            @foreach($departments as $department)
+                                                <option value="{{$department->Id}}">{{$department->Name}}</option>
+                                            @endforeach
                                         </select>
                                     </td>
                                     <td>
@@ -114,11 +100,10 @@
                         <span id="balanceStatus" class="badge bg-warning text-dark fw-bold px-3 py-2" style="font-size: 0.75rem;">
                             Unbalanced
                         </span>
-
                     </div>
 
                     <div class="d-flex justify-content-end gap-2">
-                        <a href="#" class="btn btn-secondary">Cancel</a>
+                        <a href="{{route('journalentry.index')}}" class="btn btn-secondary">Cancel</a>
                         <button type="submit" class="btn btn-success" id="postBtn" disabled>Post Journal</button>
                     </div>
                 </form>
@@ -135,6 +120,18 @@
         const postBtn = document.getElementById('postBtn');
         const balanceStatus = document.getElementById('balanceStatus');
 
+        // Function to update line numbers
+        function updateLineNumbers() {
+            const rows = body.querySelectorAll('tr');
+            rows.forEach((row, index) => {
+                const lineNumberCell = row.querySelector('.line-number');
+                if (lineNumberCell) {
+                    lineNumberCell.textContent = index + 1;
+                }
+            });
+        }
+
+        // Function to calculate totals and validate
         function calculateTotals() {
             let debit = 0, credit = 0, valid = true;
 
@@ -163,29 +160,40 @@
             }
         }
 
+        // Event listeners for input and change events
         document.addEventListener('input', calculateTotals);
         document.addEventListener('change', calculateTotals);
 
+        // Add new row
         document.getElementById('addRow').addEventListener('click', () => {
             const firstRow = body.querySelector('tr');
             const clone = firstRow.cloneNode(true);
 
+            // Clear inputs and reset selects in the cloned row
             clone.querySelectorAll('input, select').forEach(el => {
                 if (el.tagName === 'INPUT') el.value = '';
                 if (el.tagName === 'SELECT') el.selectedIndex = 0;
             });
 
+            // Append the new row
             body.appendChild(clone);
+
+            // Update line numbers and recalculate totals
+            updateLineNumbers();
             calculateTotals();
         });
 
+        // Remove row
         body.addEventListener('click', function (e) {
             if (e.target.closest('.remove-line') && body.rows.length > 1) {
                 e.target.closest('tr').remove();
+                updateLineNumbers();
                 calculateTotals();
             }
         });
 
-        calculateTotals(); // initial calc
+        // Initial calculations and line number setup
+        calculateTotals();
+        updateLineNumbers();
     </script>
 @endsection

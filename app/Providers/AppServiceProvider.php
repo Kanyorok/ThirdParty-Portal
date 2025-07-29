@@ -43,6 +43,8 @@ use App\Models\CRM\Contact;
 use App\Models\Finance\FinanceGLAccounts;
 use App\Models\Finance\FinanceGLSubAccountTypes;
 use App\Models\Finance\FinanceGLTypeGroup;
+use App\Models\Finance\FinanceJournalEntry;
+use App\Models\Finance\FinanceJournalLines;
 use App\Models\HRM\Committee;
 use App\Models\CRM\Discussion;
 use App\Models\CRM\Lead;
@@ -319,6 +321,8 @@ class AppServiceProvider extends ServiceProvider
             TaxJurisdiction::getPrimaryKey() => TaxJurisdiction::class,
             FinanceTaxType::getPrimaryKey() => FinanceTaxType::class,
             FinanceInvoiceEntry::getPrimaryKey() => FinanceInvoiceEntry::class,
+            FinanceJournalEntry::getPrimaryKey() => FinanceJournalEntry::class,
+            FinanceJournalLines::getPrimaryKey() => FinanceJournalLines::class,
         ]);
 
         Gate::policy(Role::class, RolePolicy::class);
