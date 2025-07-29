@@ -1,6 +1,11 @@
 @extends('layouts.app')
 @section('title', 'Approval Workflow Details')
 
+@section('styles')
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.6.2/dist/select2-bootstrap4.min.css" rel="stylesheet" />
+@endsection
+
 @section('content')
 <div class="card shadow p-4 rounded-4">
     <h4 class="mb-4">👁️ View Approval Workflow</h4>
@@ -21,58 +26,90 @@
         <dt class="col-sm-3">Created On</dt>
         <dd class="col-sm-9">{{ \Carbon\Carbon::parse($approval->CreatedOn)->format('d-m-Y H:i') }}</dd>
     </dl>
-    <div class="card" x-data="approvalWorkflow()">
-    <h4 class="mb-4">🛠️ Setup Approval Workflow Stages</h4>
 
-    <!-- Workflow Stages Form -->
-    <div class="space-y-4">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-                <label class="form-label">Stage Name</label>
-                <input type="text" class="form-control" x-model="stage.name">
+    <hr>
+
+    <div class="card shadow p-4 rounded-4 mt-4">
+        <h4 class="mb-4">➕ Add Approval Stage</h4>
+
+        <form method="POST" action="#" id="stageForm">
+            @csrf
+            <input type="hidden" name="WorkflowID" value="{{ $approval->Id }}">
+
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label for="StageName" class="form-label">Stage Name</label>
+                    <input type="text" name="StageName"  placeholder="e.g. Committee Stage" class="form-control" required value="{{ old('StageName') }}">
+                </div>
+
+                <div class="col-md-4">
+                    <label for="EscalationLimit" class="form-label">Escalation Limit</label>
+                    <input type="number" name="EscalationLimit" class="form-control"
+                        required min="1"
+                        placeholder="e.g. 3 – Days before escalation"
+                        value="{{ old('EscalationLimit') }}">
+                </div>
+
+                <div class="col-md-4">
+                    <label for="TypeID" class="form-label">Approval Type</label>
+                    <select name="TypeID" id="TypeID" class="form-select" required>
+                        <option value="">-- Select Type --</option>
+                        @foreach($approvalTypes as $type)
+                            <option value="{{ $type->Id }}">{{ $type->TypeID }} - {{ $type->Name }}</option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
 
-            <div>
-                <label class="form-label">Workflow Type</label>
-                <select class="form-control" x-model="stage.type">
-                    <option value="">-- Select --</option>
-                    <option value="COUNT">COUNT</option>
-                    <option value="ALL">ALL</option>
-                    <option value="AMOUNT">AMOUNT</option>
-                </select>
+            <div class="row mb-3" id="limitGroup" style="display: none;">
+                <div class="col-md-4">
+                    <label for="WorkflowLimitID" class="form-label">Approval Limit (AMOUNT only)</label>
+                    <select name="WorkflowLimitID" class="form-select">
+                        <option value="">-- Select Limit --</option>
+                    </select>
+                </div>
             </div>
 
-            <div class="flex items-center mt-4 md:mt-8">
-                <label class="me-2">Final Stage?</label>
-                <input type="checkbox" x-model="stage.isFinal">
+            <div class="row mb-3" id="countGroup" style="display: none;">
+                <div class="col-md-4">
+                    <label for="Count" class="form-label">Approval Count (COUNT only)</label>
+                    <input type="number" name="Count" id="Count" class="form-control" min="1" value="{{ old('Count') }}">
+                </div>
             </div>
-        </div>
 
-        <!-- Conditional Fields for AMOUNT -->
-        <template x-if="stage.type === 'AMOUNT'">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="form-label">Approver Role</label>
-                    <select class="form-control" x-model="stage.role">
-                        <option value="">-- Select Role --</option>
-                        <option value="Manager">Manager</option>
-                        <option value="Supervisor">Supervisor</option>
-                        <option value="Finance">Finance</option>
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label for="PermissionSelect" class="form-label">Permission to Approve</label>
+                    <select name="PermissionID" id="PermissionSelect" class="form-select select2" required>
+                        <option value="">-- Search & Select Permission --</option>
+                        @foreach($permissions as $permission)
+                        <option value="{{ $permission->id }}">{{ $permission->name }}</option>
+                        @endforeach
                     </select>
                 </div>
 
-                <div>
-                    <label class="form-label">Cut-off Amount</label>
-                    <input type="number" class="form-control" x-model="stage.cutoff">
+                <div class="col-md-4">
+                    <label for="Count" class="form-label">Approver Count</label>
+                    <input type="number" name="Count" id="Count" class="form-control" min="1" value="{{ old('Count') }}">
+                </div>
+
+                <div class="col-md-4 d-flex align-items-end pt-2">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="1" name="IsFinalStage" id="IsFinalStage">
+                        <label class="form-check-label" for="IsFinalStage">
+                            Mark as Final Stage
+                        </label>
+                    </div>
                 </div>
             </div>
-        </template>
 
-        <button class="btn btn-primary mt-2" @click="addStage()">➕ Add Stage</button>
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">💾 Save Stage</button>
+                <a href="{{ route('settings.approval_stages.show', $approval->Id) }}" class="btn btn-secondary">← Back</a>
+            </div>
+        </form>
     </div>
-
-    <!-- Stage Table -->
-    <div class="mt-6">
+    <div class="mt-5">
         <h5 class="mb-3">🧾 Added Stages</h5>
         <table class="table table-bordered">
             <thead class="table-light">
@@ -91,65 +128,66 @@
                     <tr>
                         <td x-text="index + 1"></td>
                         <td x-text="item.name"></td>
-                        <td x-text="item.type"></td>
-                        <td x-text="item.role ?? '-'"></td>
+                        <td x-text="approvalTypes[item.type] ?? item.type"></td>
+                        <td x-text="item.role || '-'"></td>
                         <td x-text="item.cutoff ? '$' + item.cutoff : '-'"></td>
-                        <td><span x-text="item.isFinal ? 'Yes' : 'No'"></span></td>
+                        <td x-text="item.isFinal ? 'Yes' : 'No'"></td>
                         <td>
                             <button class="btn btn-sm btn-danger" @click="removeStage(index)">🗑️</button>
                         </td>
                     </tr>
                 </template>
                 <tr x-show="stages.length === 0">
-                    <td colspan="7" class="text-center">No stages added yet.</td>
+                    <td colspan="7" class="text-center text-muted">No stages added yet.</td>
                 </tr>
             </tbody>
         </table>
     </div>
 </div>
-
-<!-- Alpine.js Logic -->
-<script>
-function approvalWorkflow() {
-    return {
-        stage: {
-            name: '',
-            type: '',
-            role: '',
-            cutoff: '',
-            isFinal: false
-        },
-        stages: [],
-        addStage() {
-            if (!this.stage.name || !this.stage.type) {
-                alert('Stage name and type are required.');
-                return;
-            }
-
-            if (this.stage.type === 'AMOUNT' && (!this.stage.role || !this.stage.cutoff)) {
-                alert('Role and cutoff are required for AMOUNT type.');
-                return;
-            }
-
-            this.stages.push({ ...this.stage });
-            this.resetStage();
-        },
-        removeStage(index) {
-            this.stages.splice(index, 1);
-        },
-        resetStage() {
-            this.stage = {
-                name: '',
-                type: '',
-                role: '',
-                cutoff: '',
-                isFinal: false
-            };
-        }
-    }
-}
-</script>
-
-    <a href="{{ route('settings.approval_stages') }}" class="btn btn-secondary mt-3">← Back to List</a>
 </div>
+@endsection
+
+@section('styles')
+<style>
+    .select2-container--bootstrap4 .select2-selection--single {
+        border: 1px solid #ced4da;
+        border-radius: 0.375rem;
+        height: calc(2.375rem + 2px);
+        /* matches Bootstrap form-select */
+        padding: 0.375rem 0.75rem;
+    }
+
+    .select2-container--bootstrap4 .select2-selection--single .select2-selection__rendered {
+        line-height: 1.5;
+    }
+</style>
+@endsection
+
+
+@section('scripts')
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const typeField = document.getElementById('TypeID');
+        const limitGroup = document.getElementById('limitGroup');
+        const countGroup = document.getElementById('countGroup');
+
+        function toggleFields() {
+            const type = typeField.value;
+            limitGroup.style.display = (type === 'AMT') ? 'flex' : 'none';
+            countGroup.style.display = (type === 'CNT') ? 'flex' : 'none';
+        }
+
+        typeField.addEventListener('change', toggleFields);
+        toggleFields(); // Run on load
+
+        $('#PermissionSelect').select2({
+            theme: 'bootstrap5',
+            placeholder: '🔍 Type to search permission...',
+            allowClear: true,
+            width: '100%',
+            minimumInputLength: 1
+        });
+    });
+</script>
 @endsection
