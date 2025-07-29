@@ -25,6 +25,8 @@ class TransactionReceiptItem extends Model
         'DamagedQty',
         'DispatchedQty',
         'Discrepancy',
+        'UnitCost',
+        'UOM',
         'Remarks',
         'Store',
         'CreatedBy',
