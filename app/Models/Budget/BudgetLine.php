@@ -96,7 +96,7 @@ class BudgetLine extends Model
     public function productTypes()
     {
         return $this->belongsToMany(
-            BudgetProductType::class,          // The related model
+            BudgetProduct::class,          // The related model
             't_BudgetLineProductTypes',        // The pivot table
             'BudgetLineId',                    // Foreign key on pivot pointing to this model
             'ProductTypeId',                   // Foreign key on pivot pointing to related model

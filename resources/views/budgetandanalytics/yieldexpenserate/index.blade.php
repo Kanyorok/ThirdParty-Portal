@@ -50,7 +50,7 @@
                 @foreach ($driverRates as $item)
                     <tr>
                         <td>{{ $loop->iteration }}.</td>
-                        <td>{{ $item->productType->Name }}</td>
+                        <td>{{ $item->productType->Description }}</td>
                         <td>{{ $item->rateType->RateTypeName }}</td>
                         <td>{{ $item->RateValue }}</td>
                         <td>{{ $item->Source }}</td>

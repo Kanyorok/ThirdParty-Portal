@@ -141,7 +141,7 @@ class BudgetProjectionsController extends Controller
         $validated = $request->validate([
             'BudgetID' => 'required|exists:t_Budgets,Id',
             'BudgetLineID' => 'required|exists:t_BudgetLines,Id',
-            'ProductTypeId' => 'required|exists:t_BudgetProductTypes,Id',
+            'ProductTypeId' => 'required|exists:t_BudgetProducts,Id',
             'NoOfAccounts' => 'required|integer|min:1',
             'AllocationType' => 'required|in:full,monthly',
             'FullAllocation' => 'nullable|numeric|min:0|required_if:AllocationType,full',
@@ -208,7 +208,7 @@ class BudgetProjectionsController extends Controller
         $validated = $request->validate([
             'BudgetID' => 'required|exists:t_Budgets,Id',
             'BudgetLineID' => 'required|exists:t_BudgetLines,Id',
-            'ProductTypeId' => 'required|exists:t_BudgetProductTypes,Id',
+            'ProductTypeId' => 'required|exists:t_BudgetProducts,Id',
             'NoOfAccounts' => 'required|integer|min:1',
             'AllocationType' => 'required|in:full,monthly',
             'FullAllocation' => 'nullable|numeric|min:0|required_if:AllocationType,full',
@@ -284,18 +284,20 @@ class BudgetProjectionsController extends Controller
             BudgetProduct::find($productID);
             //Getting PtoductType ID. This will be cleaned after we get actual data. SInce Id is being stores as string insteaf of foreignID
             $p_code = BudgetProduct::find($productID)->ProductTypeID;
-            $productTypeID = BudgetProductType::where('ProductCode', $p_code)->pluck('Id')->first();
+            $productTypeID = BudgetProduct::where('ProductTypeID', $p_code)->pluck('Id')->first();
 
             $products[] = [
                 'Name' => BudgetProduct::find($productID)->Description,
                 'Volume' => BudgetProjection::where('BudgetID', $id)->where('ProductID', $productID)->sum('NumberOfAccounts'),
                 'Id' => $budgetProjectionID,
-                'Rate' => BudgetDriverRates::where('ProductTypeID', $productTypeID)->pluck('RateValue')->first(),
+                'Rate' => BudgetDriverRates::where('ProductTypeID', $productID)->pluck('RateValue')->first(),
                 'Value' => $budgetProjection->AllocationType === 'full' ? $budgetProjection->FullAllocation : $budgetProjection->total_allocation ?? 0.00,
                 'AllocationType' => $budgetProjection->AllocationType,
-                'allocations' => $budgetProjection->allocations, // 👈 this is what you were missing
+                'allocations' => $budgetProjection->allocations, //
             ];
         }
+
+        //return $products;
 
         $budget = BudgetDriverProjections::findOrFail($id);
 

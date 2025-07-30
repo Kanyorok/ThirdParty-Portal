@@ -7,14 +7,6 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::table('t_BudgetLineProductTypes', function (Blueprint $table) {
-            // Drop old foreign key
-            $table->dropForeign(['ProductTypeId']);
-
-            // Add new foreign key referencing t_BudgetProducts
-            $table->foreign('ProductTypeId')->references('Id')->on('t_BudgetProducts');
-        });
-
         Schema::table('t_BudgetDriverRates', function (Blueprint $table) {
             // Drop old foreign key
             $table->dropForeign(['ProductTypeID']);
@@ -26,12 +18,6 @@ return new class extends Migration {
 
     public function down(): void
     {
-        Schema::table('t_BudgetLineProductTypes', function (Blueprint $table) {
-            // Rollback: drop new and restore old foreign key
-            $table->dropForeign(['ProductTypeId']);
-            $table->foreign('ProductTypeId')->references('Id')->on('t_BudgetProductTypes');
-        });
-
         Schema::table('t_BudgetDriverRates', function (Blueprint $table) {
             // Rollback: drop new and restore old foreign key
             $table->dropForeign(['ProductTypeId']);
