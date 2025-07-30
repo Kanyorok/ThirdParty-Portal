@@ -47,15 +47,15 @@ class DatabaseSeeder extends Seeder
         $this->call(BudgetGLAccountSubTypeSeeder::class);
         $this->call(BudgetProductTypeSeeder::class);
         $this->call(BudgetLineCategorySeeder::class);
-        $this->call(BudgetLineSeeder::class);
-        $this->call(BudgetLinesGLAccountsSeeder::class);
+//        $this->call(BudgetLineSeeder::class);
+        //$this->call(BudgetLinesGLAccountsSeeder::class);
         $this->call(BudgetProductsSeeder::class);
         $this->call(BudgetDriversMasterSeeder::class);
-        $this->call(BudgetActivityMasterSeeder::class);
+        //$this->call(BudgetActivityMasterSeeder::class);
         $this->call(BudgetDriverRatesSeeder::class);
         $this->call(BudgetMonthlyAllocationsSeeder::class);
         $this->call(BudgetSeeder::class);
-        $this->call(BudgetActivitiesSeeder::class);
+//        $this->call(BudgetActivitiesSeeder::class);
         $this->call(BudgetDriverProjectionsSeeder::class);
         $this->call(BudgetDriverProjectionsDataSeeder::class);
         $this->call(CategoryMasterSeeder::class);
@@ -66,7 +66,7 @@ class DatabaseSeeder extends Seeder
         $this->call(PropertyUnitSeeder::class);
         $this->call(TenantRegistrySeeder::class);
 
-        $this->call(PropertyNewLeaseSeeder::class);
+        //$this->call(PropertyNewLeaseSeeder::class);
         $this->call(FinanceGLTypeGroupSeeder::class);
         $this->call(FinanceGLSubAccountTypeSeeder::class);
         $this->call(FinanceGLAccountsSeeder::class);

@@ -18,7 +18,7 @@
                         <tr>
                             <th>#</th>
                             <th>GL Account No</th>
-                            <th>GL Name</th>
+{{--                            <th>GL Name</th>--}}
                             <th>Description</th>
                             <th>GL Type</th>
                             <th>Mapped to Budget Line</th>
@@ -30,10 +30,10 @@
                     @foreach($gls as $gls)
                         <tr>
                             <td>{{$loop->iteration}}</td>
-                            <td>GL00{{$gls->Id}}</td>
+                            <td>{{$gls->AccountID}}</td>
                             <td class="text-break">{{$gls->Description}}</td>
-                            <td class="text-break">{{$gls->Description}}</td>
-                            <td>{{$gls->GTType}}</td>
+{{--                            <td class="text-break">{{$gls->Description}}</td>--}}
+                            <td>{{$gls->GLAccountTypeID}}</td>
                             <td><span class="badge bg-success">✅ Yes</span></td>
                             <td><span class="badge bg-success">✔</span></td>
                             {{-- <td>
