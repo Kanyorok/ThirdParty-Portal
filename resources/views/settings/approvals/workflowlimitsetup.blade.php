@@ -24,12 +24,21 @@
     <form method="POST" action="{{ route('settings.approval_workflow_limit.store') }}">
         @csrf
         <div class="row mb-3">
-            <div class="col-md-6">
+            <div class="mb-3">
+                        <label for="DocType">Document Type <span class="text-danger">*</span></label>
+                        <select name="DocType" id="DocType" class="form-control select2" required>
+                            <option value="">-- Select --</option>
+                            @foreach($sourceOptions as $alias => $class)
+                            <option value="{{ $class }}">{{ class_basename($class) }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+            <div class="col-md-3">
                 <label for="PermissionName" class="form-label">Permission Name</label>
                 <input type="text" name="PermissionName" id="PermissionName" class="form-control" placeholder="e.g. approve-workflow-limit" required>
             </div>
 
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label for="AmountLimit" class="form-label">Max Amount</label>
                 <input type="number" name="AmountLimit" id="AmountLimit" class="form-control" min="1" value="{{ old('AmountLimit') }}" required>
             </div>

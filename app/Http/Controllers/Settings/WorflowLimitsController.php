@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Settings;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 class WorflowLimitsController extends Controller
 {
@@ -13,6 +14,8 @@ class WorflowLimitsController extends Controller
      */
     public function index()
     {
+        $morphMap = Relation::morphMap();
+
         // Logic to retrieve workflow limits
         $permissions = DB::table('t_Permissions')->get();
         $existingPermissionIds = DB::table('t_WorkflowLimits')
@@ -23,7 +26,9 @@ class WorflowLimitsController extends Controller
         ->select('t_WorkflowLimits.*', 't_Permissions.name as PermissionName')
         ->get();
 
-        return view('settings.approvals.workflowlimitsetup', compact('permissions', 'limits', 'existingPermissionIds'));
+        $sourceOptions = array_flip($morphMap);
+
+        return view('settings.approvals.workflowlimitsetup', compact('permissions', 'limits', 'existingPermissionIds', 'sourceOptions'));
     }
 
     /**

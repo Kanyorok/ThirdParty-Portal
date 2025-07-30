@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use App\Models\Settings\ApprovalStage;
 use Illuminate\Http\Request;
 use App\Http\Requests\Settings\ApprovalSetupRequest;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class ApprovalStagesController extends Controller
@@ -41,15 +42,16 @@ class ApprovalStagesController extends Controller
     public function store(ApprovalSetupRequest $request)
     {
         $validated = $request->validated();
-        $user = auth()->user();
+        /** @var \App\Models\Auth\User $user */
+        $user = Auth::user();
 
         try{
             $approvalStage =ApprovalStage::create([
                 'Name' => $validated['Name'],
                 'Description' => $validated['Description'],
                 'Source' => $validated['DocType'],
-                'CreatedBy' => auth()->id(),
-                'ModifiedBy' => auth()->id(),
+                'CreatedBy' => Auth::id(),
+                'ModifiedBy' => Auth::id(),
                 'ModifiedOn' => now(),
                 'CreatedOn' => now(),
             ]);

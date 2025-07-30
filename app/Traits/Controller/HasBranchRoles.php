@@ -4,6 +4,7 @@ namespace App\Traits\Controller;
 
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Spatie\Permission\Traits\HasRoles as BaseHasRoles;
+use Illuminate\Support\Facades\Auth;
 
 trait HasBranchRoles
 {
@@ -21,8 +22,8 @@ trait HasBranchRoles
             $this->roles()->syncWithoutDetaching([
                 $roleId => array_merge([
                     'BranchId' => $branchId,
-                    'CreatedBy' => auth()->id(),
-                    'ModifiedBy' => auth()->id(),
+                    'CreatedBy' => Auth::id(),
+                    'ModifiedBy' => Auth::id(),
                 ], $extra),
             ]);
         }
