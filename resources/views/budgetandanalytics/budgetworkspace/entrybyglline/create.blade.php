@@ -71,7 +71,7 @@
                             <div class="col-md-3 mb-2">
                                 <label>Month {{ $key }}</label>
                                 <input type="number" value="0.00" min="0" name="monthly_allocations[{{ $key }}]"
-                                       class="form-control" placeholder="0.00">
+                                       class="form-control" placeholder="0.00" step="0.01" required>
                             </div>
                         @endforeach
                     </div>
