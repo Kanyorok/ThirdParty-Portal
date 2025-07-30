@@ -4,16 +4,23 @@ namespace App\Http\Controllers\API\ThirdParty;
 
 use App\Http\Controllers\Controller;
 use App\Models\ThirdParty\ThirdPartyUser;
+use App\Models\ThirdParty\ThirdParties;
 use App\Http\Requests\ThirdPartyAuth\RegisterThirdPartyUserRequest;
 use App\Http\Requests\ThirdPartyAuth\LoginThirdPartyRequest;
+use App\Http\Requests\ThirdParty\StoreThirdPartyRequest;
+use App\Http\Requests\ThirdParty\UpdateThirdPartyRequest;
+use App\Http\Requests\ThirdParty\UpdateThirdPartyStatusRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use App\Http\Resources\ThirdParty\ThirdPartyUserResource;
+use App\Http\Resources\ThirdParty\ThirdPartyResource;
 use App\Services\RegistrationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Auth\Events\Verified;
+use App\Enums\ThirdPartyApprovalStatusEnum;
 
 class ThirdPartyAuthController extends Controller
 {
@@ -31,8 +38,8 @@ class ThirdPartyAuthController extends Controller
 
             return response()->json([
                 'message' => __('auth.registration_personal_successful'),
-                'user_id' => $userData->UserID,
-                'redirect_url' => '/register/third-party-details?user_id=' . $userData->UserID,
+                'userId' => $userData->UserID,
+                'redirectUrl' => '/register/third-party-details?user_id=' . $userData->UserID,
             ], 201);
         } catch (\Exception $e) {
             return response()->json([

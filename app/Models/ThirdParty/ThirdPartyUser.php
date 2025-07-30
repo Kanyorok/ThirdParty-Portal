@@ -8,12 +8,12 @@ use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Builder;
-use App\Enums\Employee\GenderEnum;
 use App\Enums\ThirdPartyTypeEnum;
 use App\Enums\ThirdPartyApprovalStatusEnum;
 use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
 use Illuminate\Auth\MustVerifyEmail;
 use Illuminate\Support\Str;
+use App\Enums\Employee\GenderEnum;
 
 class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract
 {

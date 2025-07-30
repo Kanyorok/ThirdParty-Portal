@@ -16,6 +16,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 
+
 class ThirdPartyController extends Controller
 {
     protected RegistrationService $registrationService;
@@ -100,13 +101,11 @@ class ThirdPartyController extends Controller
             return response()->json(['message' => 'Unauthenticated.'], 401);
         }
 
-        $thirdPartyUser = ThirdPartyUser::where('UserID', $user->id)->first();
-
-        if (!$thirdPartyUser) {
+        if (!$user->ThirdPartyId) {
             return response()->json(['message' => 'Third-party details not found for this user.'], 404);
         }
 
-        $thirdParty = ThirdParties::find($thirdPartyUser->ThirdPartyID);
+        $thirdParty = ThirdParties::find($user->ThirdPartyId);
 
         if (!$thirdParty) {
             return response()->json(['message' => 'Associated third-party record not found.'], 404);

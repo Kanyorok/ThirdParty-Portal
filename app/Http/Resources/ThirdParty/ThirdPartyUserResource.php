@@ -21,12 +21,13 @@ class ThirdPartyUserResource extends JsonResource
             'gender' => $this->Gender?->value,
             'thirdPartyId' => $this->ThirdPartyId,
             'isActive' => (bool) $this->IsActive,
-            'isApproved' => $this->whenLoaded('thirdParty', fn() => $this->isApproved()),
-            'isSupplier' => $this->whenLoaded('thirdParty', fn() => $this->isSupplier()),
+            'isApproved' => $this->isApproved(),
+            'isPrequalified' => $this->whenLoaded('thirdParty', fn() => (bool) $this->thirdParty->IsPrequalified),
+            'isSupplier' => $this->isSupplier(),
             'emailVerifiedOn' => optional($this->EmailVerifiedOn)->format('Y-m-d H:i:s'),
             'createdOn' => optional($this->CreatedOn)->format('Y-m-d H:i:s'),
             'modifiedOn' => optional($this->ModifiedOn)->format('Y-m-d H:i:s'),
-            'thirdParty' => ThirdPartyResource::make($this->whenLoaded('thirdParty')),
+            'thirdParty' => new ThirdPartyResource($this->whenLoaded('thirdParty')),
         ];
     }
 }

@@ -17,9 +17,9 @@ class ThirdParties extends Model
 {
     use SoftDeletes;
 
-    const CREATED_AT    = 'CreatedOn';
-    const UPDATED_AT    = 'ModifiedOn';
-    const DELETED_AT    = 'DeletedOn';
+    const CREATED_AT        = 'CreatedOn';
+    const UPDATED_AT        = 'ModifiedOn';
+    const DELETED_AT        = 'DeletedOn';
 
     protected $table = 't_ThirdParties';
     protected $primaryKey = 'Id';
@@ -67,6 +67,7 @@ class ThirdParties extends Model
 
         static::creating(function ($model) {
             $model->ApprovalStatus = ThirdPartyApprovalStatusEnum::Pending;
+            $model->Status = ThirdPartyStatusEnum::Inactive;
         });
     }
 

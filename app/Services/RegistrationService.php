@@ -2,25 +2,28 @@
 
 namespace App\Services;
 
-use App\Enums\ThirdPartyApprovalStatusEnum;
 use App\Models\ThirdParty\ThirdParties;
 use App\Models\ThirdParty\ThirdPartyUser;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
-use App\Enums\ThirdPartyStatusEnum;
+use Illuminate\Auth\Events\Registered;
 
 class RegistrationService
 {
     public function registerUser(array $userData): ThirdPartyUser
     {
-        return ThirdPartyUser::create([
+        $user = ThirdPartyUser::create([
             'FirstName' => $userData['FirstName'],
             'LastName' => $userData['LastName'],
             'Email' => $userData['Email'],
             'Phone' => $userData['Phone'],
             'Password' => Hash::make($userData['Password']),
-            'IsActive' => true, // TODO: change to false in prod
+            'IsActive' => false,
         ]);
+
+        event(new Registered($user));
+
+        return $user;
     }
 
     public function registerThirdPartyDetails(string $userId, array $thirdPartyData): ThirdParties
@@ -45,8 +48,6 @@ class RegistrationService
                 'Phone' => $thirdPartyData['Phone'],
                 'Website' => $thirdPartyData['Website'] ?? null,
                 'ThirdPartyType' => $thirdPartyData['ThirdPartyType'],
-                'Status' => ThirdPartyStatusEnum::Active, // TOODO: change to InActive in prod
-                'ApprovalStatus' => ThirdPartyApprovalStatusEnum::Approved, // TODO: default to pending in prod
                 'CreatedBy' => $user->Id,
                 'ModifiedBy' => $user->Id,
             ]);
