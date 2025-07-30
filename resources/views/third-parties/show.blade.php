@@ -81,6 +81,7 @@
                 'Approval Status' => $party->ApprovalStatus?->label(),
                 'Status' => $party->Status?->value,
                 'Third Party Type' => $party->ThirdPartyType?->label(),
+                'Is Prequalified' => $party->IsPrequalified ? 'Yes' : 'No',
                 'Created On' => $party->CreatedOn?->format('Y-m-d'),
                 'Modified On' => $party->ModifiedOn?->format('Y-m-d'),
                 ];

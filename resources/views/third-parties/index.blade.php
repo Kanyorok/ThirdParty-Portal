@@ -279,6 +279,7 @@
                                     <th>Third Party Type</th>
                                     <th>Approval Status</th>
                                     <th>Business Type</th>
+                                    <th>Prequalified</th> {{-- Added Prequalified column header --}}
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -362,6 +363,10 @@
                     data: 'BusinessType',
                     name: 'BusinessType'
                 },
+                {
+                    data: 'IsPrequalified',
+                    name: 'IsPrequalified'
+                }, // Added Prequalified column
                 {
                     data: 'actions',
                     name: 'actions',

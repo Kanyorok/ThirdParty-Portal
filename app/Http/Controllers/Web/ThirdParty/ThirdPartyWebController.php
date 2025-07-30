@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Web\ThirdParty;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\ThirdPartyAuth\StoreThirdPartyRequest; // Used for store method
-use App\Http\Requests\ThirdPartyAuth\UpdateThirdPartyRequest; // Used for update method
+use App\Http\Requests\ThirdPartyAuth\StoreThirdPartyRequest;
+use App\Http\Requests\ThirdPartyAuth\UpdateThirdPartyRequest;
 use App\Models\ThirdParty\ThirdParties;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use Yajra\DataTables\Facades\DataTables;
-use Illuminate\Support\Facades\Auth; // Ensure Auth facade is imported
+use Illuminate\Support\Facades\Auth;
 
 class ThirdPartyWebController extends Controller
 {
@@ -27,6 +27,7 @@ class ThirdPartyWebController extends Controller
                     'ThirdPartyType',
                     'ApprovalStatus',
                     'BusinessType',
+                    'IsPrequalified',
                 ]);
 
             if ($request->filled('search.value')) {
@@ -53,6 +54,7 @@ class ThirdPartyWebController extends Controller
                 ->addColumn('ThirdPartyType', fn(ThirdParties $thirdParty) => $thirdParty->ThirdPartyType?->label() ?? 'N/A')
                 ->addColumn('BusinessType', fn(ThirdParties $thirdParty) => $thirdParty->BusinessType?->label() ?? 'N/A')
                 ->addColumn('ApprovalStatus', fn(ThirdParties $thirdParty) => $thirdParty->ApprovalStatus?->label() ?? $thirdParty->ApprovalStatus?->value ?? 'N/A')
+                ->addColumn('IsPrequalified', fn(ThirdParties $thirdParty) => $thirdParty->IsPrequalified ? 'Yes' : 'No')
                 ->addColumn('actions', fn(ThirdParties $thirdParty) => '<a href="' . route('web.parties.show', ['party' => $thirdParty->Id]) . '" class="btn btn-sm btn-info">View</a>')
                 ->rawColumns(['actions'])
                 ->make(true);
@@ -93,9 +95,8 @@ class ThirdPartyWebController extends Controller
     public function update(UpdateThirdPartyRequest $request, ThirdParties $party): RedirectResponse
     {
         try {
-            // Ensure ModifiedBy is set for auditing
             $data = $request->validated();
-            $data['ModifiedBy'] = Auth::id(); // Get the authenticated user's ID
+            $data['ModifiedBy'] = Auth::id();
 
             $party->update($data);
 
@@ -103,7 +104,7 @@ class ThirdPartyWebController extends Controller
                 ->with('success', 'Third party information updated successfully.');
         } catch (\Exception $e) {
             Log::error('Failed to update third party: ' . $e->getMessage(), ['partyId' => $party->Id, 'request_data' => $request->all()]);
-            return redirect()->route('web.parties.show', ['party' => $party->Id]) // Redirect back to show page on error
+            return redirect()->route('web.parties.show', ['party' => $party->Id])
                 ->with('error', 'Failed to update third party information. Please try again.');
         }
     }
@@ -111,10 +112,9 @@ class ThirdPartyWebController extends Controller
     public function destroy(ThirdParties $party): RedirectResponse
     {
         try {
-            // Set DeletedBy before soft deleting
-            if ($party->DeletedBy === null && Auth::check()) { // Check if user is authenticated
+            if ($party->DeletedBy === null && Auth::check()) {
                 $party->DeletedBy = Auth::id();
-                $party->save(); // Save to persist DeletedBy before actual delete
+                $party->save();
             }
             $party->delete();
 

@@ -10,7 +10,7 @@
                 <h4 class="mb-0">Edit Third Party: {{ $party->ThirdPartyName ?? 'N/A' }}</h4>
             </div>
             <div class="card-body">
-                @if ($errors->any() && !$errors->hasAny(['ThirdPartyName', 'TradingName', 'BusinessType', 'RegistrationNumber', 'TaxPIN', 'VATNumber', 'Country', 'PhysicalAddress', 'Email', 'Phone', 'Website', 'ApprovalStatus', 'Status', 'ThirdPartyType']))
+                @if ($errors->any() && !$errors->hasAny(['ThirdPartyName', 'TradingName', 'BusinessType', 'RegistrationNumber', 'TaxPIN', 'VATNumber', 'Country', 'PhysicalAddress', 'Email', 'Phone', 'Website', 'ApprovalStatus', 'Status', 'ThirdPartyType', 'IsPrequalified']))
                 <div class="alert alert-danger mb-4">
                     <ul>
                         @foreach ($errors->all() as $error)
@@ -160,6 +160,16 @@
                             @endforeach
                         </select>
                         @error('ThirdPartyType')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input class="form-check-input @error('IsPrequalified') is-invalid @enderror" type="checkbox" id="IsPrequalified" name="IsPrequalified" value="1" @checked(old('IsPrequalified', $party->IsPrequalified))>
+                        <label class="form-check-label" for="IsPrequalified">
+                            Is Prequalified
+                        </label>
+                        @error('IsPrequalified')
                         <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>

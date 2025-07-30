@@ -6,6 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use App\Enums\ThirdPartyTypeEnum;
 use App\Enums\ThirdPartyStatusEnum;
+use App\Enums\BusinessTypeEnum;
 use App\Enums\ThirdPartyApprovalStatusEnum;
 
 class UpdateThirdPartyRequest extends FormRequest
@@ -17,23 +18,35 @@ class UpdateThirdPartyRequest extends FormRequest
 
     public function rules(): array
     {
-        $thirdPartyId = $this->route('third_party')?->Id ?? 0;
+        $partyId = $this->route('party') ? $this->route('party')->Id : null;
 
         return [
-            'thirdPartyName' => ['sometimes', 'string', 'max:255', Rule::unique('t_ThirdParties', 'ThirdPartyName')->ignore($thirdPartyId, 'Id')],
-            'tradingName' => ['nullable', 'string', 'max:255'],
-            'businessType' => ['nullable', 'string', 'max:100'],
-            'registrationNumber' => ['nullable', 'string', 'max:100', Rule::unique('t_ThirdParties', 'RegistrationNumber')->ignore($thirdPartyId, 'Id')],
-            'taxPin' => ['nullable', 'string', 'max:50', Rule::unique('t_ThirdParties', 'TaxPIN')->ignore($thirdPartyId, 'Id')],
-            'vatNumber' => ['nullable', 'string', 'max:50'],
-            'country' => ['nullable', 'string', 'max:100'],
-            'physicalAddress' => ['nullable', 'string', 'max:500'],
-            'email' => ['sometimes', 'string', 'email', 'max:255', Rule::unique('t_ThirdParties', 'Email')->ignore($thirdPartyId, 'Id')],
-            'phone' => ['nullable', 'string', 'max:50'],
-            'website' => ['nullable', 'url', 'max:255'],
-            'approvalStatus' => ['nullable', Rule::enum(ThirdPartyApprovalStatusEnum::class)],
-            'status' => ['nullable', Rule::enum(ThirdPartyStatusEnum::class)],
-            'thirdPartyType' => ['sometimes', Rule::enum(ThirdPartyTypeEnum::class)],
+            'ThirdPartyName' => ['required', 'string', 'max:255'],
+            'TradingName' => ['nullable', 'string', 'max:255'],
+            'BusinessType' => ['required', 'string', Rule::in(array_column(BusinessTypeEnum::cases(), 'value'))],
+            'RegistrationNumber' => [
+                'nullable',
+                'string',
+                'max:255',
+                Rule::unique('t_ThirdParties', 'RegistrationNumber')->ignore($partyId, 'Id'),
+            ],
+            'TaxPIN' => ['nullable', 'string', 'max:255'],
+            'VATNumber' => ['nullable', 'string', 'max:255'],
+            'Country' => ['required', 'string', 'max:255'],
+            'PhysicalAddress' => ['required', 'string', 'max:500'],
+            'Email' => [
+                'required',
+                'string',
+                'email',
+                'max:255',
+                Rule::unique('t_ThirdParties', 'Email')->ignore($partyId, 'Id'),
+            ],
+            'Phone' => ['required', 'string', 'max:20'],
+            'Website' => ['nullable', 'string', 'url', 'max:255'],
+            'ApprovalStatus' => ['required', 'string', Rule::in(array_column(ThirdPartyApprovalStatusEnum::cases(), 'value'))],
+            'Status' => ['required', 'string', Rule::in(array_column(ThirdPartyStatusEnum::cases(), 'value'))],
+            'ThirdPartyType' => ['required', 'string', Rule::in(array_column(ThirdPartyTypeEnum::cases(), 'value'))],
+            'IsPrequalified' => ['sometimes', 'boolean'],
         ];
     }
 }
