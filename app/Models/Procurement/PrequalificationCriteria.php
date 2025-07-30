@@ -4,6 +4,7 @@ namespace App\Models\Procurement;
 
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PrequalificationCriteria extends Model
@@ -15,7 +16,6 @@ class PrequalificationCriteria extends Model
     const DELETED_AT = 'DeletedOn';
     protected $table = 't_PrequalificationRoundCriteria';
     protected $primaryKey = 'Id';
-
 
     protected $fillable = [
         'RoundId',
@@ -30,5 +30,10 @@ class PrequalificationCriteria extends Model
     public static function getPrimaryKey(): string
     {
         return 'prequalificationcriteriaId';
+    }
+
+    public function round(): BelongsTo
+    {
+        return $this->belongsTo(PrequalificationRound::class, 'SectionId', 'RoundId');
     }
 }

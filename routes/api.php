@@ -16,6 +16,7 @@ Route::prefix('third-party-auth')->group(function () {
     Route::post('/email/resend-verification', [ThirdPartyAuthController::class, 'resendVerification'])->name('verification.resend')->middleware('throttle:6,1');
 });
 
+// step 2: Register company info (associated third party)
 Route::post('third-parties/register-details', [ThirdPartyController::class, 'store']);
 
 Route::middleware('auth:sanctum')->group(function () {

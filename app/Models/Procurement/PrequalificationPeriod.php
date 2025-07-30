@@ -4,6 +4,7 @@ namespace App\Models\Procurement;
 
 use App\Enums\Procurement\PrequalificationPeriodEnum;
 use App\Traits\Model\UserActorTrait;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 

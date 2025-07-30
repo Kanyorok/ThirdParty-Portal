@@ -2,116 +2,86 @@
 
 namespace Database\Seeders;
 
-use App\Enums\Employee\GenderEnum;
+use Illuminate\Database\Seeder;
 use App\Models\ThirdParty\ThirdPartyUser;
 use App\Models\ThirdParty\ThirdParties;
-use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 use App\Enums\ThirdPartyTypeEnum;
-use App\Enums\ThirdPartyApprovalStatusEnum;
-use App\Enums\ThirdPartyStatusEnum;
 use App\Enums\BusinessTypeEnum;
+use App\Enums\ThirdPartyApprovalStatusEnum;
+use App\Enums\Employee\GenderEnum;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Carbon;
 
 class ThirdPartyUserSeeder extends Seeder
 {
+    /**
+     * Run the database seeds.
+     */
     public function run(): void
     {
-        $approvedThirdParty = ThirdParties::firstOrCreate(
-            ['Email' => 'default.dcp@example.com'],
+        $thirdParty = ThirdParties::firstOrCreate(
             [
-                'ThirdPartyName' => 'DCP',
-                'TradingName' => 'Sauti Ya Ground',
+                'ThirdPartyName' => 'Seeder Company Inc.',
+                'RegistrationNumber' => 'SEED-COMP-001',
+            ],
+            [
+                'TradingName' => 'SeederCo',
                 'BusinessType' => BusinessTypeEnum::SoleProprietorship,
-                'RegistrationNumber' => 'REG' . Str::random(5),
-                'Phone' => '1234567890',
+                'TaxPIN' => 'P000000000S',
+                'VATNumber' => null,
+                'Country' => 'US',
+                'PhysicalAddress' => '123 Seeder Lane, Seed City',
+                'Email' => 'company@seeder.com',
+                'Phone' => '+15551234567',
+                'Website' => 'https://www.seedercompany.com',
+                'Status' => \App\Enums\ThirdPartyStatusEnum::Active,
                 'ThirdPartyType' => ThirdPartyTypeEnum::Supplier,
+                'IsPrequalified' => false,
                 'ApprovalStatus' => ThirdPartyApprovalStatusEnum::Approved,
-                'Status' => ThirdPartyStatusEnum::Active,
-                'CreatedBy' => 1,
-                'CreatedOn' => now(),
-                'ModifiedBy' => 1,
-                'ModifiedOn' => now(),
+                'CreatedBy' => null,
+                'ModifiedBy' => null,
             ]
         );
 
-        $pendingThirdParty = ThirdParties::firstOrCreate(
-            ['Email' => 'pending.thirdparty@example.com'],
-            [
-                'ThirdPartyName' => 'Pending Corp',
-                'TradingName' => 'Pending Trading',
-                'BusinessType' => BusinessTypeEnum::Partnership,
-                'RegistrationNumber' => 'PEND' . Str::random(5),
-                'Phone' => '0987654321',
-                'ThirdPartyType' => ThirdPartyTypeEnum::Supplier,
-                'ApprovalStatus' => ThirdPartyApprovalStatusEnum::Pending,
-                'Status' => ThirdPartyStatusEnum::Active,
-                'CreatedBy' => 1,
-                'CreatedOn' => now(),
-                'ModifiedBy' => 1,
-                'ModifiedOn' => now(),
-            ]
-        );
-
+        if (!$thirdParty) {
+            $this->command->error('Failed to create or retrieve ThirdParty for ThirdPartyUser seeder.');
+            return;
+        }
 
         ThirdPartyUser::firstOrCreate(
-            ['Email' => 'john.kim@example.com'],
+            ['Email' => 'testuser@example.com'],
             [
-                'UserID' => strtoupper(Str::random(6)),
                 'FirstName' => 'John',
-                'LastName' => 'Kim',
-                'Phone' => '0712345678',
+                'LastName' => 'Doe',
+                'Phone' => '+1234567890',
                 'ImageId' => null,
                 'Gender' => GenderEnum::Male,
-                'ThirdPartyId' => $approvedThirdParty->Id,
+                'ThirdPartyId' => $thirdParty->Id,
                 'IsActive' => true,
+                'CreatedBy' => $thirdParty->CreatedBy,
+                'ModifiedBy' => $thirdParty->ModifiedBy,
                 'Password' => Hash::make('password'),
-                'EmailVerifiedOn' => now(),
-                'CreatedBy' => 1,
-                'CreatedOn' => now(),
-                'ModifiedBy' => 1,
-                'ModifiedOn' => now(),
+                'EmailVerifiedOn' => Carbon::now(),
             ]
         );
 
         ThirdPartyUser::firstOrCreate(
             ['Email' => 'jane.smith@example.com'],
             [
-                'UserID' => strtoupper(Str::random(6)),
                 'FirstName' => 'Jane',
                 'LastName' => 'Smith',
-                'Phone' => '0787654321',
+                'Phone' => '+1987654321',
                 'ImageId' => null,
                 'Gender' => GenderEnum::Female,
-                'ThirdPartyId' => $approvedThirdParty->Id,
+                'ThirdPartyId' => $thirdParty->Id,
                 'IsActive' => true,
+                'CreatedBy' => $thirdParty->CreatedBy,
+                'ModifiedBy' => $thirdParty->ModifiedBy,
                 'Password' => Hash::make('password'),
-                'EmailVerifiedOn' => now(),
-                'CreatedBy' => 1,
-                'CreatedOn' => now(),
-                'ModifiedBy' => 1,
-                'ModifiedOn' => now(),
+                'EmailVerifiedOn' => Carbon::now(),
             ]
         );
 
-        ThirdPartyUser::firstOrCreate(
-            ['Email' => 'pending.user@example.com'],
-            [
-                'UserID' => strtoupper(Str::random(6)),
-                'FirstName' => 'Pending',
-                'LastName' => 'User',
-                'Phone' => '0777777777',
-                'ImageId' => null,
-                'Gender' => GenderEnum::Male,
-                'ThirdPartyId' => $pendingThirdParty->Id,
-                'IsActive' => true,
-                'Password' => Hash::make('password'),
-                'EmailVerifiedOn' => now(),
-                'CreatedBy' => 1,
-                'CreatedOn' => now(),
-                'ModifiedBy' => 1,
-                'ModifiedOn' => now(),
-            ]
-        );
+        $this->command->info('ThirdPartyUsers seeded successfully!');
     }
 }

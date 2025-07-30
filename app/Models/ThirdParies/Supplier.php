@@ -4,81 +4,77 @@ namespace App\Models\ThirdParies;
 
 use App\Models\Inventory\ItemCategories;
 use App\Models\Procurement\ProcurementPeriod;
+use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQEvaluation;
 use App\Models\Procurement\RFQLine;
 use App\Models\Procurement\Tender;
-use App\Traits\Model\UserActorTrait;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Procurement\PrequalificationApplication;
+use App\Enums\ThirdPartyTypeEnum;
+use App\Enums\ThirdPartyApprovalStatusEnum; // Import the enum
+use App\Models\ThirdParty\ThirdParties;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Supplier extends Model
+
+class Supplier extends ThirdParties
 {
-    use SoftDeletes, UserActorTrait;
-
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
-
-    protected $table = 't_Suppliers';
+    protected $table = 't_ThirdParties';
     protected $primaryKey = 'Id';
 
-    public static function getPrimaryKey(): string
+    protected static function booted()
     {
-        return 'SuppliersId';
+        parent::booted();
+        static::addGlobalScope('prequalifiedAndApprovedSupplier', function ($query) {
+            $query->where('ThirdPartyType', ThirdPartyTypeEnum::Supplier)
+                ->where('IsPrequalified', true)
+                ->where('ApprovalStatus', ThirdPartyApprovalStatusEnum::Approved);
+        });
     }
 
     protected $fillable = [
-        'SupplierName',
-        'ContactEmail',
-        'ContactPhone',
-        'Address',
         'IsPrequalified',
-        'CategoryId',
-        'CreatedBy',
-        'ModifiedBy',
     ];
 
-    public function getIsPrequalifiedAttribute($value)
-    {
-        return (bool)$value;
-    }
+    protected $casts = [
+        'IsPrequalified' => 'boolean',
+    ];
 
-    public function setIsPrequalifiedAttribute($value)
-    {
-        $this->attributes['IsPrequalified'] = (bool)$value;
-    }
-
-    public function category()
+    public function category(): BelongsTo
     {
         return $this->belongsTo(ItemCategories::class, 'CategoryId', 'Id');
     }
 
-    public function rfqEvaluations()
+    public function rfqEvaluations(): HasMany
     {
-        return $this->hasMany(RFQEvaluation::class, 'SupplierId');
+        return $this->hasMany(RFQEvaluation::class, 'SupplierId', 'Id');
     }
 
-    public function ProcurementPeriods()
+    public function procurementPeriods(): BelongsToMany
     {
-        return $this->belongsToMany(ProcurementPeriod::class, 't_ProcurementPeriodSupplier', 'SupplierId', 'ProcurementPeriodId');
+        return $this->belongsToMany(ProcurementPeriod::class, 't_ProcurementPeriodSupplier', 'SupplierId', 'ProcurementPeriodId', 'Id', 'Id');
     }
 
-    public function rfqs()
+    public function rfqLines(): HasMany
     {
-        return $this->hasMany(RFQLine::class, 'SupplierId');
+        return $this->hasMany(RFQLine::class, 'SupplierId', 'Id');
     }
 
-    public function suppliers()
+    public function rfqs(): BelongsToMany
     {
-        return $this->belongsToMany(Supplier::class, 't_RFQ_Supplier', 'RFQId', 'SupplierId')
+        return $this->belongsToMany(RFQ::class, 't_RFQ_Supplier', 'SupplierId', 'RFQId', 'Id', 'RFQId')
             ->withPivot('Status')
             ->withTimestamps();
     }
 
-    public function tenders()
+    public function tenders(): BelongsToMany
     {
-        return $this->belongsToMany(Tender::class, 'TenderSupplier', 'SupplierID', 'TenderID')
+        return $this->belongsToMany(Tender::class, 'TenderSupplier', 'SupplierID', 'TenderID', 'Id', 'TenderID')
             ->withTimestamps();
     }
 
+    public function prequalificationApplications(): HasMany
+    {
+        return $this->hasMany(PrequalificationApplication::class, 'SupplierID', 'Id');
+    }
 }

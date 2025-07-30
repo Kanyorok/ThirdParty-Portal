@@ -9,26 +9,21 @@ class UpdateForeignKeysOnThirdPartiesTable extends Migration
     public function up(): void
     {
         Schema::table('t_ThirdParties', function (Blueprint $table) {
-            // Drop existing FKs if needed
             $table->dropForeign(['CreatedBy']);
             $table->dropForeign(['ModifiedBy']);
             $table->dropForeign(['DeletedBy']);
 
-            // Re-add with correct constraints
             $table->foreign('CreatedBy')
                 ->references('Id')
-                ->on('t_ThirdPartyUsers')
-                ->onDelete('SET NULL'); // only this one cascades
+                ->on('t_ThirdPartyUsers');
 
             $table->foreign('ModifiedBy')
                 ->references('Id')
-                ->on('t_ThirdPartyUsers')
-                ->onDelete('NO ACTION'); // safe
+                ->on('t_ThirdPartyUsers');
 
             $table->foreign('DeletedBy')
                 ->references('Id')
-                ->on('t_ThirdPartyUsers')
-                ->onDelete('NO ACTION'); // safe
+                ->on('t_ThirdPartyUsers');
         });
     }
 

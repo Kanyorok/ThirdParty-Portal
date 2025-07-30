@@ -4,6 +4,7 @@ namespace App\Models\Procurement;
 
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PrequalificationSection extends Model
@@ -31,14 +32,13 @@ class PrequalificationSection extends Model
         return 'prequalificationsectionId';
     }
 
-    public function section()
+    public function evaluationSection(): BelongsTo
     {
         return $this->belongsTo(Section::class, 'SectionId');
     }
 
-    public function round()
+    public function round(): BelongsTo
     {
         return $this->belongsTo(PrequalificationPeriod::class, 'RoundId');
     }
-
 }

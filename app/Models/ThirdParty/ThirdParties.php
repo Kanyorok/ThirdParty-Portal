@@ -11,14 +11,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Enums\ThirdPartyTypeEnum;
 use App\Enums\BusinessTypeEnum;
+use App\Models\Inventory\ItemCategories;
 
 class ThirdParties extends Model
 {
     use SoftDeletes;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    const CREATED_AT    = 'CreatedOn';
+    const UPDATED_AT    = 'ModifiedOn';
+    const DELETED_AT    = 'DeletedOn';
 
     protected $table = 't_ThirdParties';
     protected $primaryKey = 'Id';
@@ -37,6 +38,9 @@ class ThirdParties extends Model
         'Website',
         'Status',
         'ThirdPartyType',
+        'IsPrequalified',
+        'ApprovalStatus',
+        'CategoryId',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy',
@@ -53,24 +57,33 @@ class ThirdParties extends Model
         'ApprovalStatus' => ThirdPartyApprovalStatusEnum::class,
     ];
 
-    protected static function boot()
+    protected static function booted()
     {
-        parent::boot();
+        static::saving(function ($model) {
+            if (!is_null($model->IsPrequalified) && $model->ThirdPartyType !== ThirdPartyTypeEnum::Supplier) {
+                throw new \LogicException("Only suppliers can be marked as prequalified.");
+            }
+        });
+
         static::creating(function ($model) {
             $model->ApprovalStatus = ThirdPartyApprovalStatusEnum::Pending;
         });
+    }
+
+    public function setIsPrequalifiedAttribute($value)
+    {
+        $this->attributes['IsPrequalified'] = $value;
     }
 
     public function users(): HasOne
     {
         return $this->hasOne(ThirdPartyUser::class, 'ThirdPartyId');
     }
-    // a third party can select multiple categories
+
     public function categories(): BelongsToMany
     {
-        return $this->belongsToMany(ThirdPartyCategory::class, 't_ThirdPartiesCategories', 'ThirdPartyId', 'CategoryID')
-            ->withPivot('CreatedBy', 'ModifiedBy', 'DeletedBy', 'CreatedOn', 'ModifiedOn', 'DeletedOn')
-            ->using(ThirdPartyCategory::class);
+        return $this->belongsToMany(ItemCategories::class, 't_ItemCategories', 'ThirdPartyId', 'CategoryID', 'Id', 'Id')
+            ->withPivot('CreatedBy', 'ModifiedBy', 'DeletedBy', 'CreatedOn', 'ModifiedOn', 'DeletedOn');
     }
 
     public function getLabelAttribute(): string
@@ -82,11 +95,12 @@ class ThirdParties extends Model
     {
         return $query->where('ThirdPartyType', ThirdPartyTypeEnum::Supplier);
     }
+
     public function getKRANoAttribute(): string
     {
-        return $this->KraPin ?: $this->RegistrationNumber;
+        return $this->TaxPIN ?: $this->RegistrationNumber;
     }
-    // TODO: deliberate on the number of bank details a third party can have
+
     public function bankDetails(): HasMany
     {
         return $this->hasMany(ThirdPartiesBankDetails::class, 'ThirdPartyId', 'Id');

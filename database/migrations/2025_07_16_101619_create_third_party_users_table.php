@@ -22,12 +22,21 @@ return new class extends Migration
             $table->foreignId('ThirdPartyId')->nullable()->constrained('t_ThirdParties', 'Id');
             $table->string('Password');
             $table->rememberToken();
-            $table->foreignId('CreatedBy')->nullable()->constrained('t_Users', 'Id');
-            $table->dateTime('CreatedOn')->nullable();
-            $table->foreignId('ModifiedBy')->nullable()->constrained('t_Users', 'Id');
-            $table->dateTime('ModifiedOn')->nullable();
-            $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
-            $table->softDeletes('DeletedOn');
+
+            $table->unsignedBigInteger('CreatedBy')->nullable();
+            $table->foreign('CreatedBy')->references('Id')->on('t_ThirdPartyUsers')->onDelete('no action');
+
+            $table->unsignedBigInteger('ModifiedBy')->nullable();
+            $table->foreign('ModifiedBy')->references('Id')->on('t_ThirdPartyUsers')->onDelete('no action');
+
+            $table->unsignedBigInteger('DeletedBy')->nullable();
+            $table->foreign('DeletedBy')->references('Id')->on('t_ThirdPartyUsers')->onDelete('no action');
+
+            // FIX: Explicitly add custom timestamp columns
+            $table->timestamp('CreatedOn')->useCurrent();
+            $table->timestamp('ModifiedOn')->useCurrent()->useCurrentOnUpdate();
+
+            $table->softDeletes('DeletedOn'); // This is correct for the soft delete column
         });
     }
 

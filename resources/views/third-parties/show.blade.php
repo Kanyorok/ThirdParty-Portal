@@ -81,8 +81,8 @@
                 'Approval Status' => $party->ApprovalStatus?->label(),
                 'Status' => $party->Status?->value,
                 'Third Party Type' => $party->ThirdPartyType?->label(),
-                'Created On' => $party->CreatedOn?->format('Y-m-d H:i:s'),
-                'Modified On' => $party->ModifiedOn?->format('Y-m-d H:i:s'),
+                'Created On' => $party->CreatedOn?->format('Y-m-d'),
+                'Modified On' => $party->ModifiedOn?->format('Y-m-d'),
                 ];
                 @endphp
 
@@ -99,7 +99,7 @@
 
         <div class="card-footer d-flex justify-content-end gap-2">
             <a href="{{ route('web.parties.edit', ['party' => $party->Id]) }}" class="btn btn-primary" title="Edit this third party">
-                <i class="fas fa-edit"></i> Edit
+                <i class="fas fa-edit"></i> Review
             </a>
             <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteConfirmationModal" title="Delete this third party">
                 <i class="fas fa-trash-alt"></i> Delete

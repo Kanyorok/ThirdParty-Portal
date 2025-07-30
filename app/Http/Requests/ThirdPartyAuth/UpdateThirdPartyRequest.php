@@ -17,7 +17,7 @@ class UpdateThirdPartyRequest extends FormRequest
 
     public function rules(): array
     {
-        $thirdPartyId = $this->route('third_party')->Id;
+        $thirdPartyId = $this->route('third_party')?->Id ?? 0;
 
         return [
             'thirdPartyName' => ['sometimes', 'string', 'max:255', Rule::unique('t_ThirdParties', 'ThirdPartyName')->ignore($thirdPartyId, 'Id')],
@@ -31,7 +31,7 @@ class UpdateThirdPartyRequest extends FormRequest
             'email' => ['sometimes', 'string', 'email', 'max:255', Rule::unique('t_ThirdParties', 'Email')->ignore($thirdPartyId, 'Id')],
             'phone' => ['nullable', 'string', 'max:50'],
             'website' => ['nullable', 'url', 'max:255'],
-            'approvalStatus' => ['nullable', Rule::enum(ThirdPartyApprovalStatusEnum::class)], // Use enum for validation
+            'approvalStatus' => ['nullable', Rule::enum(ThirdPartyApprovalStatusEnum::class)],
             'status' => ['nullable', Rule::enum(ThirdPartyStatusEnum::class)],
             'thirdPartyType' => ['sometimes', Rule::enum(ThirdPartyTypeEnum::class)],
         ];
