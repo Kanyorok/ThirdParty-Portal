@@ -164,7 +164,8 @@ use App\Models\Settings\ApprovalStage;
 use App\Models\Finance\FinanceInvoiceEntry;
 use App\Models\Finance\FinanceTaxType;
 use App\Models\Finance\TaxJurisdiction;
-
+use App\Models\Settings\WorkFlowLimit;
+use App\Policies\Settings\WorkFlowLimitPolicy;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -302,12 +303,6 @@ class AppServiceProvider extends ServiceProvider
             Image::getPrimaryKey() => Image::class,
             Repository::getPrimaryKey() => Repository::class,
             
-            
-
-
-
-
-
             PrequalificationPeriod::getPrimaryKey() => PrequalificationPeriod::class,
 
             //////////////  Finance  ////////////////
@@ -365,7 +360,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PrequalificationPeriod::class, PrequalificationPeriodPolicy::class);
         Gate::Policy(PropertyNewLease::class, PropertyNewLeasePolicy::class);
         Gate::policy(PropertyLeaseTermination::class, PropertyLeaseTerminationPolicy::class);
-
+        Gate::policy(WorkFlowLimit::class, WorkFlowLimitPolicy::class);
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);
          Event::listen(SMSSendEvent::class, SMSSendListener::class);

@@ -91,7 +91,6 @@ enum PermissionEnum: string
     case DebtCollectionAssignment = 'debt-collection-assignment';
     case DebtCollectionAdmin = 'debt-collection-admin';
 
-
     //Socials
     case SocialRead = 'social-read';
     case SocialWrite = 'social-create';
@@ -106,13 +105,10 @@ enum PermissionEnum: string
     case UsersMeeting = 'users-meetings';
     case UsersMessaging = 'users-messaging';
     case UsersSessions = 'users-nonExpiringSessions';
-
-
     case MeetingRooms = 'meeting-locations';
 
     case BoardManage = 'board-members-manage';
     case BoardMeeting = 'board-members-meetings';
-
 
     case TaskCreate = 'tasks-create';
     case TaskDelegate = 'tasks-delegate';
@@ -316,13 +312,11 @@ enum PermissionEnum: string
     case PropertyTypeDelete = 'propertytype-delete';
     case PropertyTypeView = 'propertytype-view';
 
-
     //Property Registry
     case PropertyRegistryCreate = 'propertyregistry-create';
     case PropertyRegistryUpdate = 'propertyregistry-update';
     case PropertyRegistryDelete = 'propertyregistry-delete';
     case PropertyRegistryView = 'propertyregistry-view';
-
 
     //Property Block
     case PropertyStructuralCreate = 'propertystructural-create';
@@ -330,15 +324,12 @@ enum PermissionEnum: string
     case PropertyStructuralDelete = 'propertystructural-delete';
     case PropertyStructuralView = 'propertystructural-view';
 
-
     //Property Attachments
     case PropertyAttachmentsCreate = 'propertyattachments-create';
     case PropertyAttachmentsUpdate = 'propertyattachments-update';
     case PropertyAttachmentsDelete = 'propertyattachments-delete';
     case PropertyAttachmentsView = 'propertyattachments-view';
     
-
-
     //Tenant Mentenance
     case TenantMentenanceCreate = 'tenantmentenance-create';
     case TenantMentenanceUpdate = 'tenantmentenance-update';
@@ -350,7 +341,6 @@ enum PermissionEnum: string
     case TenantClearanceUpdate = 'tenantclearance-update';
     case TenantClearanceDelete = 'tenantclearance-delete';
     case TenantClearanceView = 'tenantclearance-view';
-
 
     //Property New Lease
     case PropertyNewLeaseCreate = 'propertynewlease-create';
@@ -396,7 +386,6 @@ enum PermissionEnum: string
     case PropertyMaintenanceRequestDelete = 'propertymaintenancerequest-delete';
     case PropertyMaintenanceRequestView = 'propertymaintenancerequest-view';
 
-
      //Property Maintenance Assign
     case PropertyMaintenanceAssignCreate = 'propertymaintenanceassign-create';
     case PropertyMaintenanceAssignUpdate = 'propertymaintenanceassign-update';
@@ -409,9 +398,6 @@ enum PermissionEnum: string
     case PropertyMaintenanceWorkCompletionDelete = 'propertymaintenanceworkcompletion-delete';
     case PropertyMaintenanceWorkCompletionView = 'propertymaintenanceworkcompletion-view';
 
-
-    
-
     /*
      *
      * ========================================  Human Resource management  ========================================
@@ -421,7 +407,6 @@ enum PermissionEnum: string
     case EmployeesCreate = 'employee-create';
     case EmployeesUpdate = 'employee-update';
     case EmployeesDelete = 'employee-delete';
-
 
     /*
  *
@@ -466,7 +451,18 @@ enum PermissionEnum: string
     case FinanceTaxSettingCreate = 'financeTaxSetting-create';
     case FinanceTaxSettingUpdate = 'financeTaxSetting-update';
     case FinanceTaxSettingDelete = 'financeTaxSetting-delete';
+    
+    /*
+     *
+     * ========================================  Main Settings  ========================================
+     */
 
+    case WorkflowlimitManagerialLevel = 'workflowlimit-managerlevel';
+    case WorkflowlimitOperationalLevel = 'workflowlimit-operationslevel';
+    case WorkflowlimitView = 'workflowlimit-view';
+    case WorkflowlimitCreate = 'workflowlimit-create';
+    case WorkflowlimitUpdate = 'workflowlimit-update';
+    case WorkflowlimitDelete = 'workflowlimit-delete';
 
     public static function display(): Collection
     {
@@ -562,6 +558,9 @@ enum PermissionEnum: string
             [self::PropertyMaintenanceRequestCreate,self::PropertyMaintenanceRequestUpdate,self::PropertyMaintenanceRequestDelete,self::PropertyMaintenanceRequestView],
             [self::PropertyMaintenanceAssignCreate,self::PropertyMaintenanceAssignUpdate,self::PropertyMaintenanceAssignDelete,self::PropertyMaintenanceAssignView],
             [self::PropertyMaintenanceWorkCompletionCreate,self::PropertyMaintenanceWorkCompletionUpdate,self::PropertyMaintenanceWorkCompletionDelete,self::PropertyMaintenanceWorkCompletionView],
+            
+            ///////////////////////  Settings  /////////////////////////////////////
+            [self::WorkflowlimitManagerialLevel, self::WorkflowlimitOperationalLevel, self::WorkflowlimitView, self::WorkflowlimitCreate, self::WorkflowlimitUpdate, self::WorkflowlimitDelete],      
         ]);
     }
 
@@ -596,7 +595,8 @@ enum PermissionEnum: string
 
 
             self::Teams, self::Branches, self::Users, self::UsersMeeting, self::UsersMessaging, self::UsersSessions, self::Integrations,
-            self::MeetingRooms, self::Roles, self::Ceo, self::Managers, self::MarketingManager, self::ListsView, self::ListsUpdate
+            self::MeetingRooms, self::Roles, self::Ceo, self::Managers, self::MarketingManager, self::ListsView, self::ListsUpdate,
+            self::WorkflowlimitManagerialLevel, self::WorkflowlimitOperationalLevel, self::WorkflowlimitView, self::WorkflowlimitCreate, self::WorkflowlimitUpdate, self::WorkflowlimitDelete
             => ModulesEnum::Settings,
 
             //Procurement
@@ -764,6 +764,8 @@ enum PermissionEnum: string
             self::FinanceAccountsPayableView, self::FinanceAccountsPayableCreate, self::FinanceAccountsPayableUpdate, self::FinanceAccountsPayableDelete => 'Accounts Payable',
             self::FinanceAccountsReceivableView, self::FinanceAccountsReceivableCreate, self::FinanceAccountsReceivableUpdate, self::FinanceAccountsReceivableDelete => 'Accounts Receivable',
             self::FinanceTaxSettingView, self::FinanceTaxSettingCreate, self::FinanceTaxSettingUpdate, self::FinanceTaxSettingDelete => 'Tax Setting',
+
+            self::WorkflowlimitManagerialLevel, self::WorkflowlimitOperationalLevel, self::WorkflowlimitView, self::WorkflowlimitCreate, self::WorkflowlimitUpdate, self::WorkflowlimitDelete => 'Workflow Limits',
         };
     }
 }
