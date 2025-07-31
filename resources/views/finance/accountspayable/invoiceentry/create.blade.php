@@ -1,54 +1,146 @@
 @extends('layouts.app')
-@section('title', 'Invoice Entry - Accounts Payable')
+@section('title', 'Create Payables Invoice')
+
 @section('content')
-<div class="container mt-5">
-    <h2 class="mb-4">Invoice Entry - Accounts Payable</h2>
+<div class="card shadow p-4 rounded-4">
+    <h4 class="mb-4">🧾 Create Payables Invoice</h4>
 
-    <form action="submit_invoice.php" method="post">
-        <div class="mb-3">
-            <label for="vendor_name" class="form-label">Vendor Name</label>
-            <input type="text" class="form-control" id="vendor_name" name="vendor_name" placeholder="e.g., ABC Supplies Ltd." required>
-        </div>
 
-        <div class="mb-3">
-            <label for="invoice_number" class="form-label">Invoice Number</label>
-            <input type="text" class="form-control" id="invoice_number" name="invoice_number" placeholder="e.g., INV123456" required>
-        </div>
-
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label for="invoice_date" class="form-label">Invoice Date</label>
-                <input type="date" class="form-control" id="invoice_date" name="invoice_date" required>
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label class="form-label">Invoice Number</label>
+                <input type="text" name="InvoiceNumber" class="form-control" placeholder="e.g. INV-1001" required>
             </div>
-            <div class="col-md-6 mb-3">
-                <label for="due_date" class="form-label">Due Date</label>
-                <input type="date" class="form-control" id="due_date" name="due_date">
+            <div class="col-md-4">
+                <label class="form-label">Invoice Date</label>
+                <input type="date" name="InvoiceDate" class="form-control" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Vendor</label>
+                <select name="VendorID" class="form-control">
+                    <option value="">-- Select Vendor --</option>
+                    <option value="1">ABC Supplies Ltd</option>
+                    <option value="2">Global Traders Inc.</option>
+                </select>
             </div>
         </div>
 
-        <div class="mb-3">
-            <label for="amount" class="form-label">Amount (Ksh)</label>
-            <input type="number" class="form-control" id="amount" name="amount" placeholder="e.g., 12000" required>
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label class="form-label">Currency</label>
+                <select name="CurrencyCode" class="form-control">
+                    <option value="KES">KES</option>
+                    <option value="USD">USD</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Exchange Rate</label>
+                <input type="number" step="0.0001" name="ExchangeRate" class="form-control" value="1.0000">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">PO / GRN Reference</label>
+                <select name="ReferenceID" class="form-control">
+                    <option value="">-- None (Manual Entry) --</option>
+                    <option value="PO-101">PO-101 - ABC Supplies</option>
+                    <option value="GRN-204">GRN-204 - Global Traders</option>
+                </select>
+            </div>
         </div>
 
-        <div class="mb-3">
-            <label for="description" class="form-label">Invoice Description</label>
-            <textarea class="form-control" id="description" name="description" rows="3" placeholder="e.g., Office supplies and consumables"></textarea>
-        </div>
+        <hr>
+
+        <h5 class="mb-3">📦 Line Items</h5>
+        <table class="table table-bordered" id="lineItemsTable">
+            <thead class="table-light">
+                <tr>
+                    <th>Description</th>
+                    <th>Qty</th>
+                    <th>Unit Cost</th>
+                    <th>Tax</th>
+                    <th>GL Account</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><input name="lines[0][Description]" class="form-control" value="Stationery - Pens"></td>
+                    <td><input name="lines[0][Quantity]" type="number" step="0.01" class="form-control" value="10"></td>
+                    <td><input name="lines[0][UnitCost]" type="number" step="0.01" class="form-control" value="100"></td>
+                    <td>
+                        <select name="lines[0][TaxID]" class="form-control">
+                            <option value="">-- None --</option>
+                            <option value="1">VAT 16%</option>
+                            <option value="2">WHT 5%</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select name="lines[0][GLAccountID]" class="form-control">
+                            <option value="5001">5001 - Office Supplies</option>
+                            <option value="5002">5002 - Admin Expenses</option>
+                        </select>
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-danger" onclick="removeRow(this)">🗑️</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
 
         <div class="mb-3">
-            <label for="status" class="form-label">Payment Status</label>
-            <select class="form-select" id="status" name="status" required>
-                <option disabled selected>Select Status</option>
-                <option value="unpaid">Unpaid</option>
-                <option value="partially_paid">Partially Paid</option>
-                <option value="paid">Paid</option>
-            </select>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="addRow()">➕ Add Line</button>
         </div>
 
-        <div class="text-end">
-            <button type="submit" class="btn btn-success">Save Invoice</button>
+        <hr>
+
+        <h5 class="mb-3">📤 Upload EDI File (Optional)</h5>
+        <div class="mb-3">
+            <input type="file" name="edi_file" class="form-control">
+            <small class="form-text text-muted">Supports CSV/Excel import. Parse and map lines in controller.</small>
+        </div>
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-success">💾 Save Invoice</button>
         </div>
     </form>
 </div>
+
+@endsection
+
+@section('scripts')
+<script>
+let lineIndex = 1;
+
+function addRow() {
+    const table = document.querySelector("#lineItemsTable tbody");
+    const row = `
+        <tr>
+            <td><input name="lines[${lineIndex}][Description]" class="form-control"></td>
+            <td><input name="lines[${lineIndex}][Quantity]" type="number" step="0.01" class="form-control" value="1"></td>
+            <td><input name="lines[${lineIndex}][UnitCost]" type="number" step="0.01" class="form-control"></td>
+            <td>
+                <select name="lines[${lineIndex}][TaxID]" class="form-control">
+                    <option value="">-- None --</option>
+                    <option value="1">VAT 16%</option>
+                    <option value="2">WHT 5%</option>
+                </select>
+            </td>
+            <td>
+                <select name="lines[${lineIndex}][GLAccountID]" class="form-control">
+                    <option value="5001">5001 - Office Supplies</option>
+                    <option value="5002">5002 - Admin Expenses</option>
+                </select>
+            </td>
+            <td>
+                <button type="button" class="btn btn-sm btn-danger" onclick="removeRow(this)">🗑️</button>
+            </td>
+        </tr>
+    `;
+    table.insertAdjacentHTML("beforeend", row);
+    lineIndex++;
+}
+
+function removeRow(button) {
+    button.closest("tr").remove();
+}
+</script>
 @endsection
