@@ -18,7 +18,7 @@ class WorkFlowLimit extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'DocType', 'Limit', 'CreatedBy', 'ModifiedBy', 'DeletedBy',
+        'Source', 'PermissionId', 'MaxAmount', 'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
 
     public static function getPrimaryKey(): string

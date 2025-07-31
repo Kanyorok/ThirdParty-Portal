@@ -25,7 +25,7 @@
       @csrf
       <div class="row mb-3">
         <div class="col-md-3">
-          <label for="DocType">Document Type <span class="text-danger">*</span></label>
+          <label for="DocType" class="form-label">Document Type <span class="text-danger">*</span></label>
           <select name="DocType" id="DocType" class="form-control select2" required>
             <option value="">-- Select --</option>
             @foreach ($sourceOptions as $alias => $class)
@@ -35,8 +35,12 @@
         </div>
         <div class="col-md-3">
           <label for="PermissionName" class="form-label">Permission Name</label>
-          <input type="text" name="PermissionName" id="PermissionName" class="form-control"
-            placeholder="e.g. approve-workflow-limit" required>
+          <select name="Permission" id="PermissionSelect" class="form-control select2" required>
+            <option value="">Select Permission</option>
+            @foreach ($permissions as $permission)
+              <option value="{{ $permission->id }}">{{ $permission->name }}</option>
+            @endforeach
+          </select>
         </div>
 
         <div class="col-md-3">
@@ -59,7 +63,7 @@
         <thead class="table-light">
           <tr>
             <th>#</th>
-            <th>Permission</th>
+            <th>Document Type</th>
             <th>Max Amount</th>
             <th>Actions</th>
           </tr>
@@ -68,11 +72,11 @@
           @foreach ($limits as $limit)
             <tr>
               <td>{{ $loop->iteration }}</td>
-              <td>{{ $limit->permission->name ?? 'N/A' }}</td>
-              <td>{{ number_format($limit->Count, 2) }}</td>
+              <td>{{ $limit->Source ?? 'N/A' }}</td>
+              <td>{{ number_format($limit->MaxAmount, 2) }}</td>
               <td>
                 {{-- Edit/Delete buttons (optional) --}}
-                <form method="POST" action="{{ route('settings.approval_workflow_limit.destroy', $limit->id) }}"
+                <form method="POST" action="#"
                   onsubmit="return confirm('Are you sure you want to delete this limit?')">
                   @csrf
                   @method('DELETE')
@@ -102,17 +106,8 @@
 
     $(document).ready(function() {
       $('#DocType').select2({
-        theme: 'bootstrap5',
-        placeholder: '🔍 Type to search document...',
-        allowClear: true,
-        width: '100%',
-        minimumInputLength: 1
-      });
-
-      // If you later use other searchable selects, like Permission:
-      $('#PermissionSelect').select2({
         theme: 'bootstrap4',
-        placeholder: '🔍 Type to search permission...',
+        placeholder: '🔍 Type to search document...',
         allowClear: true,
         width: '100%',
         minimumInputLength: 1

@@ -3,43 +3,28 @@
 namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Database\Eloquent\Relations\Relation;
-use App\Models\Settings\ApprovalStage;
 use Illuminate\Http\Request;
-use App\Http\Requests\Settings\ApprovalSetupRequest;
+use App\Http\Requests\Settings\WorkFlowRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Models\Settings\ApprovalStage;
 
-class ApprovalStagesController extends Controller
+class WorkFlowController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $morphMap = Relation::morphMap();
-
-        $approvalGroups = ApprovalStage::all();
-
-        $sourceOptions = array_flip($morphMap);
-
-        return view('settings.approvals.sections', compact('approvalGroups', 'sourceOptions'));
+        //
     }
 
-    public function show($id)
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
     {
-        $approval = ApprovalStage::findOrFail($id);
-        $sourceOptions = array_flip(Relation::morphMap());
-        $approvalTypes = DB::table('t_WorkFlowTypes')->get(); 
-        $permissions = DB::table('t_Permissions')->get();
-        $workflowLimits = DB::table('t_WorkflowLimits')
-            ->select('Id', 'Source')
-            ->get();
-        $stages = DB::table('t_WorkflowStages')
-            ->where('WorkflowID', $id)
-            ->get();
-
-        return view('settings.approvals.show', compact('approval', 'sourceOptions', 'permissions', 'approvalTypes', 'workflowLimits', 'stages'));
+        //
     }
 
     /**
@@ -71,5 +56,37 @@ class ApprovalStagesController extends Controller
         }
 
         return redirect()->back()->with('success', 'Approval workflow created.');
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(string $id)
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(string $id)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, string $id)
+    {
+        //
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(string $id)
+    {
+        //
     }
 }

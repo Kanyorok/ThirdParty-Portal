@@ -6,8 +6,9 @@ use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Auth\User;
+use App\Models\Settings\WorkFlowType;
 
-class ApprovalStage extends Model
+class WorkFlow extends Model
 {
     use SoftDeletes, UserActorTrait;
 
@@ -25,11 +26,16 @@ class ApprovalStage extends Model
 
     public static function getPrimaryKey(): string
     {
-        return 'ApprovalStageId';
+        return 'WorkFlowId';
     }
 
     public function createdByUser()
     {
         return $this->belongsTo(User::class, 'CreatedBy', 'Id');
+    }
+
+    public function type_name()
+    {
+        return $this->belongsTo(WorkFlowType::class, 'TypeID', 'Id');
     }
 }
