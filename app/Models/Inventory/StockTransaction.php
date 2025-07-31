@@ -36,6 +36,7 @@ class StockTransaction extends Model
         'QuantityIn',
         'QuantityOut',
         'BalanceQty',
+        'TotalCost',
         'TransactionDate',
         'Remarks',
         'CreatedBy',

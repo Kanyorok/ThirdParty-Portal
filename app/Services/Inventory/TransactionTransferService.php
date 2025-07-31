@@ -211,6 +211,7 @@ class TransactionTransferService
                     'QuantityIn' => 0,
                     'QuantityOut' => $item->DispatchedQty,
                     'BalanceQty' => $newToQty,
+                    'TotalCost' => ($item->UnitCost ?? 0) * ($item->DispatchedQty ?? 0),
                     'TransactionDate' => now(),
                     'ReferenceID' => $transfer->Id,
                     'Remarks' => 'Transfer to Branch ID ' . $transfer->ToBranch,

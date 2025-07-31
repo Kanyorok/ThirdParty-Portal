@@ -62,6 +62,9 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::delete('/sku/{Id}', [SKUController::class, 'destroy'])->name('sku.destroy');
     Route::get('/get-stores', [SKUController::class, 'getStores'])->name('get.stores');
     Route::get('/info/get-items', [SKUController::class, 'getItemsByCategoryOrSubcategory'])->name('get.items');
+    Route::get('get-item-details', [SKUController::class, 'getItemDetails'])->name('sku.item-details');
+
+
 
     //Route::resource('itemcategory', ItemCategoryController::class);
     Route::get('/itemcategory', [ItemCategoryController::class, 'index'])->name('itemcategory.index');

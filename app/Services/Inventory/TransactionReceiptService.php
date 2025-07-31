@@ -186,6 +186,7 @@ class TransactionReceiptService
             'QuantityOut' => 0,
             'BalanceQty' => $newToQty,
             'TransactionDate' => now(),
+            'TotalCost' => ($itemData['unit_cost'] ?? 0) * ($itemData['received_qty'] ?? 0),
             'Remarks' => 'Transfer From Branch ID ' . ($receipt->transfer->FromBranch ?? 'Unknown'),
             'CreatedBy' => Auth::id(),
             'CreatedOn' => now(),

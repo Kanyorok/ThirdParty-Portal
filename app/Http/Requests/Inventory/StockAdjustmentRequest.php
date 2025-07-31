@@ -18,9 +18,7 @@ class StockAdjustmentRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        // Typically, you'd add authorization logic here, e.g.,
-        // return auth()->check() && auth()->user()->can('create', \App\Models\Inventory\StockAdjustment::class);
-        // For now, it remains true as per your original request.
+   
         return true;
     }
 
@@ -38,6 +36,8 @@ class StockAdjustmentRequest extends FormRequest
             'AdjustedBy' => ['required', 'integer', 'exists:t_Users,Id'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.Item' => ['required', 'integer', 'exists:t_Items,Id'],
+            'items.*.UOM' => ['required', 'integer', 'exists:t_UOM,Id'],
+            'items.*.UnitCost' => ['nullable', 'numeric', 'min:0'],
             'items.*.AdjustmentQty' => ['required', 'numeric'],
             'items.*.Remarks' => ['nullable', 'string', 'max:255'],
         ];
