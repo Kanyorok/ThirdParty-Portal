@@ -63,6 +63,7 @@ use App\Models\DMS\DocumentTags;
 use App\Models\DMS\DocumentVersion;
 use App\Models\DMS\Image;
 use App\Models\DMS\Repository;
+use App\Models\Finance\FinanceCDNotes;
 use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
 use App\Models\Procurement\DepartmentNeed;
@@ -319,6 +320,7 @@ class AppServiceProvider extends ServiceProvider
             TaxJurisdiction::getPrimaryKey() => TaxJurisdiction::class,
             FinanceTaxType::getPrimaryKey() => FinanceTaxType::class,
             FinanceInvoiceEntry::getPrimaryKey() => FinanceInvoiceEntry::class,
+            FinanceCDNotes::getPrimaryKey() => FinanceCDNotes::class,
         ]);
 
         Gate::policy(Role::class, RolePolicy::class);

@@ -155,5 +155,11 @@ Route::namespace('Finance')->prefix('finance')->group(function () {
     Route::get('/finance/pos/{selectedVendor}', [InvoiceEntryController::class, 'getOrders'])->name('finance.orders');
     // Route for getting GRNS
     Route::get('/finance/grns/{selectedPO}', [InvoiceEntryController::class, 'getGRNs'])->name('finance.grns');
+    // Route for viewingPOModal
+    Route::get('/finance/viewpo/{selectedPO}', [InvoiceEntryController::class, 'viewPOModal'])->name('finance.viewPOModal');
+    // Route for sAVING INVOICE
+    Route::post('/finance/invoice/save', [InvoiceEntryController::class, 'saveInvoice'])->name('invoiceentry.save');
+    //Route for gettng suppliers from invoices
+    Route::get('/finance/supplier/{selectedInvoice}', [PaymentVoucherController::class, 'getSuppliers'])->name('finance.getSuppliers');
 
 });
