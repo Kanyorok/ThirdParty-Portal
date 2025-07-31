@@ -11,16 +11,14 @@
             </ul>
         </div>
     @endif
-    <div class="container mt-4">
-        <div class="card p-4">
-            <div class="card-header bg-dark text-white">
-                ➕ New Budget Activity
-                <a href="{{ route('budgetactivities.index') }}" class="btn btn-secondary btn-sm float-end">← Back to
-                    Activities</a>
-            </div>
+    <div class="container mt-2">
+        <div class="card p-1">
+{{--            <div class="card-header bg-light text-black">--}}
+{{--                ➕ New Budget Activity--}}
+{{--            </div>--}}
             <div class="card-body">
                 <p class="muted">
-                    Please use this form to add a new activity under your selected budget line. An activity represents a
+                    Use this form to add a new activity under your selected budget line. An activity represents a
                     specific task or
                     project planned within the broader budget. Make sure to associate it with the appropriate budget and
                     budget line. You can
@@ -126,6 +124,12 @@
 
         <!-- Submit Button (initially hidden) -->
         <div class="text-end mt-4" id="submitButtonContainer" style="display:none;">
+
+            <button class="btn btn-secondary">
+                <a href="{{ route('budgetactivities.index') }}" class="float-end text-white">← Back to
+                    Activities</a>
+            </button>
+
             <button type="submit" class="btn btn-success"
                     onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Saving...'; this.form.submit(); }">
                 💾 Save Activity

@@ -23,7 +23,7 @@
                     <label class="form-label">Select Branch</label>
                     <select class="form-select" name="BranchID" required>
                         <option value="" selected disabled>-- Select Branch --</option>
-                        <option value="all" name="all">All</option>
+{{--                        <option value="all" name="all">All</option>--}}
                         @foreach ($branches as $item)
                             <option value="{{ $item->Id }}">{{ $item->Name }}</option>
                         @endforeach

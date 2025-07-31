@@ -2,8 +2,8 @@
 @section('title', 'Add Budget Line Entry')
 @section('content')
 
-    <div class="card mt-4">
-        <div class="card-header bg-dark text-white">➕ Add Budget Line Entry</div>
+    <div class="card mt-2">
+{{--        <div class="card-header bg-dark text-white">➕ Add Budget Line Entry</div>--}}
         <div class="card-body">
             <form action="{{ route('entrybyglline.store') }}" method="POST">
                 @csrf

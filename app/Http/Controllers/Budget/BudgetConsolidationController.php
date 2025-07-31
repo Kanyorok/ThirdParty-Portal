@@ -152,7 +152,7 @@ class BudgetConsolidationController extends Controller
                     $budgetLineID = $projection->BudgetLineID;
                     $budgetlineData = BudgetLine::find($budgetLineID);
                     $BudgetLineSubGLID = $budgetlineData->GLAccountSubTypeID;
-                    $budgetLineGLData = BudgetGLAccountSubType::find($BudgetLineSubGLID);
+                    $budgetLineGLData = BudgetGLMaster::find($BudgetLineSubGLID);
                     $budgetLineGLType = $budgetLineGLData->GLAccountTypeValue;
                     $glAccountSubType = BudgetGLSubType::find($projection->budgetLine->GLAccountSubTypeID)->Description ?? 'N/A';
                     if ($budgetLineGLType == 'A') {

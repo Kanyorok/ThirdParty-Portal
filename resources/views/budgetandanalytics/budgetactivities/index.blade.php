@@ -1,11 +1,11 @@
 @extends('layouts.app')
 @section('title', 'Activities Overview')
 @section('content')
-    <div class="container mt-4">
-        <div class="card p-4">
-            <div class="card-header bg-dark text-white py-4 mb-0" style="font-size: 20px; font-weight: bold;">
-                📊 Budget Activities Overview
-            </div>
+    <div class="container mt-1">
+        <div class="card p-1">
+{{--            <div class="card-header bg-dark text-white py-4 mb-0" style="font-size: 20px; font-weight: bold;">--}}
+{{--                📊 Budget Activities Overview--}}
+{{--            </div>--}}
 
             <div class="card-body mb-0">
                 @if(session('success'))

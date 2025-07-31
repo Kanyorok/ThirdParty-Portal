@@ -20,14 +20,15 @@
             </ul>
         </div>
     @endif
-    <div class="card mt-4">
-        <div class="mb-2 d-flex justify-content-between">
-            <a href="javascript:void(0)" class="btn btn-success btn-sm" data-bs-toggle="modal"
-               data-bs-target="#addRateModal">
-                + New Rate
-            </a>
-        </div>
-        <div class="card-header bg-secondary text-white">📈Product Rates</div>
+    <div class="mb-0 d-flex justify-content-between">
+        <a href="javascript:void(0)" class="btn btn-success btn-sm" data-bs-toggle="modal"
+           data-bs-target="#addRateModal">
+            + New Rate
+        </a>
+    </div>
+    <div class="card mt-2">
+
+{{--        <div class="card-header bg-secondary text-white">📈Product Rates</div>--}}
         <p class="text-muted">
             This form allows you to configure and manage financial rates for products imported from the Core Banking
             System (CBS).

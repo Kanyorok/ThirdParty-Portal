@@ -2,9 +2,9 @@
 @section('title', 'CBS GL Accounts')
 @section('content')
     <div class="card mb-4">
-        <div class="card-header bg-dark text-white">
-            🧾 CBS GL Accounts
-        </div>
+{{--        <div class="card-header bg-dark text-white">--}}
+{{--            🧾 CBS GL Accounts--}}
+{{--        </div>--}}
         <div class="card-body">
             <p class="text-muted">
                 Below is a list of General Ledger accounts synced from Core Banking System (CBS).
