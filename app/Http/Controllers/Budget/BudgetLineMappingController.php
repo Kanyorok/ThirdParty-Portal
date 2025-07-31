@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Budget;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Budget\BudgetGLAccount;
+use App\Models\Budget\BudgetGLMaster;
+use App\Models\Budget\BudgetGLSubType;
 use App\Models\Budget\BudgetLine;
 use App\Models\Budget\BudgetLineCategories;
 use App\Models\Budget\BudgetLinesGLAccount;
@@ -29,13 +31,13 @@ class BudgetLineMappingController extends Controller
         $this->authorize(PermissionEnum::BudgetSetupView, BudgetLine::class);
 
         //Fetch Budget Lines with related glAccounts and category
-        $budgetLines = BudgetLine::with(['glAccounts', 'category', 'glAccountSubType', 'department', 'glAccountType'])->get();
+        $budgetLines = BudgetLine::with(['newGlAccounts', 'category', 'glSubType', 'department', 'glAccountType'])->get();
 
         //Fetch Budget line category
         $budgetCategories = BudgetLineCategories::all();
 
         //Pull the GLS
-        $gls = BudgetGLAccount::select('Id', 'Description', 'GTType')->get();
+        $gls = BudgetGLMaster::select('BudgetGLID as Id', 'Description', 'GLAccountTypeID as GTType')->get();
 
         //Fetch Product type
         $productTypes = BudgetProductType::select('Id', 'Name')->get();
@@ -60,7 +62,10 @@ class BudgetLineMappingController extends Controller
         $glAccountTypes = CodeDetail::select('Id', 'CodeID', 'Value', 'Description')->where('CodeID', 'GLAccountType')->get();
 
         //Fetch GLAccountSubType
-        $glSubtype = BudgetGLAccountSubType::select('Id', 'GLAccountTypeValue', 'GLAccountSubTypeName')->get();
+        //$glSubtype = Budget::select('Id', 'GLAccountTypeID', 'Description')->get();
+        $glSubtype = DB::table('t_BudgetGLSubTypes')
+            ->select('Id', 'GLAccountTypeID', 'GLSubAccountTypeID', 'Description')
+            ->get();
 
         $departments = Department::all();
         return view('budgetandanalytics.budgetlinemapping.create', compact(
@@ -89,7 +94,6 @@ class BudgetLineMappingController extends Controller
             'GLS.*' => 'required|integer',
             // Add other fields and validation rules as needed
         ]);
-
         try {
             DB::beginTransaction();
             //Check if there is a default so that we can drop the existing and add the one created
@@ -159,7 +163,7 @@ class BudgetLineMappingController extends Controller
     {
         $budgetLine = BudgetLine::findOrFail($id);
         $budgetCategories = BudgetLineCategories::all();
-        $gls = BudgetGLAccount::select('Id', 'Description')->get();
+        $gls = BudgetGLMaster::select('BudgetGLID as Id', 'Description')->get();
         $productTypes = BudgetProduct::select('Id', 'Description')->get();
         $departments = \App\Models\HRM\Department::all();
         $glAccountTypes = \App\Models\Core\CodeDetail::select('Id', 'CodeID', 'Value', 'Description')->where('CodeID', 'GLAccountType')->get();
@@ -287,8 +291,16 @@ class BudgetLineMappingController extends Controller
 
     public function getGLAccountSubTypes($typeId)
     {
-        $subTypes = \App\Models\Budget\BudgetGLAccountSubType::where('GLAccountTypeValue', $typeId)->get();
+        //$subTypes = \App\Models\Budget\BudgetGLAccountSubType::where('GLAccountTypeValue', $typeId)->get();
+        $subTypes = DB::table('t_BudgetGLSubTypes')
+                    ->select('Id', 'GLAccountTypeID', 'GLSubAccountTypeID', 'Description')->where('GLAccountTypeID', $typeId)
+                    ->get();
         return response()->json($subTypes);
+    }
+
+    public function getGLTypes($typeId){
+        $glTypes=BudgetGLMaster::where('GLSubAccountTypeID',$typeId)->get();
+        return response()->json($glTypes);
     }
 
     public function show($id)

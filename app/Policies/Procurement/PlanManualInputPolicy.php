@@ -3,7 +3,7 @@
 namespace App\Policies\Procurement;
 
 use App\Models\Auth\User;
-use App\Models\Procurement\PlanLineItems;
+use App\Models\Procurement\PlanLineItem;
 use App\Enums\Core\PermissionEnum;
 
 class PlanManualInputPolicy
@@ -15,7 +15,7 @@ class PlanManualInputPolicy
     }
 
 
-    public function view(User $user, PlanLineItems $lineItem): bool
+    public function view(User $user, PlanLineItem $lineItem): bool
     {
         return $user->can(PermissionEnum::PlanManualInputRead->value);
     }
@@ -33,19 +33,19 @@ class PlanManualInputPolicy
     }
 
 
-    public function edit(User $user, PlanLineItems $lineItem): bool
+    public function edit(User $user, PlanLineItem $lineItem): bool
     {
         return $user->can(PermissionEnum::PlanManualInputUpdate->value);
     }
 
 
-    public function update(User $user, PlanLineItems $lineItem): bool
+    public function update(User $user, PlanLineItem $lineItem): bool
     {
         return $user->can(PermissionEnum::PlanManualInputUpdate->value);
     }
 
 
-    public function delete(User $user, PlanLineItems $lineItem): bool
+    public function delete(User $user, PlanLineItem $lineItem): bool
     {
         return $user->can(PermissionEnum::PlanManualInputDelete->value);
     }

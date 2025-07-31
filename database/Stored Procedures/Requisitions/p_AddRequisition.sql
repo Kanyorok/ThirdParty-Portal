@@ -11,7 +11,7 @@ BEGIN
     DECLARE @RequisitionNo varchar(10), @RequisitionId bigint, @StatusID bigint;
 
 
-    select @StatusID= c.ID from t_CodeDetails c (nolock) where c.CodeID='RequisitionStatus' and c.Description='Pending'
+    select @StatusID= c.ID from t_CodeDetails c (nolock) where c.CodeID='RequisitionStatus' and c.Value='Pe'
 
     -- Insert new requisition
     INSERT INTO t_Requisitions (RequisitionNo, BranchId, DepartmentId, Remarks, CreatedBy, CreatedOn, ModifiedBy,
