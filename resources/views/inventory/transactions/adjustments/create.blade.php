@@ -77,14 +77,17 @@
                 <tbody>
                 @php $oldItems = old('items'); @endphp
 
+                
+
                 @if ($oldItems)
                     @foreach ($oldItems as $index => $item)
                         <tr>
-                            <td>{{ $index + 1 }}</td>
+                            <td><td>{{ (int) $index + 1 }}</td></td>
                             <td>
-                                <input type="text" class="form-control" value="{{ $item['ItemCode'] ?? '' }}" readonly>
-                                <input type="hidden" name="items[{{ $index }}][Item]" value="{{ $item['Item'] }}">
-                            </td>
+                                    <input type="text" class="form-control" value="{{ $item['ItemCode'] ?? '' }}" readonly>
+                                    <input type="hidden" name="items[{{ $index }}][Item]" value="{{ $item['Item'] ?? '' }}">
+                                </td>
+
                             <td>
                                 <input type="text" class="form-control" value="{{ $item['ItemName'] ?? '' }}" readonly>
                             </td>

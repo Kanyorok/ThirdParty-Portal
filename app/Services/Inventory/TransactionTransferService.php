@@ -190,18 +190,29 @@ class TransactionTransferService
 
                 $skuId = 'SKU' . $nextNumber;
 
-           $lastToQty = StockTransaction::where('ItemID', $item->Item)
-                ->where('BranchID', $transfer->FromBranch)
-                ->orderByDesc('TransactionDate')
-                ->orderByDesc('id')
-                ->value('BalanceQty') ?? 0;
+               $lastToQty = StockTransaction::where('ItemID', $item->Item)
+                    ->where('BranchID', $transfer->FromBranch)
+                    ->orderByDesc('TransactionDate')
+                    ->orderByDesc('id')
+                    ->value('BalanceQty');
 
-            $newToQty = $lastToQty - $item->DispatchedQty;
+                if ($lastToQty === null) {
+                    $lastToQty = StockItem::where('ItemID', $item->Item)
+                        ->where('Branch', $transfer->FromBranch)
+                        ->value('CurrentQty') ?? 0;
+                }
 
+                $newToQty = $lastToQty - $item->DispatchedQty;
 
-                // Create StockTransaction
-                StockTransaction::create([
-                    'SKUID' => $skuId,
+                $dispatchedQty = $item->DispatchedQty;
+                $totalCost = ($item->UnitCost ?? 0) * $dispatchedQty;
+
+                // Make totalCost negative if it's a stock-out
+                if ($dispatchedQty > 0) {
+                    $totalCost *= -1;
+                }
+            StockTransaction::create([
+                'SKUID' => $skuId,
                     'TransactionType' => CodeDetail::where('CodeID', 'Source')->where('Description', 'Transaction Transfer')->value('ID'),
                     'ItemID' => $item->Item,
                     'StoreID' => $stockFrom->Store ?? null, 
@@ -211,7 +222,7 @@ class TransactionTransferService
                     'QuantityIn' => 0,
                     'QuantityOut' => $item->DispatchedQty,
                     'BalanceQty' => $newToQty,
-                    'TotalCost' => ($item->UnitCost ?? 0) * ($item->DispatchedQty ?? 0),
+                    'TotalCost' => $totalCost,
                     'TransactionDate' => now(),
                     'ReferenceID' => $transfer->Id,
                     'Remarks' => 'Transfer to Branch ID ' . $transfer->ToBranch,

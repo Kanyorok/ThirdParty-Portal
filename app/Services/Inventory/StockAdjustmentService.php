@@ -198,13 +198,19 @@ class StockAdjustmentService
             $quantityIn = $qty > 0 ? $qty : 0;
             $quantityOut = $qty < 0 ? abs($qty) : 0;
 
-            $lastQty = StockTransaction::where('SKUID', $skuId)
-                ->where('TransactionType', $adjustmentTypeId)
-                ->orderByDesc('TransactionDate')
-                ->orderByDesc('id')
-                ->value('BalanceQty');
+            $lastToQty = StockTransaction::where('ItemID', $item->Item)
+                    ->where('BranchID', $adjustment->Branch)
+                    ->orderByDesc('TransactionDate')
+                    ->orderByDesc('id')
+                    ->value('BalanceQty');
 
-            $newQty = ($lastQty ?? 0) + $quantityIn - $quantityOut;
+                if ($lastToQty === null) {
+                    $lastToQty = StockItem::where('ItemID', $item->Item)
+                        ->where('Branch', $adjustment->Branch)
+                        ->value('CurrentQty') ?? 0;
+                }
+
+            $newQty = ($lastToQty ?? 0) + $quantityIn - $quantityOut;
 
           $adjustmentQty = $quantityIn > 0 ? $quantityIn : $quantityOut;
             $totalCost = ($item->UnitCost ?? 0) * $adjustmentQty;

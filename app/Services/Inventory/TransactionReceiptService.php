@@ -164,14 +164,18 @@ class TransactionReceiptService
         ->where('Description', 'Transaction Receipts')
         ->value('ID');
 
-            $lastToQty = StockTransaction::where('SKUID', $skuId)
-                ->where('StoreID', $storeId)
-                ->where('TransactionType', $receiptTypeId)
-                ->orderByDesc('TransactionDate')
-                ->orderByDesc('id')
-                ->value('BalanceQty');
+              $lastToQty = StockTransaction::where('SKUID', $skuId)
+            ->where('BranchID', $toBranchId)
+            ->where('StoreID', $storeId)
+            ->orderByDesc('TransactionDate')
+            ->orderByDesc('id')
+            ->value('BalanceQty');
 
-            $newToQty = ($lastToQty ?? 0) + $receiptItem->ReceivedQty;
+        if ($lastToQty === null) {
+            $lastToQty = $stock->CurrentQty - $itemData['received_qty']; 
+        }
+
+        $newToQty = $lastToQty + $itemData['received_qty'];
 
         StockTransaction::create([
             'SKUID' => $skuId,

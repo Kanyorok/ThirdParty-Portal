@@ -5,6 +5,10 @@ namespace App\Models\Inventory;
 use App\Models\Auth\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Inventory\ItemMasterList;
+use App\Models\Inventory\TransactionTransferItem;
+use App\Models\Inventory\TransactionReceipt;
+
 
 class TransactionReceiptItem extends Model
 {
