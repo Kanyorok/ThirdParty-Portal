@@ -17,7 +17,7 @@
             + New Budget Line</a>
     </div>
     <div class="card mb-4">
-        <div class="card-header bg-secondary text-white">📄 Budget Lines List</div>
+{{--        <div class="card-header bg-secondary text-white">📄 Budget Lines List</div>--}}
         <div class="card-body">
             <p class="text-muted">
                 Below is a list of all existing Budget Lines, including their associated departments, descriptions,
@@ -48,7 +48,7 @@
                             </td>
                             <td>{{ $item->department->Name ?? 'N/A' }}</td>
                             <td>{{ $item->glAccountType->Description ?? 'N/A' }}</td>
-                            <td>{{ $item->glAccountSubType->GLAccountSubTypeName ?? 'N/A' }}</td>
+                            <td>{{ $item->glSubType->Description ?? 'N/A' }}</td>
                             <td>
                                 @if($item->IsProductDriven)
                                     <a href="{{ route('budgetlinemapping.show', $item->Id) }}" class="badge bg-primary"
@@ -62,7 +62,7 @@
                                 {{ $item->Description }}
                             </td>
                             <td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                @foreach($item->glAccounts as $gl)
+                                @foreach($item->newGlAccounts as $gl)
                                     <small>
                                         <div>GL{{ $gl->Id }} - {{ $gl->Description }}</div>
                                     </small>

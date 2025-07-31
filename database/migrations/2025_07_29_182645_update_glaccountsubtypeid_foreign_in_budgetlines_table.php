@@ -1,0 +1,23 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration {
+    public function up(): void
+    {
+        Schema::table('t_BudgetLines', function (Blueprint $table) {
+            // Drop the foreign key constraint only
+            $table->dropForeign(['GLAccountSubTypeID']);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('t_BudgetLines', function (Blueprint $table) {
+            // Re-add the foreign key constraint if needed (optional)
+            $table->foreign('GLAccountSubTypeID')->references('Id')->on('t_GLAccountSubTypes');
+        });
+    }
+};

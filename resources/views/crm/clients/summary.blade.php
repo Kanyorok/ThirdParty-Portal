@@ -3,12 +3,13 @@
     <hr class="m-0">
     <p class="mb-1 h4">Contacts</p>
     <div class="text center">
-        @if(!empty($client->Phone1))
+       {{-- @if(!empty($client->Phone1))
             <span class="btn btn-lg btn-link me-1 my-1">{{ $client->Phone1 }}</span>
         @endif
         @if(!empty($client->Phone2))
             <span class="btn btn-lg btn-link me-1 my-1">{{ $client->Phone2 }}</span>
-        @endif
+        @endif --}}
+        
         @if(!empty($client->Mobile))
             <span class="btn btn-lg btn-link me-1 my-1">{{ $client->Mobile }}</span>
         @endif

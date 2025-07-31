@@ -26,6 +26,7 @@ class PropertyLeaseTerminationRequest extends FormRequest
             'TerminationDate' => 'required|date',
             'TerminationReason' => 'required|exists:t_CodeDetails,ID',
             'Remarks' => 'nullable|string|max:100',
+            'Document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
         ];
     }
 }

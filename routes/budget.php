@@ -151,6 +151,7 @@ Route::namespace('Budget')->prefix('budget')->group(function () {
 
     Route::resource('budgetdriverssetup', BudgetDriversSetupController::class);
     Route::get('budgetlinemapping/gl-subtypes/{typeId}', [BudgetLineMappingController::class, 'getGLAccountSubTypes']);
+    Route::get('budgetlinemapping/gl-types/{typeId}', [BudgetLineMappingController::class, 'getGLTypes']);
 
     Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('budgetline-reports.export');
     Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([

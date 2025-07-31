@@ -2,10 +2,10 @@
 @section('title', 'Budget Line Product Types')
 @section('content')
     <div class="container mt-4">
-        <div class="card p-4">
-            <div class="card-header bg-dark text-white">
-                Product Types for: {{ $budgetLineName }}
-            </div>
+        <div class="card p-1">
+{{--            <div class="card-header bg-light text-black">--}}
+{{--                Product Types for: {{ $budgetLineName }}--}}
+{{--            </div>--}}
             <div class="card-body">
                 <p class="text-muted">
                     This budget line is mapped to the following product types.

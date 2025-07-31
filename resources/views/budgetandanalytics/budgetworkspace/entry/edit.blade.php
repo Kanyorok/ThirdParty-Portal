@@ -99,7 +99,7 @@
                         <div class="col-md-3 mb-2">
                             <label>Month {{ $key }}</label>
                             <input type="number" min="0" name="monthly_allocations[{{ $key }}]"
-                                   class="form-control" placeholder="0.00" value="{{ $amount }}">
+                                   class="form-control" placeholder="0.00" value="{{ $amount }}" step="0.01">
                         </div>
                     @endforeach
                 </div>
@@ -109,7 +109,8 @@
             </div>
 
             <div class="d-flex gap-2 mt-4" id="submitButtonContainer">
-                <button type="submit" class="btn btn-primary">
+                <button type="submit" class="btn btn-success"
+                        onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Updating...'; this.form.submit(); }">
                     Update Projection
                 </button>
             </div>

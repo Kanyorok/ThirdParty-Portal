@@ -2,6 +2,8 @@
 
 namespace App\Services\Property\TenantAndLease;
 
+use App\Enums\Core\ModulesEnum;
+use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
 use App\Models\Core\CodeDetail;
 use App\Models\PropertyManagement\PropertyBlock;
@@ -13,6 +15,7 @@ use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyUnit;
 use App\Services\Property\TenantAndLease\PropertyLeaseScheduleService;
 use DateTime;
+use Illuminate\Http\UploadedFile;
 
 class PropertyNewLeaseService
 {
@@ -39,7 +42,8 @@ class PropertyNewLeaseService
         float $OtherCharges,
         int $DueDay,
         string $SpecialTerms,
-        User $user
+        User $user,
+        UploadedFile $document = null
     ): self {
 
             $lastLeaseNumber = PropertyNewLease::withTrashed() // in case you're using soft deletes
@@ -70,6 +74,15 @@ class PropertyNewLeaseService
             'CreatedBy' => $user->Id,
             'ModifiedBy' => $user->Id,
         ]);
+
+        if ($document) {
+        $newlease->newDocument(
+            ModulesEnum::Property,
+            $document,
+            [PermissionEnum::PropertyNewLeaseView->value],
+            $user
+            );
+        }
 
         PropertyLeaseScheduleService::create(
         leaseId: $newlease->Id,
@@ -111,7 +124,8 @@ class PropertyNewLeaseService
         float $OtherCharges,
         int $DueDay,
         string $SpecialTerms,
-        User $user
+        User $user,
+        UploadedFile $document = null
     ): self {
         $lease->update([
             'PropertyID' => $PropertyID->Id,
@@ -131,10 +145,19 @@ class PropertyNewLeaseService
             'ModifiedBy' => $user->Id,
         ]);
 
+        if ($document) {
+        $lease->newDocument(
+            ModulesEnum::Property,
+            $document,
+            [PermissionEnum::PropertyNewLeaseView->value],
+            $user
+            );
+        }
+
         //Delete old schedule entries if needed (optional cleanup)
         PropertyLeaseSchedule::where('LeaseNumber', $lease->Id)->delete();
 
-        // ✅ Regenerate schedule
+        //Regenerate schedule
         PropertyLeaseScheduleService::create(
             leaseId: $lease->Id,
             paymentFrequencyId: $PaymentFrequency->ID,
